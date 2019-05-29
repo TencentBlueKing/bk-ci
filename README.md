@@ -1,1 +1,1 @@
-![home](openSource.jpg)
+![home](openSource.png)
