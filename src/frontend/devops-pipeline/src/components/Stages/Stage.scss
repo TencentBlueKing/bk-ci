@@ -1,0 +1,195 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+@import '../../scss/conf';
+@import '../../scss/mixins/ellipsis';
+$StageMargin: 82px;
+$itemHeight: 42px;
+$serialSize: 42px;
+$iconSize: 42px;
+$lineStyle: solid;
+$StagePadding: $StageMargin / 2;
+$addBtnSize: 18px;
+$shortLine: $StagePadding - $addBtnSize / 2 - 10px;
+$dotR: 10px;
+$angleSize: 5px;
+$lineRadius: 6px;
+
+
+@keyframes rotating {
+    from {
+        transform: rotate(0)
+    }
+
+    to {
+        transform: rotate(359deg)
+    }
+}
+@mixin add-plus-icon ($color, $borderColor, $bg, $size, $outline)  {
+    position: relative;
+    display: block;
+    width: $size;
+    height: $size;
+    @if $outline {
+        border: 1px solid $borderColor;
+        background-color: $bg;
+        border-radius: 50%;
+    }
+    transition: all 0.3s ease;
+    &:before,
+    &:after {
+        content: '';
+        position: absolute;
+        left: ($size - 2px) / 2;
+        top: ($size - 8px) / 2;
+        @if $outline {
+            left: ($size - 2px - 2px) / 2;
+            top: ($size - 2px - 8px) / 2;
+        }
+        height: 8px;
+        width: 2px;
+        background-color: $color;
+    }
+
+    &:after {
+        transform: rotate(90deg)
+    }
+}
+
+@mixin add-plus-icon-hover ($hoverColor, $hoverBorderColor, $hoverBg) {
+    &:hover {
+        border-color: $hoverBorderColor; 
+        background-color: $hoverColor; 
+        &:before,
+        &:after {
+            background-color: $hoverBg;
+        }
+    }
+}
+
+@mixin add-plus-icon-active ($activeColor, $activeBorder, $activeBg) {
+    &.active {
+        border-color: $activeBorder; 
+        background-color: $activeColor; 
+        &:before,
+        &:after {
+            background-color: $activeBg;
+        }
+    }
+}
+
+@mixin cruve-connect ($lineCurvature, $connectStyle, $color, $direction) {
+    position: absolute;
+    border-left: 2px $connectStyle $color;
+    height: 100%;
+    &:before,
+    &:after {
+        position: absolute;
+        content: '';
+        border-radius: 50%;
+        border: 2px $connectStyle transparent;
+        width: 2 *  $lineCurvature;
+        height: 2 *  $lineCurvature;
+    }
+    &:before {
+        left: -16px;
+        top: -$lineCurvature - 1;
+        border-right-color: $color;
+        transform: rotate(-45deg);
+    }
+    &:after {
+        left: -2px;
+        bottom: -$lineCurvature - 1;
+        border-bottom-color: $color;
+        transform: rotate(45deg);
+    }
+
+    @if $direction {
+        transform: rotate3d(0, 1, 0, 180deg);
+    }
+}
+
+$borderColor: #addaff;
+.insert-tip {
+    position: absolute;
+    display: block;
+    width: 50px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    border: 1px solid $borderColor;
+    border-radius: 22px;
+    color: $primaryColor;
+    font-size: 10px;
+    cursor: pointer;
+    background-color: white;
+    box-shadow: 0px 2px 4px 0px rgba(60, 150, 255, 0.2);
+
+    &.direction:after {
+        content: '';
+        position: absolute;
+        height: 6px;
+        width: 6px;
+        background-color: white;
+        transform: rotate(45deg);
+        bottom: -4px;
+        left: 20px;
+        border-right: 1px solid $borderColor;
+        border-bottom: 1px solid $borderColor;
+    }
+    .tip-icon {
+        margin: 0 5px 0 7px;
+        cursor: pointer;
+        @include add-plus-icon($primaryColor, $primaryColor, white, 8px, false);
+    }
+
+
+    &:hover {
+        background-color: $primaryColor;
+        color: white;
+        border-color: $primaryColor;
+        &.direction:after {
+            background-color: $primaryColor;
+            border-right-color: $primaryColor;
+            border-bottom-color: $primaryColor;
+        }
+        .tip-icon {
+            @include add-plus-icon(white, white, white, 8px, false);
+        }
+    }
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.add-plus-icon {
+    @include add-plus-icon($primaryColor, $borderColor, white, 18px, true);
+    @include add-plus-icon-active($primaryColor, $primaryColor, white);
+    @include add-plus-icon-hover($primaryColor, $primaryColor, white);
+}
+
+.minus-icon {
+    @extend .add-plus-icon;
+    &:before {
+        display: none;
+    }
+}
+
+

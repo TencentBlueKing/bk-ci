@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: project
+    desc: DevOps Project Service
+    version: 4.0
+    packageName: com.tencent.devops.project
+
+file:
+  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
+  maxUploadFileSize: 52428800
+
+server:
+  port: 21912

@@ -1,0 +1,9 @@
+{
+  "buildType": "DOCKER" ,
+  "projectId": "232",
+  "agentId": "1x",
+  "secretKey": "2323232",
+  "gateway": "api.github.com",
+  "buildId": "vvadsaaf",
+  "vmSeqId": "33223"
+}

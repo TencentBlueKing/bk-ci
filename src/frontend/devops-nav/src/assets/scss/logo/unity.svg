@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1024 1024" style="enable-background:new 0 0 1024 1024;" xml:space="preserve">
+<style type="text/css">
+	.st0{display:none;}
+	.st1{display:inline;}
+	.st2{fill:#737987;}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#737987;}
+</style>
+<g id="辅助线" class="st0">
+</g>
+<g id="网格" class="st0">
+</g>
+<g id="定时触发">
+</g>
+<g id="手动触发">
+</g>
+<g id="GIT">
+</g>
+<g id="RTX">
+</g>
+<g id="EMAIL">
+</g>
+<g id="SMS">
+</g>
+<g id="微信">
+</g>
+<g id="部署">
+</g>
+<g id="脚本">
+</g>
+<g id="企业证书">
+</g>
+<g id="个人证书">
+</g>
+<g id="安全加固">
+</g>
+<g id="SVN">
+</g>
+<g id="代码检查">
+</g>
+<g id="归档">
+</g>
+<g id="IPA">
+</g>
+<g id="APK_1_">
+</g>
+<g id="docker">
+</g>
+<g id="unity">
+	<path class="st2" d="M443.4,743.1H322.8L96,512l226.8-231.1h120.6l60.5-104.5L817.6,96L904,407.5L843.5,512L904,616.5L817.6,928
+		l-313.7-80.4L443.4,743.1 M449.9,731.6l237,63.8L550.1,558.2H276.6L449.9,731.6 M767.3,749.1L831,512l-63.8-237.1L630,512
+		L767.3,749.1 M449.9,292.4L276.6,465.8h273.5l136.7-237.1L449.9,292.4z M449.9,292.4"/>
+</g>
+<g id="XCODE">
+</g>
+<g id="andriod">
+</g>
+<g id="ios">
+</g>
+</svg>

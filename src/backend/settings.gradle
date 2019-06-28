@@ -1,0 +1,130 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+rootProject.name = 'bk-ci-backend'
+
+include ":common"
+include ":common:common-event"
+include ":common:common-api"
+include ":common:common-web"
+include ":common:common-db"
+include ":common:common-client"
+include ":common:common-redis"
+include ":common:common-es"
+include ":common:common-scm"
+include ":common:common-archive"
+include ":common:common-service"
+include ":common:common-pipeline"
+include ":common:common-log"
+include ":common:common-test"
+include ":common:common-auth"
+include ":common:common-auth:common-auth-api"
+include ":common:common-auth:common-auth-sample"
+include ":common:common-auth:common-auth-blueking"
+include ":common:common-auth:common-auth-blueshield"
+
+include ":project"
+include ":project:api-project"
+include ":project:biz-project"
+include ":project:biz-project-blueking"
+include ":project:biz-project-sample"
+include ":project:boot-project"
+include ":project:model-project"
+
+include ":log"
+include ":log:api-log"
+include ":log:biz-log"
+include ":log:boot-log"
+include ":log:model-log"
+
+include ":environment"
+include ":environment:api-environment"
+include ":environment:biz-environment"
+include ":environment:boot-environment"
+include ":environment:model-environment"
+
+include ":artifactory"
+include ":artifactory:api-artifactory"
+include ":artifactory:api-artifactory-sample"
+include ":artifactory:biz-artifactory"
+include ":artifactory:biz-artifactory-sample"
+include ":artifactory:boot-artifactory"
+include ":artifactory:model-artifactory"
+
+include ":repository"
+include ":repository:api-repository"
+include ":repository:biz-repository"
+include ":repository:biz-repository-sample"
+include ":repository:biz-repository-blueking"
+include ":repository:boot-repository"
+include ":repository:model-repository"
+
+include ":ticket"
+include ":ticket:api-ticket"
+include ":ticket:biz-ticket"
+include ":ticket:biz-ticket-sample"
+include ":ticket:biz-ticket-blueking"
+include ":ticket:boot-ticket"
+include ":ticket:model-ticket"
+
+include ":store"
+include ":store:api-store"
+include ":store:api-store-sample"
+include ":store:biz-store"
+include ":store:biz-store-sample"
+include ":store:boot-store"
+include ":store:model-store"
+
+include ":process"
+include ":process:api-process"
+include ":process:biz-process"
+include ":process:biz-process-sample"
+include ":process:biz-process-blueking"
+include ":process:boot-process"
+include ":process:model-process"
+include ":process:plugin-load"
+include ":process:plugin-sdk"
+include ":process:plugin-trigger"
+
+include ":dispatch"
+include ":dispatch:api-dispatch"
+include ":dispatch:biz-dispatch"
+include ":dispatch:boot-dispatch"
+include ":dispatch:model-dispatch"
+
+include ":plugin"
+include ":plugin:biz-plugin"
+include ":plugin:boot-plugin"
+include ":plugin:model-plugin"
+
+include ":worker"
+include ":worker:worker-agent"
+include ":worker:worker-common"
+include ":worker:worker-api-sdk"
+include ":worker:worker-plugin-scm"
+include ":worker:worker-plugin-archive"
+
+include ":boot-assembly"

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 792 896" style="enable-background:new 0 0 792 896;" xml:space="preserve">
+<style type="text/css">
+	.st0{display:none;}
+	.st1{display:inline;fill:#4D56C1;}
+	.st2{display:inline;}
+	.st3{fill:#FFFFFF;}
+	.st4{fill:url(#SVGID_1_);}
+	.st5{display:inline;fill:#2C6AE5;}
+	.st6{display:inline;fill:#0F8DF4;}
+	.st7{display:inline;fill:url(#SVGID_2_);}
+	.st8{fill:#3A84FF;}
+</style>
+<g id="图层_2">
+</g>
+<g id="图层_1" class="st0">
+</g>
+<g id="图层_3" class="st0">
+</g>
+<g id="凭据" class="st0">
+	<path class="st1" d="M748,864H44c-35.3,0-64-28.7-64-64V96c0-35.3,28.7-64,64-64h704c35.3,0,64,28.7,64,64v704
+		C812,835.3,783.3,864,748,864z"/>
+	<g id="图层_11" class="st2">
+		<path class="st3" d="M652,240H200c-8.8,0-16-7.2-16-16s7.2-16,16-16h452c8.8,0,16,7.2,16,16S660.8,240,652,240z"/>
+		<path class="st3" d="M652,272H204c-26.5,0-48-21.5-48-48s21.5-48,48-48h448c8.8,0,16-7.2,16-16s-7.2-16-16-16H204
+			c-44.1,0-80,35.9-80,80v448c0,44.1,35.9,80,80,80h448c8.8,0,16-7.2,16-16V288C668,279.2,660.8,272,652,272z"/>
+		
+			<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="427" y1="624.025" x2="427" y2="225.1338" gradientTransform="matrix(1 0 0 -1 0 896.05)">
+			<stop  offset="0" style="stop-color:#4D56C1"/>
+			<stop  offset="1" style="stop-color:#4D56C1"/>
+		</linearGradient>
+		<polygon class="st4" points="290,272 290,675.4 427,588.8 564,675.4 564,272 		"/>
+		<path class="st3" d="M474,399c0-25.4-20.6-46-46-46s-46,20.6-46,46c0,18.6,11,34.6,26.9,41.8L402,502h52l-6.9-61.2
+			C463,433.6,474,417.6,474,399z M428,385c7.7,0,14,6.3,14,14s-6.3,14-14,14s-14-6.3-14-14S420.3,385,428,385z"/>
+	</g>
+</g>
+<g id="代码托管" class="st0">
+	<polygon class="st5" points="-19.8,574.8 -19.8,318.8 294.8,137.2 294.8,393.2 	"/>
+	<polygon class="st5" points="811.8,318.2 811.8,574.2 497.2,755.8 497.2,499.8 	"/>
+	<polygon class="st6" points="811.8,318.8 497,137 497,0 295,500 -19.8,318.2 -19.8,574.2 295,756 295,896 497,393 811.8,574.8 	"/>
+</g>
+<g id="代码检查" class="st0">
+	
+		<linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="395.95" y1="864.025" x2="395.95" y2="32.025" gradientTransform="matrix(1 0 0 -1 0 896.05)">
+		<stop  offset="0" style="stop-color:#43E8E2"/>
+		<stop  offset="1" style="stop-color:#0E7EDF"/>
+	</linearGradient>
+	<path class="st7" d="M752.8,864c-7.2,0-14.4-1.3-21.3-3.9L415.4,738.6c-12.5-4.8-26.4-4.8-38.9,0L60.5,860
+		c-18.2,7-38.7,4.6-54.8-6.5c-16.1-11-25.7-29.3-25.7-48.8V91.2C-20,58.6,6.6,32,39.2,32h713.5c32.7,0,59.2,26.6,59.2,59.2v713.6
+		c0,19.5-9.6,37.7-25.7,48.8C776.3,860.4,764.6,864,752.8,864z"/>
+	<g class="st2">
+		<path class="st3" d="M274.7,590c-47,0-91.2-18.3-124.5-51.5c-68.6-68.6-68.6-180.3,0-248.9s180.3-68.6,248.9,0l-67.9,67.9
+			c-31.2-31.2-81.9-31.2-113.1,0s-31.2,81.9,0,113.1s81.9,31.2,113.1,0l67.9,67.9C365.9,571.7,321.7,590,274.7,590z"/>
+		<path class="st3" d="M568.7,590c-47,0-91.2-18.3-124.5-51.5c-68.6-68.6-68.6-180.3,0-248.9s180.3-68.6,248.9,0l-67.9,67.9
+			c-31.2-31.2-81.9-31.2-113.1,0c-31.2,31.2-31.2,81.9,0,113.1s81.9,31.2,113.1,0l67.9,67.9C659.9,571.7,615.7,590,568.7,590z"/>
+	</g>
+</g>
+<g id="容器服务">
+	<path class="st8" d="M752.3,199.5l-193.9-112c-19-11-43.3-4.4-54.2,14.6c-11,19-4.4,43.3,14.6,54.3l154.2,89L484.7,354
+		c-23.4-21.5-54.6-34.6-88.7-34.6c-34.2,0-65.3,13.1-88.7,34.6L119.1,245.4l237.2-136.9v104.1c0,21.9,17.8,39.7,39.7,39.7
+		s39.7-17.8,39.7-39.7V39.7c0-14.2-7.6-27.3-19.8-34.4c-12.3-7.1-27.4-7.1-39.7,0L39.7,199.5C15.2,213.6,0,240,0,268.3V489
+		c0,21.9,17.8,39.7,39.7,39.7s39.7-17.8,39.7-39.7V314.2l188.2,108.6c-2,9.1-3.1,18.5-3.1,28.2c0,58.7,38.6,108.6,91.8,125.5v216.8
+		L121,656l91.5-52.5c19-10.9,25.6-35.2,14.7-54.2S192,523.7,173,534.6L22,621.2c-12.3,7.1-19.9,20.1-20,34.3s7.5,27.3,19.7,34.5
+		l334.5,195.3c0.1,0,0.1,0.1,0.2,0.1c12.2,7.1,25.9,10.6,39.7,10.6c13.7,0,27.4-3.5,39.7-10.6c0,0,0.1,0,0.1-0.1l192.5-111.8
+		c19-11,25.4-35.3,14.4-54.3s-35.3-25.5-54.3-14.4l-152.8,88.7V576.6c53.2-16.9,91.8-66.8,91.8-125.5c0-9.7-1.1-19.1-3.1-28.2
+		l188.2-108.6v271.6l-92.4-53.5c-19-11-43.3-4.5-54.2,14.5c-11,19-4.5,43.3,14.5,54.3l151.9,87.9c6.1,3.6,13,5.3,19.9,5.3
+		c6.8,0,13.7-1.8,19.8-5.3c12.3-7.1,19.9-20.2,19.9-34.4V268.3C792,240,776.8,213.6,752.3,199.5z M445.1,468.6
+		c-2.1,6-5.3,11.4-9.4,16.2c-9.6,11.3-23.8,18.4-39.7,18.4c-15.9,0-30.1-7.2-39.7-18.4c-4-4.7-7.2-10.2-9.4-16.2
+		c-2-5.5-3-11.4-3-17.6c0-25.5,18.4-46.8,42.7-51.3c3.1-0.6,6.2-0.9,9.4-0.9c3.2,0,6.3,0.3,9.4,0.9c24.3,4.4,42.7,25.7,42.7,51.3
+		C448.1,457.2,447,463.1,445.1,468.6z"/>
+</g>
+</svg>

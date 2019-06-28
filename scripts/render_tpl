@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# 渲染蓝鲸的__VAR_NUM__ 类似的模板，通过环境变量自动替换它
+set -o nounset                              # Treat unset variables as an error
+
+set -a
+BK_ENV_FILE=./bkenv.properties
+[ -r $BK_ENV_FILE ] && source $BK_ENV_FILE
+set +a
+
+trap 'rm -f $sed_script' EXIT TERM
+sed_script=$(mktemp /tmp/XXXXXX.sed)
+
+usage () {
+    echo "Usage: $0 [-c] [-n] [-E k=v, -E k=v] tpl_path ..."
+} 
+
+usage_and_exit () {
+    usage
+    exit $1
+}
+
+target_file_path () {
+    local module=$MODULE
+    local tpl_file=${2##*/}
+    local _target_file
+
+    if [ "${tpl_file:0:1}" != "#" ]; then
+        _target_file=$INSTALL_PATH/$module/${tpl_file//#//}
+    else
+        _target_file=$INSTALL_PATH/${tpl_file//#//}
+    fi
+
+    echo ${_target_file%.tpl}
+}
+
+[[ $# -eq 0 ]] && usage_and_exit 1 
+declare -i DRY_RUN=0 CHECK=0
+declare MODULE=""
+declare -a EXTRA_ENV=()
+
+while getopts ncm:E: arg; do
+	case $arg in
+		n) DRY_RUN=1 ;;
+		c) CHECK=1 ;;
+		m) MODULE="$OPTARG" ;;
+		E) EXTRA_ENV+=("$OPTARG") ;;
+		*) usage_and_exit 0 ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+# 校验必须变量
+if [[ -z $INSTALL_PATH ]]; then
+    echo "INSTALL_PATH 变量不能为空。"
+    exit 1
+fi
+place_holders=$(cat $* 2>/dev/null | grep -wEo '__[0-9A-Z_]+__' | sort -u)
+
+set +u
+for p in $place_holders
+do
+	k=$(echo $p | sed 's/^__//; s/__$//;')
+	v=${!k}
+	[[ $CHECK -eq 1 ]] && [[ -z "$v" ]] && echo "EMPTY PLACE_HOLDER: $p"
+        echo "s|$p|$v|g" >> $sed_script
+done
+set -u
+unset p k v
+
+# 仅检查变量
+[[ $CHECK -eq 1 ]] && exit 0
+
+for file in "$@"; do
+	# 是否真正替换变量到目标路径
+	if [[ $DRY_RUN -eq 0 ]]; then
+		target_file=$(target_file_path $MODULE $file)
+		echo "render $file -> $target_file"
+		mkdir -p ${target_file%/*}
+		sed -f $sed_script $file > $target_file
+	else
+		sed -f $sed_script $file
+	fi
+done

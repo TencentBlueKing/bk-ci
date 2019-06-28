@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 841.4 1020.5" style="enable-background:new 0 0 841.4 1020.5;" xml:space="preserve">
+<style type="text/css">
+	.st0{display:none;}
+	.st1{display:inline;}
+	.st2{fill:#3967E0;}
+	.st3{fill:#33FF99;}
+	.st4{fill:#08B9FF;}
+	.st5{display:inline;fill:#3967E0;}
+	.st6{display:inline;fill:#F8FFFF;}
+	.st7{fill:#F8FFFF;}
+</style>
+<g id="图层_2" class="st0">
+</g>
+<g id="图层_1" class="st0">
+</g>
+<g id="图层_3" class="st0">
+</g>
+<g id="DINGSH_x5F_复制_2" class="st0">
+	<g class="st1">
+		<path class="st2" d="M676.8,158.5h-64v63h64c70.5,0.5,127.5,57.9,127.5,128.5s-57,127.9-127.5,128.5l0,0h-65v63h65l0,0
+			C782.1,541,867.3,455.4,867.3,350S782.1,159,676.8,158.5z"/>
+		<path class="st2" d="M163.8,861.5h65v-63h-65C93.3,798,36.3,740.6,36.3,670s57-127.9,127.5-128.5l0,0h65v-63h-65l0,0
+			C58.5,479-26.7,564.6-26.7,670S58.5,861,163.8,861.5z"/>
+		<circle class="st3" cx="195.3" cy="831" r="53.5"/>
+		<circle class="st3" cx="641.3" cy="512" r="53.5"/>
+		<g>
+			<path class="st4" d="M630.6,606.5H207.8c-6.6,0-12-5.4-12-12v-168c0-6.6,5.4-12,12-12h422.8c6.6,0,12,5.4,12,12v168
+				C642.6,601.1,637.2,606.5,630.6,606.5z"/>
+		</g>
+		<g>
+			<path class="st4" d="M631.8,286.5H209c-6.6,0-12-5.4-12-12v-168c0-6.6,5.4-12,12-12h422.8c6.6,0,12,5.4,12,12v168
+				C643.8,281.1,638.4,286.5,631.8,286.5z"/>
+		</g>
+		<g>
+			<path class="st4" d="M631.8,926.5H209c-6.6,0-12-5.4-12-12v-168c0-6.6,5.4-12,12-12h422.8c6.6,0,12,5.4,12,12v168
+				C643.8,921.1,638.4,926.5,631.8,926.5z"/>
+		</g>
+	</g>
+</g>
+<g id="图层_5" class="st0">
+	<path class="st5" d="M767.6,174.4L419.7,64.1L72,174.4c-13.1,4.1-21.9,16.3-21.8,30v439c0.7,3,17.1,75.3,88.2,145.2
+		c54.7,53.8,185.9,123,243.2,153c8.9,4.7,13.2,6.4,17,8.5l17,8.5c4.5,2.4,12.5,2.3,17,0l17-8.5c33.5-16.4,188.4-99.3,251.6-161.5
+		c71.2-70,87.6-142.3,88.3-145.2v-439C789.6,190.7,780.7,178.5,767.6,174.4L767.6,174.4z M424.1,890.6l-0.2-0.1h0.6
+		C424.2,890.6,424.1,890.6,424.1,890.6L424.1,890.6z"/>
+	<path class="st6" d="M490.9,529.5h-34v-32.7c48-14.6,83-59.2,83-112c0-64.6-52.4-117-117-117s-117,52.4-117,117
+		c0,52.8,34.9,97.4,83,112v217.4c0,18.7,15.3,34,34,34l0,0c18.7,0,34-15.3,34-34v-27.3h25.5c18.7,0,34-15.3,34-34l0,0
+		c0-18.7-15.3-34-34-34h-25.6v-21.4h34c18.7,0,34-15.3,34-34l0,0C524.9,544.8,509.6,529.5,490.9,529.5z M372.9,384.8
+		c0-27.5,22.3-49.9,49.9-49.9c27.5,0,49.9,22.3,49.9,49.9c0,27.5-22.3,49.9-49.9,49.9C395.3,434.7,372.9,412.3,372.9,384.8z"/>
+</g>
+<g id="DINGSH_x5F_复制_3" class="st0">
+	<g class="st1">
+		<path class="st2" d="M713.8,107.7h-73.2v72.1h73.2c80.7,0.6,145.9,66.2,145.9,147s-65.2,146.4-145.9,147l0,0h-74.4v72.1h74.4l0,0
+			c120.5-0.6,218-98.5,218-219.1S834.3,108.3,713.8,107.7z"/>
+		<path class="st2" d="M126.8,912.1h74.4V840h-74.4c-80.7-0.6-145.9-66.2-145.9-147s65.2-146.4,145.9-147l0,0h74.4v-72.1h-74.4l0,0
+			c-120.5,0.6-218,98.5-218,219.1C-91.2,813.7,6.3,911.5,126.8,912.1z"/>
+		<circle class="st3" cx="162.8" cy="877.2" r="61.2"/>
+		<circle class="st3" cx="673.2" cy="512.2" r="61.2"/>
+		<g>
+			<path class="st4" d="M662.7,620.4H175.4c-6.6,0-12-5.4-12-12V412.6c0-6.6,5.4-12,12-12h487.3c6.6,0,12,5.4,12,12v195.7
+				C674.7,615,669.3,620.4,662.7,620.4z"/>
+		</g>
+		<g>
+			<path class="st4" d="M664,254.2H176.7c-6.6,0-12-5.4-12-12V46.5c0-6.6,5.4-12,12-12H664c6.6,0,12,5.4,12,12v195.7
+				C676,248.8,670.6,254.2,664,254.2z"/>
+		</g>
+		<g>
+			<path class="st4" d="M664,986.5H176.7c-6.6,0-12-5.4-12-12V778.8c0-6.6,5.4-12,12-12H664c6.6,0,12,5.4,12,12v195.7
+				C676,981.1,670.6,986.5,664,986.5z"/>
+		</g>
+	</g>
+</g>
+<g id="图层_5_x5F_复制">
+	<path class="st2" d="M816.8,125.6L420.7,0L24.8,125.6C9.9,130.3-0.1,144.1,0,159.8v499.8C0.8,663,19.5,745.3,100.4,825
+		c62.3,61.3,211.7,140.1,276.8,174.2c10.2,5.3,15,7.3,19.3,9.7l19.3,9.6c5.1,2.7,14.2,2.6,19.3,0l19.3-9.6
+		c38.1-18.6,214.5-113.1,286.5-183.9c81.1-79.7,99.8-162,100.5-165.4V159.8C841.8,144.1,831.7,130.3,816.8,125.6L816.8,125.6z
+		 M425.7,941l-0.3-0.1h0.7C425.8,941,425.7,941,425.7,941L425.7,941z"/>
+	<path class="st7" d="M501.7,531.8h-38.8v-37.2c54.7-16.6,94.5-67.4,94.5-127.5c0-73.6-59.6-133.2-133.2-133.2S291,293.5,291,367.1
+		c0,60.1,39.8,110.9,94.5,127.5v247.5c0,21.3,17.4,38.8,38.8,38.8l0,0c21.3,0,38.8-17.4,38.8-38.8V711h29.1
+		c21.3,0,38.8-17.4,38.8-38.8l0,0c0-21.3-17.4-38.8-38.8-38.8h-29.1v-24.2h38.8c21.3,0,38.8-17.4,38.8-38.8l0,0
+		C540.5,549.3,523,531.8,501.7,531.8z M367.5,367.1c0-31.4,25.4-56.8,56.8-56.8s56.8,25.4,56.8,56.8s-25.4,56.8-56.8,56.8
+		S367.5,398.5,367.5,367.1z"/>
+</g>
+<g id="图层_6" class="st0">
+</g>
+</svg>
