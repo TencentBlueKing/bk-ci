@@ -1,0 +1,17 @@
+.idea/
+.gradle/
+build/
+!com/tencent/devops/common/pipeline/pojo/element/build/
+!/element/build/
+target/
+out/
+release/
+reports/
+*.iml
+.DS_Store
+*.log
+gradle/
+gradlew
+gradlew.bat
+version.txt
+support-files/etc

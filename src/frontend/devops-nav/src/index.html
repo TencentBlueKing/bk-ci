@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="preload" href="http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js" as="script" />
+    <link rel='preload' as='script' href="/console/static/vue.min.js" />
+    <link rel='preload' as='script' href="/console/static/vuex.min.js" />
+    <link rel='preload' as='script' href="/console/static/vue-router.min.js" />
+    
+    <!-- devops:css -->
+    <% for (key in htmlWebpackPlugin.files.css) { %>
+        <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
+    <% } %>
+    <!-- end devops:css -->
+    <title>蓝盾DevOps平台</title>
+</head>
+<body>
+    <script>
+            var ajax = new XMLHttpRequest();
+            ajax.open("GET", "/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
+            ajax.send();
+            ajax.onload = function(e) {
+                var div = document.createElement('div');
+                div.setAttribute("style", "position: absolute; width: 0; height: 0")
+                div.innerHTML = ajax.responseText
+                document.body.insertBefore(div, document.body.childNodes[0]);
+            }
+        </script>
+    <div id="devops-root">
+        <div class="bk-loading" style="position: absolute;">
+            <div class="bk-loading-wrapper">
+                <div class="bk-loading1">
+                <div class="point point1"></div>
+                <div class="point point2"></div>
+                <div class="point point3"></div>
+                <div class="point point4"></div>
+            </div>
+            <div class="bk-loading-title"></div>
+        </div>
+    </div>
+    </div>
+    <script src="/console/static/vue.min.js"></script>
+    <script src="/console/static/vuex.min.js"></script>
+    <script src="/console/static/vue-router.min.js"></script>
+    <!-- devops:assets -->
+    <!-- end devops:assets -->
+    
+    <script>
+        var WEBSITE_URL = '__HTTP_SCHEMA__://__DEVOPS_FQDN__'
+        var GW_URL_PREFIX = '__HTTP_SCHEMA__://__DEVOPS_FQDN__/ms'     // api接口前缀
+        var DOCS_URL_PREFIX = 'https://bk.tencent.com/docs/ci'  // 文档中心域名
+    </script>
+    
+    <script>
+        var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
+        // 动态加载js
+        function importScript (src, oHead, fOnload) {
+            var oScript = document.createElement('script')
+            oScript.type = 'text\/javascript'
+            
+            if (fOnload) { 
+                oScript.onload = fOnload
+            }
+             
+            oScript.setAttribute('src', src)
+            oScript.setAttribute('defer', '')
+            oHead.appendChild(oScript)
+        }
+
+        // 动态加载css
+        function importStyle (href, oHead) {
+            var oStyle = document.createElement('link')
+            oStyle.setAttribute('rel', 'stylesheet')
+            oStyle.setAttribute('type', 'text/css')
+            oStyle.setAttribute('href', href)
+            oHead.appendChild(oStyle)
+        }
+
+        function isValidPid (projectList, pid) {
+            for(var i = 0; i < projectList.length; i++) {
+                var proj = projectList[i]
+                if (proj.project_code === pid) {
+                    return true
+                }
+            }
+            return false
+        }
+        
+        for ( var i = 0; i < window.jsAssets.length; i++ ) {
+            var js = window.jsAssets[i]
+            if (js.indexOf('vendors') > -1) {
+                importScript(js, document.body)
+            }
+        }
+
+        function setCookie(cname, cvalue, domain){
+            document.cookie = cname + "=" + cvalue + "; " + 'domain=' + domain + '; path=/';
+        }
+
+        function matchPathProjectId () {
+            try {
+                var reg = /^\/console\/\w+\/(\w+)?/
+                if (location.pathname.match(/^\/console\/perm\/(\w+)?/)){
+                    var query = location.search.slice(1)
+                    var queryArr = query.split('&')
+                    for(var i = 0; i < queryArr.length; i++) {
+                        var item = queryArr[i].split('=')
+                        var key = decodeURIComponent(item[0])
+                        if (key === 'project_code') {
+                            return decodeURIComponent(item[1])
+                        } 
+                    }
+                    return ''    
+                } else {
+                    var res = location.pathname.match(reg)
+                    return res ? res[1] : ''
+                }
+                
+            } catch (e) {
+                console.warn(e)
+                return ''
+            }
+        }
+
+        var pathPid = matchPathProjectId() || localStorage.getItem('projectId')
+        
+    </script>
+    <script>
+        
+        function asyncGet (url, pid) {
+            return new Promise(function (resolve, reject) {
+                var xhr = new XMLHttpRequest()
+                xhr.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        resolve(JSON.parse(xhr.responseText).data)
+                    }  else if (this.status == 401) {
+                        window.location.href = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
+                    } else if (this.readyState == 4 && this.status > 400) {
+                        reject({
+                            status: this.status,
+                            message: this.status === 503 ? '服务维护中，请稍候...' : '服务器内部异常'
+                        })
+                    }
+                }
+                
+                xhr.withCredentials = true
+                xhr.open('GET', url)
+                pid && xhr.setRequestHeader(X_DEVOPS_PROJECT_ID, pid)
+                xhr.send()
+            })
+        }
+
+        function fetchAllServices () {
+            return asyncGet(GW_URL_PREFIX + '/project/api/user/services/', pathPid)
+        }
+
+        function fetchAllProjects () {
+            return asyncGet(GW_URL_PREFIX + '/project/api/user/projects/')
+        }
+
+        function requestUser () {
+            return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
+        }
+
+
+        function getServiceObject (serviceList) {
+            var serviceMap = {}
+            var iframeRoutes = []
+            for (var i = 0; i < serviceList.length; i++) {
+                var children = serviceList[i].children
+                for (var j = 0; j < children.length; j++) {
+                    var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, '$1')
+                    var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
+                    if (children[j].inject_type === 'amd') {
+                        children[j].js_url = WEBSITE_URL + children[j].js_url
+                        children[j].css_url = WEBSITE_URL + children[j].css_url
+                    } else {
+                        children[j].iframe_url = WEBSITE_URL + children[j].iframe_url
+                    }
+                    serviceMap[mod] = children[j]
+                    if (children[j].inject_type === 'iframe') {
+                        iframeRoutes.push({
+                            path: mod + (children[j].show_project_list ? '/:projectId?' : ''),
+                            name: mod,
+                            meta: {
+                                showProjectList: children[j].show_project_list,
+                                showNav: children[j].show_nav,
+                                projectIdType: children[j].project_id_type,
+                                header: serviceTitle,
+                                logo: mod
+                            }
+                        })
+                    }
+                }
+            }
+            return {
+                serviceMap: serviceMap,
+                iframeRoutes: iframeRoutes
+            }
+        }
+
+        Promise.all([
+            fetchAllProjects(),
+            fetchAllServices(),
+            requestUser()
+        ]).then(function (response) {
+            var projectList = response[0]
+            var allServices = response[1]
+            var userInfo = response[2]
+            var path = location.pathname.replace('/console', '')
+            var headTag = document.head || document.getElementsByTagName('head')[0]
+            var pathReg = /^\/(\w+)\/?/
+            var serviceObject = getServiceObject(allServices)
+            var serviceMap = serviceObject.serviceMap
+            var serviceMatchResult = path.match(pathReg)
+            var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
+            var page = serviceMap[subServiceId] || null
+
+            var defaultPid = projectList[0] && projectList[0].project_code
+            var isPidOk = isValidPid(projectList, pathPid)
+
+
+            window.allServices = allServices
+            window.serviceObject = serviceObject
+            window.currentPage = page
+            window.projectList = projectList
+            
+            userInfo.isAuthenticated = true
+            window.userInfo = userInfo
+            
+            if (page && page.inject_type === 'amd') {
+                var inject_type = page.inject_type
+                var js_url = page.js_url
+                var css_url = page.css_url
+                var title = page.title
+
+                importScript(js_url, document.body, loadJsAssets)
+                importStyle(css_url, headTag)
+            }else {
+                loadJsAssets()
+            }
+        }).catch(function (e) {
+            console.log(e)
+            printError(e.status, e.message)
+        })        
+        
+
+        function printError (status, msg) {
+            document.writeln(
+                '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' 
+                + '<img src="/console/static/' + status + '.png" />'
+                + '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' + msg + '</p>'
+                + '</div>'
+            )
+        }
+
+        function loadJsAssets () {
+            for ( var i = 0; i < window.jsAssets.length; i++ ) {
+                var js = window.jsAssets[i]
+                if (js.indexOf('vendors') === -1) {
+                    importScript(js, document.body)
+                }
+            }
+        }
+    </script>
+</body>
+</html>

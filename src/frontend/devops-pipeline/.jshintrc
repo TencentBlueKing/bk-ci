@@ -1,0 +1,29 @@
+{
+    "esnext": true,
+    "camelcase": true,
+    "devel": true,
+    "expr": true,
+    "curly": true,
+    "eqeqeq": true,
+    "forin": true,
+    "immed": true,
+    "latedef": "nofunc",
+    "newcap": true,
+    "noarg": true,
+    "nonew": true,
+    "quotmark": "single",
+    "sub": true,
+    "undef": true,
+    "unused": true,
+    "strict": false,
+    "globalstrict": true,
+    "trailing": true,
+    "browser": true,
+    "maxparams": 5,
+    "maxdepth": 5,
+    "maxstatements": 25,
+    "maxcomplexity": 10,
+    "predef": [
+        "System"
+    ]
+}

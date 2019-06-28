@@ -1,0 +1,25 @@
+{
+  "types": ["story", "bugfix", "task"],
+  "scope": {
+    "required": true,
+    "allowed": [
+        "pipeline",
+        "experience",
+        "quality",
+        "ticket",
+        "environment",
+        "turbo",
+        "artifactory",
+        "codelib",
+        "vs"
+    ],
+    "validate": true,
+    "multiple": false
+  },
+  "warnOnFail": false,
+  "maxSubjectLength": 100,
+  "subjectPattern": ".+",
+  "subjectPatternErrorMsg": "标题不能超过100个字符",
+  "helpMessage": "请规范化你的commit信息",
+  "autoFix": false
+}

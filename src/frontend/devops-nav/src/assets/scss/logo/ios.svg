@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1024 1024" style="enable-background:new 0 0 1024 1024;" xml:space="preserve">
+<style type="text/css">
+	.st0{display:none;}
+	.st1{fill:#737987;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#737987;}
+</style>
+<g id="辅助线">
+</g>
+<g id="网格" class="st0">
+</g>
+<g id="定时触发">
+</g>
+<g id="手动触发">
+</g>
+<g id="GIT">
+</g>
+<g id="RTX">
+</g>
+<g id="EMAIL">
+</g>
+<g id="SMS">
+</g>
+<g id="微信">
+</g>
+<g id="部署">
+</g>
+<g id="脚本">
+</g>
+<g id="企业证书">
+</g>
+<g id="个人证书">
+</g>
+<g id="安全加固">
+</g>
+<g id="SVN">
+</g>
+<g id="代码检查">
+</g>
+<g id="归档">
+</g>
+<g id="IPA">
+</g>
+<g id="APK_1_">
+</g>
+<g id="docker">
+</g>
+<g id="unity">
+</g>
+<g id="XCODE">
+</g>
+<g id="andriod">
+</g>
+<g id="ios">
+</g>
+<g id="gitlab">
+</g>
+<g id="NOTHING">
+</g>
+<g id="C_x2B__x2B_">
+</g>
+<g id="JAVA">
+</g>
+<g id="IOS">
+	<g>
+		<path class="st1" d="M667.2,359.2L667.2,359.2c2.5,0,5,0.1,7.4,0.4l1.8,0.2l1.8,0.1c7.5,0.3,27.4,1.9,49,10.5
+			c5.3,2.1,10.5,4.5,15.3,7.2c-31.4,35.4-61.4,88.4-60.8,161v0l0,0.3c0.9,90.7,46.5,155.9,98.7,195c-8,16.7-18.5,35.9-32.1,55.3
+			c-16.9,24.1-32.1,45.2-47.6,59.4c-15.2,13.9-24.9,15.9-32.4,16.1c-0.5,0-1,0-1.4,0c-13.2,0-21.5-3.3-38.9-10.6
+			c-22.4-9.5-53.1-22.4-99.2-22.4c-47.5,0-79.2,13.2-102.4,22.9c-17.4,7.3-26.4,10.8-39.6,11.3c-0.2,0-0.4,0-0.6,0
+			c-9.6,0-21.8-9.4-30.2-17.3c-17.2-16-34.1-39.2-50-61.6c-33.9-47.9-60.9-113.6-72.1-175.7c-6.2-34.1-7.6-66.4-4.3-95.9
+			c3.4-30.4,11.9-57.3,25.3-79.9c13-22.1,31.3-40.6,53-53.4c21.5-12.8,45.7-19.7,70.1-20.1l0.1,0l0.1,0c0.3,0,0.7,0,1,0
+			c18.7,0,41.2,8.7,63,17.2c24.2,9.4,49.1,19.1,75.4,19.1c24.8,0,48.5-9.1,73.6-18.8C615.6,369.8,643.2,359.2,667.2,359.2
+			 M667.2,296.4c-61.3,0-118.2,38.8-149.6,38.8c-33.1,0-84.2-36.3-138.5-36.3c-0.7,0-1.4,0-2.1,0c-72.3,1.1-139,41.1-176.2,104.4
+			c-75.1,127.4-19.2,316.2,54,419.6c35.2,49.6,77,105.3,131.5,105.3c1,0,2,0,3-0.1c54-2.1,74.4-34.1,139.6-34.1
+			c64.3,0,83,33.1,138.1,33.1c0.8,0,1.7,0,2.6,0c58-1,94.8-51.5,130.3-102.2c41.1-58.7,58-115.5,59-118.4
+			c-1.3-0.6-113.1-42.5-114.3-168.4v0c-1.1-105.5,88-156.1,92-158.6c-50.1-71.5-128.1-81.3-155.8-82.5
+			C676.2,296.6,671.7,296.4,667.2,296.4L667.2,296.4z"/>
+		<g>
+			<path class="st1" d="M510.9,287.6c-6.4-47.9,17.7-97.6,45.2-128.9c30.8-35.2,82.6-61.3,125.5-63c5.5,48.7-14.6,97.7-44.3,132.9
+				C607.5,263.8,558.7,291.2,510.9,287.6L510.9,287.6z"/>
+		</g>
+	</g>
+</g>
+<g id="ANDRIOD">
+</g>
+<g id="图层_31">
+</g>
+</svg>

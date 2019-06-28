@@ -1,0 +1,22 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.tencent.devops.environment.configuration.AgentProperties",
+      "name": "agent",
+      "type": "com.tencent.devops.environment.configuration.AgentProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.tencent.devops.environment.configuration.AgentProperties",
+      "name": "agent.gateWay",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.environment.configuration.AgentProperties",
+      "name": "agent.gateWayIps",
+      "type": "java.lang.String"
+    }
+  ]
+}

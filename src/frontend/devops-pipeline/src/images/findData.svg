@@ -1,0 +1,66 @@
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<svg width="53" height="49" viewBox="0 0 53 49" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>Group 60</title>
+<desc>Created using Figma</desc>
+<g id="Canvas" transform="translate(9319 1248)">
+<g id="Group 60">
+<g id="Group 59">
+<g id="Group 59">
+<g id="Rectangle 87">
+<use xlink:href="#path0_fill" transform="translate(-9319 -1240)" fill="#dde4eb"/>
+</g>
+<g id="Rectangle 87.1">
+<use xlink:href="#path1_fill" transform="translate(-9303 -1232)" fill="#dde4eb"/>
+</g>
+<g id="Rectangle 87.2">
+<use xlink:href="#path2_fill" transform="translate(-9288 -1248)" fill="#dde4eb"/>
+</g>
+<g id="Rectangle 87.3">
+<use xlink:href="#path0_fill" transform="translate(-9272 -1240)" fill="#dde4eb"/>
+</g>
+</g>
+<g id="Group 58">
+<g id="Ellipse 2">
+<use xlink:href="#path3_fill" transform="matrix(0.866025 -0.5 0.5 0.866025 -9296.68 -1223.66)" fill="#FFFFFF" fill-opacity="0.7"/>
+</g>
+<g id="Ellipse 2 (Stroke)">
+<use xlink:href="#path4_fill" transform="matrix(0.866025 -0.5 0.5 0.866025 -9301.16 -1224.86)" fill="#3c96ff"/>
+</g>
+<g id="Rectangle 87">
+<use xlink:href="#path5_fill" transform="matrix(0.866025 -0.5 0.5 0.866025 -9281.48 -1209.34)" fill="#3c96ff"/>
+</g>
+<g id="Rectangle 87.1">
+<use xlink:href="#path6_fill" transform="matrix(0.866025 -0.5 0.5 0.866025 -9278.98 -1205.01)" fill="#3c96ff"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<path id="path0_fill" d="M 0 3C 0 1.34315 1.34315 0 3 0L 3 0C 4.65685 0 6 1.34315 6 3L 6 32C 6 33.6569 4.65685 35 3 35L 3 35C 1.34315 35 0 33.6569 0 32L 0 3Z"/>
+<path id="path1_fill" d="M 0 3C 0 1.34315 1.34315 0 3 0L 3 0C 4.65685 0 6 1.34315 6 3L 6 24C 6 25.6569 4.65685 27 3 27L 3 27C 1.34315 27 0 25.6569 0 24L 0 3Z"/>
+<path id="path2_fill" d="M 0 3C 0 1.34314 1.34315 0 3 0L 3 0C 4.65685 0 6 1.34315 6 3L 6 40C 6 41.6568 4.65685 43 3 43L 3 43C 1.34315 43 0 41.6568 0 40L 0 3Z"/>
+<path id="path3_fill" d="M 15.9997 7.99987C 15.9997 12.4181 12.4181 15.9997 7.99987 15.9997C 3.58167 15.9997 0 12.4181 0 7.99987C 0 3.58167 3.58167 0 7.99987 0C 12.4181 0 15.9997 3.58167 15.9997 7.99987Z"/>
+<path id="path4_fill" fill-rule="evenodd" d="M 22.5658 11.2829C 22.5658 17.5143 17.5143 22.5658 11.2829 22.5658C 5.05152 22.5658 0 17.5143 0 11.2829C 0 5.05152 5.05152 0 11.2829 0C 17.5143 0 22.5658 5.05152 22.5658 11.2829ZM 11.2829 19.2828C 15.7011 19.2828 19.2828 15.7011 19.2828 11.2829C 19.2828 6.86468 15.7011 3.28302 11.2829 3.28302C 6.86468 3.28302 3.28302 6.86468 3.28302 11.2829C 3.28302 15.7011 6.86468 19.2828 11.2829 19.2828Z"/>
+<path id="path5_fill" d="M 0 1.99997C 0 0.895416 0.895416 0 1.99997 0C 3.10452 0 3.99994 0.895416 3.99994 1.99997C 3.99994 3.10452 3.10452 3.99994 1.99997 3.99994C 0.895416 3.99994 0 3.10452 0 1.99997Z"/>
+<path id="path6_fill" d="M 0 1.99997C 0 0.895416 0.895416 0 1.99997 0C 3.10452 0 3.99994 0.895416 3.99994 1.99997L 3.99994 5.00003C 3.99994 6.10458 3.10452 7 1.99997 7C 0.895416 7 0 6.10458 0 5.00003L 0 1.99997Z"/>
+</defs>
+</svg>

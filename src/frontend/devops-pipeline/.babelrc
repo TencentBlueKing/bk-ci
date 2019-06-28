@@ -1,0 +1,24 @@
+{
+    "presets": [
+        [
+            "env",
+            {
+                "modules": "commonjs",
+                "targets": {
+                    "browsers": ["> 1%", "last 2 versions", "not ie <= 8"]
+                },
+                "debug": false,
+                "useBuiltIns": true
+            }
+        ],
+        "stage-2"
+    ],
+    // "plugins": ["transform-runtime", "transform-object-assign", "lodash", "syntax-dynamic-import", "transform-vue-jsx", "@tencent/babel-plugin-import-bk-magic-vue"],
+    "plugins": ["transform-runtime", "transform-object-assign", "lodash", "syntax-dynamic-import", "transform-vue-jsx"],
+    "env": {
+        "test": {
+            "presets": ["env", "stage-2"],
+            "plugins": ["istanbul"]
+        }
+    }
+}

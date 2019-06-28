@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: repository
+    desc: DevOps Repository Service
+    version: 4.0.0
+    packageName: com.tencent.devops.repository
+
+git:
+  devopsGroupName: bkdevops-plugins
+
+server:
+  port: 21916

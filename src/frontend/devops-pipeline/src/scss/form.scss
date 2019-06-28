@@ -1,0 +1,227 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+@import './conf';
+
+.bk-form .bk-label {
+	font-weight: bold;
+	color: $fontWeightColor;
+	padding-right: 20px;
+}
+
+.bk-form-checkbox {
+	color: $fontColor;
+	margin-right: 0;
+	.bk-checkbox-text {
+		font-size: 12px !important;
+	}
+}
+.bk-form-radio {
+	font-size: 12px !important;
+}
+
+
+.bk-form-input[readonly],
+.bk-form-password[readonly],
+.bk-form-select[readonly],
+.bk-form-textarea[readonly] {
+	border-color: $lineColor !important;
+	background-color: #fafafa !important;
+}
+.bk-form-textarea {
+	line-height: 20px;
+}
+
+
+.bk-form-tip,
+.bk-form-help {
+	font-size: 12px;
+    margin: 4px 0;
+	color: $fontLigtherColor;
+	&.is-danger {
+		color: $dangerColor;
+		.bk-tip-text {
+			color: $dangerColor;
+		}
+	}
+    &.is-warning {
+		color: $warningColor;
+		.bk-tip-text {
+			color: $warningColor;
+		}
+	}
+}
+
+.bk-form-item,
+.bk-form-inline-item {
+	&.is-required {
+        .bk-label {
+            position: relative;
+        }
+        .bk-label:after {
+            content: '*';
+            color: $dangerColor;
+            position: absolute;
+            display: inline-block;
+            margin: 2px -7px 0 2px;
+        }
+	}
+
+	&.is-danger,
+	&.is-error {
+		input[type="text"],
+		input[type="number"],
+		input[type="password"],
+		textarea,
+		select{
+		border-color: $dangerColor;
+		}
+	}
+
+	&.is-warning{
+		input[type="text"],
+		input[type="number"],
+		input[type="password"],
+		textarea,
+		select{
+		border-color: $warningColor;
+		}
+	}
+
+	&.is-success{
+		input[type="text"],
+		input[type="number"],
+		input[type="password"],
+		textarea,
+		select{
+		border-color: $successColor;
+		}
+	}
+
+	input.bk-success,
+	select.bk-success,
+	textarea.bk-success,
+	input.is-success,
+	select.is-success,
+	textarea.is-success {
+		+ .bk-form-tip {
+		.bk-tip-text {
+			color: $successColor;
+		}
+		}
+	}
+
+	input.bk-error,
+	select.bk-error,
+	textarea.bk-error,
+	input.is-danger,
+	select.is-danger,
+	textarea.is-danger {
+		border-color: $dangerColor;
+		background-color: #fff4f4;
+		color: $dangerColor;
+		&::placeholder{
+			color: $dangerColor;
+		}
+
+		+ .bk-form-tip {
+			.bk-tip-text {
+				color: $dangerColor;
+			}
+		}
+	}
+}
+
+.bk-form-row {
+    clear: both;
+    display: flex;
+	align-items: flex-start;
+    margin-top: 8px;
+    .bk-form-inline-item {
+        flex: 1;
+        padding: 0 12px 0 0;
+        justify-content: space-between;
+        &:last-child {
+            padding-right: 0;
+        }
+    }
+}
+.bk-form-inline-item {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.bk-form-input-group {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 0;
+	.bk-number {
+		min-width: 55px;
+		border-radius: 2px 0 0 2px;
+	}
+	.bk-form-input,
+	.bk-form-password,
+	.bk-form-select,
+	.bk-form-textarea {
+		border-radius: 2px 0 0 2px;
+	}
+	&.is-addon-left {
+		.input-group-addon {
+			border-left: 1px solid $lineColor;
+			border-right: none;
+			border-radius: 2px 0 0 2px;
+		}
+		.bk-form-input,
+		.bk-form-password,
+		.bk-form-select,
+		.bk-number,
+		.bk-form-textarea {
+			border-radius: 0 2px 2px 0;
+		}
+	}
+	.input-group-addon {
+		min-width: 36px;
+		height: 36px;
+		text-align: center;
+		line-height: 34px;
+		display: inline-block;
+		vertical-align: middle;
+		background: #fafbfd;
+		border: 1px solid $lineColor;
+		color: $fontWeightColor;
+		font-size: 14px;
+		border-left: none;
+		border-radius: 0 2px 2px 0;
+		padding: 0 7px;
+		> .bk-icon {
+			font-size: 18px;
+			line-height: 34px;
+		}
+		.bk-selector-input {
+			border: none;
+			background-color: transparent;
+		}
+	}
+	button:hover {
+		background-color: $primaryColor;
+		border-color: $primaryColor;
+		color: #fff;
+	}
+}
