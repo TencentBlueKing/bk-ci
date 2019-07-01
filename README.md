@@ -47,8 +47,6 @@
 1. 阅读 [wiki](https://github.com/Tencent/bk-ci/wiki) 或者寻求帮助
 2. 常见 [FAQ](https://github.com/Tencent/bk-ci/wiki/FAQ)
 3. 了解蓝鲸整体的社区生态请加入蓝鲸社区版交流QQ群，：495299374
-4. 联系我们，bk-ci技术交流QQ群(744672165), 扫码入群
-> ![qq群](docs/resource/img/qq.png)
 
 # They are using BK-CI
 > ![Using](docs/resource/img/using.png)
