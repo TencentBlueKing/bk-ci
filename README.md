@@ -5,7 +5,7 @@
 > **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
 请通过[releases](https://github.com/tencent/bk-ci/releases) 而非 `master` 去获取稳定的二进制文件。
 
-蓝盾（bk-ci）是一个开源的持续集成和持续交付系统，使用蓝盾可以轻松将你的研发流程呈现到你面前。
+蓝盾（bk-ci）是一个开源的持续集成和持续交付系统，目前服务于腾讯10000+开发人员，现已成为公司指定的CI平台。另外，她也获得行业至今为止唯一一个4级认证的DevOps标准。
 
 ## What to Use BK-CI for and When to Use It
 使用蓝盾屏蔽掉所有研发流程中的繁琐环节，让你聚焦于编码。蓝盾通常被用于：
@@ -29,7 +29,6 @@
 - [代码目录](docs/overview/code_framework.md)
 - [设计理念](docs/overview/design.md)
 
-
 ## Features
 | 特性 | 介绍  |
 | ------ | ------  |
@@ -48,8 +47,9 @@
 1. 阅读 [wiki](https://github.com/Tencent/bk-ci/wiki) 或者寻求帮助
 2. 常见 [FAQ](https://github.com/Tencent/bk-ci/wiki/FAQ)
 3. 了解蓝鲸整体的社区生态请加入蓝鲸社区版交流QQ群，：495299374
-4. 联系我们，bk-ci技术交流QQ群(744672165), 扫码入群
- > ![qq群](docs/resource/img/qq.png)
+
+# They are using BK-CI
+> ![Using](docs/resource/img/using.png)
 
 ## BK Community
 - [BCS](https://github.com/Tencent/bk-bcs)：蓝鲸容器管理平台是以容器技术为基础，为微服务业务提供编排管理的基础服务平台。
