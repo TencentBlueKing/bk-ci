@@ -47,7 +47,11 @@ cd /usr/local/openresty/nginx && ./sbin/nginx -v
 
 ### 部署并启动bk-ci网关
 
-网关主要是配置文件和lua脚本，所以只需要将网关gateway的代覆盖到nginx的conf目录(`/usr/local/openresty/nginx/conf/`)，并启动nginx即可完成网关gateway的部署和启动。
+网关主要是配置文件和lua脚本，所以只需要将网关gateway的外链到nginx的conf目录
+```shell
+1. 拷贝nginx代码到部署目录 - cp -r {{code}}/gateway __INSTALL_PATH__/__MODULE__/
+2. 外链部署目录到nginx的config - rm -rf /usr/local/openresty/nginx/conf && ln -s __INSTALL_PATH__/__MODULE__//gateway /usr/local/openresty/nginx/conf
+```
 
 #### 命令
 
