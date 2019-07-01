@@ -33,8 +33,8 @@ import com.tencent.devops.common.api.exception.ScmException
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.common.pipeline.enums.SvnDepth
-import com.tencent.devops.common.pipeline.pojo.element.build.CodeGitElement
-import com.tencent.devops.common.pipeline.pojo.element.build.CodeSvnElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.plugin.worker.task.scm.git.CodeGitPullCodeSetting
 import com.tencent.devops.plugin.worker.task.scm.git.GithubPullCodeSetting

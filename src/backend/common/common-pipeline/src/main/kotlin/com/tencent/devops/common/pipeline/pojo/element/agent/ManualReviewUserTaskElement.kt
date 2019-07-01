@@ -24,11 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task
+package com.tencent.devops.common.pipeline.pojo.element.agent
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
-import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@TaskClassType(classTypes = [CodeGitElement.classType])
-class CodeGitPullTask : CodePullTask(ScmType.CODE_GIT)
+@ApiModel("人工审核", description = ManualReviewUserTaskElement.classType)
+data class ManualReviewUserTaskElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "人工审核",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("审核人", required = true)
+    val reviewUsers: MutableList<String> = mutableListOf()
+) : Element(name, id, status) {
+    companion object {
+        const val classType = "manualReviewUserTask"
+    }
+
+    override fun getTaskAtom() = "manualReviewTaskAtom"
+
+    override fun getClassType() = classType
+}
