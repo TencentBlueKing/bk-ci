@@ -44,7 +44,6 @@ include ":common:common-auth"
 include ":common:common-auth:common-auth-api"
 include ":common:common-auth:common-auth-sample"
 include ":common:common-auth:common-auth-blueking"
-include ":common:common-auth:common-auth-blueshield"
 
 include ":project"
 include ":project:api-project"
