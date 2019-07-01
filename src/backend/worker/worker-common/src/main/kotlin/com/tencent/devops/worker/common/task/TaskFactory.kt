@@ -26,8 +26,8 @@
 
 package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.pipeline.pojo.element.build.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.build.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.worker.common.task.market.MarketAtomTask

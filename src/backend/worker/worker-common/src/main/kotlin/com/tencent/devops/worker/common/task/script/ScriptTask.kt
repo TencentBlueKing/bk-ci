@@ -28,8 +28,8 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.pipeline.pojo.element.build.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.build.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.logger.LoggerService
