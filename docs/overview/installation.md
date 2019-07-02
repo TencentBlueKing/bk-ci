@@ -60,18 +60,11 @@
   - 修改MODULE变量建议不要修改，默认为bkci
 
 - 执行scripts/render_tpl 脚本将自动将所有support-files/templates下的所有文件变量替换掉并移到正常安装路径下。
-
-格式如下：
-   ./render_tpl -m bkci  相对文件目录或者具体绝对文件路径
    
-示例：
-   
-  ```shell 
+  ```bash 
   cd bk-ci/scripts
   chmod +x render_tpl 
   ./render_tpl -m bkci ../support-files/templates/*
-  ./render_tpl -m bkci /data/bkee/bkci/frontend/pipeline/frontend#pipeline#index.html
-  ./render_tpl -m bkci /data/bkee/bkci/frontend/console/frontend#console#index.html
   ```
 
   
@@ -88,6 +81,12 @@
 ### 3.2 前端编译部署
 
 - [前端部署](../install/frontend.md)
+
+前端构建之后生成的模板配置文件变量替换
+```bash
+  ./render_tpl -m bkci /data/bkee/bkci/frontend/pipeline/frontend#pipeline#index.html
+  ./render_tpl -m bkci /data/bkee/bkci/frontend/console/frontend#console#index.html
+```
 
 ### 3.3 后端微服务部署
 
