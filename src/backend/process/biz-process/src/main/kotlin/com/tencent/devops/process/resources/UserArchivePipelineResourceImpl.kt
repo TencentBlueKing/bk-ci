@@ -60,7 +60,11 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
         return Result(archivePipelineService.getDownloadAllPipelines(userId, projectId))
     }
 
-    override fun getAllBuildNo(userId: String, pipelineId: String, projectId: String): Result<List<Map<String, String>>> {
+    override fun getAllBuildNo(
+        userId: String,
+        pipelineId: String,
+        projectId: String
+    ): Result<List<Map<String, String>>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }

@@ -26,15 +26,14 @@
 
 package com.tencent.devops.store.dao.container
 
-import com.tencent.devops.store.pojo.container.ContainerRequest
 import com.tencent.devops.model.store.tables.TContainer
 import com.tencent.devops.model.store.tables.records.TContainerRecord
+import com.tencent.devops.store.pojo.container.ContainerRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
-import java.time.LocalDateTime
 
 @Repository
 class ContainerDao {
@@ -47,42 +46,43 @@ class ContainerDao {
 
     fun savePipelineContainer(dslContext: DSLContext, id: String, containerRequest: ContainerRequest): Int {
         with(TContainer.T_CONTAINER) {
-            return dslContext.insertInto(this,
-                    ID,
-                    NAME,
-                    TYPE,
-                    OS,
-                    REQUIRED,
-                    MAX_QUEUE_MINUTES,
-                    MAX_RUNNING_MINUTES,
-                    PROPS
-            ) .values(
-                    id,
-                    containerRequest.name,
-                    containerRequest.type,
-                    containerRequest.os,
-                    containerRequest.required,
-                    containerRequest.maxQueueMinutes,
-                    containerRequest.maxRunningMinutes,
-                    containerRequest.props
-                    )
-                    .execute()
+            return dslContext.insertInto(
+                this,
+                ID,
+                NAME,
+                TYPE,
+                OS,
+                REQUIRED,
+                MAX_QUEUE_MINUTES,
+                MAX_RUNNING_MINUTES,
+                PROPS
+            ).values(
+                id,
+                containerRequest.name,
+                containerRequest.type,
+                containerRequest.os,
+                containerRequest.required,
+                containerRequest.maxQueueMinutes,
+                containerRequest.maxRunningMinutes,
+                containerRequest.props
+            )
+                .execute()
         }
     }
 
     fun updatePipelineContainer(dslContext: DSLContext, id: String, containerRequest: ContainerRequest): Int {
         with(TContainer.T_CONTAINER) {
             return dslContext.update(this)
-                    .set(NAME, containerRequest.name)
-                    .set(TYPE, containerRequest.type)
-                    .set(OS, containerRequest.os)
-                    .set(REQUIRED, containerRequest.required)
-                    .set(MAX_QUEUE_MINUTES, containerRequest.maxQueueMinutes)
-                    .set(MAX_RUNNING_MINUTES, containerRequest.maxRunningMinutes)
-                    .set(PROPS, containerRequest.props)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(id))
-                    .execute()
+                .set(NAME, containerRequest.name)
+                .set(TYPE, containerRequest.type)
+                .set(OS, containerRequest.os)
+                .set(REQUIRED, containerRequest.required)
+                .set(MAX_QUEUE_MINUTES, containerRequest.maxQueueMinutes)
+                .set(MAX_RUNNING_MINUTES, containerRequest.maxRunningMinutes)
+                .set(PROPS, containerRequest.props)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -90,10 +90,10 @@ class ContainerDao {
         with(TContainer.T_CONTAINER) {
             val conditions = queryContainerCondition(this, type, os)
             return dslContext
-                    .selectFrom(this)
-                    .where(conditions)
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 
@@ -107,16 +107,16 @@ class ContainerDao {
     fun getPipelineContainer(dslContext: DSLContext, id: String): TContainerRecord? {
         with(TContainer.T_CONTAINER) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun deletePipelineContainer(dslContext: DSLContext, id: String): Int {
         with(TContainer.T_CONTAINER) {
             return dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 }

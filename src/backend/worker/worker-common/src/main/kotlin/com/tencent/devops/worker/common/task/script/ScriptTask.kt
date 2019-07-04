@@ -48,7 +48,8 @@ open class ScriptTask : ITask() {
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val scriptType = taskParams["scriptType"] ?: throw ParamBlankException("Unknown script type of build script task")
+        val scriptType =
+            taskParams["scriptType"] ?: throw ParamBlankException("Unknown script type of build script task")
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]

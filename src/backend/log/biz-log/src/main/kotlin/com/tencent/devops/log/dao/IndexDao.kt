@@ -30,7 +30,6 @@ import com.tencent.devops.model.log.tables.TLogIndices
 import com.tencent.devops.model.log.tables.records.TLogIndicesRecord
 import org.jooq.DSLContext
 import org.jooq.exception.DataAccessException
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.util.Optional
@@ -66,9 +65,9 @@ class IndexDao {
         with(TLogIndices.T_LOG_INDICES) {
             return try {
                 dslContext.insertInto(this, ID, INDEX_NAME, CREATE_TYPE_MAPPING)
-                        .values(buildId, indexName, true)
-                        .onDuplicateKeyIgnore()
-                        .execute()
+                    .values(buildId, indexName, true)
+                    .onDuplicateKeyIgnore()
+                    .execute()
                 true
             } catch (e: DataAccessException) {
                 logger.error("Save db failure", e)
@@ -90,20 +89,20 @@ class IndexDao {
         with(TLogIndices.T_LOG_INDICES) {
             return dslContext.transactionResult { configuration ->
                 val record = DSL.using(configuration)
-                        .selectFrom(this)
-                        .where(ID.eq(buildId))
-                        .forUpdate()
-                        .fetchOne()
+                    .selectFrom(this)
+                    .where(ID.eq(buildId))
+                    .forUpdate()
+                    .fetchOne()
 
                 if (record != null) {
                     if (record.lastLineNum == null || record.lastLineNum <= 0) {
                         record.lastLineNum = 1L
                     }
                     val updated = DSL.using(configuration)
-                            .update(this)
-                            .set(LAST_LINE_NUM, record.lastLineNum!! + addLineNum)
-                            .where(ID.eq(buildId))
-                            .execute()
+                        .update(this)
+                        .set(LAST_LINE_NUM, record.lastLineNum!! + addLineNum)
+                        .where(ID.eq(buildId))
+                        .execute()
 
                     if (updated == 0) {
                         logger.error("Update table LogIndices lastLineNum failed, buildId: " + buildId)

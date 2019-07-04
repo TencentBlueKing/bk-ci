@@ -41,6 +41,7 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
         private const val TryInterval2 = 3000
         private const val TryInterval3 = 5000
     }
+
     protected val logger = LoggerFactory.getLogger(javaClass)!!
 
     override fun execute(event: T) {

@@ -31,7 +31,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineViewProjectRecor
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 用户当前使用视图
@@ -48,20 +47,22 @@ class PipelineViewProjectDao {
         with(TPipelineViewProject.T_PIPELINE_VIEW_PROJECT) {
             logger.info("Create the user view $viewId of project $projectId by user $userId")
             val now = LocalDateTime.now()
-            dslContext.insertInto(this,
-                    VIEW_ID,
-                    PROJECT_ID,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    CREATE_USER)
-                    .values(
-                            viewId,
-                            projectId,
-                            now,
-                            now,
-                            userId
-                    )
-                    .execute()
+            dslContext.insertInto(
+                this,
+                VIEW_ID,
+                PROJECT_ID,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATE_USER
+            )
+                .values(
+                    viewId,
+                    projectId,
+                    now,
+                    now,
+                    userId
+                )
+                .execute()
         }
     }
 
@@ -73,8 +74,8 @@ class PipelineViewProjectDao {
         logger.info("Delete the view $id by user $userId")
         with(TPipelineViewProject.T_PIPELINE_VIEW_PROJECT) {
             return dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -85,9 +86,9 @@ class PipelineViewProjectDao {
     ) {
         with(TPipelineViewProject.T_PIPELINE_VIEW_PROJECT) {
             dslContext.deleteFrom(this)
-                    .where(CREATE_USER.eq(userId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .execute()
+                .where(CREATE_USER.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 
@@ -99,8 +100,8 @@ class PipelineViewProjectDao {
         logger.info("Delete the view of viewId $viewId by user $userId")
         with(TPipelineViewProject.T_PIPELINE_VIEW_PROJECT) {
             return dslContext.deleteFrom(this)
-                    .where(VIEW_ID.eq(viewId))
-                    .execute()
+                .where(VIEW_ID.eq(viewId))
+                .execute()
         }
     }
 
@@ -113,11 +114,11 @@ class PipelineViewProjectDao {
         logger.info("Update the project view $projectId with viewId $viewId by user $userId")
         with(TPipelineViewProject.T_PIPELINE_VIEW_PROJECT) {
             return dslContext.update(this)
-                    .set(VIEW_ID, viewId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(CREATE_USER.eq(userId))
-                    .execute()
+                .set(VIEW_ID, viewId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(CREATE_USER.eq(userId))
+                .execute()
         }
     }
 
@@ -128,9 +129,9 @@ class PipelineViewProjectDao {
     ): TPipelineViewProjectRecord? {
         with(TPipelineViewProject.T_PIPELINE_VIEW_PROJECT) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(CREATE_USER.eq(userId))
-                    .fetchOne()
+                .where(PROJECT_ID.eq(projectId))
+                .and(CREATE_USER.eq(userId))
+                .fetchOne()
         }
     }
 

@@ -28,9 +28,9 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.BuildFileResource
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -64,7 +64,8 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
             customFilePath = customFilePath,
             inputStream = inputStream,
             disposition = disposition,
-            fileChannelType = FileChannelTypeEnum.BUILD)
+            fileChannelType = FileChannelTypeEnum.BUILD
+        )
     }
 
     override fun downloadArchiveFile(
@@ -82,7 +83,8 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
             buildId = buildId,
             fileType = fileType,
             customFilePath = customFilePath,
-            response = response)
+            response = response
+        )
     }
 
     override fun getFileDownloadUrls(
@@ -99,6 +101,7 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
             buildId = buildId,
             fileType = fileType,
             customFilePath = customFilePath,
-            fileChannelType = FileChannelTypeEnum.BUILD)
+            fileChannelType = FileChannelTypeEnum.BUILD
+        )
     }
 }

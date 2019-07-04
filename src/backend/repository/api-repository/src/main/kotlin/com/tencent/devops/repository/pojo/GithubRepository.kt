@@ -26,7 +26,6 @@
 
 package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.repository.pojo.Repository
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

@@ -68,9 +68,11 @@ class AtomCrontabService @Autowired constructor(
                 logger.info("expired atom is: {}", it.atomCode)
                 dslContext.transaction { t ->
                     val context = DSL.using(t)
-                    marketAtomDao.setAtomStatusByCode(context, it.atomCode,
+                    marketAtomDao.setAtomStatusByCode(
+                        context, it.atomCode,
                         AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                        AtomStatusEnum.UNDERCARRIAGED.status.toByte(), "system", null)
+                        AtomStatusEnum.UNDERCARRIAGED.status.toByte(), "system", null
+                    )
                     marketAtomOfflineDao.setStatus(context, it.id, 1, "system")
                 }
 

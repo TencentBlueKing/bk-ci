@@ -31,5 +31,5 @@ object SkipElementUtils {
     val prefix = "devops_container_condition_skip_atoms_"
 
     fun getSkipElementVariableName(elementId: String?) =
-            "$prefix$elementId"
+        "$prefix$elementId"
 }

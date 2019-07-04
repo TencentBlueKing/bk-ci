@@ -78,7 +78,14 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.isPipelineExist(projectId, null, pipelineName, ChannelCode.BS))
     }
 
-    override fun hasPermissionList(userId: String, projectId: String, permission: Permission, excludePipelineId: String?, page: Int?, pageSize: Int?): Result<Page<Pipeline>> {
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        permission: Permission,
+        excludePipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
         val bkAuthPermission = when (permission) {
             Permission.DEPLOY -> BkAuthPermission.DEPLOY
@@ -92,8 +99,18 @@ class UserPipelineResourceImpl @Autowired constructor(
         }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
-        val limit = if (pageSizeNotNull == -1) SQLLimit(0, -1) else PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = pipelineService.hasPermissionList(userId, projectId, bkAuthPermission, excludePipelineId, limit.offset, limit.limit)
+        val limit = if (pageSizeNotNull == -1) SQLLimit(0, -1) else PageUtil.convertPageSizeToSQLLimit(
+            pageNotNull,
+            pageSizeNotNull
+        )
+        val result = pipelineService.hasPermissionList(
+            userId,
+            projectId,
+            bkAuthPermission,
+            excludePipelineId,
+            limit.offset,
+            limit.limit
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
@@ -103,7 +120,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineId)
     }
 
-    override fun hasPermission(userId: String, projectId: String, pipelineId: String, permission: Permission): Result<Boolean> {
+    override fun hasPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: Permission
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         val bkAuthPermission = when (permission) {
@@ -119,13 +141,27 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.hasPermission(userId, projectId, pipelineId, bkAuthPermission))
     }
 
-    override fun copy(userId: String, projectId: String, pipelineId: String, pipeline: PipelineCopy): Result<PipelineId> {
+    override fun copy(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipeline: PipelineCopy
+    ): Result<PipelineId> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         if (pipeline.name.isBlank()) {
             throw ParamBlankException("Invalid pipeline name")
         }
-        val pid = PipelineId(pipelineService.copyPipeline(userId, projectId, pipelineId, pipeline.name, pipeline.desc, ChannelCode.BS))
+        val pid = PipelineId(
+            pipelineService.copyPipeline(
+                userId,
+                projectId,
+                pipelineId,
+                pipeline.name,
+                pipeline.desc,
+                ChannelCode.BS
+            )
+        )
         return Result(pid)
     }
 
@@ -137,15 +173,32 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun saveAll(userId: String, projectId: String, pipelineId: String, modelAndSetting: PipelineModelAndSetting): Result<Boolean> {
+    override fun saveAll(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         checkParam(modelAndSetting.setting)
         checkPipelineId(pipelineId)
-        pipelineService.saveAll(userId, projectId, pipelineId, modelAndSetting.model, modelAndSetting.setting, ChannelCode.BS)
+        pipelineService.saveAll(
+            userId,
+            projectId,
+            pipelineId,
+            modelAndSetting.model,
+            modelAndSetting.setting,
+            ChannelCode.BS
+        )
         return Result(true)
     }
 
-    override fun saveSetting(userId: String, projectId: String, pipelineId: String, setting: PipelineSetting): Result<Boolean> {
+    override fun saveSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        setting: PipelineSetting
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         checkParam(setting)
         checkPipelineId(pipelineId)
@@ -166,7 +219,11 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getPipeline(userId, projectId, pipelineId, ChannelCode.BS))
     }
 
-    override fun generateRemoteToken(userId: String, projectId: String, pipelineId: String): Result<PipelineRemoteToken> {
+    override fun generateRemoteToken(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<PipelineRemoteToken> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         return Result(pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId))
@@ -201,8 +258,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         sortType: PipelineSortType?
     ): Result<PipelineViewPipelinePage<PipelineInfo>> {
         checkParam(userId, projectId)
-        return Result(pipelineService.listDeletePipelineIdByProject(userId, projectId, page,
-            pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS))
+        return Result(
+            pipelineService.listDeletePipelineIdByProject(
+                userId, projectId, page,
+                pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS
+            )
+        )
     }
 
     override fun listViewSettingAndPipelines(
@@ -227,8 +288,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         viewId: String
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         checkParam(userId, projectId)
-        return Result(pipelineService.listViewPipelines(userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
-            ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels))
+        return Result(
+            pipelineService.listViewPipelines(
+                userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
+                ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels
+            )
+        )
     }
 
     override fun list(
@@ -239,16 +304,40 @@ class UserPipelineResourceImpl @Autowired constructor(
         sortType: PipelineSortType?
     ): Result<PipelinePage<Pipeline>> {
         checkParam(userId, projectId)
-        return Result(pipelineService.listPermissionPipeline(userId, projectId, page,
-            pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS, true))
+        return Result(
+            pipelineService.listPermissionPipeline(
+                userId, projectId, page,
+                pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS, true
+            )
+        )
     }
 
-    override fun getPipelineStatus(userId: String, projectId: String, pipelines: Set<String>): Result<Map<String, PipelineStatus>> {
+    override fun getPipelineStatus(
+        userId: String,
+        projectId: String,
+        pipelines: Set<String>
+    ): Result<Map<String, PipelineStatus>> {
         checkParam(userId, projectId)
         val status = pipelineService.getPipelineStatus(userId, projectId, pipelines)
         val currentTimestamp = System.currentTimeMillis()
-        return Result(status.map { it.pipelineId to PipelineStatus(it.taskCount, it.buildCount, it.lock, it.canManualStartup, it.latestBuildStartTime, it.latestBuildEndTime,
-            it.latestBuildStatus, it.latestBuildNum, it.latestBuildTaskName, it.latestBuildEstimatedExecutionSeconds, it.latestBuildId, currentTimestamp, it.runningBuildCount, it.hasCollect) }.toMap())
+        return Result(status.map {
+            it.pipelineId to PipelineStatus(
+                it.taskCount,
+                it.buildCount,
+                it.lock,
+                it.canManualStartup,
+                it.latestBuildStartTime,
+                it.latestBuildEndTime,
+                it.latestBuildStatus,
+                it.latestBuildNum,
+                it.latestBuildTaskName,
+                it.latestBuildEstimatedExecutionSeconds,
+                it.latestBuildId,
+                currentTimestamp,
+                it.runningBuildCount,
+                it.hasCollect
+            )
+        }.toMap())
     }
 
     override fun favor(userId: String, projectId: String, pipelineId: String, favor: Boolean): Result<Boolean> {

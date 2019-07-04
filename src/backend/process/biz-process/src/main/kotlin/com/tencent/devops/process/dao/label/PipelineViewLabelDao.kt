@@ -32,7 +32,6 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 视图和标签绑定表
@@ -47,16 +46,18 @@ class PipelineViewLabelDao {
     ) {
         logger.info("Add label $labelId with view $viewId")
         with(TPipelineViewLabel.T_PIPELINE_VIEW_LABEL) {
-            dslContext.insertInto(this,
-                    VIEW_ID,
-                    LABEL_ID,
-                    CREATE_TIME)
-                    .values(
-                            viewId,
-                            labelId,
-                            LocalDateTime.now()
-                    )
-                    .execute()
+            dslContext.insertInto(
+                this,
+                VIEW_ID,
+                LABEL_ID,
+                CREATE_TIME
+            )
+                .values(
+                    viewId,
+                    labelId,
+                    LocalDateTime.now()
+                )
+                .execute()
         }
     }
 
@@ -68,17 +69,19 @@ class PipelineViewLabelDao {
         logger.info("Add label $labelId with view $viewId")
         with(TPipelineViewLabel.T_PIPELINE_VIEW_LABEL) {
             dslContext.batch(
-                    labelId.map {
-                        dslContext.insertInto(this,
-                                VIEW_ID,
-                                LABEL_ID,
-                                CREATE_TIME)
-                                .values(
-                                        viewId,
-                                        it,
-                                        LocalDateTime.now()
-                                )
-                    }
+                labelId.map {
+                    dslContext.insertInto(
+                        this,
+                        VIEW_ID,
+                        LABEL_ID,
+                        CREATE_TIME
+                    )
+                        .values(
+                            viewId,
+                            it,
+                            LocalDateTime.now()
+                        )
+                }
             ).execute()
         }
     }
@@ -94,8 +97,8 @@ class PipelineViewLabelDao {
         logger.info("Detach label $labelId by user $userId")
         with(TPipelineViewLabel.T_PIPELINE_VIEW_LABEL) {
             dslContext.deleteFrom(this)
-                    .where(LABEL_ID.eq(labelId))
-                    .execute()
+                .where(LABEL_ID.eq(labelId))
+                .execute()
         }
     }
 
@@ -107,8 +110,8 @@ class PipelineViewLabelDao {
         logger.info("Detach label $labelId by user $userId")
         with(TPipelineViewLabel.T_PIPELINE_VIEW_LABEL) {
             dslContext.deleteFrom(this)
-                    .where(LABEL_ID.`in`(labelId))
-                    .execute()
+                .where(LABEL_ID.`in`(labelId))
+                .execute()
         }
     }
 
@@ -120,8 +123,8 @@ class PipelineViewLabelDao {
         logger.info("Detach the labels by view $viewId by user $userId")
         with(TPipelineViewLabel.T_PIPELINE_VIEW_LABEL) {
             dslContext.deleteFrom(this)
-                    .where(VIEW_ID.eq(viewId))
-                    .execute()
+                .where(VIEW_ID.eq(viewId))
+                .execute()
         }
     }
 
@@ -131,8 +134,8 @@ class PipelineViewLabelDao {
     ): Result<TPipelineViewLabelRecord> {
         with(TPipelineViewLabel.T_PIPELINE_VIEW_LABEL) {
             return dslContext.selectFrom(this)
-                    .where(VIEW_ID.eq(viewId))
-                    .fetch()
+                .where(VIEW_ID.eq(viewId))
+                .fetch()
         }
     }
 
@@ -142,8 +145,8 @@ class PipelineViewLabelDao {
     ): Result<TPipelineViewLabelRecord> {
         with(TPipelineViewLabel.T_PIPELINE_VIEW_LABEL) {
             return dslContext.selectFrom(this)
-                    .where(VIEW_ID.`in`(viewId))
-                    .fetch()
+                .where(VIEW_ID.`in`(viewId))
+                .fetch()
         }
     }
 

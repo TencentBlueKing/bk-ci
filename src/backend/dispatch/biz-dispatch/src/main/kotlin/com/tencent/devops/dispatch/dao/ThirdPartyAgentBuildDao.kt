@@ -32,7 +32,6 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgent
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ThirdPartyAgentBuildDao {
@@ -40,17 +39,17 @@ class ThirdPartyAgentBuildDao {
     fun get(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .fetchOne()
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .fetchOne()
         }
     }
 
     fun list(dslContext: DSLContext, buildId: String): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .fetch()
+                .where(BUILD_ID.eq(buildId))
+                .fetch()
         }
     }
 
@@ -66,37 +65,39 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
             val preRecord =
-                    dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
+                dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
                 dslContext.update(this)
-                        .set(WORKSPACE, thirdPartyAgentWorkspace)
-                        .set(CREATED_TIME, now)
-                        .set(UPDATED_TIME, now)
-                        .set(STATUS, PipelineTaskStatus.QUEUE.status)
-                        .where(ID.eq(preRecord.id)).execute()
+                    .set(WORKSPACE, thirdPartyAgentWorkspace)
+                    .set(CREATED_TIME, now)
+                    .set(UPDATED_TIME, now)
+                    .set(STATUS, PipelineTaskStatus.QUEUE.status)
+                    .where(ID.eq(preRecord.id)).execute()
                 return preRecord.id
             }
-            return dslContext.insertInto(this,
-                    PROJECT_ID,
-                    AGENT_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    VM_SEQ_ID,
-                    STATUS,
-                    CREATED_TIME,
-                    UPDATED_TIME,
-                    WORKSPACE)
-                    .values(
-                            projectId,
-                            agentId,
-                            pipelineId,
-                            buildId,
-                            vmSeqId,
-                            PipelineTaskStatus.QUEUE.status,
-                            now,
-                            now,
-                            thirdPartyAgentWorkspace
-                    ).execute()
+            return dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                AGENT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                VM_SEQ_ID,
+                STATUS,
+                CREATED_TIME,
+                UPDATED_TIME,
+                WORKSPACE
+            )
+                .values(
+                    projectId,
+                    agentId,
+                    pipelineId,
+                    buildId,
+                    vmSeqId,
+                    PipelineTaskStatus.QUEUE.status,
+                    now,
+                    now,
+                    thirdPartyAgentWorkspace
+                ).execute()
         }
     }
 
@@ -108,13 +109,13 @@ class ThirdPartyAgentBuildDao {
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .and(STATUS.eq(PipelineTaskStatus.DONE.status))
-                    .orderBy(CREATED_TIME.desc())
-                    .limit(10)
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(STATUS.eq(PipelineTaskStatus.DONE.status))
+                .orderBy(CREATED_TIME.desc())
+                .limit(10)
+                .fetch()
         }
     }
 
@@ -125,10 +126,10 @@ class ThirdPartyAgentBuildDao {
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.update(this)
-                    .set(STATUS, status.status)
-                    .set(UPDATED_TIME, LocalDateTime.now())
-                    .where(ID.eq(id))
-                    .execute()
+                .set(STATUS, status.status)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -138,10 +139,10 @@ class ThirdPartyAgentBuildDao {
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(AGENT_ID.eq(agentId))
-                    .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .orderBy(UPDATED_TIME.asc())
-                    .fetch()
+                .where(AGENT_ID.eq(agentId))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .orderBy(UPDATED_TIME.asc())
+                .fetch()
         }
     }
 
@@ -151,9 +152,9 @@ class ThirdPartyAgentBuildDao {
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(AGENT_ID.eq(agentId))
-                    .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                    .fetch()
+                .where(AGENT_ID.eq(agentId))
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .fetch()
         }
     }
 
@@ -163,9 +164,9 @@ class ThirdPartyAgentBuildDao {
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(AGENT_ID.eq(agentId))
-                    .and(STATUS.eq(PipelineTaskStatus.RUNNING.status))
-                    .fetch()
+                .where(AGENT_ID.eq(agentId))
+                .and(STATUS.eq(PipelineTaskStatus.RUNNING.status))
+                .fetch()
         }
     }
 }

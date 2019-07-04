@@ -41,7 +41,10 @@ data class MyTemplateItem(
     val logoUrl: String?,
     @ApiModelProperty("版本号", required = false)
     val version: String,
-    @ApiModelProperty("模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = true)
+    @ApiModelProperty(
+        "模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
+        required = true
+    )
     val templateStatus: String,
     @ApiModelProperty("模板所属项目代码", required = false)
     val projectCode: String,

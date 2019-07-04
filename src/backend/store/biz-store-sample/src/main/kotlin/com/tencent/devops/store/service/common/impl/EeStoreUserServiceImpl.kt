@@ -56,7 +56,12 @@ class EeStoreUserServiceImpl : StoreUserService, StoreUserServiceImpl() {
     /**
      * 判断用户是否能安装store组件
      */
-    override fun isCanInstallStoreComponent(defaultFlag: Boolean, userId: String, storeCode: String, storeType: StoreTypeEnum): Boolean {
+    override fun isCanInstallStoreComponent(
+        defaultFlag: Boolean,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean {
         logger.info("isCanInstallStoreComponent userId is :$userId,defaultFlag is :$defaultFlag,storeCode is :$storeCode,storeType is :$storeType")
         return true // 开源版默认都有安装权限
     }

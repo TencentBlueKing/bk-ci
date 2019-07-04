@@ -33,9 +33,21 @@ import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
 
 interface EeMarketAtomService {
 
-    fun verifyAtomPackageByUserId(userId: String, projectCode: String, atomCode: String, version: String, releaseType: ReleaseTypeEnum?, os: String?): Result<Boolean>
+    fun verifyAtomPackageByUserId(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum?,
+        os: String?
+    ): Result<Boolean>
 
-    fun verifyAtomTaskJson(userId: String, projectCode: String, atomCode: String, version: String): Result<GetAtomConfigResult?>
+    fun verifyAtomTaskJson(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ): Result<GetAtomConfigResult?>
 
     fun updateAtomEnv(userId: String, atomId: String, atomEnvRequest: AtomEnvRequest): Result<Boolean>
 }

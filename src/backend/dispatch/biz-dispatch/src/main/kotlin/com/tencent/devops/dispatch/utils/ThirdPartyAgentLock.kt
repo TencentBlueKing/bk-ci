@@ -42,5 +42,5 @@ class ThirdPartyAgentLock(
     fun lock() = redisLock.lock()
 
     fun unlock() =
-            redisLock.unlock()
+        redisLock.unlock()
 }

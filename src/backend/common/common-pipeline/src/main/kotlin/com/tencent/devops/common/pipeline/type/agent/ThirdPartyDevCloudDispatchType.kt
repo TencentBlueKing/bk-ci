@@ -30,7 +30,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.DispatchType
 
-data class ThirdPartyDevCloudDispatchType(@JsonProperty("value") var displayName: String, var workspace: String?, val agentType: AgentType = AgentType.NAME) : DispatchType(
+data class ThirdPartyDevCloudDispatchType(
+    @JsonProperty("value") var displayName: String, var workspace: String?,
+    val agentType: AgentType = AgentType.NAME
+) : DispatchType(
     displayName
 ) {
     override fun replaceField(variables: Map<String, String>) {

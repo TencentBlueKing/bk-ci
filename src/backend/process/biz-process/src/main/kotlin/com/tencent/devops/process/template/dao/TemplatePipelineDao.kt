@@ -34,8 +34,6 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 /**
  * deng
@@ -56,7 +54,8 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     ) {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val now = LocalDateTime.now()
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 PIPELINE_ID,
                 VERSION,
                 VERSION_NAME,
@@ -66,8 +65,10 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                 CREATED_TIME,
                 UPDATED_TIME,
                 BUILD_NO,
-                PARAM)
-                .values(pipelineId,
+                PARAM
+            )
+                .values(
+                    pipelineId,
                     templateVersion,
                     versionName,
                     templateId,
@@ -76,7 +77,8 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                     now,
                     now,
                     buildNo ?: "",
-                    param ?: "")
+                    param ?: ""
+                )
                 .execute()
         }
     }
@@ -158,7 +160,10 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                 .set(VERSION, templateVersion)
                 .set(VERSION_NAME, versionName)
                 .set(UPDATOR, userId)
-                .set(BUILD_NO, if (instance.buildNo == null) null else objectMapper.writeValueAsString(instance.buildNo))
+                .set(
+                    BUILD_NO,
+                    if (instance.buildNo == null) null else objectMapper.writeValueAsString(instance.buildNo)
+                )
                 .set(PARAM, objectMapper.writeValueAsString(instance.param))
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(instance.pipelineId))

@@ -26,9 +26,9 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.pojo.common.ClassifyRequest
-import com.tencent.devops.common.api.pojo.Result
 
 /**
  * 分类业务逻辑类

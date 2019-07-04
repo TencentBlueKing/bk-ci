@@ -31,7 +31,6 @@ import com.tencent.devops.model.ticket.tables.records.TCertTlsRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 class CertTlsDao {

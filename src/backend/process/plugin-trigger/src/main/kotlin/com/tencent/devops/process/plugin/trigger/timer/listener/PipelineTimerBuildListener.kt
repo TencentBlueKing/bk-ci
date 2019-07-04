@@ -29,9 +29,9 @@ package com.tencent.devops.process.plugin.trigger.timer.listener
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.process.api.ServiceTimerBuildResource
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
-import com.tencent.devops.process.api.ServiceTimerBuildResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

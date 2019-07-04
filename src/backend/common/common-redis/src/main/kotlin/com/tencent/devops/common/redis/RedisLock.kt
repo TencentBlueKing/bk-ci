@@ -28,8 +28,8 @@ package com.tencent.devops.common.redis
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisCallback
-import redis.clients.jedis.JedisCluster
 import redis.clients.jedis.Jedis
+import redis.clients.jedis.JedisCluster
 import java.util.UUID
 
 class RedisLock(
@@ -55,7 +55,8 @@ class RedisLock(
 
         private val logger = LoggerFactory.getLogger(RedisLock::class.java)
 
-        private val UNLOCK_LUA = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
+        private val UNLOCK_LUA =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
     }
 
     private val lockValue = UUID.randomUUID().toString()
@@ -140,14 +141,14 @@ class RedisLock(
                 val keys = listOf(lockKey)
                 val values = listOf(lockValue)
                 val result =
-                        when (nativeConnection) {
-                            is JedisCluster -> nativeConnection.eval(UNLOCK_LUA, keys, values)
-                            is Jedis -> nativeConnection.eval(UNLOCK_LUA, keys, values)
-                            else -> {
-                                logger.warn("Unknown redis connection($nativeConnection)")
-                                0L
-                            }
+                    when (nativeConnection) {
+                        is JedisCluster -> nativeConnection.eval(UNLOCK_LUA, keys, values)
+                        is Jedis -> nativeConnection.eval(UNLOCK_LUA, keys, values)
+                        else -> {
+                            logger.warn("Unknown redis connection($nativeConnection)")
+                            0L
                         }
+                    }
                 locked = result == 0
                 result == 1
             })

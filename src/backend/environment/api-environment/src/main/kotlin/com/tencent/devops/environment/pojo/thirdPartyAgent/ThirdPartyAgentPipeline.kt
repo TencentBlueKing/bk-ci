@@ -34,7 +34,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineType
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
-        JsonSubTypes.Type(value = CommandPipeline::class, name = "COMMAND"),
-        JsonSubTypes.Type(value = FilePipeline::class, name = "FILE")
+    JsonSubTypes.Type(value = CommandPipeline::class, name = "COMMAND"),
+    JsonSubTypes.Type(value = FilePipeline::class, name = "FILE")
 )
 open class ThirdPartyAgentPipeline(val type: PipelineType, open val seqId: String)

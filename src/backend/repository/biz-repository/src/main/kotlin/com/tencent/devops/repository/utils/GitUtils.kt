@@ -40,6 +40,7 @@ object GitUtils {
             getActualRefObjectId(repo, ref)
         }
     }
+
     private fun getActualRefObjectId(repo: Repository, ref: Ref): ObjectId {
         val repoPeeled = repo.peel(ref)
         return if (repoPeeled.peeledObjectId != null) {

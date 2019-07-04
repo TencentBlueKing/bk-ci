@@ -46,6 +46,21 @@ data class BuildHistoryPage<out T>(
     @ApiModelProperty("最新的编排版本号", required = true)
     val pipelineVersion: Int
 ) {
-    constructor(page: Int, pageSize: Int, count: Long, records: List<T>, hasDownloadPermission: Boolean, pipelineVersion: Int) :
-            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records, hasDownloadPermission, pipelineVersion)
+    constructor(
+        page: Int,
+        pageSize: Int,
+        count: Long,
+        records: List<T>,
+        hasDownloadPermission: Boolean,
+        pipelineVersion: Int
+    ) :
+        this(
+            count,
+            page,
+            pageSize,
+            Math.ceil(count * 1.0 / pageSize).toInt(),
+            records,
+            hasDownloadPermission,
+            pipelineVersion
+        )
 }

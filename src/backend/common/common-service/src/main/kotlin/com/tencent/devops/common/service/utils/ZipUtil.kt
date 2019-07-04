@@ -73,7 +73,12 @@ object ZipUtil {
         }
     }
 
-    private fun handleZipFile(entry: ZipEntry, destDirPath: String, entryName: String?, zipFile: ZipFile): Pair<OutputStream?, InputStream?> {
+    private fun handleZipFile(
+        entry: ZipEntry,
+        destDirPath: String,
+        entryName: String?,
+        zipFile: ZipFile
+    ): Pair<OutputStream?, InputStream?> {
         var inputStream: InputStream? = null
         var fos: OutputStream? = null
         if (entry.isDirectory) {

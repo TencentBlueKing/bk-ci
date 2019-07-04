@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtomOffline
 import com.tencent.devops.model.store.tables.records.TAtomOfflineRecord
 import org.jooq.DSLContext
@@ -43,7 +42,8 @@ class MarketAtomOfflineDao {
     fun create(dslContext: DSLContext, atomCode: String, bufferDay: Byte, userId: String, status: Byte) {
         val expireTime = LocalDateTime.now().plusDays(bufferDay.toLong())
         with(TAtomOffline.T_ATOM_OFFLINE) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ATOM_CODE,
                 BUFFER_DAY,

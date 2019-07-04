@@ -77,9 +77,24 @@ class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
             val context = DSL.using(t)
             val id = UUIDUtil.generate()
             // 添加插件基本信息
-            marketAtomDao.addMarketAtom(context, userId, id, "", "", atomDetailBaseUrl + atomCode, marketAtomCreateRequest)
+            marketAtomDao.addMarketAtom(
+                context,
+                userId,
+                id,
+                "",
+                "",
+                atomDetailBaseUrl + atomCode,
+                marketAtomCreateRequest
+            )
             // 添加插件与项目关联关系，type为0代表新增插件时关联的项目
-            storeProjectRelDao.addStoreProjectRel(context, userId, atomCode, marketAtomCreateRequest.projectCode, 0, StoreTypeEnum.ATOM.type.toByte())
+            storeProjectRelDao.addStoreProjectRel(
+                context,
+                userId,
+                atomCode,
+                marketAtomCreateRequest.projectCode,
+                0,
+                StoreTypeEnum.ATOM.type.toByte()
+            )
             val atomEnvRequest = AtomEnvRequest(userId, "", "", marketAtomCreateRequest.language, null, "", null, null)
             // 添加流水线插件执行环境信息
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, id, atomEnvRequest)
@@ -90,7 +105,11 @@ class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun updateMarketAtom(userId: String, projectCode: String, marketAtomUpdateRequest: MarketAtomUpdateRequest): Result<String?> {
+    override fun updateMarketAtom(
+        userId: String,
+        projectCode: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String?> {
         logger.info("the updateMarketAtom userId is :$userId,projectCode is :$projectCode,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
         val version = marketAtomUpdateRequest.version
@@ -100,7 +119,8 @@ class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID)
         }
         val taskJsonStr = getTaskJsonStr(projectCode, atomCode, version)
-        val handleUpdateResult = handleUpdateMarketAtom(projectCode, userId, taskJsonStr, AtomStatusEnum.TESTING, marketAtomUpdateRequest)
+        val handleUpdateResult =
+            handleUpdateMarketAtom(projectCode, userId, taskJsonStr, AtomStatusEnum.TESTING, marketAtomUpdateRequest)
         logger.info("the handleUpdateResult is :$handleUpdateResult")
         return handleUpdateResult
     }
@@ -114,7 +134,14 @@ class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun verifyAtomPackageByUserId(userId: String, projectCode: String, atomCode: String, version: String, releaseType: ReleaseTypeEnum?, os: String?): Result<Boolean> {
+    override fun verifyAtomPackageByUserId(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum?,
+        os: String?
+    ): Result<Boolean> {
         logger.info("verifyAtomPackageByUserId userId is :$userId,projectCode is :$projectCode,atomCode is :$atomCode,version is :$version,releaseType is :$releaseType,os is :$os")
         // 校验用户是否是该插件的开发成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
@@ -140,7 +167,12 @@ class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
         return Result(true)
     }
 
-    override fun verifyAtomTaskJson(userId: String, projectCode: String, atomCode: String, version: String): Result<GetAtomConfigResult?> {
+    override fun verifyAtomTaskJson(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ): Result<GetAtomConfigResult?> {
         val taskJsonStr = getTaskJsonStr(projectCode, atomCode, version)
         val result = parseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
         logger.info("parseTaskJson result is :$taskJsonStr")
@@ -190,22 +222,39 @@ class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
 
     override fun handlePassTest(userId: String, atomId: String): Result<Boolean> {
         val atomRecord = marketAtomDao.getAtomById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(atomId)
+            )
         val atomStatus = AtomStatusEnum.RELEASED.status.toByte()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 清空旧版本LATEST_FLAG
             marketAtomDao.cleanLatestFlag(context, atomRecord["atomCode"] as String)
-            marketAtomDao.updateAtomInfo(context, userId, atomId, UpdateAtomInfo(atomStatus = atomStatus, latestFlag = true))
+            marketAtomDao.updateAtomInfo(
+                context,
+                userId,
+                atomId,
+                UpdateAtomInfo(atomStatus = atomStatus, latestFlag = true)
+            )
         }
         return Result(true)
     }
 
-    override fun generateAtomVisibleData(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<Int>>?> {
+    override fun generateAtomVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>?> {
         return Result(data = null) // 开源版插件不设置可见范围
     }
 
-    override fun generateInstallFlag(defaultFlag: Boolean, members: MutableList<String>?, userId: String, visibleList: MutableList<Int>?, userDeptList: List<Int>): Boolean {
+    override fun generateInstallFlag(
+        defaultFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
+    ): Boolean {
         return true // 开源版插件默认所有用户都有权限安装
     }
 

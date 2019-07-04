@@ -145,7 +145,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     }
 
     override fun downloadAtom(atomFilePath: String, file: File) {
-        val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${URLEncoder.encode("$BK_ATOM_DIR/$atomFilePath","UTF-8")}"
+        val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${URLEncoder.encode(
+            "$BK_ATOM_DIR/$atomFilePath",
+            "UTF-8"
+        )}"
         val request = buildGet(path)
         download(request, file)
     }

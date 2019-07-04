@@ -41,7 +41,10 @@ interface StoreMemberService {
     /***
      * 批量获取store组件成员列表
      */
-    fun batchListMember(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<String>>>
+    fun batchListMember(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<String>>>
 
     /**
      * 添加store组件成员

@@ -107,6 +107,7 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
     fun hdelete(key: String, hashKey: String) {
         redisTemplate.opsForHash<String, String>().delete(key, hashKey)
     }
+
     fun hhaskey(key: String, hashKey: String): Boolean {
         return redisTemplate.opsForHash<String, String>().hasKey(key, hashKey)
     }

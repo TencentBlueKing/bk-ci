@@ -29,8 +29,8 @@ package com.tencent.devops.common.log
 import com.tencent.devops.common.log.meta.AnsiAttribute
 import com.tencent.devops.common.log.meta.AnsiColor
 import com.tencent.devops.common.log.meta.AnsiErase
-import java.util.concurrent.Callable
 import java.util.ArrayList
+import java.util.concurrent.Callable
 
 open class Ansi(private var builder: StringBuilder) {
     companion object {

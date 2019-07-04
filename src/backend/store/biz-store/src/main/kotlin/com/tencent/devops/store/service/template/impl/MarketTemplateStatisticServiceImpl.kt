@@ -41,8 +41,10 @@ import java.math.BigDecimal
 @Service
 class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTemplateStatisticService {
 
-    @Autowired lateinit var dslContext: DSLContext
-    @Autowired lateinit var storeStatisticDao: StoreStatisticDao
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var storeStatisticDao: StoreStatisticDao
 
     private val logger = LoggerFactory.getLogger(MarketTemplateStatisticServiceImpl::class.java)
 
@@ -51,7 +53,8 @@ class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTempla
      */
     override fun getStatisticByCode(userId: String, templateCode: String): Result<TemplateStatistic> {
         logger.info("the userId is:$userId,templateCode is:$templateCode")
-        val record = storeStatisticDao.getStatisticByStoreCode(dslContext, templateCode, StoreTypeEnum.ATOM.type.toByte())
+        val record =
+            storeStatisticDao.getStatisticByStoreCode(dslContext, templateCode, StoreTypeEnum.ATOM.type.toByte())
         val statistic = formatTemplateStatistic(record)
         return Result(statistic)
     }
@@ -60,7 +63,8 @@ class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTempla
         val downloads = record.value1()?.toInt()
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
-        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+        val averageScore: Double =
+            if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
         logger.info("the averageScore is:$averageScore")
         return TemplateStatistic(
             downloads = downloads ?: 0,
@@ -74,7 +78,11 @@ class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTempla
      */
     override fun getStatisticByCodeList(templateCodeList: List<String>): Result<HashMap<String, TemplateStatistic>> {
         logger.info("the templateCodeList is:$templateCodeList")
-        val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, templateCodeList, StoreTypeEnum.TEMPLATE.type.toByte())
+        val records = storeStatisticDao.batchGetStatisticByStoreCode(
+            dslContext,
+            templateCodeList,
+            StoreTypeEnum.TEMPLATE.type.toByte()
+        )
         val statistic = hashMapOf<String, TemplateStatistic>()
         records.map {
             if (it.value4() != null) {

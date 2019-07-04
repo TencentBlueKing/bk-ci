@@ -44,7 +44,7 @@ data class Result<out T>(
     val data: T? = null
 ) {
     constructor(data: T) : this(0, null, data)
-    constructor(status: Int, message: String): this(status, message, null)
+    constructor(status: Int, message: String) : this(status, message, null)
 
     @JsonIgnore
     fun isOk(): Boolean {

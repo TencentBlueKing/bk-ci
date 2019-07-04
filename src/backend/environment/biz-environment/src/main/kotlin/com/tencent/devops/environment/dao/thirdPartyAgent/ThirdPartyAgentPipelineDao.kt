@@ -31,7 +31,6 @@ import com.tencent.devops.model.environment.tables.TEnvironmentAgentPipeline
 import com.tencent.devops.model.environment.tables.records.TEnvironmentAgentPipelineRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ThirdPartyAgentPipelineDao {
@@ -46,14 +45,16 @@ class ThirdPartyAgentPipelineDao {
     ): Long {
         with(TEnvironmentAgentPipeline.T_ENVIRONMENT_AGENT_PIPELINE) {
             val now = LocalDateTime.now()
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 AGENT_ID,
                 PROJECT_ID,
                 USER_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
                 PIPELINE,
-                STATUS)
+                STATUS
+            )
                 .values(
                     agentId,
                     projectId,

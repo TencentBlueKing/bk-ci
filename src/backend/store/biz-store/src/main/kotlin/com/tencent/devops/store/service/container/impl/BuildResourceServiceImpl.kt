@@ -26,12 +26,12 @@
 
 package com.tencent.devops.store.service.container.impl
 
-import com.tencent.devops.store.dao.container.BuildResourceDao
-import com.tencent.devops.store.pojo.container.BuildResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.dao.container.BuildResourceDao
+import com.tencent.devops.store.pojo.container.BuildResource
 import com.tencent.devops.store.service.container.BuildResourceService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -55,7 +55,8 @@ class BuildResourceServiceImpl @Autowired constructor(
      * 获取所有构建资源信息
      */
     override fun getAllPipelineBuildResource(): Result<List<BuildResource>> {
-        val pipelineBuildResourceList = buildResourceDao.getAllBuildResource(dslContext).map { buildResourceDao.convert(it) }
+        val pipelineBuildResourceList =
+            buildResourceDao.getAllBuildResource(dslContext).map { buildResourceDao.convert(it) }
         return Result(pipelineBuildResourceList)
     }
 
@@ -65,11 +66,13 @@ class BuildResourceServiceImpl @Autowired constructor(
     override fun getPipelineBuildResource(id: String): Result<BuildResource?> {
         val pipelineBuildResourceRecord = buildResourceDao.getBuildResource(dslContext, id)
         logger.info("the pipelineBuildResourceRecord is :$pipelineBuildResourceRecord")
-        return Result(if (pipelineBuildResourceRecord == null) {
-            null
-        } else {
-            buildResourceDao.convert(pipelineBuildResourceRecord)
-        })
+        return Result(
+            if (pipelineBuildResourceRecord == null) {
+                null
+            } else {
+                buildResourceDao.convert(pipelineBuildResourceRecord)
+            }
+        )
     }
 
     /**
@@ -87,13 +90,21 @@ class BuildResourceServiceImpl @Autowired constructor(
     /**
      * 保存构建资源信息
      */
-    override fun savePipelineBuildResource(defaultFlag: Boolean, buildResourceCode: String, buildResourceName: String): Result<Boolean> {
+    override fun savePipelineBuildResource(
+        defaultFlag: Boolean,
+        buildResourceCode: String,
+        buildResourceName: String
+    ): Result<Boolean> {
         logger.info("the save defaultFlag is:$defaultFlag,the save buildResourceCode is:$buildResourceCode,the save buildResourceName is:$buildResourceName")
         // 判断构建资源代码是否存在
         val count = getCountByCode(buildResourceCode)
         if (count > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(buildResourceCode), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(buildResourceCode),
+                false
+            )
         }
         val id = UUIDUtil.generate()
         buildResourceDao.add(dslContext, id, defaultFlag, buildResourceCode, buildResourceName)
@@ -103,7 +114,12 @@ class BuildResourceServiceImpl @Autowired constructor(
     /**
      * 更新构建资源信息
      */
-    override fun updatePipelineBuildResource(id: String, defaultFlag: Boolean, buildResourceCode: String, buildResourceName: String): Result<Boolean> {
+    override fun updatePipelineBuildResource(
+        id: String,
+        defaultFlag: Boolean,
+        buildResourceCode: String,
+        buildResourceName: String
+    ): Result<Boolean> {
         logger.info("the update id is :$id,the update defaultFlag is :$defaultFlag,the update buildResourceCode is:$buildResourceCode,the update buildResourceName is:$buildResourceName")
         // 判断构建资源代码是否存在
         val count = getCountByCode(buildResourceCode)
@@ -112,7 +128,11 @@ class BuildResourceServiceImpl @Autowired constructor(
             val pipelineBuildResource = buildResourceDao.getBuildResource(dslContext, id)
             if (null != pipelineBuildResource && buildResourceCode != pipelineBuildResource.buildResourceCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(buildResourceCode), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(buildResourceCode),
+                    false
+                )
             }
         }
         dslContext.transaction { t ->

@@ -58,7 +58,12 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
     @Value("\${artifactory.archiveLocalBasePath}")
     private lateinit var atomArchiveLocalBasePath: String
 
-    override fun archiveAtom(userId: String, inputStream: InputStream, disposition: FormDataContentDisposition, archiveAtomRequest: ArchiveAtomRequest): Result<ArchiveAtomResponse?> {
+    override fun archiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        archiveAtomRequest: ArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?> {
         logger.info("archiveAtom userId is:$userId,file info is:$disposition,archiveAtomRequest is:$archiveAtomRequest")
         // 校验用户上传的插件包是否合法
         val projectCode = archiveAtomRequest.projectCode
@@ -66,14 +71,16 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
         val version = archiveAtomRequest.version
         val releaseType = archiveAtomRequest.releaseType
         val os = archiveAtomRequest.os
-        val verifyAtomPackageResult = client.get(EeServiceMarketAtomResource::class).verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
+        val verifyAtomPackageResult = client.get(EeServiceMarketAtomResource::class)
+            .verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
         logger.info("verifyAtomPackageResult is:$verifyAtomPackageResult")
         if (verifyAtomPackageResult.isNotOk()) {
             return Result(verifyAtomPackageResult.status, verifyAtomPackageResult.message, null)
         }
         unZipFile(disposition, inputStream, projectCode, atomCode, version)
         // 校验taskJson配置是否正确
-        val verifyAtomTaskJsonResult = client.get(EeServiceMarketAtomResource::class).verifyAtomTaskJson(userId, projectCode, atomCode, version)
+        val verifyAtomTaskJsonResult =
+            client.get(EeServiceMarketAtomResource::class).verifyAtomTaskJson(userId, projectCode, atomCode, version)
         logger.info("verifyAtomTaskJsonResult is:$verifyAtomTaskJsonResult")
         if (verifyAtomTaskJsonResult.isNotOk()) {
             return Result(verifyAtomTaskJsonResult.status, verifyAtomTaskJsonResult.message, null)
@@ -86,7 +93,16 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
         val fileId = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            fileDao.addFileInfo(context, userId, fileId, projectCode, BK_ATOM_DIR, "$BK_ATOM_DIR/${atomEnvRequest.pkgPath}", packageFile.name, packageFile.length())
+            fileDao.addFileInfo(
+                context,
+                userId,
+                fileId,
+                projectCode,
+                BK_ATOM_DIR,
+                "$BK_ATOM_DIR/${atomEnvRequest.pkgPath}",
+                packageFile.name,
+                packageFile.length()
+            )
             fileDao.batchAddFileProps(context, userId, fileId, mapOf("shaContent" to shaContent))
         }
         // 可执行文件摘要内容放入redis供插件升级校验
@@ -96,7 +112,12 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
         return Result(ArchiveAtomResponse(atomEnvRequest))
     }
 
-    override fun reArchiveAtom(userId: String, inputStream: InputStream, disposition: FormDataContentDisposition, reArchiveAtomRequest: ReArchiveAtomRequest): Result<ArchiveAtomResponse?> {
+    override fun reArchiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        reArchiveAtomRequest: ReArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?> {
         logger.info("reArchiveAtom userId is:$userId,file info is:$disposition,reArchiveAtomRequest is:$reArchiveAtomRequest")
         val archiveAtomRequest = ArchiveAtomRequest(
             projectCode = reArchiveAtomRequest.projectCode,
@@ -111,7 +132,8 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
             return archiveAtomResult
         }
         val atomEnvRequest = archiveAtomResult.data!!.atomEnvRequest
-        val updateAtomEnvResult = client.get(EeServiceMarketAtomResource::class).updateAtomEnv(userId, reArchiveAtomRequest.atomId, atomEnvRequest)
+        val updateAtomEnvResult = client.get(EeServiceMarketAtomResource::class)
+            .updateAtomEnv(userId, reArchiveAtomRequest.atomId, atomEnvRequest)
         logger.info("updateAtomEnvResult is:$updateAtomEnvResult")
         if (updateAtomEnvResult.isNotOk()) {
             return Result(updateAtomEnvResult.status, updateAtomEnvResult.message, null)
@@ -119,7 +141,13 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
         return archiveAtomResult
     }
 
-    private fun unZipFile(disposition: FormDataContentDisposition, inputStream: InputStream, projectCode: String, atomCode: String, version: String) {
+    private fun unZipFile(
+        disposition: FormDataContentDisposition,
+        inputStream: InputStream,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ) {
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
@@ -140,9 +168,13 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
         logger.info("getAtomFileContent filePath is:$filePath")
         if (filePath.contains("../")) {
             // 非法路径则抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(filePath), "")
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(filePath),
+                ""
+            )
         }
-        val file = File("$atomArchiveLocalBasePath/$BK_ATOM_DIR/${URLDecoder.decode(filePath,"UTF-8")}")
+        val file = File("$atomArchiveLocalBasePath/$BK_ATOM_DIR/${URLDecoder.decode(filePath, "UTF-8")}")
         val content = FileUtils.readFileToString(file)
         logger.info("getAtomFileContent content is:$content")
         return Result(content)

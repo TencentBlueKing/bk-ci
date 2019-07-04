@@ -45,5 +45,5 @@ data class RepositoryPage<out T>(
     val hasCreatePermission: Boolean
 ) {
     constructor(page: Int, pageSize: Int, count: Long, records: List<T>, hasCreatePermission: Boolean) :
-            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records, hasCreatePermission)
+        this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records, hasCreatePermission)
 }

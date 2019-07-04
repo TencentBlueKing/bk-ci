@@ -27,13 +27,12 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.model.store.tables.TStoreComment
-import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import com.tencent.devops.model.store.tables.records.TStoreCommentRecord
+import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreCommentDao {
@@ -41,8 +40,8 @@ class StoreCommentDao {
     fun getStoreComment(dslContext: DSLContext, commentId: String): TStoreCommentRecord? {
         return with(TStoreComment.T_STORE_COMMENT) {
             dslContext.selectFrom(this)
-                    .where(ID.eq(commentId))
-                    .fetchOne()
+                .where(ID.eq(commentId))
+                .fetchOne()
         }
     }
 
@@ -54,7 +53,8 @@ class StoreCommentDao {
         pageSize: Int?
     ): Result<TStoreCommentRecord>? {
         with(TStoreComment.T_STORE_COMMENT) {
-            val baseStep = dslContext.selectFrom(this).where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType))).orderBy(CREATE_TIME.desc())
+            val baseStep = dslContext.selectFrom(this).where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .orderBy(CREATE_TIME.desc())
             return if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             } else {
@@ -69,17 +69,35 @@ class StoreCommentDao {
         storeType: Byte
     ): Long {
         with(TStoreComment.T_STORE_COMMENT) {
-            return dslContext.selectCount().from(this).where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType))).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .fetchOne(0, Long::class.java)
         }
     }
 
-    fun getUserLatestCommentByStoreCode(dslContext: DSLContext, userId: String, storeCode: String, storeType: Byte): TStoreCommentRecord? {
+    fun getUserLatestCommentByStoreCode(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        storeType: Byte
+    ): TStoreCommentRecord? {
         with(TStoreComment.T_STORE_COMMENT) {
-            return dslContext.selectFrom(this).where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(CREATOR.eq(userId))).orderBy(CREATE_TIME.desc()).limit(1).fetchOne()
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(CREATOR.eq(userId)))
+                .orderBy(CREATE_TIME.desc()).limit(1).fetchOne()
         }
     }
 
-    fun addStoreComment(dslContext: DSLContext, commentId: String, userId: String, commenterDept: String, storeId: String, storeCode: String, profileUrl: String?, storeCommentRequest: StoreCommentRequest, storeType: Byte) {
+    fun addStoreComment(
+        dslContext: DSLContext,
+        commentId: String,
+        userId: String,
+        commenterDept: String,
+        storeId: String,
+        storeCode: String,
+        profileUrl: String?,
+        storeCommentRequest: StoreCommentRequest,
+        storeType: Byte
+    ) {
         with(TStoreComment.T_STORE_COMMENT) {
             dslContext.insertInto(
                 this,
@@ -93,55 +111,60 @@ class StoreCommentDao {
                 STORE_TYPE,
                 CREATOR,
                 MODIFIER
-            ) .values(
-                    commentId,
-                    storeId,
-                    storeCode,
-                    storeCommentRequest.commentContent,
-                    commenterDept,
-                    storeCommentRequest.score,
-                    profileUrl,
-                    storeType,
-                    userId,
-                    userId
-                ).execute()
+            ).values(
+                commentId,
+                storeId,
+                storeCode,
+                storeCommentRequest.commentContent,
+                commenterDept,
+                storeCommentRequest.score,
+                profileUrl,
+                storeType,
+                userId,
+                userId
+            ).execute()
         }
     }
 
-    fun updateStoreComment(dslContext: DSLContext, userId: String, commentId: String, storeCommentRequest: StoreCommentRequest) {
+    fun updateStoreComment(
+        dslContext: DSLContext,
+        userId: String,
+        commentId: String,
+        storeCommentRequest: StoreCommentRequest
+    ) {
         with(TStoreComment.T_STORE_COMMENT) {
             dslContext.update(this)
-                    .set(COMMENT_CONTENT, storeCommentRequest.commentContent)
-                    .set(SCORE, storeCommentRequest.score)
-                    .set(MODIFIER, userId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(commentId))
-                    .execute()
+                .set(COMMENT_CONTENT, storeCommentRequest.commentContent)
+                .set(SCORE, storeCommentRequest.score)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(commentId))
+                .execute()
         }
     }
 
     fun updateStoreCommentPraiseCount(dslContext: DSLContext, userId: String, commentId: String, praiseCount: Int) {
         with(TStoreComment.T_STORE_COMMENT) {
             dslContext.update(this)
-                    .set(PRAISE_COUNT, PRAISE_COUNT + praiseCount)
-                    .set(MODIFIER, userId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(commentId))
-                    .execute()
+                .set(PRAISE_COUNT, PRAISE_COUNT + praiseCount)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(commentId))
+                .execute()
         }
     }
 
     fun getStoreCommentScoreInfo(dslContext: DSLContext, storeCode: String, storeType: Byte): Result<out Record>? {
         return with(TStoreComment.T_STORE_COMMENT) {
             dslContext.select(
-                    SCORE.`as`("score"),
-                    SCORE.count().`as`("num")
+                SCORE.`as`("score"),
+                SCORE.count().`as`("num")
             )
-                    .from(this)
-                    .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
-                    .groupBy(SCORE)
-                    .orderBy(SCORE.desc())
-                    .fetch()
+                .from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .groupBy(SCORE)
+                .orderBy(SCORE.desc())
+                .fetch()
         }
     }
 }

@@ -28,9 +28,9 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
-import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

@@ -37,7 +37,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineTaskResourceImpl @Autowired constructor(
     val pipelineTaskService: PipelineTaskService
 ) : ServicePipelineTaskResource {
-    override fun list(projectId: String, pipelineIds: Collection<String>): Result<Map<String, List<PipelineModelTask>>> {
+    override fun list(
+        projectId: String,
+        pipelineIds: Collection<String>
+    ): Result<Map<String, List<PipelineModelTask>>> {
         return Result(pipelineTaskService.list(projectId, pipelineIds))
     }
 }

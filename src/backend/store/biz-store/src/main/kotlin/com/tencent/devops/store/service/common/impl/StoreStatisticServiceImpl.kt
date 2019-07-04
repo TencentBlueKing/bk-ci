@@ -26,11 +26,11 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.pojo.common.ScoreItemInfo
 import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.service.common.StoreStatisticService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -56,19 +56,20 @@ class StoreStatisticServiceImpl @Autowired constructor(
             val score = it["score"] as Int
             val num = it["num"] as Int
             scoreItemList.add(
-                    ScoreItemInfo(score, num)
+                ScoreItemInfo(score, num)
             )
             totalCommentNum += num
-            totalScore += score*num
+            totalScore += score * num
         }
-        val avgScore: Double = if (totalScore > 0 && totalCommentNum > 0) totalScore.toDouble().div(totalCommentNum) else 0.toDouble()
+        val avgScore: Double =
+            if (totalScore > 0 && totalCommentNum > 0) totalScore.toDouble().div(totalCommentNum) else 0.toDouble()
         logger.info("the avgScore is:$avgScore,totalCommentNum is:$totalCommentNum,scoreItemList is:$scoreItemList")
         return Result(
-                StoreCommentScoreInfo(
-                        avgScore = String.format("%.1f", avgScore).toDouble(),
-                        totalNum = totalCommentNum,
-                        scoreItemList = scoreItemList
-                )
+            StoreCommentScoreInfo(
+                avgScore = String.format("%.1f", avgScore).toDouble(),
+                totalNum = totalCommentNum,
+                scoreItemList = scoreItemList
+            )
         )
     }
 }

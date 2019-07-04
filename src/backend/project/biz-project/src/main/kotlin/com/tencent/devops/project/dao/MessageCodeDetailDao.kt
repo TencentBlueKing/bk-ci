@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.dao
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.MessageCodeDetail
 import com.tencent.devops.model.project.tables.TMessageCodeDetail
 import com.tencent.devops.model.project.tables.records.TMessageCodeDetailRecord

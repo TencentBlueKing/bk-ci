@@ -27,8 +27,8 @@
 package com.tencent.devops.process.engine.listener.run.monitor
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.process.engine.control.BuildMonitorControl
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.process.engine.control.BuildMonitorControl
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

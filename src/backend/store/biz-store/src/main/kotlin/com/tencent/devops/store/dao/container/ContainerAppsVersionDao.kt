@@ -26,9 +26,9 @@
 
 package com.tencent.devops.store.dao.container
 
-import com.tencent.devops.store.pojo.app.ContainerAppVersion
 import com.tencent.devops.model.store.tables.TAppVersion
 import com.tencent.devops.model.store.tables.records.TAppVersionRecord
+import com.tencent.devops.store.pojo.app.ContainerAppVersion
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -39,62 +39,64 @@ class ContainerAppsVersionDao {
     fun get(dslContext: DSLContext, appId: Int, version: String?): TAppVersionRecord? {
         return with(TAppVersion.T_APP_VERSION) {
             dslContext.selectFrom(this)
-                    .where(APP_ID.eq(appId))
-                    .and(VERSION.eq(version))
-                    .fetchOne()
+                .where(APP_ID.eq(appId))
+                .and(VERSION.eq(version))
+                .fetchOne()
         }
     }
 
     fun getById(dslContext: DSLContext, id: Int): TAppVersionRecord? {
         with(TAppVersion.T_APP_VERSION) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun add(dslContext: DSLContext, appId: Int, version: String?) {
         with(TAppVersion.T_APP_VERSION) {
-            dslContext.insertInto(this,
-                    APP_ID,
-                    VERSION)
-                    .values(appId, version)
-                    .execute()
+            dslContext.insertInto(
+                this,
+                APP_ID,
+                VERSION
+            )
+                .values(appId, version)
+                .execute()
         }
     }
 
     fun delete(dslContext: DSLContext, id: Int) {
         with(TAppVersion.T_APP_VERSION) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun deleteByAppId(dslContext: DSLContext, appId: Int) {
         with(TAppVersion.T_APP_VERSION) {
             dslContext.deleteFrom(this)
-                    .where(APP_ID.eq(appId))
-                    .execute()
+                .where(APP_ID.eq(appId))
+                .execute()
         }
     }
 
     fun listByAppId(dslContext: DSLContext, appId: Int): Result<TAppVersionRecord> {
         with(TAppVersion.T_APP_VERSION) {
             return dslContext.selectFrom(this)
-                    .where(APP_ID.eq(appId))
-                    .orderBy(ID.desc())
-                    .fetch()
+                .where(APP_ID.eq(appId))
+                .orderBy(ID.desc())
+                .fetch()
         }
     }
 
     fun update(dslContext: DSLContext, id: Int, appId: Int, version: String?) {
         with(TAppVersion.T_APP_VERSION) {
             dslContext.update(this)
-                    .set(APP_ID, appId)
-                    .set(VERSION, version)
-                    .where(ID.eq(id))
-                    .execute()
+                .set(APP_ID, appId)
+                .set(VERSION, version)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 

@@ -41,8 +41,10 @@ import java.time.LocalDateTime
 @Service
 class TemplateCategoryServiceImpl @Autowired constructor() : TemplateCategoryService {
 
-    @Autowired lateinit var dslContext: DSLContext
-    @Autowired lateinit var templateCategoryRelDao: TemplateCategoryRelDao
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var templateCategoryRelDao: TemplateCategoryRelDao
 
     private val logger = LoggerFactory.getLogger(TemplateCategoryServiceImpl::class.java)
 
@@ -52,7 +54,8 @@ class TemplateCategoryServiceImpl @Autowired constructor() : TemplateCategorySer
     override fun getCategorysByTemplateId(templateId: String): Result<List<Category>?> {
         logger.info("the templateId is :$templateId")
         val templateCategoryList = mutableListOf<Category>()
-        val templateCategoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, templateId) // 查询模板范畴信息
+        val templateCategoryRecords =
+            templateCategoryRelDao.getCategorysByTemplateId(dslContext, templateId) // 查询模板范畴信息
         templateCategoryRecords?.forEach {
             templateCategoryList.add(
                 Category(

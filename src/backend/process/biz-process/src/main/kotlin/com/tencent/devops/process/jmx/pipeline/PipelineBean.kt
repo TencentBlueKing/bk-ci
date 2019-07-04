@@ -32,8 +32,10 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component
-@ManagedResource(objectName = "com.tencent.devops.process:type=pipelines",
-        description = "pipeline jmx metrics")
+@ManagedResource(
+    objectName = "com.tencent.devops.process:type=pipelines",
+    description = "pipeline jmx metrics"
+)
 class PipelineBean {
 
     private val create = AtomicInteger(0)

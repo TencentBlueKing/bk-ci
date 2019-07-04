@@ -38,13 +38,13 @@ class KeywordConfig {
 
     @Bean
     fun defaultKeywords() = listOf(
-            "error ( )",
-            "Scripts have compiler errors",
-            "fatal error",
-            "no such",
-            // "Exception :",;
-            "Code Sign error",
-            "BUILD FAILED",
-            "Failed PVR compression"
+        "error ( )",
+        "Scripts have compiler errors",
+        "fatal error",
+        "no such",
+        // "Exception :",;
+        "Code Sign error",
+        "BUILD FAILED",
+        "Failed PVR compression"
     )
 }

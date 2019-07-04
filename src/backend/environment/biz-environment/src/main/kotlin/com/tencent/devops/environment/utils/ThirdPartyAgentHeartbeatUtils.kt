@@ -47,5 +47,5 @@ object ThirdPartyAgentHeartbeatUtils {
     }
 
     private fun getHeartbeatKey(projectId: String, agentId: String) =
-            "third-party-agent-heartbeat-$projectId-$agentId"
+        "third-party-agent-heartbeat-$projectId-$agentId"
 }
