@@ -53,9 +53,6 @@ interface ServiceProjectResource {
     @Path("/")
     @ApiOperation("查询所有项目")
     fun list(
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
@@ -82,9 +79,6 @@ interface ServiceProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @ApiOperation(" 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,

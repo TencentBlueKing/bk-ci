@@ -72,7 +72,7 @@ class StoreProjectServiceImpl @Autowired constructor(
     ): Result<List<InstalledProjRespItem>> {
         logger.info("accessToken is :$accessToken, userId is :$userId, storeCode is :$storeCode, storeType is :$storeType")
         // 获取用户有权限的项目列表
-        val projectList = client.get(ServiceProjectResource::class).list(accessToken, userId).data
+        val projectList = client.get(ServiceProjectResource::class).list(userId).data
         logger.info("projectList is :$projectList")
         if (projectList?.count() == 0) {
             return Result(mutableListOf())
@@ -111,7 +111,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
         }
         // 获取用户有权限的项目列表
-        val projectList = client.get(ServiceProjectResource::class).list(accessToken, userId).data
+        val projectList = client.get(ServiceProjectResource::class).list(userId).data
         logger.info("projectList is :$projectList")
         // 判断用户是否有权限安装到对应的项目
         val privilegeProjectCodeList = mutableListOf<String>()

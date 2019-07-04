@@ -64,6 +64,9 @@ interface UserProjectUserResource {
     @Path("/detail")
     @ApiOperation("查询用户详细信息")
     fun getDetail(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("bk_token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         bkToken: String

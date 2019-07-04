@@ -53,7 +53,7 @@ class UserProjectUserResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getDetail(bkToken: String): Result<UserDeptDetail> {
-        return Result(userCacheService.getDetailFromCache(bkToken))
+    override fun getDetail(userId: String, bkToken: String): Result<UserDeptDetail> {
+        return Result(userCacheService.getDetailFromCache(userId))
     }
 }
