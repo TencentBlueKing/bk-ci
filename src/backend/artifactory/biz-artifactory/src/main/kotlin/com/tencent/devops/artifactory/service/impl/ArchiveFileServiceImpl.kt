@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.BkAuthPermission

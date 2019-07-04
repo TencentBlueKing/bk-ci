@@ -31,6 +31,7 @@ import com.tencent.devops.model.environment.tables.TEnvironmentAgentPipeline
 import com.tencent.devops.model.environment.tables.records.TEnvironmentAgentPipelineRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class ThirdPartyAgentPipelineDao {

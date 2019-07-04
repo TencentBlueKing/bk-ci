@@ -28,6 +28,7 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.repository.dao.CommitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.commit.CommitData

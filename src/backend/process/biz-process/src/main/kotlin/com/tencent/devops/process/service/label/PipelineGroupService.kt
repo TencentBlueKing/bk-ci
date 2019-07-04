@@ -28,6 +28,7 @@ package com.tencent.devops.process.service.label
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
 import com.tencent.devops.process.dao.PipelineFavorDao

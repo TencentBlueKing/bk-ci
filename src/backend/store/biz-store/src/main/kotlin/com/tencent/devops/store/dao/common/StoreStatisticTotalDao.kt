@@ -26,9 +26,11 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreStatisticTotalDao {

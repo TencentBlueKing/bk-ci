@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
 import org.jooq.DSLContext

@@ -165,10 +165,8 @@ class BkAuthPermissionApi constructor(
         appCode: String,
         appSecret: String
     ): Map<BkAuthPermission, List<String>> {
-        val epoch = System.currentTimeMillis()
-        val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/authorized-resources/search"
 
-//        logger.info("开始调用权限中心查询单有权限的资源，uri:$uri , systemId= ${systemId.id()}")
+        val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/authorized-resources/search"
         val resultMap = LinkedHashMap<BkAuthPermission, List<String>>()
 
         val requestBean = BkUserResourcesAuthRequest(

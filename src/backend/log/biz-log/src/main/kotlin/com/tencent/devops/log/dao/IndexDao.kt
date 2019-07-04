@@ -30,6 +30,7 @@ import com.tencent.devops.model.log.tables.TLogIndices
 import com.tencent.devops.model.log.tables.records.TLogIndicesRecord
 import org.jooq.DSLContext
 import org.jooq.exception.DataAccessException
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.util.Optional
@@ -105,7 +106,7 @@ class IndexDao {
                         .execute()
 
                     if (updated == 0) {
-                        logger.error("Update table LogIndices lastLineNum failed, buildId: " + buildId)
+                        logger.error("Update table LogIndices lastLineNum failed, buildId: $buildId")
                     }
                 }
 
