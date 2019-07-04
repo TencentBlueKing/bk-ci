@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord

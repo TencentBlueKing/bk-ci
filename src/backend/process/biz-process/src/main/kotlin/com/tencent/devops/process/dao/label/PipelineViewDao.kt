@@ -31,6 +31,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 /**
  * 流水线视图

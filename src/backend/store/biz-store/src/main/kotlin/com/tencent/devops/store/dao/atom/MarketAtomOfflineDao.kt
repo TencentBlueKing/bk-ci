@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.dao.atom
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtomOffline
 import com.tencent.devops.model.store.tables.records.TAtomOfflineRecord
 import org.jooq.DSLContext

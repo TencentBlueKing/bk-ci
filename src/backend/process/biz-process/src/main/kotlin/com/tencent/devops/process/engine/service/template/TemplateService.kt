@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -52,7 +53,10 @@ import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.PipelineResource
+import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -74,6 +78,7 @@ import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PTemplateDao
 import com.tencent.devops.process.template.dao.TemplatePipelineDao
+import com.tencent.devops.process.util.DateTimeUtils
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
