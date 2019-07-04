@@ -24,49 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api
+package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.UserProjectUserResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.project.service.UserCacheService
+import com.tencent.devops.project.service.UserService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["USER_PROJECT_USER"], description = "项目列表用户接口")
-@Path("/user/users")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserProjectUserResource {
+@RestResource
+class UserProjectUserResourceImpl @Autowired constructor(
+    private val userService: UserService,
+    private val userCacheService: UserCacheService
+) : UserProjectUserResource {
 
-    @GET
-    @Path("/")
-    @ApiOperation("查询用户基本信息")
-    fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("bk ticket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bkToken: String?
-    ): Result<ProjectUser>
+    override fun get(userId: String): Result<ProjectUser> {
 
-    @GET
-    @Path("/detail")
-    @ApiOperation("查询用户详细信息")
-    fun getDetail(
-        @ApiParam("bk_token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        bkToken: String
-    ): Result<UserDeptDetail>
+        val staff = userService.getStaffInfo(userId)
+        return Result(
+            ProjectUser(
+                chineseName = staff.chineseName,
+                avatarUrl = "",
+                username = staff.username
+            )
+        )
+    }
+
+    override fun getDetail(userId: String): Result<UserDeptDetail> {
+        return Result(userCacheService.getDetailFromCache(userId))
+    }
 }
