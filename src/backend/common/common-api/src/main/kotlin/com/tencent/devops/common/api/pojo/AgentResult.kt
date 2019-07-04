@@ -43,7 +43,7 @@ data class AgentResult<out T>(
     val data: T? = null
 ) {
     constructor(status: AgentStatus, data: T) : this(0, null, status, data)
-    constructor(status: Int, message: String): this(status, message, null, null)
+    constructor(status: Int, message: String) : this(status, message, null, null)
 
     @JsonIgnore
     fun isNotOk(): Boolean {

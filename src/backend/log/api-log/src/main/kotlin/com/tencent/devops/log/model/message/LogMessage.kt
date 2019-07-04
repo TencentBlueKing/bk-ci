@@ -41,6 +41,6 @@ data class LogMessage(
 ) {
     override fun toString(): String {
         return "LogMessage(tag='$tag', message='$message', " +
-                "timestamp=$timestamp), logType=$logType, executeCount=$executeCount)"
+            "timestamp=$timestamp), logType=$logType, executeCount=$executeCount)"
     }
 }

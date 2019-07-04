@@ -130,7 +130,12 @@ object OkhttpUtils {
         return okHttpClient.newCall(request).execute()
     }
 
-    fun uploadFile(url: String, uploadFile: File, headers: Map<String, String>? = null,fileFieldName: String = "file"): Response {
+    fun uploadFile(
+        url: String,
+        uploadFile: File,
+        headers: Map<String, String>? = null,
+        fileFieldName: String = "file"
+    ): Response {
         val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), uploadFile)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)

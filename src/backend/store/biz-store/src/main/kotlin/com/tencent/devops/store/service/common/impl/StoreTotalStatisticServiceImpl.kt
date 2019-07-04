@@ -55,17 +55,31 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     override fun updateStoreTotalStatisticByCode(storeCode: String, storeType: Byte) {
-        calculateAndStorage(storeType, storeStatisticDao.batchGetStatisticByStoreCode(dslContext, listOf(storeCode), storeType))
+        calculateAndStorage(
+            storeType,
+            storeStatisticDao.batchGetStatisticByStoreCode(dslContext, listOf(storeCode), storeType)
+        )
     }
 
-    private fun calculateAndStorage(storeType: Byte, statistics: Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>>) {
+    private fun calculateAndStorage(
+        storeType: Byte,
+        statistics: Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>>
+    ) {
         statistics.forEach {
             val downloads = it.value1().toInt()
             val comments = it.value2().toInt()
             val score = it.value3().toDouble()
             val code = it.value4().toString()
             val scoreAverage: Double = if (score > 0 && comments > 0) score.div(comments) else 0.toDouble()
-            storeStatisticTotalDao.updateStatisticData(dslContext, code, storeType, downloads, comments, score.toInt(), scoreAverage)
+            storeStatisticTotalDao.updateStatisticData(
+                dslContext,
+                code,
+                storeType,
+                downloads,
+                comments,
+                score.toInt(),
+                scoreAverage
+            )
         }
     }
 }

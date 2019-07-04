@@ -26,9 +26,9 @@
 
 package com.tencent.devops.common.event.util
 
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
-
-import org.junit.Assert.*
 
 class IPUtilsTest {
 

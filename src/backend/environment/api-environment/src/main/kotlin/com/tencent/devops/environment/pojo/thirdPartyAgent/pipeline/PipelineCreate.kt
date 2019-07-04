@@ -31,8 +31,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
-        JsonSubTypes.Type(value = CommandPipelineCreate::class, name = "COMMAND"),
-        JsonSubTypes.Type(value = FilePipelineCreate::class, name = "FILE")
+    JsonSubTypes.Type(value = CommandPipelineCreate::class, name = "COMMAND"),
+    JsonSubTypes.Type(value = FilePipelineCreate::class, name = "FILE")
 )
 open class PipelineCreate(
     open val type: PipelineType

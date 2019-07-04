@@ -36,7 +36,6 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.BkAuthPermission
@@ -238,7 +237,8 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         val validateFileTypeList = listOf(
             FileTypeEnum.BK_CUSTOM.fileType,
             FileTypeEnum.BK_ARCHIVE.fileType,
-            FileTypeEnum.BK_REPORT.fileType)
+            FileTypeEnum.BK_REPORT.fileType
+        )
         // 校验用户是否有下载流水线文件的权限
         if (validateFileTypeList.contains(fileType)) {
             flag = authPermissionApi.validateUserResourcePermission(

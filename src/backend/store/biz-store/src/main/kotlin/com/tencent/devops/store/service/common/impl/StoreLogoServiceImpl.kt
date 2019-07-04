@@ -27,8 +27,8 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.artifactory.api.ServiceFileResource
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum.WEB_SHOW
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -71,7 +71,11 @@ class StoreLogoServiceImpl @Autowired constructor(
     /**
      * 上传logo
      */
-    override fun uploadStoreLogo(userId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<String?> {
+    override fun uploadStoreLogo(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
         logger.info("the upload file info is:$disposition")
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
@@ -79,13 +83,19 @@ class StoreLogoServiceImpl @Autowired constructor(
         // 校验文件类型是否满足上传文件类型的要求
         val allowUploadFileTypeList = allowUploadLogoTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType)) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT, arrayOf(fileType, allowUploadLogoTypes))
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT,
+                arrayOf(fileType, allowUploadLogoTypes)
+            )
         }
         // 校验上传文件大小是否超出限制
         val fileSize = disposition.size
         val maxFileSize = maxUploadLogoSize.toLong()
-        if (fileSize>maxFileSize) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE, arrayOf((maxFileSize / 1048576).toString() + "M"))
+        if (fileSize > maxFileSize) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
+                arrayOf((maxFileSize / 1048576).toString() + "M")
+            )
         }
         val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".$fileType").toFile()
         val output = file.outputStream()
@@ -96,7 +106,10 @@ class StoreLogoServiceImpl @Autowired constructor(
             val width = img.width
             val height = img.height
             if (width != height || width < allowUploadLogoWidth.toInt()) {
-                return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID, arrayOf(allowUploadLogoWidth, allowUploadLogoHeight))
+                return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
+                    arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
+                )
             }
             ImageIO.write(img, fileType, output)
         } else {

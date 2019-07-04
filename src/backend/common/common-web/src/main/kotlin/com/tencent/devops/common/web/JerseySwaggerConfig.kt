@@ -31,7 +31,6 @@ import io.swagger.jaxrs.listing.ApiListingResource
 import io.swagger.jaxrs.listing.SwaggerSerializers
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
 
 class JerseySwaggerConfig : JerseyConfig() {

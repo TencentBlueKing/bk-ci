@@ -36,7 +36,10 @@ import java.util.concurrent.atomic.AtomicLong
  * 2019-02-28
  */
 @Component
-@ManagedResource(objectName = "com.tencent.devops.log:type=index,operation=update", description = "log update index performance")
+@ManagedResource(
+    objectName = "com.tencent.devops.log:type=index,operation=update",
+    description = "log update index performance"
+)
 class UpdateIndexBean {
 
     private val executeCount = AtomicLong(0)

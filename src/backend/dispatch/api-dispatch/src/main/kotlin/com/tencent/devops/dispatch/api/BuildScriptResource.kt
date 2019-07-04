@@ -49,7 +49,7 @@ interface BuildScriptResource {
     @Path("/")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiResponses(
-            ApiResponse(code = 304, message = "本地插件已是最新，无需下载")
+        ApiResponse(code = 304, message = "本地插件已是最新，无需下载")
     )
     fun download(
         @ApiParam("插件标识符", required = true)

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.dao.template
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TTemplateCategoryRel
 import org.jooq.DSLContext
@@ -67,7 +66,8 @@ class TemplateCategoryRelDao {
     fun batchAdd(dslContext: DSLContext, userId: String, templateId: String, categoryIdList: List<String>) {
         with(TTemplateCategoryRel.T_TEMPLATE_CATEGORY_REL) {
             val addStep = categoryIdList.map {
-                dslContext.insertInto(this,
+                dslContext.insertInto(
+                    this,
                     ID,
                     TEMPLATE_ID,
                     CATEGORY_ID,

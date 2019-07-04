@@ -45,7 +45,12 @@ abstract class StoreUserServiceImpl : StoreUserService {
     /**
      * 判断用户是否能安装store组件
      */
-    abstract override fun isCanInstallStoreComponent(defaultFlag: Boolean, userId: String, storeCode: String, storeType: StoreTypeEnum): Boolean
+    abstract override fun isCanInstallStoreComponent(
+        defaultFlag: Boolean,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean
 
     /**
      * 获取用户机构名称

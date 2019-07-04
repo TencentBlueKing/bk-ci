@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.lang.NullPointerException
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -109,8 +108,14 @@ object CommonUtils {
         }
     }
 
-    fun serviceUploadFile(userId: String, serviceUrlPrefix: String, file: File, fileChannelType: String): Result<String?> {
-        val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload?userId=$userId&fileChannelType=$fileChannelType"
+    fun serviceUploadFile(
+        userId: String,
+        serviceUrlPrefix: String,
+        file: File,
+        fileChannelType: String
+    ): Result<String?> {
+        val serviceUrl =
+            "$serviceUrlPrefix/service/artifactories/file/upload?userId=$userId&fileChannelType=$fileChannelType"
         logger.info("the serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()

@@ -292,7 +292,7 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     fun getUpgradeFile(fileName: String): File {
-        val file =File(agentPackage, fileName)
+        val file = File(agentPackage, fileName)
         if (!file.exists()) {
             logger.warn("The file(${file.absolutePath}) is not exist")
             throw FileNotFoundException("The file is not exist")

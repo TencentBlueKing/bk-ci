@@ -112,7 +112,8 @@ class ContainerControl @Autowired constructor(
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
         if (!ActionType.isEnd(actionType) && container.controlOption?.jobControlOption?.enable != false) {
-            val mutexResult = mutexControl.checkContainerMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
+            val mutexResult =
+                mutexControl.checkContainerMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
             logger.info("[$buildId]|MUTEX_START|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
             when (mutexResult) {
                 ContainerMutexStatus.CANCELED -> {

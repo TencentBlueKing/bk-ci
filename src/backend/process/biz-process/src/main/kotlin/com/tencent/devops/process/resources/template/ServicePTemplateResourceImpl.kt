@@ -38,11 +38,17 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     private val templateService: TemplateService
 ) : ServicePTemplateResource {
 
-    override fun addMarketTemplate(userId: String, addMarketTemplateRequest: AddMarketTemplateRequest): Result<Boolean> {
+    override fun addMarketTemplate(
+        userId: String,
+        addMarketTemplateRequest: AddMarketTemplateRequest
+    ): Result<Boolean> {
         return templateService.addMarketTemplate(userId, addMarketTemplateRequest)
     }
 
-    override fun updateMarketTemplateReference(userId: String, updateMarketTemplateRequest: AddMarketTemplateRequest): Result<Boolean> {
+    override fun updateMarketTemplateReference(
+        userId: String,
+        updateMarketTemplateRequest: AddMarketTemplateRequest
+    ): Result<Boolean> {
         return templateService.updateMarketTemplateReference(userId, updateMarketTemplateRequest)
     }
 

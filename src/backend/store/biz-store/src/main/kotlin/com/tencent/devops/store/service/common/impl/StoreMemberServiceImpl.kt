@@ -26,10 +26,10 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.atom.AtomMemberItem
 import com.tencent.devops.store.pojo.atom.AtomMemberReq
@@ -52,7 +52,7 @@ class StoreMemberServiceImpl @Autowired constructor(
      * store组件成员列表
      */
     override fun list(userId: String, atomCode: String, storeType: StoreTypeEnum): Result<List<AtomMemberItem?>> {
-        if (! storeMemberDao.isStoreMember(dslContext, userId, atomCode, storeType.type.toByte())) {
+        if (!storeMemberDao.isStoreMember(dslContext, userId, atomCode, storeType.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
 
@@ -77,7 +77,10 @@ class StoreMemberServiceImpl @Autowired constructor(
         return Result(members)
     }
 
-    override fun batchListMember(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<String>>> {
+    override fun batchListMember(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<String>>> {
         val ret = hashMapOf<String, MutableList<String>>()
         val records = storeMemberDao.batchList(dslContext, storeCodeList, storeType.type.toByte())
         records?.forEach {
@@ -100,7 +103,7 @@ class StoreMemberServiceImpl @Autowired constructor(
         val atomCode = atomMemberReq.atomCode
         val type = atomMemberReq.type.type.toByte()
 
-        if (! storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, storeType.type.toByte())) {
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, storeType.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
 
@@ -118,7 +121,7 @@ class StoreMemberServiceImpl @Autowired constructor(
      * 删除store组件成员
      */
     override fun delete(userId: String, id: String, atomCode: String, storeType: StoreTypeEnum): Result<Boolean> {
-        if (! storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, storeType.type.toByte())) {
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, storeType.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
 

@@ -51,6 +51,7 @@ enum class Env {
                 }
             }
         }
+
         private val logger = LoggerFactory.getLogger(Env::class.java)
     }
 }

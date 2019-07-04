@@ -71,14 +71,29 @@ class MachineService @Autowired constructor(
         // 判断ip是否重复
         val ipCount = machineDao.countByIp(dslContext, machine.ip)
         if (ipCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(machine.ip), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(machine.ip),
+                false
+            )
         }
         // 判断名字是否重复
         val nameCount = machineDao.countByName(dslContext, machine.name)
         if (nameCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(machine.name), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(machine.name),
+                false
+            )
         }
-        machineDao.addMachine(dslContext, machine.ip, machine.name, machine.username, machine.password, machine.maxVMRun)
+        machineDao.addMachine(
+            dslContext,
+            machine.ip,
+            machine.name,
+            machine.username,
+            machine.password,
+            machine.maxVMRun
+        )
         return Result(true)
     }
 
@@ -88,14 +103,22 @@ class MachineService @Autowired constructor(
         if (ipCount > 0) {
             val machineObj = machineDao.findMachineById(dslContext, machine.id)
             if (null != machineObj && machineObj.machineIp != machine.ip) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(machine.ip), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(machine.ip),
+                    false
+                )
             }
         }
         val nameCount = machineDao.countByName(dslContext, machine.name)
         if (nameCount > 0) {
             val machineObj = machineDao.findMachineById(dslContext, machine.id)
             if (null != machineObj && machineObj.machineName != machine.name) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(machine.name), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(machine.name),
+                    false
+                )
             }
         }
         machineDao.updateMachine(

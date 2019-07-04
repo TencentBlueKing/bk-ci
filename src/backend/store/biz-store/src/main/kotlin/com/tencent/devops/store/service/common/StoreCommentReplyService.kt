@@ -50,5 +50,9 @@ interface StoreCommentReplyService {
     /**
      * 添加评论回复
      */
-    fun addStoreCommentReply(userId: String, commentId: String, storeCommentReplyRequest: StoreCommentReplyRequest): Result<StoreCommentReplyInfo?>
+    fun addStoreCommentReply(
+        userId: String,
+        commentId: String,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ): Result<StoreCommentReplyInfo?>
 }

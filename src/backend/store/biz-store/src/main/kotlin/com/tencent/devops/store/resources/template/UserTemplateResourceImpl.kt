@@ -26,40 +26,61 @@
 
 package com.tencent.devops.store.resources.template
 
-import com.tencent.devops.store.pojo.template.MarketTemplateMain
-import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
-import com.tencent.devops.store.pojo.template.TemplateDetail
-import com.tencent.devops.store.pojo.template.TemplateProcessInfo
-import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import com.tencent.devops.store.pojo.template.MyTemplateItem
-import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.UserTemplateResource
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import com.tencent.devops.store.pojo.template.MarketTemplateMain
+import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateResp
+import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
+import com.tencent.devops.store.pojo.template.MyTemplateItem
+import com.tencent.devops.store.pojo.template.TemplateDetail
+import com.tencent.devops.store.pojo.template.TemplateProcessInfo
+import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.service.common.StoreProjectService
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.store.service.template.MarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserTemplateResourceImpl @Autowired constructor(private val marketTemplateService: MarketTemplateService, private val storeProjectService: StoreProjectService) :
+class UserTemplateResourceImpl @Autowired constructor(
+    private val marketTemplateService: MarketTemplateService,
+    private val storeProjectService: StoreProjectService
+) :
     UserTemplateResource {
 
-    override fun getInstalledProjects(accessToken: String, userId: String, templateCode: String): Result<List<InstalledProjRespItem?>> {
+    override fun getInstalledProjects(
+        accessToken: String,
+        userId: String,
+        templateCode: String
+    ): Result<List<InstalledProjRespItem?>> {
         return storeProjectService.getInstalledProjects(accessToken, userId, templateCode, StoreTypeEnum.TEMPLATE)
     }
 
-    override fun getMyTemplates(userId: String, templateName: String?, page: Int, pageSize: Int): Result<Page<MyTemplateItem>?> {
+    override fun getMyTemplates(
+        userId: String,
+        templateName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<MyTemplateItem>?> {
         return marketTemplateService.getMyTemplates(userId, templateName, page, pageSize)
     }
 
-    override fun installTemplate(accessToken: String, userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
-        return marketTemplateService.installTemplate(accessToken, userId, installTemplateReq.projectCodeList, installTemplateReq.templateCode)
+    override fun installTemplate(
+        accessToken: String,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
+        return marketTemplateService.installTemplate(
+            accessToken,
+            userId,
+            installTemplateReq.projectCodeList,
+            installTemplateReq.templateCode
+        )
     }
 
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketTemplateMain>> {
@@ -78,7 +99,20 @@ class UserTemplateResourceImpl @Autowired constructor(private val marketTemplate
         page: Int?,
         pageSize: Int?
     ): Result<MarketTemplateResp> {
-        return Result(marketTemplateService.list(userId.trim(), templateName?.trim(), classifyCode?.trim(), categoryCode?.trim(), labelCode?.trim(), score, rdType, sortType, page, pageSize))
+        return Result(
+            marketTemplateService.list(
+                userId.trim(),
+                templateName?.trim(),
+                classifyCode?.trim(),
+                categoryCode?.trim(),
+                labelCode?.trim(),
+                score,
+                rdType,
+                sortType,
+                page,
+                pageSize
+            )
+        )
     }
 
     override fun addMarketTemplate(
@@ -116,7 +150,12 @@ class UserTemplateResourceImpl @Autowired constructor(private val marketTemplate
         return marketTemplateService.cancelRelease(userId, templateId)
     }
 
-    override fun offlineTemplate(userId: String, templateCode: String, version: String?, reason: String?): Result<Boolean> {
+    override fun offlineTemplate(
+        userId: String,
+        templateCode: String,
+        version: String?,
+        reason: String?
+    ): Result<Boolean> {
         return marketTemplateService.offlineTemplate(userId, templateCode, version, reason)
     }
 }

@@ -60,7 +60,8 @@ class PipelineStatusMQConfiguration {
     private val pipelineStatusChangeConcurrency: Int? = null
 
     @Bean
-    fun pipelineStatusChangeQueue() = Queue(MQ.QUEUE_PIPELINE_STATUS_CHANGE_TMP_EVENT + "." + CommonUtils.getInnerIP(), false, true, true)
+    fun pipelineStatusChangeQueue() =
+        Queue(MQ.QUEUE_PIPELINE_STATUS_CHANGE_TMP_EVENT + "." + CommonUtils.getInnerIP(), false, true, true)
 
     @Bean
     fun pipelineStatusChangeQueueBind(

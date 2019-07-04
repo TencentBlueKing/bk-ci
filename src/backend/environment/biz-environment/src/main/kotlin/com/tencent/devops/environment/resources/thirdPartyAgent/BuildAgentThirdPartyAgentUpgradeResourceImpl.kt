@@ -32,8 +32,8 @@ import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildAgentThirdPartyAgentUpgradeResourceImpl @Autowired constructor(private val upgradeService: UpgradeService)
-    : BuildAgentThirdPartyAgentUpgradeResource {
+class BuildAgentThirdPartyAgentUpgradeResourceImpl @Autowired constructor(private val upgradeService: UpgradeService) :
+    BuildAgentThirdPartyAgentUpgradeResource {
 
     override fun downloadUpgrade(
         projectId: String,

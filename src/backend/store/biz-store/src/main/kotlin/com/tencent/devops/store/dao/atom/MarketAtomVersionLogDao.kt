@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -34,9 +33,16 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomVersionLogDao {
 
-    fun addMarketAtomVersion(dslContext: DSLContext, userId: String, atomId: String, releaseType: Byte, versionContent: String) {
+    fun addMarketAtomVersion(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        releaseType: Byte,
+        versionContent: String
+    ) {
         with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ATOM_ID,
                 RELEASE_TYPE,

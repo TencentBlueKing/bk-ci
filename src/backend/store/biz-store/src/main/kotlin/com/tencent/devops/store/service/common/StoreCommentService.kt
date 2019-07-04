@@ -48,12 +48,24 @@ interface StoreCommentService {
     /**
      * 获取评论信息列表
      */
-    fun getStoreComments(userId: String, storeCode: String, storeType: StoreTypeEnum, page: Int, pageSize: Int): Result<Page<StoreCommentInfo>?>
+    fun getStoreComments(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreCommentInfo>?>
 
     /**
      * 添加评论
      */
-    fun addStoreComment(userId: String, storeId: String, storeCode: String, storeCommentRequest: StoreCommentRequest, storeType: StoreTypeEnum): Result<StoreCommentInfo?>
+    fun addStoreComment(
+        userId: String,
+        storeId: String,
+        storeCode: String,
+        storeCommentRequest: StoreCommentRequest,
+        storeType: StoreTypeEnum
+    ): Result<StoreCommentInfo?>
 
     /**
      * 更新评论信息

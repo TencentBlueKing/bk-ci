@@ -29,5 +29,5 @@ package com.tencent.devops.common.pipeline.utils
 object HeartBeatUtils {
 
     fun genHeartBeatKey(buildId: String, vmSeqId: String) =
-            "heartbeat:$buildId:$vmSeqId"
+        "heartbeat:$buildId:$vmSeqId"
 }

@@ -47,7 +47,7 @@ import javax.ws.rs.NotFoundException
 class ReportArchiveTask : ITask() {
 
     private val api = ApiFactory.create(ReportSDKApi::class)
-    
+
     private val regex = Pattern.compile("[,|;]")
 
     private val logger = LoggerFactory.getLogger(ReportArchiveTask::class.java)

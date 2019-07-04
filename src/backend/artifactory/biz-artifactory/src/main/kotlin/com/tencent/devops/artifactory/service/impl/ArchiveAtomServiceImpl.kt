@@ -34,8 +34,12 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
-    @Autowired lateinit var redisOperation: RedisOperation
-    @Autowired lateinit var client: Client
-    @Autowired lateinit var dslContext: DSLContext
-    @Autowired lateinit var fileDao: FileDao
+    @Autowired
+    lateinit var redisOperation: RedisOperation
+    @Autowired
+    lateinit var client: Client
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var fileDao: FileDao
 }

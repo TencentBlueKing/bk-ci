@@ -52,7 +52,12 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
         disposition: FormDataContentDisposition,
         os: String
     ): Result<ArchiveAtomResponse?> {
-        return archiveAtomService.archiveAtom(userId, inputStream, disposition, ArchiveAtomRequest(projectCode, atomCode, version, releaseType, os))
+        return archiveAtomService.archiveAtom(
+            userId,
+            inputStream,
+            disposition,
+            ArchiveAtomRequest(projectCode, atomCode, version, releaseType, os)
+        )
     }
 
     override fun reArchiveAtom(
@@ -64,6 +69,11 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<ArchiveAtomResponse?> {
-        return archiveAtomService.reArchiveAtom(userId, inputStream, disposition, ReArchiveAtomRequest(projectCode, atomId, atomCode, version))
+        return archiveAtomService.reArchiveAtom(
+            userId,
+            inputStream,
+            disposition,
+            ReArchiveAtomRequest(projectCode, atomId, atomCode, version)
+        )
     }
 }

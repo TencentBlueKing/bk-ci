@@ -26,9 +26,9 @@
 
 package com.tencent.devops.store.api.template
 
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

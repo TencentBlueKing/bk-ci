@@ -87,8 +87,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        return Result(buildService.buildManualStartupInfo(userId, projectId, pipelineId,
-                channelCode, ChannelCode.isNeedAuth(channelCode)))
+        return Result(
+            buildService.buildManualStartupInfo(
+                userId, projectId, pipelineId,
+                channelCode, ChannelCode.isNeedAuth(channelCode)
+            )
+        )
     }
 
     override fun manualStartup(
@@ -100,8 +104,14 @@ class ServiceBuildResourceImpl @Autowired constructor(
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        return Result(BuildId(buildService.buildManualStartup(userId, StartType.SERVICE,
-                projectId, pipelineId, values, channelCode, ChannelCode.isNeedAuth(channelCode))))
+        return Result(
+            BuildId(
+                buildService.buildManualStartup(
+                    userId, StartType.SERVICE,
+                    projectId, pipelineId, values, channelCode, ChannelCode.isNeedAuth(channelCode)
+                )
+            )
+        )
     }
 
     override fun manualShutdown(
@@ -116,8 +126,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        buildService.buildManualShutdown(userId, projectId, pipelineId, buildId, channelCode,
-                ChannelCode.isNeedAuth(channelCode))
+        buildService.buildManualShutdown(
+            userId, projectId, pipelineId, buildId, channelCode,
+            ChannelCode.isNeedAuth(channelCode)
+        )
         return Result(true)
     }
 
@@ -152,8 +164,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        buildService.buildManualReview(userId, projectId, pipelineId, buildId, elementId,
-                action, channelCode, ChannelCode.isNeedAuth(channelCode))
+        buildService.buildManualReview(
+            userId, projectId, pipelineId, buildId, elementId,
+            action, channelCode, ChannelCode.isNeedAuth(channelCode)
+        )
         return Result(true)
     }
 
@@ -169,8 +183,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(buildService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode,
-                ChannelCode.isNeedAuth(channelCode)))
+        return Result(
+            buildService.getBuildDetail(
+                userId, projectId, pipelineId, buildId, channelCode,
+                ChannelCode.isNeedAuth(channelCode)
+            )
+        )
     }
 
     override fun getHistoryBuild(
@@ -183,8 +201,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        val result = buildService.getHistoryBuild(userId, projectId, pipelineId,
-                page, pageSize, channelCode, ChannelCode.isNeedAuth(channelCode))
+        val result = buildService.getHistoryBuild(
+            userId, projectId, pipelineId,
+            page, pageSize, channelCode, ChannelCode.isNeedAuth(channelCode)
+        )
         return Result(result)
     }
 
@@ -207,8 +227,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(buildService.getBuildStatus(userId, projectId, pipelineId, buildId, channelCode,
-                ChannelCode.isNeedAuth(channelCode)))
+        return Result(
+            buildService.getBuildStatus(
+                userId, projectId, pipelineId, buildId, channelCode,
+                ChannelCode.isNeedAuth(channelCode)
+            )
+        )
     }
 
     override fun getBuildVars(
@@ -231,12 +255,20 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(buildService.batchServiceBasic(buildIds))
     }
 
-    override fun getBatchBuildStatus(projectId: String, buildId: Set<String>, channelCode: ChannelCode): Result<List<BuildHistory>> {
+    override fun getBatchBuildStatus(
+        projectId: String,
+        buildId: Set<String>,
+        channelCode: ChannelCode
+    ): Result<List<BuildHistory>> {
         if (buildId.isEmpty()) {
             return Result(listOf())
         }
-        return Result(buildService.getBatchBuildStatus(projectId, buildId,
-                channelCode, ChannelCode.isNeedAuth(channelCode)))
+        return Result(
+            buildService.getBatchBuildStatus(
+                projectId, buildId,
+                channelCode, ChannelCode.isNeedAuth(channelCode)
+            )
+        )
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {

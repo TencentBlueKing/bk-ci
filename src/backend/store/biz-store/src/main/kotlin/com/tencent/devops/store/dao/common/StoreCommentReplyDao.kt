@@ -26,9 +26,9 @@
 
 package com.tencent.devops.store.dao.common
 
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
 import com.tencent.devops.model.store.tables.TStoreCommentReply
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
+import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -60,27 +60,35 @@ class StoreCommentReplyDao {
         }
     }
 
-    fun addStoreCommentReply(dslContext: DSLContext, replyId: String, userId: String, replyerDept: String, commentId: String, profileUrl: String?, storeCommentReplyRequest: StoreCommentReplyRequest) {
+    fun addStoreCommentReply(
+        dslContext: DSLContext,
+        replyId: String,
+        userId: String,
+        replyerDept: String,
+        commentId: String,
+        profileUrl: String?,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ) {
         with(TStoreCommentReply.T_STORE_COMMENT_REPLY) {
             dslContext.insertInto(
-                    this,
-                    ID,
-                    COMMENT_ID,
-                    REPLY_CONTENT,
-                    PROFILE_URL,
-                    REPLY_TO_USER,
-                    REPLYER_DEPT,
-                    CREATOR,
-                    MODIFIER
-            ) .values(
-                    replyId,
-                    commentId,
-                    storeCommentReplyRequest.replyContent,
-                    profileUrl,
-                    storeCommentReplyRequest.replyToUser,
-                    replyerDept,
-                    userId,
-                    userId
+                this,
+                ID,
+                COMMENT_ID,
+                REPLY_CONTENT,
+                PROFILE_URL,
+                REPLY_TO_USER,
+                REPLYER_DEPT,
+                CREATOR,
+                MODIFIER
+            ).values(
+                replyId,
+                commentId,
+                storeCommentReplyRequest.replyContent,
+                profileUrl,
+                storeCommentReplyRequest.replyToUser,
+                replyerDept,
+                userId,
+                userId
             ).execute()
         }
     }

@@ -26,16 +26,13 @@
 
 package com.tencent.devops.store.dao.common
 
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.records.TCategoryRecord
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.CategoryRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class CategoryDao {
@@ -62,64 +59,66 @@ class CategoryDao {
 
     fun countByName(dslContext: DSLContext, categoryName: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
-            return dslContext.selectCount().from(this).where(CATEGORY_NAME.eq(categoryName).and(TYPE.eq(type))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(CATEGORY_NAME.eq(categoryName).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun countByCode(dslContext: DSLContext, categoryCode: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
-            return dslContext.selectCount().from(this).where(CATEGORY_CODE.eq(categoryCode).and(TYPE.eq(type))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(CATEGORY_CODE.eq(categoryCode).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun delete(dslContext: DSLContext, id: String) {
         with(TCategory.T_CATEGORY) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun update(dslContext: DSLContext, id: String, categoryRequest: CategoryRequest) {
         with(TCategory.T_CATEGORY) {
             dslContext.update(this)
-                    .set(CATEGORY_CODE, categoryRequest.categoryCode)
-                    .set(CATEGORY_NAME, categoryRequest.categoryName)
-                    .set(ICON_URL, categoryRequest.iconUrl)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(id))
-                    .execute()
+                .set(CATEGORY_CODE, categoryRequest.categoryCode)
+                .set(CATEGORY_NAME, categoryRequest.categoryName)
+                .set(ICON_URL, categoryRequest.iconUrl)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun getCategory(dslContext: DSLContext, id: String): TCategoryRecord? {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun getAllCategory(dslContext: DSLContext, type: Byte): Result<TCategoryRecord>? {
         with(TCategory.T_CATEGORY) {
             return dslContext
-                    .selectFrom(this)
-                    .where(TYPE.eq(type))
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .selectFrom(this)
+                .where(TYPE.eq(type))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 
     fun convert(record: TCategoryRecord): Category {
         with(record) {
             return Category(
-                    id = id,
-                    categoryCode = categoryCode,
-                    categoryName = categoryName,
-                    iconUrl = iconUrl,
-                    categoryType = StoreTypeEnum.getStoreType(type.toInt()),
-                    createTime = createTime.timestampmilli(),
-                    updateTime = updateTime.timestampmilli()
+                id = id,
+                categoryCode = categoryCode,
+                categoryName = categoryName,
+                iconUrl = iconUrl,
+                categoryType = StoreTypeEnum.getStoreType(type.toInt()),
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli()
             )
         }
     }

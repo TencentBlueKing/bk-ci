@@ -26,8 +26,8 @@
 
 package com.tencent.devops.store.pojo.container
 
-import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

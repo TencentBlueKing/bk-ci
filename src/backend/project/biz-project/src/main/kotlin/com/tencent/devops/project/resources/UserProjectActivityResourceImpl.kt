@@ -35,8 +35,8 @@ import com.tencent.devops.project.service.ActivityService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserProjectActivityResourceImpl @Autowired constructor(private val activityService: ActivityService)
-    : UserProjectActivityResource {
+class UserProjectActivityResourceImpl @Autowired constructor(private val activityService: ActivityService) :
+    UserProjectActivityResource {
 
     override fun getActivities(userId: String, type: ActivityType): Result<List<ActivityInfo>> {
         return Result(activityService.list(type))

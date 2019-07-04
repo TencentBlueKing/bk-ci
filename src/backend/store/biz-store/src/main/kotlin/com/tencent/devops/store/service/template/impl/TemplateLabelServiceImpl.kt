@@ -41,8 +41,10 @@ import java.time.LocalDateTime
 @Service
 class TemplateLabelServiceImpl : TemplateLabelService {
 
-    @Autowired lateinit var dslContext: DSLContext
-    @Autowired lateinit var templateLabelRelDao: TemplateLabelRelDao
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var templateLabelRelDao: TemplateLabelRelDao
 
     private val logger = LoggerFactory.getLogger(TemplateLabelServiceImpl::class.java)
 

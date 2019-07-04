@@ -26,9 +26,10 @@
 
 package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.store.api.atom.UserAtomCommentResource
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.atom.UserAtomCommentResource
 import com.tencent.devops.store.pojo.common.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
@@ -36,12 +37,15 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreStatisticService
-import com.tencent.devops.common.api.pojo.Page
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserAtomCommentResourceImpl @Autowired constructor(private val atomService: AtomService, private val storeCommentService: StoreCommentService, private val storeStatisticService: StoreStatisticService) :
-        UserAtomCommentResource {
+class UserAtomCommentResourceImpl @Autowired constructor(
+    private val atomService: AtomService,
+    private val storeCommentService: StoreCommentService,
+    private val storeStatisticService: StoreStatisticService
+) :
+    UserAtomCommentResource {
 
     override fun getAtomCommentScoreInfo(templateCode: String): Result<StoreCommentScoreInfo> {
         return storeStatisticService.getStoreCommentScoreInfo(templateCode, StoreTypeEnum.ATOM)
@@ -51,11 +55,21 @@ class UserAtomCommentResourceImpl @Autowired constructor(private val atomService
         return storeCommentService.getStoreComment(userId, commentId)
     }
 
-    override fun getStoreComments(userId: String, atomCode: String, page: Int, pageSize: Int): Result<Page<StoreCommentInfo>?> {
+    override fun getStoreComments(
+        userId: String,
+        atomCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreCommentInfo>?> {
         return storeCommentService.getStoreComments(userId, atomCode, StoreTypeEnum.ATOM, page, pageSize)
     }
 
-    override fun addAtomComment(userId: String, atomId: String, atomCode: String, storeCommentRequest: StoreCommentRequest): Result<StoreCommentInfo?> {
+    override fun addAtomComment(
+        userId: String,
+        atomId: String,
+        atomCode: String,
+        storeCommentRequest: StoreCommentRequest
+    ): Result<StoreCommentInfo?> {
         // 判断atomId和atomCode是否真实有效
         val result = atomService.judgeAtomExistByIdAndCode(atomId, atomCode)
         if (result.isNotOk()) {
@@ -64,7 +78,11 @@ class UserAtomCommentResourceImpl @Autowired constructor(private val atomService
         return storeCommentService.addStoreComment(userId, atomId, atomCode, storeCommentRequest, StoreTypeEnum.ATOM)
     }
 
-    override fun updateStoreComment(userId: String, commentId: String, storeCommentRequest: StoreCommentRequest): Result<Boolean> {
+    override fun updateStoreComment(
+        userId: String,
+        commentId: String,
+        storeCommentRequest: StoreCommentRequest
+    ): Result<Boolean> {
         return storeCommentService.updateStoreComment(userId, commentId, storeCommentRequest)
     }
 

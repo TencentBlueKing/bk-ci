@@ -147,12 +147,12 @@ object SvnUtil {
         }
     }
 
-
     data class SvnCredential(
         val username: String,
         val password: String, // password or private key
         val passphrase: String? // passphrase for ssh private key
     )
+
     /**
      * svn锁住后需要删除LOCK, WC_LOCK, WORK_QUEUE中的记录
      */

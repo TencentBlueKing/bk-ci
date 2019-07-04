@@ -29,7 +29,7 @@ dependencies {
     compile project(":store:api-store-sample")
     compile project(":artifactory:api-artifactory-sample")
     compile project(":artifactory:biz-artifactory")
-    
+
 }
 
 

@@ -39,5 +39,8 @@ interface MarketAtomStatisticService {
     /**
      * 根据批量插件标识获取统计数据
      */
-    fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>>
+    fun getStatisticByCodeList(
+        atomCodeList: List<String>,
+        statFiledList: List<String>
+    ): Result<HashMap<String, AtomStatistic>>
 }

@@ -31,7 +31,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 流水线视图
@@ -50,27 +49,29 @@ class PipelineViewDao {
     ): Long {
         with(TPipelineView.T_PIPELINE_VIEW) {
             val now = LocalDateTime.now()
-            return dslContext.insertInto(this,
-                    PROJECT_ID,
-                    NAME,
-                    IS_PROJECT,
-                    FILTER_BY_PIPEINE_NAME,
-                    FILTER_BY_CREATOR,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    CREATE_USER)
-                    .values(
-                            projectId,
-                            name,
-                            isProject,
-                            filterByPipelineName,
-                            filterByCreator,
-                            now,
-                            now,
-                            userId
-                    )
-                    .returning(ID)
-                    .fetchOne().id
+            return dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                NAME,
+                IS_PROJECT,
+                FILTER_BY_PIPEINE_NAME,
+                FILTER_BY_CREATOR,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATE_USER
+            )
+                .values(
+                    projectId,
+                    name,
+                    isProject,
+                    filterByPipelineName,
+                    filterByCreator,
+                    now,
+                    now,
+                    userId
+                )
+                .returning(ID)
+                .fetchOne().id
         }
     }
 
@@ -85,31 +86,33 @@ class PipelineViewDao {
     ): Long {
         with(TPipelineView.T_PIPELINE_VIEW) {
             val now = LocalDateTime.now()
-            return dslContext.insertInto(this,
-                    PROJECT_ID,
-                    NAME,
-                    IS_PROJECT,
-                    LOGIC,
-                    FILTER_BY_PIPEINE_NAME,
-                    FILTER_BY_CREATOR,
-                    FILTERS,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    CREATE_USER)
-                    .values(
-                            projectId,
-                            name,
-                            isProject,
-                            logic,
-                            "",
-                            "",
-                            filters,
-                            now,
-                            now,
-                            userId
-                    )
-                    .returning(ID)
-                    .fetchOne().id
+            return dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                NAME,
+                IS_PROJECT,
+                LOGIC,
+                FILTER_BY_PIPEINE_NAME,
+                FILTER_BY_CREATOR,
+                FILTERS,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATE_USER
+            )
+                .values(
+                    projectId,
+                    name,
+                    isProject,
+                    logic,
+                    "",
+                    "",
+                    filters,
+                    now,
+                    now,
+                    userId
+                )
+                .returning(ID)
+                .fetchOne().id
         }
     }
 
@@ -123,13 +126,13 @@ class PipelineViewDao {
     ): Boolean {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.update(this)
-                    .set(NAME, name)
-                    .set(IS_PROJECT, isProject)
-                    .set(FILTER_BY_PIPEINE_NAME, filterByPipelineName)
-                    .set(FILTER_BY_CREATOR, filterByCreator)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(viewId))
-                    .execute() == 1
+                .set(NAME, name)
+                .set(IS_PROJECT, isProject)
+                .set(FILTER_BY_PIPEINE_NAME, filterByPipelineName)
+                .set(FILTER_BY_CREATOR, filterByCreator)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(viewId))
+                .execute() == 1
         }
     }
 
@@ -143,15 +146,15 @@ class PipelineViewDao {
     ): Boolean {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.update(this)
-                    .set(NAME, name)
-                    .set(LOGIC, logic)
-                    .set(IS_PROJECT, isProject)
-                    .set(FILTER_BY_PIPEINE_NAME, "")
-                    .set(FILTER_BY_CREATOR, "")
-                    .set(FILTERS, filters)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(viewId))
-                    .execute() == 1
+                .set(NAME, name)
+                .set(LOGIC, logic)
+                .set(IS_PROJECT, isProject)
+                .set(FILTER_BY_PIPEINE_NAME, "")
+                .set(FILTER_BY_CREATOR, "")
+                .set(FILTERS, filters)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(viewId))
+                .execute() == 1
         }
     }
 
@@ -161,25 +164,25 @@ class PipelineViewDao {
     ): Boolean {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.deleteFrom(this)
-                    .where(ID.eq(viewId))
-                    .execute() == 1
+                .where(ID.eq(viewId))
+                .execute() == 1
         }
     }
 
     fun list(dslContext: DSLContext, projectId: String): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .fetch()
         }
     }
 
     fun list(dslContext: DSLContext, projectId: String, isProject: Boolean): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(IS_PROJECT.eq(isProject))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_PROJECT.eq(isProject))
+                .fetch()
         }
     }
 
@@ -190,9 +193,9 @@ class PipelineViewDao {
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(CREATE_USER.eq(userId))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(CREATE_USER.eq(userId))
+                .fetch()
         }
     }
 
@@ -204,11 +207,11 @@ class PipelineViewDao {
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(IS_PROJECT.eq(isProject))
-                    .and(CREATE_USER.eq(userId))
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_PROJECT.eq(isProject))
+                .and(CREATE_USER.eq(userId))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 
@@ -218,9 +221,9 @@ class PipelineViewDao {
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(ID.`in`(viewIds))
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .where(ID.`in`(viewIds))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 
@@ -232,18 +235,18 @@ class PipelineViewDao {
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(IS_PROJECT.eq(isProject).or(CREATE_USER.eq(userId)))
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_PROJECT.eq(isProject).or(CREATE_USER.eq(userId)))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 
     fun get(dslContext: DSLContext, viewId: Long): TPipelineViewRecord? {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(viewId))
-                    .fetchOne()
+                .where(ID.eq(viewId))
+                .fetchOne()
         }
     }
 
@@ -255,10 +258,10 @@ class PipelineViewDao {
     ): TPipelineViewRecord? {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(viewId))
-                    .and(CREATE_USER.eq(userId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetchOne()
+                .where(ID.eq(viewId))
+                .and(CREATE_USER.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchOne()
         }
     }
 }

@@ -32,8 +32,8 @@ import io.swagger.annotations.ApiModel
 
 object ElementUtils {
     val ELEMENT_NAME_MAP = Element::class.java.getAnnotation(JsonSubTypes::class.java).value
-            .map { it.name /*classType*/ to it.value.java.getAnnotation(ApiModel::class.java).value /*chinese name*/ }
-            .toMap()
+        .map { it.name /*classType*/ to it.value.java.getAnnotation(ApiModel::class.java).value /*chinese name*/ }
+        .toMap()
 
     fun getElementCnName(classType: String?) = ELEMENT_NAME_MAP[classType] ?: ""
 }

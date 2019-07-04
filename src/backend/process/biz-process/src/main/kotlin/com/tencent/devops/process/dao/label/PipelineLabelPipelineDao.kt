@@ -32,7 +32,6 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 流水线和标签对应关系表
@@ -48,17 +47,20 @@ class PipelineLabelPipelineDao {
     ) {
         logger.info("Create pipeline-label for pipeline $pipelineId with label $labelId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
-            dslContext.insertInto(this,
-                    PIPELINE_ID,
-                    LABEL_ID,
-                    CREATE_TIME,
-                    CREATE_USER
-                    )
-                    .values(pipelineId,
-                            labelId,
-                            LocalDateTime.now(),
-                            userId).onDuplicateKeyIgnore()
-                    .execute()
+            dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                LABEL_ID,
+                CREATE_TIME,
+                CREATE_USER
+            )
+                .values(
+                    pipelineId,
+                    labelId,
+                    LocalDateTime.now(),
+                    userId
+                ).onDuplicateKeyIgnore()
+                .execute()
         }
     }
 
@@ -71,18 +73,21 @@ class PipelineLabelPipelineDao {
         logger.info("Create pipeline-label for pipeline $pipelineId with labels $labelIds by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.batch(
-                    labelIds.map {
-                        dslContext.insertInto(this,
-                                PIPELINE_ID,
-                                LABEL_ID,
-                                CREATE_TIME,
-                                CREATE_USER
-                        )
-                                .values(pipelineId,
-                                        it,
-                                        LocalDateTime.now(),
-                                        userId).onDuplicateKeyIgnore()
-                    }
+                labelIds.map {
+                    dslContext.insertInto(
+                        this,
+                        PIPELINE_ID,
+                        LABEL_ID,
+                        CREATE_TIME,
+                        CREATE_USER
+                    )
+                        .values(
+                            pipelineId,
+                            it,
+                            LocalDateTime.now(),
+                            userId
+                        ).onDuplicateKeyIgnore()
+                }
             ).execute()
         }
     }
@@ -95,8 +100,8 @@ class PipelineLabelPipelineDao {
         logger.info("Delete pipeline-label $id by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -108,8 +113,8 @@ class PipelineLabelPipelineDao {
         logger.info("Delete pipeline-label of pipeline $pipelineId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .execute()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
@@ -121,8 +126,8 @@ class PipelineLabelPipelineDao {
         logger.info("Delete pipeline-label of label $labelId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.deleteFrom(this)
-                    .where(LABEL_ID.eq(labelId))
-                    .execute()
+                .where(LABEL_ID.eq(labelId))
+                .execute()
         }
     }
 
@@ -132,8 +137,8 @@ class PipelineLabelPipelineDao {
     ): Result<TPipelineLabelPipelineRecord> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectFrom(this)
-                    .where(LABEL_ID.eq(labelId))
-                    .fetch()
+                .where(LABEL_ID.eq(labelId))
+                .fetch()
         }
     }
 
@@ -143,8 +148,8 @@ class PipelineLabelPipelineDao {
     ): Result<TPipelineLabelPipelineRecord> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectFrom(this)
-                    .where(LABEL_ID.`in`(labelId))
-                    .fetch()
+                .where(LABEL_ID.`in`(labelId))
+                .fetch()
         }
     }
 
@@ -154,8 +159,8 @@ class PipelineLabelPipelineDao {
     ): Result<TPipelineLabelPipelineRecord> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .fetch()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetch()
         }
     }
 

@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -30,9 +29,9 @@ apply from: "$rootDir/task_shadow_jar.gradle"
 mainClassName = "com.tencent.devops.agent.ApplicationKt"
 
 dependencies {
-    compile project (":worker:worker-common")
-    compile project (":worker:worker-api-sdk")
-    compile project (":worker:worker-plugin-scm")
-    compile project (":worker:worker-plugin-archive")
+    compile project(":worker:worker-common")
+    compile project(":worker:worker-api-sdk")
+    compile project(":worker:worker-plugin-scm")
+    compile project(":worker:worker-plugin-archive")
     compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
 }

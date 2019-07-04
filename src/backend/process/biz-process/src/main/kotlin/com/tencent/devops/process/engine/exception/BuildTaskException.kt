@@ -36,7 +36,6 @@ class BuildTaskException(
     val pipelineId: String?,
     val buildId: String?,
     val taskId: String?
-)
-    : RuntimeException(message) {
+) : RuntimeException(message) {
     constructor(code: Int, message: String) : this(code, message, null, null, null)
 }

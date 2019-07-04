@@ -92,9 +92,9 @@ class ContainerAppServiceImpl @Autowired constructor(
         return listApps(os).map {
             // 查找版本信息
             val versions = listAppVersion(it.id).filter { it.version != null && !it.version!!.trim().isEmpty() }
-                    .map { v ->
-                        v.version!!
-                    }
+                .map { v ->
+                    v.version!!
+                }
             sortAppVersion(versions)
             val envRecords = containerAppsEnvDao.listByAppId(dslContext, it.id)
             ContainerAppWithVersion(it.name, versions, it.binPath, envRecords.map { env ->
@@ -110,7 +110,8 @@ class ContainerAppServiceImpl @Autowired constructor(
         val apps = listApps(os)
         val buildEnvList = mutableListOf<BuildEnv>()
         for (app in apps) {
-            val versions = listAppVersion(app.id).filter { it.version != null && !it.version!!.trim().isEmpty() }.map { v -> v.version!! }
+            val versions = listAppVersion(app.id).filter { it.version != null && !it.version!!.trim().isEmpty() }
+                .map { v -> v.version!! }
             sortAppVersion(versions)
             for (version in versions) {
                 buildEnvList.add(getBuildEnv(app.name, version, "linux")!!)
@@ -150,7 +151,13 @@ class ContainerAppServiceImpl @Autowired constructor(
             if (!containerAppsDao.exist(context, appEnvCreate.appId)) {
                 throw NotFoundException("The appId(${appEnvCreate.appId}) is not exist")
             }
-            containerAppsEnvDao.add(context, appEnvCreate.appId, appEnvCreate.name, appEnvCreate.path, appEnvCreate.description)
+            containerAppsEnvDao.add(
+                context,
+                appEnvCreate.appId,
+                appEnvCreate.name,
+                appEnvCreate.path,
+                appEnvCreate.description
+            )
         }
     }
 
@@ -163,7 +170,11 @@ class ContainerAppServiceImpl @Autowired constructor(
         // 判断编译环境名称和操作系统组合是否存在系统
         val count = containerAppsDao.countByNameAndOs(dslContext, containerApp.name, containerApp.os)
         if (count > 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(containerApp.name + "+" + containerApp.os), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(containerApp.name + "+" + containerApp.os),
+                false
+            )
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -194,7 +205,11 @@ class ContainerAppServiceImpl @Autowired constructor(
         if (count > 0) {
             val containerAppInfoRecord = containerAppsDao.getContainerAppInfo(dslContext, id)
             if (null != containerAppInfoRecord && name != containerAppInfoRecord.name && os != containerAppInfoRecord.os) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf("$name+$os"), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf("$name+$os"),
+                    false
+                )
             }
         }
         // 判断编译环境名称是否存在
@@ -245,8 +260,10 @@ class ContainerAppServiceImpl @Autowired constructor(
             logger.info("the containerAppInfoRecord is :{}", containerAppInfoRecord)
             if (null != containerAppInfoRecord) {
                 val containerApp = containerAppInfoRecord.map { containerAppsDao.convert(it as TAppsRecord) }
-                val containerAppEnvList = containerAppsEnvDao.listByAppId(context, containerApp.id).map { containerAppsEnvDao.convert(it) }
-                val containerAppVersionList = containerAppsVersionDao.listByAppId(context, containerApp.id).map { containerAppsVersionDao.convert(it) }
+                val containerAppEnvList =
+                    containerAppsEnvDao.listByAppId(context, containerApp.id).map { containerAppsEnvDao.convert(it) }
+                val containerAppVersionList = containerAppsVersionDao.listByAppId(context, containerApp.id)
+                    .map { containerAppsVersionDao.convert(it) }
                 containerAppInfo = ContainerAppInfo(containerApp, containerAppEnvList, containerAppVersionList)
             }
         }
@@ -266,14 +283,16 @@ class ContainerAppServiceImpl @Autowired constructor(
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val appRecord = containerAppsDao.get(context, name, os) ?: return@transactionResult null
-            val versionRecord = containerAppsVersionDao.get(context, appRecord.id, version) ?: return@transactionResult null
+            val versionRecord =
+                containerAppsVersionDao.get(context, appRecord.id, version) ?: return@transactionResult null
             val envRecords = containerAppsEnvDao.listByAppId(context, appRecord.id)
             BuildEnv(appRecord.name,
-                    getAppVersion(versionRecord.version, appRecord.name),
-                    appRecord.binPath,
-                    envRecords.map {
-                        it.name to it.path
-                    }.toMap())
+                getAppVersion(versionRecord.version, appRecord.name),
+                appRecord.binPath,
+                envRecords.map {
+                    it.name to it.path
+                }.toMap()
+            )
         }
     }
 

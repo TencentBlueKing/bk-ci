@@ -28,4 +28,5 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline
 
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 
-class CommandPipeline(val command: String, override val seqId: String) : ThirdPartyAgentPipeline(PipelineType.COMMAND, seqId)
+class CommandPipeline(val command: String, override val seqId: String) :
+    ThirdPartyAgentPipeline(PipelineType.COMMAND, seqId)

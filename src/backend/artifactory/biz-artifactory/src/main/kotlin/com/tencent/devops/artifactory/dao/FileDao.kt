@@ -26,7 +26,6 @@
 
 package com.tencent.devops.artifactory.dao
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.artifactory.tables.TFileInfo
 import com.tencent.devops.model.artifactory.tables.TFilePropsInfo
 import com.tencent.devops.model.artifactory.tables.records.TFileInfoRecord

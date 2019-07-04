@@ -39,11 +39,23 @@ import org.springframework.beans.factory.annotation.Autowired
 class EeServiceMarketAtomResourceImpl @Autowired constructor(private val eeMarketAtomService: EeMarketAtomService) :
     EeServiceMarketAtomResource {
 
-    override fun verifyAtomPackageByUserId(userId: String, projectCode: String, atomCode: String, version: String, releaseType: ReleaseTypeEnum?, os: String?): Result<Boolean> {
+    override fun verifyAtomPackageByUserId(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum?,
+        os: String?
+    ): Result<Boolean> {
         return eeMarketAtomService.verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
     }
 
-    override fun verifyAtomTaskJson(userId: String, projectCode: String, atomCode: String, version: String): Result<GetAtomConfigResult?> {
+    override fun verifyAtomTaskJson(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ): Result<GetAtomConfigResult?> {
         return eeMarketAtomService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
     }
 

@@ -28,8 +28,8 @@ package com.tencent.devops.common.redis
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisCallback
-import redis.clients.jedis.JedisCluster
 import redis.clients.jedis.Jedis
+import redis.clients.jedis.JedisCluster
 
 class RedisLockByValue(
     private val redisOperation: RedisOperation,
@@ -55,7 +55,8 @@ class RedisLockByValue(
 
         private val logger = LoggerFactory.getLogger(RedisLockByValue::class.java)
 
-        private val UNLOCK_LUA = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
+        private val UNLOCK_LUA =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
     }
 
     /**
@@ -119,14 +120,14 @@ class RedisLockByValue(
 
             val nativeConnection = connection.nativeConnection
             val result =
-                    when (nativeConnection) {
-                        is JedisCluster -> nativeConnection.set(key, value, NX, EX, seconds)
-                        is Jedis -> nativeConnection.set(key, value, NX, EX, seconds)
-                        else -> {
-                            logger.warn("Unknown redis connection($nativeConnection)")
-                            null
-                        }
+                when (nativeConnection) {
+                    is JedisCluster -> nativeConnection.set(key, value, NX, EX, seconds)
+                    is Jedis -> nativeConnection.set(key, value, NX, EX, seconds)
+                    else -> {
+                        logger.warn("Unknown redis connection($nativeConnection)")
+                        null
                     }
+                }
             result
         })
     }
@@ -164,14 +165,14 @@ class RedisLockByValue(
                 val keys = listOf(lockKey)
                 val values = listOf(lockValue)
                 val queryResult =
-                        when (nativeConnection) {
-                            is JedisCluster -> nativeConnection.eval(UNLOCK_LUA, keys, values)
-                            is Jedis -> nativeConnection.eval(UNLOCK_LUA, keys, values)
-                            else -> {
-                                logger.warn("Unknown redis connection($nativeConnection)")
-                                0L
-                            }
+                    when (nativeConnection) {
+                        is JedisCluster -> nativeConnection.eval(UNLOCK_LUA, keys, values)
+                        is Jedis -> nativeConnection.eval(UNLOCK_LUA, keys, values)
+                        else -> {
+                            logger.warn("Unknown redis connection($nativeConnection)")
+                            0L
                         }
+                    }
                 queryResult == 1L
             })
         }

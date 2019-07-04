@@ -43,7 +43,15 @@ object SvnUtils {
     fun getClientManager(svnURL: SVNURL, userName: String, privateKey: String, passphrase: String?): SVNClientManager {
         val options = SVNWCUtil.createDefaultOptions(true)
         val auth = if (isSSHProtocol(svnURL.protocol)) {
-            SVNSSHAuthentication.newInstance(userName, privateKey.toCharArray(), passphrase?.toCharArray(), 22, false, svnURL, false)
+            SVNSSHAuthentication.newInstance(
+                userName,
+                privateKey.toCharArray(),
+                passphrase?.toCharArray(),
+                22,
+                false,
+                svnURL,
+                false
+            )
         } else {
             SVNPasswordAuthentication.newInstance(userName, privateKey.toCharArray(), false, svnURL, false)
         }
@@ -54,13 +62,22 @@ object SvnUtils {
         val svnURL = SVNURL.parseURIEncoded(url)
 
         val auth = if (isSSHProtocol(svnURL.protocol)) {
-            SVNSSHAuthentication.newInstance(userName, privateKey.toCharArray(), passphrase?.toCharArray(), 22, false, svnURL, false)
+            SVNSSHAuthentication.newInstance(
+                userName,
+                privateKey.toCharArray(),
+                passphrase?.toCharArray(),
+                22,
+                false,
+                svnURL,
+                false
+            )
         } else {
             SVNPasswordAuthentication.newInstance(userName, privateKey.toCharArray(), false, svnURL, false)
         }
 
         val basicAuthenticationManager = BasicAuthenticationManager(arrayOf(auth))
-        val options = DefaultSVNRepositoryPool(basicAuthenticationManager, SVNWCUtil.createDefaultOptions(true), 30*1000L, true)
+        val options =
+            DefaultSVNRepositoryPool(basicAuthenticationManager, SVNWCUtil.createDefaultOptions(true), 30 * 1000L, true)
         val repository = SVNRepositoryFactory.create(svnURL, options)
 
         repository.authenticationManager = basicAuthenticationManager
@@ -69,7 +86,8 @@ object SvnUtils {
 
     fun isSSHProtocol(protocol: String?): Boolean {
         if (protocol == "http" ||
-                protocol == "https") {
+            protocol == "https"
+        ) {
             return false
         }
         return true
