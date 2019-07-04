@@ -6,7 +6,7 @@
 
 - **前端&接口网关(WebAPI Gateway & FrontEnd) ：**
 
-  - **WebAPI Gateway：**由OpenResty负责，包含了对接用户登录及身份鉴权，和后端API的**Consul**服务发现转发的lua脚本及Nginx配置
+  - **WebAPI Gateway：** 由OpenResty负责，包含了对接用户登录及身份鉴权，和后端API的**Consul**服务发现转发的lua脚本及Nginx配置
   - **FrontEnd：** 基于VUE的纯前端工程，包含一序列的js,img和html等静态资源。
 
 - **后端服务(MicroService BackEnd)：** 基于Kotlin/Java编写，采用SpringCloud框架的微服务架构设计，以下按各微服务模块的启动顺序介绍：
