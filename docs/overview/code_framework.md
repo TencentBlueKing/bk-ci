@@ -58,12 +58,17 @@
 |- bk-ci/src
   |- agent         # agent基于go语言编写，用于在构建机上运行DevopsDaemon&DevopsAgent
   |- backend
-    |- process                  # 流水线微服务总目录
-      |- api-process            # api定义抽象层
-      |- service-process        # api和业务服务实现层，如有一些需要扩展抽象则会放到sample示例实现
-      |- service-process-sample # 业务服务实现扩展示例，主要是示例如何扩展实现
-      |- boot-process           # 构建springboot微服务包，负责出包，会输出到release目录
-      |- model-process          # 使用JOOQ 从db中ORM映射生成的PO
+    |- project                  # 项目微服务总目录
+      |- api-project            # api定义抽象层
+      |- api-project-sample     # 默认与对接不同平台有差异的部分的api定义抽象层
+      |- api-project-blueking   # 对接蓝鲸特有差异api定义抽象层
+      |- api-project-op         # 运营后台操作类api定义抽象层
+      |- biz-project            # api和业务服务实现层，如有一些需要扩展抽象则会放到sample示例实现
+      |- biz-project-blueking   # 对接蓝鲸平台的业务服务实现
+      |- biz-project-sample     # 业务服务实现扩展示例，主要是示例如何扩展实现
+      |- biz-project-op         # 运营后台操作类api的实现
+      |- boot-process           # 构建springboot微服务包，设置依赖构建并输出到release目录
+      |- model-process          # 使用JOOQ从db中动态生成的PO，表结构有变更需要clean后重新build
     |- boot-assembly            # 用于构建单体微服务，整合所有微服务的单体jar包
     |- common                   # 通用模块
       |- common-auth            # 权限模块
@@ -74,7 +79,7 @@
     |- environment # 环境管理微服务总目录
     |- log         # 日志微服务总目录
     |- artifactory # 构件仓库微服务总目录
-    |- project     # 项目管理微服务总目录
+    |- process     # 流水线微服务总目录
     |- release     # 本地打包生成的目录，输出jar的目录
     |- repository  # 代码仓库微服务总目录
     |- store       # 研发商店微服务总目录

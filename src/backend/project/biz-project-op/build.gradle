@@ -25,10 +25,8 @@
  */
 
 dependencies {
-    compile project(":project:biz-project-op") // OP管理类接口
-    compile project(":project:biz-project-blueking") // 这是对接蓝鲸的实现
-
-    // 根据依赖蓝鲸的打出来的包就是对接蓝鲸平台的微服务
+    compile project(":project:biz-project")
+    compile project(":project:api-project-op")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"
