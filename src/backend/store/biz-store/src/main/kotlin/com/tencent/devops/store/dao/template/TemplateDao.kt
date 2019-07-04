@@ -26,17 +26,17 @@
 
 package com.tencent.devops.store.dao.template
 
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.enums.TemplateStatusEnum
-import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TLabel
+import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatistics
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.TTemplateCategoryRel
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
-import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.enums.TemplateStatusEnum
+import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -132,7 +132,10 @@ class TemplateDao {
         if (null != sortType) {
             if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name) {
                 val tas = TStoreStatistics.T_STORE_STATISTICS.`as`("tas")
-                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.sum().`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).groupBy(tas.STORE_CODE).asTable("t")
+                val t = dslContext.select(
+                    tas.STORE_CODE,
+                    tas.DOWNLOADS.sum().`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)
+                ).from(tas).groupBy(tas.STORE_CODE).asTable("t")
                 baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -217,7 +220,9 @@ class TemplateDao {
      */
     fun countReleaseTemplateNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this)
+                .where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
@@ -228,7 +233,8 @@ class TemplateDao {
         val a = TTemplate.T_TEMPLATE.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
         val templateStatusList = listOf(TemplateStatusEnum.RELEASED.status.toByte())
-        return dslContext.selectCount().from(a).join(b).on(a.TEMPLATE_CODE.eq(b.STORE_CODE)).where(a.TEMPLATE_STATUS.`in`(templateStatusList).and(a.CLASSIFY_ID.eq(classifyId)))
-                .fetchOne(0, Int::class.java)
+        return dslContext.selectCount().from(a).join(b).on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
+            .where(a.TEMPLATE_STATUS.`in`(templateStatusList).and(a.CLASSIFY_ID.eq(classifyId)))
+            .fetchOne(0, Int::class.java)
     }
 }

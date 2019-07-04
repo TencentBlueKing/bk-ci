@@ -26,10 +26,8 @@
 
 package com.tencent.devops.store.dao.common
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
-import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -38,7 +36,14 @@ import org.springframework.stereotype.Repository
 @Repository
 class StoreMemberDao {
 
-    fun addStoreMember(dslContext: DSLContext, userId: String, storeCode: String, userName: String, type: Byte, storeType: Byte) {
+    fun addStoreMember(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        userName: String,
+        type: Byte,
+        storeType: Byte
+    ) {
         with(TStoreMember.T_STORE_MEMBER) {
             dslContext.insertInto(
                 this,

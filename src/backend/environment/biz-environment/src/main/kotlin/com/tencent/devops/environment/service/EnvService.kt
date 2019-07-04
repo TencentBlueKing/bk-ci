@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -96,8 +95,10 @@ class EnvService @Autowired constructor(
                 var envId = 0L
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    envId = envDao.create(context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
-                        envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars))
+                    envId = envDao.create(
+                        context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
+                        envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                    )
                     val envNodeList = nodeLongIds.map { TEnvNodeRecord(envId, it, projectId) }
                     envNodeDao.batchStoreEnvNode(context, envNodeList)
                 }
@@ -124,7 +125,8 @@ class EnvService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
 
-            envDao.update(context,
+            envDao.update(
+                context,
                 HashUtil.decodeIdToLong(envHashId),
                 envUpdateInfo.name,
                 envUpdateInfo.desc,
@@ -214,7 +216,13 @@ class EnvService @Autowired constructor(
             val abnormalNodeCount = if (nodeIds.isEmpty()) {
                 0
             } else {
-                thirdPartyAgentDao.countAgentByStatusAndOS(dslContext, projectId, nodeIds, AgentStatus.IMPORT_EXCEPTION, os)
+                thirdPartyAgentDao.countAgentByStatusAndOS(
+                    dslContext,
+                    projectId,
+                    nodeIds,
+                    AgentStatus.IMPORT_EXCEPTION,
+                    os
+                )
             }
 
             EnvWithNodeCount(
@@ -248,7 +256,8 @@ class EnvService @Autowired constructor(
     }
 
     fun listRawEnvByHashIds(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission> {
-        val envRecords = envDao.listServerEnvByIds(dslContext, projectId, envHashIds.map { HashUtil.decodeIdToLong(it) })
+        val envRecords =
+            envDao.listServerEnvByIds(dslContext, projectId, envHashIds.map { HashUtil.decodeIdToLong(it) })
         return envRecords.map {
             EnvWithPermission(
                 HashUtil.encodeLongId(it.envId),
@@ -363,6 +372,10 @@ class EnvService @Autowired constructor(
     }
 
     fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
-        envNodeDao.batchDeleteEnvNode(dslContext, projectId, HashUtil.decodeIdToLong(envHashId), nodeHashIds.map { HashUtil.decodeIdToLong(it) })
+        envNodeDao.batchDeleteEnvNode(
+            dslContext,
+            projectId,
+            HashUtil.decodeIdToLong(envHashId),
+            nodeHashIds.map { HashUtil.decodeIdToLong(it) })
     }
 }

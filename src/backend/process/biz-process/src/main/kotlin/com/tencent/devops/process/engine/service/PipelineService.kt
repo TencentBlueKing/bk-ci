@@ -209,7 +209,14 @@ class PipelineService @Autowired constructor(
                     model
                 }
                 pipelineId =
-                    pipelineRepositoryService.deployPipeline(instance, projectId, fixPipelineId, userId, channelCode, true)
+                    pipelineRepositoryService.deployPipeline(
+                        instance,
+                        projectId,
+                        fixPipelineId,
+                        userId,
+                        channelCode,
+                        true
+                    )
                 if (checkPermission) {
                     logger.info("[$pipelineId]|start to create auth")
                     try {
@@ -779,7 +786,12 @@ class PipelineService @Autowired constructor(
                 val hasPipelines = allFilterPipelines.isNotEmpty()
 
                 if (!hasPipelines) {
-                    return PipelineViewPipelinePage(page = pageNotNull, pageSize = pageSizeNotNull, count = 0, records = emptyList())
+                    return PipelineViewPipelinePage(
+                        page = pageNotNull,
+                        pageSize = pageSizeNotNull,
+                        count = 0,
+                        records = emptyList()
+                    )
                 }
 
                 val filterPipelines = when (viewId) {
@@ -823,7 +835,12 @@ class PipelineService @Autowired constructor(
             }
             watch.stop()
 
-            return PipelineViewPipelinePage(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = list)
+            return PipelineViewPipelinePage(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = count,
+                records = list
+            )
         } finally {
             logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
@@ -1314,7 +1331,12 @@ class PipelineService @Autowired constructor(
                 pipelines.subList(offset, toIndex)
             }
         }
-        return PipelineViewPipelinePage(page = pageNotNull, pageSize = pageSizeNotNull, count = pipelines.size + 0L, records = list)
+        return PipelineViewPipelinePage(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = pipelines.size + 0L,
+            records = list
+        )
     }
 
     private fun isTemplatePipeline(pipelineId: String): Boolean {

@@ -30,8 +30,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.UserJobMutexGroupResource
-import com.tencent.devops.process.pojo.JobMutexGroup
 import com.tencent.devops.process.engine.service.PipelineJobMutexGroupService
+import com.tencent.devops.process.pojo.JobMutexGroup
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

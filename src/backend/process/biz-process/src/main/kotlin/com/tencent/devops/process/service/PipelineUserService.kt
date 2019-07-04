@@ -57,15 +57,15 @@ class PipelineUserService @Autowired constructor(
 
     fun listCreateUsers(pipelineIds: Set<String>): Map<String/*pipelineId*/, String> {
         return pipelineUserDao.list(dslContext, pipelineIds)
-                .map {
-                    it.pipelineId to it.createUser
-                }.toMap()
+            .map {
+                it.pipelineId to it.createUser
+            }.toMap()
     }
 
     fun listUpdateUsers(pipelineIds: Set<String>): Map<String/*pipelineId*/, String> {
         return pipelineUserDao.list(dslContext, pipelineIds)
-                .map {
-                    it.pipelineId to it.updateUser
-                }.toMap()
+            .map {
+                it.pipelineId to it.updateUser
+            }.toMap()
     }
 }

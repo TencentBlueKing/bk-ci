@@ -31,35 +31,35 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * {
-    "name": "master",
-    "commit": {
-        "sha": "bdd43327c549105f5e1296d65121afbeb0f3f1ef",
-        "node_id": "MDM6UmVmNjEyOTgzNDU6dGVzdF92MQ==",
-        "commit": {
-            "author": {
-                "name": "The xxx",
-                "date": "2015-04-06T15:06:50-08:00",
-                "email": "xx@cc.com"
-            },
-            "url": "https://api.github.com/repos/xx/Hello-World/git/commits/bdd43327c549105f5e1296d65121afbeb0f3f1ef",
-            "message": "Merge pull request #6 from Spaceghost/patch-1\n\nNew line at end of file.",
-            "tree": {
-                "sha": "b4eecafa9be2f2006ce1b709d6857b07069b4608",
-                "url": "https://api.github.com/repos/xx/Hello-World/git/trees/bdd43327c549105f5e1296d65121afbeb0f3f1ef"
-            },
-            "committer": {
-                "name": "The cc",
-                "date": "2015-04-06T15:06:50-08:00",
-                "email": "xx@cc.com"
-            },
-            "verification": {
-                "verified": false,
-                "reason": "unsigned",
-                "signature": null,
-                "payload": null
-            }
-        }
-    }
+"name": "master",
+"commit": {
+"sha": "bdd43327c549105f5e1296d65121afbeb0f3f1ef",
+"node_id": "MDM6UmVmNjEyOTgzNDU6dGVzdF92MQ==",
+"commit": {
+"author": {
+"name": "The xxx",
+"date": "2015-04-06T15:06:50-08:00",
+"email": "xx@cc.com"
+},
+"url": "https://api.github.com/repos/xx/Hello-World/git/commits/bdd43327c549105f5e1296d65121afbeb0f3f1ef",
+"message": "Merge pull request #6 from Spaceghost/patch-1\n\nNew line at end of file.",
+"tree": {
+"sha": "b4eecafa9be2f2006ce1b709d6857b07069b4608",
+"url": "https://api.github.com/repos/xx/Hello-World/git/trees/bdd43327c549105f5e1296d65121afbeb0f3f1ef"
+},
+"committer": {
+"name": "The cc",
+"date": "2015-04-06T15:06:50-08:00",
+"email": "xx@cc.com"
+},
+"verification": {
+"verified": false,
+"reason": "unsigned",
+"signature": null,
+"payload": null
+}
+}
+}
  * }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)

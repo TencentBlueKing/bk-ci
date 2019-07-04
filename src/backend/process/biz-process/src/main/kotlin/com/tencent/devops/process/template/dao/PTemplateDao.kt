@@ -56,7 +56,16 @@ class PTemplateDao {
                 this,
                 PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, STORE_FLAG
             )
-                .values(projectId, templateId, templateName, versionName, userId, java.time.LocalDateTime.now(), template, storeFlag)
+                .values(
+                    projectId,
+                    templateId,
+                    templateName,
+                    versionName,
+                    userId,
+                    java.time.LocalDateTime.now(),
+                    template,
+                    storeFlag
+                )
                 .returning(VERSION)
                 .fetchOne().version
         }
@@ -80,15 +89,47 @@ class PTemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.insertInto(
                 this,
-                PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, TYPE, CATEGORY, LOGO_URL, SRC_TEMPLATE_ID, STORE_FLAG, WEIGHT
+                PROJECT_ID,
+                ID,
+                TEMPLATE_NAME,
+                VERSION_NAME,
+                CREATOR,
+                CREATED_TIME,
+                TEMPLATE,
+                TYPE,
+                CATEGORY,
+                LOGO_URL,
+                SRC_TEMPLATE_ID,
+                STORE_FLAG,
+                WEIGHT
             )
-                .values(projectId, templateId, templateName, versionName, userId, java.time.LocalDateTime.now(), template, type, category, logoUrl, srcTemplateId, storeFlag, weight)
+                .values(
+                    projectId,
+                    templateId,
+                    templateName,
+                    versionName,
+                    userId,
+                    java.time.LocalDateTime.now(),
+                    template,
+                    type,
+                    category,
+                    logoUrl,
+                    srcTemplateId,
+                    storeFlag,
+                    weight
+                )
                 .returning(VERSION)
                 .fetchOne().version
         }
     }
 
-    fun updateTemplateReference(dslContext: DSLContext, srcTemplateId: String, name: String, category: String, logoUrl: String?) {
+    fun updateTemplateReference(
+        dslContext: DSLContext,
+        srcTemplateId: String,
+        name: String,
+        category: String,
+        logoUrl: String?
+    ) {
         with(TTemplate.T_TEMPLATE) {
             dslContext.update(this)
                 .set(TEMPLATE_NAME, name)
@@ -260,7 +301,16 @@ class PTemplateDao {
         )
             .from(a)
             .join(t)
-            .on(a.ID.eq(t.field("templateId", String::class.java)).and(a.VERSION.eq(t.field("version", Long::class.java))))
+            .on(
+                a.ID.eq(t.field("templateId", String::class.java)).and(
+                    a.VERSION.eq(
+                        t.field(
+                            "version",
+                            Long::class.java
+                        )
+                    )
+                )
+            )
             .where(conditions)
             .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc())
 

@@ -31,7 +31,7 @@ package com.tencent.devops.common.event.dispatcher
  *
  * @version 1.0
  */
-interface EventDispatcher <T> {
+interface EventDispatcher<T> {
 
     fun dispatch(vararg events: T)
 }

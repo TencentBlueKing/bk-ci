@@ -29,7 +29,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.project.pojo.user.UserVO
 
 interface UserService {
-    
+
     /**
      * 获取用户信息
      * @param userId 用户id

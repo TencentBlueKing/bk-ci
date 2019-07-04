@@ -63,8 +63,10 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
     }
 
     private fun checkOKAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.IMPORT_OK))
+        val nodeRecords = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.IMPORT_OK)
+        )
         if (nodeRecords.isEmpty()) {
             return
         }
@@ -80,7 +82,13 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
                 logger.warn("The agent($agentId) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    thirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.IMPORT_EXCEPTION)
+                    thirdPartyAgentDao.updateStatus(
+                        context,
+                        record.id,
+                        null,
+                        record.projectId,
+                        AgentStatus.IMPORT_EXCEPTION
+                    )
                     val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)
                     if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
                         deleteAgent(context, record.projectId, record.id)
@@ -92,8 +100,10 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
     }
 
     private fun checkUnimportAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.UN_IMPORT_OK))
+        val nodeRecords = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.UN_IMPORT_OK)
+        )
         if (nodeRecords.isEmpty()) {
             return
         }
@@ -109,15 +119,24 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
                 logger.warn("The un-import agent($agentId) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    thirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.UN_IMPORT, AgentStatus.UN_IMPORT_OK)
+                    thirdPartyAgentDao.updateStatus(
+                        context,
+                        record.id,
+                        null,
+                        record.projectId,
+                        AgentStatus.UN_IMPORT,
+                        AgentStatus.UN_IMPORT_OK
+                    )
                 }
             }
         }
     }
 
     private fun checkExceptionAgent() {
-        val exceptionRecord = thirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.IMPORT_EXCEPTION))
+        val exceptionRecord = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.IMPORT_EXCEPTION)
+        )
         if (exceptionRecord.isEmpty()) {
             return
         }

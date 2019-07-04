@@ -40,12 +40,25 @@ interface StoreProjectService {
     /**
      * 根据商店组件标识获取已安装的项目列表
      */
-    fun getInstalledProjects(accessToken: String, userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<InstalledProjRespItem>>
+    fun getInstalledProjects(
+        accessToken: String,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<List<InstalledProjRespItem>>
 
     /**
      * 安装商店组件
      */
-    fun installStoreComponent(accessToken: String, userId: String, projectCodeList: ArrayList<String>, storeId: String, storeCode: String, storeType: StoreTypeEnum, publicFlag: Boolean): Result<Boolean>
+    fun installStoreComponent(
+        accessToken: String,
+        userId: String,
+        projectCodeList: ArrayList<String>,
+        storeId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        publicFlag: Boolean
+    ): Result<Boolean>
 
     /**
      * 卸载商店组件

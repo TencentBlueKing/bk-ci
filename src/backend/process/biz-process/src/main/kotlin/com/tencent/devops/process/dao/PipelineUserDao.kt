@@ -31,7 +31,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineUserRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class PipelineUserDao {
@@ -43,18 +42,20 @@ class PipelineUserDao {
     ) {
         with(TPipelineUser.T_PIPELINE_USER) {
             val now = LocalDateTime.now()
-            dslContext.insertInto(this,
-                    PIPELINE_ID,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    CREATE_USER,
-                    UPDATE_USER)
-                    .values(
-                            pipelineId,
-                            now, now,
-                            userId, userId
-                    ).onDuplicateKeyIgnore()
-                    .execute()
+            dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATE_USER,
+                UPDATE_USER
+            )
+                .values(
+                    pipelineId,
+                    now, now,
+                    userId, userId
+                ).onDuplicateKeyIgnore()
+                .execute()
         }
     }
 
@@ -65,10 +66,10 @@ class PipelineUserDao {
     ) {
         with(TPipelineUser.T_PIPELINE_USER) {
             dslContext.update(this)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(UPDATE_USER, userId)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .execute()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(UPDATE_USER, userId)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
@@ -78,8 +79,8 @@ class PipelineUserDao {
     ): Result<TPipelineUserRecord> {
         with(TPipelineUser.T_PIPELINE_USER) {
             return dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.`in`(pipelineIds))
-                    .fetch()
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .fetch()
         }
     }
 
@@ -89,8 +90,8 @@ class PipelineUserDao {
     ) {
         with(TPipelineUser.T_PIPELINE_USER) {
             dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .execute()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 }

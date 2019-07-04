@@ -43,12 +43,12 @@ class PipelineTaskService @Autowired constructor(
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
         return pipelineTaskDao.list(dslContext, projectId, pipelineIds)?.map {
             PipelineModelTask(
-                    it.projectId,
-                    it.pipelineId,
-                    it.taskId,
-                    it.taskName,
-                    it.classType,
-                    objectMapper.readValue(it.taskParams)
+                it.projectId,
+                it.pipelineId,
+                it.taskId,
+                it.taskName,
+                it.classType,
+                objectMapper.readValue(it.taskParams)
             )
         }?.groupBy { it.pipelineId } ?: mapOf()
     }

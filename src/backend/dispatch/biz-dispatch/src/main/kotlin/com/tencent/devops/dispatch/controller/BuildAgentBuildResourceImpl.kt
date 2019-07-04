@@ -35,19 +35,37 @@ import com.tencent.devops.dispatch.service.ThirdPartyAgentBuildService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildAgentBuildResourceImpl @Autowired constructor(private val thirdPartyAgentBuildService: ThirdPartyAgentBuildService) : BuildAgentBuildResource {
+class BuildAgentBuildResourceImpl @Autowired constructor(private val thirdPartyAgentBuildService: ThirdPartyAgentBuildService) :
+    BuildAgentBuildResource {
 
     override fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
         checkParam(projectId, agentId, secretKey)
         return thirdPartyAgentBuildService.startBuild(projectId, agentId, secretKey)
     }
 
-    override fun upgrade(projectId: String, agentId: String, secretKey: String, version: String?, masterVersion: String?): AgentResult<Boolean> {
+    override fun upgrade(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        version: String?,
+        masterVersion: String?
+    ): AgentResult<Boolean> {
         checkParam(projectId, agentId, secretKey)
-        return thirdPartyAgentBuildService.checkIfCanUpgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
+        return thirdPartyAgentBuildService.checkIfCanUpgradeByVersion(
+            projectId,
+            agentId,
+            secretKey,
+            version,
+            masterVersion
+        )
     }
 
-    override fun finishUpgrade(projectId: String, agentId: String, secretKey: String, success: Boolean): AgentResult<Boolean> {
+    override fun finishUpgrade(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        success: Boolean
+    ): AgentResult<Boolean> {
         checkParam(projectId, agentId, secretKey)
         return thirdPartyAgentBuildService.finishUpgrade(projectId, agentId, secretKey, success)
     }

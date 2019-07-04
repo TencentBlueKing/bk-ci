@@ -59,8 +59,10 @@ class ReportService @Autowired constructor(
         } else {
             indexFile // 防止第三方报告url路径http://截断成http:/
         }
-        logger.info("[$buildId]|pipelineId=$pipelineId|projectId=$projectId|taskId=$taskId" +
-            "|indexFile=$indexFile|name=$name|reportType=$reportType|indexFilePath=$indexFilePath")
+        logger.info(
+            "[$buildId]|pipelineId=$pipelineId|projectId=$projectId|taskId=$taskId" +
+                "|indexFile=$indexFile|name=$name|reportType=$reportType|indexFilePath=$indexFilePath"
+        )
         reportDao.create(dslContext, projectId, pipelineId, buildId, taskId, indexFilePath, name, reportType.name)
     }
 

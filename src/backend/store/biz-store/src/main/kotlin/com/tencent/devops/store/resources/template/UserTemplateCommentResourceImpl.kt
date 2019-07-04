@@ -26,22 +26,26 @@
 
 package com.tencent.devops.store.resources.template
 
-import com.tencent.devops.store.api.template.UserTemplateCommentResource
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.template.UserTemplateCommentResource
 import com.tencent.devops.store.pojo.common.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreStatisticService
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.store.service.template.MarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserTemplateCommentResourceImpl @Autowired constructor(private val marketTemplateService: MarketTemplateService, private val storeCommentService: StoreCommentService, private val storeStatisticService: StoreStatisticService) :
-        UserTemplateCommentResource {
+class UserTemplateCommentResourceImpl @Autowired constructor(
+    private val marketTemplateService: MarketTemplateService,
+    private val storeCommentService: StoreCommentService,
+    private val storeStatisticService: StoreStatisticService
+) :
+    UserTemplateCommentResource {
 
     override fun getTemplateCommentScoreInfo(templateCode: String): Result<StoreCommentScoreInfo> {
         return storeStatisticService.getStoreCommentScoreInfo(templateCode, StoreTypeEnum.TEMPLATE)
@@ -51,20 +55,40 @@ class UserTemplateCommentResourceImpl @Autowired constructor(private val marketT
         return storeCommentService.getStoreComment(userId, commentId)
     }
 
-    override fun getStoreComments(userId: String, templateCode: String, page: Int, pageSize: Int): Result<Page<StoreCommentInfo>?> {
+    override fun getStoreComments(
+        userId: String,
+        templateCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreCommentInfo>?> {
         return storeCommentService.getStoreComments(userId, templateCode, StoreTypeEnum.TEMPLATE, page, pageSize)
     }
 
-    override fun addTemplateComment(userId: String, templateId: String, templateCode: String, storeCommentRequest: StoreCommentRequest): Result<StoreCommentInfo?> {
+    override fun addTemplateComment(
+        userId: String,
+        templateId: String,
+        templateCode: String,
+        storeCommentRequest: StoreCommentRequest
+    ): Result<StoreCommentInfo?> {
         // 判断templateId和templateCode是否真实有效
         val result = marketTemplateService.judgeTemplateExistByIdAndCode(templateId, templateCode)
         if (result.isNotOk()) {
             return Result(status = result.status, message = result.message ?: "")
         }
-        return storeCommentService.addStoreComment(userId, templateId, templateCode, storeCommentRequest, StoreTypeEnum.TEMPLATE)
+        return storeCommentService.addStoreComment(
+            userId,
+            templateId,
+            templateCode,
+            storeCommentRequest,
+            StoreTypeEnum.TEMPLATE
+        )
     }
 
-    override fun updateStoreComment(userId: String, commentId: String, storeCommentRequest: StoreCommentRequest): Result<Boolean> {
+    override fun updateStoreComment(
+        userId: String,
+        commentId: String,
+        storeCommentRequest: StoreCommentRequest
+    ): Result<Boolean> {
         return storeCommentService.updateStoreComment(userId, commentId, storeCommentRequest)
     }
 

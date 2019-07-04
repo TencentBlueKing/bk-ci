@@ -49,7 +49,10 @@ data class OpTemplateItem(
     val classifyName: String?,
     @ApiModelProperty("简介", required = false)
     val summary: String?,
-    @ApiModelProperty("模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = true)
+    @ApiModelProperty(
+        "模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
+        required = true
+    )
     val templateStatus: String,
     @ApiModelProperty("模板描述", required = false)
     val description: String?,

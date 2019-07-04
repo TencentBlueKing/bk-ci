@@ -26,20 +26,25 @@
 
 package com.tencent.devops.store.resources
 
-import com.tencent.devops.store.api.ServiceContainerResource
-import com.tencent.devops.store.pojo.container.ContainerResourceValue
-import com.tencent.devops.store.service.container.ContainerService
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.ServiceContainerResource
+import com.tencent.devops.store.pojo.container.ContainerResourceValue
+import com.tencent.devops.store.service.container.ContainerService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
     ServiceContainerResource {
 
-    override fun getContainers(userId: String, projectId: String, buildType: BuildType, os: OS): Result<ContainerResourceValue?> {
+    override fun getContainers(
+        userId: String,
+        projectId: String,
+        buildType: BuildType,
+        os: OS
+    ): Result<ContainerResourceValue?> {
         return containerService.getContainerResource(userId, projectId, os, buildType)
     }
 }

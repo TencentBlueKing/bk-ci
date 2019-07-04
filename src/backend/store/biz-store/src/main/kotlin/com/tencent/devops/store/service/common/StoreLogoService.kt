@@ -40,5 +40,9 @@ interface StoreLogoService {
     /**
      * 上传logo
      */
-    fun uploadStoreLogo(userId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<String?>
+    fun uploadStoreLogo(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }

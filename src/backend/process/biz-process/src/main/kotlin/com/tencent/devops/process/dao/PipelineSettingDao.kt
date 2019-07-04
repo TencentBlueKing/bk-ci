@@ -28,13 +28,7 @@ package com.tencent.devops.process.dao
 
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.util.DateTimeUtils
-import com.tencent.devops.process.util.NotifyTemplateUtils
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1

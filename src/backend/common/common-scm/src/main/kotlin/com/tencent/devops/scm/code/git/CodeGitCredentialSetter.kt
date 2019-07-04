@@ -83,9 +83,9 @@ class CodeGitCredentialSetter constructor(
             override fun createDefaultJSch(fs: FS): JSch {
                 val defaultJSch = super.createDefaultJSch(fs)
                 defaultJSch.addIdentity(
-                        "TempIdentity",
-                        privateKey.toByteArray(), null,
-                        passPhrase?.toByteArray()
+                    "TempIdentity",
+                    privateKey.toByteArray(), null,
+                    passPhrase?.toByteArray()
                 )
                 return defaultJSch
             }

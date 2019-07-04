@@ -62,7 +62,8 @@ open class GitApiImpl {
         var page = 1
         val result = mutableListOf<GitBranch>()
         while (true) {
-            val request = get(host, token, "projects/${urlEncode(projectName)}/repository/branches", "page=$page&per_page=100")
+            val request =
+                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", "page=$page&per_page=100")
             page++
             val pageResult = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
             result.addAll(pageResult)
@@ -77,7 +78,8 @@ open class GitApiImpl {
         var page = 1
         val result = mutableListOf<GitTag>()
         while (true) {
-            val request = get(host, token, "projects/${urlEncode(projectName)}/repository/tags", "page=$page&per_page=100")
+            val request =
+                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", "page=$page&per_page=100")
             page++
             val pageResult: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
             result.addAll(pageResult)
@@ -99,13 +101,27 @@ open class GitApiImpl {
             existHooks.forEach {
                 if (it.url == hookUrl) {
                     val exist = when (event) {
-                        null -> { it.pushEvents }
-                        CodeGitWebhookEvent.PUSH_EVENTS.value -> { it.pushEvents }
-                        CodeGitWebhookEvent.TAG_PUSH_EVENTS.value -> { it.tagPushEvents }
-                        CodeGitWebhookEvent.ISSUES_EVENTS.value -> { it.issuesEvents }
-                        CodeGitWebhookEvent.NOTE_EVENTS.value -> { it.noteEvents }
-                        CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value -> { it.mergeRequestsEvents }
-                        CodeGitWebhookEvent.REVIEW_EVENTS.value -> { it.reviewEvents }
+                        null -> {
+                            it.pushEvents
+                        }
+                        CodeGitWebhookEvent.PUSH_EVENTS.value -> {
+                            it.pushEvents
+                        }
+                        CodeGitWebhookEvent.TAG_PUSH_EVENTS.value -> {
+                            it.tagPushEvents
+                        }
+                        CodeGitWebhookEvent.ISSUES_EVENTS.value -> {
+                            it.issuesEvents
+                        }
+                        CodeGitWebhookEvent.NOTE_EVENTS.value -> {
+                            it.noteEvents
+                        }
+                        CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value -> {
+                            it.mergeRequestsEvents
+                        }
+                        CodeGitWebhookEvent.REVIEW_EVENTS.value -> {
+                            it.reviewEvents
+                        }
                         else -> false
                     }
 
@@ -121,13 +137,23 @@ open class GitApiImpl {
         addHook(host, token, projectName, hookUrl, event)
     }
 
-    fun addCommitCheck(host: String, token: String, projectName: String, commitId: String, state: String, detailUrl: String, context: String, description: String, block: Boolean) {
+    fun addCommitCheck(
+        host: String,
+        token: String,
+        projectName: String,
+        commitId: String,
+        state: String,
+        detailUrl: String,
+        context: String,
+        description: String,
+        block: Boolean
+    ) {
         val params = mapOf(
-                "state" to state,
-                "targetUrl" to detailUrl,
-                "description" to description,
-                "context" to context,
-                "block" to block
+            "state" to state,
+            "targetUrl" to detailUrl,
+            "description" to description,
+            "context" to context,
+            "block" to block
         )
 
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
@@ -142,7 +168,13 @@ open class GitApiImpl {
         }
     }
 
-    private fun addHook(host: String, token: String, projectName: String, hookUrl: String, event: String? = null): GitHook {
+    private fun addHook(
+        host: String,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String? = null
+    ): GitHook {
         val params = mutableMapOf<String, String>()
 
         params["url"] = hookUrl
@@ -175,7 +207,8 @@ open class GitApiImpl {
             while (true) {
                 val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "page=$page&per_page=100")
                 page++
-                val pageResult: List<GitHook> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_LIST_WEBHOOK, request))
+                val pageResult: List<GitHook> =
+                    JsonUtil.getObjectMapper().readValue(getBody(OPERATION_LIST_WEBHOOK, request))
                 result.addAll(pageResult)
                 if (pageResult.size < 100) {
                     if (result.size >= HOOK_LIMIT) logger.error("there are ${result.size} hooks in project $projectName")
@@ -191,22 +224,25 @@ open class GitApiImpl {
     }
 
     private fun post(host: String, token: String, url: String, body: String) =
-            request(host, token, url, "")
-                    .post(RequestBody.create(
-                            MediaType.parse("application/json; charset=utf-8"), body))
-                    .build()
+        request(host, token, url, "")
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"), body
+                )
+            )
+            .build()
 
     private fun get(host: String, token: String, url: String, page: String) = request(host, token, url, page)
-            .get()
-            .build()
+        .get()
+        .build()
 
     protected open fun request(host: String, token: String, url: String, page: String): Request.Builder {
         return if (page.isNotEmpty()) Request.Builder()
-                .url("$host/$url?$page")
-                .header("PRIVATE-TOKEN", token)
-            else Request.Builder()
-                .url("$host/$url")
-                .header("PRIVATE-TOKEN", token)
+            .url("$host/$url?$page")
+            .header("PRIVATE-TOKEN", token)
+        else Request.Builder()
+            .url("$host/$url")
+            .header("PRIVATE-TOKEN", token)
     }
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
@@ -242,5 +278,4 @@ open class GitApiImpl {
     }
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
-
 }

@@ -55,7 +55,7 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
             // 600
             val perms = PosixFilePermissions.fromString("rw-------")
             val fileAttributes = PosixFilePermissions
-                    .asFileAttribute(perms)
+                .asFileAttribute(perms)
 
             val keyFile = Files.createTempFile("private_key_", ".key", fileAttributes).toFile()
             keyFile.writeText(privateKey)
@@ -147,7 +147,7 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
         // 700
         val perms = PosixFilePermissions.fromString("rwx------")
         val fileAttributes = PosixFilePermissions
-                .asFileAttribute(perms)
+            .asFileAttribute(perms)
         val askpass = Files.createTempFile("askpass_", ".sh", fileAttributes).toFile()
         logger.info("Create the askpass file(${askpass.absolutePath})")
         askpass.writeText("#!/bin/sh\necho \"\$SSH_PASSPHRASE\"\nrm \"$0\"\n")

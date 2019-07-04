@@ -34,7 +34,7 @@ dependencies {
 def moduleName = name.split('-')[1]
 def databaseName = moduleName
 def mysqlEnv = System.getProperty("mysqlEnv")
-if(mysqlEnv != null && mysqlEnv != "") {
+if (mysqlEnv != null && mysqlEnv != "") {
 
     println "jooq build env :" + mysqlEnv
     databaseName = mysqlEnv + "_" + databaseName

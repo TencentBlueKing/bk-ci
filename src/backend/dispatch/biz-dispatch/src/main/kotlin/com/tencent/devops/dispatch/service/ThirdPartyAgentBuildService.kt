@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
@@ -64,8 +63,10 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         vmSeqId: String,
         thirdPartyAgentWorkspace: String
     ) {
-        val count = thirdPartyAgentBuildDao.add(dslContext, projectId, agentId, pipelineId, buildId,
-                vmSeqId, thirdPartyAgentWorkspace)
+        val count = thirdPartyAgentBuildDao.add(
+            dslContext, projectId, agentId, pipelineId, buildId,
+            vmSeqId, thirdPartyAgentWorkspace
+        )
         if (count != 1) {
             logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|$agentId|$count)")
             throw OperationException("Fail to add the third party agent build")
@@ -74,15 +75,16 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
     fun getPreBuildAgents(projectId: String, pipelineId: String, vmSeqId: String): List<ThirdPartyAgentPreBuildAgents> {
         val records = thirdPartyAgentBuildDao.getPreBuildAgent(
-                dslContext, projectId, pipelineId, vmSeqId)
+            dslContext, projectId, pipelineId, vmSeqId
+        )
         return records.map {
             ThirdPartyAgentPreBuildAgents(
-                    it.id,
-                    it.projectId,
-                    it.agentId,
-                    it.buildId,
-                    it.status,
-                    it.createdTime.timestamp()
+                it.id,
+                it.projectId,
+                it.agentId,
+                it.buildId,
+                it.status,
+                it.createdTime.timestamp()
             )
         }
     }
@@ -117,8 +119,10 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             }
 
             if (agentResult.data!!.secretKey != secretKey) {
-                logger.warn("The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)")
+                logger.warn(
+                    "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
+                        "of project($projectId) and agent($agentId)"
+                )
                 throw NotFoundException("Fail to get the agent")
             }
 
@@ -133,7 +137,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             try {
                 redisLock.lock()
                 val buildRecords =
-                        thirdPartyAgentBuildDao.getQueueBuilds(dslContext, agentId)
+                    thirdPartyAgentBuildDao.getQueueBuilds(dslContext, agentId)
                 if (buildRecords.isEmpty()) {
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
@@ -141,8 +145,10 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 val build = buildRecords[0]
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
                 thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)
-                return AgentResult(AgentStatus.IMPORT_OK,
-                        ThirdPartyBuildInfo(projectId, build.buildId, build.vmSeqId, build.workspace))
+                return AgentResult(
+                    AgentStatus.IMPORT_OK,
+                    ThirdPartyBuildInfo(projectId, build.buildId, build.vmSeqId, build.workspace)
+                )
             } finally {
                 redisLock.unlock()
             }
@@ -179,7 +185,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         logger.info("Start to check if the agent($agentId) of project($projectId) can upgrade")
         return try {
             val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
-                    .upgrade(projectId, agentId, secretKey, tag)
+                .upgrade(projectId, agentId, secretKey, tag)
             upgrade(projectId, agentId, agentUpgradeResult)
         } catch (ignored: Throwable) {
             logger.warn("Fail to check if agent can upgrade", ignored)
@@ -217,8 +223,10 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             }
 
             if (agentResult.data!!.secretKey != secretKey) {
-                logger.warn("The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)")
+                logger.warn(
+                    "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
+                        "of project($projectId) and agent($agentId)"
+                )
                 throw NotFoundException("Fail to get the agent")
             }
             redisUtils.thirdPartyAgentUpgradingDone(projectId, agentId)
@@ -244,13 +252,13 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             }
         } else {
             val record =
-                    thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId!!) ?: return
+                thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId!!) ?: return
             finishBuild(record, success)
         }
     }
 
     private fun upgrade(projectId: String, agentId: String, agentUpgradeResult: AgentResult<Boolean>)
-            : AgentResult<Boolean> {
+        : AgentResult<Boolean> {
         try {
             if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
                 return agentUpgradeResult
@@ -265,10 +273,11 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             try {
                 redisLock.lock()
                 val runningBuildRecord =
-                        thirdPartyAgentBuildDao.getRunningBuilds(dslContext, agentId)
+                    thirdPartyAgentBuildDao.getRunningBuilds(dslContext, agentId)
                 if (runningBuildRecord.isNotEmpty()) {
                     logger.info(("The agent is running the build " +
-                            "${runningBuildRecord.joinToString(",") { it.buildId }}, can't upgrade"))
+                        "${runningBuildRecord.joinToString(",") { it.buildId }}, can't upgrade")
+                    )
                     return AgentResult(AgentStatus.IMPORT_OK, false)
                 }
                 logger.info("The agent($agentId) of project($projectId) can upgrade")
@@ -287,10 +296,12 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         record: TDispatchThirdpartyAgentBuildRecord,
         success: Boolean
     ) {
-        logger.info("Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
-                "of seq(${record.vmSeqId}) and status(${record.status})")
+        logger.info(
+            "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
+                "of seq(${record.vmSeqId}) and status(${record.status})"
+        )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
-                .getAgentById(record.projectId, record.agentId)
+            .getAgentById(record.projectId, record.agentId)
         if (agentResult.isNotOk()) {
             logger.warn("Fail to get the third party agent(${record.agentId}) because of ${agentResult.message}")
             throw RemoteServiceException("Fail to get the third party agent")
@@ -301,8 +312,10 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             throw RemoteServiceException("Fail to get the third party agent")
         }
         redisUtils.deleteThirdPartyBuild(agentResult.data!!.secretKey, record.agentId, record.buildId, record.vmSeqId)
-        thirdPartyAgentBuildDao.updateStatus(dslContext, record.id,
-                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+        thirdPartyAgentBuildDao.updateStatus(
+            dslContext, record.id,
+            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+        )
     }
 
     companion object {

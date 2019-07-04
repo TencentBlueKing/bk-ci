@@ -31,7 +31,7 @@ import java.time.LocalDateTime
 object TimeRangeUtils {
 
     fun getTodayRange() =
-            getTimeRange(LocalDateTime.now())
+        getTimeRange(LocalDateTime.now())
 
     fun getTimeRange(date: LocalDateTime): Pair<LocalDateTime, LocalDateTime> {
         val start = LocalDateTime.of(date.year, date.month, date.dayOfMonth, 0, 0, 0)

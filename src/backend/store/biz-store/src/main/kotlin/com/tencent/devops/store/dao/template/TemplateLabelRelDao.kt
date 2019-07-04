@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.dao.template
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import org.jooq.DSLContext
@@ -66,7 +65,8 @@ class TemplateLabelRelDao {
     fun batchAdd(dslContext: DSLContext, userId: String, templateId: String, labelIdList: List<String>?) {
         with(TTemplateLabelRel.T_TEMPLATE_LABEL_REL) {
             val addStep = labelIdList?.map {
-                dslContext.insertInto(this,
+                dslContext.insertInto(
+                    this,
                     ID,
                     TEMPLATE_ID,
                     LABEL_ID,

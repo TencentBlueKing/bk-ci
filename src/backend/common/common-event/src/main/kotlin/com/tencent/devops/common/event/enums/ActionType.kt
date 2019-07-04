@@ -38,6 +38,7 @@ enum class ActionType {
     SKIP, // 跳过-不执行
     TERMINATE // 终止
     ;
+
     companion object {
         fun isStart(actionType: ActionType) = START == actionType || RETRY == actionType
         fun isEnd(actionType: ActionType) = END == actionType || isTerminate(actionType)

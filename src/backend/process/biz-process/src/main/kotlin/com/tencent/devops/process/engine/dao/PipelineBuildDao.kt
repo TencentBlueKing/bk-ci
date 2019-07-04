@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -41,7 +40,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildDao {

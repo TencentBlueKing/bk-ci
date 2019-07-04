@@ -41,6 +41,6 @@ enum class ChannelCode {
     companion object {
         // Only BS need to check the authentication for now
         fun isNeedAuth(channelCode: ChannelCode) =
-                channelCode == BS
+            channelCode == BS
     }
 }

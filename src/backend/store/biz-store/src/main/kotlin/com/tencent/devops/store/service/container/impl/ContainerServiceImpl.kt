@@ -81,6 +81,7 @@ class ContainerServiceImpl @Autowired constructor(
         OS.LINUX to BuildType.THIRD_PARTY_AGENT_ID,
         OS.MACOS to BuildType.THIRD_PARTY_AGENT_ID
     )
+
     /**
      * 获取所有构建容器信息
      */
@@ -99,14 +100,21 @@ class ContainerServiceImpl @Autowired constructor(
     /**
      * 获取构建容器信息
      */
-    override fun getAllContainerInfos(userId: String, projectCode: String, type: String?, os: OS?): Result<List<ContainerResp>> {
+    override fun getAllContainerInfos(
+        userId: String,
+        projectCode: String,
+        type: String?,
+        os: OS?
+    ): Result<List<ContainerResp>> {
         logger.info("the get userId is :$userId,projectCode is :$projectCode, type is :$type,os is :$os")
         val dataList = mutableListOf<ContainerResp>()
         val pipelineContainers = containerDao.getAllPipelineContainer(dslContext, type, os?.name)
         pipelineContainers?.forEach {
             val containerId = it.id
-            val defaultBuildResourceRecord = buildResourceDao.getBuildResourceByContainerId(dslContext, containerId, true)
-            val defaultBuildResourceObject = if (null != defaultBuildResourceRecord && defaultBuildResourceRecord.size > 0) defaultBuildResourceRecord[0] else null
+            val defaultBuildResourceRecord =
+                buildResourceDao.getBuildResourceByContainerId(dslContext, containerId, true)
+            val defaultBuildResourceObject =
+                if (null != defaultBuildResourceRecord && defaultBuildResourceRecord.size > 0) defaultBuildResourceRecord[0] else null
             val defaultPublicBuildResource: String? = defaultBuildResourceObject?.get("buildResourceCode") as? String
             var appList: List<ContainerAppWithVersion>? = null
             val resources = HashMap<BuildType, ContainerResource>()
@@ -134,7 +142,10 @@ class ContainerServiceImpl @Autowired constructor(
                     val resource = try {
                         getResource(userId, projectCode, containerId, containerOS, type).first
                     } catch (e: Exception) {
-                        logger.warn("[$userId|$projectCode|$containerId|$containerOS|$type] Fail to get the container resource", e)
+                        logger.warn(
+                            "[$userId|$projectCode|$containerId|$containerOS|$type] Fail to get the container resource",
+                            e
+                        )
                         null
                     }
                     if (resource != null) {
@@ -215,7 +226,8 @@ class ContainerServiceImpl @Autowired constructor(
                         "/${it.ip}（${it.status}）"
                     )
                 }
-            } else -> {
+            }
+            else -> {
                 containerResourceValue = emptyList()
                 emptyList<String>()
             }
@@ -267,11 +279,13 @@ class ContainerServiceImpl @Autowired constructor(
         logger.info("the get id is :{}", id)
         val pipelineContainerRecord = containerDao.getPipelineContainer(dslContext, id)
         logger.info("the pipelineContainerRecord is :{}", pipelineContainerRecord)
-        return Result(if (pipelineContainerRecord == null) {
-            null
-        } else {
-            convertPipelineContainer(pipelineContainerRecord)
-        })
+        return Result(
+            if (pipelineContainerRecord == null) {
+                null
+            } else {
+                convertPipelineContainer(pipelineContainerRecord)
+            }
+        )
     }
 
     /**
@@ -283,14 +297,22 @@ class ContainerServiceImpl @Autowired constructor(
         // 判断容器名称是否存在
         val count = containerDao.countByName(dslContext, name)
         if (count > 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(name), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(name),
+                false
+            )
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val id = UUIDUtil.generate()
             containerDao.savePipelineContainer(context, id, containerRequest)
             val resourceIdList = containerRequest.resourceIdList
-            if (!CollectionUtils.isEmpty(resourceIdList)) containerResourceRelDao.batchAdd(context, id, resourceIdList!!)
+            if (!CollectionUtils.isEmpty(resourceIdList)) containerResourceRelDao.batchAdd(
+                context,
+                id,
+                resourceIdList!!
+            )
         }
         return Result(true)
     }
@@ -307,7 +329,11 @@ class ContainerServiceImpl @Autowired constructor(
             // 判断更新的容器名称是否属于自已
             val pipelineContainer = containerDao.getPipelineContainer(dslContext, id)
             if (null != pipelineContainer && name != pipelineContainer.name) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(name), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(name),
+                    false
+                )
             }
         }
         dslContext.transaction { t ->
@@ -316,7 +342,11 @@ class ContainerServiceImpl @Autowired constructor(
             // 先解除容器与构建资源的关联关系，然后再从新建立二者之间的关系
             containerResourceRelDao.deleteByContainerId(context, id)
             val resourceIdList = containerRequest.resourceIdList
-            if (!CollectionUtils.isEmpty(resourceIdList)) containerResourceRelDao.batchAdd(context, id, resourceIdList!!)
+            if (!CollectionUtils.isEmpty(resourceIdList)) containerResourceRelDao.batchAdd(
+                context,
+                id,
+                resourceIdList!!
+            )
         }
         return Result(true)
     }

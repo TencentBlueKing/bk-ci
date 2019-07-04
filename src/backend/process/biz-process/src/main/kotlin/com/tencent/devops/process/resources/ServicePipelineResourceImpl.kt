@@ -48,11 +48,22 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getSinglePipelineStatus(userId, projectId, pipelineId))
     }
 
-    override fun create(userId: String, projectId: String, pipeline: Model, channelCode: ChannelCode): Result<PipelineId> {
+    override fun create(
+        userId: String,
+        projectId: String,
+        pipeline: Model,
+        channelCode: ChannelCode
+    ): Result<PipelineId> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(PipelineId(pipelineService.createPipeline(userId, projectId, pipeline, channelCode,
-                ChannelCode.isNeedAuth(channelCode))))
+        return Result(
+            PipelineId(
+                pipelineService.createPipeline(
+                    userId, projectId, pipeline, channelCode,
+                    ChannelCode.isNeedAuth(channelCode)
+                )
+            )
+        )
     }
 
     override fun edit(
@@ -63,8 +74,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Boolean> {
         checkParams(userId, projectId, pipelineId)
-        pipelineService.editPipeline(userId, projectId, pipelineId, pipeline,
-                channelCode, ChannelCode.isNeedAuth(channelCode))
+        pipelineService.editPipeline(
+            userId, projectId, pipelineId, pipeline,
+            channelCode, ChannelCode.isNeedAuth(channelCode)
+        )
         // pipelineGroupService.setPipelineGroup(userId, pipelineId,projectId,pipeline.group)
         return Result(true)
     }
@@ -81,8 +94,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Boolean> {
         checkParams(userId, projectId, pipelineId)
-        pipelineService.deletePipeline(userId, projectId, pipelineId, channelCode,
-                ChannelCode.isNeedAuth(channelCode))
+        pipelineService.deletePipeline(
+            userId, projectId, pipelineId, channelCode,
+            ChannelCode.isNeedAuth(channelCode)
+        )
         return Result(true)
     }
 
@@ -97,8 +112,9 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         val result = pipelineService.listPermissionPipeline(
-                userId, projectId, page, pageSize, PipelineSortType.CREATE_TIME,
-                channelCode ?: ChannelCode.BS, false)
+            userId, projectId, page, pageSize, PipelineSortType.CREATE_TIME,
+            channelCode ?: ChannelCode.BS, false
+        )
         return Result(Page(result.page, result.pageSize, result.count, result.records))
     }
 
@@ -119,7 +135,11 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getPipelineNameByIds(projectId, pipelineIds))
     }
 
-    override fun getBuildNoByBuildIds(projectId: String, pipelineId: String, buildIds: Set<String>): Result<Map<String, Int>> {
+    override fun getBuildNoByBuildIds(
+        projectId: String,
+        pipelineId: String,
+        buildIds: Set<String>
+    ): Result<Map<String, Int>> {
         return Result(pipelineService.getBuildNoByBuildIds(projectId, pipelineId, buildIds))
     }
 

@@ -26,16 +26,13 @@
 
 package com.tencent.devops.store.dao.common
 
-import com.tencent.devops.store.pojo.common.Classify
-import com.tencent.devops.store.pojo.common.ClassifyRequest
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.ClassifyRequest
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ClassifyDao {
@@ -62,51 +59,53 @@ class ClassifyDao {
 
     fun countByName(dslContext: DSLContext, classifyName: String, type: Byte): Int {
         with(TClassify.T_CLASSIFY) {
-            return dslContext.selectCount().from(this).where(CLASSIFY_NAME.eq(classifyName).and(TYPE.eq(type))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(CLASSIFY_NAME.eq(classifyName).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun countByCode(dslContext: DSLContext, classifyCode: String, type: Byte): Int {
         with(TClassify.T_CLASSIFY) {
-            return dslContext.selectCount().from(this).where(CLASSIFY_CODE.eq(classifyCode).and(TYPE.eq(type))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(CLASSIFY_CODE.eq(classifyCode).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun delete(dslContext: DSLContext, id: String) {
         with(TClassify.T_CLASSIFY) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun update(dslContext: DSLContext, id: String, classifyRequest: ClassifyRequest) {
         with(TClassify.T_CLASSIFY) {
             dslContext.update(this)
-                    .set(CLASSIFY_CODE, classifyRequest.classifyCode)
-                    .set(CLASSIFY_NAME, classifyRequest.classifyName)
-                    .set(WEIGHT, classifyRequest.weight)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(id))
-                    .execute()
+                .set(CLASSIFY_CODE, classifyRequest.classifyCode)
+                .set(CLASSIFY_NAME, classifyRequest.classifyName)
+                .set(WEIGHT, classifyRequest.weight)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun getClassify(dslContext: DSLContext, id: String): TClassifyRecord? {
         with(TClassify.T_CLASSIFY) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun getAllClassify(dslContext: DSLContext, type: Byte): Result<TClassifyRecord> {
         with(TClassify.T_CLASSIFY) {
             return dslContext
-                    .selectFrom(this)
-                    .where(TYPE.eq(type))
-                    .orderBy(WEIGHT.desc())
-                    .fetch()
+                .selectFrom(this)
+                .where(TYPE.eq(type))
+                .orderBy(WEIGHT.desc())
+                .fetch()
         }
     }
 

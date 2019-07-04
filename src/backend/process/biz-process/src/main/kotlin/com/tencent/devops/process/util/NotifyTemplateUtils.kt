@@ -34,9 +34,9 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
 object NotifyTemplateUtils {
     const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "【\${$PROJECT_NAME_CHINESE}】- " +
-            "【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} " +
-            "执行成功，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
+        "【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} " +
+        "执行成功，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
     const val COMMON_SHUTDOWN_FAILURE_CONTENT = "【\${$PROJECT_NAME_CHINESE}】- " +
-            "【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} " +
-            "执行失败，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
+        "【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} " +
+        "执行失败，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
 }
