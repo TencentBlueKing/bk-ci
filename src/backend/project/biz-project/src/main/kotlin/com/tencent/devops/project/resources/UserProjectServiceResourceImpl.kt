@@ -36,11 +36,11 @@ import com.tencent.devops.project.service.UserProjectServiceService
 class UserProjectServiceResourceImpl constructor(private val userProjectServiceService: UserProjectServiceService) :
     UserProjectServiceResource {
 
-    override fun updateCollected(bkToken: String, serviceId: Long, collector: Boolean): Result<Boolean> {
-        return userProjectServiceService.updateCollected(bkToken, serviceId, collector)
+    override fun updateCollected(userId: String, serviceId: Long, collector: Boolean): Result<Boolean> {
+        return userProjectServiceService.updateCollected(userId, serviceId, collector)
     }
 
-    override fun getServiceList(bkToken: String, projectId: String?): Result<List<ServiceListVO>> {
-        return userProjectServiceService.listService(bkToken, projectId)
+    override fun getServiceList(userId: String, projectId: String?): Result<List<ServiceListVO>> {
+        return userProjectServiceService.listService(userId, projectId)
     }
 }

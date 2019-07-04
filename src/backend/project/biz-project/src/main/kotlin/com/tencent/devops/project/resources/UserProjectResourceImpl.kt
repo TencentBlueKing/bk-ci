@@ -44,11 +44,11 @@ class UserProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService
 ) : UserProjectResource {
 
-    override fun list(accessToken: String, userId: String): Result<List<ProjectVO>> {
+    override fun list(userId: String): Result<List<ProjectVO>> {
         return Result(projectService.list(userId))
     }
 
-    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
         // 创建项目
         projectService.create(userId, projectCreateInfo)
 
@@ -57,7 +57,6 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun update(
         userId: String,
-        accessToken: String,
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean> {
@@ -66,7 +65,6 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun updateLogo(
         userId: String,
-        accessToken: String,
         projectId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
@@ -84,7 +82,7 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun get(accessToken: String, projectId: String): Result<ProjectVO> {
+    override fun get(projectId: String): Result<ProjectVO> {
         return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
     }
 }
