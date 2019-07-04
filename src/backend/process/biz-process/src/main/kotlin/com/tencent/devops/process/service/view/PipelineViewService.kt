@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao

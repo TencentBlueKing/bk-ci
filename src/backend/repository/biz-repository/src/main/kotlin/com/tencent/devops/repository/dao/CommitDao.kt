@@ -26,12 +26,17 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.repository.tables.TRepositoryCommit
 import com.tencent.devops.model.repository.tables.records.TRepositoryCommitRecord
 import com.tencent.devops.repository.pojo.commit.CommitData
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 @Repository
 class CommitDao {

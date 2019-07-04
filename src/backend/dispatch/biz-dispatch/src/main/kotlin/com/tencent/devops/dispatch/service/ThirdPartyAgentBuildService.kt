@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
@@ -275,8 +276,9 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 val runningBuildRecord =
                     thirdPartyAgentBuildDao.getRunningBuilds(dslContext, agentId)
                 if (runningBuildRecord.isNotEmpty()) {
-                    logger.info(("The agent is running the build " +
-                        "${runningBuildRecord.joinToString(",") { it.buildId }}, can't upgrade")
+                    logger.info(
+                        ("The agent is running the build " +
+                            "${runningBuildRecord.joinToString(",") { it.buildId }}, can't upgrade")
                     )
                     return AgentResult(AgentStatus.IMPORT_OK, false)
                 }

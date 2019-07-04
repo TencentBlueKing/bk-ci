@@ -34,6 +34,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 
 @Repository
 class RepositoryDao {
