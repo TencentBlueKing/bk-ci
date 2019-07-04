@@ -32,6 +32,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 /**
  * 流水线标签

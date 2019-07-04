@@ -27,6 +27,7 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.dispatch.pojo.Machine
 import com.tencent.devops.model.dispatch.tables.TDispatchMachine
 import com.tencent.devops.model.dispatch.tables.records.TDispatchMachineRecord
@@ -34,6 +35,8 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import org.springframework.util.StringUtils
+import java.time.LocalDateTime
 
 @Repository
 class MachineDao {

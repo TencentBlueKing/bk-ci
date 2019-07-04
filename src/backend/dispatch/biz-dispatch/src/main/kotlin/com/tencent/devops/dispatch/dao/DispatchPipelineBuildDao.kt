@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.pojo.PipelineBuildCreate
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -34,6 +35,7 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineBuildRe
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class DispatchPipelineBuildDao {

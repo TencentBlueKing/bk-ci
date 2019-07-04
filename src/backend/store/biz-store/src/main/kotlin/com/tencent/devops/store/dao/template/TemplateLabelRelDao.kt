@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.dao.template
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import org.jooq.DSLContext

@@ -32,6 +32,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 open class PipelineTimerDao {

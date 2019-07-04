@@ -29,10 +29,13 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.container.JobControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_CONTAINER
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
