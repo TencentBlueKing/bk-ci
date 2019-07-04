@@ -26,8 +26,8 @@
 
 package com.tencent.devops.project.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import io.swagger.annotations.Api
@@ -53,9 +53,8 @@ interface UserProjectServiceResource {
     @Path("/services")
     @ApiOperation("查询所有服务")
     fun getServiceList(
-        @ApiParam("bk Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        bkToken: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String?
@@ -66,8 +65,8 @@ interface UserProjectServiceResource {
     @ApiOperation("用户修改关注")
     fun updateCollected(
         @ApiParam("bk Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        bkToken: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("服务ID")
         @PathParam("service_id")
         serviceId: Long,
