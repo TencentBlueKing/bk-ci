@@ -38,7 +38,8 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineGroupService: PipelineGroupService) : UserPipelineGroupResource {
+class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineGroupService: PipelineGroupService) :
+    UserPipelineGroupResource {
     override fun getGroups(userId: String, projectId: String): Result<List<PipelineGroup>> {
         return Result(pipelineGroupService.getGroups(userId, projectId))
     }

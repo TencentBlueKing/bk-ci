@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -37,7 +36,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class MarketAtomEnvInfoDao {
@@ -74,7 +72,13 @@ class MarketAtomEnvInfoDao {
         }
     }
 
-    fun getProjectMarketAtomEnvInfo(dslContext: DSLContext, projectCode: String, atomCode: String, version: String, atomStatusList: List<Byte>?): Record? {
+    fun getProjectMarketAtomEnvInfo(
+        dslContext: DSLContext,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatusList: List<Byte>?
+    ): Record? {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")

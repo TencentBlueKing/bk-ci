@@ -62,7 +62,16 @@ class MarketAtomClassifyServiceImpl @Autowired constructor(
             val atomNum = it["atomNum"] as? Int
             val createTime = it["createTime"] as LocalDateTime
             val updateTime = it["updateTime"] as LocalDateTime
-            marketAtomClassifyList.add(MarketAtomClassify(id, classifyCode, classifyName, atomNum ?: 0, createTime.timestampmilli(), updateTime.timestampmilli()))
+            marketAtomClassifyList.add(
+                MarketAtomClassify(
+                    id,
+                    classifyCode,
+                    classifyName,
+                    atomNum ?: 0,
+                    createTime.timestampmilli(),
+                    updateTime.timestampmilli()
+                )
+            )
         }
         logger.info("the marketAtomClassifyList is:$marketAtomClassifyList")
         return Result(marketAtomClassifyList)

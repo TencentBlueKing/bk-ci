@@ -53,7 +53,8 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
      * 根据编译环境ID查找该编译环境下的环境变量
      */
     override fun listByAppId(appId: Int): Result<List<ContainerAppEnv>> {
-        val containerAppEnvList = containerAppsEnvDao.listByAppId(dslContext, appId).map { containerAppsEnvDao.convert(it) }
+        val containerAppEnvList =
+            containerAppsEnvDao.listByAppId(dslContext, appId).map { containerAppsEnvDao.convert(it) }
         return Result(containerAppEnvList)
     }
 
@@ -63,11 +64,13 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
     override fun getContainerAppEnv(id: Int): Result<ContainerAppEnv?> {
         val containerAppEnvRecord = containerAppsEnvDao.getById(dslContext, id)
         logger.info("the containerAppEnvRecord is :{}", containerAppEnvRecord)
-        return Result(if (containerAppEnvRecord == null) {
-            null
-        } else {
-            containerAppsEnvDao.convert(containerAppEnvRecord)
-        })
+        return Result(
+            if (containerAppEnvRecord == null) {
+                null
+            } else {
+                containerAppsEnvDao.convert(containerAppEnvRecord)
+            }
+        )
     }
 
     /**
@@ -75,7 +78,13 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
      */
     override fun saveContainerAppEnv(containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
         logger.info("the save containerAppEnvRequest is:{}", containerAppEnvRequest)
-        containerAppsEnvDao.add(dslContext, containerAppEnvRequest.appId, containerAppEnvRequest.name, containerAppEnvRequest.path, containerAppEnvRequest.description)
+        containerAppsEnvDao.add(
+            dslContext,
+            containerAppEnvRequest.appId,
+            containerAppEnvRequest.name,
+            containerAppEnvRequest.path,
+            containerAppEnvRequest.description
+        )
         return Result(true)
     }
 
@@ -84,7 +93,14 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
      */
     override fun updateContainerAppEnv(id: Int, containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
         logger.info("the update id is :{},the update containerAppEnvRequest is:{}", id, containerAppEnvRequest)
-        containerAppsEnvDao.update(dslContext, id, containerAppEnvRequest.appId, containerAppEnvRequest.name, containerAppEnvRequest.path, containerAppEnvRequest.description)
+        containerAppsEnvDao.update(
+            dslContext,
+            id,
+            containerAppEnvRequest.appId,
+            containerAppEnvRequest.name,
+            containerAppEnvRequest.path,
+            containerAppEnvRequest.description
+        )
         return Result(true)
     }
 

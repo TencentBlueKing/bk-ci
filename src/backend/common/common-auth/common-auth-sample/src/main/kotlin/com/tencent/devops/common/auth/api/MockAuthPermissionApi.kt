@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.auth.api
 
-import com.tencent.devops.common.auth.code.ADMIN
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthPermissionApi : AuthPermissionApi {

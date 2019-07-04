@@ -44,10 +44,26 @@ object RepositoryConfigUtils {
 
     fun buildConfig(element: Element): RepositoryConfig {
         return when (element) {
-            is CodeGitElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
-            is CodeSvnElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
-            is CodeGitlabElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
-            is GithubElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
+            is CodeGitElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is CodeSvnElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is CodeGitlabElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is GithubElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
             else -> throw InvalidParamException("Unknown code element -> $element")
         }
     }

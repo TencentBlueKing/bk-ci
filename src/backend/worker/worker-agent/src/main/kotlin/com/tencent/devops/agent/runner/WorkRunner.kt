@@ -96,7 +96,8 @@ object WorkRunner {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() {
                     logger.info("start kill process tree")
-                    val killedProcessIds = KillBuildProcessTree.killProcessTree(buildInfo.projectId, buildInfo.buildId, buildInfo.vmSeqId)
+                    val killedProcessIds =
+                        KillBuildProcessTree.killProcessTree(buildInfo.projectId, buildInfo.buildId, buildInfo.vmSeqId)
                     logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed")
                 }
             })

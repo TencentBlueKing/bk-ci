@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtomPipelineBuildRel
 import com.tencent.devops.model.store.tables.records.TAtomPipelineBuildRelRecord
 import org.jooq.DSLContext
@@ -37,7 +36,8 @@ class MarketAtomPipelineBuildRelDao {
 
     fun add(dslContext: DSLContext, atomId: String, pipelineId: String, buildId: String) {
         with(TAtomPipelineBuildRel.T_ATOM_PIPELINE_BUILD_REL) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ATOM_ID,
                 PIPELINE_ID,

@@ -32,7 +32,6 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /**
  * 用户分组管理
@@ -49,23 +48,25 @@ class PipelineGroupDao {
         logger.info("Create the pipeline group for project $projectId with name $name by user $userId")
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             val now = LocalDateTime.now()
-            return dslContext.insertInto(this,
-                    PROJECT_ID,
-                    NAME,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    CREATE_USER,
-                    UPDATE_USER)
-                    .values(
-                            projectId,
-                            name,
-                            now,
-                            now,
-                            userId,
-                            userId
-                    )
-                    .returning(ID)
-                    .fetchOne().id
+            return dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                NAME,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATE_USER,
+                UPDATE_USER
+            )
+                .values(
+                    projectId,
+                    name,
+                    now,
+                    now,
+                    userId,
+                    userId
+                )
+                .returning(ID)
+                .fetchOne().id
         }
     }
 
@@ -78,11 +79,11 @@ class PipelineGroupDao {
         logger.info("Update the pipeline group $groupId with name $name by user $userId")
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.update(this)
-                    .set(NAME, name)
-                    .set(UPDATE_USER, userId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(groupId))
-                    .execute() == 1
+                .set(NAME, name)
+                .set(UPDATE_USER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(groupId))
+                .execute() == 1
         }
     }
 
@@ -94,8 +95,8 @@ class PipelineGroupDao {
         logger.info("Delete the pipeline group $groupId by user $userId")
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.deleteFrom(this)
-                    .where(ID.eq(groupId))
-                    .execute() == 1
+                .where(ID.eq(groupId))
+                .execute() == 1
         }
     }
 
@@ -105,17 +106,17 @@ class PipelineGroupDao {
     ): Result<TPipelineGroupRecord> {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .fetch()
         }
     }
 
     fun listByIds(dslContext: DSLContext, projectId: String, ids: Set<Long>): Result<TPipelineGroupRecord> {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(ID.`in`(ids))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(ID.`in`(ids))
+                .fetch()
         }
     }
 

@@ -26,13 +26,10 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

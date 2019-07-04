@@ -30,7 +30,6 @@ import com.tencent.devops.model.process.tables.TPipelineRemoteAuth
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class PipelineRemoteAuthDao {
@@ -43,36 +42,38 @@ class PipelineRemoteAuthDao {
         userId: String
     ) {
         with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
-            dslContext.insertInto(this,
-                    PIPELINE_ID,
-                    PIPELINE_AUTH,
-                    PROJECT_ID,
-                    CREATE_TIME,
-                    CREATE_USER)
-                    .values(
-                            pipelineId,
-                            pipelineAuth,
-                            projectId,
-                            LocalDateTime.now(),
-                            userId
-                    )
-                    .execute()
+            dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                PIPELINE_AUTH,
+                PROJECT_ID,
+                CREATE_TIME,
+                CREATE_USER
+            )
+                .values(
+                    pipelineId,
+                    pipelineAuth,
+                    projectId,
+                    LocalDateTime.now(),
+                    userId
+                )
+                .execute()
         }
     }
 
     fun getByPipelineId(dslContext: DSLContext, pipelineId: String): TPipelineRemoteAuthRecord? {
         with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
             return dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .fetchOne()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetchOne()
         }
     }
 
     fun getByAuth(dslContext: DSLContext, auth: String): TPipelineRemoteAuthRecord? {
         with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
             return dslContext.selectFrom(this)
-                    .where(PIPELINE_AUTH.eq(auth))
-                    .fetchOne()
+                .where(PIPELINE_AUTH.eq(auth))
+                .fetchOne()
         }
     }
 }

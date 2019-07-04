@@ -38,7 +38,7 @@ dependencies {
     compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
     compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
     compile "org.bouncycastle:bcprov-jdk16"
-    compile ("com.github.fge:json-schema-validator") {
+    compile("com.github.fge:json-schema-validator") {
         exclude group: 'javax.mail', module: 'mailapi'
         exclude group: 'com.google.guava', module: 'guava'
     }

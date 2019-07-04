@@ -52,7 +52,8 @@ import org.springframework.beans.factory.annotation.Autowired
  * 2019-01-08
  */
 @RestResource
-class UserPTemplateResourceImpl @Autowired constructor(private val templateService: TemplateService) : UserPTemplateResource {
+class UserPTemplateResourceImpl @Autowired constructor(private val templateService: TemplateService) :
+    UserPTemplateResource {
 
     override fun createTemplate(userId: String, projectId: String, template: Model): Result<TemplateId> {
         return Result(TemplateId(templateService.createTemplate(projectId, userId, template)))
@@ -135,11 +136,20 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         return Result(templateService.getTemplateSetting(projectId, userId, templateId))
     }
 
-    override fun copyTemplate(userId: String, projectId: String, templateId: String, copyTemplateReq: CopyTemplateReq): Result<TemplateId> {
+    override fun copyTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        copyTemplateReq: CopyTemplateReq
+    ): Result<TemplateId> {
         return Result(TemplateId(templateService.copyTemplate(userId, projectId, templateId, copyTemplateReq)))
     }
 
-    override fun saveAsTemplate(userId: String, projectId: String, saveAsTemplateReq: SaveAsTemplateReq): Result<TemplateId> {
+    override fun saveAsTemplate(
+        userId: String,
+        projectId: String,
+        saveAsTemplateReq: SaveAsTemplateReq
+    ): Result<TemplateId> {
         return Result(TemplateId(templateService.saveAsTemplate(userId, projectId, saveAsTemplateReq)))
     }
 

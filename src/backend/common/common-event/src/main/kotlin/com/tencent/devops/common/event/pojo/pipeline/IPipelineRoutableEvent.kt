@@ -32,7 +32,7 @@ import com.tencent.devops.common.event.enums.ActionType
  * 可指定路由key后续的流水线事件
  */
 abstract class IPipelineRoutableEvent(
-    open var routeKeySuffix: String ? = null, // 路由后缀Key
+    open var routeKeySuffix: String? = null, // 路由后缀Key
     override var actionType: ActionType,
     override val source: String,
     override val projectId: String,

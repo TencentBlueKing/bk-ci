@@ -28,6 +28,7 @@ package com.tencent.devops.common.api.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+
 /**
  * 返回码详情
  *

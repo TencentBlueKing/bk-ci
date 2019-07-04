@@ -50,6 +50,17 @@ data class PipelineViewPipelinePage<out T>(
 //        @ApiModelProperty("是否有用户权限的流水线", required = true)
 //        val hasPermissionPipelines: Boolean
 ) {
-    constructor(page: Int, pageSize: Int, count: Long, records: List<T>/*, hasCreatePermission: Boolean, hasPipelines: Boolean, hasFavorPipelines: Boolean, hasPermissionPipelines: Boolean*/) :
-            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records/*, hasCreatePermission, hasPipelines, hasFavorPipelines, hasPermissionPipelines*/)
+    constructor(
+        page: Int,
+        pageSize: Int,
+        count: Long,
+        records: List<T>/*, hasCreatePermission: Boolean, hasPipelines: Boolean, hasFavorPipelines: Boolean, hasPermissionPipelines: Boolean*/
+    ) :
+        this(
+            count,
+            page,
+            pageSize,
+            Math.ceil(count * 1.0 / pageSize).toInt(),
+            records/*, hasCreatePermission, hasPipelines, hasFavorPipelines, hasPermissionPipelines*/
+        )
 }

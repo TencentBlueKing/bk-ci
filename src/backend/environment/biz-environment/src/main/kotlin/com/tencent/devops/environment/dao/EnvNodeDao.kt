@@ -30,7 +30,6 @@ import com.tencent.devops.model.environment.tables.TEnvNode
 import com.tencent.devops.model.environment.tables.records.TEnvNodeRecord
 import org.jooq.DSLContext
 import org.jooq.Record2
-import org.jooq.impl.DSL.count
 import org.springframework.stereotype.Repository
 
 @Repository

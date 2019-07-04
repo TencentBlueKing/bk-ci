@@ -47,7 +47,8 @@ class ContainerAppVersionServiceImpl @Autowired constructor(
      * 根据编译环境id查找编译环境版本信息
      */
     override fun listByAppId(appId: Int): Result<List<ContainerAppVersion>> {
-        val containerAppsVersionList = containerAppsVersionDao.listByAppId(dslContext, appId).map { containerAppsVersionDao.convert(it) }
+        val containerAppsVersionList =
+            containerAppsVersionDao.listByAppId(dslContext, appId).map { containerAppsVersionDao.convert(it) }
         return Result(containerAppsVersionList)
     }
 
@@ -57,11 +58,13 @@ class ContainerAppVersionServiceImpl @Autowired constructor(
     override fun getContainerAppVersion(id: Int): Result<ContainerAppVersion?> {
         val containerAppVersionRecord = containerAppsVersionDao.getById(dslContext, id)
         logger.info("the containerAppVersionRecord is :$containerAppVersionRecord")
-        return Result(if (containerAppVersionRecord == null) {
-            null
-        } else {
-            containerAppsVersionDao.convert(containerAppVersionRecord)
-        })
+        return Result(
+            if (containerAppVersionRecord == null) {
+                null
+            } else {
+                containerAppsVersionDao.convert(containerAppVersionRecord)
+            }
+        )
     }
 
     /**
@@ -76,9 +79,17 @@ class ContainerAppVersionServiceImpl @Autowired constructor(
     /**
      * 更新编译环境版本信息
      */
-    override fun updateContainerAppVersion(id: Int, containerAppVersionRequest: ContainerAppVersionCreate): Result<Boolean> {
+    override fun updateContainerAppVersion(
+        id: Int,
+        containerAppVersionRequest: ContainerAppVersionCreate
+    ): Result<Boolean> {
         logger.info("the update id is :$id,the update containerAppVersionRequest is:$containerAppVersionRequest")
-        containerAppsVersionDao.update(dslContext, id, containerAppVersionRequest.appId, containerAppVersionRequest.version)
+        containerAppsVersionDao.update(
+            dslContext,
+            id,
+            containerAppVersionRequest.appId,
+            containerAppVersionRequest.version
+        )
         return Result(true)
     }
 

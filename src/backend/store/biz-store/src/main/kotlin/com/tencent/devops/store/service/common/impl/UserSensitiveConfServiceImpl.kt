@@ -86,18 +86,34 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         // 判断是否有权限新增
         val optRight = checkRight(userId, storeType, storeCode)
         logger.info("create right: $optRight")
-        if (!optRight) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(userId), false)
+        if (!optRight) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PERMISSION_DENIED,
+            arrayOf(userId),
+            false
+        )
 
         val fieldName = sensitiveConfReq.fieldName
-        if (fieldName.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldName), false)
+        if (fieldName.isEmpty()) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PARAMETER_IS_NULL,
+            arrayOf(fieldName),
+            false
+        )
         val fieldValue = sensitiveConfReq.fieldValue
-        if (fieldValue.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldValue), false)
+        if (fieldValue.isEmpty()) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PARAMETER_IS_NULL,
+            arrayOf(fieldValue),
+            false
+        )
 
         // 判断同名
         val isNameExist = sensitiveConfDao.check(dslContext, storeCode, storeType.type.toByte(), fieldName, null)
         logger.info("fieldName: $fieldName, isNameExist: $isNameExist")
         if (isNameExist) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_SENSITIVE_CONF_EXIST, arrayOf(fieldName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                arrayOf(fieldName),
+                false
+            )
         }
 
         // 对字段值进行加密
@@ -113,7 +129,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             fieldName = fieldName,
             fieldValue = fieldValueEncrypted,
             fieldDesc = sensitiveConfReq.fieldDesc
-            )
+        )
 
         return Result(true)
     }
@@ -133,18 +149,34 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         // 判断是否有权限编辑
         val optRight = checkRight(userId, storeType, storeCode)
         logger.info("update right: $optRight")
-        if (!optRight) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(userId), false)
+        if (!optRight) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PERMISSION_DENIED,
+            arrayOf(userId),
+            false
+        )
 
         val fieldName = sensitiveConfReq.fieldName
-        if (fieldName.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldName), false)
+        if (fieldName.isEmpty()) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PARAMETER_IS_NULL,
+            arrayOf(fieldName),
+            false
+        )
         val fieldValue = sensitiveConfReq.fieldValue
-        if (fieldValue.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldValue), false)
+        if (fieldValue.isEmpty()) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PARAMETER_IS_NULL,
+            arrayOf(fieldValue),
+            false
+        )
 
         // 判断同名
         val isNameExist = sensitiveConfDao.check(dslContext, storeCode, storeType.type.toByte(), fieldName, id)
         logger.info("fieldName: $fieldName, isNameExist: $isNameExist")
         if (isNameExist) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_SENSITIVE_CONF_EXIST, arrayOf(fieldName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                arrayOf(fieldName),
+                false
+            )
         }
 
         // 对字段值进行加密
@@ -181,7 +213,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         // 判断是否有权限删除
         val optRight = checkRight(userId, storeType, storeCode)
         logger.info("delete right: $optRight")
-        if (!optRight) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(userId), false)
+        if (!optRight) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PERMISSION_DENIED,
+            arrayOf(userId),
+            false
+        )
 
         sensitiveConfDao.batchDelete(dslContext, storeType.type.toByte(), storeCode, ids.split(","))
 
@@ -200,25 +236,31 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         // 判断是否有权限
         val optRight = checkRight(userId, storeType, storeCode)
         logger.info("get right: $optRight")
-        if (!optRight) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(userId), null)
+        if (!optRight) return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PERMISSION_DENIED,
+            arrayOf(userId),
+            null
+        )
 
         val record = sensitiveConfDao.getById(dslContext, id)
         logger.info("the record is :$record")
         val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        return Result(if (null != record) {
-            SensitiveConfResp(
-                fieldId = record["ID"] as String,
-                fieldName = record["FIELD_NAME"] as String,
-                fieldValue = aesMock,
-                fieldDesc = record["FIELD_DESC"] as? String,
-                creator = record["CREATOR"] as String,
-                modifier = record["MODIFIER"] as String,
-                createTime = df.format(record["CREATE_TIME"] as TemporalAccessor),
-                updateTime = df.format(record["UPDATE_TIME"] as TemporalAccessor)
-            )
-        } else {
-            null
-        })
+        return Result(
+            if (null != record) {
+                SensitiveConfResp(
+                    fieldId = record["ID"] as String,
+                    fieldName = record["FIELD_NAME"] as String,
+                    fieldValue = aesMock,
+                    fieldDesc = record["FIELD_DESC"] as? String,
+                    creator = record["CREATOR"] as String,
+                    modifier = record["MODIFIER"] as String,
+                    createTime = df.format(record["CREATE_TIME"] as TemporalAccessor),
+                    updateTime = df.format(record["UPDATE_TIME"] as TemporalAccessor)
+                )
+            } else {
+                null
+            }
+        )
     }
 
     /**
@@ -234,7 +276,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             // 判断是否有权限
             val optRight = checkRight(userId, storeType, storeCode)
             logger.info("list right: $optRight")
-            if (!optRight) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(userId), null)
+            if (!optRight) return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PERMISSION_DENIED,
+                arrayOf(userId),
+                null
+            )
         }
         val records = sensitiveConfDao.list(dslContext, storeType.type.toByte(), storeCode)
         val sensitiveConfRespList = mutableListOf<SensitiveConfResp>()

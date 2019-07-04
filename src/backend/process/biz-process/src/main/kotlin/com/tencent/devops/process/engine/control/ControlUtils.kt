@@ -108,12 +108,12 @@ object ControlUtils {
     }
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-            additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
-                    additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
+            additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-            additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
-                    additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
+            additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
 
     private fun skipWhenPreTaskFailedOnly(
         additionalOptions: ElementAdditionalOptions?,
@@ -121,9 +121,9 @@ object ControlUtils {
         hasFailedTaskInSuccessContainer: Boolean
     ): Boolean {
         return additionalOptions != null &&
-                additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
-                BuildStatus.isSuccess(containerFinalStatus) &&
-                !hasFailedTaskInSuccessContainer
+            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
+            BuildStatus.isSuccess(containerFinalStatus) &&
+            !hasFailedTaskInSuccessContainer
     }
 
     fun checkSkipCondition(

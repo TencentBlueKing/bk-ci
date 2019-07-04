@@ -50,5 +50,6 @@ class PipelineJobMutexGroupService @Autowired constructor(
         }
     }
 
-    fun create(projectId: String, jobMutexGroupName: String) = pipelineJobMutexGroupDao.create(dslContext, projectId, jobMutexGroupName)
+    fun create(projectId: String, jobMutexGroupName: String) =
+        pipelineJobMutexGroupDao.create(dslContext, projectId, jobMutexGroupName)
 }

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtomLabelRel
 import com.tencent.devops.model.store.tables.TLabel
 import org.jooq.DSLContext
@@ -58,30 +57,31 @@ class AtomLabelRelDao {
     fun deleteByAtomId(dslContext: DSLContext, atomId: String) {
         with(TAtomLabelRel.T_ATOM_LABEL_REL) {
             dslContext.deleteFrom(this)
-                    .where(ATOM_ID.eq(atomId))
-                    .execute()
+                .where(ATOM_ID.eq(atomId))
+                .execute()
         }
     }
 
     fun batchAdd(dslContext: DSLContext, userId: String, atomId: String, labelIdList: List<String>) {
         with(TAtomLabelRel.T_ATOM_LABEL_REL) {
-                val addStep = labelIdList.map {
-                    dslContext.insertInto(this,
-                        ID,
-                        ATOM_ID,
-                        LABEL_ID,
-                        CREATOR,
-                        MODIFIER
+            val addStep = labelIdList.map {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    ATOM_ID,
+                    LABEL_ID,
+                    CREATOR,
+                    MODIFIER
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        atomId,
+                        it,
+                        userId,
+                        userId
                     )
-                        .values(
-                            UUIDUtil.generate(),
-                            atomId,
-                            it,
-                            userId,
-                            userId
-                        )
-                }
-                dslContext.batch(addStep).execute()
             }
+            dslContext.batch(addStep).execute()
+        }
     }
 }

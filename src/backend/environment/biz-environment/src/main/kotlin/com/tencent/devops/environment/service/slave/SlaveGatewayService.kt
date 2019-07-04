@@ -47,7 +47,7 @@ class SlaveGatewayService @Autowired constructor(
     private var lastUpdate: Long = 0
 
     fun getGateway(agentRecord: TEnvironmentThirdpartyAgentRecord) =
-            if (agentRecord.gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else agentRecord.gateway
+        if (agentRecord.gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else agentRecord.gateway
 
     fun getShowName(gateway: String): String {
         val gatewayList = if (cache.isEmpty()) {
@@ -104,7 +104,7 @@ class SlaveGatewayService @Autowired constructor(
     }
 
     private fun need2Refresh() =
-            System.currentTimeMillis() - lastUpdate >= TimeUnit.MINUTES.toMillis(1)
+        System.currentTimeMillis() - lastUpdate >= TimeUnit.MINUTES.toMillis(1)
 
     companion object {
         private val logger = LoggerFactory.getLogger(SlaveGatewayService::class.java)

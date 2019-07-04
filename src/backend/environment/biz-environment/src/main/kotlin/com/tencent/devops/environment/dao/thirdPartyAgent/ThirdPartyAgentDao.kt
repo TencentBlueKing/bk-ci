@@ -34,8 +34,6 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 class ThirdPartyAgentDao {
@@ -49,7 +47,8 @@ class ThirdPartyAgentDao {
         gateway: String?
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 PROJECT_ID,
                 OS,
                 STATUS,

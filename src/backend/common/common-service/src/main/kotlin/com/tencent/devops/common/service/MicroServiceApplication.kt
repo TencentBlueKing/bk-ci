@@ -33,8 +33,8 @@ import kotlin.reflect.KClass
 object MicroServiceApplication {
     fun run(application: KClass<*>, args: Array<String>) {
         SpringApplicationBuilder()
-                .bannerMode(Banner.Mode.OFF)
-                .sources(application.java)
-                .run(*args)
+            .bannerMode(Banner.Mode.OFF)
+            .sources(application.java)
+            .run(*args)
     }
 }

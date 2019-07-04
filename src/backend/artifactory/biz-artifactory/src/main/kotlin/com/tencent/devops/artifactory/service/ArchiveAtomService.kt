@@ -38,12 +38,22 @@ interface ArchiveAtomService {
     /**
      * 归档插件
      */
-    fun archiveAtom(userId: String, inputStream: InputStream, disposition: FormDataContentDisposition, archiveAtomRequest: ArchiveAtomRequest): Result<ArchiveAtomResponse?>
+    fun archiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        archiveAtomRequest: ArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?>
 
     /**
      * 重新归档插件
      */
-    fun reArchiveAtom(userId: String, inputStream: InputStream, disposition: FormDataContentDisposition, reArchiveAtomRequest: ReArchiveAtomRequest): Result<ArchiveAtomResponse?>
+    fun reArchiveAtom(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        reArchiveAtomRequest: ReArchiveAtomRequest
+    ): Result<ArchiveAtomResponse?>
 
     /**
      * 获取插件相关文件内容

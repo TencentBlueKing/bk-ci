@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -119,7 +118,10 @@ class ThirdPartyAgentService @Autowired constructor(
             ?: throw NotFoundException("The agent is not exist")
         val gw = slaveGatewayService.getGateway(agentRecord)
         val agentId = HashUtil.encodeLongId(agentRecord.id)
-        return ThirdPartyAgentLink(agentId, "curl http://$gw/ms/environment/api/external/thirdPartyAgent/$agentId/install | bash")
+        return ThirdPartyAgentLink(
+            agentId,
+            "curl http://$gw/ms/environment/api/external/thirdPartyAgent/$agentId/install | bash"
+        )
     }
 
     fun listAgents(

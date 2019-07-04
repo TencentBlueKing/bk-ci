@@ -26,12 +26,12 @@
 
 package com.tencent.devops.store.api.template
 
-import com.tencent.devops.store.pojo.common.StoreCommentInfo
-import com.tencent.devops.store.pojo.common.StoreCommentRequest
-import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreCommentInfo
+import com.tencent.devops.store.pojo.common.StoreCommentRequest
+import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

@@ -60,14 +60,6 @@ import java.io.File
 import java.io.InputStream
 import java.util.ArrayList
 import java.util.regex.Pattern
-import kotlin.collections.HashMap
-import kotlin.collections.List
-import kotlin.collections.Set
-import kotlin.collections.emptySet
-import kotlin.collections.filter
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.toSet
 
 /**
  * 蓝鲸权限中心管控的项目服务实现
@@ -129,7 +121,8 @@ class ProjectServiceImpl @Autowired constructor(
         try {
             // 保存Logo文件
             val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-            val result = CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            val result =
+                CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
             if (result.isNotOk()) {
                 throw OperationException("${result.status}:${result.message}")
             }
@@ -346,7 +339,8 @@ class ProjectServiceImpl @Autowired constructor(
             try {
                 logoFile = FileUtil.convertTempFile(inputStream)
                 val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-                val result = CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+                val result =
+                    CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
                 if (result.isNotOk()) {
                     return Result(result.status, result.message, false)
                 }

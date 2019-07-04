@@ -26,9 +26,9 @@
 
 package com.tencent.devops.store.dao.container
 
-import com.tencent.devops.store.pojo.app.ContainerAppEnv
 import com.tencent.devops.model.store.tables.TAppEnv
 import com.tencent.devops.model.store.tables.records.TAppEnvRecord
+import com.tencent.devops.store.pojo.app.ContainerAppEnv
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -38,57 +38,59 @@ class ContainerAppsEnvDao {
 
     fun add(dslContext: DSLContext, appId: Int, name: String, path: String, description: String) {
         with(TAppEnv.T_APP_ENV) {
-            dslContext.insertInto(this,
-                    APP_ID,
-                    NAME,
-                    PATH,
-                    DESCRIPTION)
-                    .values(appId, name, path, description)
-                    .execute()
+            dslContext.insertInto(
+                this,
+                APP_ID,
+                NAME,
+                PATH,
+                DESCRIPTION
+            )
+                .values(appId, name, path, description)
+                .execute()
         }
     }
 
     fun delete(dslContext: DSLContext, id: Int) {
         with(TAppEnv.T_APP_ENV) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun deleteByAppId(dslContext: DSLContext, appId: Int) {
         with(TAppEnv.T_APP_ENV) {
             dslContext.deleteFrom(this)
-                    .where(APP_ID.eq(appId))
-                    .execute()
+                .where(APP_ID.eq(appId))
+                .execute()
         }
     }
 
     fun getById(dslContext: DSLContext, id: Int): TAppEnvRecord? {
         with(TAppEnv.T_APP_ENV) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun listByAppId(dslContext: DSLContext, appId: Int): Result<TAppEnvRecord> {
         with(TAppEnv.T_APP_ENV) {
             return dslContext.selectFrom(this)
-                    .where(APP_ID.eq(appId))
-                    .fetch()
+                .where(APP_ID.eq(appId))
+                .fetch()
         }
     }
 
     fun update(dslContext: DSLContext, id: Int, appId: Int, name: String, path: String, description: String) {
         with(TAppEnv.T_APP_ENV) {
             dslContext.update(this)
-                    .set(APP_ID, appId)
-                    .set(NAME, name)
-                    .set(PATH, path)
-                    .set(DESCRIPTION, description)
-                    .where(ID.eq(id))
-                    .execute()
+                .set(APP_ID, appId)
+                .set(NAME, name)
+                .set(PATH, path)
+                .set(DESCRIPTION, description)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 

@@ -100,33 +100,48 @@ class EeMarketTemplateServiceImpl : EeMarketTemplateService, MarketTemplateServi
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
         futureList.add(
-            doList(name = null, classifyCode = null, category = null,
+            doList(
+                name = null, classifyCode = null, category = null,
                 labelCode = null, score = null, rdType = null, sortType = MarketTemplateSortTypeEnum.UPDATE_TIME,
-                desc = true, page = page, pageSize = pageSize)
+                desc = true, page = page, pageSize = pageSize
+            )
         )
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
         futureList.add(
-            doList(name = null, classifyCode = null, category = null,
+            doList(
+                name = null, classifyCode = null, category = null,
                 labelCode = null, score = null, rdType = null, sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
-                desc = true, page = page, pageSize = pageSize)
+                desc = true, page = page, pageSize = pageSize
+            )
         )
         val classifyList = classifyDao.getAllClassify(dslContext, 1)
         classifyList.forEach {
             val classifyCode = it["CLASSIFY_CODE"] as String
             labelInfoList.add(MarketMainItemLabel(classifyCode, it["CLASSIFY_NAME"] as String))
             futureList.add(
-                doList(name = null, classifyCode = classifyCode,
-                    category = null, labelCode = null, score = null, rdType = null, sortType = MarketTemplateSortTypeEnum.NAME,
-                    desc = false, page = page, pageSize = pageSize)
+                doList(
+                    name = null,
+                    classifyCode = classifyCode,
+                    category = null,
+                    labelCode = null,
+                    score = null,
+                    rdType = null,
+                    sortType = MarketTemplateSortTypeEnum.NAME,
+                    desc = false,
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         }
         for (index in futureList.indices) {
             val labelInfo = labelInfoList[index]
-            result.add(MarketTemplateMain(
-                key = labelInfo.key,
-                label = labelInfo.label,
-                records = futureList[index].get().records
-            ))
+            result.add(
+                MarketTemplateMain(
+                    key = labelInfo.key,
+                    label = labelInfo.label,
+                    records = futureList[index].get().records
+                )
+            )
         }
         return Result(result)
     }

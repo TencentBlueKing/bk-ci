@@ -88,8 +88,10 @@ class BuildBuildResourceImpl @Autowired constructor(
         buildNum: String,
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
-        val history = buildService.getSingleHistoryBuild(projectId, pipelineId,
-                buildNum.toInt(), channelCode ?: ChannelCode.BS)
+        val history = buildService.getSingleHistoryBuild(
+            projectId, pipelineId,
+            buildNum.toInt(), channelCode ?: ChannelCode.BS
+        )
         return Result(history)
     }
 
@@ -102,8 +104,12 @@ class BuildBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(buildService.getBuildDetail(projectId, pipelineId, buildId, channelCode,
-                ChannelCode.isNeedAuth(channelCode)))
+        return Result(
+            buildService.getBuildDetail(
+                projectId, pipelineId, buildId, channelCode,
+                ChannelCode.isNeedAuth(channelCode)
+            )
+        )
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {

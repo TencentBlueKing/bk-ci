@@ -30,6 +30,7 @@ enum class ContainerMutexStatus {
     READY, // 0 准备就绪
     WAITING, // 1 继续等待
     CANCELED; // 2 取消
+
     companion object {
         fun isReady(status: ContainerMutexStatus) = status == READY
 

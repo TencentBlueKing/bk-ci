@@ -69,7 +69,8 @@ object KillBuildProcessTree {
                 val envVmSeqId = envVars["VM_SEQ_ID"]
                 if (projectId.equals(envProjectId, ignoreCase = true) &&
                     buildId.equals(envBuildId, ignoreCase = true) &&
-                    vmSeqId.equals(envVmSeqId, ignoreCase = true)) {
+                    vmSeqId.equals(envVmSeqId, ignoreCase = true)
+                ) {
                     osProcess.killRecursively()
                     osProcess.kill()
                     killedProcessIds.add(osProcess.pid)

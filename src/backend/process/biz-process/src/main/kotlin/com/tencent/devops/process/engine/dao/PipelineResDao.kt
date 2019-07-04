@@ -47,19 +47,21 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {
             val modelString = objectMapper.writeValueAsString(model)
-            dslContext.insertInto(this,
-                    PIPELINE_ID,
-                    VERSION,
-                    MODEL)
-                    .values(pipelineId, version, modelString)
-                    .onDuplicateKeyUpdate()
-                    .set(MODEL, modelString)
-                    .execute()
+            dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                VERSION,
+                MODEL
+            )
+                .values(pipelineId, version, modelString)
+                .onDuplicateKeyUpdate()
+                .set(MODEL, modelString)
+                .execute()
         }
     }
 
     fun getLatestVersionModelString(dslContext: DSLContext, pipelineId: String) =
-            getVersionModelString(dslContext, pipelineId, null)
+        getVersionModelString(dslContext, pipelineId, null)
 
     fun getVersionModelString(
         dslContext: DSLContext,
@@ -69,8 +71,8 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
 
         return with(T_PIPELINE_RESOURCE) {
             val where = dslContext.select(MODEL)
-                    .from(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId))
             if (version != null) {
                 where.and(VERSION.eq(version))
             } else {
@@ -98,18 +100,18 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
 
         return with(T_PIPELINE_RESOURCE) {
             dslContext.select(MODEL)
-                    .from(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .orderBy(VERSION.desc())
-                    .fetch(0, String::class.java)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .orderBy(VERSION.desc())
+                .fetch(0, String::class.java)
         }
     }
 
     fun deleteAllVersion(dslContext: DSLContext, pipelineId: String): Int {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .execute()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 

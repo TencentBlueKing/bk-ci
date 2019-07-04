@@ -69,7 +69,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         if (atomResult.isNotOk()) {
             return Result(atomResult.status, atomResult.message ?: "")
         }
-        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        val initProjectCode =
+            storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("the initProjectCode is :$initProjectCode")
         var atomStatusList: List<Byte>? = null
         if (version.contains("*")) {
@@ -84,7 +85,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 )
             } else {
                 // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
-                listOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte(), AtomStatusEnum.UNDERCARRIAGED.status.toByte())
+                listOf(
+                    AtomStatusEnum.RELEASED.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+                )
             }
         }
         val atomEnvInfoRecord = marketAtomEnvInfoDao.getProjectMarketAtomEnvInfo(
@@ -128,7 +133,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     /**
      * 更新插件执行环境信息
      */
-    override fun updateMarketAtomEnvInfo(projectCode: String, atomCode: String, version: String, atomEnvRequest: AtomEnvRequest): Result<Boolean> {
+    override fun updateMarketAtomEnvInfo(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomEnvRequest: AtomEnvRequest
+    ): Result<Boolean> {
         logger.info("the atomCode is :$atomCode,version is :$version,atomEnvRequest is :$atomEnvRequest")
         val atomResult = atomService.getPipelineAtom(projectCode, atomCode, version) // 判断插件查看的权限
         val status = atomResult.status
@@ -141,7 +151,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomRecord.id, atomEnvRequest)
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("$atomCode+$version"), false)
+            MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf("$atomCode+$version"),
+                false
+            )
         }
     }
 }

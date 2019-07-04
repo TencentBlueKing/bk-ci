@@ -90,7 +90,13 @@ class PipelineBuildLessDispatchService @Autowired constructor(
         }
 
         if (pipelineBuildLessAgentStartupEvent.retryTime == 0) {
-            LogUtils.addLine(rabbitTemplate, buildId, "Prepare BuildLess Job(#$vmSeqId)...", "", pipelineBuildLessAgentStartupEvent.executeCount ?: 1)
+            LogUtils.addLine(
+                rabbitTemplate,
+                buildId,
+                "Prepare BuildLess Job(#$vmSeqId)...",
+                "",
+                pipelineBuildLessAgentStartupEvent.executeCount ?: 1
+            )
         }
 
         val dispatchType = pipelineBuildLessAgentStartupEvent.dispatchType

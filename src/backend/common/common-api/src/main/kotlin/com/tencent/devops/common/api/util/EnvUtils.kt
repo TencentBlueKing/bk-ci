@@ -47,7 +47,13 @@ object EnvUtils {
         return newValue.toString()
     }
 
-    private fun parseVariable(command: String, start: Int, newValue: StringBuilder, data: Map<String, String>, replaceWithEmpty: Boolean = false): Int {
+    private fun parseVariable(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean = false
+    ): Int {
         val token = StringBuilder()
         var index = start
         while (index < command.length) {

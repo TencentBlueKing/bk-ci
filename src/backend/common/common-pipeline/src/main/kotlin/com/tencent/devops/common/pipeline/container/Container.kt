@@ -35,9 +35,9 @@ import io.swagger.annotations.ApiModel
 @ApiModel("流水线模型-多态基类")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
-        JsonSubTypes.Type(value = TriggerContainer::class, name = TriggerContainer.classType),
-        JsonSubTypes.Type(value = NormalContainer::class, name = NormalContainer.classType),
-        JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType)
+    JsonSubTypes.Type(value = TriggerContainer::class, name = TriggerContainer.classType),
+    JsonSubTypes.Type(value = NormalContainer::class, name = NormalContainer.classType),
+    JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType)
 )
 interface Container {
     var id: String? // seq id
@@ -50,8 +50,15 @@ interface Container {
     var canRetry: Boolean? // 当前job是否能重试
     var containerId: String? // container 唯一ID
 
+    /**
+     * 只存储Container相关的配置，elements不会存储。
+     */
     fun genTaskParams(): MutableMap<String, Any> {
-        return JsonUtil.toMutableMapSkipEmpty(this)
+        val configParams = JsonUtil.toMutableMapSkipEmpty(this)
+        if (elements.isNotEmpty()) {
+            configParams["elements"] = "[]" // ignore elements storage
+        }
+        return configParams
     }
 
     fun getClassType(): String

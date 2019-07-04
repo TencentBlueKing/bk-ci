@@ -38,8 +38,8 @@ class BuildStartupParamService @Autowired constructor(
 ) {
 
     fun addParam(buildId: String, param: String) =
-            buildStartupParamDao.add(dslContext, buildId, param)
+        buildStartupParamDao.add(dslContext, buildId, param)
 
     fun getParam(buildId: String) =
-            buildStartupParamDao.get(dslContext, buildId)
+        buildStartupParamDao.get(dslContext, buildId)
 }
