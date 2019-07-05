@@ -92,4 +92,40 @@ interface AuthResourceApi {
         user: String,
         resourceList: List<ResourceRegisterInfo>
     )
+
+    fun batchCreateResource(
+        principalId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: BkAuthResourceType,
+        resourceList: List<ResourceRegisterInfo>,
+        systemId: AuthServiceCode
+    ): Boolean
+
+    fun deleteResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    )
+
+    fun modifyResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    )
+
+    fun createResource(
+        scopeType: String,
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    )
 }

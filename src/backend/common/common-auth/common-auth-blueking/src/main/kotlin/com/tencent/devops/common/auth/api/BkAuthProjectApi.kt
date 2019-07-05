@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCODE
 import com.tencent.devops.common.auth.code.BkProjectAuthServiceCode
+import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 
 class BkAuthProjectApi constructor(
     private val bkAuthPermissionApi: BkAuthPermissionApi,
@@ -76,10 +77,11 @@ class BkAuthProjectApi constructor(
         supplier: (() -> List<String>)?
     ): List<String> {
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = serviceCode,
+            userId = userId,
+            scopeType = GLOBAL_SCOPE_TYPE,
+            systemId = serviceCode,
             resourceType = BkAuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCODE,
+            scopeId = BK_DEVOPS_SCODE,
             permissions = setOf(BkAuthPermission.MANAGE),
             supplier = supplier
         )
@@ -94,11 +96,12 @@ class BkAuthProjectApi constructor(
         supplier: (() -> List<String>)?
     ): Map<String, String> {
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = serviceCode,
+            userId = userId,
+            scopeType = GLOBAL_SCOPE_TYPE,
+            scopeId = BK_DEVOPS_SCODE,
             resourceType = BkAuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCODE,
             permissions = setOf(BkAuthPermission.VIEW, BkAuthPermission.MANAGE),
+            systemId = serviceCode,
             supplier = supplier
         )
         val sets = mutableSetOf<String>()
