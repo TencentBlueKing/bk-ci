@@ -56,6 +56,7 @@ cd /usr/local/openresty/nginx && ./sbin/nginx -v
 #### 命令
 
 ```shell
+mkdir -p /usr/local/openresty/nginx/run/ # 创建PID目录
 cd /usr/local/openresty/nginx # 进入nginx安装目录
 ./sbin/nginx  # 启动nginx
 ./sbin/nginx -t  # 验证nginx的配置是否正确
