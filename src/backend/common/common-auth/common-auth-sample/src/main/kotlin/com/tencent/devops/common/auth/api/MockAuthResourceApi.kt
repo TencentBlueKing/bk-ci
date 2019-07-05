@@ -30,6 +30,46 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthResourceApi : AuthResourceApi {
+    override fun batchCreateResource(
+        principalId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: BkAuthResourceType,
+        resourceList: List<ResourceRegisterInfo>,
+        systemId: AuthServiceCode
+    ): Boolean {
+        return true
+    }
+
+    override fun deleteResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) {
+    }
+
+    override fun modifyResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+    }
+
+    override fun createResource(
+        scopeType: String,
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+    }
 
     override fun createResource(
         user: String,
