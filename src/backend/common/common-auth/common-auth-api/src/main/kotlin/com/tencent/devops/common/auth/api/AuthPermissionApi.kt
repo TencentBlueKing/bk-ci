@@ -102,4 +102,14 @@ interface AuthPermissionApi {
         permissions: Set<BkAuthPermission>,
         supplier: (() -> List<String>)?
     ): Map<BkAuthPermission, List<String>>
+
+    fun getUserResourcesByPermissions(
+        userId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: BkAuthResourceType,
+        permissions: Set<BkAuthPermission>,
+        systemId: AuthServiceCode,
+        supplier: (() -> List<String>)? = null
+    ): Map<BkAuthPermission, List<String>>
 }

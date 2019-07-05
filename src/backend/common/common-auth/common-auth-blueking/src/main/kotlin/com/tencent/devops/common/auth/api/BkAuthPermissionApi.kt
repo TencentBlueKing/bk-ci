@@ -148,43 +148,49 @@ class BkAuthPermissionApi constructor(
     ): Map<BkAuthPermission, List<String>> {
 
         return getUserResourcesByPermissions(
-            bkAuthProperties.principalType!!, user, PROJECT_SCOPE_TYPE, projectCode,
-            resourceType, permissions, serviceCode, bkAuthProperties.appCode!!, bkAuthProperties.appSecret!!
+            userId = user, scopeType = PROJECT_SCOPE_TYPE, scopeId = projectCode,
+            resourceType = resourceType, permissions = permissions, systemId = serviceCode
         )
     }
 
     // 批量查询有权限的资源,若返回的map的Entry中Boolean为true，则表明用户对该资源拥有所有权限
-    private fun getUserResourcesByPermissions(
-        principalType: String,
-        principalId: String,
+    override fun getUserResourcesByPermissions(
+        userId: String,
         scopeType: String,
         scopeId: String, // 项目id
         resourceType: BkAuthResourceType,
         permissions: Set<BkAuthPermission>,
         systemId: AuthServiceCode,
-        appCode: String,
-        appSecret: String
+        supplier: (() -> List<String>)?
     ): Map<BkAuthPermission, List<String>> {
 
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/authorized-resources/search"
         val resultMap = LinkedHashMap<BkAuthPermission, List<String>>()
 
         val requestBean = BkUserResourcesAuthRequest(
-            principalId, principalType, scopeType, scopeId,
-            permissions.map {
+            principalId = userId,
+            principalType = bkAuthProperties.principalType!!,
+            scopeType = scopeType,
+            scopeId = scopeId,
+            resourceTypesActions = permissions.map {
                 BkUserResourcesAuthRequest.ResourceTypesAction(
                     it.value,
                     resourceType.value
                 )
             },
-            "array",
-            true
+            resourceDataType = "array",
+            exactResource = true
         )
 
         val requestBeanString = objectMapper.writeValueAsString(requestBean)
         // 发送请求
         val responseBody =
-            authUtils.doAuthPostRequest(uri, JSONObject(requestBeanString), appCode, appSecret)
+            authUtils.doAuthPostRequest(
+                uri,
+                JSONObject(requestBeanString),
+                bkAuthProperties.appCode!!,
+                bkAuthProperties.appSecret!!
+            )
         val responseBean =
             jacksonObjectMapper().readValue<BkUserResourcesAuthResponse>(responseBody.toString())
 
