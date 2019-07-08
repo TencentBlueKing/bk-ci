@@ -56,7 +56,7 @@ interface Container {
     fun genTaskParams(): MutableMap<String, Any> {
         val configParams = JsonUtil.toMutableMapSkipEmpty(this)
         if (elements.isNotEmpty()) {
-            configParams["elements"] = "[]" // ignore elements storage
+            configParams["elements"] = listOf<Element>()// ignore elements storage
         }
         return configParams
     }
