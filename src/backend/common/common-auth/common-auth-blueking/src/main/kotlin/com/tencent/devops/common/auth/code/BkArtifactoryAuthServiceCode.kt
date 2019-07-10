@@ -26,28 +26,9 @@
 
 package com.tencent.devops.common.auth.code
 
-const val GLOBAL_SCOPE_TYPE = "system"
-const val PROJECT_SCOPE_TYPE = "project"
-// 蓝鲸持续集成平台产品ID
-const val BK_DEVOPS_SCODE = "bk_devops"
-
-enum class BkAuthServiceCode(val value: String) {
-    BCS("bk_bcs"),
-    REPO("bk_repo"),
-    ARTIFACTORY(BK_DEVOPS_SCODE),
-    CODE(BK_DEVOPS_SCODE),
-    PIPELINE(BK_DEVOPS_SCODE),
-    TICKET(BK_DEVOPS_SCODE),
-    ENVIRONMENT(BK_DEVOPS_SCODE),
-    PROJECT(BK_DEVOPS_SCODE),
-    QUALITY(BK_DEVOPS_SCODE);
-
-    companion object {
-        fun get(value: String): BkAuthServiceCode {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
-    }
+/**
+ * Artifactory ServiceCode
+ */
+class BkArtifactoryAuthServiceCode : ArtifactoryAuthServiceCode {
+    override fun id() = BkAuthServiceCode.ARTIFACTORY.value
 }

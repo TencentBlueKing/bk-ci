@@ -1,3 +1,5 @@
+package com.tencent.devops.common.auth.code
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,31 +25,6 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.common.auth.code
-
-const val GLOBAL_SCOPE_TYPE = "system"
-const val PROJECT_SCOPE_TYPE = "project"
-// 蓝鲸持续集成平台产品ID
-const val BK_DEVOPS_SCODE = "bk_devops"
-
-enum class BkAuthServiceCode(val value: String) {
-    BCS("bk_bcs"),
-    REPO("bk_repo"),
-    ARTIFACTORY(BK_DEVOPS_SCODE),
-    CODE(BK_DEVOPS_SCODE),
-    PIPELINE(BK_DEVOPS_SCODE),
-    TICKET(BK_DEVOPS_SCODE),
-    ENVIRONMENT(BK_DEVOPS_SCODE),
-    PROJECT(BK_DEVOPS_SCODE),
-    QUALITY(BK_DEVOPS_SCODE);
-
-    companion object {
-        fun get(value: String): BkAuthServiceCode {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
-    }
+class BkQualityAuthServiceCode : QualityAuthServiceCode {
+    override fun id() = BkAuthServiceCode.QUALITY.value
 }
