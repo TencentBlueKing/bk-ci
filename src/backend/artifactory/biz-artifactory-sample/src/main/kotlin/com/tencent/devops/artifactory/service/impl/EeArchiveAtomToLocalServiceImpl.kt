@@ -37,7 +37,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
-import com.tencent.devops.store.api.atom.EeServiceMarketAtomResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.impl.DSL
@@ -71,7 +71,7 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
         val version = archiveAtomRequest.version
         val releaseType = archiveAtomRequest.releaseType
         val os = archiveAtomRequest.os
-        val verifyAtomPackageResult = client.get(EeServiceMarketAtomResource::class)
+        val verifyAtomPackageResult = client.get(ServiceMarketAtomArchiveResource::class)
             .verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
         logger.info("verifyAtomPackageResult is:$verifyAtomPackageResult")
         if (verifyAtomPackageResult.isNotOk()) {
@@ -80,7 +80,7 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
         unZipFile(disposition, inputStream, projectCode, atomCode, version)
         // 校验taskJson配置是否正确
         val verifyAtomTaskJsonResult =
-            client.get(EeServiceMarketAtomResource::class).verifyAtomTaskJson(userId, projectCode, atomCode, version)
+            client.get(ServiceMarketAtomArchiveResource::class).verifyAtomTaskJson(userId, projectCode, atomCode, version)
         logger.info("verifyAtomTaskJsonResult is:$verifyAtomTaskJsonResult")
         if (verifyAtomTaskJsonResult.isNotOk()) {
             return Result(verifyAtomTaskJsonResult.status, verifyAtomTaskJsonResult.message, null)
@@ -132,7 +132,7 @@ class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomService
             return archiveAtomResult
         }
         val atomEnvRequest = archiveAtomResult.data!!.atomEnvRequest
-        val updateAtomEnvResult = client.get(EeServiceMarketAtomResource::class)
+        val updateAtomEnvResult = client.get(ServiceMarketAtomArchiveResource::class)
             .updateAtomEnv(userId, reArchiveAtomRequest.atomId, atomEnvRequest)
         logger.info("updateAtomEnvResult is:$updateAtomEnvResult")
         if (updateAtomEnvResult.isNotOk()) {
