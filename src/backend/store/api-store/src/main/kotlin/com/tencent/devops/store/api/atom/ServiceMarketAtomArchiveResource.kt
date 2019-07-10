@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/market/atom/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface EeServiceMarketAtomResource {
+interface ServiceMarketAtomArchiveResource {
 
     @ApiOperation("校验用户上传的插件包是否合法")
     @GET
