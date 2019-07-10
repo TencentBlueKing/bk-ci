@@ -119,17 +119,14 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         val taskJsonStr = getTaskJsonStr(projectCode, atomCode, version)
         val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
         logger.info("parseTaskJson result is :$taskJsonStr")
-        if (getAtomConfResult.errorCode != "0") {
-            return MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
+        return if (getAtomConfResult.errorCode != "0") {
+            MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
         } else {
             val taskDataMap = JsonUtil.toMap(taskJsonStr)
             val executionInfoMap = taskDataMap["execution"] as Map<String, Any>
             val packagePath = executionInfoMap["packagePath"] as? String
-            return if (!StringUtils.isEmpty(packagePath)) {
-                Result(GetAtomConfigResult(
-                    StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    arrayOf("packagePath"), null, null
-                ))
+            if (StringUtils.isEmpty(packagePath)) {
+                MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf("packagePath"))
             } else {
                 val atomEnvRequest = getAtomConfResult.atomEnvRequest!!
                 atomEnvRequest.pkgPath = "$projectCode/$atomCode/$version/$packagePath"
