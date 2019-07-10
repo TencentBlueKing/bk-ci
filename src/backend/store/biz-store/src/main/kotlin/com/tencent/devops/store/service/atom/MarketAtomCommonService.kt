@@ -24,42 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources
+package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.EeServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
-import com.tencent.devops.store.service.atom.EeMarketAtomService
-import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class EeServiceMarketAtomResourceImpl @Autowired constructor(private val eeMarketAtomService: EeMarketAtomService) :
-    EeServiceMarketAtomResource {
+interface MarketAtomCommonService {
 
-    override fun verifyAtomPackageByUserId(
-        userId: String,
+    fun validateAtomVersion(
+        atomRecord: TAtomRecord,
+        releaseType: ReleaseTypeEnum,
+        osList: ArrayList<String>,
+        version: String
+    ): Result<Boolean>
+
+    fun parseBaseTaskJson(
+        taskJsonStr: String,
         projectCode: String,
         atomCode: String,
         version: String,
-        releaseType: ReleaseTypeEnum?,
-        os: String?
-    ): Result<Boolean> {
-        return eeMarketAtomService.verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
-    }
-
-    override fun verifyAtomTaskJson(
-        userId: String,
-        projectCode: String,
-        atomCode: String,
-        version: String
-    ): Result<GetAtomConfigResult?> {
-        return eeMarketAtomService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
-    }
-
-    override fun updateAtomEnv(userId: String, atomId: String, atomEnvRequest: AtomEnvRequest): Result<Boolean> {
-        return eeMarketAtomService.updateAtomEnv(userId, atomId, atomEnvRequest)
-    }
+        userId: String
+    ): GetAtomConfigResult
 }
