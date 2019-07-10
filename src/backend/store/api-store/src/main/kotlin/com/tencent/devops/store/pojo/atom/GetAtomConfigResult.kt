@@ -38,7 +38,7 @@ data class GetAtomConfigResult(
     @ApiModelProperty("参数", required = false)
     val taskDataMap: Map<String, Any>?,
     @ApiModelProperty("参数", required = false)
-    val atomEnvRequest: AtomEnvRequest?
+    var atomEnvRequest: AtomEnvRequest?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
