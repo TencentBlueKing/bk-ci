@@ -615,12 +615,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     ): GetAtomConfigResult {
         val taskDataMap = JsonUtil.toMap(taskJsonStr)
         val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
-        if (getAtomConfResult.errorCode != "0") {
-            return getAtomConfResult
+        return if (getAtomConfResult.errorCode != "0") {
+            getAtomConfResult
         } else {
             val executionInfoMap = taskDataMap["execution"] as Map<String, Any>
             val packagePath = executionInfoMap["packagePath"] as? String
-            return if (!validatePackagePath(packagePath)) {
+            if (!validatePackagePath(packagePath)) {
                 GetAtomConfigResult(
                     StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
                     arrayOf("packagePath"), null, null
