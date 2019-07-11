@@ -24,6 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.common.auth.code
 
-interface EeArchiveAtomService
+/**
+ * Artifactory ServiceCode
+ */
+class BkArtifactoryAuthServiceCode : ArtifactoryAuthServiceCode {
+    override fun id() = BkAuthServiceCode.ARTIFACTORY.value
+}

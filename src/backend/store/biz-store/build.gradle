@@ -31,7 +31,7 @@ dependencies {
     compile project(":store:api-store")
     compile project(":project:api-project")
     compile project(":process:api-process")
-    compile project(":artifactory:api-artifactory")
+    compile project(":artifactory:api-artifactory-store")
     compile project(":store:model-store")
     testCompile project(":common:common-test")
 }
