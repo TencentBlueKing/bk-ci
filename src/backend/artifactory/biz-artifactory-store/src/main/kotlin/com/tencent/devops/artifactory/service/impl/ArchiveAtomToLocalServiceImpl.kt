@@ -30,7 +30,6 @@ import com.tencent.devops.artifactory.constant.BK_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
-import com.tencent.devops.artifactory.service.EeArchiveAtomService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
@@ -51,9 +50,9 @@ import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 
 @Service
-class EeArchiveAtomToLocalServiceImpl : EeArchiveAtomService, ArchiveAtomServiceImpl() {
+class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(EeArchiveAtomToLocalServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(ArchiveAtomToLocalServiceImpl::class.java)
 
     @Value("\${artifactory.archiveLocalBasePath}")
     private lateinit var atomArchiveLocalBasePath: String

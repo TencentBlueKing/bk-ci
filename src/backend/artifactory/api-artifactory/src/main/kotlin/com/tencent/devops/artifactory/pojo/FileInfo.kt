@@ -47,5 +47,11 @@ data class FileInfo(
     @ApiModelProperty("更新时间", required = true)
     val modifiedTime: Long,
     @ApiModelProperty("仓库类型", required = true)
-    val artifactoryType: ArtifactoryType
+    val artifactoryType: ArtifactoryType,
+    @ApiModelProperty("元数据", required = true)
+    val bkProperties: List<Property>? = emptyList(),
+    @ApiModelProperty("app版本", required = true)
+    val appVersion: String? = null,
+    @ApiModelProperty("下载短链接", required = true)
+    val shortUrl: String? = null
 )
