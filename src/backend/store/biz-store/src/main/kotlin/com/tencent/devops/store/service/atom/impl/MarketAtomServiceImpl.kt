@@ -492,7 +492,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val releaseType = marketAtomUpdateRequest.releaseType
         val version = marketAtomUpdateRequest.version
         val osList = marketAtomUpdateRequest.os
-        val validateAtomVersionResult = marketAtomCommonService.validateAtomVersion(atomRecord, releaseType, osList, version)
+        val validateAtomVersionResult =
+            marketAtomCommonService.validateAtomVersion(atomRecord, releaseType, osList, version)
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {
             return Result(
@@ -614,7 +615,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String
     ): GetAtomConfigResult {
         val taskDataMap = JsonUtil.toMap(taskJsonStr)
-        val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
+        val getAtomConfResult =
+            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
         return if (getAtomConfResult.errorCode != "0") {
             getAtomConfResult
         } else {

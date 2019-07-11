@@ -773,6 +773,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     } else {
                                         atomElement.name
                                     }
+
                                 buildTaskList.add(
                                     PipelineBuildTask(
                                         projectId = pipelineInfo.projectId,
