@@ -33,6 +33,7 @@ const val ADMIN = "admin"
 enum class BkAuthServiceCode(val value: String) {
     BCS("bk_bcs"),
     REPO("bk_repo"),
+    ARTIFACTORY(BK_DEVOPS_SCOPE),
     CODE(BK_DEVOPS_SCOPE),
     PIPELINE(BK_DEVOPS_SCOPE),
     TICKET(BK_DEVOPS_SCOPE),

@@ -24,30 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.code
+package com.tencent.devops.artifactory.pojo
 
-const val GLOBAL_SCOPE_TYPE = "system"
-const val PROJECT_SCOPE_TYPE = "project"
-// 蓝鲸持续集成平台产品ID
-const val BK_DEVOPS_SCODE = "bk_devops"
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-enum class BkAuthServiceCode(val value: String) {
-    BCS("bk_bcs"),
-    REPO("bk_repo"),
-    ARTIFACTORY(BK_DEVOPS_SCODE),
-    CODE(BK_DEVOPS_SCODE),
-    PIPELINE(BK_DEVOPS_SCODE),
-    TICKET(BK_DEVOPS_SCODE),
-    ENVIRONMENT(BK_DEVOPS_SCODE),
-    PROJECT(BK_DEVOPS_SCODE),
-    QUALITY(BK_DEVOPS_SCODE);
-
-    companion object {
-        fun get(value: String): BkAuthServiceCode {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
-    }
-}
+@ApiModel("版本仓库-文件信息")
+data class AppFileInfo(
+    @ApiModelProperty("文件名", required = true)
+    val name: String,
+    @ApiModelProperty("文件全名", required = true)
+    val fullName: String,
+    @ApiModelProperty("文件路径", required = true)
+    val path: String,
+    @ApiModelProperty("文件全路径", required = true)
+    val fullPath: String,
+    @ApiModelProperty("文件大小(byte)", required = true)
+    val size: Long,
+    @ApiModelProperty("是否文件夹", required = true)
+    val folder: Boolean,
+    @ApiModelProperty("更新时间", required = true)
+    val modifiedTime: Long,
+    @ApiModelProperty("仓库类型", required = true)
+    val artifactoryType: ArtifactoryType,
+    @ApiModelProperty("是否显示", required = true)
+    val show: Boolean,
+    @ApiModelProperty("是否可下载", required = true)
+    val canDownload: Boolean
+)

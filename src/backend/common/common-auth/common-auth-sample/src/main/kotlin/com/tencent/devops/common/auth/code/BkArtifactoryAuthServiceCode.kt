@@ -24,23 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.init
+package com.tencent.devops.common.auth.code
 
-import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.artifactory.service.impl.DiskArchiveFileServiceImpl
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
-import org.springframework.core.Ordered
-
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
-
-    @Bean
-    @Primary
-    fun diskArchiveFileServiceImpl(): ArchiveFileService = DiskArchiveFileServiceImpl()
+/**
+ * Artifactory ServiceCode
+ */
+class BkArtifactoryAuthServiceCode : ArtifactoryAuthServiceCode {
+    override fun id() = BkAuthServiceCode.ARTIFACTORY.value
 }
