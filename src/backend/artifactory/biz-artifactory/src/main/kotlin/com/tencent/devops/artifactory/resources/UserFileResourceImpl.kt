@@ -27,16 +27,8 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.UserFileResource
-import com.tencent.devops.artifactory.pojo.FileDetail
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.SearchProps
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
@@ -49,36 +41,6 @@ import javax.ws.rs.core.Response
 @RestResource
 class UserFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
     UserFileResource {
-
-    override fun downloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String
-    ): Result<Url> {
-        val fileType = when (artifactoryType) {
-            ArtifactoryType.PIPELINE -> FileTypeEnum.BK_ARCHIVE
-            ArtifactoryType.CUSTOM_DIR -> FileTypeEnum.BK_CUSTOM
-        }
-        val result = archiveFileService.getFileDownloadUrls(
-            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD, filePath = path, fileType = fileType
-        )
-        return if (result.isNotOk() || result.data == null || result.data!!.fileUrlList!!.isEmpty()) {
-            Result(result.status, result.message ?: "")
-        } else {
-            Result(Url(result.data!!.fileUrlList!![0]))
-        }
-    }
-
-    override fun show(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String
-    ): Result<FileDetail> {
-        checkParameters(userId, projectId, path)
-        return Result(archiveFileService.show(userId, projectId, artifactoryType, path))
-    }
 
     override fun uploadFile(
         userId: String,
@@ -114,27 +76,5 @@ class UserFileResourceImpl @Autowired constructor(private val archiveFileService
 
     override fun downloadFileExt(userId: String, filePath: String, response: HttpServletResponse) {
         downloadFile(userId, filePath, response)
-    }
-
-    override fun searchFile(
-        userId: String,
-        projectCode: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: SearchProps
-    ): Result<Page<FileInfo>> {
-        return archiveFileService.searchFileList(userId, projectCode, page, pageSize, searchProps)
-    }
-
-    private fun checkParameters(userId: String, projectId: String, path: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (path.isBlank()) {
-            throw ParamBlankException("Invalid path")
-        }
     }
 }

@@ -25,23 +25,8 @@
  */
 
 dependencies {
-
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    testCompile "junit:junit"
-    testCompile "org.springframework.boot:spring-boot-starter-test"
-
-    compile project(":artifactory:biz-artifactory-store")
-    compile project(":artifactory:biz-artifactory-sample")
-    compile project(":dispatch:biz-dispatch")
-    compile project(":environment:biz-environment")
-    compile project(":log:biz-log")
-    compile project(":plugin:biz-plugin")
-    compile project(":process:biz-process-sample")
-    compile project(":project:biz-project-sample")
-    compile project(":repository:biz-repository-sample")
-    compile project(":ticket:biz-ticket-sample")
-    compile project(":store:biz-store-sample")
+    compile project(":artifactory:api-artifactory-store")
+    compile project(":artifactory:biz-artifactory")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"
