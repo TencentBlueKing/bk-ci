@@ -111,4 +111,9 @@ interface AtomService {
      * 根据用户ID和插件代码判断该插件是否由该用户创建
      */
     fun judgeAtomIsCreateByUserId(userId: String, atomCode: String): Result<Boolean>
+
+    /**
+     * 获取插件的中文名
+     */
+    fun getProjectAtomNames(projectCode: String): Result<Map<String, String>>
 }
