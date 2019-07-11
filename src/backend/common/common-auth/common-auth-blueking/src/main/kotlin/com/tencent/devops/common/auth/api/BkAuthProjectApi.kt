@@ -29,7 +29,7 @@ package com.tencent.devops.common.auth.api
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.code.BK_DEVOPS_SCODE
+import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.BkProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 
@@ -81,7 +81,7 @@ class BkAuthProjectApi constructor(
             scopeType = GLOBAL_SCOPE_TYPE,
             systemId = serviceCode,
             resourceType = BkAuthResourceType.PROJECT,
-            scopeId = BK_DEVOPS_SCODE,
+            scopeId = BK_DEVOPS_SCOPE,
             permissions = setOf(BkAuthPermission.MANAGE),
             supplier = supplier
         )
@@ -98,7 +98,7 @@ class BkAuthProjectApi constructor(
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
             userId = userId,
             scopeType = GLOBAL_SCOPE_TYPE,
-            scopeId = BK_DEVOPS_SCODE,
+            scopeId = BK_DEVOPS_SCOPE,
             resourceType = BkAuthResourceType.PROJECT,
             permissions = setOf(BkAuthPermission.VIEW, BkAuthPermission.MANAGE),
             systemId = serviceCode,
