@@ -100,7 +100,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         // 不是重新上传的包才需要校验版本号
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
-            val validateAtomVersionResult = marketAtomCommonService.validateAtomVersion(atomRecord, releaseType, osList, version)
+            val validateAtomVersionResult =
+                marketAtomCommonService.validateAtomVersion(atomRecord, releaseType, osList, version)
             logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
             if (validateAtomVersionResult.isNotOk()) {
                 return validateAtomVersionResult
@@ -117,7 +118,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         version: String
     ): Result<GetAtomConfigResult?> {
         val taskJsonStr = getTaskJsonStr(projectCode, atomCode, version)
-        val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
+        val getAtomConfResult =
+            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
         logger.info("parseTaskJson result is :$taskJsonStr")
         return if (getAtomConfResult.errorCode != "0") {
             MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
@@ -126,7 +128,10 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             val executionInfoMap = taskDataMap["execution"] as Map<String, Any>
             val packagePath = executionInfoMap["packagePath"] as? String
             if (StringUtils.isEmpty(packagePath)) {
-                MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf("packagePath"))
+                MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                    arrayOf("packagePath")
+                )
             } else {
                 val atomEnvRequest = getAtomConfResult.atomEnvRequest!!
                 atomEnvRequest.pkgPath = "$projectCode/$atomCode/$version/$packagePath"

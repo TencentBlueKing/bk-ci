@@ -47,7 +47,14 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(private val ma
         releaseType: ReleaseTypeEnum?,
         os: String?
     ): Result<Boolean> {
-        return marketAtomArchiveService.verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
+        return marketAtomArchiveService.verifyAtomPackageByUserId(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            releaseType = releaseType,
+            os = os
+        )
     }
 
     override fun verifyAtomTaskJson(
