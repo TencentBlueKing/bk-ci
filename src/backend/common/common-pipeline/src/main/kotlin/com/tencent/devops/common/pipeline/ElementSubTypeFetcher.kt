@@ -24,23 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
+package com.tencent.devops.common.pipeline
 
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-}
+import com.tencent.devops.common.pipeline.pojo.element.Element
 
-shadowJar {
+/**
+ * 扩展Element的子类
+ */
+interface ElementSubTypeFetcher {
 
-    mergeServiceFiles()
-
-    destinationDir = file("${rootDir}/release")
-    classifier = null
-    // 设置为release包不带版本号
-    version = null
-    zip64 true
+    /**
+     * 返回扩展的子类
+     */
+    fun jsonSubTypes(): Map<String, Class<out Element>>
 }
