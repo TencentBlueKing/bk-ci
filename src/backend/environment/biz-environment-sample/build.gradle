@@ -24,19 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package build
-
-import (
-	"fmt"
-	"testing"
-	"time"
-)
-
-func Test_BuildManager_01(t *testing.T) {
-	fmt.Println("start")
-	GBuildManager.AddBuild(6124, &ThirdPartyBuildInfo{})
-	for {
-		time.Sleep(5 * time.Second)
-		fmt.Println("instanceCount: ", GBuildManager.GetInstanceCount())
-	}
+dependencies {
+    compile project(":environment:biz-environment")
+    compile project(":common:common-auth:common-auth-sample")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

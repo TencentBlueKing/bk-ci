@@ -29,8 +29,13 @@ package com.tencent.devops.environment.api.thirdPartyAgent
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentAction
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
@@ -53,7 +58,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserThirdPartyAgentResource {
-
     @ApiOperation("是否启动第三方构建机接入")
     @GET
     @Path("/projects/{projectId}/enable")
@@ -173,4 +177,183 @@ interface UserThirdPartyAgentResource {
         @PathParam("nodeId")
         nodeId: String
     ): Result<Boolean>
+
+    @ApiOperation("保存agent环境变量")
+    @POST
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/envs")
+    fun saveAgentEnvs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("Envs", required = true)
+        envs: List<EnvVar>
+    ): Result<Boolean>
+
+    @ApiOperation("获取agent环境变量")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/envs")
+    fun getAgentEnvs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String
+    ): Result<List<EnvVar>>
+
+    @ApiOperation("设置agent构建并发数")
+    @POST
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/parallelTaskCount")
+    fun setAgentParallelTaskCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("parallelTaskCount", required = true)
+        @QueryParam("parallelTaskCount")
+        parallelTaskCount: Int
+    ): Result<Boolean>
+
+    @ApiOperation("获取构建机详情")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/thirdPartyAgentDetail")
+    fun getThirdPartyAgentDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String
+    ): Result<ThirdPartyAgentDetail?>
+
+    @ApiOperation("获取第三方构建机任务")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentBuilds")
+    fun listAgentBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>>
+
+    @ApiOperation("获取第三方构建机活动")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentActions")
+    fun listAgentActions(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<ThirdPartyAgentAction>>
+
+    @ApiOperation("获取 CPU 使用率图表数据")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/queryCpuUsageMetrix")
+    fun queryCpuUsageMetrix(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("时间段，HOUR | DAY | WEEK", required = true)
+        @QueryParam("timeRange")
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>>
+
+    @ApiOperation("获取内存使用率图表数据")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/queryMemoryUsageMetrix")
+    fun queryMemoryUsageMetrix(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("时间段，HOUR | DAY | WEEK", required = true)
+        @QueryParam("timeRange")
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>>
+
+    @ApiOperation("获取磁盘IO图表数据")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/queryDiskioMetrix")
+    fun queryDiskioMetrix(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("时间段，HOUR | DAY | WEEK", required = true)
+        @QueryParam("timeRange")
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>>
+
+    @ApiOperation("获取网络图表数据")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/queryNetMetrix")
+    fun queryNetMetrix(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("时间段，HOUR | DAY | WEEK", required = true)
+        @QueryParam("timeRange")
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>>
 }

@@ -31,7 +31,7 @@ import (
 )
 
 func Test_RunCommand_01(t *testing.T) {
-	output, _, err := RunCommand("ipconfig", []string{"/all"}, "", nil)
+	output, err := RunCommand("ipconfig", []string{"/all"}, "", nil)
 	if err != nil {
 		t.Error("err: ", err.Error())
 	}
@@ -39,7 +39,7 @@ func Test_RunCommand_01(t *testing.T) {
 }
 
 func Test_RunCommand_02(t *testing.T) {
-	output, _, err := RunCommand("bash", []string{"/Users/huangou/workspace/agent/test/devops_pipeline_oamyqvmd_COMMAND.sh"}, "/Users/huangou/workspace/agent/test", nil)
+	output, err := RunCommand("bash", []string{"/Users/huangou/workspace/agent/test/devops_pipeline_oamyqvmd_COMMAND.sh"}, "/Users/huangou/workspace/agent/test", nil)
 	if err != nil {
 		t.Error("err: ", err.Error())
 	}

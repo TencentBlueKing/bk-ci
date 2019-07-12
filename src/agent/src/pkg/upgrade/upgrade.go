@@ -27,10 +27,12 @@
 package upgrade
 
 import (
+	"errors"
 	"github.com/astaxie/beego/logs"
 	"os"
 	"pkg/api"
 	"pkg/config"
+	"pkg/util/fileutil"
 	"time"
 )
 
@@ -64,44 +66,58 @@ func agentUpgrade() {
 		return
 	}
 
-	agentChanged, workAgentChanged, err := downloadFile()
+	logs.Info("download upgrade files start")
+	agentChanged, workerChanged, err := downloadUpgradeFiles()
 	if err != nil {
-		logs.Error("download file err: ", err.Error())
+		logs.Error("download upgrade files failed", err.Error())
 		return
 	}
+	logs.Info("download upgrade files done")
 
-	err = DoUpgradeOperation(agentChanged, workAgentChanged)
+	err = DoUpgradeOperation(agentChanged, workerChanged)
 	if err != nil {
 		logs.Error("do upgrade operation failed", err)
 	}
 }
 
-func downloadFile() (agentChanged bool, workAgentChanged bool, err error) {
-	logs.Info("start download new agent")
-
+func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error) {
 	tmpDir := config.GetAgentWorkdir() + "/tmp"
 	os.MkdirAll(config.GetAgentWorkdir()+"/tmp", os.ModePerm)
 
-	logs.Info("start download upgrader")
-	upgraderChanged, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerUpgraderFile(), tmpDir+"/"+config.GetClientUpgraderFile())
+	logs.Info("download upgrader start")
+	_, err = api.DownloadUpgradeFile("upgrade/"+config.GetServerUpgraderFile(), tmpDir+"/"+config.GetClientUpgraderFile())
 	if err != nil {
-		return true, true, err
+		logs.Error("download upgrader failed", err)
+		return false, false, errors.New("download upgrader failed")
 	}
-	logs.Info("upgrader download done")
+	logs.Info("download upgrader done")
 
-	logs.Info("start download agent")
-	agentChanged, err = api.DownloadUpgradeFile("upgrade/"+config.GetServerAgentFile(), tmpDir+"/"+config.GetClienAgentFile())
+	logs.Info("download agent start")
+	newAgentMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerAgentFile(), tmpDir+"/"+config.GetClienAgentFile())
 	if err != nil {
-		return true, true, err
+		logs.Error("download agent failed", err)
+		return false, false, errors.New("download agent failed")
 	}
-	logs.Info("agent download done")
+	logs.Info("download agent done")
 
-	logs.Info("start download work agent")
-	workAgentChanged, err = api.DownloadUpgradeFile("jar/"+config.WorkAgentFile, tmpDir+"/"+config.WorkAgentFile)
+	logs.Info("download worker start")
+	newWorkerMd5, err := api.DownloadUpgradeFile("jar/"+config.WorkAgentFile, tmpDir+"/"+config.WorkAgentFile)
 	if err != nil {
-		return upgraderChanged || agentChanged, true, err
+		logs.Error("download worker failed", err)
+		return false, false, errors.New("download worker failed")
 	}
-	logs.Info("work agent download done")
+	logs.Info("download worker done")
 
-	return upgraderChanged || agentChanged, workAgentChanged, nil
+	agentMd5, err := fileutil.GetFileMd5(config.GetAgentWorkdir() + "/" + config.GetClienAgentFile())
+	if err != nil {
+		logs.Error("check agent md5 failed", err)
+		return false, false, errors.New("check agent md5 failed")
+	}
+	workerMd5, err := fileutil.GetFileMd5(config.GetAgentWorkdir() + "/" + config.WorkAgentFile)
+	if err != nil {
+		logs.Error("check worker md5 failed", err)
+		return false, false, errors.New("check agent md5 failed")
+	}
+
+	return agentMd5 != newAgentMd5, workerMd5 != newWorkerMd5, nil
 }

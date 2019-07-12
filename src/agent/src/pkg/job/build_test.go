@@ -24,57 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package build
+package job
 
 import (
-	"encoding/json"
-	"github.com/astaxie/beego/logs"
 	"os"
+	"pkg/api"
+	"testing"
 )
 
-type buildManager struct {
-	instances map[int]*ThirdPartyBuildInfo
-}
-
-var GBuildManager *buildManager
-
-func init() {
-	GBuildManager = new(buildManager)
-	GBuildManager.instances = make(map[int]*ThirdPartyBuildInfo)
-}
-
-func (b *buildManager) GetInstanceCount() int {
-	return len(b.instances)
-}
-
-func (b *buildManager) AddBuild(processId int, buildInfo *ThirdPartyBuildInfo) {
-	bytes, _ := json.Marshal(buildInfo)
-	logs.Info("add build: processId: ", processId, ", buildInfo: ", string(bytes))
-	b.instances[processId] = buildInfo
-	go b.waitProcessDone(processId)
-}
-
-func (b *buildManager) waitProcessDone(processId int) {
-	process, err := os.FindProcess(processId)
+func Test_writeStartBuildAgentScript_01(t *testing.T) {
+	buildInfo := &api.ThirdPartyBuildInfo{"pid", "bid", "1", ""}
+	file, err := writeStartBuildAgentScript(buildInfo)
 	if err != nil {
-		logs.Warn("build process err, pid: ", processId, ", err: ", err.Error())
-		delete(b.instances, processId)
-		return
+		t.Error("error: ", err.Error())
 	}
-	process.Wait()
-	logs.Info("build process finish: pid: ", processId)
-	delete(b.instances, processId)
+	dir, _ := os.Getwd()
+	t.Log("workDir: ", dir)
+	t.Log("fileName: ", file)
 }
-
-//func (b *buildManager) StartMonitor() {
-//    for {
-//        time.Sleep(5 * time.Second)
-//        for processId := range b.instances {
-//            _, err := os.FindProcess(processId)
-//            if err != nil {
-//
-//                delete(b.instances, processId)
-//            }
-//        }
-//    }
-//}
