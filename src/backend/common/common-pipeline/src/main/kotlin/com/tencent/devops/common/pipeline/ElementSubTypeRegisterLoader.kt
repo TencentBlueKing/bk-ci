@@ -24,23 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
+package com.tencent.devops.common.pipeline
 
-jar {
-    from("src/main/resources") {
-        include "*.*"
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.jsontype.NamedType
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.tencent.devops.common.api.util.JsonUtil
+import org.slf4j.LoggerFactory
+import java.util.ServiceLoader
+
+object ElementSubTypeRegisterLoader {
+
+    private val logger = LoggerFactory.getLogger(ElementSubTypeRegisterLoader::class.java)
+
+    /**
+     * 加载初始化
+     */
+    fun registerElementForJsonUtil() {
+        registerElement(null)
     }
-}
+    fun registerElement(objectMapper: ObjectMapper?) {
 
-shadowJar {
+        val clazz = ElementSubTypeFetcher::class.java
+        var fetcheries = ServiceLoader.load(clazz)
 
-    mergeServiceFiles()
+        if (!fetcheries.iterator().hasNext()) {
+            fetcheries = ServiceLoader.load(clazz, ServiceLoader::class.java.classLoader)
+        }
+        val elementSubModule = SimpleModule()
+        fetcheries.forEach { fetcher ->
+            val jsonSubTypes = fetcher.jsonSubTypes()
+            jsonSubTypes.forEach { (classTypeName, clazz) ->
+                elementSubModule.registerSubtypes(NamedType(clazz, classTypeName))
+                logger.info("[REGISTER_MODEL_ELEMENT]|$clazz for $classTypeName")
+            }
+        }
 
-    destinationDir = file("${rootDir}/release")
-    classifier = null
-    // 设置为release包不带版本号
-    version = null
-    zip64 true
+        JsonUtil.registerModule(elementSubModule)
+        objectMapper?.registerModule(elementSubModule)
+    }
 }
