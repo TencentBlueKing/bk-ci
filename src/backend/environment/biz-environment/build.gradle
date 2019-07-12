@@ -27,6 +27,7 @@
 dependencies {
     compile project(":log:api-log")
     compile project(":environment:api-environment")
+    compile project(":dispatch:api-dispatch")
     compile project(":project:api-project")
     compile project(":environment:model-environment")
     compile project(":common:common-client")
@@ -36,6 +37,7 @@ dependencies {
     compile project(":common:common-db")
     compile("org.apache.commons:commons-compress:1.15")
     compile("org.json:json:20140107")
+    compile("org.influxdb:influxdb-java:2.10")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

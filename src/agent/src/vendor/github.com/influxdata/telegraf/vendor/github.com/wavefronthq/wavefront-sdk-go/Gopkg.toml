@@ -1,0 +1,7 @@
+[[constraint]]
+  name = "github.com/caio/go-tdigest"
+  version = "2.3.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true

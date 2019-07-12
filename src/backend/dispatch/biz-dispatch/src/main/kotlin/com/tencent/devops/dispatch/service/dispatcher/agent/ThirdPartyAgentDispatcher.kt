@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.service.ThirdPartyAgentBuildService
+import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
@@ -57,7 +57,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val redisUtils: RedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val thirdPartyAgentBuildService: ThirdPartyAgentBuildService
+    private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) : Dispatcher {
     override fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) =
         pipelineAgentStartupEvent.dispatchType is ThirdPartyAgentIDDispatchType ||
@@ -198,7 +198,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     pipelineAgentStartupEvent.pipelineId,
                     pipelineAgentStartupEvent.buildId,
                     pipelineAgentStartupEvent.vmSeqId,
-                    workspace ?: ""
+                    workspace ?: "",
+                    pipelineAgentStartupEvent.pipelineName,
+                    pipelineAgentStartupEvent.buildNo,
+                    pipelineAgentStartupEvent.taskName
                 )
                 logger.info(
                     "Start the third party build agent($agentId) " +

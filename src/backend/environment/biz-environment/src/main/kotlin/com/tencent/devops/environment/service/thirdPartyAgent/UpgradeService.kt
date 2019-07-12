@@ -62,9 +62,12 @@ class UpgradeService @Autowired constructor(
 
         private const val CURRENT_AGENT_VERSION = "environment.thirdparty.agent.verison"
         private const val GRAY_CURRENT_AGENT_VERSION = "environment.thirdparty.agent.gray.version"
+
+        private const val PARALLEL_UPGRADE_COUNT = "environment.thirdparty.agent.parallel.upgrade.count"
+        private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
     }
 
-    fun setUpgrade(agentVersion: String) =
+    fun setWorkerVersion(agentVersion: String) =
         redisOperation.set(getAgentVersionKey(), agentVersion, TimeUnit.DAYS.toSeconds(120))
 
     fun setMasterVersion(masterVersion: String) =
@@ -162,6 +165,14 @@ class UpgradeService @Autowired constructor(
         } else {
             Response.status(Response.Status.NOT_MODIFIED).build()
         }
+    }
+
+    fun setMaxParallelUpgradeCount(count: Int) {
+        redisOperation.set(PARALLEL_UPGRADE_COUNT, count.toString())
+    }
+
+    fun getMaxParallelUpgradeCount(): Int {
+        return redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
     }
 
     private fun checkAgent(

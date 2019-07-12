@@ -219,16 +219,4 @@ interface UserEnvironmentResource {
         @ApiParam("节点 HashId", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
-
-//    @ApiOperation("获取用户有权限使用的环境列表")
-//    @GET
-//    @Path("/{projectId}/listUsableServerEnvs")
-//    fun listUsableServerEnvs(
-//        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//        @HeaderParam(AUTH_HEADER_USER_ID)
-//        userId: String,
-//        @ApiParam("项目ID", required = true)
-//        @PathParam("projectId")
-//        projectId: String
-//    ): Result<List<EnvWithPermission>>
 }

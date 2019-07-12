@@ -28,9 +28,11 @@ package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -51,15 +53,23 @@ class NodeService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val slaveGatewayService: SlaveGatewayService
+    private val slaveGatewayService: SlaveGatewayService,
+    private val environmentPermissionService: EnvironmentPermissionService
 ) {
     fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        val canDeleteNodeIds =
+            environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.DELETE)
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
         if (existNodeList.isEmpty()) {
             return
         }
         val existNodeIdList = existNodeList.map { it.nodeId }
+
+        val unauthorizedNodeIds = existNodeIdList.filterNot { canDeleteNodeIds.contains(it) }
+        if (unauthorizedNodeIds.isNotEmpty()) {
+            throw OperationException("没有删除节点的权限，节点ID：[${unauthorizedNodeIds.map { HashUtil.encodeLongId(it) }.joinToString(",")}]")
+        }
 
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -68,10 +78,32 @@ class NodeService @Autowired constructor(
         }
     }
 
+    fun hasCreatePermission(userId: String, projectId: String): Boolean {
+        return environmentPermissionService.checkNodePermission(userId, projectId, BkAuthPermission.CREATE)
+    }
+
     fun list(userId: String, projectId: String): List<NodeWithPermission> {
         val nodeRecordList = nodeDao.listNodes(dslContext, projectId)
         if (nodeRecordList.isEmpty()) {
             return emptyList()
+        }
+
+        val permissionMap = environmentPermissionService.listNodeByPermissions(userId, projectId,
+            setOf(BkAuthPermission.USE, BkAuthPermission.EDIT, BkAuthPermission.DELETE))
+        val canUseNodeIds = if (permissionMap.containsKey(BkAuthPermission.USE)) {
+            permissionMap[BkAuthPermission.USE]!!.map { HashUtil.decodeIdToLong(it) }
+        } else {
+            emptyList()
+        }
+        val canEditNodeIds = if (permissionMap.containsKey(BkAuthPermission.EDIT)) {
+            permissionMap[BkAuthPermission.EDIT]!!.map { HashUtil.decodeIdToLong(it) }
+        } else {
+            emptyList()
+        }
+        val canDeleteNodeIds = if (permissionMap.containsKey(BkAuthPermission.DELETE)) {
+            permissionMap[BkAuthPermission.DELETE]!!.map { HashUtil.decodeIdToLong(it) }
+        } else {
+            emptyList()
         }
 
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }
@@ -100,9 +132,9 @@ class NodeService @Autowired constructor(
                 it.createdUser,
                 it.operator,
                 it.bakOperator,
-                true,
-                true,
-                true,
+                canUseNodeIds.contains(it.nodeId),
+                canEditNodeIds.contains(it.nodeId),
+                canDeleteNodeIds.contains(it.nodeId),
                 gatewayShowName,
                 NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 if (null == it.createdTime) "" else
@@ -119,6 +151,25 @@ class NodeService @Autowired constructor(
         val nodeRecordList = nodeDao.listAllByIds(dslContext, projectId, nodeIds)
         if (nodeRecordList.isEmpty()) {
             return emptyList()
+        }
+
+        val permissionMap = environmentPermissionService.listNodeByPermissions(userId, projectId,
+            setOf(BkAuthPermission.USE, BkAuthPermission.EDIT, BkAuthPermission.DELETE))
+
+        val canUseNodeIds = if (permissionMap.containsKey(BkAuthPermission.USE)) {
+            permissionMap[BkAuthPermission.USE]!!.map { HashUtil.decodeIdToLong(it) }
+        } else {
+            emptyList()
+        }
+        val canEditNodeIds = if (permissionMap.containsKey(BkAuthPermission.EDIT)) {
+            permissionMap[BkAuthPermission.EDIT]!!.map { HashUtil.decodeIdToLong(it) }
+        } else {
+            emptyList()
+        }
+        val canDeleteNodeIds = if (permissionMap.containsKey(BkAuthPermission.DELETE)) {
+            permissionMap[BkAuthPermission.DELETE]!!.map { HashUtil.decodeIdToLong(it) }
+        } else {
+            emptyList()
         }
 
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }
@@ -145,9 +196,9 @@ class NodeService @Autowired constructor(
                 it.createdUser,
                 it.operator,
                 it.bakOperator,
-                true,
-                true,
-                true,
+                canUseNodeIds.contains(it.nodeId),
+                canEditNodeIds.contains(it.nodeId),
+                canDeleteNodeIds.contains(it.nodeId),
                 gatewayShowName,
                 NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 if (null == it.createdTime) "" else
@@ -190,8 +241,10 @@ class NodeService @Autowired constructor(
     fun updateDisplayName(userId: String, projectId: String, nodeHashId: String, displayName: String) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         nodeDao.get(dslContext, projectId, nodeId) ?: throw NotFoundException("node not found")
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, BkAuthPermission.EDIT)) {
+            throw OperationException("No Permission")
+        }
         checkDisplayName(projectId, nodeId, displayName)
-
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             nodeDao.updateDisplayName(context, nodeId, displayName)

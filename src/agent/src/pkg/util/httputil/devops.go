@@ -94,15 +94,19 @@ func (r *HttpResult) IntoAgentResult() (*AgentResult, error) {
 	}
 }
 
-func DownloadUpgradeFile(url string, headers map[string]string, filepath string) (fileChanged bool, err error) {
-	md5Sum, _ := fileutil.GetFileMd5(filepath)
-	if md5Sum != "" {
-		url = url + "&eTag=" + md5Sum
+func DownloadUpgradeFile(url string, headers map[string]string, filepath string) (md5 string, err error) {
+	oldFileMd5, err := fileutil.GetFileMd5(filepath)
+	if err != nil {
+		logs.Error("check file md5 failed", err)
+		return "", errors.New("check file md5 failed")
+	}
+	if oldFileMd5 != "" {
+		url = url + "&eTag=" + oldFileMd5
 	}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return true, err
+		return "", err
 	}
 
 	//header
@@ -117,41 +121,42 @@ func DownloadUpgradeFile(url string, headers map[string]string, filepath string)
 		}
 	}()
 	if err != nil {
-		logs.Error("http request failed", err)
-		return true, err
+		logs.Error("download upgrade file failed", err)
+		return "", errors.New("download upgrade file failed")
 	}
 
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
 		if resp.StatusCode == http.StatusNotFound {
-			return true, errors.New("file not found")
+			return "", errors.New("file not found")
 		}
 		if resp.StatusCode == http.StatusNotModified {
-			return false, nil
+			return oldFileMd5, nil
 		}
 		body, _ := ioutil.ReadAll(resp.Body)
 		logs.Error("download upgrade file failed, status: " + resp.Status + ", responseBody: " + string(body))
-		return true, errors.New("download upgrade file failed")
+		return "", errors.New("download upgrade file failed")
 	}
 
 	err = writeToFile(filepath, resp.Body)
 	if err != nil {
-		return true, err
+		logs.Error("download upgrade file failed", err)
+		return "", errors.New("download upgrade file failed")
+	}
+
+	fileMd5, err := fileutil.GetFileMd5(filepath)
+	logs.Info("download file md5: ", fileMd5)
+	if err != nil {
+		logs.Error("check file md5 failed", err)
+		return "", errors.New("check file md5 failed")
 	}
 
 	checksumMd5 := resp.Header.Get("X-Checksum-Md5")
 	logs.Info("checksum md5: ", checksumMd5)
-	if len(checksumMd5) > 0 {
-		fileMd5, err := fileutil.GetFileMd5(filepath)
-		logs.Info("download file md5: ", fileMd5)
-		if err != nil {
-			return true, errors.New("check file md5 err: " + err.Error())
-		}
-		if checksumMd5 != fileMd5 {
-			return true, errors.New("file md5 not match")
-		}
+	if len(checksumMd5) > 0 && checksumMd5 != fileMd5 {
+		return "", errors.New("file md5 not match")
 	}
 
-	return true, err
+	return fileMd5, err
 }
 
 func writeToFile(file string, content io.Reader) error {

@@ -1,16 +1,30 @@
-# Agent 代码说明文档
+# Agent(Golang)
 
-## agent 代码说明
-agent 使用 golang 编写，目前支持 linux/windows/macos 三种系统，其他系统没有做编译验证。
+构建Agent是指包含了agent进程监控和调度部分逻辑的代码，不包含与流水线交互的构建类业务逻辑代码，需要与另外一个worker(kotlin) 一起整合才能是完整的Agent包。
 
-为方便编译，所有编译依赖已放入源代码的 vendor 文件夹
 
-## agent 编译说明
-建议使用 `golang 1.12` 版本编译。
 
-建议不要使用交叉编译生成 agent 程序。
+## Agent二进制程序编译
 
-安装好golang后，将 `bk-ci/agent` 加入 `GOPATH` 环境变量，执行 `bk-ci/agent` 下面不同操作系统对应的编译脚本，会在 `bk-ci/agent/bin` 文件夹下生成agent程序。
+在根目录下分别有3个操作系统的编译脚本：
 
-## 部署
-agent的部署请参考配套文档
+- build_linux.sh
+- build_macos.sh
+- build_windows.bat
+
+只需要直接执行即可，比如Linux包将会在bin目录下生成对应devopsDaemon_linux,devopsAgent_linux ，其他系统依此类推。
+
+- devopsDaemon： 用于守护agent进程，监控和拉起agent进程
+- devopsAgent:  用于和调度服务通信，以及拉起构建进程worker
+
+## Agent控制脚本
+
+举例Linux, 其他系统依此类推。
+
+- scripts/linux/install.sh：  agent安装脚本
+- scripts/linux/start.sh：   agent启动脚本
+- scripts/linux/stop.sh：   agent停止脚本
+- scripts/linux/uninstall.sh：   agent卸载脚本
+
+
+

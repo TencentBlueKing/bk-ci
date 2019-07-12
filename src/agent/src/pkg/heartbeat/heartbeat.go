@@ -27,33 +27,57 @@
 package heartbeat
 
 import (
+	"errors"
 	"github.com/astaxie/beego/logs"
 	"pkg/api"
 	"pkg/config"
+	"pkg/job"
 	"pkg/upgrade"
+	"pkg/util"
 	"time"
 )
 
 func DoAgentHeartbeat() {
 	for {
-		agentHeartbeat()
+		err := newAgentHeartbeat()
+		if err != nil {
+			logs.Info("new heartbeat failed, try old heartbeat")
+		}
 		time.Sleep(10 * time.Second)
 	}
 }
 
-func agentHeartbeat() {
-	logs.Info("agent heartbeat start")
-	result, err := api.AgentHeartbeat()
+func newAgentHeartbeat() error {
+	result, err := api.NewAgentHeartbeat(job.GBuildManager.GetInstances())
 	if err != nil {
-		logs.Error("agent heart beat failed: ", err.Error())
-		return
+		logs.Error("agent heartbeat(new) failed: ", err.Error())
+		return errors.New("agent heartbeat(new) failed")
 	}
-	if result.IsOk() {
-		if result.Data == config.AgentStatusDelete {
-			logs.Warning("agent is deleted from server")
-			upgrade.UninstallAgent()
-			return
-		}
+	if result.IsNotOk() {
+		logs.Error("agent heartbeat(new) failed: ", result.Message)
+		return errors.New("agent heartbeat(new) failed")
 	}
-	logs.Info("agent heartbeat done")
+
+	heartbeatResponse := new(api.AgentHeartbeatResponse)
+	err = util.ParseJsonToData(result.Data, &heartbeatResponse)
+	if err != nil {
+		logs.Error("agent heartbeat(new) failed: ", err.Error())
+		return errors.New("agent heartbeat(new) failed")
+	}
+
+	if heartbeatResponse.AgentStatus == config.AgentStatusDelete {
+		upgrade.UninstallAgent()
+		return nil
+	}
+
+	// 修改agent配置
+	if config.GAgentConfig.ParallelTaskCount != heartbeatResponse.ParallelTaskCount {
+		config.GAgentConfig.ParallelTaskCount = heartbeatResponse.ParallelTaskCount
+		config.GAgentConfig.SaveConfig()
+	}
+
+	// agent环境变量
+	config.GEnvVars = heartbeatResponse.Envs
+	logs.Info("agent heartbeat(new) done")
+	return nil
 }

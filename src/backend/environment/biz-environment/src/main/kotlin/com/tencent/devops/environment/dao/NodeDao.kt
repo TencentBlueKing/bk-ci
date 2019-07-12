@@ -235,4 +235,8 @@ class NodeDao {
             }
         }
     }
+
+    fun saveNode(dslContext: DSLContext, nodeRecord: TNodeRecord) {
+        dslContext.executeUpdate(nodeRecord)
+    }
 }

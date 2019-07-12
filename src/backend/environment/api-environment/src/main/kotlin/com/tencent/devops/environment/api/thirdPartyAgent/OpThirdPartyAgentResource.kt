@@ -54,7 +54,7 @@ interface OpThirdPartyAgentResource {
     @ApiOperation("设置Agent升级")
     @PUT
     @Path("/agents/upgrade/{version}")
-    fun setAgentUpgrade(
+    fun setWorkerVersion(
         @ApiParam("版本号", required = true)
         @PathParam("version")
         version: String
@@ -72,12 +72,12 @@ interface OpThirdPartyAgentResource {
     @ApiOperation("获取当前Agent版本")
     @GET
     @Path("/agent/upgrade")
-    fun getAgentVersion(): Result<String?>
+    fun getWorkerVersion(): Result<String?>
 
     @ApiOperation("获取当前Master版本")
     @GET
     @Path("/agent/masterVersion")
-    fun getAgentMasterVersion(): Result<String?>
+    fun getMasterVersion(): Result<String?>
 
     @ApiOperation("执行第三方构建机管道")
     @POST
@@ -111,32 +111,6 @@ interface OpThirdPartyAgentResource {
         seqId: String
     ): Result<PipelineResponse>
 
-    @ApiOperation("设置项目升级")
-    @POST
-    @Path("/agents/setUpgradeProjects")
-    fun setUpgradeProjects(
-        @ApiParam("projects", required = true)
-        projects: List<String>
-    ): Result<Boolean>
-
-    @ApiOperation("取消项目升级")
-    @POST
-    @Path("/agents/unsetUpgradeProjects")
-    fun unsetUpgradeProjects(
-        @ApiParam("projects", required = true)
-        projects: List<String>
-    ): Result<Boolean>
-
-    @ApiOperation("获取所有升级项目")
-    @GET
-    @Path("/agents/getAllUpdateProjects")
-    fun getAllUpdateProjects(): Result<List<String>>
-
-    @ApiOperation("清空所有升级项目")
-    @POST
-    @Path("/agents/cleanAllUpgradeProjects")
-    fun cleanAllUpgradeProjects(): Result<Boolean>
-
     @ApiOperation("设置agent强制升级")
     @POST
     @Path("/agents/setForceUpdateAgents")
@@ -162,4 +136,43 @@ interface OpThirdPartyAgentResource {
     @POST
     @Path("/agents/cleanAllForceUpgradeAgents")
     fun cleanAllForceUpgradeAgents(): Result<Boolean>
+
+    @ApiOperation("设置agent锁定升级")
+    @POST
+    @Path("/agents/setLockUpdateAgents")
+    fun setLockUpdateAgents(
+        @ApiParam("agentIds", required = true)
+        agentIds: List<Long>
+    ): Result<Boolean>
+
+    @ApiOperation("取消agent锁定升级")
+    @POST
+    @Path("/agents/unsetLockUpdateAgents")
+    fun unsetLockUpdateAgents(
+        @ApiParam("agentIds", required = true)
+        agentIds: List<Long>
+    ): Result<Boolean>
+
+    @ApiOperation("获取所有强制锁定agent")
+    @POST
+    @Path("/agents/getAllLockUpgradeAgents")
+    fun getAllLockUpgradeAgents(): Result<List<Long>>
+
+    @ApiOperation("取消所有强制锁定agent")
+    @POST
+    @Path("/agents/cleanAllLockUpgradeAgents")
+    fun cleanAllLockUpgradeAgents(): Result<Boolean>
+
+    @ApiOperation("设置agent最大并发升级数量")
+    @POST
+    @Path("/agents/setMaxParallelUpgradeCount")
+    fun setMaxParallelUpgradeCount(
+        @ApiParam("maxParallelUpgradeCount", required = true)
+        maxParallelUpgradeCount: Int
+    ): Result<Boolean>
+
+    @ApiOperation("获取agent最大并发升级数量")
+    @POST
+    @Path("/agents/getMaxParallelUpgradeCount")
+    fun getMaxParallelUpgradeCount(): Result<Int?>
 }
