@@ -31,6 +31,7 @@ import com.tencent.devops.agent.utils.KillBuildProcessTree
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
@@ -49,6 +50,8 @@ object WorkRunner {
 
     fun execute(args: Array<String>) {
         try {
+
+            ElementSubTypeRegisterLoader.registerElementForJsonUtil()
             ApiFactory.init()
             TaskFactory.init()
             val buildInfo = getBuildInfo(args)!!
@@ -98,7 +101,7 @@ object WorkRunner {
                     logger.info("start kill process tree")
                     val killedProcessIds =
                         KillBuildProcessTree.killProcessTree(buildInfo.projectId, buildInfo.buildId, buildInfo.vmSeqId)
-                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed")
+                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, pid(s): $killedProcessIds")
                 }
             })
         } catch (t: Throwable) {
