@@ -19,10 +19,10 @@
 
 |   文件名称   |   文件说明     |
 | ------------ | ---------------- |
-|   [openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm)   |  openresy依赖的openssl包    |
-|   [openresty-pcre-8.42-1.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-pcre-8.42-1.el7.centos.x86_64.rpm)   |  openresy依赖的pcre包 |
-|   [openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm)   |  openresy依赖的zlib包 |
-|   [openresty-1.13.6.2-1.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-1.13.6.2-1.el7.centos.x86_64.rpm)   |  openresy安装包 |
+|   [openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm)   |  openresty依赖的openssl包    |
+|   [openresty-pcre-8.42-1.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-pcre-8.42-1.el7.centos.x86_64.rpm)   |  openresty依赖的pcre包 |
+|   [openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm)   |  openresty依赖的zlib包 |
+|   [openresty-1.13.6.2-1.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-1.13.6.2-1.el7.centos.x86_64.rpm)   |  openresty安装包 |
 
 - 安装openresty
 
