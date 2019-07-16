@@ -126,7 +126,6 @@ import java.time.LocalDateTime
 
 /**
  * 流水线运行时相关的服务
- * @author irwinsun
  * @version 1.0
  */
 @Service
@@ -1270,7 +1269,7 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
         }
         with(latestRunningBuild) {
-            val materials = try {
+            val materials: List<PipelineBuildMaterial> = try {
                 getPipelineBuildMaterial(buildId)
             } catch (e: Throwable) {
                 logger.error("[$pipelineId]|getPipelineBuildMaterial-$buildId exception:", e)
@@ -1278,7 +1277,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getPipelineBuildMaterial-$buildId material: ${JsonUtil.toJson(materials)}")
 
-            val artifactList = try {
+            val artifactList: List<FileInfo> = try {
                 getArtifactList(userId = userId, projectId = projectId, pipelineId = pipelineId, buildId = buildId)
             } catch (e: Throwable) {
                 logger.error("[$pipelineId]|getArtifactList-$buildId exception:", e)
@@ -1294,7 +1293,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
-            val buildParameters = try {
+            val buildParameters: List<BuildParameters> = try {
                 getBuildParameters(buildId)
             } catch (e: Throwable) {
                 logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", e)
