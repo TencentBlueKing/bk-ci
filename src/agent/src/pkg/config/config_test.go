@@ -37,5 +37,5 @@ func Test_GetWorkdir_01(t *testing.T) {
 }
 
 func Test_DetectSlaveVersion_01(t *testing.T) {
-	DetectSlaveVersion()
+	t.Log("DetectSlaveVersion: ", DetectSlaveVersion())
 }

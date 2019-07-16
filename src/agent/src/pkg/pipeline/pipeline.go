@@ -94,7 +94,7 @@ func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
 	}
 	defer os.Remove(scriptFile)
 
-	output, exitCode, err := command.RunCommand(scriptFile, []string{} /*args*/, config.GetAgentWorkdir(), nil)
+	output, err := command.RunCommand(scriptFile, []string{} /*args*/, config.GetAgentWorkdir(), nil)
 	if err != nil {
 		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()))
 		return errors.New("run pipeline failed: " + err.Error())
@@ -102,13 +102,8 @@ func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
 
 	outputStr := string(output)
 	logs.Info("script output: ", string(output))
-	logs.Info("exitCode: ", exitCode)
 
-	if exitCode == 0 {
-		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, outputStr))
-	} else {
-		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, outputStr))
-	}
+	api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, outputStr))
 	return nil
 }
 

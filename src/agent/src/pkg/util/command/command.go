@@ -30,12 +30,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/logs"
-	"io/ioutil"
 	"os"
 	"os/exec"
 )
 
-func RunCommand(command string, args []string, workDir string, envMap map[string]string) (output []byte, exitCode int, err error) {
+func RunCommand(command string, args []string, workDir string, envMap map[string]string) (output []byte, err error) {
 	cmd := exec.Command(command)
 
 	if len(args) > 0 {
@@ -53,32 +52,17 @@ func RunCommand(command string, args []string, workDir string, envMap map[string
 		}
 	}
 
-	stdout, err := cmd.StdoutPipe()
-
-	if err != nil {
-		logs.Error("StdoutPipe, err: ", err.Error())
-		return nil, -1, err
-	}
-	defer stdout.Close()
-
 	logs.Info("cmd.Path: ", cmd.Path)
 	logs.Info("cmd.Args: ", cmd.Args)
 	logs.Info("cmd.workDir: ", cmd.Dir)
 
-	if err := cmd.Start(); err != nil {
-		logs.Error("Start, err: ", err.Error())
-		return nil, -1, err
-	}
-
-	opBytes, err := ioutil.ReadAll(stdout)
+	outPut, err := cmd.Output()
+	logs.Info("output: ", string(outPut))
 	if err != nil {
-		logs.Error("ReadAll, err: ", err.Error())
-		return nil, -1, err
+		return outPut, err
 	}
 
-	//exitCode := cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
-	//todo get exitCode
-	return opBytes, 0, nil
+	return outPut, nil
 }
 
 func StartProcess(command string, args []string, workDir string, envMap map[string]string, runUser string) (int, error) {

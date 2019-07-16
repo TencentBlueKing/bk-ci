@@ -43,42 +43,9 @@ func Test_buildUrl_01(t *testing.T) {
 	t.Log("url: ", url)
 }
 
-func Test_AgentHeartbeat_01(t *testing.T) {
-	loadConfig()
-	//for {
-	time.Sleep(5 * time.Second)
-	data, err := AgentHeartbeat()
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("data: ", data)
-	//}
-}
-
 func Test_CheckUpgrade_01(t *testing.T) {
 	loadConfig()
 	data, err := CheckUpgrade()
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("data: ", data)
-}
-
-func Test_DownloadUpgradeFile_01(t *testing.T) {
-	loadConfig()
-	data, err := DownloadUpgradeFile("upgrade/upgrader-steps.jar", "c:\\data\\landun\\tmp\\step.jar")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("data: ", data)
-}
-
-func Test_DownloadUpgradeFile_02(t *testing.T) {
-	loadConfig()
-	data, err := DownloadUpgradeFile("upgrade/agent.exe", "c:\\data\\landun\\tmp\\agent.exe")
 	if err != nil {
 		t.Error("err: ", err.Error())
 		return
