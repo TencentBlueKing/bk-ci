@@ -240,15 +240,18 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String?,
         pipelineId: String,
         channelCode: ChannelCode? = null,
         delete: Boolean = false
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
-            val query = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+            val query = if (!projectId.isNullOrBlank()) {
+                dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+            } else {
+                dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId))
+            }
 
             if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
