@@ -29,6 +29,7 @@ package api
 import (
 	"pkg/config"
 	"pkg/util/httputil"
+	"pkg/util/systemutil"
 	"strconv"
 	"strings"
 )
@@ -41,12 +42,18 @@ func buildUrl(url string) string {
 	}
 }
 
-func AgentHeartbeat() (*httputil.DevopsResult, error) {
+func NewAgentHeartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/heartbeat")
 
 	agentHeartbeatInfo := &AgentHeartbeatInfo{
-		MasterVersion: config.AgentVersion,
-		SlaveVersion:  config.GAgentEnv.SlaveVersion,
+		MasterVersion:     config.AgentVersion,
+		SlaveVersion:      config.GAgentEnv.SlaveVersion,
+		HostName:          config.GAgentEnv.HostName,
+		AgentIp:           config.GAgentEnv.AgentIp,
+		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
+		AgentInstallPath:  config.GetAgentWorkdir(),
+		StartedUser:       systemutil.GetCurrentUser().Username,
+		TaskList:          buildInfos,
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
@@ -62,7 +69,7 @@ func FinishUpgrade(success bool) (*httputil.AgentResult, error) {
 	return httputil.NewHttpClient().Delete(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
 }
 
-func DownloadUpgradeFile(serverFile string, saveFile string) (fileChanged bool, err error) {
+func DownloadUpgradeFile(serverFile string, saveFile string) (fileMd5 string, err error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/upgrade/files/download?file=" + serverFile)
 	return httputil.DownloadUpgradeFile(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
 }

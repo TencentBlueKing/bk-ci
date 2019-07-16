@@ -24,20 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package build
+package job
 
 import (
-	"os"
+	"fmt"
 	"testing"
+	"time"
 )
 
-func Test_writeStartBuildAgentScript_01(t *testing.T) {
-	buildInfo := &ThirdPartyBuildInfo{"pid", "bid", "1", ""}
-	file, err := writeStartBuildAgentScript(buildInfo)
-	if err != nil {
-		t.Error("error: ", err.Error())
+func Test_BuildManager_01(t *testing.T) {
+	fmt.Println("start")
+	GBuildManager.AddBuild(6124, &ThirdPartyBuildInfo{})
+	for {
+		time.Sleep(5 * time.Second)
+		fmt.Println("instanceCount: ", GBuildManager.GetInstanceCount())
 	}
-	dir, _ := os.Getwd()
-	t.Log("workDir: ", dir)
-	t.Log("fileName: ", file)
 }

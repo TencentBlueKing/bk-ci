@@ -101,7 +101,7 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
 		}
 		logs.Info("relace agent file done")
 
-		config.DetectSlaveVersion()
+		config.GAgentEnv.SlaveVersion = config.DetectSlaveVersion()
 	}
 
 	if agentChanged {

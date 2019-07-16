@@ -27,9 +27,11 @@
 package agent
 
 import (
-	"pkg/build"
+	"github.com/astaxie/beego/logs"
+	"pkg/collector"
 	"pkg/config"
 	"pkg/heartbeat"
+	"pkg/job"
 	"pkg/pipeline"
 	"pkg/upgrade"
 )
@@ -37,7 +39,13 @@ import (
 func Run() {
 	config.Init()
 
-	build.AgentStartup()
+	_, err := job.AgentStartup()
+	if err != nil {
+		logs.Warn("agent startup failed: ", err.Error())
+	}
+
+	//数据采集
+	go collector.DoAgentCollect()
 
 	//心跳
 	go heartbeat.DoAgentHeartbeat()
@@ -48,5 +56,5 @@ func Run() {
 	//启动pipeline
 	go pipeline.Start()
 
-	build.DoPollAndBuild()
+	job.DoPollAndBuild()
 }

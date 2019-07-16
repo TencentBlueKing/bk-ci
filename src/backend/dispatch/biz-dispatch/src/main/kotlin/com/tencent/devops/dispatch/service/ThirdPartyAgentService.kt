@@ -30,12 +30,15 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
@@ -48,7 +51,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
 @Service
-class ThirdPartyAgentBuildService @Autowired constructor(
+class ThirdPartyAgentService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,
     private val client: Client,
@@ -62,11 +65,22 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        thirdPartyAgentWorkspace: String
+        thirdPartyAgentWorkspace: String,
+        pipelineName: String,
+        buildNo: Int,
+        taskName: String
     ) {
         val count = thirdPartyAgentBuildDao.add(
-            dslContext, projectId, agentId, pipelineId, buildId,
-            vmSeqId, thirdPartyAgentWorkspace
+            dslContext,
+            projectId,
+            agentId,
+            pipelineId,
+            buildId,
+            vmSeqId,
+            thirdPartyAgentWorkspace,
+            pipelineName,
+            buildNo,
+            taskName
         )
         if (count != 1) {
             logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|$agentId|$count)")
@@ -177,23 +191,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
     }
 
-    fun checkIfCanUpgrade(
-        projectId: String,
-        agentId: String,
-        secretKey: String,
-        tag: String
-    ): AgentResult<Boolean> {
-        logger.info("Start to check if the agent($agentId) of project($projectId) can upgrade")
-        return try {
-            val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
-                .upgrade(projectId, agentId, secretKey, tag)
-            upgrade(projectId, agentId, agentUpgradeResult)
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to check if agent can upgrade", ignored)
-            AgentResult(AgentStatus.IMPORT_EXCEPTION, false)
-        }
-    }
-
     fun finishUpgrade(
         projectId: String,
         agentId: String,
@@ -294,6 +291,35 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
     }
 
+    fun listAgentBuilds(agentId: String, page: Int?, pageSize: Int?): Page<AgentBuildInfo> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 100
+        val sqlLimit =
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+        val offset = sqlLimit?.offset ?: 0
+        val limit = sqlLimit?.limit ?: 100
+
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(dslContext, agentId)
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(dslContext, agentId, offset, limit).map {
+            AgentBuildInfo(
+                it.projectId,
+                it.agentId,
+                it.pipelineId,
+                it.pipelineName,
+                it.buildId,
+                it.buildNum,
+                it.vmSeqId,
+                it.taskName,
+                PipelineTaskStatus.toStatus(it.status).name,
+                it.createdTime.timestamp(),
+                it.updatedTime.timestamp(),
+                it.workspace
+            )
+        }
+        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
+    }
+
+
     private fun finishBuild(
         record: TDispatchThirdpartyAgentBuildRecord,
         success: Boolean
@@ -321,6 +347,6 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
     }
 }

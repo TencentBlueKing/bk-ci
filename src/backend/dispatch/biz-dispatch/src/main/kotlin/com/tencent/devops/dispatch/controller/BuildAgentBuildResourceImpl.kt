@@ -31,11 +31,11 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
-import com.tencent.devops.dispatch.service.ThirdPartyAgentBuildService
+import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildAgentBuildResourceImpl @Autowired constructor(private val thirdPartyAgentBuildService: ThirdPartyAgentBuildService) :
+class BuildAgentBuildResourceImpl @Autowired constructor(private val thirdPartyAgentBuildService: ThirdPartyAgentService) :
     BuildAgentBuildResource {
 
     override fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {

@@ -24,11 +24,53 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package build
+package job
 
-type ThirdPartyBuildInfo struct {
-	ProjectId string `json:"projectId"`
-	BuildId   string `json:"buildId"`
-	VmSeqId   string `json:"vmSeqId"`
-	Workspace string `json:"workspace"`
+import (
+	"encoding/json"
+	"github.com/astaxie/beego/logs"
+	"os"
+	"pkg/api"
+)
+
+type buildManager struct {
+	instances map[int]*api.ThirdPartyBuildInfo
+}
+
+var GBuildManager *buildManager
+
+func init() {
+	GBuildManager = new(buildManager)
+	GBuildManager.instances = make(map[int]*api.ThirdPartyBuildInfo)
+}
+
+func (b *buildManager) GetInstanceCount() int {
+	return len(b.instances)
+}
+
+func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
+	result := make([]api.ThirdPartyBuildInfo, 0)
+	for _, value := range b.instances {
+		result = append(result, *value)
+	}
+	return result
+}
+
+func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInfo) {
+	bytes, _ := json.Marshal(buildInfo)
+	logs.Info("add build: processId: ", processId, ", buildInfo: ", string(bytes))
+	b.instances[processId] = buildInfo
+	go b.waitProcessDone(processId)
+}
+
+func (b *buildManager) waitProcessDone(processId int) {
+	process, err := os.FindProcess(processId)
+	if err != nil {
+		logs.Warn("build process err, pid: ", processId, ", err: ", err.Error())
+		delete(b.instances, processId)
+		return
+	}
+	process.Wait()
+	logs.Info("build process finish: pid: ", processId)
+	delete(b.instances, processId)
 }

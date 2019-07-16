@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package build
+package job
 
 import (
 	"encoding/base64"
@@ -116,7 +116,7 @@ func DoPollAndBuild() {
 	}
 }
 
-func getBuild() (*ThirdPartyBuildInfo, error) {
+func getBuild() (*api.ThirdPartyBuildInfo, error) {
 	logs.Info("get build")
 	result, err := api.GetBuild()
 	if err != nil {
@@ -132,7 +132,7 @@ func getBuild() (*ThirdPartyBuildInfo, error) {
 		return nil, nil
 	}
 
-	buildInfo := new(ThirdPartyBuildInfo)
+	buildInfo := new(api.ThirdPartyBuildInfo)
 	err = util.ParseJsonToData(result.Data, buildInfo)
 	if err != nil {
 		return nil, err
@@ -141,14 +141,20 @@ func getBuild() (*ThirdPartyBuildInfo, error) {
 	return buildInfo, nil
 }
 
-func runBuild(buildInfo *ThirdPartyBuildInfo) error {
+func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	runUser := config.GAgentConfig.SlaveUser
 
 	goEnv := map[string]string{
 		"DEVOPS_AGENT_VERSION": config.AgentVersion,
+		"DEVOPS_SLAVE_VERSION": config.GAgentEnv.SlaveVersion,
 		"PROJECT_ID":           buildInfo.ProjectId,
 		"BUILD_ID":             buildInfo.BuildId,
 		"VM_SEQ_ID":            buildInfo.VmSeqId,
+	}
+	if config.GEnvVars != nil {
+		for k, v := range config.GEnvVars {
+			goEnv[k] = v
+		}
 	}
 
 	if systemutil.IsWindows() {
@@ -163,34 +169,22 @@ func runBuild(buildInfo *ThirdPartyBuildInfo) error {
 		logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
 		return nil
 	} else {
-		if systemutil.GetCurrentUser().Username == config.GAgentConfig.SlaveUser {
-			startCmd := config.GetJava()
-			args := []string{"-Ddevops.slave.agent.role=devops.slave.agent.role.slave", "-jar", config.WorkAgentFile, getEncodedBuildInfo(buildInfo)}
-			pid, err := command.StartProcess(startCmd, args, config.GetAgentWorkdir(), goEnv, runUser)
-			if err != nil {
-				logs.Error("start agent process failed", err)
-				return err
-			}
-			GBuildManager.AddBuild(pid, buildInfo)
-			logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
-		} else {
-			scriptFile, err := writeStartBuildAgentScript(buildInfo)
-			if err != nil {
-				return err
-			}
-			pid, err := command.StartProcess(scriptFile, []string{}, config.GetAgentWorkdir(), goEnv, runUser)
-			if err != nil {
-				logs.Error("start agent process failed", err)
-				return err
-			}
-			GBuildManager.AddBuild(pid, buildInfo)
-			logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
+		scriptFile, err := writeStartBuildAgentScript(buildInfo)
+		if err != nil {
+			return err
 		}
+		pid, err := command.StartProcess(scriptFile, []string{}, config.GetAgentWorkdir(), goEnv, runUser)
+		if err != nil {
+			logs.Error("start agent process failed", err)
+			return err
+		}
+		GBuildManager.AddBuild(pid, buildInfo)
+		logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
 	}
 	return nil
 }
 
-func getEncodedBuildInfo(buildInfo *ThirdPartyBuildInfo) string {
+func getEncodedBuildInfo(buildInfo *api.ThirdPartyBuildInfo) string {
 	strBuildInfo, _ := json.Marshal(buildInfo)
 	logs.Info("buildInfo: ", string(strBuildInfo))
 	codedBuildInfo := base64.StdEncoding.EncodeToString(strBuildInfo)
@@ -198,9 +192,10 @@ func getEncodedBuildInfo(buildInfo *ThirdPartyBuildInfo) string {
 	return codedBuildInfo
 }
 
-func writeStartBuildAgentScript(buildInfo *ThirdPartyBuildInfo) (string, error) {
+func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, error) {
 	logs.Info("write start build agent script to file")
 	scriptFile := fmt.Sprintf("%s/devops_agent_start_%s_%s_%s.sh", config.GetAgentWorkdir(), buildInfo.ProjectId, buildInfo.BuildId, buildInfo.VmSeqId)
+	jarFile := fmt.Sprintf("%s/%s", config.GetAgentWorkdir(), config.WorkAgentFile)
 	logs.Info("start agent script: ", scriptFile)
 	lines := []string{
 		"#!/bin/bash",
@@ -212,7 +207,7 @@ func writeStartBuildAgentScript(buildInfo *ThirdPartyBuildInfo) (string, error) 
 		"  source ~/.bashrc",
 		"fi",
 		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.role=devops.slave.agent.role.slave -jar %s %s",
-			config.GetJava(), scriptFile, config.WorkAgentFile, getEncodedBuildInfo(buildInfo)),
+			config.GetJava(), scriptFile, jarFile, getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 
