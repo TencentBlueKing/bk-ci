@@ -30,10 +30,10 @@
 
 ```shell
 # 修改安装包权限
-chmod 775 openresty-1.13.6.2-1.el7.centos.x86_64.rpm
-chmod 775 openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm
-chmod 775 openresty-pcre-8.42-1.el7.centos.x86_64.rpm
-chmod 775 openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
+chmod 644 openresty-1.13.6.2-1.el7.centos.x86_64.rpm
+chmod 644 openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm
+chmod 644 openresty-pcre-8.42-1.el7.centos.x86_64.rpm
+chmod 644 openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
 # 开始安装
 rpm -ivh openresty-pcre-8.42-1.el7.centos.x86_64.rpm
 rpm -ivh openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
