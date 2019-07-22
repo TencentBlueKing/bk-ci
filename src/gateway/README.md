@@ -19,7 +19,7 @@
 将consul应用上传到服务器上,修改文件权限后，作为全局应用放到`/usr/local/sbin/`目录下。
 ```shell
 # 修改consul程序mod
-chmod 766 ./consul
+chmod 755 ./consul
 # 将consul程序放到`/usr/local/sbin/`即可
 cp ./consul /usr/local/sbin/
 ```
@@ -72,10 +72,10 @@ consul agent -data-dir=/data/consul -datacenter=bkdevops -domain=bkdevops -join=
 
 ```shell
 # 修改安装包权限
-chmod 775 openresty-1.11.2.5-2.el7.centos.x86_64.rpm
-chmod 775 openresty-openssl-1.0.2k-1.el7.centos.x86_64.rpm
-chmod 775 openresty-pcre-8.40-1.el7.centos.x86_64.rpm
-chmod 775 openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
+chmod 644 openresty-1.11.2.5-2.el7.centos.x86_64.rpm
+chmod 644 openresty-openssl-1.0.2k-1.el7.centos.x86_64.rpm
+chmod 644 openresty-pcre-8.40-1.el7.centos.x86_64.rpm
+chmod 644 openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
 # 开始安装
 rpm -ivh openresty-pcre-8.40-1.el7.centos.x86_64.rpm
 rpm -ivh openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
