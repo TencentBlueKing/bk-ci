@@ -23,7 +23,7 @@
 - **研发商店**：由流水线插件和流水线模板组成，插件用于对接企业内部的各种第三方服务，模板助力企业内部的研发流程规范化
 
 ## Overview
-![front-page](docs/resource/img/pipeline.png)
+![front-page](docs/resource/img/bk-ci-demo.gif)
 
 - [架构设计](docs/overview/architecture.md)
 - [代码目录](docs/overview/code_framework.md)
