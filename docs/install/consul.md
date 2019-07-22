@@ -14,7 +14,7 @@
 将consul应用上传到服务器上,修改文件权限后，作为全局应用放到`/usr/local/sbin/`目录下。
 ```shell
 # 修改consul程序mod
-chmod 766 ./consul
+chmod 755 ./consul
 # 将consul程序放到`/usr/local/sbin/`即可
 cp ./consul /usr/local/sbin/
 ```
