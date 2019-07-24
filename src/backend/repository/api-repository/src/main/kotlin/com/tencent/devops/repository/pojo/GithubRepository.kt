@@ -37,7 +37,7 @@ data class GithubRepository(
     override val url: String,
     @ApiModelProperty("用户名", required = true)
     override val userName: String = "",
-    @ApiModelProperty("github项目名称", example = "Tencent/wepy", required = true)
+    @ApiModelProperty("github项目名称", example = "Tencent/bkci", required = true)
     override val projectName: String,
     @ApiModelProperty("项目id", required = true)
     override val projectId: String = "",
