@@ -74,7 +74,13 @@ class MarketAtomEnvInfoDao {
         }
     }
 
-    fun getProjectMarketAtomEnvInfo(dslContext: DSLContext, projectCode: String, atomCode: String, version: String, atomStatusList: List<Byte>?): Record? {
+    fun getProjectMarketAtomEnvInfo(
+        dslContext: DSLContext,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatusList: List<Byte>?
+    ): Record? {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")

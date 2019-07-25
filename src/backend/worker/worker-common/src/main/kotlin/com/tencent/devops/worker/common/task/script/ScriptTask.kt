@@ -28,8 +28,8 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.pipeline.pojo.element.build.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.build.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -48,7 +48,8 @@ open class ScriptTask : ITask() {
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val scriptType = taskParams["scriptType"] ?: throw ParamBlankException("Unknown script type of build script task")
+        val scriptType =
+            taskParams["scriptType"] ?: throw ParamBlankException("Unknown script type of build script task")
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]

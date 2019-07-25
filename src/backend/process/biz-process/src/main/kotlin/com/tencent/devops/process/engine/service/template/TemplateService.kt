@@ -881,7 +881,13 @@ class TemplateService @Autowired constructor(
                     val context = DSL.using(configuration)
                     // TODO 事务
                     val instanceModel =
-                        pipelineService.instanceModel(objectMapper.readValue(template.template), pipelineName, buildNo, param, true)
+                        pipelineService.instanceModel(
+                            objectMapper.readValue(template.template),
+                            pipelineName,
+                            buildNo,
+                            param,
+                            true
+                        )
                     val pipelineId =
                         pipelineService.createPipeline(userId, projectId, instanceModel, ChannelCode.BS, true)
                     templatePipelineDao.create(
@@ -957,7 +963,13 @@ class TemplateService @Autowired constructor(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = it.pipelineId,
-                        model = pipelineService.instanceModel(templateModel, it.pipelineName, it.buildNo, it.param, true),
+                        model = pipelineService.instanceModel(
+                            templateModel,
+                            it.pipelineName,
+                            it.buildNo,
+                            it.param,
+                            true
+                        ),
                         channelCode = ChannelCode.BS,
                         checkPermission = true,
                         checkTemplate = false

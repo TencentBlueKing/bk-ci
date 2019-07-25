@@ -45,22 +45,24 @@ class MetadataDao {
     ): Long {
         val now = LocalDateTime.now()
         with(TMetadata.T_METADATA) {
-            val record = dslContext.insertInto(this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    META_DATA_ID,
-                    META_DATA_VALUE,
-                    CREATE_TIME
+            val record = dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                META_DATA_ID,
+                META_DATA_VALUE,
+                CREATE_TIME
             ).values(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    metaDataId,
-                    metaDataValue,
-                    now)
-                    .returning(ID)
-                    .fetchOne()
+                projectId,
+                pipelineId,
+                buildId,
+                metaDataId,
+                metaDataValue,
+                now
+            )
+                .returning(ID)
+                .fetchOne()
             return record.id
         }
     }
@@ -84,8 +86,8 @@ class MetadataDao {
     fun list(dslContext: DSLContext, buildId: String): Result<TMetadataRecord> {
         with(TMetadata.T_METADATA) {
             return dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .fetch()
+                .where(BUILD_ID.eq(buildId))
+                .fetch()
         }
     }
 }

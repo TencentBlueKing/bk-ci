@@ -68,11 +68,13 @@ class CategoryServiceImpl @Autowired constructor(
     override fun getCategory(id: String): Result<Category?> {
         val categoryRecord = categoryDao.getCategory(dslContext, id)
         logger.info("the pipelineContainerRecord is :{}", categoryRecord)
-        return Result(if (categoryRecord == null) {
-            null
-        } else {
-            categoryDao.convert(categoryRecord)
-        })
+        return Result(
+            if (categoryRecord == null) {
+                null
+            } else {
+                categoryDao.convert(categoryRecord)
+            }
+        )
     }
 
     /**
@@ -85,14 +87,22 @@ class CategoryServiceImpl @Autowired constructor(
         val codeCount = categoryDao.countByCode(dslContext, categoryCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(categoryCode), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(categoryCode),
+                false
+            )
         }
         val categoryName = categoryRequest.categoryName
         // 判断范畴名称是否存在
         val nameCount = categoryDao.countByName(dslContext, categoryName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(categoryName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(categoryName),
+                false
+            )
         }
         val id = UUIDUtil.generate()
         categoryDao.add(dslContext, id, categoryRequest, type)
@@ -112,7 +122,11 @@ class CategoryServiceImpl @Autowired constructor(
             val category = categoryDao.getCategory(dslContext, id)
             if (null != category && categoryCode != category.categoryCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(categoryCode), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(categoryCode),
+                    false
+                )
             }
         }
         val categoryName = categoryRequest.categoryName
@@ -123,7 +137,11 @@ class CategoryServiceImpl @Autowired constructor(
             val category = categoryDao.getCategory(dslContext, id)
             if (null != category && categoryName != category.categoryName) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(categoryName), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(categoryName),
+                    false
+                )
             }
         }
         categoryDao.update(dslContext, id, categoryRequest)

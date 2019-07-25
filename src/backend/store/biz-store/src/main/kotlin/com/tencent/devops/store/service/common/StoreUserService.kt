@@ -44,7 +44,12 @@ interface StoreUserService {
     /**
      * 判断用户是否能安装store组件
      */
-    fun isCanInstallStoreComponent(defaultFlag: Boolean, userId: String, storeCode: String, storeType: StoreTypeEnum): Boolean
+    fun isCanInstallStoreComponent(
+        defaultFlag: Boolean,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean
 
     /**
      * 获取用户机构名称

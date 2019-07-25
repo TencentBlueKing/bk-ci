@@ -29,6 +29,8 @@ package com.tencent.devops.environment.dao.thirdPartyAgent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
+import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentActionRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -49,7 +51,8 @@ class ThirdPartyAgentDao {
         gateway: String?
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 PROJECT_ID,
                 OS,
                 STATUS,
@@ -196,6 +199,13 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun saveAgent(
+        dslContext: DSLContext,
+        agentRecode: TEnvironmentThirdpartyAgentRecord
+    ) {
+        dslContext.executeUpdate(agentRecode)
+    }
+
     fun updateAgentInfo(
         dslContext: DSLContext,
         id: Long,
@@ -315,6 +325,62 @@ class ThirdPartyAgentDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
+        }
+    }
+
+    fun saveAgentEnvs(dslContext: DSLContext, agentId: Long, envStr: String) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.update(this)
+                .set(AGENT_ENVS, envStr)
+                .where(ID.eq(agentId))
+                .execute()
+        }
+    }
+
+    fun addAgentAction(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: Long,
+        action: String
+    ) {
+        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
+            dslContext.insertInto(this,
+                PROJECT_ID,
+                AGENT_ID,
+                ACTION,
+                ACTION_TIME)
+                .values(
+                    projectId,
+                    agentId,
+                    action,
+                    java.time.LocalDateTime.now()
+                ).execute()
+        }
+    }
+
+    fun listAgentActions(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: Long,
+        offset: Int,
+        limit: Int
+    ): Result<TEnvironmentThirdpartyAgentActionRecord> {
+        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(AGENT_ID.eq(agentId))
+                .orderBy(ACTION_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun getAgentActionsCount(dslContext: DSLContext, projectId: String, agentId: Long): Long {
+        with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(AGENT_ID.eq(agentId))
+                .fetchOne(0, kotlin.Long::class.java)
         }
     }
 }

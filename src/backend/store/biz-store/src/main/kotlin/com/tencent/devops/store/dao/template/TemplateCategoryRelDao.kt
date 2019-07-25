@@ -67,7 +67,8 @@ class TemplateCategoryRelDao {
     fun batchAdd(dslContext: DSLContext, userId: String, templateId: String, categoryIdList: List<String>) {
         with(TTemplateCategoryRel.T_TEMPLATE_CATEGORY_REL) {
             val addStep = categoryIdList.map {
-                dslContext.insertInto(this,
+                dslContext.insertInto(
+                    this,
                     ID,
                     TEMPLATE_ID,
                     CATEGORY_ID,

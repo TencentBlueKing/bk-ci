@@ -41,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
  * 2019-01-11
  */
 @RestResource
-class OpPipelineContainerMonitorResourceImpl @Autowired constructor(private val monitorService: PipelineContainerMonitorService) : OpPipelineContainerMonitorResource {
+class OpPipelineContainerMonitorResourceImpl @Autowired constructor(private val monitorService: PipelineContainerMonitorService) :
+    OpPipelineContainerMonitorResource {
     override fun update(userId: String, monitor: PipelineContainerMonitor): Result<Boolean> {
         logger.info("Update the monitor $monitor by user $userId")
         return Result(monitorService.update(monitor))

@@ -28,7 +28,8 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline
 
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 
-class FilePipeline(val operation: FilePipelineOperation, val file: String, override val seqId: String) : ThirdPartyAgentPipeline(PipelineType.FILE, seqId)
+class FilePipeline(val operation: FilePipelineOperation, val file: String, override val seqId: String) :
+    ThirdPartyAgentPipeline(PipelineType.FILE, seqId)
 
 enum class FilePipelineOperation {
     DOWNLOAD,

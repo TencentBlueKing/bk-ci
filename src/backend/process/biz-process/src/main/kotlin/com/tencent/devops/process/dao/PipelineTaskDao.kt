@@ -34,11 +34,15 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class PipelineTaskDao {
-    fun list(dslContext: DSLContext, projectId: String, pipelineIds: Collection<String>): Result<TPipelineModelTaskRecord>? {
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Collection<String>
+    ): Result<TPipelineModelTaskRecord>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
+                .fetch()
         }
     }
 }

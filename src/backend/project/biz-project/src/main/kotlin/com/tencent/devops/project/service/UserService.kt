@@ -29,5 +29,12 @@ package com.tencent.devops.project.service
 import com.tencent.devops.project.pojo.user.UserVO
 
 interface UserService {
-    fun getStaffInfo(userId: String, bkToken: String?): UserVO
+
+    /**
+     * 获取用户信息
+     * @param userId 用户id
+     * @param bkToken 用户会话Token，如果有的话
+     * @return UserVO
+     */
+    fun getStaffInfo(userId: String, bkToken: String? = null): UserVO
 }

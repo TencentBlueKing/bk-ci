@@ -40,13 +40,18 @@ class StoreStatisticDao {
     /**
      * 根据storeCode获取组件统计数据
      */
-    fun getStatisticByStoreCode(dslContext: DSLContext, storeCode: String, storeType: Byte): Record4<BigDecimal, BigDecimal, BigDecimal, String> {
+    fun getStatisticByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte
+    ): Record4<BigDecimal, BigDecimal, BigDecimal, String> {
         with(TStoreStatistics.T_STORE_STATISTICS) {
             return dslContext.select(
                 DOWNLOADS.sum(),
                 COMMITS.sum(),
                 SCORE.sum(),
-                STORE_CODE)
+                STORE_CODE
+            )
                 .from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .fetchOne()
@@ -56,13 +61,18 @@ class StoreStatisticDao {
     /**
      * 批量获取统计数据oo
      */
-    fun batchGetStatisticByStoreCode(dslContext: DSLContext, storeCodeList: List<String?>, storeType: Byte): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
+    fun batchGetStatisticByStoreCode(
+        dslContext: DSLContext,
+        storeCodeList: List<String?>,
+        storeType: Byte
+    ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
         with(TStoreStatistics.T_STORE_STATISTICS) {
             val baseStep = dslContext.select(
                 DOWNLOADS.sum(),
                 COMMITS.sum(),
                 SCORE.sum(),
-                STORE_CODE)
+                STORE_CODE
+            )
                 .from(this)
 
             val conditions = mutableListOf<Condition>()
@@ -80,7 +90,14 @@ class StoreStatisticDao {
     /**
      * 更新下载量
      */
-    fun updateDownloads(dslContext: DSLContext, userId: String, storeId: String, storeCode: String, storeType: Byte, increment: Int) {
+    fun updateDownloads(
+        dslContext: DSLContext,
+        userId: String,
+        storeId: String,
+        storeCode: String,
+        storeType: Byte,
+        increment: Int
+    ) {
         with(TStoreStatistics.T_STORE_STATISTICS) {
             val record = dslContext.selectFrom(this).where(STORE_ID.eq(storeId)).fetchOne()
             if (null == record) {
@@ -117,37 +134,45 @@ class StoreStatisticDao {
     /**
      * 更新评论信息
      */
-    fun updateCommentInfo(dslContext: DSLContext, userId: String, storeId: String, storeCode: String, storeType: Byte, commentIncrement: Int, scoreIncrement: Int) {
+    fun updateCommentInfo(
+        dslContext: DSLContext,
+        userId: String,
+        storeId: String,
+        storeCode: String,
+        storeType: Byte,
+        commentIncrement: Int,
+        scoreIncrement: Int
+    ) {
         with(TStoreStatistics.T_STORE_STATISTICS) {
             val record = dslContext.selectFrom(this).where(STORE_ID.eq(storeId)).fetchOne()
             if (null == record) {
                 dslContext.insertInto(this).columns(
-                        ID,
-                        STORE_ID,
-                        STORE_CODE,
-                        DOWNLOADS,
-                        COMMITS,
-                        SCORE,
-                        STORE_TYPE,
-                        CREATOR,
-                        MODIFIER
+                    ID,
+                    STORE_ID,
+                    STORE_CODE,
+                    DOWNLOADS,
+                    COMMITS,
+                    SCORE,
+                    STORE_TYPE,
+                    CREATOR,
+                    MODIFIER
                 ).values(
-                        UUIDUtil.generate(),
-                        storeId,
-                        storeCode,
-                        0,
-                        commentIncrement,
-                        scoreIncrement,
-                        storeType,
-                        userId,
-                        userId
+                    UUIDUtil.generate(),
+                    storeId,
+                    storeCode,
+                    0,
+                    commentIncrement,
+                    scoreIncrement,
+                    storeType,
+                    userId,
+                    userId
                 ).execute()
             } else {
                 dslContext.update(this)
-                        .set(COMMITS, COMMITS + commentIncrement)
-                        .set(SCORE, SCORE + scoreIncrement)
-                        .where(STORE_ID.eq(storeId).and(STORE_TYPE.eq(storeType)))
-                        .execute()
+                    .set(COMMITS, COMMITS + commentIncrement)
+                    .set(SCORE, SCORE + scoreIncrement)
+                    .where(STORE_ID.eq(storeId).and(STORE_TYPE.eq(storeType)))
+                    .execute()
             }
         }
     }

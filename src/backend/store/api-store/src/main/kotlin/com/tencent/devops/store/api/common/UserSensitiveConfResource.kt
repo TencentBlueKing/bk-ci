@@ -26,11 +26,11 @@
 
 package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.SensitiveConfReq
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

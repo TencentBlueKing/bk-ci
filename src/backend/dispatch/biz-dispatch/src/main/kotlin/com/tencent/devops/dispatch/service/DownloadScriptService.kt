@@ -65,8 +65,8 @@ class DownloadScriptService {
             output.flush()
         }
         return Response
-                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = $scriptName")
-                .build()
+            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = $scriptName")
+            .build()
     }
 }

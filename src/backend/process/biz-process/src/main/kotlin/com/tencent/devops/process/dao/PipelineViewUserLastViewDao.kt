@@ -37,27 +37,28 @@ class PipelineViewUserLastViewDao {
     fun get(dslContext: DSLContext, userId: String, projectId: String): TPipelineViewUserLastViewRecord? {
         with(TPipelineViewUserLastView.T_PIPELINE_VIEW_USER_LAST_VIEW) {
             return dslContext.selectFrom(this)
-                    .where(USER_ID.eq(userId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetchOne()
+                .where(USER_ID.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchOne()
         }
     }
 
     fun create(dslContext: DSLContext, userId: String, projectId: String, viewId: String) {
         val now = LocalDateTime.now()
         with(TPipelineViewUserLastView.T_PIPELINE_VIEW_USER_LAST_VIEW) {
-            dslContext.insertInto(this,
-                    USER_ID,
-                    PROJECT_ID,
-                    VIEW_ID,
-                    CREATE_TIME,
-                    UPDATE_TIME
+            dslContext.insertInto(
+                this,
+                USER_ID,
+                PROJECT_ID,
+                VIEW_ID,
+                CREATE_TIME,
+                UPDATE_TIME
             ).values(
-                    userId,
-                    projectId,
-                    viewId,
-                    now,
-                    now
+                userId,
+                projectId,
+                viewId,
+                now,
+                now
             ).execute()
         }
     }
@@ -65,10 +66,10 @@ class PipelineViewUserLastViewDao {
     fun update(dslContext: DSLContext, userId: String, projectId: String, viewId: String) {
         with(TPipelineViewUserLastView.T_PIPELINE_VIEW_USER_LAST_VIEW) {
             dslContext.update(this)
-                    .set(VIEW_ID, viewId)
-                    .where(USER_ID.eq(userId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .execute()
+                .set(VIEW_ID, viewId)
+                .where(USER_ID.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 }

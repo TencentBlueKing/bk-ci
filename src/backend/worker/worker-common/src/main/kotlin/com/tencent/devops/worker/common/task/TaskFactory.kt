@@ -26,10 +26,11 @@
 
 package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.pipeline.pojo.element.build.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.build.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.market.MarketAtomTask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.task.script.shell.LinuxScriptTask
@@ -56,7 +57,7 @@ object TaskFactory {
 
         val reflections = Reflections("com.tencent.devops.plugin.worker.task")
         val taskClasses = reflections.getSubTypesOf(ITask::class.java)
-        logger.info("Get the ITask classes $taskClasses")
+        LoggerService.addNormalLine("Get the ITask classes $taskClasses")
         taskClasses?.forEach { taskClazz ->
             if (!Modifier.isAbstract(taskClazz.modifiers)) {
                 val taskClassType = AnnotationUtils.findAnnotation(taskClazz, TaskClassType::class.java)
@@ -69,7 +70,7 @@ object TaskFactory {
 
     private fun register(classType: String, taskClass: KClass<out ITask>) {
         taskMap[classType] = taskClass
-        logger.info("Add Task $taskClass for type $classType")
+        LoggerService.addNormalLine("Add Task $taskClass for type $classType")
     }
 
     fun create(type: String): ITask {

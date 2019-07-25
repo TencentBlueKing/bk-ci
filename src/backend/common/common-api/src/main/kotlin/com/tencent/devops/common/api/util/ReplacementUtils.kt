@@ -49,6 +49,7 @@ object ReplacementUtils {
         }
         return sb.toString()
     }
+
     private fun parseTemplate(command: String, replacement: KeyReplacement): String {
         if (command.isBlank()) {
             return command

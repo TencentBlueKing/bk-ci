@@ -55,7 +55,17 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
-        return atomService.getPipelineAtoms(accessToken, userId, serviceScope, os, projectCode, category, classifyId, page, pageSize)
+        return atomService.getPipelineAtoms(
+            accessToken = accessToken,
+            userId = userId,
+            serviceScope = serviceScope,
+            os = os,
+            projectCode = projectCode,
+            category = category,
+            classifyId = classifyId,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>> {

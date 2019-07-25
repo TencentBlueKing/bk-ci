@@ -45,16 +45,18 @@ class PipelineBuildVarDao @Autowired constructor() {
     ) {
 
         val count =
-                with(T_PIPELINE_BUILD_VAR) {
-                    dslContext.insertInto(this,
-                            BUILD_ID,
-                            KEY,
-                            VALUE)
-                            .values(buildId, name, value.toString())
-                            .onDuplicateKeyUpdate()
-                            .set(VALUE, value.toString())
-                            .execute()
-                }
+            with(T_PIPELINE_BUILD_VAR) {
+                dslContext.insertInto(
+                    this,
+                    BUILD_ID,
+                    KEY,
+                    VALUE
+                )
+                    .values(buildId, name, value.toString())
+                    .onDuplicateKeyUpdate()
+                    .set(VALUE, value.toString())
+                    .execute()
+            }
 
         logger.info("save the buildVariable=$name $value, result=$count")
     }
@@ -66,7 +68,7 @@ class PipelineBuildVarDao @Autowired constructor() {
     ): MutableMap<String, TPipelineBuildVarRecord> {
         val result = with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId))
             if (key != null) {
                 where.and(KEY.eq(key))
             }
@@ -86,8 +88,8 @@ class PipelineBuildVarDao @Autowired constructor() {
     ): MutableMap<String, TPipelineBuildVarRecord> {
         val result = with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(KEY.like("$key%"))
+                .where(BUILD_ID.eq(buildId))
+                .and(KEY.like("$key%"))
             where.fetch()
         }
         val map = mutableMapOf<String, TPipelineBuildVarRecord>()
@@ -105,7 +107,7 @@ class PipelineBuildVarDao @Autowired constructor() {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId))
             if (key != null) {
                 where.and(KEY.eq(key))
             }
@@ -134,16 +136,16 @@ class PipelineBuildVarDao @Autowired constructor() {
 //            records.add(TPipelineBuildVarRecord(buildId, key, value.toString()))
 //        }
         val sets =
-                mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
+            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
         with(T_PIPELINE_BUILD_VAR) {
             variables.forEach { key, value ->
                 val set =
-                        dslContext.insertInto(this)
-                                .set(BUILD_ID, buildId)
-                                .set(KEY, key)
-                                .set(VALUE, value.toString())
-                                .onDuplicateKeyUpdate()
-                                .set(VALUE, value.toString())
+                    dslContext.insertInto(this)
+                        .set(BUILD_ID, buildId)
+                        .set(KEY, key)
+                        .set(VALUE, value.toString())
+                        .onDuplicateKeyUpdate()
+                        .set(VALUE, value.toString())
                 sets.add(set)
             }
         }

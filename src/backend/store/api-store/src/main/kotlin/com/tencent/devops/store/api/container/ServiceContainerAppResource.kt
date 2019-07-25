@@ -26,9 +26,9 @@
 
 package com.tencent.devops.store.api.container
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
-import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

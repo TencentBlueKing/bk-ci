@@ -41,7 +41,10 @@ data class AtomVersionListItem(
     val category: String?,
     @ApiModelProperty("版本号")
     val version: String,
-    @ApiModelProperty("插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架", required = false)
+    @ApiModelProperty(
+        "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
+        required = false
+    )
     val atomStatus: String,
     @ApiModelProperty("创建人")
     val creator: String,

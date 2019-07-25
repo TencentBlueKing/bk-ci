@@ -30,7 +30,7 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.BkAuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.code.BK_DEVOPS_SCODE
+import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +55,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         bkAuthResourceApi.modifyResource(
             serviceCode = projectAuthServiceCode,
             resourceType = BkAuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCODE,
+            projectCode = BK_DEVOPS_SCOPE,
             resourceCode = projectCode,
             resourceName = projectName
         )
@@ -66,7 +66,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         bkAuthResourceApi.deleteResource(
             serviceCode = projectAuthServiceCode,
             resourceType = BkAuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCODE,
+            projectCode = BK_DEVOPS_SCOPE,
             resourceCode = projectCode
         )
     }
@@ -76,7 +76,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
             serviceCode = projectAuthServiceCode,
             resourceType = BkAuthResourceType.PROJECT,
             resourceList = projectList,
-            projectCode = BK_DEVOPS_SCODE,
+            projectCode = BK_DEVOPS_SCOPE,
             user = userId
         )
     }

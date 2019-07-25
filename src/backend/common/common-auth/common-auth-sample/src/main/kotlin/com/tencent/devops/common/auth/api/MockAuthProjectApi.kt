@@ -28,7 +28,6 @@ package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.common.auth.code.ADMIN
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 

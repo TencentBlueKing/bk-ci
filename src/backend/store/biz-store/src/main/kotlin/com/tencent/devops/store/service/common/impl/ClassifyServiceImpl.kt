@@ -26,6 +26,10 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -33,10 +37,6 @@ import com.tencent.devops.store.dao.template.TemplateDao
 import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.pojo.common.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.service.common.ClassifyService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -73,11 +73,13 @@ class ClassifyServiceImpl @Autowired constructor(
     override fun getClassify(id: String): Result<Classify?> {
         val classifyRecord = classifyDao.getClassify(dslContext, id)
         logger.info("the pipelineContainerRecord is :{}", classifyRecord)
-        return Result(if (classifyRecord == null) {
-            null
-        } else {
-            classifyDao.convert(classifyRecord)
-        })
+        return Result(
+            if (classifyRecord == null) {
+                null
+            } else {
+                classifyDao.convert(classifyRecord)
+            }
+        )
     }
 
     /**
@@ -90,14 +92,22 @@ class ClassifyServiceImpl @Autowired constructor(
         val codeCount = classifyDao.countByCode(dslContext, classifyCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(classifyCode), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(classifyCode),
+                false
+            )
         }
         val classifyName = classifyRequest.classifyName
         // 判断分类名称是否存在
         val nameCount = classifyDao.countByName(dslContext, classifyName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(classifyName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(classifyName),
+                false
+            )
         }
         val id = UUIDUtil.generate()
         classifyDao.add(dslContext, id, classifyRequest, type)
@@ -117,7 +127,11 @@ class ClassifyServiceImpl @Autowired constructor(
             val classify = classifyDao.getClassify(dslContext, id)
             if (null != classify && classifyCode != classify.classifyCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(classifyCode), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(classifyCode),
+                    false
+                )
             }
         }
         val classifyName = classifyRequest.classifyName
@@ -128,7 +142,11 @@ class ClassifyServiceImpl @Autowired constructor(
             val classify = classifyDao.getClassify(dslContext, id)
             if (null != classify && classifyName != classify.classifyName) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(classifyName), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(classifyName),
+                    false
+                )
             }
         }
         classifyDao.update(dslContext, id, classifyRequest)

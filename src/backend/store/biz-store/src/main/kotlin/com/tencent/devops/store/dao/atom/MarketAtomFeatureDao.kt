@@ -26,10 +26,10 @@
 
 package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.records.TAtomFeatureRecord
+import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -41,7 +41,8 @@ class MarketAtomFeatureDao {
      */
     fun addAtomFeature(dslContext: DSLContext, userId: String, atomFeatureRequest: AtomFeatureRequest) {
         with(TAtomFeature.T_ATOM_FEATURE) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ATOM_CODE,
                 VISIBILITY_LEVEL,

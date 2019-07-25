@@ -48,13 +48,6 @@ public class ExceptionAppender extends AbstractAppender {
         super(name, filter, layout);
     }
 
-    @Override
-    public void append(LogEvent event) {
-        if (event.getThrown() != null) {
-            // to do something
-        }
-    }
-
     @PluginFactory
     public static ExceptionAppender createAppender(@PluginAttribute("name") String name,
                                                    @PluginElement("Filter") final Filter filter,
@@ -67,6 +60,13 @@ public class ExceptionAppender extends AbstractAppender {
             layout = PatternLayout.createDefaultLayout();
         }
         return new ExceptionAppender(name, filter, layout);
+    }
+
+    @Override
+    public void append(LogEvent event) {
+        if (event.getThrown() != null) {
+            // to do something
+        }
     }
 
     @Override

@@ -60,7 +60,12 @@ interface Dispatcher {
         pipelineEventDispatcher.dispatch(event)
     }
 
-    fun onFailBuild(client: Client, rabbitTemplate: RabbitTemplate, event: PipelineAgentStartupEvent, errorMessage: String) {
+    fun onFailBuild(
+        client: Client,
+        rabbitTemplate: RabbitTemplate,
+        event: PipelineAgentStartupEvent,
+        errorMessage: String
+    ) {
         LogUtils.addRedLine(rabbitTemplate, event.buildId, errorMessage, "", event.executeCount ?: 1)
         client.get(ServiceBuildResource::class).setVMStatus(
             projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,

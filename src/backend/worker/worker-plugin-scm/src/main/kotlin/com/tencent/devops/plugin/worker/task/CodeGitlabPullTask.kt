@@ -27,7 +27,7 @@
 package com.tencent.devops.plugin.worker.task
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.pojo.element.build.CodeGitlabElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.worker.common.task.TaskClassType
 
 @TaskClassType(classTypes = [CodeGitlabElement.classType])

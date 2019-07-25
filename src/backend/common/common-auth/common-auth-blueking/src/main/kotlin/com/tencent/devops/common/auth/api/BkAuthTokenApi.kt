@@ -64,7 +64,7 @@ class BkAuthTokenApi constructor(
         return getAccessToken()
     }
 
-    fun getAccessToken(): String {
+    private fun getAccessToken(): String {
         while (true) {
             val key = "auth_token_$appCode"
             val value = redisOperation.get(key)
@@ -92,7 +92,7 @@ class BkAuthTokenApi constructor(
         return createAccessToken()
     }
 
-    fun createAccessToken(): String {
+    private fun createAccessToken(): String {
         val url = "${bkAuthProperties.url}/bkiam/api/v1/auth/access-tokens"
 //        logger.info("The url to get access_token is url: ($url) ")
         val accessTokenRequest = mapOf(

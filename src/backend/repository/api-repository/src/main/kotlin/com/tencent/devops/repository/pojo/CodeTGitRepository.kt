@@ -52,7 +52,7 @@ data class CodeTGitRepository(
         const val classType = "codeTGit"
     }
 
-//    override fun getStartPrefix() = "git@git.tencent.com"
+    //    override fun getStartPrefix() = "git@git.tencent.com"
     override fun getStartPrefix(): String {
         return when (authType) {
             RepoAuthType.SSH -> "git@git.tencent.com"

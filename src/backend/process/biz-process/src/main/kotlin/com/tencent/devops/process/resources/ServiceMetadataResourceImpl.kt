@@ -44,7 +44,12 @@ class ServiceMetadataResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun create(projectId: String, pipelineId: String, buildId: String, metadatas: List<Property>): Result<Boolean> {
+    override fun create(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        metadatas: List<Property>
+    ): Result<Boolean> {
         checkParams(projectId, pipelineId, buildId)
         metadataService.create(projectId, pipelineId, buildId, metadatas)
         return Result(true)

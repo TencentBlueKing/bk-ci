@@ -38,6 +38,7 @@ interface IScm {
     fun getTags(): List<String>
     // This is to check if the token & private key legal
     fun checkTokenAndPrivateKey()
+
     fun checkTokenAndUsername()
 
     fun addWebHook(hookUrl: String)

@@ -68,11 +68,13 @@ class LabelServiceImpl @Autowired constructor(
     override fun getLabel(id: String): Result<Label?> {
         val labelRecord = labelDao.getLabel(dslContext, id)
         logger.info("the pipelineContainerRecord is :{}", labelRecord)
-        return Result(if (labelRecord == null) {
-            null
-        } else {
-            labelDao.convert(labelRecord)
-        })
+        return Result(
+            if (labelRecord == null) {
+                null
+            } else {
+                labelDao.convert(labelRecord)
+            }
+        )
     }
 
     /**
@@ -85,14 +87,22 @@ class LabelServiceImpl @Autowired constructor(
         val codeCount = labelDao.countByCode(dslContext, labelCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(labelCode), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(labelCode),
+                false
+            )
         }
         val labelName = labelRequest.labelName
         // 判断标签名称是否存在
         val nameCount = labelDao.countByName(dslContext, labelName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(labelName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(labelName),
+                false
+            )
         }
         val id = UUIDUtil.generate()
         labelDao.add(dslContext, id, labelRequest, type)
@@ -112,7 +122,11 @@ class LabelServiceImpl @Autowired constructor(
             val label = labelDao.getLabel(dslContext, id)
             if (null != label && labelCode != label.labelCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(labelCode), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(labelCode),
+                    false
+                )
             }
         }
         val labelName = labelRequest.labelName
@@ -123,7 +137,11 @@ class LabelServiceImpl @Autowired constructor(
             val label = labelDao.getLabel(dslContext, id)
             if (null != label && labelName != label.labelName) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(labelName), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(labelName),
+                    false
+                )
             }
         }
         labelDao.update(dslContext, id, labelRequest)

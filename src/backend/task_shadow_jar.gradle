@@ -35,8 +35,10 @@ jar {
 }
 
 shadowJar {
+
+    mergeServiceFiles()
+
     destinationDir = file("${rootDir}/release")
-//    baseName = "worker"
     classifier = null
     // 设置为release包不带版本号
     version = null

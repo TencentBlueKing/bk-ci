@@ -48,18 +48,20 @@ class PipelineFavorDao {
     ) {
         logger.info("Create the pipeline favor for pipeline $pipelineId of project $projectId by user $userId")
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
-            dslContext.insertInto(this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    CREATE_TIME,
-                    CREATE_USER)
-                    .values(
-                            projectId,
-                            pipelineId,
-                            LocalDateTime.now(),
-                            userId
-                    )
-                    .execute()
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                CREATE_TIME,
+                CREATE_USER
+            )
+                .values(
+                    projectId,
+                    pipelineId,
+                    LocalDateTime.now(),
+                    userId
+                )
+                .execute()
         }
     }
 
@@ -71,17 +73,17 @@ class PipelineFavorDao {
         logger.info("Delete the pipeline favor of pipeline $pipelineId by user $userId")
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
             dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(CREATE_USER.eq(userId))
-                    .execute()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(CREATE_USER.eq(userId))
+                .execute()
         }
     }
 
     fun deleteAllUserFavorByPipeline(dslContext: DSLContext, pipelineId: String): Int {
         return with(TPipelineFavor.T_PIPELINE_FAVOR) {
             dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .execute()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
@@ -92,17 +94,17 @@ class PipelineFavorDao {
     ): Result<TPipelineFavorRecord> {
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
             return dslContext.selectFrom(this)
-                    .where(CREATE_USER.eq(userId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetch()
+                .where(CREATE_USER.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
         }
     }
 
     fun listByUserId(dslContext: DSLContext, userId: String): Result<TPipelineFavorRecord>? {
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
             return dslContext.selectFrom(this)
-                    .where(CREATE_USER.eq(userId))
-                    .fetch()
+                .where(CREATE_USER.eq(userId))
+                .fetch()
         }
     }
 

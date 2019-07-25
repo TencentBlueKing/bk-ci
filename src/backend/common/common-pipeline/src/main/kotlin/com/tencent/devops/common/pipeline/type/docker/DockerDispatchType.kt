@@ -30,7 +30,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.DispatchType
 
-data class DockerDispatchType(@JsonProperty("value") var dockerBuildVersion: String) : DispatchType(dockerBuildVersion) {
+data class DockerDispatchType(@JsonProperty("value") var dockerBuildVersion: String) :
+    DispatchType(dockerBuildVersion) {
     override fun replaceField(variables: Map<String, String>) {
         dockerBuildVersion = EnvUtils.parseEnv(dockerBuildVersion, variables)
     }

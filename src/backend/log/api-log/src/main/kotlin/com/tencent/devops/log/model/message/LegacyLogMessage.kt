@@ -43,7 +43,7 @@ data class LegacyLogMessage(
 
         val otherObj = other as LegacyLogMessage
         return this.buildId == otherObj.buildId &&
-                this.nanoTime == otherObj.nanoTime
+            this.nanoTime == otherObj.nanoTime
     }
 
     override fun hashCode(): Int {
@@ -52,6 +52,6 @@ data class LegacyLogMessage(
 
     override fun toString(): String {
         return "LegacyLogMessage(tag='$tag', buildId='$buildId', " +
-                "message='$message', timestamp=$timestamp, nanoTime=$nanoTime)"
+            "message='$message', timestamp=$timestamp, nanoTime=$nanoTime)"
     }
 }

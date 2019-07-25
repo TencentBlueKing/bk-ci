@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-rootProject.name = 'bk-ci-backend'
+rootProject.name = "bk-ci-backend"
 
 include ":common"
 include ":common:common-event"
@@ -44,13 +44,16 @@ include ":common:common-auth"
 include ":common:common-auth:common-auth-api"
 include ":common:common-auth:common-auth-sample"
 include ":common:common-auth:common-auth-blueking"
-include ":common:common-auth:common-auth-blueshield"
 
 include ":project"
 include ":project:api-project"
+include ":project:api-project-sample"
+include ":project:api-project-blueking"
+include ":project:api-project-op"
 include ":project:biz-project"
 include ":project:biz-project-blueking"
 include ":project:biz-project-sample"
+include ":project:biz-project-op"
 include ":project:boot-project"
 include ":project:model-project"
 
@@ -63,14 +66,18 @@ include ":log:model-log"
 include ":environment"
 include ":environment:api-environment"
 include ":environment:biz-environment"
+include ":environment:biz-environment-sample"
+include ":environment:biz-environment-blueking"
 include ":environment:boot-environment"
 include ":environment:model-environment"
 
 include ":artifactory"
 include ":artifactory:api-artifactory"
 include ":artifactory:api-artifactory-sample"
+include ":artifactory:api-artifactory-store"
 include ":artifactory:biz-artifactory"
 include ":artifactory:biz-artifactory-sample"
+include ":artifactory:biz-artifactory-store"
 include ":artifactory:boot-artifactory"
 include ":artifactory:model-artifactory"
 

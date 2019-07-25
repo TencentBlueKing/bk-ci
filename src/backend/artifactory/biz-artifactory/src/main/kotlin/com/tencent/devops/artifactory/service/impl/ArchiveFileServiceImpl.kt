@@ -238,7 +238,8 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         val validateFileTypeList = listOf(
             FileTypeEnum.BK_CUSTOM.fileType,
             FileTypeEnum.BK_ARCHIVE.fileType,
-            FileTypeEnum.BK_REPORT.fileType)
+            FileTypeEnum.BK_REPORT.fileType
+        )
         // 校验用户是否有下载流水线文件的权限
         if (validateFileTypeList.contains(fileType)) {
             flag = authPermissionApi.validateUserResourcePermission(

@@ -114,7 +114,8 @@ class NodeDao {
         /** Node ID **/
     {
         with(TNode.T_NODE) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 PROJECT_ID,
                 NODE_IP,
                 NODE_NAME,
@@ -122,7 +123,8 @@ class NodeDao {
                 NODE_STATUS,
                 NODE_TYPE,
                 CREATED_USER,
-                CREATED_TIME)
+                CREATED_TIME
+            )
                 .values(
                     projectId,
                     ip,
@@ -232,5 +234,9 @@ class NodeDao {
                     .fetchOne(0, Long::class.java) > 0
             }
         }
+    }
+
+    fun saveNode(dslContext: DSLContext, nodeRecord: TNodeRecord) {
+        dslContext.executeUpdate(nodeRecord)
     }
 }

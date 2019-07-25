@@ -381,10 +381,12 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
             if (materialAlias != null && materialAlias.isNotEmpty()) {
                 var conditionsOr: Condition
-                conditionsOr = jsonExtract(MATERIAL, "\$[*].aliasName").like("%${materialAlias.first()}%")
+                conditionsOr =
+                    jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%")
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(jsonExtract(MATERIAL, "\$[*].aliasName").like("%$s%"))
+                    conditionsOr =
+                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${s.toLowerCase()}%"))
                 }
                 where.and(conditionsOr)
             }
@@ -393,10 +395,12 @@ class PipelineBuildDao {
             }
             if (materialBranch != null && materialBranch.isNotEmpty()) {
                 var conditionsOr: Condition
-                conditionsOr = jsonExtract(MATERIAL, "\$[*].branchName").like("%${materialBranch.first()}%")
+                conditionsOr =
+                    jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${materialBranch.first().toLowerCase()}%")
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(jsonExtract(MATERIAL, "\$[*].branchName").like("%$s%"))
+                    conditionsOr =
+                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${s.toLowerCase()}%"))
                 }
                 where.and(conditionsOr)
             }
@@ -406,10 +410,10 @@ class PipelineBuildDao {
             if (materialCommitMessage != null && materialCommitMessage.isNotEmpty()) {
                 where.and(jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
             }
-            if (status != null && status.filterNotNull().isNotEmpty()) { // filterNotNull不能删
+            if (status != null && status.isNotEmpty()) { // filterNotNull不能删
                 where.and(STATUS.`in`(status.map { it.ordinal }))
             }
-            if (trigger != null && trigger.filterNotNull().isNotEmpty()) { // filterNotNull不能删
+            if (trigger != null && trigger.isNotEmpty()) { // filterNotNull不能删
                 where.and(TRIGGER.`in`(trigger.map { it.name }))
             }
             if (queueTimeStartTime != null && queueTimeStartTime > 0) {
@@ -484,10 +488,12 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
             if (materialAlias != null && materialAlias.isNotEmpty()) {
                 var conditionsOr: Condition
-                conditionsOr = jsonExtract(MATERIAL, "\$[*].aliasName").like("%${materialAlias.first()}%")
+                conditionsOr =
+                    jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%")
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(jsonExtract(MATERIAL, "\$[*].aliasName").like("%$s%"))
+                    conditionsOr =
+                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${s.toLowerCase()}%"))
                 }
                 where.and(conditionsOr)
             }
@@ -496,10 +502,12 @@ class PipelineBuildDao {
             }
             if (materialBranch != null && materialBranch.isNotEmpty()) {
                 var conditionsOr: Condition
-                conditionsOr = jsonExtract(MATERIAL, "\$[*].branchName").like("%${materialBranch.first()}%")
+                conditionsOr =
+                    jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${materialBranch.first().toLowerCase()}%")
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(jsonExtract(MATERIAL, "\$[*].branchName").like("%$s%"))
+                    conditionsOr =
+                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${s.toLowerCase()}%"))
                 }
                 where.and(conditionsOr)
             }
@@ -509,10 +517,10 @@ class PipelineBuildDao {
             if (materialCommitMessage != null && materialCommitMessage.isNotEmpty()) {
                 where.and(jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
             }
-            if (status != null && status.filterNotNull().isNotEmpty()) { // filterNotNull不能删
+            if (status != null && status.isNotEmpty()) { // filterNotNull不能删
                 where.and(STATUS.`in`(status.map { it.ordinal }))
             }
-            if (trigger != null && trigger.filterNotNull().isNotEmpty()) { // filterNotNull不能删
+            if (trigger != null && trigger.isNotEmpty()) { // filterNotNull不能删
                 where.and(TRIGGER.`in`(trigger.map { it.name }))
             }
             if (queueTimeStartTime != null && queueTimeStartTime > 0) {
@@ -584,11 +592,18 @@ class PipelineBuildDao {
         )
     }
 
-    fun jsonExtract(t1: Field<String>, t2: String): Field<String> {
-        return DSL.field(
-            "JSON_EXTRACT({0}, {1})",
-            String::class.java, t1, t2
-        )
+    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
+        return if (lower) {
+            DSL.field(
+                "LOWER(JSON_EXTRACT({0}, {1}))",
+                String::class.java, t1, t2
+            )
+        } else {
+            DSL.field(
+                "JSON_EXTRACT({0}, {1})",
+                String::class.java, t1, t2
+            )
+        }
     }
 
     fun getBuildHistoryMaterial(

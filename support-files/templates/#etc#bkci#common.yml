@@ -19,7 +19,7 @@ spring:
     host: __REDIS_IP0__
     port: __REDIS_PORT__
     password: __REDIS_PASS__
-    database: 1
+    database: __REDIS_DB__
     pool:
       max-active: 16
       max-wait:  2000

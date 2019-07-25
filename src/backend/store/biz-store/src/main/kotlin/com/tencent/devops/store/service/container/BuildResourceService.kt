@@ -54,12 +54,21 @@ interface BuildResourceService {
     /**
      * 保存构建资源信息
      */
-    fun savePipelineBuildResource(defaultFlag: Boolean, buildResourceCode: String, buildResourceName: String): Result<Boolean>
+    fun savePipelineBuildResource(
+        defaultFlag: Boolean,
+        buildResourceCode: String,
+        buildResourceName: String
+    ): Result<Boolean>
 
     /**
      * 更新构建资源信息
      */
-    fun updatePipelineBuildResource(id: String, defaultFlag: Boolean, buildResourceCode: String, buildResourceName: String): Result<Boolean>
+    fun updatePipelineBuildResource(
+        id: String,
+        defaultFlag: Boolean,
+        buildResourceCode: String,
+        buildResourceName: String
+    ): Result<Boolean>
 
     /**
      * 删除构建资源信息

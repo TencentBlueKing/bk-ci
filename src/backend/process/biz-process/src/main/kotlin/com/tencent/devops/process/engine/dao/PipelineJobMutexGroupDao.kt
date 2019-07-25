@@ -38,17 +38,17 @@ class PipelineJobMutexGroupDao {
     fun getByProjectId(dslContext: DSLContext, projectId: String): Result<TPipelineJobMutexGroupRecord>? {
         with(TPipelineJobMutexGroup.T_PIPELINE_JOB_MUTEX_GROUP) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .fetch()
         }
     }
 
     fun insert(dslContext: DSLContext, projectId: String, jobMutexGroupName: String): Boolean {
         with(TPipelineJobMutexGroup.T_PIPELINE_JOB_MUTEX_GROUP) {
             return dslContext.insertInto(this)
-                    .set(PROJECT_ID, projectId)
-                    .set(JOB_MUTEX_GROUP_NAME, jobMutexGroupName)
-                    .execute() > 0
+                .set(PROJECT_ID, projectId)
+                .set(JOB_MUTEX_GROUP_NAME, jobMutexGroupName)
+                .execute() > 0
         }
     }
 
@@ -67,10 +67,10 @@ class PipelineJobMutexGroupDao {
     fun exit(dslContext: DSLContext, projectId: String, jobMutexGroupName: String): Boolean {
         with(TPipelineJobMutexGroup.T_PIPELINE_JOB_MUTEX_GROUP) {
             return dslContext.selectFrom(this)
-                    .where(
-                            PROJECT_ID.eq(projectId),
-                            JOB_MUTEX_GROUP_NAME.eq(jobMutexGroupName)
-                    ).fetch().isNotEmpty
+                .where(
+                    PROJECT_ID.eq(projectId),
+                    JOB_MUTEX_GROUP_NAME.eq(jobMutexGroupName)
+                ).fetch().isNotEmpty
         }
     }
 }

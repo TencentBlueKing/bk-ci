@@ -26,26 +26,57 @@
 
 package com.tencent.devops.environment.utils
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatInfo
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-object ThirdPartyAgentHeartbeatUtils {
+@Component
+class ThirdPartyAgentHeartbeatUtils @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartbeatUtils::class.java)
+    }
 
-    fun heartbeat(
+    fun saveHeartbeat(
         projectId: String,
-        agentId: String,
-        redisOperation: RedisOperation
+        agentId: Long,
+        newHeartbeatInfo: HeartbeatInfo
     ) {
-        redisOperation.set(getHeartbeatKey(projectId, agentId), System.currentTimeMillis().toString())
+        newHeartbeatInfo.projectId = projectId
+        newHeartbeatInfo.agentId = agentId
+        newHeartbeatInfo.heartbeatTime = System.currentTimeMillis()
+        redisOperation.set(getHeartbeatKey(projectId, agentId), objectMapper.writeValueAsString(newHeartbeatInfo))
     }
 
-    fun getHeartbeat(
-        projectId: String,
-        agentId: String,
-        redisOperation: RedisOperation
-    ): Long? {
-        return redisOperation.get(getHeartbeatKey(projectId, agentId))?.toLong()
+    fun getHeartbeat(projectId: String, agentId: Long): HeartbeatInfo? {
+        val build = redisOperation.get(getHeartbeatKey(projectId, agentId)) ?: return null
+        try {
+            return objectMapper.readValue(build, HeartbeatInfo::class.java)
+        } catch (t: Throwable) {
+            logger.warn("parse newHeartbeatInfo failed", t)
+        }
+        return null
     }
 
-    private fun getHeartbeatKey(projectId: String, agentId: String) =
-            "third-party-agent-heartbeat-$projectId-$agentId"
+    private fun getHeartbeatKey(projectId: String, agentId: Long): String {
+        return "environment.thirdparty.agent.heartbeat_${projectId}_$agentId"
+    }
+
+    fun getHeartbeatTime(record: TEnvironmentThirdpartyAgentRecord): Long? {
+        var heartbeat = getHeartbeat(record.projectId, record.id)
+        return if (heartbeat != null) {
+            heartbeat.heartbeatTime
+        } else {
+            saveHeartbeat(record.projectId, record.id,
+                HeartbeatInfo.dummyHeartbeat(record.projectId, record.id)
+            )
+            null
+        }
+    }
 }

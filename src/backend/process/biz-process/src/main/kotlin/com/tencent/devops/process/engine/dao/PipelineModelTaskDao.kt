@@ -33,8 +33,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
-import org.jooq.Result
 import org.jooq.Record2
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
@@ -106,7 +106,10 @@ class PipelineModelTaskDao {
     /**
      * 根据插件标识，批量获取使用该插件的pipeline个数
      */
-    fun batchGetPipelineCountByAtomCode(dslContext: DSLContext, atomCodeList: List<String>): Result<Record2<Int, String>> {
+    fun batchGetPipelineCountByAtomCode(
+        dslContext: DSLContext,
+        atomCodeList: List<String>
+    ): Result<Record2<Int, String>> {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             return dslContext.select(PIPELINE_ID.countDistinct(), ATOM_CODE)
                 .from(this)
@@ -119,8 +122,8 @@ class PipelineModelTaskDao {
     fun getModelTasks(dslContext: DSLContext, pipelineId: String): Result<TPipelineModelTaskRecord>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             return dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .fetch()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetch()
         }
     }
 

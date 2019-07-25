@@ -26,6 +26,15 @@
 
 package com.tencent.devops.store.dao.template
 
+import com.tencent.devops.model.store.tables.TCategory
+import com.tencent.devops.model.store.tables.TClassify
+import com.tencent.devops.model.store.tables.TLabel
+import com.tencent.devops.model.store.tables.TStoreMember
+import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.model.store.tables.TTemplate
+import com.tencent.devops.model.store.tables.TTemplateCategoryRel
+import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.enums.TemplateStatusEnum
@@ -33,15 +42,6 @@ import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
-import com.tencent.devops.model.store.tables.TCategory
-import com.tencent.devops.model.store.tables.TClassify
-import com.tencent.devops.model.store.tables.TLabel
-import com.tencent.devops.model.store.tables.TTemplate
-import com.tencent.devops.model.store.tables.TTemplateCategoryRel
-import com.tencent.devops.model.store.tables.TTemplateLabelRel
-import com.tencent.devops.model.store.tables.TStoreMember
-import com.tencent.devops.model.store.tables.TStoreProjectRel
-import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -198,7 +198,10 @@ class MarketTemplateDao {
         if (null != sortType) {
             if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
-                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).asTable("t")
+                val t = dslContext.select(
+                    tas.STORE_CODE,
+                    tas.DOWNLOADS.`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)
+                ).from(tas).asTable("t")
                 baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -231,7 +234,8 @@ class MarketTemplateDao {
         marketTemplateRelRequest: MarketTemplateRelRequest
     ) {
         with(TTemplate.T_TEMPLATE) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 TEMPLATE_NAME,
                 TEMPLATE_CODE,
@@ -261,9 +265,17 @@ class MarketTemplateDao {
         }
     }
 
-    fun updateMarketTemplate(dslContext: DSLContext, userId: String, templateId: String, version: String, marketTemplateUpdateRequest: MarketTemplateUpdateRequest) {
+    fun updateMarketTemplate(
+        dslContext: DSLContext,
+        userId: String,
+        templateId: String,
+        version: String,
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
+    ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID).from(a).where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode).and(a.TYPE.eq(1))).fetchOne(0, String::class.java)
+        val classifyId = dslContext.select(a.ID).from(a)
+            .where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode).and(a.TYPE.eq(1)))
+            .fetchOne(0, String::class.java)
         with(TTemplate.T_TEMPLATE) {
             dslContext.update(this)
                 .set(TEMPLATE_NAME, marketTemplateUpdateRequest.templateName)
@@ -282,11 +294,21 @@ class MarketTemplateDao {
         }
     }
 
-    fun upgradeMarketTemplate(dslContext: DSLContext, userId: String, templateId: String, version: String, templateRecord: TTemplateRecord, marketTemplateUpdateRequest: MarketTemplateUpdateRequest) {
+    fun upgradeMarketTemplate(
+        dslContext: DSLContext,
+        userId: String,
+        templateId: String,
+        version: String,
+        templateRecord: TTemplateRecord,
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
+    ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID).from(a).where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode).and(a.TYPE.eq(1))).fetchOne(0, String::class.java)
+        val classifyId = dslContext.select(a.ID).from(a)
+            .where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode).and(a.TYPE.eq(1)))
+            .fetchOne(0, String::class.java)
         with(TTemplate.T_TEMPLATE) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 TEMPLATE_NAME,
                 TEMPLATE_CODE,
@@ -334,34 +356,39 @@ class MarketTemplateDao {
 
     fun countByName(dslContext: DSLContext, templateName: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(TEMPLATE_NAME.eq(templateName)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(TEMPLATE_NAME.eq(templateName))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun countByCode(dslContext: DSLContext, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(TEMPLATE_CODE.eq(templateCode)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(TEMPLATE_CODE.eq(templateCode))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun countByIdAndCode(dslContext: DSLContext, templateId: String, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(ID.eq(templateId).and(TEMPLATE_CODE.eq(templateCode))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(ID.eq(templateId).and(TEMPLATE_CODE.eq(templateCode)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun countReleaseTemplateByCode(dslContext: DSLContext, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(TEMPLATE_CODE.eq(templateCode).and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this)
+                .where(TEMPLATE_CODE.eq(templateCode).and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun getLatestTemplateByCode(dslContext: DSLContext, templateCode: String): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
-                    .where(TEMPLATE_CODE.eq(templateCode))
-                    .and(LATEST_FLAG.eq(true))
-                    .fetchOne()
+                .where(TEMPLATE_CODE.eq(templateCode))
+                .and(LATEST_FLAG.eq(true))
+                .fetchOne()
         }
     }
 
@@ -395,8 +422,8 @@ class MarketTemplateDao {
     fun getTemplate(dslContext: DSLContext, templateCode: String, version: String): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
-                    .where(TEMPLATE_CODE.eq(templateCode).and(VERSION.eq(version)))
-                    .fetchOne()
+                .where(TEMPLATE_CODE.eq(templateCode).and(VERSION.eq(version)))
+                .fetchOne()
         }
     }
 
@@ -422,33 +449,41 @@ class MarketTemplateDao {
         val a = TTemplate.T_TEMPLATE.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
-        val t = dslContext.select(a.TEMPLATE_CODE.`as`("templateCode"), a.CREATE_TIME.max().`as`("createTime")).from(a).groupBy(a.TEMPLATE_CODE) // 查找每组templateCode最新的记录
+        val t = dslContext.select(a.TEMPLATE_CODE.`as`("templateCode"), a.CREATE_TIME.max().`as`("createTime")).from(a)
+            .groupBy(a.TEMPLATE_CODE) // 查找每组templateCode最新的记录
         val conditions = generateGetMyTemplatesConditions(a, userId, b, c, templateName)
         return dslContext.select(
-                a.ID.`as`("templateId"),
-                a.TEMPLATE_CODE.`as`("templateCode"),
-                a.TEMPLATE_NAME.`as`("templateName"),
-                a.LOGO_URL.`as`("logoUrl"),
-                a.VERSION.`as`("version"),
-                a.TEMPLATE_STATUS.`as`("templateStatus"),
-                a.CREATOR.`as`("creator"),
-                a.CREATE_TIME.`as`("createTime"),
-                a.MODIFIER.`as`("modifier"),
-                a.UPDATE_TIME.`as`("updateTime"),
-                c.PROJECT_CODE.`as`("projectCode")
+            a.ID.`as`("templateId"),
+            a.TEMPLATE_CODE.`as`("templateCode"),
+            a.TEMPLATE_NAME.`as`("templateName"),
+            a.LOGO_URL.`as`("logoUrl"),
+            a.VERSION.`as`("version"),
+            a.TEMPLATE_STATUS.`as`("templateStatus"),
+            a.CREATOR.`as`("creator"),
+            a.CREATE_TIME.`as`("createTime"),
+            a.MODIFIER.`as`("modifier"),
+            a.UPDATE_TIME.`as`("updateTime"),
+            c.PROJECT_CODE.`as`("projectCode")
         )
-                .from(a)
-                .join(t)
-                .on(a.TEMPLATE_CODE.eq(t.field("templateCode", String::class.java)).and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
-                .leftJoin(b)
-                .on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
-                .join(c)
-                .on(a.TEMPLATE_CODE.eq(c.STORE_CODE))
-                .where(conditions)
-                .groupBy(a.TEMPLATE_CODE)
-                .orderBy(a.UPDATE_TIME.desc())
-                .limit((page - 1) * pageSize, pageSize)
-                .fetch()
+            .from(a)
+            .join(t)
+            .on(
+                a.TEMPLATE_CODE.eq(
+                    t.field(
+                        "templateCode",
+                        String::class.java
+                    )
+                ).and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java)))
+            )
+            .leftJoin(b)
+            .on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
+            .join(c)
+            .on(a.TEMPLATE_CODE.eq(c.STORE_CODE))
+            .where(conditions)
+            .groupBy(a.TEMPLATE_CODE)
+            .orderBy(a.UPDATE_TIME.desc())
+            .limit((page - 1) * pageSize, pageSize)
+            .fetch()
     }
 
     fun getMyTemplatesCount(
@@ -461,18 +496,24 @@ class MarketTemplateDao {
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
         val conditions = generateGetMyTemplatesConditions(a, userId, b, c, templateName)
         return dslContext.select(
-                a.TEMPLATE_CODE.countDistinct()
+            a.TEMPLATE_CODE.countDistinct()
         )
-                .from(a)
-                .leftJoin(b)
-                .on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
-                .join(c)
-                .on(a.TEMPLATE_CODE.eq(c.STORE_CODE))
-                .where(conditions)
-                .fetchOne(0, Long::class.java)
+            .from(a)
+            .leftJoin(b)
+            .on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
+            .join(c)
+            .on(a.TEMPLATE_CODE.eq(c.STORE_CODE))
+            .where(conditions)
+            .fetchOne(0, Long::class.java)
     }
 
-    private fun generateGetMyTemplatesConditions(a: TTemplate, userId: String, b: TStoreMember, c: TStoreProjectRel, templateName: String?): MutableList<Condition> {
+    private fun generateGetMyTemplatesConditions(
+        a: TTemplate,
+        userId: String,
+        b: TStoreMember,
+        c: TStoreProjectRel,
+        templateName: String?
+    ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.CREATOR.eq(userId).or(b.USERNAME.eq(userId)))
         conditions.add(c.TYPE.eq(0))
@@ -483,32 +524,45 @@ class MarketTemplateDao {
         return conditions
     }
 
-    fun updateTemplateStatusById(dslContext: DSLContext, templateId: String, templateStatus: Byte, userId: String, msg: String?) {
+    fun updateTemplateStatusById(
+        dslContext: DSLContext,
+        templateId: String,
+        templateStatus: Byte,
+        userId: String,
+        msg: String?
+    ) {
         with(TTemplate.T_TEMPLATE) {
             val baseStep = dslContext.update(this)
-                    .set(TEMPLATE_STATUS, templateStatus)
+                .set(TEMPLATE_STATUS, templateStatus)
             if (!msg.isNullOrEmpty()) {
                 baseStep.set(TEMPLATE_STATUS_MSG, msg)
             }
             baseStep.set(MODIFIER, userId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(templateId))
-                    .execute()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(templateId))
+                .execute()
         }
     }
 
-    fun updateTemplateStatusByCode(dslContext: DSLContext, templateCode: String, templateOldStatus: Byte, templateNewStatus: Byte, userId: String, msg: String?) {
+    fun updateTemplateStatusByCode(
+        dslContext: DSLContext,
+        templateCode: String,
+        templateOldStatus: Byte,
+        templateNewStatus: Byte,
+        userId: String,
+        msg: String?
+    ) {
         with(TTemplate.T_TEMPLATE) {
             val baseStep = dslContext.update(this)
-                    .set(TEMPLATE_STATUS, templateNewStatus)
+                .set(TEMPLATE_STATUS, templateNewStatus)
             if (!msg.isNullOrEmpty()) {
                 baseStep.set(TEMPLATE_STATUS_MSG, msg)
             }
             baseStep.set(MODIFIER, userId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(TEMPLATE_CODE.eq(templateCode))
-                    .and(TEMPLATE_STATUS.eq(templateOldStatus))
-                    .execute()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(TEMPLATE_CODE.eq(templateCode))
+                .and(TEMPLATE_STATUS.eq(templateOldStatus))
+                .execute()
         }
     }
 }

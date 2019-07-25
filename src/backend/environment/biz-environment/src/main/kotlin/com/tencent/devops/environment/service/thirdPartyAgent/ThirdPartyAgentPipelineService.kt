@@ -87,7 +87,8 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         }
         authAgent(agentRecord, secretKey)
         val seqId = HashUtil.decodeIdToLong(statusResponse.seqId)
-        return thirdPartyAgentPipelineDao.updateStatus(dslContext,
+        return thirdPartyAgentPipelineDao.updateStatus(
+            dslContext,
             seqId,
             statusResponse.status,
             statusResponse.response

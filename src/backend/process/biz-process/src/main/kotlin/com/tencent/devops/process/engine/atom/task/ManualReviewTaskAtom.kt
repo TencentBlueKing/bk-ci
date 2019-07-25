@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.pojo.element.build.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask

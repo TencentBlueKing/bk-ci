@@ -63,11 +63,29 @@ class BkAuthResourceApi constructor(
         )
     }
 
+    override fun createResource(
+        scopeType: String,
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+        batchCreateResource(
+            principalId = user,
+            scopeType = scopeType,
+            scopeId = projectCode,
+            resourceType = resourceType,
+            resourceList = listOf(ResourceRegisterInfo(resourceCode, resourceName)),
+            systemId = serviceCode
+        )
+    }
+
     /**
      * 新版批量注册资源
      */
-    private fun batchCreateResource(
-        principalType: String,
+    override fun batchCreateResource(
         principalId: String,
         scopeType: String, // "project"
         scopeId: String,
@@ -75,6 +93,7 @@ class BkAuthResourceApi constructor(
         resourceList: List<ResourceRegisterInfo>,
         systemId: AuthServiceCode // 旧版本的serviceCode
     ): Boolean {
+        val principalType = bkAuthProperties.principalType!!
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/resources/batch-register"
 //        logger.info("开始调用权限中心批量注册资源，uri:$uri , systemId= ${systemId.id()}")
 
@@ -122,12 +141,30 @@ class BkAuthResourceApi constructor(
         resourceName: String
     ) {
         modifyResource(
+            scopeType = PROJECT_SCOPE_TYPE,
+            projectCode = projectCode, resourceType = resourceType,
+            resourceCode = resourceCode, resourceName = resourceName,
+            serviceCode = serviceCode
+        )
+    }
+
+    override fun modifyResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+        modifyResource(
+            scopeType,
             projectCode, resourceType, resourceCode, resourceName,
             serviceCode
         )
     }
 
     private fun modifyResource(
+        scopeType: String,
         scopeId: String,
         resourceType: BkAuthResourceType,
         resourceId: String,
@@ -146,7 +183,7 @@ class BkAuthResourceApi constructor(
                         resourceType.value
                     )
                 ),
-                resourceName, resourceType.value, scopeId, PROJECT_SCOPE_TYPE
+                resourceName, resourceType.value, scopeId, scopeType
             )
             val requestBeanString = objectMapper.writeValueAsString(requestBean)
             // 发送请求
@@ -176,8 +213,24 @@ class BkAuthResourceApi constructor(
         projectCode: String,
         resourceCode: String
     ) {
-        batchDeleteResource(
+        deleteResource(
             scopeType = PROJECT_SCOPE_TYPE,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            resourceCode = resourceCode
+        )
+    }
+
+    override fun deleteResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) {
+        batchDeleteResource(
+            scopeType = scopeType,
             scopeId = projectCode,
             resources = setOf(BkDeleteResourceAuthRequest.ResourceId(resourceCode, resourceType.value)),
             systemId = serviceCode
@@ -240,7 +293,6 @@ class BkAuthResourceApi constructor(
         resourceList: List<ResourceRegisterInfo>
     ) {
         batchCreateResource(
-            principalType = bkAuthProperties.principalType!!,
             principalId = user,
             scopeType = PROJECT_SCOPE_TYPE,
             scopeId = projectCode,

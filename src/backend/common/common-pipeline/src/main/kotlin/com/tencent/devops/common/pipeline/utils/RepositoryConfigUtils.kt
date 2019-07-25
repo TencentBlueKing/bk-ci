@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.build.CodeGitElement
-import com.tencent.devops.common.pipeline.pojo.element.build.CodeGitlabElement
-import com.tencent.devops.common.pipeline.pojo.element.build.CodeSvnElement
-import com.tencent.devops.common.pipeline.pojo.element.build.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 
 /**
  * deng
@@ -44,10 +44,26 @@ object RepositoryConfigUtils {
 
     fun buildConfig(element: Element): RepositoryConfig {
         return when (element) {
-            is CodeGitElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
-            is CodeSvnElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
-            is CodeGitlabElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
-            is GithubElement -> RepositoryConfig(element.repositoryHashId, element.repositoryName, element.repositoryType ?: RepositoryType.ID)
+            is CodeGitElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is CodeSvnElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is CodeGitlabElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is GithubElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
             else -> throw InvalidParamException("Unknown code element -> $element")
         }
     }

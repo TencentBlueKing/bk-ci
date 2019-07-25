@@ -26,14 +26,15 @@
 
 package com.tencent.devops.environment.cron
 
+import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
-import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils.getHeartbeat
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -46,11 +47,19 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
+    private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val redisOperation: RedisOperation
 ) {
 
-    @Scheduled(initialDelay = 5000, fixedDelay = 3000)
+    @Scheduled(initialDelay = 5000, fixedDelay = 10000)
     fun heartbeat() {
+        val lockValue = redisOperation.get(LOCK_KEY)
+        if (lockValue != null) {
+            logger.info("get lock failed, skip")
+            return
+        } else {
+            redisOperation.set(LOCK_KEY, LOCK_VALUE, 60)
+        }
         try {
             checkOKAgent()
 
@@ -63,24 +72,26 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
     }
 
     private fun checkOKAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.IMPORT_OK))
+        val nodeRecords = thirdPartyAgentDao.listByStatus(dslContext, setOf(AgentStatus.IMPORT_OK))
         if (nodeRecords.isEmpty()) {
             return
         }
         nodeRecords.forEach { record ->
-            val agentId = HashUtil.encodeLongId(record.id)
-            val lastUpdate = getHeartbeat(record.projectId, agentId, redisOperation)
-            if (lastUpdate == null) {
-                ThirdPartyAgentHeartbeatUtils.heartbeat(record.projectId, agentId, redisOperation)
-                return@forEach
-            }
-            val escape = System.currentTimeMillis() - lastUpdate
-            if (escape > IMPORTED_AGENT_TIMEOUT_MILLIS) {
-                logger.warn("The agent($agentId) has not receive the heart for $escape ms, mark it as exception")
+            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record) ?: return@forEach
+
+            val escape = System.currentTimeMillis() - heartbeatTime
+            if (escape > 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
+                logger.warn("The agent(${HashUtil.encodeLongId(record.id)}) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    thirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.IMPORT_EXCEPTION)
+                    thirdPartyAgentDao.updateStatus(
+                        context,
+                        record.id,
+                        null,
+                        record.projectId,
+                        AgentStatus.IMPORT_EXCEPTION
+                    )
+                    thirdPartyAgentDao.addAgentAction(context, record.projectId, record.id, AgentAction.OFFLINE.name)
                     val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)
                     if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
                         deleteAgent(context, record.projectId, record.id)
@@ -92,32 +103,38 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
     }
 
     private fun checkUnimportAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.UN_IMPORT_OK))
+        val nodeRecords = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.UN_IMPORT_OK)
+        )
         if (nodeRecords.isEmpty()) {
             return
         }
         nodeRecords.forEach { record ->
-            val agentId = HashUtil.encodeLongId(record.id)
-            val lastUpdate = getHeartbeat(record.projectId, agentId, redisOperation)
-            if (lastUpdate == null) {
-                ThirdPartyAgentHeartbeatUtils.heartbeat(record.projectId, agentId, redisOperation)
-                return@forEach
-            }
-            val escape = System.currentTimeMillis() - lastUpdate
-            if (escape > UNIMPORTED_AGENT_TIMEOUT_MILLIS) {
-                logger.warn("The un-import agent($agentId) has not receive the heart for $escape ms, mark it as exception")
+            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record) ?: return@forEach
+            val escape = System.currentTimeMillis() - heartbeatTime
+            if (escape > 2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
+                logger.warn("The un-import agent(${HashUtil.encodeLongId(record.id)}) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    thirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.UN_IMPORT, AgentStatus.UN_IMPORT_OK)
+                    thirdPartyAgentDao.updateStatus(
+                        context,
+                        record.id,
+                        null,
+                        record.projectId,
+                        AgentStatus.UN_IMPORT,
+                        AgentStatus.UN_IMPORT_OK
+                    )
                 }
             }
         }
     }
 
     private fun checkExceptionAgent() {
-        val exceptionRecord = thirdPartyAgentDao.listByStatus(dslContext,
-            setOf(AgentStatus.IMPORT_EXCEPTION))
+        val exceptionRecord = thirdPartyAgentDao.listByStatus(
+            dslContext,
+            setOf(AgentStatus.IMPORT_EXCEPTION)
+        )
         if (exceptionRecord.isEmpty()) {
             return
         }
@@ -137,7 +154,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartBeat::class.java)
-        private const val IMPORTED_AGENT_TIMEOUT_MILLIS = 50 * 1000L
-        private const val UNIMPORTED_AGENT_TIMEOUT_MILLIS = 10 * 1000L
+        private const val LOCK_KEY = "env_cron_agent_heartbeat_check"
+        private const val LOCK_VALUE = "lock"
     }
 }

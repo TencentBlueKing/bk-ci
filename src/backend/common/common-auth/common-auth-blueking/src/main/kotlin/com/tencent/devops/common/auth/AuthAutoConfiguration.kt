@@ -33,11 +33,13 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.BkAuthResourceApi
 import com.tencent.devops.common.auth.api.BkAuthTokenApi
 import com.tencent.devops.common.auth.api.utils.AuthUtils
+import com.tencent.devops.common.auth.code.BkArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BkBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BkCodeAuthServiceCode
 import com.tencent.devops.common.auth.code.BkEnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BkProjectAuthServiceCode
+import com.tencent.devops.common.auth.code.BkQualityAuthServiceCode
 import com.tencent.devops.common.auth.code.BkRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BkTicketAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
@@ -119,6 +121,12 @@ class AuthAutoConfiguration {
 
     @Bean
     fun ticketAuthServiceCode() = BkTicketAuthServiceCode()
+
+    @Bean
+    fun artifactoryAuthServiceCode() = BkArtifactoryAuthServiceCode()
+
+    @Bean
+    fun qualityAuthServiceCode() = BkQualityAuthServiceCode()
 
     @Bean
     @Primary

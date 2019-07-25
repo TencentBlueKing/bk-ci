@@ -26,17 +26,17 @@
 
 package com.tencent.devops.store.resources.container
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import com.tencent.devops.store.service.container.ContainerAppService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceContainerAppResourceImpl @Autowired constructor(private val containerAppService: ContainerAppService)
-    : ServiceContainerAppResource {
+class ServiceContainerAppResourceImpl @Autowired constructor(private val containerAppService: ContainerAppService) :
+    ServiceContainerAppResource {
 
     override fun getBuildEnv(name: String, version: String, os: String): Result<BuildEnv?> {
         return Result(containerAppService.getBuildEnv(name, version, os))

@@ -175,7 +175,7 @@ interface ArchiveFileService {
         pathPattern: String,
         fileChannelType: FileChannelTypeEnum,
         filePath: String
-    ): String ?
+    ): String?
 
     /**
      * 校验用户是否有下载文件的权限

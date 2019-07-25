@@ -48,21 +48,45 @@ object LogUtils {
         dispatch(rabbitTemplate, LogEvent(buildId, logMessages))
     }
 
-    fun addFoldStartLine(rabbitTemplate: RabbitTemplate, buildId: String, tagName: String, tag: String, executeCount: Int) {
+    fun addFoldStartLine(
+        rabbitTemplate: RabbitTemplate,
+        buildId: String,
+        tagName: String,
+        tag: String,
+        executeCount: Int
+    ) {
         dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:start:$tagName", tag, LogType.START, executeCount))
     }
 
-    fun addFoldEndLine(rabbitTemplate: RabbitTemplate, buildId: String, tagName: String, tag: String, executeCount: Int) {
+    fun addFoldEndLine(
+        rabbitTemplate: RabbitTemplate,
+        buildId: String,
+        tagName: String,
+        tag: String,
+        executeCount: Int
+    ) {
         dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:end:$tagName", tag, LogType.END, executeCount))
     }
 
-    fun addYellowLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, executeCount: Int) =
-            addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, executeCount)
+    fun addYellowLine(
+        rabbitTemplate: RabbitTemplate,
+        buildId: String,
+        message: String,
+        tag: String,
+        executeCount: Int
+    ) =
+        addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, executeCount)
 
     fun addRedLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, executeCount: Int) =
-            addLine(rabbitTemplate, buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, executeCount)
+        addLine(rabbitTemplate, buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, executeCount)
 
-    fun updateLogStatus(rabbitTemplate: RabbitTemplate, buildId: String, finished: Boolean, tag: String, executeCount: Int?) {
+    fun updateLogStatus(
+        rabbitTemplate: RabbitTemplate,
+        buildId: String,
+        finished: Boolean,
+        tag: String,
+        executeCount: Int?
+    ) {
         dispatch(rabbitTemplate, LogStatusEvent(buildId, finished, tag, executeCount))
     }
 
@@ -70,7 +94,13 @@ object LogUtils {
         updateLogStatus(rabbitTemplate, buildId, true, tag, executeCount)
     }
 
-    private fun genLogEvent(buildId: String, message: String, tag: String, logType: LogType, executeCount: Int): LogEvent {
+    private fun genLogEvent(
+        buildId: String,
+        message: String,
+        tag: String,
+        logType: LogType,
+        executeCount: Int
+    ): LogEvent {
         val logs = listOf(LogMessage(message, System.currentTimeMillis(), tag, logType, executeCount))
         return LogEvent(buildId, logs)
     }

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.websocket
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.ServiceProjectResource
@@ -70,11 +69,10 @@ class WebSocketConfig @Autowired constructor(
                 ): Boolean {
                     val req = request as ServletServerHttpRequest
                     val projectId = req.servletRequest.getParameter("projectId")
-                    val accessToken = req.servletRequest.getHeader(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
                     val userId = req.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
                     logger.info("before hand shake, userId is $userId, projectId is $projectId")
 
-                    val projectList = client.get(ServiceProjectResource::class).list(accessToken, userId).data
+                    val projectList = client.get(ServiceProjectResource::class).list(userId).data
                     val privilegeProjectCodeList = mutableListOf<String>()
                     projectList?.map {
                         privilegeProjectCodeList.add(it.projectCode)

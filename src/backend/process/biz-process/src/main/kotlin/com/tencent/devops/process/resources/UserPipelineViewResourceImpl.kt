@@ -39,7 +39,8 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineViewService: PipelineViewService) : UserPipelineViewResource {
+class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineViewService: PipelineViewService) :
+    UserPipelineViewResource {
     override fun getViewSettings(userId: String, projectId: String): Result<PipelineViewSettings> {
         return Result(pipelineViewService.getViewSettings(userId, projectId))
     }
@@ -57,7 +58,11 @@ class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineVi
         return Result(pipelineViewService.getView(userId, projectId, viewId))
     }
 
-    override fun addView(userId: String, projectId: String, pipelineView: PipelineNewViewCreate): Result<PipelineViewId> {
+    override fun addView(
+        userId: String,
+        projectId: String,
+        pipelineView: PipelineNewViewCreate
+    ): Result<PipelineViewId> {
         return Result(PipelineViewId(pipelineViewService.addView(userId, projectId, pipelineView)))
     }
 
@@ -65,7 +70,12 @@ class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineVi
         return Result(pipelineViewService.deleteView(userId, projectId, viewId))
     }
 
-    override fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Result<Boolean> {
+    override fun updateView(
+        userId: String,
+        projectId: String,
+        viewId: String,
+        pipelineView: PipelineNewViewUpdate
+    ): Result<Boolean> {
         return Result(pipelineViewService.updateView(userId, projectId, viewId, pipelineView))
     }
 }
