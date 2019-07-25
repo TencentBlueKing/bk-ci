@@ -31,6 +31,7 @@ dependencies {
     testCompile "junit:junit"
     testCompile "org.springframework.boot:spring-boot-starter-test"
 
+    compile project(":artifactory:biz-artifactory-store")
     compile project(":artifactory:biz-artifactory-sample")
     compile project(":dispatch:biz-dispatch")
     compile project(":environment:biz-environment")

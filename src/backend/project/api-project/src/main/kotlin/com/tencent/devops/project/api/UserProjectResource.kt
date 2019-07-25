@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -60,9 +59,6 @@ interface UserProjectResource {
     @Path("/")
     @ApiOperation("查询所有项目")
     fun list(
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
@@ -72,9 +68,6 @@ interface UserProjectResource {
     @Path("/{english_name}")
     @ApiOperation("获取项目信息")
     fun get(
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String
@@ -87,9 +80,6 @@ interface UserProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam(value = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<Boolean>
@@ -101,9 +91,6 @@ interface UserProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("项目ID", required = true)
         @PathParam("project_id")
         projectId: String,
@@ -119,9 +106,6 @@ interface UserProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("项目ID", required = true)
         @PathParam("project_id")
         projectId: String,

@@ -27,18 +27,18 @@
 package com.tencent.devops.common.api.util
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
-import java.security.Security
-import java.security.spec.X509EncodedKeySpec
-import javax.crypto.interfaces.DHPublicKey
-import javax.crypto.Cipher
-import javax.crypto.spec.SecretKeySpec
-import javax.crypto.KeyAgreement
-import java.security.spec.PKCS8EncodedKeySpec
-import java.math.BigInteger
 import java.security.SecureRandom
+import java.security.Security
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
+import javax.crypto.Cipher
+import javax.crypto.KeyAgreement
+import javax.crypto.interfaces.DHPublicKey
 import javax.crypto.spec.DHParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 object DHUtil {
     private val KEY_ALGORITHM = "DH"

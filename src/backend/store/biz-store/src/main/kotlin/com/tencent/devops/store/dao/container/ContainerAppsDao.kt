@@ -26,9 +26,9 @@
 
 package com.tencent.devops.store.dao.container
 
-import com.tencent.devops.store.pojo.app.ContainerApp
 import com.tencent.devops.model.store.tables.TApps
 import com.tencent.devops.model.store.tables.records.TAppsRecord
+import com.tencent.devops.store.pojo.app.ContainerApp
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -39,46 +39,48 @@ class ContainerAppsDao {
     fun exist(dslContext: DSLContext, id: Int): Boolean {
         with(TApps.T_APPS) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne() != null
+                .where(ID.eq(id))
+                .fetchOne() != null
         }
     }
 
     fun get(dslContext: DSLContext, name: String, os: String): TAppsRecord? {
         return with(TApps.T_APPS) {
             dslContext.selectFrom(this)
-                    .where(NAME.eq(name))
-                    .and(OS.eq(os))
-                    .fetchOne()
+                .where(NAME.eq(name))
+                .and(OS.eq(os))
+                .fetchOne()
         }
     }
 
     fun getContainerAppInfo(dslContext: DSLContext, id: Int): TAppsRecord? {
         return with(TApps.T_APPS) {
             dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun getAllContainerApps(dslContext: DSLContext): Result<TAppsRecord> {
         with(TApps.T_APPS) {
             return dslContext
-                    .selectFrom(this)
-                    .orderBy(ID.desc())
-                    .fetch()
+                .selectFrom(this)
+                .orderBy(ID.desc())
+                .fetch()
         }
     }
 
     fun add(dslContext: DSLContext, name: String, os: String, binPath: String?): Int {
         return with(TApps.T_APPS) {
-            dslContext.insertInto(this,
-                    NAME,
-                    OS,
-                    BIN_PATH)
-                    .values(name, os, binPath)
-                    .returning(ID)
-                    .fetchOne().id
+            dslContext.insertInto(
+                this,
+                NAME,
+                OS,
+                BIN_PATH
+            )
+                .values(name, os, binPath)
+                .returning(ID)
+                .fetchOne().id
         }
     }
 
@@ -91,27 +93,27 @@ class ContainerAppsDao {
     fun delete(dslContext: DSLContext, id: Int) {
         with(TApps.T_APPS) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun listByOS(dslContext: DSLContext, os: String): Result<TAppsRecord> {
         with(TApps.T_APPS) {
             return dslContext.selectFrom(this)
-                    .where(OS.eq(os))
-                    .fetch()
+                .where(OS.eq(os))
+                .fetch()
         }
     }
 
     fun update(dslContext: DSLContext, id: Int, name: String, os: String, binPath: String?) {
         with(TApps.T_APPS) {
             dslContext.update(this)
-                    .set(NAME, name)
-                    .set(OS, os)
-                    .set(BIN_PATH, binPath)
-                    .where(ID.eq(id))
-                    .execute()
+                .set(NAME, name)
+                .set(OS, os)
+                .set(BIN_PATH, binPath)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 

@@ -49,22 +49,22 @@ object AgentSystemInfoUtils {
     fun getAgentDiskInfo(): List<AgentDiskInfo> {
         val systemInfo = SystemInfo()
         val hardware = systemInfo.hardware
-        var start = System.currentTimeMillis()
-        var startDiskStores = hardware.diskStores
+        val start = System.currentTimeMillis()
+        val startDiskStores = hardware.diskStores
 
         Util.sleep(2000)
         val timeDiff = (System.currentTimeMillis() - start) / 1000.0
-        var endDiskStores = hardware.diskStores
-        var endIoDataMap = mutableMapOf<String, Pair<Long, Long>>()
+        val endDiskStores = hardware.diskStores
+        val endIoDataMap = mutableMapOf<String, Pair<Long, Long>>()
 
         endDiskStores.forEach { disk ->
             endIoDataMap.put(disk.name, Pair(disk.readBytes, disk.writeBytes))
         }
 
-        var diskInfos = mutableListOf<AgentDiskInfo>()
+        val diskInfos = mutableListOf<AgentDiskInfo>()
         startDiskStores.forEach { disk ->
             if (disk.size == 0L) return@forEach
-            var ioData = endIoDataMap.get(disk.name) ?: return@forEach
+            val ioData = endIoDataMap.get(disk.name) ?: return@forEach
             val diskInfo = AgentDiskInfo().apply {
                 name = disk.name
                 serial = disk.serial
@@ -110,7 +110,7 @@ object AgentSystemInfoUtils {
             endData[2] = network.packetsRecv
             endData[3] = network.packetsSent
 
-            var networkInfo = AgentNetworkInfo().apply {
+            val networkInfo = AgentNetworkInfo().apply {
                 name = network.name
                 displayName = network.displayName
                 macAddr = network.macaddr
@@ -133,14 +133,14 @@ object AgentSystemInfoUtils {
         val systemInfo = SystemInfo()
         val hardware = systemInfo.getHardware()
         val processor = hardware.processor
-        var physicalProcessorCount = processor.physicalProcessorCount
-        var logicalProcessorCount = processor.logicalProcessorCount
+        val physicalProcessorCount = processor.physicalProcessorCount
+        val logicalProcessorCount = processor.logicalProcessorCount
 
         // 采集cpu使用率
-        var start = System.currentTimeMillis()
+//        var start = System.currentTimeMillis()
         val startTicks = processor.systemCpuLoadTicks
         Util.sleep(1000)
-        var timeDiff = (System.currentTimeMillis() - start) / 1000.0
+//        var timeDiff = (System.currentTimeMillis() - start) / 1000.0
         val endTicks = processor.systemCpuLoadTicks
 
         val userTick = endTicks[TickType.USER.index] - startTicks[TickType.USER.index]
@@ -160,8 +160,8 @@ object AgentSystemInfoUtils {
             irqTick / totalCpuTick,
             softirqTick / totalCpuTick
         )
-        var tickCpuLoad = processor.systemCpuLoadBetweenTicks
-        var systemCpuLoad = processor.systemCpuLoad
+        val tickCpuLoad = processor.systemCpuLoadBetweenTicks
+        val systemCpuLoad = processor.systemCpuLoad
 
         val processorLoads = processor.processorCpuLoadBetweenTicks.toList()
 

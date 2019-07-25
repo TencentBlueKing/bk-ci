@@ -48,7 +48,7 @@ enum class AgentStatus(val status: Int) {
         }
 
         fun isDelete(status: AgentStatus) =
-                status == DELETE
+            status == DELETE
 
         fun isUnImport(status: AgentStatus) = status == UN_IMPORT
 

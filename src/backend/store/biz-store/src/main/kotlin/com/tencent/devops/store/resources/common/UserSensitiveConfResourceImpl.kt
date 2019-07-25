@@ -26,13 +26,13 @@
 
 package com.tencent.devops.store.resources.common
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserSensitiveConfResource
 import com.tencent.devops.store.pojo.common.SensitiveConfReq
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.UserSensitiveConfService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -40,11 +40,22 @@ class UserSensitiveConfResourceImpl @Autowired constructor(
     private val userSensitiveConfService: UserSensitiveConfService
 ) : UserSensitiveConfResource {
 
-    override fun create(userId: String, storeType: StoreTypeEnum, storeCode: String, sensitiveConfReq: SensitiveConfReq): Result<Boolean> {
+    override fun create(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        sensitiveConfReq: SensitiveConfReq
+    ): Result<Boolean> {
         return userSensitiveConfService.create(userId, storeType, storeCode, sensitiveConfReq)
     }
 
-    override fun edit(userId: String, storeType: StoreTypeEnum, storeCode: String, id: String, sensitiveConfReq: SensitiveConfReq): Result<Boolean> {
+    override fun edit(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        id: String,
+        sensitiveConfReq: SensitiveConfReq
+    ): Result<Boolean> {
         return userSensitiveConfService.update(userId, storeType, storeCode, id, sensitiveConfReq)
     }
 
@@ -52,7 +63,12 @@ class UserSensitiveConfResourceImpl @Autowired constructor(
         return userSensitiveConfService.delete(userId, storeType, storeCode, ids)
     }
 
-    override fun get(userId: String, storeType: StoreTypeEnum, storeCode: String, id: String): Result<SensitiveConfResp?> {
+    override fun get(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        id: String
+    ): Result<SensitiveConfResp?> {
         return userSensitiveConfService.get(userId, storeType, storeCode, id)
     }
 

@@ -36,8 +36,8 @@ import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import com.tencent.devops.process.template.dao.PTemplateDao
+import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

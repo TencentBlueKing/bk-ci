@@ -62,9 +62,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> =
         Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
 
-    override fun upgrade(projectId: String, agentId: String, secretKey: String, tag: String) =
-        thirdPartyAgentService.checkIfCanUpgrade(projectId, agentId, secretKey, tag)
-
     override fun upgradeByVersion(
         projectId: String,
         agentId: String,

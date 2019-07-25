@@ -1,0 +1,35 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.11
+    environment:
+      GOCACHE: /tmp/go-cache
+      GOFLAGS: "-mod=readonly -p=4"
+    working_directory: "/go/src/github.com/influxdata/go-syslog"
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restoring caches
+          keys:
+            - go-syslog-gocache-{{ .Branch }}-{{ .Revision }}
+            - go-syslog-modules-{{ checksum "go.sum" }}
+      - run: make GO_ARGS="-timeout 20s -coverprofile cover.out -race -v" tests
+      - save_cache:
+          name: Caching GOCACHE
+          key: go-syslog-gocache-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - /tmp/go-cache
+          when: always
+      - save_cache:
+          name: Caching modules
+          key: go-syslog-modules-{{ checksum "go.sum" }}
+          paths:
+            - /go/pkg/mod
+          when: always
+
+workflows:
+  version: 2
+  testing:
+    jobs:
+      - test

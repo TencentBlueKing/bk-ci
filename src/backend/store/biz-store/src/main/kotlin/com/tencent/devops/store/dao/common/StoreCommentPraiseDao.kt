@@ -38,16 +38,17 @@ class StoreCommentPraiseDao {
 
     fun countByIds(dslContext: DSLContext, userId: String, commentId: String): Int {
         with(TStoreCommentPraise.T_STORE_COMMENT_PRAISE) {
-            return dslContext.selectCount().from(this).where(COMMENT_ID.eq(commentId).and(CREATOR.eq(userId))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(COMMENT_ID.eq(commentId).and(CREATOR.eq(userId)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun getStoreCommentPraisesById(dslContext: DSLContext, commentId: String): Result<TStoreCommentPraiseRecord>? {
         with(TStoreCommentPraise.T_STORE_COMMENT_PRAISE) {
             return dslContext
-                    .selectFrom(this)
-                    .where(COMMENT_ID.eq(commentId))
-                    .fetch()
+                .selectFrom(this)
+                .where(COMMENT_ID.eq(commentId))
+                .fetch()
         }
     }
 
@@ -59,12 +60,12 @@ class StoreCommentPraiseDao {
                 COMMENT_ID,
                 CREATOR,
                 MODIFIER
-            ) .values(
-                    UUIDUtil.generate(),
-                    commentId,
-                    userId,
-                    userId
-                ).execute()
+            ).values(
+                UUIDUtil.generate(),
+                commentId,
+                userId,
+                userId
+            ).execute()
         }
     }
 

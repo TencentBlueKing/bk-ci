@@ -37,27 +37,28 @@ class PipelineViewUserSettingsDao {
     fun get(dslContext: DSLContext, userId: String, projectId: String): TPipelineViewUserSettingsRecord? {
         with(TPipelineViewUserSettings.T_PIPELINE_VIEW_USER_SETTINGS) {
             return dslContext.selectFrom(this)
-                    .where(USER_ID.eq(userId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetchOne()
+                .where(USER_ID.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchOne()
         }
     }
 
     fun create(dslContext: DSLContext, userId: String, projectId: String, settings: String) {
         val now = LocalDateTime.now()
         with(TPipelineViewUserSettings.T_PIPELINE_VIEW_USER_SETTINGS) {
-            dslContext.insertInto(this,
-                    USER_ID,
-                    PROJECT_ID,
-                    SETTINGS,
-                    CREATE_TIME,
-                    UPDATE_TIME
+            dslContext.insertInto(
+                this,
+                USER_ID,
+                PROJECT_ID,
+                SETTINGS,
+                CREATE_TIME,
+                UPDATE_TIME
             ).values(
-                    userId,
-                    projectId,
-                    settings,
-                    now,
-                    now
+                userId,
+                projectId,
+                settings,
+                now,
+                now
             ).execute()
         }
     }
@@ -65,10 +66,10 @@ class PipelineViewUserSettingsDao {
     fun update(dslContext: DSLContext, userId: String, projectId: String, settings: String) {
         with(TPipelineViewUserSettings.T_PIPELINE_VIEW_USER_SETTINGS) {
             dslContext.update(this)
-                    .set(SETTINGS, settings)
-                    .where(USER_ID.eq(userId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .execute()
+                .set(SETTINGS, settings)
+                .where(USER_ID.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 }

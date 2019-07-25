@@ -34,9 +34,16 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomVersionLogDao {
 
-    fun addMarketAtomVersion(dslContext: DSLContext, userId: String, atomId: String, releaseType: Byte, versionContent: String) {
+    fun addMarketAtomVersion(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        releaseType: Byte,
+        versionContent: String
+    ) {
         with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ATOM_ID,
                 RELEASE_TYPE,

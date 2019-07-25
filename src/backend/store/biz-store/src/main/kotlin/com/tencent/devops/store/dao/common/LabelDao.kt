@@ -60,50 +60,52 @@ class LabelDao {
 
     fun countByName(dslContext: DSLContext, labelName: String, type: Byte): Int {
         with(TLabel.T_LABEL) {
-            return dslContext.selectCount().from(this).where(LABEL_NAME.eq(labelName).and(TYPE.eq(type))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(LABEL_NAME.eq(labelName).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun countByCode(dslContext: DSLContext, labelCode: String, type: Byte): Int {
         with(TLabel.T_LABEL) {
-            return dslContext.selectCount().from(this).where(LABEL_CODE.eq(labelCode).and(TYPE.eq(type))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(LABEL_CODE.eq(labelCode).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
     fun delete(dslContext: DSLContext, id: String) {
         with(TLabel.T_LABEL) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun update(dslContext: DSLContext, id: String, labelRequest: LabelRequest) {
         with(TLabel.T_LABEL) {
             dslContext.update(this)
-                    .set(LABEL_CODE, labelRequest.labelCode)
-                    .set(LABEL_NAME, labelRequest.labelName)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(id))
-                    .execute()
+                .set(LABEL_CODE, labelRequest.labelCode)
+                .set(LABEL_NAME, labelRequest.labelName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun getLabel(dslContext: DSLContext, id: String): TLabelRecord? {
         with(TLabel.T_LABEL) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun getAllLabel(dslContext: DSLContext, type: Byte): Result<TLabelRecord>? {
         with(TLabel.T_LABEL) {
             return dslContext
-                    .selectFrom(this)
-                    .where(TYPE.eq(type))
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .selectFrom(this)
+                .where(TYPE.eq(type))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 

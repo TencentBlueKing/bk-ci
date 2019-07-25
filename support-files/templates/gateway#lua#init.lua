@@ -38,7 +38,7 @@ config = {
       host = "__REDIS_IP0__",
       port = __REDIS_PORT__,
       pass = "__REDIS_PASS__",  -- redis 密码，没有密码的话，把这行注释掉
-      database = 0,         -- 默认选择db0
+      database = __REDIS_DB__,         -- 默认选择db0
       max_idle_time = 600000, -- 保留在连接池的时间
       pool_size = 10         -- 连接池的大小
     },

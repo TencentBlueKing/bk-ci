@@ -45,7 +45,8 @@ class StoreStatisticTotalDao {
         scoreAverage: Double
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            val record = dslContext.selectFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).fetchOne()
+            val record =
+                dslContext.selectFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).fetchOne()
             if (null == record) {
                 dslContext.insertInto(this).columns(
                     ID,

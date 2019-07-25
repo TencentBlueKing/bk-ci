@@ -69,7 +69,7 @@ class BuildArchiveGetTask : ITask() {
         }.forEach { srcPath ->
 
             logger.info("[$buildId]|pipelineId=$pipelineId|srcPath=$srcPath")
-            val fileList =  archiveGetResourceApi.getFileDownloadUrls(
+            val fileList = archiveGetResourceApi.getFileDownloadUrls(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 fileType = FileTypeEnum.BK_ARCHIVE,

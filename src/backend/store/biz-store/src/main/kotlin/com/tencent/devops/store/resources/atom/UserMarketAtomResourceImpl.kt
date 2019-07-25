@@ -68,10 +68,26 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<MarketAtomResp> {
-        return Result(marketAtomService.list(userId.trim(), atomName?.trim(), classifyCode?.trim(), labelCode?.trim(), score, rdType, sortType, page, pageSize))
+        return Result(
+            marketAtomService.list(
+                userId.trim(),
+                atomName?.trim(),
+                classifyCode?.trim(),
+                labelCode?.trim(),
+                score,
+                rdType,
+                sortType,
+                page,
+                pageSize
+            )
+        )
     }
 
-    override fun updateMarketAtom(userId: String, projectCode: String, marketAtomUpdateRequest: MarketAtomUpdateRequest): Result<String?> {
+    override fun updateMarketAtom(
+        userId: String,
+        projectCode: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String?> {
         return marketAtomService.updateMarketAtom(userId, projectCode, marketAtomUpdateRequest)
     }
 
@@ -105,7 +121,11 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.installAtom(accessToken, userId, installAtomReq.projectCode, installAtomReq.atomCode)
     }
 
-    override fun getInstalledProjects(accessToken: String, userId: String, atomCode: String): Result<List<InstalledProjRespItem?>> {
+    override fun getInstalledProjects(
+        accessToken: String,
+        userId: String,
+        atomCode: String
+    ): Result<List<InstalledProjRespItem?>> {
         return storeProjectService.getInstalledProjects(accessToken, userId, atomCode, StoreTypeEnum.ATOM)
     }
 

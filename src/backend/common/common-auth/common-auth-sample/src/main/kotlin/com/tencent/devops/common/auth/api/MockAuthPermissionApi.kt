@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.auth.api
 
-import com.tencent.devops.common.auth.code.ADMIN
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthPermissionApi : AuthPermissionApi {
@@ -71,6 +70,27 @@ class MockAuthPermissionApi : AuthPermissionApi {
         permissions: Set<BkAuthPermission>,
         supplier: (() -> List<String>)?
     ): Map<BkAuthPermission, List<String>> {
+        return getUserResourcesByPermissions(
+            userId = user,
+            scopeType = "Project",
+            scopeId = projectCode,
+            resourceType = resourceType,
+            permissions = permissions,
+            systemId = serviceCode,
+            supplier = supplier
+        )
+    }
+
+    override fun getUserResourcesByPermissions(
+        userId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: BkAuthResourceType,
+        permissions: Set<BkAuthPermission>,
+        systemId: AuthServiceCode,
+        supplier: (() -> List<String>)?
+    ): Map<BkAuthPermission, List<String>> {
+
         val list = supplier?.invoke() ?: emptyList()
         val mock = mutableMapOf<BkAuthPermission, List<String>>()
         permissions.forEach { permission ->

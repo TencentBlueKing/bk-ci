@@ -43,7 +43,8 @@ class MarketAtomOfflineDao {
     fun create(dslContext: DSLContext, atomCode: String, bufferDay: Byte, userId: String, status: Byte) {
         val expireTime = LocalDateTime.now().plusDays(bufferDay.toLong())
         with(TAtomOffline.T_ATOM_OFFLINE) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ATOM_CODE,
                 BUFFER_DAY,

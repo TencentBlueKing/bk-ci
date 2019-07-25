@@ -25,6 +25,7 @@
  */
 
 package com.tencent.devops.project.constant
+
 /**
  * 项目微服务模块常量
  *

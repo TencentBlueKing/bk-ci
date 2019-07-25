@@ -39,7 +39,8 @@ class ServiceTemplateResourceImpl @Autowired constructor(
 ) : ServiceTemplateResource {
 
     override fun list(userId: String): Result<MarketTemplateResp> {
-        return Result(marketTemplateService.list(
+        return Result(
+            marketTemplateService.list(
                 userId.trim(),
                 null,
                 null,
@@ -50,6 +51,7 @@ class ServiceTemplateResourceImpl @Autowired constructor(
                 null,
                 null,
                 1
-                ))
+            )
+        )
     }
 }

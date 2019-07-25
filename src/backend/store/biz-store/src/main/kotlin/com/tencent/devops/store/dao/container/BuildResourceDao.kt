@@ -26,11 +26,11 @@
 
 package com.tencent.devops.store.dao.container
 
-import com.tencent.devops.store.pojo.container.BuildResource
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.store.tables.TBuildResource
 import com.tencent.devops.model.store.tables.TContainerResourceRel
 import com.tencent.devops.model.store.tables.records.TBuildResourceRecord
+import com.tencent.devops.store.pojo.container.BuildResource
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -42,20 +42,27 @@ import java.time.LocalDateTime
 @Repository
 class BuildResourceDao {
 
-    fun add(dslContext: DSLContext, id: String, defaultFlag: Boolean, buildResourceCode: String, buildResourceName: String) {
+    fun add(
+        dslContext: DSLContext,
+        id: String,
+        defaultFlag: Boolean,
+        buildResourceCode: String,
+        buildResourceName: String
+    ) {
         with(TBuildResource.T_BUILD_RESOURCE) {
-            dslContext.insertInto(this,
-                    ID,
-                    BUILD_RESOURCE_CODE,
-                    BUILD_RESOURCE_NAME,
-                    DEFAULT_FLAG
+            dslContext.insertInto(
+                this,
+                ID,
+                BUILD_RESOURCE_CODE,
+                BUILD_RESOURCE_NAME,
+                DEFAULT_FLAG
             )
-                    .values(
-                            id,
-                            buildResourceCode,
-                            buildResourceName,
-                            defaultFlag
-                    ).execute()
+                .values(
+                    id,
+                    buildResourceCode,
+                    buildResourceName,
+                    defaultFlag
+                ).execute()
         }
     }
 
@@ -68,8 +75,8 @@ class BuildResourceDao {
     fun delete(dslContext: DSLContext, id: String) {
         with(TBuildResource.T_BUILD_RESOURCE) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -81,36 +88,46 @@ class BuildResourceDao {
         }
     }
 
-    fun update(dslContext: DSLContext, id: String, defaultFlag: Boolean, buildResourceCode: String, buildResourceName: String) {
+    fun update(
+        dslContext: DSLContext,
+        id: String,
+        defaultFlag: Boolean,
+        buildResourceCode: String,
+        buildResourceName: String
+    ) {
         with(TBuildResource.T_BUILD_RESOURCE) {
             dslContext.update(this)
-                    .set(BUILD_RESOURCE_CODE, buildResourceCode)
-                    .set(BUILD_RESOURCE_NAME, buildResourceName)
-                    .set(DEFAULT_FLAG, defaultFlag)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(id))
-                    .execute()
+                .set(BUILD_RESOURCE_CODE, buildResourceCode)
+                .set(BUILD_RESOURCE_NAME, buildResourceName)
+                .set(DEFAULT_FLAG, defaultFlag)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun getBuildResource(dslContext: DSLContext, id: String): TBuildResourceRecord? {
         with(TBuildResource.T_BUILD_RESOURCE) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
     fun getAllBuildResource(dslContext: DSLContext): Result<TBuildResourceRecord> {
         with(TBuildResource.T_BUILD_RESOURCE) {
             return dslContext
-                    .selectFrom(this)
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .selectFrom(this)
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 
-    fun getBuildResourceByContainerId(dslContext: DSLContext, containerId: String?, defaultFlag: Boolean?): Result<out Record>? {
+    fun getBuildResourceByContainerId(
+        dslContext: DSLContext,
+        containerId: String?,
+        defaultFlag: Boolean?
+    ): Result<out Record>? {
         val a = TBuildResource.T_BUILD_RESOURCE.`as`("a")
         val b = TContainerResourceRel.T_CONTAINER_RESOURCE_REL.`as`("b")
         val conditions = mutableListOf<Condition>()
@@ -132,7 +149,14 @@ class BuildResourceDao {
 
     fun convert(record: TBuildResourceRecord): BuildResource {
         with(record) {
-            return BuildResource(id = id, buildResourceCode = buildResourceCode, buildResourceName = buildResourceName, defaultFlag = defaultFlag, createTime = createTime.timestampmilli(), updateTime = updateTime.timestampmilli())
+            return BuildResource(
+                id = id,
+                buildResourceCode = buildResourceCode,
+                buildResourceName = buildResourceName,
+                defaultFlag = defaultFlag,
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli()
+            )
         }
     }
 }

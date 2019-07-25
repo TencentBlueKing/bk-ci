@@ -77,12 +77,14 @@ class PipelineContainerMonitorDao @Autowired constructor(private val dslContext:
                         .where(ID.eq(existRecord.id))
                         .execute()
                 } else {
-                    context.insertInto(this,
+                    context.insertInto(
+                        this,
                         OS_TYPE,
                         BUILD_TYPE,
                         MAX_STARTUP_TIME,
                         MAX_EXECUTE_TIME,
-                        USERS)
+                        USERS
+                    )
                         .values(
                             monitor.osType.name,
                             monitor.buildType.name,

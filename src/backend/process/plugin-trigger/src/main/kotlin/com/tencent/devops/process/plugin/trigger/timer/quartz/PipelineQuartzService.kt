@@ -77,7 +77,8 @@ class PipelineQuartzService @Autowired constructor(
                 timer.crontabExpressions.forEach { crontab ->
                     val md5 = DigestUtils.md5Hex(crontab)
                     val comboKey = "${timer.pipelineId}_$md5"
-                    schedulerManager.addJob(comboKey, crontab,
+                    schedulerManager.addJob(
+                        comboKey, crontab,
                         jobBeanClass
                     )
                 }

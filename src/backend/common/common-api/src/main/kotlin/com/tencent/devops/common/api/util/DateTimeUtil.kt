@@ -100,7 +100,7 @@ object DateTimeUtil {
         val minute = (time - hour * timeGap * timeGap * million) / (timeGap * million)
         val second = (time - hour * timeGap * timeGap * million - minute * timeGap * million) / million
         return (if (hour == zero) "00" else if (hour >= ten) hour.toString() else "0$hour").toString() + "时" +
-                (if (minute == zero) "00" else if (minute >= ten) minute else "0$minute") + "分" +
-                (if (second == zero) "00" else if (second >= ten) second.toShort() else "0$second") + "秒"
+            (if (minute == zero) "00" else if (minute >= ten) minute else "0$minute") + "分" +
+            (if (second == zero) "00" else if (second >= ten) second.toShort() else "0$second") + "秒"
     }
 }

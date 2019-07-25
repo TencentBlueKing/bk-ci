@@ -30,16 +30,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
- {
-    "id": 365,
-    "state": "success",
-    "target_url": "https://git.domain.com/mr/check",
-    "description": "check success",
-    "context": "jenkins/mr",
-    "created_at": "2014-03-05T07:56:56+0000",
-    "updated_at": "2014-03-05T07:56:56+0000",
-    "block": true
- }
+{
+"id": 365,
+"state": "success",
+"target_url": "https://git.domain.com/mr/check",
+"description": "check success",
+"context": "jenkins/mr",
+"created_at": "2014-03-05T07:56:56+0000",
+"updated_at": "2014-03-05T07:56:56+0000",
+"block": true
+}
  */
 
 @JsonIgnoreProperties(ignoreUnknown = true)

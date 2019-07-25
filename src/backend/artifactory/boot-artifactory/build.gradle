@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,8 +25,10 @@
  */
 
 dependencies {
+    compile project(":common:common-auth:common-auth-sample")
     compile project(":artifactory:biz-artifactory")
-    compile project(":artifactory:biz-artifactory-sample")
+    compile project(":artifactory:biz-artifactory-store") // 对接研发商店
+    compile project(":artifactory:biz-artifactory-sample") // sample 是开源版实现
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

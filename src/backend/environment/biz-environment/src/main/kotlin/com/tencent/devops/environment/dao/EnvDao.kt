@@ -71,7 +71,8 @@ class EnvDao {
     ): Long {
         val now = LocalDateTime.now()
         with(TEnv.T_ENV) {
-            val record = dslContext.insertInto(this,
+            val record = dslContext.insertInto(
+                this,
                 PROJECT_ID,
                 ENV_NAME,
                 ENV_DESC,
@@ -92,7 +93,8 @@ class EnvDao {
                 userId,
                 now,
                 now,
-                false)
+                false
+            )
                 .returning(ENV_ID)
                 .fetchOne()
             return record.envId

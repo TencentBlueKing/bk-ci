@@ -37,7 +37,8 @@ class MarketAtomPipelineRelDao {
 
     fun add(dslContext: DSLContext, atomCode: String, pipelineId: String) {
         with(TAtomPipelineRel.T_ATOM_PIPELINE_REL) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ATOM_CODE,
                 PIPELINE_ID

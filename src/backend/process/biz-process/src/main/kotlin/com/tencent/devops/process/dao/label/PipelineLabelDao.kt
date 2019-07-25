@@ -49,22 +49,24 @@ class PipelineLabelDao {
         logger.info("Create the pipeline label for group $groupId with name $name by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             val now = LocalDateTime.now()
-            dslContext.insertInto(this,
-                    GROUP_ID,
-                    NAME,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    CREATE_USER,
-                    UPDATE_USER)
-                    .values(
-                            groupId,
-                            name,
-                            now,
-                            now,
-                            userId,
-                            userId
-                    )
-                    .execute()
+            dslContext.insertInto(
+                this,
+                GROUP_ID,
+                NAME,
+                CREATE_TIME,
+                UPDATE_TIME,
+                CREATE_USER,
+                UPDATE_USER
+            )
+                .values(
+                    groupId,
+                    name,
+                    now,
+                    now,
+                    userId,
+                    userId
+                )
+                .execute()
         }
     }
 
@@ -77,11 +79,11 @@ class PipelineLabelDao {
         logger.info("Update the pipeline label $labelId with name $name by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.update(this)
-                    .set(NAME, name)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(UPDATE_USER, userId)
-                    .where(ID.eq(labelId))
-                    .execute() == 1
+                .set(NAME, name)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(UPDATE_USER, userId)
+                .where(ID.eq(labelId))
+                .execute() == 1
         }
     }
 
@@ -93,8 +95,8 @@ class PipelineLabelDao {
         logger.info("Delete the label $labelId by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.deleteFrom(this)
-                    .where(ID.eq(labelId))
-                    .execute() == 1
+                .where(ID.eq(labelId))
+                .execute() == 1
         }
     }
 
@@ -106,8 +108,8 @@ class PipelineLabelDao {
         logger.info("Delete the group $groupId by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.deleteFrom(this)
-                    .where(GROUP_ID.eq(groupId))
-                    .execute()
+                .where(GROUP_ID.eq(groupId))
+                .execute()
         }
     }
 
@@ -117,8 +119,8 @@ class PipelineLabelDao {
     ): Result<TPipelineLabelRecord> {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectFrom(this)
-                    .where(GROUP_ID.eq(groupId))
-                    .fetch()
+                .where(GROUP_ID.eq(groupId))
+                .fetch()
         }
     }
 
@@ -128,8 +130,8 @@ class PipelineLabelDao {
     ): Result<TPipelineLabelRecord> {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectFrom(this)
-                    .where(GROUP_ID.`in`(groupId))
-                    .fetch()
+                .where(GROUP_ID.`in`(groupId))
+                .fetch()
         }
     }
 
@@ -139,8 +141,8 @@ class PipelineLabelDao {
     ): Result<TPipelineLabelRecord> {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectFrom(this)
-                    .where(ID.`in`(ids))
-                    .fetch()
+                .where(ID.`in`(ids))
+                .fetch()
         }
     }
 

@@ -1,12 +1,5 @@
 // +build windows
 
-package command
-
-import (
-	"github.com/astaxie/beego/logs"
-	"os/exec"
-)
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -32,6 +25,13 @@ import (
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+package command
+
+import (
+	"github.com/astaxie/beego/logs"
+	"os/exec"
+)
 
 func setUser(cmd *exec.Cmd, runUser string) error {
 	logs.Info("set user(windows): ", runUser)

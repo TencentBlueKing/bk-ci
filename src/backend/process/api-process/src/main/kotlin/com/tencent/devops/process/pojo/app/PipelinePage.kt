@@ -53,6 +53,27 @@ data class PipelinePage<out T>(
     @ApiModelProperty("用户当前视图", required = false)
     val currentView: PipelineView?
 ) {
-    constructor(page: Int, pageSize: Int, count: Long, records: List<T>, hasCreatePermission: Boolean, hasPipelines: Boolean, hasFavorPipelines: Boolean, hasPermissionPipelines: Boolean, currentView: PipelineView?) :
-            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records, hasCreatePermission, hasPipelines, hasFavorPipelines, hasPermissionPipelines, currentView)
+    constructor(
+        page: Int,
+        pageSize: Int,
+        count: Long,
+        records: List<T>,
+        hasCreatePermission: Boolean,
+        hasPipelines: Boolean,
+        hasFavorPipelines: Boolean,
+        hasPermissionPipelines: Boolean,
+        currentView: PipelineView?
+    ) :
+        this(
+            count,
+            page,
+            pageSize,
+            Math.ceil(count * 1.0 / pageSize).toInt(),
+            records,
+            hasCreatePermission,
+            hasPipelines,
+            hasFavorPipelines,
+            hasPermissionPipelines,
+            currentView
+        )
 }

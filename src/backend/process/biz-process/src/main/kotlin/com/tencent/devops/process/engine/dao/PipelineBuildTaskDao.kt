@@ -51,45 +51,48 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
     ) {
 
         val count =
-                with(T_PIPELINE_BUILD_TASK) {
-                    dslContext.insertInto(this,
-                            PIPELINE_ID,
-                            BUILD_ID,
-                            STAGE_ID,
-                            CONTAINER_TYPE,
-                            CONTAINER_ID,
-                            TASK_SEQ,
-                            TASK_ID,
-                            TASK_TYPE,
-                            TASK_ATOM,
-                            SUB_BUILD_ID,
-                            STATUS,
-                            STARTER,
-                            TASK_PARAMS,
-                            START_TIME,
-                            END_TIME,
-                            APPROVER,
-                            ADDITIONAL_OPTIONS
+            with(T_PIPELINE_BUILD_TASK) {
+                dslContext.insertInto(
+                    this,
+                    PIPELINE_ID,
+                    BUILD_ID,
+                    STAGE_ID,
+                    CONTAINER_TYPE,
+                    CONTAINER_ID,
+                    TASK_SEQ,
+                    TASK_ID,
+                    TASK_TYPE,
+                    TASK_ATOM,
+                    SUB_BUILD_ID,
+                    STATUS,
+                    STARTER,
+                    TASK_PARAMS,
+                    START_TIME,
+                    END_TIME,
+                    APPROVER,
+                    ADDITIONAL_OPTIONS
+                )
+                    .values(
+                        buildTask.pipelineId,
+                        buildTask.buildId,
+                        buildTask.stageId,
+                        buildTask.containerType,
+                        buildTask.containerId,
+                        buildTask.taskSeq,
+                        buildTask.taskId,
+                        buildTask.taskType,
+                        buildTask.taskAtom,
+                        buildTask.subBuildId,
+                        buildTask.status.ordinal,
+                        buildTask.starter,
+                        objectMapper.writeValueAsString(buildTask.taskParams),
+                        buildTask.startTime,
+                        buildTask.endTime,
+                        buildTask.approver,
+                        objectMapper.writeValueAsString(buildTask.additionalOptions)
                     )
-                            .values(buildTask.pipelineId,
-                                    buildTask.buildId,
-                                    buildTask.stageId,
-                                    buildTask.containerType,
-                                    buildTask.containerId,
-                                    buildTask.taskSeq,
-                                    buildTask.taskId,
-                                    buildTask.taskType,
-                                    buildTask.taskAtom,
-                                    buildTask.subBuildId,
-                                    buildTask.status.ordinal,
-                                    buildTask.starter,
-                                    objectMapper.writeValueAsString(buildTask.taskParams),
-                                    buildTask.startTime,
-                                    buildTask.endTime,
-                                    buildTask.approver,
-                                    objectMapper.writeValueAsString(buildTask.additionalOptions))
-                            .execute()
-                }
+                    .execute()
+            }
         logger.info("save the buildTask=$buildTask, result=${count == 1}")
     }
 
@@ -98,12 +101,15 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         taskList.forEach {
             with(it) {
                 records.add(
-                        TPipelineBuildTaskRecord(
-                                pipelineId, projectId, buildId, stageId, containerId, taskName, taskId,
-                                objectMapper.writeValueAsString(taskParams), taskType, taskAtom, startTime, endTime,
-                                starter, approver, status.ordinal, executeCount, taskSeq, subBuildId, containerType,
-                                objectMapper.writeValueAsString(additionalOptions),
-                                if (endTime != null && startTime != null) { Duration.between(startTime, endTime).toMillis() / 1000 } else null)
+                    TPipelineBuildTaskRecord(
+                        pipelineId, projectId, buildId, stageId, containerId, taskName, taskId,
+                        objectMapper.writeValueAsString(taskParams), taskType, taskAtom, startTime, endTime,
+                        starter, approver, status.ordinal, executeCount, taskSeq, subBuildId, containerType,
+                        objectMapper.writeValueAsString(additionalOptions),
+                        if (endTime != null && startTime != null) {
+                            Duration.between(startTime, endTime).toMillis() / 1000
+                        } else null
+                    )
                 )
             }
         }
@@ -126,10 +132,15 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         }
     }
 
-    fun listByStatus(dslContext: DSLContext, buildId: String, containerId: String?, statusSet: Collection<BuildStatus>?): List<TPipelineBuildTaskRecord> {
+    fun listByStatus(
+        dslContext: DSLContext,
+        buildId: String,
+        containerId: String?,
+        statusSet: Collection<BuildStatus>?
+    ): List<TPipelineBuildTaskRecord> {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId))
             if (!containerId.isNullOrBlank())
                 where.and(CONTAINER_ID.eq(containerId))
             if (statusSet != null && statusSet.isNotEmpty()) {
@@ -154,31 +165,55 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
     fun deletePipelineBuildTasks(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.delete(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .execute()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
     fun convert(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord): PipelineBuildTask? {
         return with(tPipelineBuildTaskRecord) {
-            PipelineBuildTask(projectId, pipelineId, buildId, stageId, containerId, containerType,
-                    taskSeq, taskId, taskName, taskType, taskAtom, BuildStatus.values()[status],
-                    JsonUtil.toMutableMapSkipEmpty(taskParams), JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
-                    executeCount ?: 1, starter, approver, subBuildId, startTime, endTime)
+            PipelineBuildTask(
+                projectId,
+                pipelineId,
+                buildId,
+                stageId,
+                containerId,
+                containerType,
+                taskSeq,
+                taskId,
+                taskName,
+                taskType,
+                taskAtom,
+                BuildStatus.values()[status],
+                JsonUtil.toMutableMapSkipEmpty(taskParams),
+                JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
+                executeCount ?: 1,
+                starter,
+                approver,
+                subBuildId,
+                startTime,
+                endTime
+            )
         }
     }
 
     fun updateSubBuildId(dslContext: DSLContext, buildId: String, taskId: String, subBuildId: String): Int {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.update(this)
-                    .set(SUB_BUILD_ID, subBuildId)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(TASK_ID.eq(taskId)).execute()
+                .set(SUB_BUILD_ID, subBuildId)
+                .where(BUILD_ID.eq(buildId))
+                .and(TASK_ID.eq(taskId)).execute()
         }
     }
 
-    fun updateStatus(dslContext: DSLContext, buildId: String, taskId: String, userId: String?, buildStatus: BuildStatus) {
+    fun updateStatus(
+        dslContext: DSLContext,
+        buildId: String,
+        taskId: String,
+        userId: String?,
+        buildStatus: BuildStatus
+    ) {
         with(T_PIPELINE_BUILD_TASK) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
             // 根据状态来设置字段
@@ -197,10 +232,14 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
 
             if (BuildStatus.isFinish(buildStatus)) {
                 val record = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).fetchOne()
-                val totalTime = if (record.startTime == null || record.endTime == null) { 0 } else { Duration.between(record.startTime, record.endTime).toMillis() / 1000 }
+                val totalTime = if (record.startTime == null || record.endTime == null) {
+                    0
+                } else {
+                    Duration.between(record.startTime, record.endTime).toMillis() / 1000
+                }
                 dslContext.update(this)
-                        .set(TOTAL_TIME, (record.totalTime ?: 0) + totalTime)
-                        .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
+                    .set(TOTAL_TIME, (record.totalTime ?: 0) + totalTime)
+                    .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
             }
         }
     }
@@ -212,6 +251,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 .fetch()
         }
     }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildTaskDao::class.java)
     }

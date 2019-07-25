@@ -105,24 +105,6 @@ interface ServiceThirdPartyAgentResource {
 
     @ApiOperation("Agent是否能升级")
     @GET
-    @Path("/projects/{projectId}/agents/{agentId}/upgrade")
-    fun upgrade(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("Agent Hash ID", required = true)
-        @PathParam("agentId")
-        agentId: String,
-        @ApiParam("Agent secret key", required = true)
-        @QueryParam("secretKey")
-        secretKey: String,
-        @ApiParam("worker-agent.jar的MD5", required = true)
-        @QueryParam("tag")
-        tag: String
-    ): AgentResult<Boolean>
-
-    @ApiOperation("Agent是否能升级")
-    @GET
     @Path("/projects/{projectId}/agents/{agentId}/upgradeByVersion")
     fun upgradeByVersion(
         @ApiParam("项目ID", required = true)

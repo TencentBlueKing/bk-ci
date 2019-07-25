@@ -27,7 +27,6 @@
 package com.tencent.devops.scm.config
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
 /**
  * Git通用配置

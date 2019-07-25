@@ -28,10 +28,15 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentAction
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
@@ -44,10 +49,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentService,
     private val slaveGatewayService: SlaveGatewayService
 ) : UserThirdPartyAgentResource {
-
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
-        checkUserId(userId)
-        checkProjectId(projectId)
         return Result(true)
     }
 
@@ -108,21 +110,95 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun saveAgentEnvs(userId: String, projectId: String, nodeHashId: String, envs: List<EnvVar>): Result<Boolean> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        thirdPartyAgentService.saveAgentEnv(userId, projectId, nodeHashId, envs)
+        return Result(true)
+    }
+
+    override fun getAgentEnvs(userId: String, projectId: String, nodeHashId: String): Result<List<EnvVar>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(thirdPartyAgentService.getAgentEnv(projectId, nodeHashId))
+    }
+
+    override fun setAgentParallelTaskCount(userId: String, projectId: String, nodeHashId: String, parallelTaskCount: Int): Result<Boolean> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        thirdPartyAgentService.setParallelTaskCount(userId, projectId, nodeHashId, parallelTaskCount)
+        return Result(true)
+    }
+
+    override fun getThirdPartyAgentDetail(userId: String, projectId: String, nodeHashId: String): Result<ThirdPartyAgentDetail?> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, nodeHashId))
+    }
+
+    override fun listAgentBuilds(userId: String, projectId: String, nodeHashId: String, page: Int?, pageSize: Int?): Result<Page<AgentBuildDetail>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(thirdPartyAgentService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+    }
+
+    override fun listAgentActions(userId: String, projectId: String, nodeHashId: String, page: Int?, pageSize: Int?): Result<Page<ThirdPartyAgentAction>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(thirdPartyAgentService.listAgentActions(userId, projectId, nodeHashId, page, pageSize))
+    }
+
+    override fun queryCpuUsageMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(thirdPartyAgentService.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange))
+    }
+
+    override fun queryMemoryUsageMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(thirdPartyAgentService.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange))
+    }
+
+    override fun queryDiskioMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(thirdPartyAgentService.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange))
+    }
+
+    override fun queryNetMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(thirdPartyAgentService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
+    }
+
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {
-            throw ParamBlankException("UserId is illegal")
+            throw ParamBlankException("invalid userId")
         }
     }
 
     private fun checkProjectId(projectId: String) {
         if (projectId.isBlank()) {
-            throw ParamBlankException("ProjectId is illegal")
+            throw ParamBlankException("invalid projectId")
         }
     }
 
-    private fun checkAgentId(agentId: String) {
-        if (agentId.isBlank()) {
-            throw ParamBlankException("AgentId is illegal")
+    private fun checkAgentId(agentHashId: String) {
+        if (agentHashId.isBlank()) {
+            throw ParamBlankException("invalid agentId")
+        }
+    }
+
+    private fun checkNodeId(nodeHashId: String) {
+        if (nodeHashId.isBlank()) {
+            throw ParamBlankException("invalid nodeId")
         }
     }
 }

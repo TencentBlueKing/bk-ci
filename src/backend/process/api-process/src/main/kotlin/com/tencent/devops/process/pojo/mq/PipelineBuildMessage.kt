@@ -26,8 +26,8 @@
 
 package com.tencent.devops.process.pojo.mq
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class PipelineBuildMessage(

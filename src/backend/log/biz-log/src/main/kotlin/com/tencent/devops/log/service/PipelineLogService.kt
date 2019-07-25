@@ -51,8 +51,10 @@ class PipelineLogService @Autowired constructor(
     createIndexBean: CreateIndexBean,
     redisOperation: RedisOperation,
     rabbitTemplate: RabbitTemplate
-) : LogService(client, indexService, defaultKeywords, logBean, updateIndexBean,
-        createIndexBean, redisOperation, rabbitTemplate) {
+) : LogService(
+    client, indexService, defaultKeywords, logBean, updateIndexBean,
+    createIndexBean, redisOperation, rabbitTemplate
+) {
 
     override fun queryInitLogsPage(
         buildId: String,
@@ -99,8 +101,10 @@ class PipelineLogService @Autowired constructor(
             return result
         } finally {
             val elapse = System.currentTimeMillis() - startEpoch
-            logger.info("[$buildId|$index|$type|$isAnalysis|$keywordsStr|$tag|$executeCount|$page|$pageSize] " +
-                    "It took ${elapse}ms to query init log page with result - $success")
+            logger.info(
+                "[$buildId|$index|$type|$isAnalysis|$keywordsStr|$tag|$executeCount|$page|$pageSize] " +
+                    "It took ${elapse}ms to query init log page with result - $success"
+            )
             logBean.query(elapse, success)
         }
     }
@@ -117,8 +121,10 @@ class PipelineLogService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            var result = super.queryInitLogs(buildId, index, type, isAnalysis,
-                    keywordsStr, tag, executeCount ?: 1)
+            var result = super.queryInitLogs(
+                buildId, index, type, isAnalysis,
+                keywordsStr, tag, executeCount ?: 1
+            )
             // 兼容旧的没有executeCount的数据
             if (result.status == LogStatus.EMPTY) {
                 if (executeCount == null || executeCount == 1) {
@@ -129,8 +135,10 @@ class PipelineLogService @Autowired constructor(
             return result
         } finally {
             val elapse = System.currentTimeMillis() - startEpoch
-            logger.info("[$buildId|$index|$type|$isAnalysis|$keywordsStr|$tag|$executeCount] " +
-                    "It took ${elapse}ms to query the inig logs with result - $success")
+            logger.info(
+                "[$buildId|$index|$type|$isAnalysis|$keywordsStr|$tag|$executeCount] " +
+                    "It took ${elapse}ms to query the inig logs with result - $success"
+            )
             logBean.query(elapse, success)
         }
     }
@@ -180,8 +188,10 @@ class PipelineLogService @Autowired constructor(
             return result
         } finally {
             val elapse = System.currentTimeMillis() - startEpoch
-            logger.info("[$buildId|$index|$type|$wholeQuery|$keywords|$tag|$executeCount|$page|$pageSize] " +
-                    "It took ${elapse}ms to query the init logs with result - $success")
+            logger.info(
+                "[$buildId|$index|$type|$wholeQuery|$keywords|$tag|$executeCount|$page|$pageSize] " +
+                    "It took ${elapse}ms to query the init logs with result - $success"
+            )
             logBean.query(elapse, success)
         }
     }
@@ -214,16 +224,20 @@ class PipelineLogService @Autowired constructor(
             // 兼容旧的没有executeCount的数据
             if (result.status == LogStatus.EMPTY) {
                 if (executeCount == null || executeCount == 1) {
-                    result = super.queryMoreLogsBetweenLines(buildId, index, type, num, fromStart,
-                            start, end, tag, null)
+                    result = super.queryMoreLogsBetweenLines(
+                        buildId, index, type, num, fromStart,
+                        start, end, tag, null
+                    )
                 }
             }
             success = result.status != LogStatus.FAIL
             return result
         } finally {
             val elapse = System.currentTimeMillis() - startEpoch
-            logger.info("[$buildId|$index|$type|$num|$fromStart|$start|$end|$tag|$executeCount] " +
-                    "It took ${elapse}ms to query logs between line with result - $success")
+            logger.info(
+                "[$buildId|$index|$type|$num|$fromStart|$start|$end|$tag|$executeCount] " +
+                    "It took ${elapse}ms to query logs between line with result - $success"
+            )
             logBean.query(elapse, success)
         }
     }
@@ -254,16 +268,20 @@ class PipelineLogService @Autowired constructor(
             // 兼容旧的没有executeCount的数据
             if (result.status == LogStatus.EMPTY) {
                 if (executeCount == null || executeCount == 1) {
-                    result = super.queryMoreLogsAfterLine(buildId, index, type,
-                            start, isAnalysis, keywordsStr, tag, null)
+                    result = super.queryMoreLogsAfterLine(
+                        buildId, index, type,
+                        start, isAnalysis, keywordsStr, tag, null
+                    )
                 }
             }
             success = result.status != LogStatus.FAIL
             return result
         } finally {
             val elapse = System.currentTimeMillis() - startEpoch
-            logger.info("[$$buildId|$index|$type|$start|$isAnalysis|$keywordsStr|$tag|$executeCount] " +
-                    "It took ${elapse}ms to query more logs after lines with result - $success")
+            logger.info(
+                "[$$buildId|$index|$type|$start|$isAnalysis|$keywordsStr|$tag|$executeCount] " +
+                    "It took ${elapse}ms to query more logs after lines with result - $success"
+            )
             logBean.query(elapse, success)
         }
     }
@@ -287,19 +305,23 @@ class PipelineLogService @Autowired constructor(
             return response
         } finally {
             val elapse = System.currentTimeMillis() - startEpoch
-            logger.info("[$pipelineId|$buildId|$tag|$executeCount] " +
-                    "It took ${elapse}ms to downloads with result - $success")
+            logger.info(
+                "[$pipelineId|$buildId|$tag|$executeCount] " +
+                    "It took ${elapse}ms to downloads with result - $success"
+            )
             logBean.query(elapse, success)
         }
     }
 
     override fun getEndLogs(pipelineId: String, buildId: String, tag: String, executeCount: Int?, size: Int)
-            : EndPageQueryLogs {
+        : EndPageQueryLogs {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            var result = super.getEndLogs(pipelineId, buildId, tag,
-                    executeCount ?: 1, size)
+            var result = super.getEndLogs(
+                pipelineId, buildId, tag,
+                executeCount ?: 1, size
+            )
             // 兼容旧的没有executeCount的数据
             if (result.status == LogStatus.EMPTY) {
                 if (executeCount == null || executeCount == 1) {
@@ -310,8 +332,10 @@ class PipelineLogService @Autowired constructor(
             return result
         } finally {
             val elapse = System.currentTimeMillis() - startEpoch
-            logger.info("[$pipelineId|$buildId|$tag|$executeCount|$size] " +
-                    "It took ${elapse}ms to query the end logs with results - $success")
+            logger.info(
+                "[$pipelineId|$buildId|$tag|$executeCount|$size] " +
+                    "It took ${elapse}ms to query the end logs with results - $success"
+            )
             logBean.query(elapse, success)
         }
     }

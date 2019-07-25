@@ -54,17 +54,22 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     override fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic> {
         logger.info("getStatisticByCode userId is :$userId,atomCode is :$atomCode")
         val record = storeStatisticDao.getStatisticByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        val pipelineCnt = client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(atomCode).data ?: 0
+        val pipelineCnt =
+            client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(atomCode).data ?: 0
         val atomStatistic = formatAtomStatistic(record, pipelineCnt)
         logger.info("getStatisticByCode atomStatistic is :$atomStatistic")
         return Result(atomStatistic)
     }
 
-    private fun formatAtomStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>, pipelineCnt: Int): AtomStatistic {
+    private fun formatAtomStatistic(
+        record: Record4<BigDecimal, BigDecimal, BigDecimal, String>,
+        pipelineCnt: Int
+    ): AtomStatistic {
         val downloads = record.value1()?.toInt()
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
-        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+        val averageScore: Double =
+            if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
 
         return AtomStatistic(
             downloads = downloads ?: 0,
@@ -77,9 +82,13 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     /**
      * 根据批量插件标识获取统计数据
      */
-    override fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>> {
+    override fun getStatisticByCodeList(
+        atomCodeList: List<String>,
+        statFiledList: List<String>
+    ): Result<HashMap<String, AtomStatistic>> {
         logger.info("getStatisticByCodeList atomCodeList is :$atomCodeList,statFiledList is :$statFiledList")
-        val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, atomCodeList, StoreTypeEnum.ATOM.type.toByte())
+        val records =
+            storeStatisticDao.batchGetStatisticByStoreCode(dslContext, atomCodeList, StoreTypeEnum.ATOM.type.toByte())
         val atomCodes = atomCodeList.joinToString(",")
         val isStatPipeline = statFiledList.contains("PIPELINE")
         val pipelineStat = if (isStatPipeline) {

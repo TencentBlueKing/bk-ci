@@ -48,7 +48,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.build.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -126,7 +126,6 @@ import java.time.LocalDateTime
 
 /**
  * 流水线运行时相关的服务
- * @author irwinsun
  * @version 1.0
  */
 @Service
@@ -773,6 +772,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     } else {
                                         atomElement.name
                                     }
+
                                 buildTaskList.add(
                                     PipelineBuildTask(
                                         projectId = pipelineInfo.projectId,
@@ -1269,22 +1269,53 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
         }
         with(latestRunningBuild) {
-            val materials = getPipelineBuildMaterial(buildId)
+            val materials: List<PipelineBuildMaterial> = try {
+                getPipelineBuildMaterial(buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getPipelineBuildMaterial-$buildId exception:", e)
+                mutableListOf()
+            }
             logger.info("[$pipelineId]|getPipelineBuildMaterial-$buildId material: ${JsonUtil.toJson(materials)}")
 
-            val artifactList = getArtifactList(userId, projectId, pipelineId, buildId)
+            val artifactList: List<FileInfo> = try {
+                getArtifactList(userId = userId, projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getArtifactList-$buildId exception:", e)
+                mutableListOf()
+            }
             logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
 
-            val executeTime = getExecuteTime(pipelineId, buildId)
-            logger.info("[$pipelineId]|getExecuteTime-$buildId artifact: $executeTime")
+            val executeTime = try {
+                getExecuteTime(pipelineId, buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getExecuteTime-$buildId exception:", e)
+                0L
+            }
+            logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
-            val buildParameters = getBuildParameters(buildId)
+            val buildParameters: List<BuildParameters> = try {
+                getBuildParameters(buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", e)
+                mutableListOf()
+            }
             logger.info("[$pipelineId]|getBuildParameters-$buildId buildParameters: ${JsonUtil.toJson(buildParameters)}")
 
-            val recommendVersion = getRecommendVersion(buildParameters)
+            val recommendVersion = try {
+                getRecommendVersion(buildParameters)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getRecommendVersion-$buildId exception:", e)
+                null
+            }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
 
-            val hookType = getWebHookType(buildId)
+            val hookType = try {
+                getWebHookType(buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getWebHookType-$buildId exception:", e)
+                null
+            }
+
             logger.info("[$pipelineId]|getWebHookType-$buildId hookType: $hookType")
 
             pipelineBuildDao.finishBuild(
@@ -1426,8 +1457,8 @@ class PipelineRuntimeService @Autowired constructor(
 
         val repoIds = mutableListOf<String>()
         urlMap.map {
-            val keyArray = it.key.split(".")
-            repoIds.add(keyArray.last())
+            val repoId = it.key.substringAfter(PIPELINE_MATERIAL_URL)
+            repoIds.add(repoId)
         }
         logger.info("repoIds: $repoIds")
 

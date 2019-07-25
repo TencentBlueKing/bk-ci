@@ -34,7 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
-class BuildScriptResourceImpl @Autowired constructor(private val downloadScriptService: DownloadScriptService) : BuildScriptResource {
+class BuildScriptResourceImpl @Autowired constructor(private val downloadScriptService: DownloadScriptService) :
+    BuildScriptResource {
 
     override fun download(scriptName: String, eTag: String?): Response {
         if (scriptName.isBlank()) {

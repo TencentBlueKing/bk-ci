@@ -68,7 +68,13 @@ interface MarketAtomService {
     /**
      * 根据用户和插件名称获取插件信息
      */
-    fun getMyAtoms(accessToken: String, userId: String, atomName: String?, page: Int?, pageSize: Int?): Result<MyAtomResp?>
+    fun getMyAtoms(
+        accessToken: String,
+        userId: String,
+        atomName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<MyAtomResp?>
 
     /**
      * 添加插件
@@ -78,7 +84,11 @@ interface MarketAtomService {
     /**
      * 升级插件
      */
-    fun updateMarketAtom(userId: String, projectCode: String, marketAtomUpdateRequest: MarketAtomUpdateRequest): Result<String?>
+    fun updateMarketAtom(
+        userId: String,
+        projectCode: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String?>
 
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
@@ -93,7 +103,12 @@ interface MarketAtomService {
     /**
      * 安装插件到项目
      */
-    fun installAtom(accessToken: String, userId: String, projectCodeList: ArrayList<String>, atomCode: String): Result<Boolean>
+    fun installAtom(
+        accessToken: String,
+        userId: String,
+        projectCodeList: ArrayList<String>,
+        atomCode: String
+    ): Result<Boolean>
 
     /**
      * 根据插件标识获取插件版本列表

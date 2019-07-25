@@ -36,7 +36,10 @@ import com.tencent.devops.store.service.common.LabelService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserAtomLabelResourceImpl @Autowired constructor(private val labelService: LabelService, private val atomLabelService: AtomLabelService) :
+class UserAtomLabelResourceImpl @Autowired constructor(
+    private val labelService: LabelService,
+    private val atomLabelService: AtomLabelService
+) :
     UserAtomLabelResource {
 
     override fun getAllAtomLabels(): Result<List<Label>?> {

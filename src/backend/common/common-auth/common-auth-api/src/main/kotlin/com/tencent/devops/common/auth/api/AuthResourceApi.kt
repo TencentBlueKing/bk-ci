@@ -26,8 +26,8 @@
 
 package com.tencent.devops.common.auth.api
 
-import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.code.AuthServiceCode
 
 interface AuthResourceApi {
     /**
@@ -91,5 +91,41 @@ interface AuthResourceApi {
         projectCode: String,
         user: String,
         resourceList: List<ResourceRegisterInfo>
+    )
+
+    fun batchCreateResource(
+        principalId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: BkAuthResourceType,
+        resourceList: List<ResourceRegisterInfo>,
+        systemId: AuthServiceCode
+    ): Boolean
+
+    fun deleteResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    )
+
+    fun modifyResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    )
+
+    fun createResource(
+        scopeType: String,
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: BkAuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
     )
 }

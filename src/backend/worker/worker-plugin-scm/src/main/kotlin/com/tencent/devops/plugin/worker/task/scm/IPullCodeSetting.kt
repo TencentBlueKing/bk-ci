@@ -49,10 +49,10 @@ interface IPullCodeSetting {
     fun getRepository() = RepositoryUtils.getRepository(repositoryConfig)
 
     fun getCredential(id: String) =
-            CredentialUtils.getCredential(buildId, id)
+        CredentialUtils.getCredential(buildId, id)
 
     fun getCredentialWithType(id: String) =
-            CredentialUtils.getCredentialWithType(id)
+        CredentialUtils.getCredentialWithType(id)
 
     fun getCodeSourceDir(path: String?): File {
         if (path.isNullOrBlank()) return workspace

@@ -50,7 +50,7 @@ object CommonEnv {
         svnPass = password
     }
 
-    fun getSvnHttpCredential(): Pair<String, String> ? {
+    fun getSvnHttpCredential(): Pair<String, String>? {
         if (svnUser.isNullOrBlank() || svnPass.isNullOrBlank()) {
             return null
         }

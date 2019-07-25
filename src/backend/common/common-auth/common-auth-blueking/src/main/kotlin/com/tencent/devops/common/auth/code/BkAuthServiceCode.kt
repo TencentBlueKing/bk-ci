@@ -29,16 +29,18 @@ package com.tencent.devops.common.auth.code
 const val GLOBAL_SCOPE_TYPE = "system"
 const val PROJECT_SCOPE_TYPE = "project"
 // 蓝鲸持续集成平台产品ID
-const val BK_DEVOPS_SCODE = "bk_devops"
+const val BK_DEVOPS_SCOPE = "bk_devops"
 
 enum class BkAuthServiceCode(val value: String) {
     BCS("bk_bcs"),
     REPO("bk_repo"),
-    CODE(BK_DEVOPS_SCODE),
-    PIPELINE(BK_DEVOPS_SCODE),
-    TICKET(BK_DEVOPS_SCODE),
-    ENVIRONMENT(BK_DEVOPS_SCODE),
-    PROJECT(BK_DEVOPS_SCODE);
+    ARTIFACTORY(BK_DEVOPS_SCOPE),
+    CODE(BK_DEVOPS_SCOPE),
+    PIPELINE(BK_DEVOPS_SCOPE),
+    TICKET(BK_DEVOPS_SCOPE),
+    ENVIRONMENT(BK_DEVOPS_SCOPE),
+    PROJECT(BK_DEVOPS_SCOPE),
+    QUALITY(BK_DEVOPS_SCOPE);
 
     companion object {
         fun get(value: String): BkAuthServiceCode {

@@ -26,13 +26,13 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.store.dao.common.StoreCommentReplyDao
-import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
+import com.tencent.devops.store.dao.common.StoreCommentReplyDao
+import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
 import com.tencent.devops.store.service.common.StoreCommentReplyService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
@@ -63,9 +63,10 @@ class StoreCommentReplyServiceImpl @Autowired constructor(
      */
     override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
         logger.info("commentId is :$commentId")
-        val storeCommentReplyInfoList = storeCommentReplyDao.getStoreCommentReplysByCommentId(dslContext, commentId)?.map {
-            generateStoreCommentReplyInfo(it)
-        }
+        val storeCommentReplyInfoList =
+            storeCommentReplyDao.getStoreCommentReplysByCommentId(dslContext, commentId)?.map {
+                generateStoreCommentReplyInfo(it)
+            }
         return Result(storeCommentReplyInfoList)
     }
 
@@ -85,21 +86,25 @@ class StoreCommentReplyServiceImpl @Autowired constructor(
 
     private fun generateStoreCommentReplyInfo(it: TStoreCommentReplyRecord): StoreCommentReplyInfo {
         return StoreCommentReplyInfo(
-                replyId = it.id,
-                replyer = it.creator,
-                replyContent = it.replyContent,
-                replyerDept = it.replyerDept,
-                profileUrl = it.profileUrl,
-                replyToUser = it.replyToUser,
-                replyTime = it.createTime.timestampmilli(),
-                updateTime = it.updateTime.timestampmilli()
+            replyId = it.id,
+            replyer = it.creator,
+            replyContent = it.replyContent,
+            replyerDept = it.replyerDept,
+            profileUrl = it.profileUrl,
+            replyToUser = it.replyToUser,
+            replyTime = it.createTime.timestampmilli(),
+            updateTime = it.updateTime.timestampmilli()
         )
     }
 
     /**
      * 添加评论回复
      */
-    override fun addStoreCommentReply(userId: String, commentId: String, storeCommentReplyRequest: StoreCommentReplyRequest): Result<StoreCommentReplyInfo?> {
+    override fun addStoreCommentReply(
+        userId: String,
+        commentId: String,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ): Result<StoreCommentReplyInfo?> {
         logger.info("userId is :$userId,commentId is :commentId, storeCommentReplyRequest is :$storeCommentReplyRequest")
         val userDeptNameResult = storeUserService.getUserFullDeptName(userId)
         logger.info("the userDeptNameResult is:$userDeptNameResult")
@@ -108,7 +113,15 @@ class StoreCommentReplyServiceImpl @Autowired constructor(
         }
         val profileUrl = "$profileUrlPrefix$userId/profile.jpg"
         val replyId = UUIDUtil.generate()
-        storeCommentReplyDao.addStoreCommentReply(dslContext, replyId, userId, userDeptNameResult.data.toString(), commentId, profileUrl, storeCommentReplyRequest)
+        storeCommentReplyDao.addStoreCommentReply(
+            dslContext,
+            replyId,
+            userId,
+            userDeptNameResult.data.toString(),
+            commentId,
+            profileUrl,
+            storeCommentReplyRequest
+        )
         return getStoreCommentReply(replyId)
     }
 }

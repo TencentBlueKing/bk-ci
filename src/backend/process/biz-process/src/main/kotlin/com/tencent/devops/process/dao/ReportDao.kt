@@ -47,28 +47,30 @@ class ReportDao {
     ): Long {
         val now = LocalDateTime.now()
         with(TReport.T_REPORT) {
-            val record = dslContext.insertInto(this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    ELEMENT_ID,
-                    INDEX_FILE,
-                    NAME,
-                    TYPE,
-                    CREATE_TIME,
-                    UPDATE_TIME
+            val record = dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                ELEMENT_ID,
+                INDEX_FILE,
+                NAME,
+                TYPE,
+                CREATE_TIME,
+                UPDATE_TIME
             ).values(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    elementId,
-                    indexFile,
-                    name,
-                    type,
-                    now,
-                    now)
-                    .returning(ID)
-                    .fetchOne()
+                projectId,
+                pipelineId,
+                buildId,
+                elementId,
+                indexFile,
+                name,
+                type,
+                now,
+                now
+            )
+                .returning(ID)
+                .fetchOne()
             return record.id
         }
     }
@@ -76,10 +78,10 @@ class ReportDao {
     fun list(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String): Result<TReportRecord> {
         with(TReport.T_REPORT) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(BUILD_ID.eq(buildId))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetch()
         }
     }
 }

@@ -38,16 +38,18 @@ class ContainerResourceRelDao {
 
     fun add(dslContext: DSLContext, id: String, containerId: String, resourceId: String) {
         with(TContainerResourceRel.T_CONTAINER_RESOURCE_REL) {
-            dslContext.insertInto(this,
-                    ID,
-                    CONTAINER_ID,
-                    RESOURCE_ID
+            dslContext.insertInto(
+                this,
+                ID,
+                CONTAINER_ID,
+                RESOURCE_ID
             )
-                    .values(id,
-                            containerId,
-                            resourceId
-                    )
-                    .execute()
+                .values(
+                    id,
+                    containerId,
+                    resourceId
+                )
+                .execute()
         }
     }
 
@@ -65,24 +67,24 @@ class ContainerResourceRelDao {
     fun listByContainerId(dslContext: DSLContext, containerId: String): Result<TContainerResourceRelRecord>? {
         with(TContainerResourceRel.T_CONTAINER_RESOURCE_REL) {
             return dslContext.selectFrom(this)
-                    .where(CONTAINER_ID.eq(containerId))
-                    .fetch()
+                .where(CONTAINER_ID.eq(containerId))
+                .fetch()
         }
     }
 
     fun delete(dslContext: DSLContext, id: String) {
         with(TContainerResourceRel.T_CONTAINER_RESOURCE_REL) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun deleteByContainerId(dslContext: DSLContext, containerId: String) {
         with(TContainerResourceRel.T_CONTAINER_RESOURCE_REL) {
             dslContext.deleteFrom(this)
-                    .where(CONTAINER_ID.eq(containerId))
-                    .execute()
+                .where(CONTAINER_ID.eq(containerId))
+                .execute()
         }
     }
 }

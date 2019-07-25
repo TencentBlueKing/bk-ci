@@ -56,7 +56,7 @@ class CustomizeArchiveGetTask : ITask() {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { srcPath ->
 
-            val fileList =  archiveGetResourceApi.getFileDownloadUrls(
+            val fileList = archiveGetResourceApi.getFileDownloadUrls(
                 pipelineId = buildVariables.pipelineId,
                 buildId = buildVariables.buildId,
                 fileType = FileTypeEnum.BK_CUSTOM,

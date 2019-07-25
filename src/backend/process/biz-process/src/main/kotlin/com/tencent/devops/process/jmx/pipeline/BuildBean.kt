@@ -35,8 +35,10 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component
-@ManagedResource(objectName = "com.tencent.devops.process:type=builds",
-        description = "build jmx metrics")
+@ManagedResource(
+    objectName = "com.tencent.devops.process:type=builds",
+    description = "build jmx metrics"
+)
 class BuildBean @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {

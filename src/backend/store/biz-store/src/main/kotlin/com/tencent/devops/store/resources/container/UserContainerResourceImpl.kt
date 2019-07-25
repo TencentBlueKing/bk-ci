@@ -40,7 +40,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
     UserContainerResource {
 
-    override fun getContainerResource(userId: String, projectCode: String, containerId: String, os: OS, buildType: BuildType): Result<ContainerResource?> {
+    override fun getContainerResource(
+        userId: String,
+        projectCode: String,
+        containerId: String,
+        os: OS,
+        buildType: BuildType
+    ): Result<ContainerResource?> {
         return containerService.getContainerResource(userId, projectCode, containerId, os, buildType)
     }
 

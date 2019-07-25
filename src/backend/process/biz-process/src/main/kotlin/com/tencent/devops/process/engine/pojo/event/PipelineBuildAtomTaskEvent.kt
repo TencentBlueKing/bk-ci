@@ -26,9 +26,9 @@
 
 package com.tencent.devops.process.engine.pojo.event
 
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 
 /**

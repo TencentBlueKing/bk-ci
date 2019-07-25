@@ -402,12 +402,12 @@ class PipelineRepositoryService constructor(
         return pipelineId
     }
 
-    fun getPipelineInfo(projectId: String, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
+    fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
         return pipelineInfoDao.convert(pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode))
     }
 
     fun getPipelineInfo(pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
-        return pipelineInfoDao.convert(pipelineInfoDao.getPipelineInfo(dslContext, pipelineId, channelCode))
+        return getPipelineInfo(projectId = null, pipelineId = pipelineId, channelCode = channelCode)
     }
 
     fun getModel(pipelineId: String, version: Int? = null): Model? {

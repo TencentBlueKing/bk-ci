@@ -36,9 +36,17 @@ import org.springframework.stereotype.Repository
 @Repository
 class StoreProjectRelDao {
 
-    fun addStoreProjectRel(dslContext: DSLContext, userId: String, storeCode: String, projectCode: String, type: Byte, storeType: Byte) {
+    fun addStoreProjectRel(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        projectCode: String,
+        type: Byte,
+        storeType: Byte
+    ) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 STORE_CODE,
                 PROJECT_CODE,
@@ -71,9 +79,10 @@ class StoreProjectRelDao {
     fun countInstalledProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectCount().from(this)
-                .where(PROJECT_CODE.eq(projectCode)
-                .and(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
+                .where(
+                    PROJECT_CODE.eq(projectCode)
+                        .and(STORE_CODE.eq(storeCode))
+                        .and(STORE_TYPE.eq(storeType))
                 )
                 .fetchOne(0, Int::class.java)
         }
@@ -82,9 +91,10 @@ class StoreProjectRelDao {
     fun countInstalledProject(dslContext: DSLContext, storeCode: String, storeType: Byte): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectCount().from(this)
-                .where(STORE_CODE.eq(storeCode)
-                    .and(STORE_TYPE.eq(storeType))
-                    .and(TYPE.eq(1))
+                .where(
+                    STORE_CODE.eq(storeCode)
+                        .and(STORE_TYPE.eq(storeType))
+                        .and(TYPE.eq(1))
                 )
                 .fetchOne(0, Int::class.java)
         }
@@ -93,7 +103,12 @@ class StoreProjectRelDao {
     /**
      * 根据商城组件标识和用户已授权的项目列表，查询已安装商城组件的项目列表
      */
-    fun getInstalledProject(dslContext: DSLContext, storeCode: String, storeType: Byte, authorizedProjectCodeList: Set<String>): Result<TStoreProjectRelRecord>? {
+    fun getInstalledProject(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        authorizedProjectCodeList: Set<String>
+    ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
@@ -105,7 +120,11 @@ class StoreProjectRelDao {
     /**
      * 获取项目下已安装的插件
      */
-    fun getInstalledComponent(dslContext: DSLContext, projectCode: String, storeType: Byte): Result<TStoreProjectRelRecord>? {
+    fun getInstalledComponent(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: Byte
+    ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
@@ -119,7 +138,8 @@ class StoreProjectRelDao {
      */
     fun deleteRel(dslContext: DSLContext, storeCode: String, storeType: Byte) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            dslContext.deleteFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).and(TYPE.eq(1)).execute()
+            dslContext.deleteFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).and(TYPE.eq(1))
+                .execute()
         }
     }
 

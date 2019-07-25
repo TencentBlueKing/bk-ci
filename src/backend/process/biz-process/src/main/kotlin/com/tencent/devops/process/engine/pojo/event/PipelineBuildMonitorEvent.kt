@@ -27,10 +27,10 @@
 package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 /**
  * 构建任务监视： 状态，进度等，如发现卡死做一定策略停止

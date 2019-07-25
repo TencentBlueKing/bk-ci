@@ -574,7 +574,7 @@ class CertService @Autowired constructor(
         val developerName = ""
         val teamName = ""
         val uuid = ""
-        val jksInfo = certHelper.parseJks(jksFileContent!!, credential.v1, alias, aliasCredential.v1)
+        val jksInfo = certHelper.parseJks(jksFileContent, credential.v1, alias, aliasCredential.v1)
         val expireDate = jksInfo.expireDate
 
         certDao.update(
