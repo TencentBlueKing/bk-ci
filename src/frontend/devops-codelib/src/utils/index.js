@@ -29,7 +29,7 @@ export function parsePathAlias (type, path, authType, svnType) {
     let msg = ''
     switch (true) {
         case isGithub(type):
-            reg = /^https\:\/\/github\.com\/([\w\W\.\-\_\/\+]+)\.git$/i
+            reg = /^https\:\/\/(github\.com)\/([\w\W\.\-\_\/\+]+)\.git$/i
             msg = `请输入以https://github.com/开头的${type}地址`
             break
         case isSvn(type) && svnType === 'ssh':

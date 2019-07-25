@@ -1,10 +1,6 @@
 <template>
     <div class="pull-code-panel bk-form bk-form-vertical">
-        <p class="no-support" v-if="isThirdParty">
-            第三方构建机目前暂不支持github仓库
-        </p>
-        <!-- <normal-atom v-else v-bind='$props'></normal-atom> -->
-        <template v-else>
+        <template>
             <template v-for="(obj, key) in atomPropsModel">
                 <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                     <component :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleMethods" :value="element[key]" v-bind="obj"></component>
@@ -22,12 +18,10 @@
         name: 'pull-github',
         mixins: [atomMixin, validMixins],
         created () {
-            if (!this.isThirdParty) {
-                if (!this.element.repositoryType) {
-                    this.handleUpdateElement('repositoryType', 'ID')
-                }
-                this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
+            if (!this.element.repositoryType) {
+                this.handleUpdateElement('repositoryType', 'ID')
             }
+            this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
         },
         methods: {
             handleMethods (name, value) {
