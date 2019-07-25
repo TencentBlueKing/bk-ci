@@ -17,3 +17,4 @@ frontend/*/yarn-debug.log*
 frontend/*/yarn-error.log*
 
 frontend/*/package-lock.json
+node_modules/
