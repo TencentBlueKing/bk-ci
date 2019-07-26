@@ -30,7 +30,8 @@
         codelibTypes,
         getCodelibConfig,
         isGit,
-        isGithub
+        isGithub,
+        isGitLab
     } from '../config/'
     export default {
         name: 'codelib-list',
@@ -127,6 +128,9 @@
                 if (isGit(typeName) || isGithub(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'OAUTH' })
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
+                }
+                if (isGitLab(typeName)) {
+                    Object.assign(CodelibDialog, { authType: 'HTTP' })
                 }
                 this.toggleCodelibDialog(CodelibDialog)
             },
