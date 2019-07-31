@@ -11,7 +11,7 @@
     "public:external": "npm run public -- --env.name=external"
   },
   "dependencies": {
-    "bk-magic-vue": "^2.0.8-beta.4",
+    "bk-magic-vue": "2.0.8-beta.13",
     "axios": "^0.18.1",
     "brace": "^0.10.0",
     "clipboard": "^1.7.1",
