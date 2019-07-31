@@ -30,7 +30,7 @@
             <p v-if="isError" class="error-tip">
                 <i class="bk-icon icon-info-circle"></i>
                 <span>
-                    <template v-if="errorTip === 2">你选择的项目正在审批中，我们会在24小时内完成审批。加急请联系 <a class="text-link" href="wxwork://message/?username=DevOps">蓝盾助手</a></template>
+                    <template v-if="errorTip === 2">你选择的项目正在审批中</template>
                     <template v-else>必须选择一个项目</template>
                 </span>
             </p>

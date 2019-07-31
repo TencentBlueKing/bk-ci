@@ -535,7 +535,7 @@
                             this.requestGateway()
                         }
                     } else {
-                        message = '第三方构建机接入灰度公测中，可以联系蓝盾助手接入'
+                        message = '第三方构建机接入灰度公测中'
                         theme = 'warning'
 
                         this.$bkMessage({
