@@ -379,7 +379,7 @@ class PipelineBuildDao {
             val where = dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-            if (materialAlias != null && materialAlias.isNotEmpty()) {
+            if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr =
                     jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%")
@@ -393,7 +393,7 @@ class PipelineBuildDao {
             if (materialUrl != null && materialUrl.isNotEmpty()) {
                 where.and(jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
             }
-            if (materialBranch != null && materialBranch.isNotEmpty()) {
+            if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr =
                     jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${materialBranch.first().toLowerCase()}%")
@@ -486,7 +486,7 @@ class PipelineBuildDao {
             val where = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-            if (materialAlias != null && materialAlias.isNotEmpty()) {
+            if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr =
                     jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%")
@@ -500,7 +500,7 @@ class PipelineBuildDao {
             if (materialUrl != null && materialUrl.isNotEmpty()) {
                 where.and(jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
             }
-            if (materialBranch != null && materialBranch.isNotEmpty()) {
+            if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr =
                     jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${materialBranch.first().toLowerCase()}%")
