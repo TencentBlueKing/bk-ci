@@ -959,16 +959,30 @@ class TemplateService @Autowired constructor(
                         userId, it
                     )
                     val templateModel: Model = objectMapper.readValue(template.template)
+                    val labels = if (useTemplateSettings) {
+                        templateModel.labels
+                    } else {
+                        val tmpLabels = ArrayList<String>()
+                        pipelineGroupService.getGroups(
+                            userId,
+                            projectId,
+                            it.pipelineId
+                        ).forEach { group ->
+                            tmpLabels.addAll(group.labels)
+                        }
+                        tmpLabels
+                    }
                     pipelineService.editPipeline(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = it.pipelineId,
                         model = pipelineService.instanceModel(
-                            templateModel,
-                            it.pipelineName,
-                            it.buildNo,
-                            it.param,
-                            true
+                            templateModel = templateModel,
+                            pipelineName = it.pipelineName,
+                            buildNo = it.buildNo,
+                            param = it.param,
+                            instanceFromTemplate = true,
+                            labels = labels
                         ),
                         channelCode = ChannelCode.BS,
                         checkPermission = true,
