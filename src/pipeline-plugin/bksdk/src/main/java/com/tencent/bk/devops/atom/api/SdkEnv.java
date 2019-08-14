@@ -34,13 +34,11 @@ public class SdkEnv {
 
     private static SdkEnv instance;
 
-
     static Map<String, String> getSdkHeader() {
         Map<String, String> map = Maps.newHashMap();
         map.put(Header.AUTH_HEADER_DEVOPS_BUILD_TYPE, instance.buildType.name());
 
         map.put(Header.AUTH_HEADER_DEVOPS_PROJECT_ID, instance.projectId);
-        map.put(Header.AUTH_HEADER_PROJECT_ID, instance.projectId);
 
         map.put(Header.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY, instance.secretKey);
 
@@ -49,8 +47,23 @@ public class SdkEnv {
         map.put(Header.AUTH_HEADER_DEVOPS_VM_SEQ_ID, instance.vmSeqId);
 
         map.put(Header.AUTH_HEADER_DEVOPS_BUILD_ID, instance.buildId);
-        map.put(Header.AUTH_HEADER_BUILD_ID, instance.buildId);
         return map;
+    }
+
+    public static String projectId() {
+        return instance.projectId;
+    }
+
+    public static String agentId() {
+        return instance.agentId;
+    }
+
+    public static String buildId() {
+        return instance.buildId;
+    }
+
+    public static String vmSeqId() {
+        return instance.vmSeqId;
     }
 
     public static void init() throws IOException {
