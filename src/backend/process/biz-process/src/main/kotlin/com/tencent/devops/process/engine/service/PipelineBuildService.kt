@@ -95,7 +95,6 @@ import javax.ws.rs.core.UriBuilder
 
 /**
  *
- * @author irwinsun
  * @version 1.0
  */
 @Service
