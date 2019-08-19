@@ -4,8 +4,6 @@ package com.tencent.bk.devops.atom.api;
  * @version 1.0
  */
 class Header {
-    static String AUTH_HEADER_BUILD_ID = "X-SODA-BID";
-    static String AUTH_HEADER_PROJECT_ID = "X-SODA-PID";
 
     static String AUTH_HEADER_DEVOPS_BUILD_TYPE = "X-DEVOPS-BUILD-TYPE";
 
