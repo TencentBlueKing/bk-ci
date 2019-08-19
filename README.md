@@ -5,7 +5,7 @@
 > **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
 请通过[releases](https://github.com/tencent/bk-ci/releases) 而非 `master` 去获取稳定的二进制文件。
 
-蓝盾（bk-ci）是一个开源的持续集成和持续交付系统，目前服务于腾讯10000+开发人员，现已成为公司指定的CI平台。另外，她也获得行业至今为止唯一一个4级认证的DevOps标准。
+蓝鲸持续集成平台（代号蓝盾）是一个开源的持续集成和持续交付系统，目前服务于腾讯10000+开发人员，现已成为公司指定的CI平台。另外，她也获得行业至今为止唯一一个4级认证的DevOps标准。
 
 ## What to Use BK-CI for and When to Use It
 使用蓝盾屏蔽掉所有研发流程中的繁琐环节，让你聚焦于编码。蓝盾通常被用于：
@@ -23,7 +23,7 @@
 - **研发商店**：由流水线插件和流水线模板组成，插件用于对接企业内部的各种第三方服务，模板助力企业内部的研发流程规范化
 
 ## Overview
-![front-page](docs/resource/img/pipeline.png)
+![front-page](docs/resource/img/bk-ci-demo.gif)
 
 - [架构设计](docs/overview/architecture.md)
 - [代码目录](docs/overview/code_framework.md)

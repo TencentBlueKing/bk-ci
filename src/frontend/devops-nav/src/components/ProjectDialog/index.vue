@@ -12,7 +12,7 @@
                 <bk-input maxlength="12" v-model="newProject.project_name" name="project_name" v-validate="{ required: true, min: 4, max: 12, projectNameUnique: [newProject.project_id] }" placeholder="请输入4-12字符的项目名称" />
                 <div slot="error-tips" class="project-dialog-error-tips" v-if="errors.has('project_name')">
                     {{ errors.first('project_name') }}
-                    <span v-if="errors.first('project_name') === &quot;项目名称已存在&quot;">如有疑问请联系<a class="text-link" href="wxwork://message/?username=DevOps">蓝盾助手</a></span>
+                    <span v-if="errors.first('project_name') === &quot;项目名称已存在&quot;"></span>
                 </div>
             </devops-form-item>
             <devops-form-item label="英文缩写" :required="true" :rules="[]" property="english_name" :is-error="errors.has('english_name')" :error-msg="errors.first('english_name')">
