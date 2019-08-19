@@ -393,9 +393,9 @@
                 }
             },
             toNodeDetail (node) {
-                // if (this.canShowDetail(node)) {
-                //     this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
-                // }
+                if (this.canShowDetail(node)) {
+                    this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
+                }
             },
             toInstall () {
                 const url = `${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%8E%AF%E5%A2%83%E7%AE%A1%E7%90%86/installGseAgentGuide.html`
@@ -535,7 +535,7 @@
                             this.requestGateway()
                         }
                     } else {
-                        message = '第三方构建机接入灰度公测中，可以联系蓝盾助手接入'
+                        message = '第三方构建机接入灰度公测中'
                         theme = 'warning'
 
                         this.$bkMessage({
@@ -1008,6 +1008,9 @@
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                }
+                .pointer {
+                    cursor: pointer;
                 }
                 .icon-edit {
                     position: relative;
