@@ -740,7 +740,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 updateTime = df.format(record["updateTime"] as TemporalAccessor),
                 flag = flag,
                 defaultFlag = defaultFlag,
-                projectCode = if (defaultFlag) "" else storeProjectRelDao.getInitProjectCodeByStoreCode(
+                projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
                     dslContext,
                     atomCode,
                     StoreTypeEnum.ATOM.type.toByte()
