@@ -221,7 +221,7 @@ class MarketAtomDao : AtomBaseDao() {
         atomName: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(a.CREATOR.eq(userId).or(b.USERNAME.eq(userId)))
+        conditions.add(b.USERNAME.eq(userId))
         conditions.add(c.TYPE.eq(0))
         conditions.add(c.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         if (null != atomName) {
