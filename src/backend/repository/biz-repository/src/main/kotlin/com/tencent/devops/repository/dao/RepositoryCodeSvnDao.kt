@@ -40,7 +40,7 @@ class RepositoryCodeSvnDao {
     fun create(
         dslContext: DSLContext,
         repositoryId: Long,
-        region: CodeSvnRegion,
+        region: CodeSvnRegion?,
         projectName: String,
         userName: String,
         privateToken: String,
@@ -61,7 +61,7 @@ class RepositoryCodeSvnDao {
             )
                 .values(
                     repositoryId,
-                    region.name,
+                    region?.name ?: "",
                     projectName,
                     userName,
                     privateToken,
@@ -87,7 +87,7 @@ class RepositoryCodeSvnDao {
     fun edit(
         dslContext: DSLContext,
         repositoryId: Long,
-        region: CodeSvnRegion,
+        region: CodeSvnRegion?,
         projectName: String,
         userName: String,
         credentialId: String,
@@ -96,7 +96,7 @@ class RepositoryCodeSvnDao {
         val now = LocalDateTime.now()
         with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
             dslContext.update(this)
-                .set(REGION, region.name)
+                .set(REGION, region?.name ?: "")
                 .set(PROJECT_NAME, projectName)
                 .set(USER_NAME, userName)
                 .set(UPDATED_TIME, now)

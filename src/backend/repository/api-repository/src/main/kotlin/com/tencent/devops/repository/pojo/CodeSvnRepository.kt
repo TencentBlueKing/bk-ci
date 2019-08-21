@@ -39,7 +39,7 @@ data class CodeSvnRepository(
     @ApiModelProperty("凭据id", required = true)
     override val credentialId: String,
     @ApiModelProperty("SVN区域", required = true)
-    val region: CodeSvnRegion,
+    val region: CodeSvnRegion? = CodeSvnRegion.TC,
     @ApiModelProperty("svn项目名称", example = "xx/yy_proj", required = true)
     override val projectName: String,
     @ApiModelProperty("用户名", required = true)
