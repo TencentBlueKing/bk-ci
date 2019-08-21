@@ -47,6 +47,7 @@ const (
 	ConfigKeyTaskCount     = "devops.parallel.task.count"
 	ConfigKeyEnvType       = "landun.env"
 	ConfigKeySlaveUser     = "devops.slave.user"
+	ConfigKeyCollectorOn   = "devops.agent.collectorOn"
 )
 
 type AgentConfig struct {
@@ -58,6 +59,7 @@ type AgentConfig struct {
 	ParallelTaskCount int
 	EnvType           string
 	SlaveUser         string
+	CollectorOn       bool
 }
 
 type AgentEnv struct {
@@ -148,6 +150,11 @@ func LoadAgentConfig() error {
 		slaveUser = systemutil.GetCurrentUser().Username
 	}
 
+	collectorOn, err := conf.Bool(ConfigKeyCollectorOn)
+	if err != nil {
+		collectorOn = true
+	}
+
 	GAgentConfig.Gateway = landunGateway
 	logs.Info("Gateway: ", GAgentConfig.Gateway)
 	GAgentConfig.BuildType = BuildTypeAgent
@@ -164,6 +171,8 @@ func LoadAgentConfig() error {
 	logs.Info("ParallelTaskCount: ", GAgentConfig.ParallelTaskCount)
 	GAgentConfig.SlaveUser = slaveUser
 	logs.Info("SlaveUser: ", GAgentConfig.SlaveUser)
+	GAgentConfig.CollectorOn = collectorOn
+	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
 	return nil
 }
 

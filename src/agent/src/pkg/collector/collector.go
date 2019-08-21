@@ -41,7 +41,7 @@ const configTemplateLinux = `[global_tags]
   hostname = ""
   omit_hostname = false
 [[outputs.influxdb]]
-  urls = ["http://###{gateway}###/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
 [[inputs.cpu]]
@@ -78,7 +78,7 @@ const configTemplateWindows = `[global_tags]
   hostname = ""
   omit_hostname = false
 [[outputs.influxdb]]
-  urls = ["http://###{gateway}###/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
 [[inputs.mem]]
@@ -174,6 +174,11 @@ const configTemplateWindows = `[global_tags]
 `
 
 func DoAgentCollect() {
+	if config.GAgentConfig.CollectorOn == false {
+		logs.Info("agent collector off")
+		return
+	}
+
 	writeTelegrafConfig()
 
 	tAgent, err := telegraf.GetTelegrafAgent(
@@ -204,9 +209,17 @@ func writeTelegrafConfig() {
 
 	configContent := strings.Replace(configTemplate, templateKeyAgentId, config.GAgentConfig.AgentId, 1)
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 1)
-	configContent = strings.Replace(configContent, templateKeyGateway, config.GAgentConfig.Gateway, 1)
+	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
 	ioutil.WriteFile(
 		systemutil.GetExecutableDir()+"/telegraf.conf",
 		[]byte(configContent),
 		0666)
+}
+
+func buildGateway(gateway string) string {
+	if strings.HasPrefix(gateway, "http") {
+		return gateway
+	} else {
+		return "http://" + gateway
+	}
 }
