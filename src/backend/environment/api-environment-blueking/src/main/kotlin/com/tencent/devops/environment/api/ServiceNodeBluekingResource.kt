@@ -24,29 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":process:api-process")
-    compile project(":log:api-log")
-    compile project(":store:api-store")
-    compile project(":dispatch:api-dispatch")
-    compile project(":ticket:api-ticket")
-    compile project(":environment:api-environment")
-    compile project(":common:common-log")
-    compile project(":common:common-archive")
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    compile "org.apache.commons:commons-exec"
-    compile "org.apache.commons:commons-compress"
-    compile "com.github.oshi:oshi-core:3.4.0"
-    compile group: 'com.googlecode.plist', name: 'dd-plist', version: '1.20'
-    compile group: 'net.dongliu', name: 'apk-parser', version: '2.5.3'
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
-    compile "ch.qos.logback:logback-core"
-    compile "ch.qos.logback:logback-classic"
-}
+package com.tencent.devops.environment.api
 
-configurations {
-    all*.exclude group: 'org.springframework.boot', module: 'spring-boot-starter-log4j2'
-}
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+@Api(tags = ["SERVICE_NODE_BLUEKING"], description = "用户-节点")
+@Path("/service/envnode")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceNodeBluekingResource {
+    @ApiOperation("获取节点IP")
+    @GET
+    @Path("/getNodeIp")
+    fun getNodeIp(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("节点 HashId", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String
+    ): Result<String>
+}

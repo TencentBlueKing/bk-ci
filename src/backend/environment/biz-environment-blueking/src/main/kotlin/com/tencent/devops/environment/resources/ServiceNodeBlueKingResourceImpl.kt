@@ -24,29 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":process:api-process")
-    compile project(":log:api-log")
-    compile project(":store:api-store")
-    compile project(":dispatch:api-dispatch")
-    compile project(":ticket:api-ticket")
-    compile project(":environment:api-environment")
-    compile project(":common:common-log")
-    compile project(":common:common-archive")
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    compile "org.apache.commons:commons-exec"
-    compile "org.apache.commons:commons-compress"
-    compile "com.github.oshi:oshi-core:3.4.0"
-    compile group: 'com.googlecode.plist', name: 'dd-plist', version: '1.20'
-    compile group: 'net.dongliu', name: 'apk-parser', version: '2.5.3'
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
-    compile "ch.qos.logback:logback-core"
-    compile "ch.qos.logback:logback-classic"
-}
+package com.tencent.devops.environment.resources
 
-configurations {
-    all*.exclude group: 'org.springframework.boot', module: 'spring-boot-starter-log4j2'
-}
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.ServiceNodeBluekingResource
+import com.tencent.devops.environment.service.NodeBluekingService
+import org.springframework.beans.factory.annotation.Autowired
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+@RestResource
+class ServiceNodeBlueKingResourceImpl @Autowired constructor(
+    private val nodeService: NodeBluekingService
+) : ServiceNodeBluekingResource {
+    override fun getNodeIp(
+        projectId: String,
+        nodeHashId: String
+    ): Result<String> {
+        return Result(nodeService.getNodeIp(projectId, HashUtil.decodeIdToLong(nodeHashId)))
+    }
+}

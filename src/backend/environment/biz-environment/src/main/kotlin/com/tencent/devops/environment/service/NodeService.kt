@@ -75,6 +75,9 @@ class NodeService @Autowired constructor(
             val context = DSL.using(configuration)
             nodeDao.batchDeleteNode(context, projectId, existNodeIdList)
             envNodeDao.deleteByNodeIds(context, existNodeIdList)
+            existNodeIdList.forEach {
+                environmentPermissionService.deleteNode(projectId, it)
+            }
         }
     }
 
@@ -121,27 +124,27 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
             NodeWithPermission(
-                HashUtil.encodeLongId(it.nodeId),
-                nodeStringId,
-                it.nodeName,
-                it.nodeIp,
-                it.nodeStatus,
-                getAgentStatus(it),
-                it.nodeType,
-                it.osName,
-                it.createdUser,
-                it.operator,
-                it.bakOperator,
-                canUseNodeIds.contains(it.nodeId),
-                canEditNodeIds.contains(it.nodeId),
-                canDeleteNodeIds.contains(it.nodeId),
-                gatewayShowName,
-                NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                if (null == it.createdTime) "" else
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = it.nodeStatus,
+                agentStatus = getAgentStatus(it),
+                nodeType = it.nodeType,
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                canUse = canUseNodeIds.contains(it.nodeId),
+                canEdit = canEditNodeIds.contains(it.nodeId),
+                canDelete = canDeleteNodeIds.contains(it.nodeId),
+                gateway = gatewayShowName,
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
+                createTime = if (null == it.createdTime) "" else
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime),
-                if (null == it.lastModifyTime) "" else
+                lastModifyTime = if (null == it.lastModifyTime) "" else
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime),
-                it.lastModifyUser ?: ""
+                lastModifyUser = it.lastModifyUser ?: ""
             )
         }
     }
@@ -185,27 +188,27 @@ class NodeService @Autowired constructor(
             }
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
-                HashUtil.encodeLongId(it.nodeId),
-                nodeStringId,
-                it.nodeName,
-                it.nodeIp,
-                NodeStatus.getStatusName(it.nodeStatus),
-                getAgentStatus(it),
-                NodeType.getTypeName(it.nodeType),
-                it.osName,
-                it.createdUser,
-                it.operator,
-                it.bakOperator,
-                canUseNodeIds.contains(it.nodeId),
-                canEditNodeIds.contains(it.nodeId),
-                canDeleteNodeIds.contains(it.nodeId),
-                gatewayShowName,
-                NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                if (null == it.createdTime) "" else
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
+                agentStatus = getAgentStatus(it),
+                nodeType = NodeType.getTypeName(it.nodeType),
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                canUse = canUseNodeIds.contains(it.nodeId),
+                canEdit = canEditNodeIds.contains(it.nodeId),
+                canDelete = canDeleteNodeIds.contains(it.nodeId),
+                gateway = gatewayShowName,
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
+                createTime = if (null == it.createdTime) "" else
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime),
-                if (null == it.lastModifyTime) "" else
+                lastModifyTime = if (null == it.lastModifyTime) "" else
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime),
-                it.lastModifyUser ?: ""
+                lastModifyUser = it.lastModifyUser ?: ""
             )
         }
     }
@@ -215,19 +218,19 @@ class NodeService @Autowired constructor(
         return nodeRecords.map {
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
-                HashUtil.encodeLongId(it.nodeId),
-                nodeStringId,
-                it.nodeName,
-                it.nodeIp,
-                it.nodeStatus,
-                getAgentStatus(it),
-                it.nodeType,
-                it.osName,
-                it.createdUser,
-                it.operator,
-                it.bakOperator,
-                "",
-                NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = it.nodeStatus,
+                agentStatus = getAgentStatus(it),
+                nodeType = it.nodeType,
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                gateway = "",
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
             )
         }
     }
@@ -247,7 +250,7 @@ class NodeService @Autowired constructor(
         checkDisplayName(projectId, nodeId, displayName)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            nodeDao.updateDisplayName(context, nodeId, displayName)
+            nodeDao.updateDisplayName(dslContext = context, nodeId = nodeId, nodeName = displayName, userId = userId)
         }
     }
 }
