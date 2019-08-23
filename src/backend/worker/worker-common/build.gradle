@@ -32,6 +32,7 @@ dependencies {
     compile project(":ticket:api-ticket")
     compile project(":environment:api-environment")
     compile project(":common:common-log")
+    compile project(":common:common-archive")
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile "org.jetbrains.kotlin:kotlin-reflect"
     compile "org.apache.commons:commons-exec"
