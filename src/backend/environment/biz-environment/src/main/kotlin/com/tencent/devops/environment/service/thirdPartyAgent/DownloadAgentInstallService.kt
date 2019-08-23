@@ -63,6 +63,9 @@ class DownloadAgentInstallService @Autowired constructor(
     @Value("\${environment.agent-package}")
     private val agentPackage = ""
 
+    @Value("\${environment.agentCollectorOn:false}")
+    private val agentCollectorOn = ""
+
     fun downloadInstallScript(agentId: String): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
@@ -269,7 +272,8 @@ class DownloadAgentInstallService @Autowired constructor(
             "agentId" to agentId,
             "agentSecretKey" to SecurityUtil.decrypt(agentRecord.secretKey),
             "gateWay" to gw!!,
-            "landun.env" to profile.getEnv().name
+            "landun.env" to profile.getEnv().name,
+            "agentCollectorOn" to agentCollectorOn
         )
     }
 
