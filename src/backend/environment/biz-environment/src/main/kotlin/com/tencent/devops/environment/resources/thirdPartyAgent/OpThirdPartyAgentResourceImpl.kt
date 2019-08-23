@@ -37,10 +37,6 @@ import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
 import com.tencent.devops.environment.utils.AgentGrayUtils
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * deng
- * 2018/5/9
- */
 @RestResource
 class OpThirdPartyAgentResourceImpl @Autowired constructor(
     private val upgradeService: UpgradeService,
