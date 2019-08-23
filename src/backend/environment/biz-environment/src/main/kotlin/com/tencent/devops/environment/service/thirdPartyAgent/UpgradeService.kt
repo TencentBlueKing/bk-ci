@@ -43,10 +43,6 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
-/**
- * deng
- * 2018/7/13
- */
 @Service
 class UpgradeService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -73,9 +69,9 @@ class UpgradeService @Autowired constructor(
     fun setMasterVersion(masterVersion: String) =
         redisOperation.set(getAgentMasterVersionKey(), masterVersion, TimeUnit.DAYS.toSeconds(120))
 
-    fun getAgentVersion() = redisOperation.get(getAgentVersionKey())
+    fun getAgentVersion() = redisOperation.get(getAgentVersionKey()) ?: "null"
 
-    fun getAgentMasterVersion() = redisOperation.get(getAgentMasterVersionKey())
+    fun getAgentMasterVersion() = redisOperation.get(getAgentMasterVersionKey()) ?: "null"
 
     fun checkUpgrade(
         projectId: String,

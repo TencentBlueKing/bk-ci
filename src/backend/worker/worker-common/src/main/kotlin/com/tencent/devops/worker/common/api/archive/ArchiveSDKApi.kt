@@ -67,9 +67,9 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
 
     /**
      * 获取下载地址
-     * @param pipelineId  流水线id
-     * @param buildId     构建id
-     * @param fileType         分流水线构件和自定义归档
+     * @param pipelineId        流水线id
+     * @param buildId           构建id
+     * @param fileType          分流水线构件和自定义归档
      * @param customFilePath    要下载的文件路径，支持如 *.jar 模糊匹配
      * @return 下载地址
      */

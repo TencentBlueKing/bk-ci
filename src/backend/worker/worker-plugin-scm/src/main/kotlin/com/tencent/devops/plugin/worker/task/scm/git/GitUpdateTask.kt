@@ -112,7 +112,14 @@ open class GitUpdateTask constructor(
     open fun cleanupWorkspace() {
         if (workspace.exists()) {
             LoggerService.addNormalLine("Clean up the workspace(${workspace.path})")
-            workspace.deleteRecursively()
+            workspace.listFiles()?.forEach {
+                val deleteSuccess = if (it.isDirectory) {
+                    it.deleteRecursively()
+                } else {
+                    it.delete()
+                }
+                LoggerService.addNormalLine("delete the file: ${it.canonicalPath} ($deleteSuccess)")
+            }
         }
     }
 
@@ -461,7 +468,7 @@ open class GitUpdateTask constructor(
 
         if (pullResult.mergeResult.mergeStatus == MergeResult.MergeStatus.CONFLICTING) {
             LoggerService.addRedLine("Merge branch $branchName conflict")
-            pullResult.mergeResult.conflicts.forEach { file, value ->
+            pullResult.mergeResult.conflicts.forEach { (file, value) ->
                 LoggerService.addRedLine("Conflict file $file")
             }
             throw RuntimeException("Merge branch $branchName conflict")

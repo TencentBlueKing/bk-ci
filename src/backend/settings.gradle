@@ -65,6 +65,7 @@ include ":log:model-log"
 
 include ":environment"
 include ":environment:api-environment"
+include ":environment:api-environment-blueking"
 include ":environment:biz-environment"
 include ":environment:biz-environment-sample"
 include ":environment:biz-environment-blueking"
