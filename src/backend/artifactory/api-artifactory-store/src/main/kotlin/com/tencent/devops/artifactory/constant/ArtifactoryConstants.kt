@@ -26,4 +26,4 @@
 
 package com.tencent.devops.artifactory.constant
 
-const val BK_ATOM_DIR = "bk-atom"
+const val BK_CI_ATOM_DIR = "bk-atom"

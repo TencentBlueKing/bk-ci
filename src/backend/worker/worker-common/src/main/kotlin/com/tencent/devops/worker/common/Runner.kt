@@ -106,9 +106,9 @@ object Runner {
                         }
                     }
                 }
-            } catch (e: Exception) {
-                logger.error("Other unknown error has occurred:", e)
-                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + e.message).reset().toString())
+            } catch (ignored: Throwable) {
+                logger.error("Other unknown error has occurred:", ignored)
+                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + ignored.message).reset().toString())
             } finally {
                 LoggerService.stop()
                 Heartbeat.stop()

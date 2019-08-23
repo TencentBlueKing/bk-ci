@@ -110,16 +110,16 @@ object SCM {
         }
     }
 
-    private fun repositoryConfig(taskParams: Map<String, String>): RepositoryConfig {
+    private fun repositoryConfig(taskParams: Map<String, String>, scmType: ScmType): RepositoryConfig {
         val repositoryType = RepositoryType.valueOf(taskParams[CodeSvnElement.REPO_TYPE] ?: RepositoryType.ID.name)
         val repositoryId = when (repositoryType) {
             RepositoryType.ID -> taskParams[CodeSvnElement.REPO_HASH_ID] ?: throw ScmException(
                 "代码仓库ID没存在参数中",
-                ScmType.GITHUB.name
+                scmType.name
             )
             RepositoryType.NAME -> taskParams[CodeSvnElement.REPO_NAME] ?: throw ScmException(
                 "代码仓库名没存在参数中",
-                ScmType.GITHUB.name
+                scmType.name
             )
         }
         return buildConfig(repositoryId, repositoryType)
@@ -138,7 +138,7 @@ object SCM {
         return CodeSvnPullCodeSetting(
             pipelineId = pipelineId,
             buildId = buildId,
-            repositoryConfig = repositoryConfig(taskParams),
+            repositoryConfig = repositoryConfig(taskParams, ScmType.CODE_SVN),
             branchName = taskParams[CodeSvnElement.BRANCH_NAME],
             revision = taskParams[CodeSvnElement.REVISION],
             strategy = codePullStrategy(taskParams),
@@ -200,7 +200,7 @@ object SCM {
         return CodeGitPullCodeSetting(
             pipelineId = pipelineId,
             buildId = buildId,
-            repositoryConfig = repositoryConfig(taskParams),
+            repositoryConfig = repositoryConfig(taskParams, ScmType.CODE_GIT),
             branchName = taskParams[CodeSvnElement.BRANCH_NAME],
             revision = taskParams[CodeSvnElement.REVISION],
             strategy = codePullStrategy(taskParams),
@@ -226,7 +226,7 @@ object SCM {
         return GitlabPullCodeSetting(
             pipelineId = pipelineId,
             buildId = buildId,
-            repositoryConfig = repositoryConfig(taskParams),
+            repositoryConfig = repositoryConfig(taskParams, ScmType.CODE_GITLAB),
             branchName = taskParams[CodeSvnElement.BRANCH_NAME],
             revision = taskParams[CodeSvnElement.REVISION],
             strategy = codePullStrategy(taskParams),
@@ -252,7 +252,7 @@ object SCM {
         return GithubPullCodeSetting(
             pipelineId = pipelineId,
             buildId = buildId,
-            repositoryConfig = repositoryConfig(taskParams),
+            repositoryConfig = repositoryConfig(taskParams, ScmType.GITHUB),
             strategy = codePullStrategy(taskParams),
             workspace = workspace,
             path = taskParams[CodeSvnElement.PATH],
