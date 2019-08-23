@@ -50,7 +50,8 @@ class InfluxdbClient {
         val queryStr =
             "SELECT last(\"n_cpus\") FROM \"system\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND time >= now() - 7d and time <= now() - 30s; SELECT last(\"total\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND time >= now() - 7d and time <= now() - 30s; SELECT max(\"total\") FROM \"disk\" WHERE \"agentId\" =~ /^$agentHashId\$/ and time >= now() - 7d and time <= now() - 30s"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return AgentHostInfo("", "", "")
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return AgentHostInfo("0", "0", "0")
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
@@ -120,7 +121,13 @@ class InfluxdbClient {
         val queryStr =
             "SELECT mean(\"usage_idle\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart fill(null); SELECT mean(\"usage_iowait\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart fill(null); SELECT mean(\"usage_user\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart fill(null); SELECT mean(\"usage_system\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart fill(null)"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyMap()
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return mapOf(
+                "usage_idle" to listOf(mapOf("time" to "0")),
+                "usage_iowait" to listOf(mapOf("time" to "0")),
+                "usage_user" to listOf(mapOf("time" to "0")),
+                "usage_system" to listOf(mapOf("time" to "0"))
+            )
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
@@ -139,7 +146,12 @@ class InfluxdbClient {
         val queryStr =
             "SELECT mean(\"Percent_Privileged_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart fill(null); SELECT mean(\"Percent_User_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart fill(null); SELECT mean(\"Percent_Interrupt_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart fill(null)"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyMap()
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return mapOf(
+                "usage_privileged" to listOf(mapOf("time" to "0")),
+                "usage_user" to listOf(mapOf("time" to "0")),
+                "usage_interrupt" to listOf(mapOf("time" to "0"))
+            )
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
@@ -158,7 +170,8 @@ class InfluxdbClient {
                 timeRange
             )} fill(null)"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyMap()
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return mapOf("used_percent" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
@@ -175,7 +188,8 @@ class InfluxdbClient {
         val queryStr =
             "SELECT non_negative_derivative(mean(\"read_bytes\"), $timeGroupBy) as \"read\" FROM \"diskio\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null); SELECT non_negative_derivative(mean(\"write_bytes\"), $timeGroupBy)  as \"write\" FROM \"diskio\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null)"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyMap()
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return mapOf("dev" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
@@ -209,7 +223,8 @@ class InfluxdbClient {
         val queryStr =
             "select mean(\"Disk_Write_Bytes_persec\") as \"write\" from \"win_diskio\" where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null); select mean(\"Disk_Read_Bytes_persec\") as \"read\"  from \"win_diskio\" where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null)"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyMap()
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return mapOf("io" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
@@ -243,7 +258,8 @@ class InfluxdbClient {
         val queryStr =
             "SELECT non_negative_derivative(mean(\"bytes_recv\"), $timeGroupBy) as \"IN\" FROM \"net\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null); SELECT non_negative_derivative(mean(\"bytes_sent\"), $timeGroupBy)  as \"OUT\" FROM \"net\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"interface\" fill(null)"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyMap()
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return mapOf("eth0" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
@@ -277,7 +293,8 @@ class InfluxdbClient {
         val queryStr =
             "SELECT non_negative_derivative(mean(\"Bytes_Received_persec\"), $timeGroupBy) as \"received\" FROM \"win_net\" WHERE \"agentId\" =~ /$agentHashId\$/ AND $timePart, \"instance\" fill(null); SELECT non_negative_derivative(mean(\"Bytes_Sent_persec\"), $timeGroupBy) as \"sent\" FROM \"win_net\" WHERE \"agentId\" =~ /$agentHashId\$/ AND $timePart, \"instance\" fill(null)"
         logger.info("queryStr: $queryStr")
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyMap()
+        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
+            ?: return mapOf("net" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
