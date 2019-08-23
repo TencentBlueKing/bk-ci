@@ -24,10 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":environment:biz-environment")
-    compile project(":environment:api-environment-blueking")
-    compile project(":common:common-auth:common-auth-blueking")
-}
+package com.tencent.devops.environment.service
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.environment.dao.NodeDao
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class NodeBluekingService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val nodeDao: NodeDao
+){
+    fun getNodeIp(projectId: String, nodeId: Long):String {
+        return nodeDao.get(dslContext,projectId,nodeId)!!.getNodeIp()
+    }
+}

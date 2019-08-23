@@ -25,9 +25,8 @@
  */
 
 dependencies {
-    compile project(":environment:biz-environment")
-    compile project(":environment:api-environment-blueking")
-    compile project(":common:common-auth:common-auth-blueking")
+    compile project(":environment:api-environment")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
+

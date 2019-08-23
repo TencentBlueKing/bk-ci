@@ -24,10 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":environment:biz-environment")
-    compile project(":environment:api-environment-blueking")
-    compile project(":common:common-auth:common-auth-blueking")
-}
+package com.tencent.devops.environment.api
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_NODE_BLUEKING"], description = "用户-节点")
+@Path("/service/envnode")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceNodeBluekingResource {
+    @ApiOperation("获取节点IP")
+    @GET
+    @Path("/getNodeIp")
+    fun getNodeIp(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("节点 HashId", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String
+    ): Result<String>
+}
