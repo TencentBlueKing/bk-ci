@@ -31,29 +31,23 @@ import com.tencent.devops.agent.utils.KillBuildProcessTree
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
-import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Base64
+import kotlin.system.exitProcess
 
 object WorkRunner {
     private val logger = LoggerFactory.getLogger(WorkRunner::class.java)
 
     fun execute(args: Array<String>) {
         try {
-
-            ElementSubTypeRegisterLoader.registerElementForJsonUtil()
-            ApiFactory.init()
-            TaskFactory.init()
             val buildInfo = getBuildInfo(args)!!
 
             logger.info("[${buildInfo.buildId}]|Start worker for build| projectId=${buildInfo.projectId}")
@@ -83,14 +77,14 @@ object WorkRunner {
                     return dir
                 }
             }, false)
-            System.exit(0)
+            exitProcess(0)
         } catch (e: PropertyNotExistException) {
             logger.warn("The property(${e.key}) is not exist")
-            System.exit(-1)
+            exitProcess(-1)
         } catch (t: Throwable) {
             logger.error("Encounter unknown exception", t)
             LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + t.message).reset().toString())
-            System.exit(-1)
+            exitProcess(-1)
         }
     }
 
@@ -112,7 +106,7 @@ object WorkRunner {
     private fun getBuildInfo(args: Array<String>): ThirdPartyBuildInfo? {
         if (args.isEmpty()) {
             logger.error("Empty argument")
-            System.exit(1)
+            exitProcess(1)
         }
         val buildInfoStr = String(Base64.getDecoder().decode(args[0]))
         try {
@@ -120,8 +114,7 @@ object WorkRunner {
             return JsonUtil.getObjectMapper().readValue(buildInfoStr)
         } catch (t: Throwable) {
             logger.warn("Fail to read the build Info", t)
-            System.exit(1)
+            exitProcess(1)
         }
-        return null
     }
 }

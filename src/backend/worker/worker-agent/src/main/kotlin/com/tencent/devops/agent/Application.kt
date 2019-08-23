@@ -27,10 +27,36 @@
 package com.tencent.devops.agent
 
 import com.tencent.devops.agent.runner.WorkRunner
+import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.BUILD_TYPE
+import com.tencent.devops.worker.common.Runner
+import com.tencent.devops.worker.common.WorkspaceInterface
+import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.task.TaskFactory
+import java.io.File
 
 fun main(args: Array<String>) {
-    System.setProperty(BUILD_TYPE, BuildType.AGENT.name)
-    WorkRunner.execute(args)
+    ElementSubTypeRegisterLoader.registerElementForJsonUtil()
+    ApiFactory.init()
+    TaskFactory.init()
+    if(System.getProperty(BUILD_TYPE) == BuildType.DOCKER.name){
+        System.setProperty(BUILD_TYPE, BuildType.DOCKER.name)
+        Runner.run(object : WorkspaceInterface {
+            override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                val workspace = System.getProperty("devops_workspace")
+
+                val dir = if (workspace.isNullOrBlank()) {
+                    File("/data/devops/workspace")
+                } else {
+                    File(workspace)
+                }
+                dir.mkdirs()
+                return dir
+            }
+        })
+    } else {
+        System.setProperty(BUILD_TYPE, BuildType.AGENT.name)
+        WorkRunner.execute(args)
+    }
 }
