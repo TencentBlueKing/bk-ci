@@ -36,6 +36,7 @@ import com.tencent.devops.worker.common.service.ProcessService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import org.slf4j.LoggerFactory
+import kotlin.system.exitProcess
 
 object Runner {
     private val logger = LoggerFactory.getLogger(Runner::class.java)
@@ -119,7 +120,7 @@ object Runner {
             throw e
         } finally {
             if (systemExit) {
-                System.exit(0)
+                exitProcess(0)
             }
         }
     }
@@ -154,7 +155,7 @@ object Runner {
         LoggerService.addFoldStartLine("env_system")
         LoggerService.addNormalLine(Ansi().bold().a("Get build system properties").reset().toString())
         val envs = System.getenv()
-        envs.forEach { k, v ->
+        envs.forEach { (k, v) ->
             LoggerService.addNormalLine(Ansi().bold().a("$k: ").reset().a(v).toString())
         }
         LoggerService.addFoldEndLine("env_system")
@@ -167,7 +168,7 @@ object Runner {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("env_user")
         LoggerService.addNormalLine(Ansi().bold().a("Resolve the construction process parameter variable table").reset().toString())
-        variables.forEach { k, v ->
+        variables.forEach { (k, v) ->
             LoggerService.addNormalLine(Ansi().bold().a("$k: ").reset().a(v).toString())
         }
         LoggerService.addFoldEndLine("env_user")
