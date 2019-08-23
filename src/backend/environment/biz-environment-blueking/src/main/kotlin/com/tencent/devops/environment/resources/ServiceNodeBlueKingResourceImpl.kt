@@ -24,10 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":environment:biz-environment")
-    compile project(":environment:api-environment-blueking")
-    compile project(":common:common-auth:common-auth-blueking")
-}
+package com.tencent.devops.environment.resources
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.ServiceNodeBluekingResource
+import com.tencent.devops.environment.service.NodeBluekingService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceNodeBlueKingResourceImpl @Autowired constructor(
+    private val nodeService: NodeBluekingService
+) : ServiceNodeBluekingResource {
+    override fun getNodeIp(
+        projectId: String,
+        nodeHashId: String
+    ): Result<String> {
+        return Result(nodeService.getNodeIp(projectId, HashUtil.decodeIdToLong(nodeHashId)))
+    }
+}
