@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.artifactory.constant.BK_ATOM_DIR
+import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
@@ -86,7 +86,7 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
         }
         val atomConfigResult = verifyAtomTaskJsonResult.data
         val atomEnvRequest = atomConfigResult!!.atomEnvRequest!! // verifyAtomPackageByUserId方法已经检查通过，atomEnvRequest不会为空
-        val packageFile = File("$atomArchiveLocalBasePath/$BK_ATOM_DIR/${atomEnvRequest.pkgPath}")
+        val packageFile = File("$atomArchiveLocalBasePath/$BK_CI_ATOM_DIR/${atomEnvRequest.pkgPath}")
         val shaContent = ShaUtils.sha1(packageFile.readBytes())
         logger.info("packageFile is:${packageFile.name},shaContent is:$shaContent")
         val fileId = UUIDUtil.generate()
@@ -97,8 +97,8 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
                 userId,
                 fileId,
                 projectCode,
-                BK_ATOM_DIR,
-                "$BK_ATOM_DIR/${atomEnvRequest.pkgPath}",
+                BK_CI_ATOM_DIR,
+                "$BK_CI_ATOM_DIR/${atomEnvRequest.pkgPath}",
                 packageFile.name,
                 packageFile.length()
             )
@@ -155,7 +155,7 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
             inputStream.copyTo(it)
         }
         // 解压到指定目录
-        val atomArchivePath = "$atomArchiveLocalBasePath/$BK_ATOM_DIR/$projectCode/$atomCode/$version"
+        val atomArchivePath = "$atomArchiveLocalBasePath/$BK_CI_ATOM_DIR/$projectCode/$atomCode/$version"
         try {
             ZipUtil.unZipFile(file, atomArchivePath, false)
         } finally {
@@ -173,7 +173,7 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
                 ""
             )
         }
-        val file = File("$atomArchiveLocalBasePath/$BK_ATOM_DIR/${URLDecoder.decode(filePath, "UTF-8")}")
+        val file = File("$atomArchiveLocalBasePath/$BK_CI_ATOM_DIR/${URLDecoder.decode(filePath, "UTF-8")}")
         val content = FileUtils.readFileToString(file)
         logger.info("getAtomFileContent content is:$content")
         return Result(content)
