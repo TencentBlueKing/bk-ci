@@ -3,6 +3,7 @@ package com.tencent.bk.devops.atom.api;
 import com.google.common.collect.Maps;
 import com.tencent.bk.devops.atom.common.BuildType;
 import com.tencent.bk.devops.atom.common.Constants;
+import com.tencent.bk.devops.atom.utils.http.SdkUtils;
 import com.tencent.bk.devops.atom.utils.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -75,20 +76,24 @@ public class SdkEnv {
         File file = new File(dataDir + "/" + sdkFile);
         String json = FileUtils.readFileToString(file, Charset.defaultCharset());
         boolean flag = file.delete(); //读取完后删除文件
-        logger.info("delete file result is:{}",flag);
+        logger.info("delete file result is:{}", flag);
         instance = JsonUtil.fromJson(json, SdkEnv.class);
     }
 
     public static String genUrl(String path) {
         if (path.startsWith("/")) {
-            return "http://" + instance.gateway + "/" + path.substring(1).trim();
+            return getGatewayHost() + "/" + path.substring(1).trim();
         } else {
-            return "http://" + instance.gateway + "/" + path.trim();
+            return getGatewayHost() + "/" + path.trim();
         }
     }
 
-    public static String getGatewayHost(){
-        return instance.gateway;
+    public static String getGatewayHost() {
+        if (SdkUtils.hasProtocol(instance.gateway)) {
+            return instance.gateway;
+        } else {
+            return "http://" + instance.gateway;
+        }
     }
 
 }
