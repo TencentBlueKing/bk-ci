@@ -22,16 +22,6 @@
             <bk-form-item label="描述" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
                 <vuex-textarea name="desc" :value="pipelineSetting.desc" placeholder="请输入100个字符以内的描述内容" v-validate.initial="&quot;max:100&quot;" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
-            <bk-form-item class="item-badge" label="徽章" v-if="routeName !== 'templateSetting'">
-                <img class="image-url" :src="badgeImageUrl">
-                <div v-for="copyUrl in urlList" :key="copyUrl.url">
-                    <label>{{copyUrl.label}}</label>
-                    <p class="badge-item">
-                        <bk-input readonly :value="copyUrl.url" disabled />
-                        <span class="bk-icon icon-clipboard copy-icon" :data-clipboard-text="copyUrl.url"></span>
-                    </p>
-                </div>
-            </bk-form-item>
         </bk-form>
     </div>
 </template>
