@@ -1,18 +1,21 @@
 package com.tencent.bk.devops.atom.task;
 
+import com.google.common.collect.Sets;
 import com.tencent.bk.devops.atom.AtomContext;
+import com.tencent.bk.devops.atom.api.SdkEnv;
 import com.tencent.bk.devops.atom.common.Status;
-import com.tencent.bk.devops.atom.pojo.AtomResult;
-import com.tencent.bk.devops.atom.pojo.DataField;
-import com.tencent.bk.devops.atom.pojo.StringData;
+import com.tencent.bk.devops.atom.pojo.*;
 import com.tencent.bk.devops.atom.spi.AtomService;
 import com.tencent.bk.devops.atom.spi.TaskAtom;
 import com.tencent.bk.devops.atom.task.pojo.AtomParam;
 import com.tencent.bk.devops.atom.utils.json.JsonUtil;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -25,6 +28,7 @@ public class DemoAtom implements TaskAtom<AtomParam> {
 
     /**
      * 执行主入口
+     *
      * @param atomContext 插件上下文
      */
     @Override
@@ -48,12 +52,32 @@ public class DemoAtom implements TaskAtom<AtomParam> {
         StringData testResult = new StringData("hello");
         // 设置一个名称为testResult的出参
         data.put("testResult", testResult);
+
+        File index = new File("./index.html");
+        try {
+            FileUtils.write(index, "<html><head><title>蓝盾报告测试</title></head><body><h1>标题1</h1><p>正文...</p></body></html>", "utf-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ReportData reportData = new ReportData("test", ".", "index.html");
+        data.put("report", reportData);
+
+        File artFile = new File("./a.art");
+        try {
+            FileUtils.write(artFile, "hello world", "utf-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ArtifactData artifactData = new ArtifactData(Sets.newHashSet(artFile.getName()));
+        data.put("artifact", artifactData);
+
         logger.info("the testResult is :{}", JsonUtil.toJson(testResult));
         // 结束。
     }
 
     /**
      * 检查参数
+     *
      * @param param  请求参数
      * @param result 结果
      */
