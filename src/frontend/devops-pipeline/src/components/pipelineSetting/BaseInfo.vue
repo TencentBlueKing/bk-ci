@@ -51,21 +51,6 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
-            },
-            badgeImageUrl () {
-                return `${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId}`
-            },
-            badgeMarkdownLink () {
-                return `[![BK Pipelines Status](${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId})](${AJAX_URL_PIRFIX}/process/api-html/user/builds/projects/${this.projectId}/pipelines/${this.pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${this.projectId})`
-            },
-            urlList () {
-                return [{
-                    label: '图片url',
-                    url: this.badgeImageUrl
-                }, {
-                    label: 'markdown链接',
-                    url: this.badgeMarkdownLink
-                }]
             }
         },
         created () {
