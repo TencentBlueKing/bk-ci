@@ -61,7 +61,8 @@ class PipelineBuildDao {
         firstTaskId: String,
         channelCode: ChannelCode,
         parentBuildId: String?,
-        parentTaskId: String?
+        parentTaskId: String?,
+        webhookType: String?
     ) {
 
         with(T_PIPELINE_BUILD_HISTORY) {
@@ -82,7 +83,8 @@ class PipelineBuildDao {
                 FIRST_TASK_ID,
                 CHANNEL,
                 VERSION,
-                QUEUE_TIME
+                QUEUE_TIME,
+                WEBHOOK_TYPE
             ).values(
                 buildId,
                 buildNum,
@@ -99,7 +101,8 @@ class PipelineBuildDao {
                 firstTaskId,
                 channelCode.name,
                 version,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                webhookType
             ).execute()
         }
     }
@@ -271,7 +274,6 @@ class PipelineBuildDao {
         artifactList: String?,
         executeTime: Long?,
         buildParameters: String?,
-        hookType: String?,
         recommendVersion: String?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
@@ -282,7 +284,6 @@ class PipelineBuildDao {
                 .set(ARTIFACT_INFO, artifactList)
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
-                .set(WEBHOOK_TYPE, hookType)
                 .set(RECOMMEND_VERSION, recommendVersion)
                 .where(BUILD_ID.eq(buildId))
                 .execute()
