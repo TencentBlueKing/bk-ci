@@ -38,7 +38,8 @@ object EnvUtils {
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
                 index = parseVariable(command, index + 2, inside, data, replaceWithEmpty)
-                newValue.append(inside)
+                // 将动态参数值里面的双引号转义
+                newValue.append(inside.toString().replace("\"", "\\\""))
             } else {
                 newValue.append(c)
                 index++
