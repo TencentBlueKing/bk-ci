@@ -189,20 +189,23 @@ class BuildMonitorControl @Autowired constructor(
                     status = BuildStatus.QUEUE_TIMEOUT
                 )
             )
-        } else { // 一直未启动的构建，则进行一次重发
-            logger.info("[${event.buildId}]|monitor| still queue, to start it!")
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildStartEvent(
-                    source = "start_monitor",
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId,
-                    buildId = event.buildId,
-                    taskId = buildInfo.firstTaskId,
-                    status = BuildStatus.RUNNING,
-                    actionType = ActionType.START
-                ), event
-            )
+        } else {
+            val nextQueueBuildInfo = pipelineRuntimeService.getNextQueueBuildInfo(event.pipelineId)
+            if (nextQueueBuildInfo?.buildId == event.buildId) { // 一直未启动的构建，则进行一次重发
+                logger.info("[${event.buildId}]|monitor| still queue, to start it!")
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStartEvent(
+                        source = "start_monitor",
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        userId = event.userId,
+                        buildId = event.buildId,
+                        taskId = buildInfo.firstTaskId,
+                        status = BuildStatus.RUNNING,
+                        actionType = ActionType.START
+                    ), event
+                )
+            }
         }
 
         return
