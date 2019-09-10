@@ -197,6 +197,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     fun buildGet(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
+        LoggerService.addNormalLine("build get url: $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
@@ -217,6 +218,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
+        logger.info("the url is $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
 

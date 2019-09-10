@@ -29,10 +29,6 @@ package com.tencent.devops.worker.common.utils
 import java.io.PrintWriter
 import java.io.StringWriter
 
-/**
- * deng
- * 24/01/2018
- */
 object ExceptionUtils {
 
     fun exception2String(t: Throwable): String {

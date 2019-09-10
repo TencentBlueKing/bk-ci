@@ -457,8 +457,13 @@ class PipelineVMBuildService @Autowired constructor(
 
         // 只要buildResult不为空，都写入到环境变量里面
         if (result.buildResult.isNotEmpty()) {
-            logger.info("Add the build result(${result.buildResult}) to var")
-            pipelineRuntimeService.batchSetVariable(buildId, result.buildResult)
+            logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
+            try {
+                pipelineRuntimeService.batchSetVariable(buildId, result.buildResult)
+            } catch (ignored: Exception) {
+                // 防止因为变量字符过长而失败。做下拦截
+                logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
+            }
         }
 
         val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED

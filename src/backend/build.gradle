@@ -116,7 +116,7 @@ ext {
 
 allprojects {
     group "com.tencent.bk.devops"
-    version "0.0.1-SNAPSHOT"
+    version "0.1.0-SNAPSHOT"
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {

@@ -27,7 +27,7 @@
 dependencies {
     compile project(":project:biz-project-op") // OP管理类接口
     compile project(":project:biz-project-sample") // 这是开源示例实现
-    // compile project(":project:biz-project-sample") // 这是对接蓝鲸的实现
+    // compile project(":project:biz-project-blueking") // 这是对接蓝鲸的实现
     // 根据依赖蓝鲸的打出来的包就是对接蓝鲸平台的微服务
 }
 

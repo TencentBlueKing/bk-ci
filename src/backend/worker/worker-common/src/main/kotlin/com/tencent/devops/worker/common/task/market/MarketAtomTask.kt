@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -48,6 +49,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
+import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.ShellUtil
@@ -454,7 +456,7 @@ open class MarketAtomTask : ITask() {
             resultData = url
         }
         params["reportName"] = output["label"] as String
-        val buildTask2 = BuildTask(
+        val reportArchTask = BuildTask(
             buildTask.buildId,
             buildTask.vmSeqId,
             buildTask.status,
@@ -465,7 +467,13 @@ open class MarketAtomTask : ITask() {
             params,
             buildTask.buildVariable
         )
-        logger.info("buildTask2 is:$buildTask2,buildVariables is:$buildVariables,atomWorkspacePath is:${atomWorkspace.absolutePath}")
+        logger.info("reportArchTask is:$reportArchTask,buildVariables is:$buildVariables,atomWorkspacePath is:${atomWorkspace.absolutePath}")
+
+        TaskFactory.create(ReportArchiveElement.classType).run(
+            buildTask = reportArchTask,
+            buildVariables = buildVariables, workspace = atomWorkspace
+        )
+
         return resultData
     }
 

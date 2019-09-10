@@ -286,7 +286,8 @@ class ContainerAppServiceImpl @Autowired constructor(
             val versionRecord =
                 containerAppsVersionDao.get(context, appRecord.id, version) ?: return@transactionResult null
             val envRecords = containerAppsEnvDao.listByAppId(context, appRecord.id)
-            BuildEnv(appRecord.name,
+            BuildEnv(
+                appRecord.name,
                 getAppVersion(versionRecord.version, appRecord.name),
                 appRecord.binPath,
                 envRecords.map {

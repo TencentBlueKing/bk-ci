@@ -106,6 +106,6 @@ class PipelineBuildHeartbeatListener @Autowired constructor(
     }
 
     companion object {
-        private const val TIMEOUT_IN_MS = 10 * 60 * 1000 // timeout in 10 minutes
+        private const val TIMEOUT_IN_MS = 2 * 60 * 1000 // timeout in 2 minutes
     }
 }

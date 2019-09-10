@@ -469,7 +469,8 @@
                 renderList: [],
                 templateList: [],
                 languageList: [
-                    { language: 'java', name: 'java' }
+                    { language: 'java', name: 'java' },
+                    { language: 'python', name: 'python' }
                 ],
                 promptList: [
                     '1、插件市场不再展示插件',

@@ -26,8 +26,12 @@
 
 package com.tencent.devops.agent.utils
 
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.process.ProcessTree
 import org.slf4j.LoggerFactory
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.lang.management.ManagementFactory
 
 object KillBuildProcessTree {
@@ -40,10 +44,34 @@ object KillBuildProcessTree {
         val index = name.indexOf("@")
         return if (index != -1) {
             Integer.parseInt(name.substring(0, index))
-        } else -9999999
+        } else -1
+    }
+
+    private fun getUnixPID(): Int {
+        var reader: BufferedReader? = null
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("sh", "-c", "echo \$PPID"))
+            reader = BufferedReader(InputStreamReader(process.inputStream))
+            reader.readLine().toIntOrNull() ?: -1
+        } catch (e: Exception) {
+            logger.error("get Unix PID err: ", e)
+            -1
+        } finally {
+            reader?.close()
+        }
     }
 
     fun killProcessTree(projectId: String, buildId: String, vmSeqId: String): List<Int> {
+        val currentProcessId = if (AgentEnv.getOS() == OSType.WINDOWS) {
+            getCurrentPID()
+        } else {
+            getUnixPID()
+        }
+        if (currentProcessId <= 0) {
+            logger.warn("get current pid failed")
+            return listOf()
+        }
+
         val processTree = ProcessTree.get()
         val processTreeIterator = processTree.iterator()
         val killedProcessIds = mutableListOf<Int>()
@@ -59,7 +87,7 @@ object KillBuildProcessTree {
                 logger.info("DEVOPS_DONT_KILL_PROCESS_TREE is true, skip")
                 continue
             }
-            val currentProcessId = getCurrentPID()
+
             if (osProcess.pid == currentProcessId) {
                 continue
             }

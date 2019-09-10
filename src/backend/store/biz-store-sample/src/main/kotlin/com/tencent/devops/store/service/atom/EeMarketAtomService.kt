@@ -26,28 +26,4 @@
 
 package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
-
-interface EeMarketAtomService {
-
-    fun verifyAtomPackageByUserId(
-        userId: String,
-        projectCode: String,
-        atomCode: String,
-        version: String,
-        releaseType: ReleaseTypeEnum?,
-        os: String?
-    ): Result<Boolean>
-
-    fun verifyAtomTaskJson(
-        userId: String,
-        projectCode: String,
-        atomCode: String,
-        version: String
-    ): Result<GetAtomConfigResult?>
-
-    fun updateAtomEnv(userId: String, atomId: String, atomEnvRequest: AtomEnvRequest): Result<Boolean>
-}
+interface EeMarketAtomService

@@ -26,14 +26,7 @@
 
 package com.tencent.devops.artifactory.api
 
-import com.tencent.devops.artifactory.pojo.FileDetail
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.SearchProps
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -117,60 +110,4 @@ interface UserFileResource {
         @Context
         response: HttpServletResponse
     )
-
-    @ApiOperation("根据元数据获取文件")
-    @Path("/{projectCode}/search")
-    @POST
-    fun searchFile(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("元数据", required = true)
-        searchProps: SearchProps
-    ): Result<Page<FileInfo>>
-
-    @ApiOperation("获取文件信息")
-    @Path("/{projectId}/{artifactoryType}/show")
-    @GET
-    fun show(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String
-    ): Result<FileDetail>
-
-    @ApiOperation("创建下载链接")
-    @Path("/{projectId}/{artifactoryType}/downloadUrl")
-    @POST
-    fun downloadUrl(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String
-    ): Result<Url>
 }

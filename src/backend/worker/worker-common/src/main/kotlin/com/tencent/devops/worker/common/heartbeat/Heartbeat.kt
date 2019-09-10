@@ -30,6 +30,7 @@ import com.tencent.devops.worker.common.service.ProcessService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.system.exitProcess
 
 object Heartbeat {
     private val EXIT_AFTER_FAILURE = 12 // Worker will exist after 12 fail heart
@@ -56,7 +57,7 @@ object Heartbeat {
                     failCnt++
                     if (failCnt >= EXIT_AFTER_FAILURE) {
                         logger.error("Heartbeat has been failed for $failCnt times, worker exit")
-                        System.exit(-1)
+                        exitProcess(-1)
                     }
                 }
             }

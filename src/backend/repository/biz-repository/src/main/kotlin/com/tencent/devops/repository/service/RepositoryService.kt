@@ -244,7 +244,11 @@ class RepositoryService @Autowired constructor(
                     repository.aliasName,
                     repository.url,
                     record.credentialId,
-                    CodeSvnRegion.valueOf(record.region),
+                    if (record.region.isNullOrBlank()) {
+                        CodeSvnRegion.TC
+                    } else {
+                        CodeSvnRegion.valueOf(record.region)
+                    },
                     record.projectName,
                     record.userName,
                     repository.projectId,

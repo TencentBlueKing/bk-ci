@@ -64,7 +64,7 @@
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {
-    "bk-magic-vue": "^2.0.8-beta.4",
+    "bk-magic-vue": "2.0.8-beta.13",
     "@types/js-cookie": "^2.1.0",
     "axios": "^0.18.0",
     "bluebird": "^3.5.1",

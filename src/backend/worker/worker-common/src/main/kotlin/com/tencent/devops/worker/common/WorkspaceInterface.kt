@@ -28,10 +28,6 @@ package com.tencent.devops.worker.common
 
 import java.io.File
 
-/**
- * deng
- * 2019-04-23
- */
 interface WorkspaceInterface {
     fun getWorkspace(variables: Map<String, String>, pipelineId: String): File
 }

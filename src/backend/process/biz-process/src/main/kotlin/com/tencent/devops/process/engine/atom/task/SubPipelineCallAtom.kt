@@ -79,6 +79,17 @@ class SubPipelineCallAtom @Autowired constructor(
         }
 
         val (message, buildStatus) = pair(task)
+
+        if (force) { // 强制终止时，将子流水线也一并终止
+            if (!BuildStatus.isFinish(buildStatus)) {
+                pipelineBuildService.serviceShutdown(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.subBuildId!!,
+                    channelCode = ChannelCode.BS
+                )
+            }
+        }
         when {
             BuildStatus.isFailure(buildStatus) ->
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, message, task.taskId, task.executeCount ?: 1)
