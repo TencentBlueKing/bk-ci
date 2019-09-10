@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -40,28 +39,29 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.EeMarketAtomService
+import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
-import java.net.URLEncoder
 
 @Service
 class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
+
+    @Autowired
+    lateinit var marketAtomArchiveService: MarketAtomArchiveService
 
     private val logger = LoggerFactory.getLogger(EeMarketAtomServiceImpl::class.java)
 
@@ -118,74 +118,11 @@ class EeMarketAtomServiceImpl : EeMarketAtomService, MarketAtomServiceImpl() {
         if (marketAtomUpdateRequest.packageShaContent != packageShaContent) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID)
         }
-        val taskJsonStr = getTaskJsonStr(projectCode, atomCode, version)
+        val taskJsonStr = marketAtomArchiveService.getTaskJsonStr(projectCode, atomCode, version)
         val handleUpdateResult =
             handleUpdateMarketAtom(projectCode, userId, taskJsonStr, AtomStatusEnum.TESTING, marketAtomUpdateRequest)
         logger.info("the handleUpdateResult is :$handleUpdateResult")
         return handleUpdateResult
-    }
-
-    private fun getTaskJsonStr(projectCode: String, atomCode: String, version: String): String {
-        logger.info("getTaskJsonStr projectCode is:$projectCode,atomCode is :$atomCode,version is :$version")
-        val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/task.json", "UTF-8")
-        val taskJsonStr = client.get(ServiceArchiveAtomResource::class).getAtomFileContent(filePath).data
-        logger.info("the taskJsonStr is :$taskJsonStr")
-        return taskJsonStr!!
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun verifyAtomPackageByUserId(
-        userId: String,
-        projectCode: String,
-        atomCode: String,
-        version: String,
-        releaseType: ReleaseTypeEnum?,
-        os: String?
-    ): Result<Boolean> {
-        logger.info("verifyAtomPackageByUserId userId is :$userId,projectCode is :$projectCode,atomCode is :$atomCode,version is :$version,releaseType is :$releaseType,os is :$os")
-        // 校验用户是否是该插件的开发成员
-        val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        if (!flag) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
-        }
-        val atomRecords = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode)
-        logger.info("the atomRecords is :$atomRecords")
-        if (null == atomRecords || atomRecords.isEmpty()) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
-        }
-        val atomRecord = atomRecords[0]
-        logger.info("the latest atomRecord is :$atomRecord")
-        // 不是重新上传的包才需要校验版本号
-        if (null != releaseType) {
-            val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
-            val validateAtomVersionResult = validateAtomVersion(atomRecord, releaseType, osList, version)
-            logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
-            if (validateAtomVersionResult.isNotOk()) {
-                return validateAtomVersionResult
-            }
-        }
-        return Result(true)
-    }
-
-    override fun verifyAtomTaskJson(
-        userId: String,
-        projectCode: String,
-        atomCode: String,
-        version: String
-    ): Result<GetAtomConfigResult?> {
-        val taskJsonStr = getTaskJsonStr(projectCode, atomCode, version)
-        val result = parseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
-        logger.info("parseTaskJson result is :$taskJsonStr")
-        if (result.errorCode != "0") {
-            return MessageCodeUtil.generateResponseDataObject(result.errorCode, result.errorParams)
-        }
-        return Result(result)
-    }
-
-    override fun updateAtomEnv(userId: String, atomId: String, atomEnvRequest: AtomEnvRequest): Result<Boolean> {
-        logger.info("updateAtomEnv userId is :$userId,atomId is :$atomId,atomEnvRequest is :$atomEnvRequest")
-        marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, atomEnvRequest)
-        return Result(true)
     }
 
     override fun handleProcessInfo(status: Int): List<ReleaseProcessItem> {

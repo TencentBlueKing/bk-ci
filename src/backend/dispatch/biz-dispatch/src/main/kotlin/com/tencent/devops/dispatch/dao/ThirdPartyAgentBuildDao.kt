@@ -61,7 +61,10 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        thirdPartyAgentWorkspace: String
+        thirdPartyAgentWorkspace: String,
+        pipelineName: String,
+        buildNum: Int,
+        taskName: String
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -86,19 +89,24 @@ class ThirdPartyAgentBuildDao {
                 STATUS,
                 CREATED_TIME,
                 UPDATED_TIME,
-                WORKSPACE
-            )
-                .values(
-                    projectId,
-                    agentId,
-                    pipelineId,
-                    buildId,
-                    vmSeqId,
-                    PipelineTaskStatus.QUEUE.status,
-                    now,
-                    now,
-                    thirdPartyAgentWorkspace
-                ).execute()
+                WORKSPACE,
+                PIPELINE_NAME,
+                BUILD_NUM,
+                TASK_NAME
+            ).values(
+                projectId,
+                agentId,
+                pipelineId,
+                buildId,
+                vmSeqId,
+                PipelineTaskStatus.QUEUE.status,
+                now,
+                now,
+                thirdPartyAgentWorkspace,
+                pipelineName,
+                buildNum,
+                taskName
+            ).execute()
         }
     }
 
@@ -168,6 +176,30 @@ class ThirdPartyAgentBuildDao {
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.RUNNING.status))
                 .fetch()
+        }
+    }
+
+    fun listAgentBuilds(
+        dslContext: DSLContext,
+        agentId: String,
+        offset: Int,
+        limit: Int
+    ): List<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(AGENT_ID.eq(agentId))
+                .orderBy(CREATED_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun countAgentBuilds(dslContext: DSLContext, agentId: String): Long {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectCount().from(this)
+                .where(AGENT_ID.eq(agentId))
+                .orderBy(CREATED_TIME.desc())
+                .fetchOne(0, Long::class.java)
         }
     }
 }

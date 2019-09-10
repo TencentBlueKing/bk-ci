@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-rootProject.name = 'bk-ci-backend'
+rootProject.name = "bk-ci-backend"
 
 include ":common"
 include ":common:common-event"
@@ -65,15 +65,20 @@ include ":log:model-log"
 
 include ":environment"
 include ":environment:api-environment"
+include ":environment:api-environment-blueking"
 include ":environment:biz-environment"
+include ":environment:biz-environment-sample"
+include ":environment:biz-environment-blueking"
 include ":environment:boot-environment"
 include ":environment:model-environment"
 
 include ":artifactory"
 include ":artifactory:api-artifactory"
 include ":artifactory:api-artifactory-sample"
+include ":artifactory:api-artifactory-store"
 include ":artifactory:biz-artifactory"
 include ":artifactory:biz-artifactory-sample"
+include ":artifactory:biz-artifactory-store"
 include ":artifactory:boot-artifactory"
 include ":artifactory:model-artifactory"
 

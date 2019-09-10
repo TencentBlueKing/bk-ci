@@ -3,6 +3,7 @@ package com.tencent.bk.devops.atom.api;
 import com.google.common.collect.Maps;
 import com.tencent.bk.devops.atom.common.BuildType;
 import com.tencent.bk.devops.atom.common.Constants;
+import com.tencent.bk.devops.atom.utils.http.SdkUtils;
 import com.tencent.bk.devops.atom.utils.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,13 +35,11 @@ public class SdkEnv {
 
     private static SdkEnv instance;
 
-
     static Map<String, String> getSdkHeader() {
         Map<String, String> map = Maps.newHashMap();
         map.put(Header.AUTH_HEADER_DEVOPS_BUILD_TYPE, instance.buildType.name());
 
         map.put(Header.AUTH_HEADER_DEVOPS_PROJECT_ID, instance.projectId);
-        map.put(Header.AUTH_HEADER_PROJECT_ID, instance.projectId);
 
         map.put(Header.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY, instance.secretKey);
 
@@ -49,8 +48,23 @@ public class SdkEnv {
         map.put(Header.AUTH_HEADER_DEVOPS_VM_SEQ_ID, instance.vmSeqId);
 
         map.put(Header.AUTH_HEADER_DEVOPS_BUILD_ID, instance.buildId);
-        map.put(Header.AUTH_HEADER_BUILD_ID, instance.buildId);
         return map;
+    }
+
+    public static String projectId() {
+        return instance.projectId;
+    }
+
+    public static String agentId() {
+        return instance.agentId;
+    }
+
+    public static String buildId() {
+        return instance.buildId;
+    }
+
+    public static String vmSeqId() {
+        return instance.vmSeqId;
     }
 
     public static void init() throws IOException {
@@ -62,20 +76,24 @@ public class SdkEnv {
         File file = new File(dataDir + "/" + sdkFile);
         String json = FileUtils.readFileToString(file, Charset.defaultCharset());
         boolean flag = file.delete(); //读取完后删除文件
-        logger.info("delete file result is:{}",flag);
+        logger.info("delete file result is:{}", flag);
         instance = JsonUtil.fromJson(json, SdkEnv.class);
     }
 
     public static String genUrl(String path) {
         if (path.startsWith("/")) {
-            return "http://" + instance.gateway + "/" + path.substring(1).trim();
+            return getGatewayHost() + "/" + path.substring(1).trim();
         } else {
-            return "http://" + instance.gateway + "/" + path.trim();
+            return getGatewayHost() + "/" + path.trim();
         }
     }
 
-    public static String getGatewayHost(){
-        return instance.gateway;
+    public static String getGatewayHost() {
+        if (SdkUtils.hasProtocol(instance.gateway)) {
+            return instance.gateway;
+        } else {
+            return "http://" + instance.gateway;
+        }
     }
 
 }

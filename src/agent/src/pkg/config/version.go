@@ -26,4 +26,4 @@
 
 package config
 
-const AgentVersion = "GO_20190410"
+const AgentVersion = "GO_20190626"

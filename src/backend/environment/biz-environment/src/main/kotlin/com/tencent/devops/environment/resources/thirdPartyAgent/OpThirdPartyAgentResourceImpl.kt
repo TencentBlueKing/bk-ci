@@ -37,18 +37,15 @@ import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
 import com.tencent.devops.environment.utils.AgentGrayUtils
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * deng
- * 2018/5/9
- */
 @RestResource
 class OpThirdPartyAgentResourceImpl @Autowired constructor(
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val agentGrayUtils: AgentGrayUtils
 ) : OpThirdPartyAgentResource {
-    override fun setAgentUpgrade(version: String): Result<Boolean> {
-        upgradeService.setUpgrade(version)
+
+    override fun setWorkerVersion(version: String): Result<Boolean> {
+        upgradeService.setWorkerVersion(version)
         return Result(true)
     }
 
@@ -57,11 +54,11 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getAgentVersion(): Result<String> {
+    override fun getWorkerVersion(): Result<String> {
         return Result(upgradeService.getAgentVersion()!!)
     }
 
-    override fun getAgentMasterVersion(): Result<String> {
+    override fun getMasterVersion(): Result<String> {
         return Result(upgradeService.getAgentMasterVersion()!!)
     }
 
@@ -76,25 +73,6 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun getAgentPipelineResponse(projectId: String, nodeId: String, seqId: String): Result<PipelineResponse> {
         return Result(thirdPartyAgentPipelineService.getPipelineResult(projectId, nodeId, seqId))
-    }
-
-    override fun setUpgradeProjects(projects: List<String>): Result<Boolean> {
-        agentGrayUtils.setUpgradeProjects(projects)
-        return Result(true)
-    }
-
-    override fun unsetUpgradeProjects(projects: List<String>): Result<Boolean> {
-        agentGrayUtils.unsetUpgradeProjects(projects)
-        return Result(true)
-    }
-
-    override fun getAllUpdateProjects(): Result<List<String>> {
-        return Result(agentGrayUtils.getAllUpgradeProjects())
-    }
-
-    override fun cleanAllUpgradeProjects(): Result<Boolean> {
-        agentGrayUtils.cleanAllUpgradeProjects()
-        return Result(true)
     }
 
     override fun setForceUpdateAgents(agentIds: List<Long>): Result<Boolean> {
@@ -114,5 +92,33 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     override fun cleanAllForceUpgradeAgents(): Result<Boolean> {
         agentGrayUtils.cleanAllForceUpgradeAgents()
         return Result(true)
+    }
+
+    override fun setLockUpdateAgents(agentIds: List<Long>): Result<Boolean> {
+        agentGrayUtils.setLockUpgradeAgents(agentIds)
+        return Result(true)
+    }
+
+    override fun unsetLockUpdateAgents(agentIds: List<Long>): Result<Boolean> {
+        agentGrayUtils.unsetLockUpgradeAgents(agentIds)
+        return Result(true)
+    }
+
+    override fun getAllLockUpgradeAgents(): Result<List<Long>> {
+        return Result(agentGrayUtils.getAllLockUpgradeAgents())
+    }
+
+    override fun cleanAllLockUpgradeAgents(): Result<Boolean> {
+        agentGrayUtils.cleanAllLockUpgradeAgents()
+        return Result(true)
+    }
+
+    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
+        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
+        return Result(true)
+    }
+
+    override fun getMaxParallelUpgradeCount(): Result<Int> {
+        return Result(upgradeService.getMaxParallelUpgradeCount())
     }
 }

@@ -78,6 +78,7 @@ import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
+import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
@@ -135,6 +136,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var storeCommentService: StoreCommentService
     @Autowired
     lateinit var classifyService: ClassifyService
+    @Autowired
+    lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
@@ -489,7 +492,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val releaseType = marketAtomUpdateRequest.releaseType
         val version = marketAtomUpdateRequest.version
         val osList = marketAtomUpdateRequest.os
-        val validateAtomVersionResult = validateAtomVersion(atomRecord, releaseType, osList, version)
+        val validateAtomVersionResult =
+            marketAtomCommonService.validateAtomVersion(atomRecord, releaseType, osList, version)
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {
             return Result(
@@ -596,49 +600,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return Result(atomId)
     }
 
-    @Suppress("UNCHECKED_CAST")
-    protected fun validateAtomVersion(
-        atomRecord: TAtomRecord,
-        releaseType: ReleaseTypeEnum,
-        osList: ArrayList<String>,
-        version: String
-    ): Result<Boolean> {
-        val dbVersion = atomRecord.version
-        if ("1.0.0" == dbVersion && releaseType == ReleaseTypeEnum.NEW) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(version))
-        }
-        val dbOsList = if (!StringUtils.isEmpty(atomRecord.os)) JsonUtil.getObjectMapper().readValue(
-            atomRecord.os,
-            List::class.java
-        ) as List<String> else null
-        // 支持的操作系统减少必须采用大版本升级方案
-        val requireReleaseType =
-            if (null != dbOsList && !osList.containsAll(dbOsList)) ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE else releaseType
-        val requireVersion = getRequireVersion(dbVersion, requireReleaseType)
-        if (version != requireVersion) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
-            )
-        }
-        if (dbVersion.isNotBlank()) {
-            // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-            val atomFinalStatusList = listOf(
-                AtomStatusEnum.AUDIT_REJECT.status.toByte(),
-                AtomStatusEnum.RELEASED.status.toByte(),
-                AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
-            )
-            if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
-                    arrayOf(atomRecord.name, atomRecord.version)
-                )
-            }
-        }
-        return Result(true)
-    }
-
     abstract override fun updateMarketAtom(
         userId: String,
         projectCode: String,
@@ -654,73 +615,27 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String
     ): GetAtomConfigResult {
         val taskDataMap = JsonUtil.toMap(taskJsonStr)
-        val taskAtomCode = taskDataMap["atomCode"] as? String
-        if (atomCode != taskAtomCode) {
-            // 如果用户输入的插件代码和其代码库配置文件的不一致，则抛出错误提示给用户
-            return GetAtomConfigResult(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                arrayOf("atomCode"), null, null
-            )
-        }
-        val executionInfoMap = taskDataMap["execution"] as? Map<String, Any>
-        val packagePath: String? // 执行文件路径
-        if (null != executionInfoMap) {
-            val target = executionInfoMap["target"]
-            if (StringUtils.isEmpty(target)) {
-                // 执行入口为空则校验失败
-                return GetAtomConfigResult(
-                    StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    arrayOf("target"), null, null
-                )
-            }
-            packagePath = executionInfoMap["packagePath"] as? String
-            if (!validatePackagePath(packagePath)) return GetAtomConfigResult(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                arrayOf("packagePath"), null, null
-            )
+        val getAtomConfResult =
+            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
+        return if (getAtomConfResult.errorCode != "0") {
+            getAtomConfResult
         } else {
-            // 抛出错误提示
-            return GetAtomConfigResult(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                arrayOf("execution"), null, null
-            )
+            val executionInfoMap = taskDataMap["execution"] as Map<String, Any>
+            val packagePath = executionInfoMap["packagePath"] as? String
+            if (!validatePackagePath(packagePath)) {
+                GetAtomConfigResult(
+                    StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                    arrayOf("packagePath"), null, null
+                )
+            } else {
+                val atomEnvRequest = getAtomConfResult.atomEnvRequest!!
+                atomEnvRequest.pkgPath = "$projectCode/$atomCode/$version/$packagePath"
+                getAtomConfResult
+            }
         }
-
-        val atomEnvRequest = AtomEnvRequest(
-            userId = userId,
-            pkgPath = "$projectCode/$atomCode/$version/$packagePath",
-            language = executionInfoMap["language"] as? String,
-            minVersion = executionInfoMap["minimumVersion"] as? String,
-            target = executionInfoMap["target"] as String,
-            shaContent = null,
-            preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: "")
-        )
-        return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequest)
     }
 
     abstract fun validatePackagePath(packagePath: String?): Boolean
-
-    private fun getRequireVersion(
-        dbVersion: String,
-        releaseType: ReleaseTypeEnum
-    ): String {
-        var requireVersion = "1.0.0"
-        val dbVersionParts = dbVersion.split(".")
-        when (releaseType) {
-            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {
-                requireVersion = "${dbVersionParts[0].toInt() + 1}.0.0"
-            }
-            ReleaseTypeEnum.COMPATIBILITY_UPGRADE -> {
-                requireVersion = "${dbVersionParts[0]}.${dbVersionParts[1].toInt() + 1}.0"
-            }
-            ReleaseTypeEnum.COMPATIBILITY_FIX -> {
-                requireVersion = "${dbVersionParts[0]}.${dbVersionParts[1]}.${dbVersionParts[2].toInt() + 1}"
-            }
-            else -> {
-            }
-        }
-        return requireVersion
-    }
 
     private fun validateAtomNameIsExist(
         atomName: String,
@@ -827,7 +742,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 updateTime = df.format(record["updateTime"] as TemporalAccessor),
                 flag = flag,
                 defaultFlag = defaultFlag,
-                projectCode = if (defaultFlag) "" else storeProjectRelDao.getInitProjectCodeByStoreCode(
+                projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
                     dslContext,
                     atomCode,
                     StoreTypeEnum.ATOM.type.toByte()

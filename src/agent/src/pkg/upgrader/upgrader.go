@@ -39,12 +39,6 @@ import (
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 
-	//err := StopAgent()
-	//if err != nil {
-	//    logs.Error("stop agent failed: ", err.Error())
-	//    return errors.New("stop agent failed")
-	//}
-
 	logs.Info("wait 15 seconds for agent to stop")
 	time.Sleep(10 * time.Second)
 
@@ -52,15 +46,7 @@ func DoUpgradeAgent() error {
 	if err != nil {
 		logs.Error("replace agent file failed: ", err.Error())
 		return errors.New("replace agent file failed")
-		return err
 	}
-
-	//err = StartAgent()
-	//if err != nil {
-	//    logs.Error("start agent failed: ", err.Error())
-	//    return errors.New("start agent failed")
-	//    return err
-	//}
 
 	logs.Info("agent upgrade done, upgrader exiting")
 	return nil
@@ -79,11 +65,8 @@ func UninstallAgent() error {
 	logs.Info("start uninstall agent")
 
 	workDir := systemutil.GetWorkDir()
-	//startCmd := "cmd"
-	//args := []string{"/C", workDir + "/" + config.GetUninstallScript()}
-	//output, err := command.RunCommand(startCmd, args, workDir, nil)
 	startCmd := workDir + "/" + config.GetUninstallScript()
-	output, _, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
 		logs.Error("run uninstall script failed: ", err.Error())
 		return errors.New("run uninstall script failed")
@@ -96,11 +79,8 @@ func StopAgent() error {
 	logs.Info("start stop agent")
 
 	workDir := systemutil.GetWorkDir()
-	//startCmd := "cmd"
-	//args := []string{"/C", workDir + "/" + config.GetStopScript()}
-	//output, err := command.RunCommand(startCmd, args/*[]string{}*/, workDir, nil)
 	startCmd := workDir + "/" + config.GetStopScript()
-	output, _, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
 		logs.Error("run uninstall script failed: ", err.Error())
 		return errors.New("run uninstall script failed")
@@ -113,11 +93,8 @@ func StartAgent() error {
 	logs.Info("start agent")
 
 	workDir := systemutil.GetWorkDir()
-	//startCmd := "cmd"
-	//args := []string{"/C", config.GetAgentWorkdir() + "/" + config.GetStartScript()}
-	//output, err := command.RunCommand(startCmd, args/*[]string{}*/, workDir, nil)
 	startCmd := workDir + "/" + config.GetStartScript()
-	output, _, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
 		logs.Error("run uninstall script failed: ", err.Error())
 		return errors.New("run uninstall script failed")
@@ -141,12 +118,9 @@ func InstallAgent() error {
 	logs.Info("start install agent")
 
 	workDir := systemutil.GetWorkDir()
-	//startCmd := "cmd"
-	//args := []string{"/C", config.GetAgentWorkdir() + "/" + config.GetInstallScript()}
-	//output, err := command.RunCommand(startCmd, args/*[]string{}*/, workDir, nil)
 
 	startCmd := workDir + "/" + config.GetInstallScript()
-	output, _, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
 		logs.Error("run install script failed: ", err.Error())
 		return errors.New("run install script failed")

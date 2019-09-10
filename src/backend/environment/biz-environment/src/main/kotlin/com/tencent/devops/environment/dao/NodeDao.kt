@@ -123,7 +123,9 @@ class NodeDao {
                 NODE_STATUS,
                 NODE_TYPE,
                 CREATED_USER,
-                CREATED_TIME
+                CREATED_TIME,
+                LAST_MODIFY_USER,
+                LAST_MODIFY_TIME
             )
                 .values(
                     projectId,
@@ -132,6 +134,8 @@ class NodeDao {
                     osName,
                     status.name,
                     type.name,
+                    userId,
+                    LocalDateTime.now(),
                     userId,
                     LocalDateTime.now()
                 )
@@ -144,12 +148,15 @@ class NodeDao {
         dslContext: DSLContext,
         id: Long,
         nodeStringId: String,
-        displayName: String
+        displayName: String,
+        userId: String
     ) {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STRING_ID, nodeStringId)
                 .set(DISPLAY_NAME, displayName)
+                .set(LAST_MODIFY_USER, userId)
+                .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_ID.eq(id))
                 .execute()
         }
@@ -208,10 +215,12 @@ class NodeDao {
         }
     }
 
-    fun updateDisplayName(dslContext: DSLContext, nodeId: Long, nodeName: String): Int {
+    fun updateDisplayName(dslContext: DSLContext, nodeId: Long, nodeName: String, userId: String): Int {
         with(TNode.T_NODE) {
             return dslContext.update(this)
                 .set(DISPLAY_NAME, nodeName)
+                .set(LAST_MODIFY_USER, userId)
+                .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_ID.eq(nodeId))
                 .execute()
         }
@@ -234,5 +243,9 @@ class NodeDao {
                     .fetchOne(0, Long::class.java) > 0
             }
         }
+    }
+
+    fun saveNode(dslContext: DSLContext, nodeRecord: TNodeRecord) {
+        dslContext.executeUpdate(nodeRecord)
     }
 }

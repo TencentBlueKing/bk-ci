@@ -204,7 +204,15 @@ class PipelineService @Autowired constructor(
             try {
                 val instance = if (model.instanceFromTemplate == null || !model.instanceFromTemplate!!) {
                     // 将模版常量变更实例化为流水线变量
-                    instanceModel(model, model.name, null, null, false)
+                    val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                    instanceModel(
+                        templateModel = model,
+                        pipelineName = model.name,
+                        buildNo = triggerContainer.buildNo,
+                        param = triggerContainer.params,
+                        instanceFromTemplate = false,
+                        labels = model.labels
+                    )
                 } else {
                     model
                 }
@@ -258,7 +266,8 @@ class PipelineService @Autowired constructor(
         pipelineName: String,
         buildNo: BuildNo?,
         param: List<BuildFormProperty>?,
-        instanceFromTemplate: Boolean
+        instanceFromTemplate: Boolean,
+        labels: List<String>? = null
     ): Model {
         val templateTrigger = templateModel.stages[0].containers[0] as TriggerContainer
         val instanceParam = if (templateTrigger.templateParams == null) {
@@ -292,7 +301,7 @@ class PipelineService @Autowired constructor(
             }
         }
 
-        return Model(pipelineName, "", stages, templateModel.labels, instanceFromTemplate)
+        return Model(pipelineName, "", stages, labels ?: templateModel.labels, instanceFromTemplate)
     }
 
     /**

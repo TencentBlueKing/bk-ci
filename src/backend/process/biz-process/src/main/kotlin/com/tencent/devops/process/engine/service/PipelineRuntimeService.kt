@@ -51,9 +51,14 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -126,7 +131,6 @@ import java.time.LocalDateTime
 
 /**
  * 流水线运行时相关的服务
- * @author irwinsun
  * @version 1.0
  */
 @Service
@@ -534,6 +538,23 @@ class PipelineRuntimeService @Autowired constructor(
             StartType.TIME_TRIGGER.name -> {
                 TimerTriggerElement.classType
             }
+            StartType.WEB_HOOK.name -> {
+                when (webhookType) {
+                    CodeType.SVN.name -> {
+                        CodeSVNWebHookTriggerElement.classType
+                    }
+                    CodeType.GIT.name -> {
+                        CodeGitWebHookTriggerElement.classType
+                    }
+                    CodeType.GITLAB.name -> {
+                        CodeGitlabWebHookTriggerElement.classType
+                    }
+                    CodeType.GITHUB.name -> {
+                        CodeGithubWebHookTriggerElement.classType
+                    }
+                    else -> RemoteTriggerElement.classType
+                }
+            }
             else -> { // StartType.SERVICE.name,  StartType.PIPELINE.name, StartType.REMOTE.name
                 RemoteTriggerElement.classType
             }
@@ -773,6 +794,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     } else {
                                         atomElement.name
                                     }
+
                                 buildTaskList.add(
                                     PipelineBuildTask(
                                         projectId = pipelineInfo.projectId,
@@ -885,19 +907,31 @@ class PipelineRuntimeService @Autowired constructor(
                 // 构建号递增
                 val buildNum = pipelineBuildSummaryDao.updateBuildNum(transactionContext, pipelineInfo.pipelineId)
                 pipelineBuildDao.create(
-                    transactionContext, pipelineInfo.projectId,
-                    pipelineInfo.pipelineId, buildId, params[PIPELINE_VERSION] as Int,
-                    buildNum, params[PIPELINE_START_TYPE] as String, startBuildStatus,
-                    userId, triggerUser, taskCount, firstTaskId, channelCode, parentBuildId, parentTaskId
+                    dslContext = transactionContext,
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildId = buildId,
+                    version = params[PIPELINE_VERSION] as Int,
+                    buildNum = buildNum,
+                    trigger = startType.name,
+                    status = startBuildStatus,
+                    startUser = userId,
+                    triggerUser = triggerUser,
+                    taskCount = taskCount,
+                    firstTaskId = firstTaskId,
+                    channelCode = channelCode,
+                    parentBuildId = parentBuildId,
+                    parentTaskId = parentTaskId,
+                    webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?
                 )
                 // detail记录,未正式启动，先排队状态
                 buildDetailDao.create(
-                    transactionContext,
-                    buildId,
-                    startType,
-                    buildNum,
-                    JsonUtil.toJson(sModel),
-                    BuildStatus.QUEUE
+                    dslContext = transactionContext,
+                    buildId = buildId,
+                    startType = startType,
+                    buildNum = buildNum,
+                    model = JsonUtil.toJson(sModel),
+                    buildStatus = BuildStatus.QUEUE
                 )
                 // 写入版本号
                 pipelineBuildVarDao.save(transactionContext, buildId, PIPELINE_BUILD_NUM, buildNum)
@@ -1269,23 +1303,45 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
         }
         with(latestRunningBuild) {
-            val materials = getPipelineBuildMaterial(buildId)
+            val materials: List<PipelineBuildMaterial> = try {
+                getPipelineBuildMaterial(buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getPipelineBuildMaterial-$buildId exception:", e)
+                mutableListOf()
+            }
             logger.info("[$pipelineId]|getPipelineBuildMaterial-$buildId material: ${JsonUtil.toJson(materials)}")
 
-            val artifactList = getArtifactList(userId, projectId, pipelineId, buildId)
+            val artifactList: List<FileInfo> = try {
+                getArtifactList(userId = userId, projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getArtifactList-$buildId exception:", e)
+                mutableListOf()
+            }
             logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
 
-            val executeTime = getExecuteTime(pipelineId, buildId)
-            logger.info("[$pipelineId]|getExecuteTime-$buildId artifact: $executeTime")
+            val executeTime = try {
+                getExecuteTime(pipelineId, buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getExecuteTime-$buildId exception:", e)
+                0L
+            }
+            logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
-            val buildParameters = getBuildParameters(buildId)
+            val buildParameters: List<BuildParameters> = try {
+                getBuildParameters(buildId)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", e)
+                mutableListOf()
+            }
             logger.info("[$pipelineId]|getBuildParameters-$buildId buildParameters: ${JsonUtil.toJson(buildParameters)}")
 
-            val recommendVersion = getRecommendVersion(buildParameters)
+            val recommendVersion = try {
+                getRecommendVersion(buildParameters)
+            } catch (e: Throwable) {
+                logger.error("[$pipelineId]|getRecommendVersion-$buildId exception:", e)
+                null
+            }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
-
-            val hookType = getWebHookType(buildId)
-            logger.info("[$pipelineId]|getWebHookType-$buildId hookType: $hookType")
 
             pipelineBuildDao.finishBuild(
                 dslContext,
@@ -1295,7 +1351,6 @@ class PipelineRuntimeService @Autowired constructor(
                 JsonUtil.toJson(artifactList),
                 executeTime,
                 JsonUtil.toJson(buildParameters),
-                hookType,
                 recommendVersion
             )
             val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
@@ -1347,11 +1402,6 @@ class PipelineRuntimeService @Autowired constructor(
         } else return null
 
         return "$majorVersion.$minorVersion.$fixVersion.$buildNo"
-    }
-
-    private fun getWebHookType(buildId: String): String? {
-        val hookType = pipelineBuildVarDao.getVars(dslContext, buildId, PIPELINE_WEBHOOK_TYPE)
-        return if (hookType.isNotEmpty()) hookType[PIPELINE_WEBHOOK_TYPE] else null
     }
 
     private fun getBuildParameters(
@@ -1426,8 +1476,8 @@ class PipelineRuntimeService @Autowired constructor(
 
         val repoIds = mutableListOf<String>()
         urlMap.map {
-            val keyArray = it.key.split(".")
-            repoIds.add(keyArray.last())
+            val repoId = it.key.substringAfter(PIPELINE_MATERIAL_URL)
+            repoIds.add(repoId)
         }
         logger.info("repoIds: $repoIds")
 

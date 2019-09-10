@@ -26,6 +26,8 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -58,6 +60,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  * 插件业务逻辑类
@@ -470,4 +473,29 @@ class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return Result(true)
     }
+
+    override fun getProjectAtomNames(projectCode: String): Result<Map<String, String>> {
+        return Result(cache.get(projectCode))
+    }
+
+    private val cache = CacheBuilder.newBuilder().maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(object : CacheLoader<String, Map<String, String>>() {
+            override fun load(projectId: String): Map<String, String> {
+                val elementMapData = getPipelineAtoms(
+                    accessToken = "",
+                    userId = "",
+                    serviceScope = null,
+                    os = null,
+                    projectCode = projectId,
+                    category = null,
+                    classifyId = null,
+                    page = null,
+                    pageSize = null
+                ).data
+                return elementMapData?.records?.map {
+                    it.atomCode to it.name
+                }?.toMap() ?: mapOf()
+            }
+        })
 }

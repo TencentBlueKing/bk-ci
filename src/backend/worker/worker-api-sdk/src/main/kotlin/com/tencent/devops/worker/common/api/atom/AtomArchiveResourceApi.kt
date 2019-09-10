@@ -28,7 +28,7 @@ package com.tencent.devops.worker.common.api.atom
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.constant.BK_ATOM_DIR
+import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -146,7 +146,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
     override fun downloadAtom(atomFilePath: String, file: File) {
         val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${URLEncoder.encode(
-            "$BK_ATOM_DIR/$atomFilePath",
+            "$BK_CI_ATOM_DIR/$atomFilePath",
             "UTF-8"
         )}"
         val request = buildGet(path)
