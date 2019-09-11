@@ -34,7 +34,7 @@ dependencies {
     compile project(":artifactory:biz-artifactory-store")
     compile project(":artifactory:biz-artifactory-sample")
     compile project(":dispatch:biz-dispatch")
-    compile project(":environment:biz-environment")
+    compile project(":environment:biz-environment-sample")
     compile project(":log:biz-log")
     compile project(":plugin:biz-plugin")
     compile project(":process:biz-process-sample")
