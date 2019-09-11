@@ -38,29 +38,29 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCrea
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentService
+import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
-    private val thirdPartyAgentService: ThirdPartyAgentService,
+    private val thirdPartyAgentMgrService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
-        return thirdPartyAgentService.getAgent(projectId, agentId)
+        return thirdPartyAgentMgrService.getAgent(projectId, agentId)
     }
 
     override fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
-        return thirdPartyAgentService.getAgentByDisplayName(projectId, displayName)
+        return thirdPartyAgentMgrService.getAgentByDisplayName(projectId, displayName)
     }
 
     override fun getAgentsByEnvId(projectId: String, envId: String) =
-        Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
+        Result(thirdPartyAgentMgrService.getAgentByEnvId(projectId, envId))
 
     override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> =
-        Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
+        Result(thirdPartyAgentMgrService.getAgnetByEnvName(projectId, envName))
 
     override fun upgradeByVersion(
         projectId: String,
@@ -86,7 +86,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
+        return Result(thirdPartyAgentMgrService.listAgents(userId, projectId, os))
     }
 
     private fun checkUserId(userId: String) {
