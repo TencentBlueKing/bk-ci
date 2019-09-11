@@ -79,7 +79,7 @@ import java.util.Date
 import javax.ws.rs.NotFoundException
 
 @Service
-class ThirdPartyAgentService @Autowired constructor(
+class ThirdPartyAgentMgrService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
@@ -975,7 +975,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private fun generateSecretKey() = ApiUtil.randomSecretKey()
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
+        private val logger = LoggerFactory.getLogger(ThirdPartyAgentMgrService::class.java)
         private const val MAX_PARALLEL_TASK_COUNT = "10"
     }
 }
