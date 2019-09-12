@@ -91,6 +91,9 @@ class Client @Autowired constructor(
     @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
     private val tag: String? = null
 
+    @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
+    private val assemblyServiceName: String? = null
+
     fun <T : Any> get(clz: KClass<T>): T {
         return get(clz, "")
     }
@@ -126,6 +129,10 @@ class Client @Autowired constructor(
     }
 
     private fun findServiceName(clz: KClass<*>): String {
+        // 单体结构，不分微服务的方式
+        if (!assemblyServiceName.isNullOrBlank()) {
+            return assemblyServiceName!!
+        }
         return interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
