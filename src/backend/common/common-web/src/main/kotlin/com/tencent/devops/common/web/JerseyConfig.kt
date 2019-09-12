@@ -94,8 +94,9 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         logger.info("JerseyConfig-RestResource-register-end")
         val containerRequestFilter = applicationContext.getBeansWithAnnotation(RequestFilter::class.java)
         containerRequestFilter.values.forEach {
+            logger.info("RequestFilter: $it")
             register(it)
         }
-        logger.info("JerseyConfig-register-end")
+        logger.info("JerseyConfig-RequestFilter-register-end")
     }
 }

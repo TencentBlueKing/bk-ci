@@ -63,6 +63,12 @@ include ":log:biz-log"
 include ":log:boot-log"
 include ":log:model-log"
 
+include ":dockerhost"
+include ":dockerhost"
+include ":dockerhost:api-dockerhost"
+include ":dockerhost:biz-dockerhost"
+include ":dockerhost:boot-dockerhost"
+
 include ":environment"
 include ":environment:api-environment"
 include ":environment:api-environment-blueking"
@@ -119,7 +125,9 @@ include ":process:plugin-trigger"
 
 include ":dispatch"
 include ":dispatch:api-dispatch"
+include ":dispatch:api-dispatch-docker"
 include ":dispatch:biz-dispatch"
+include ":dispatch:biz-dispatch-docker"
 include ":dispatch:boot-dispatch"
 include ":dispatch:model-dispatch"
 
