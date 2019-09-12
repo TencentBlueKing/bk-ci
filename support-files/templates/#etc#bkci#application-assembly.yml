@@ -56,3 +56,21 @@ bk_login:
   getAllUser: get_all_users/
   bk_app_code: __APP_CODE__
   bk_app_secret: __APP_TOKEN__
+
+
+logo:
+  allowUploadLogoTypes: jpg,png,svg
+  allowUploadLogoWidth: 200
+  allowUploadLogoHeight: 200
+  maxUploadLogoSize: 2097152
+
+aes:
+  aesKey: "J%k^yO{?vt}3tXpG"
+  aesMock: "******"
+
+cert:
+  aes-key: "gHi(xG9Af)jEvCx&"
+
+credential:
+  mixer: "******"
+  aes-key: "G/I%yP{?ST}2TXPg"
