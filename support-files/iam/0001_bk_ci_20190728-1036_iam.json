@@ -1,0 +1,490 @@
+{
+  "system": "bk_ci",
+  "operations": [
+    {
+      "operation": "register_system",
+      "data": {
+        "system_id": "bk_ci",
+        "system_name": "蓝鲸持续集成平台",
+        "releated_scope_types": "system;project",
+        "managers": "admin",
+        "creator": "admin"
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "system",
+        "resource_types": [
+          {
+            "resource_type": "project",
+            "resource_type_name": "项目",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "manage",
+                "action_name": "管理",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "pipeline",
+            "resource_type_name": "流水线",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "download",
+                "action_name": "下载构件",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "share",
+                "action_name": "分享构件",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "execute",
+                "action_name": "执行",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "repertory",
+            "resource_type_name": "代码库",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "use",
+                "action_name": "使用",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "credential",
+            "resource_type_name": "凭据",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "use",
+                "action_name": "使用",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "cert",
+            "resource_type_name": "证书",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "use",
+                "action_name": "使用",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "environment",
+            "resource_type_name": "环境",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "use",
+                "action_name": "使用",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "node",
+            "resource_type_name": "环境节点",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "use",
+                "action_name": "使用",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "custom_dir",
+            "resource_type_name": "版本仓库自定义目录",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "deploy",
+                "action_name": "部署",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "move",
+                "action_name": "移动",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "copy",
+                "action_name": "复制",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "share",
+                "action_name": "分享",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "mkdir",
+                "action_name": "创建目录",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "rule",
+            "resource_type_name": "质量红线规则",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "enable",
+                "action_name": "停用/启用",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "group",
+            "resource_type_name": "质量红线通知组",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "view",
+                "action_name": "查看",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "edit",
+                "action_name": "编辑",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "create",
+                "action_name": "创建",
+                "is_related_resource": false
+              },
+              {
+                "action_id": "delete",
+                "action_name": "删除",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "list",
+                "action_name": "列表",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "enable",
+                "action_name": "停用/启用",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

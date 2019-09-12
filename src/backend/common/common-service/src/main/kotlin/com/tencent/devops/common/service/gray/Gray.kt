@@ -29,10 +29,6 @@ package com.tencent.devops.common.service.gray
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
-/**
- * deng
- * 2018-12-26
- */
 @Component
 class Gray {
 

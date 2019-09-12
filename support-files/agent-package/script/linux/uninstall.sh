@@ -17,7 +17,7 @@ function uninstall()
     fi
   fi
 
-  stop.sh
+  ${workspace}/stop.sh
 }
 
 if [[ "$user" = "root" ]]; then
