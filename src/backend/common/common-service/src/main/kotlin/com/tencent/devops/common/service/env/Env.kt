@@ -28,10 +28,6 @@ package com.tencent.devops.common.service.env
 
 import org.slf4j.LoggerFactory
 
-/**
- * deng
- * 2018/9/10
- */
 enum class Env {
     PROD,
     TEST,
