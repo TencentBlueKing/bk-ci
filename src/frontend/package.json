@@ -1,0 +1,30 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "ghooks": "^2.0.4",
+    "husky": "^3.0.5",
+    "lerna": "^3.16.4"
+  },
+  "scripts": {
+    "build": "lerna run public:external --parallel"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "node ./formatCommitMsg.js"
+    }
+  },
+  "workspaces": [
+    "devops-artifactory",
+    "devops-codelib",
+    "devops-environment",
+    "devops-experience",
+    "devops-atomstore",
+    "devops-quality",
+    "devops-ticket",
+    "devops-turbo",
+    "devops-vs",
+    "devops-pipeline",
+    "devops-nav"
+  ]
+}

@@ -19,10 +19,9 @@
 
 const webpack = require('webpack')
 const path = require('path')
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = (env, argv) => {
-    const isProd = argv.mode === 'production'
     return {
         entry: [
             'axios',
@@ -40,7 +39,8 @@ module.exports = (env, argv) => {
         ],
         output: {
             filename: '[name].dll.js',
-            library: 'lib'
+            library: 'lib',
+            path: path.join(__dirname, '../devops/pipeline')
         },
         module: {
             rules: [
@@ -79,8 +79,6 @@ module.exports = (env, argv) => {
             ]
         },
         plugins: [
-            // new BundleAnalyzerPlugin(),
-            // moment 优化，只提取本地包
             new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/),
             new webpack.DllPlugin({
                 context: __dirname,

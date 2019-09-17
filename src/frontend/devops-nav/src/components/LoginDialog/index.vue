@@ -1,5 +1,6 @@
 <template>
-    <bk-dialog v-model="showLoginDialog"
+    <bk-dialog
+        v-model="showLoginDialog"
         class="devops-login-dialog"
         :show-footer="false"
         :width="width"
@@ -7,7 +8,13 @@
         @confirm="toApplyPermission"
     >
         <main class="devops-login-iframe-container">
-            <iframe :src="iframeSrc" scrolling="no" border="0" width="618" height="560"></iframe>
+            <iframe
+                :src="iframeSrc"
+                scrolling="no"
+                border="0"
+                width="618"
+                height="560"
+            />
         </main>
     </bk-dialog>
 </template>
@@ -24,7 +31,7 @@
         showLoginDialog: boolean = true
         width: number = 666
         beforeDestroy () {
-            location.reload()
+          location.reload()
         }
     }
 </script>
