@@ -27,24 +27,24 @@ const DialogCreator = Vue.extend(AskPermissionDialog)
 let instance = null
 
 export default function showAskPermissionDialog (props) {
-    if (!isObject(props)) {
-        console.warn('权限弹窗需要传入一个对象')
-        return
+  if (!isObject(props)) {
+    console.warn('权限弹窗需要传入一个对象')
+    return
+  }
+  if (instance) { // 存在时更新内部props
+    eventBus.$emit('update-permission-props', props)
+    return
+  }
+  instance = new DialogCreator({
+    propsData: props,
+    data: {
+      showDialog: true
+    },
+    methods: {
+      close
     }
-    if (instance) { // 存在时更新内部props
-        eventBus.$emit('update-permission-props', props)
-        return
-    }
-    instance = new DialogCreator({
-        propsData: props,
-        data: {
-            showDialog: true
-        },
-        methods: {
-            close
-        }
-    })
+  })
 
-    instance.viewmodel = instance.$mount()
-    document.body.appendChild(instance.viewmodel.$el)
+  instance.viewmodel = instance.$mount()
+  document.body.appendChild(instance.viewmodel.$el)
 }

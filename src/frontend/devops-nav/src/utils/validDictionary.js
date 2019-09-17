@@ -18,24 +18,24 @@
  */
 
 const dictionary = {
-    cn: {
-        messages: {
-            alpha: field => '字段只能包含字母',
-            required: field => '字段不能为空',
-            unique: field => '字段不能重复',
-            string: field => '字段只能包含数字，字母和下划线',
-            numeric: field => '字段只能包含数字',
-            regex: (field, regex) => {
-                return `字段不符合(${regex})正则表达式规则`
-            },
-            max: (field, args) => {
-                return `字段长度不能超过${args}个字符`
-            },
-            min: (field, args) => {
-                return `字段长度不能少于${args}个字符`
-            }
-        }
+  cn: {
+    messages: {
+      alpha: field => '字段只能包含字母',
+      required: field => '字段不能为空',
+      unique: field => '字段不能重复',
+      string: field => '字段只能包含数字，字母和下划线',
+      numeric: field => '字段只能包含数字',
+      regex: (field, regex) => {
+        return `字段不符合(${regex})正则表达式规则`
+      },
+      max: (field, args) => {
+        return `字段长度不能超过${args}个字符`
+      },
+      min: (field, args) => {
+        return `字段长度不能少于${args}个字符`
+      }
     }
+  }
 }
 
 export default dictionary
