@@ -21,7 +21,7 @@ const webpack = require('webpack')
 const path = require('path')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-module.exports = (env, argv) => {
+module.exports = (env = {}, argv) => {
     return {
         entry: [
             'axios',
@@ -40,7 +40,7 @@ module.exports = (env, argv) => {
         output: {
             filename: '[name].dll.js',
             library: 'lib',
-            path: path.join(__dirname, '../devops/pipeline')
+            path: path.join(__dirname, 'dist')
         },
         module: {
             rules: [

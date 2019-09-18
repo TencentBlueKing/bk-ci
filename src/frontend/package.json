@@ -3,11 +3,16 @@
   "private": true,
   "devDependencies": {
     "ghooks": "^2.0.4",
+    "gulp": "^4.0.2",
     "husky": "^3.0.5",
-    "lerna": "^3.16.4"
+    "lerna": "^3.16.4",
+    "ora": "^3.4.0",
+    "yargs": "^14.0.0"
   },
   "scripts": {
-    "build": "lerna run public:external --parallel"
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run public:external --parallel",
+    "public": "gulp"
   },
   "husky": {
     "hooks": {

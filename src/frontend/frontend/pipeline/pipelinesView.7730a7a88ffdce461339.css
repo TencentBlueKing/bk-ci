@@ -1,0 +1,76 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon{animation:loading .8s linear infinite}@keyframes loading{from{transform:rotate(0)}to{transform:rotate(360deg)}}.devops-empty-tips{width:913px;margin:0 auto;text-align:center}.devops-empty-tips .title{color:#333C48;font-size:18px;line-height:26px}.devops-empty-tips .desc{margin-top:10px;margin-bottom:20px;color:#63656E;font-size:14px}.devops-empty-tips .btns-row{font-size:0}.devops-empty-tips .btns-row .bk-button+.bk-button{margin-left:10px}.devops-empty-tips .no-data-pic{margin-top:90px;margin-bottom:14px;max-width:320px;max-height:320px}.devops-empty-tips .no-collect-pic{margin-top:40px;margin-bottom:24px;width:320px;height:320px}
+
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon[data-v-116967b8]{animation:loading-data-v-116967b8 .8s linear infinite}@keyframes loading-data-v-116967b8{from{transform:rotate(0)}to{transform:rotate(360deg)}}.staff-selector[data-v-116967b8]{border:1px solid #c3cdd7}.staff-selector .select-tags[data-v-116967b8]{position:relative;z-index:99;margin:4px 10px 0px 4px}.staff-selector .tag-info[data-v-116967b8]{display:inline-block;padding:2px 5px;margin:1px 5px 4px 5px;background-color:#fafafa;border:1px solid #d9d9d9;border-radius:2px;font-size:14px;color:#2b2b2b}.staff-selector .form-input[data-v-116967b8]{padding:6px 0 8px 4px;width:10px;max-width:160px;border:none;background-color:transparent;outline:0}.staff-selector .staff-placeholder[data-v-116967b8]{position:absolute;z-index:10;line-height:36px;padding-left:8px;color:#c3cdd7}.staff-selector .select-editor[data-v-116967b8]{cursor:text}.staff-selector .bk-selector-list[data-v-116967b8]{position:absolute;top:calc(100% + 5px)}.staff-selector .bk-selector-list>ul[data-v-116967b8]{max-height:212px}.staff-selector .bk-selector-list-item .bk-selector-node[data-v-116967b8]{display:flex;align-items:center}.staff-selector .bk-selector-list-item .text[data-v-116967b8]{display:inline}.staff-selector .bk-data-avatar[data-v-116967b8]{margin-left:16px;margin-right:0;width:28px;height:28px;border-radius:50%}.staff-selector .bk-selector-selected[data-v-116967b8]{background-color:#eef6fe;color:#3c96ff}.disable-status[data-v-116967b8]{background-color:#fafafa;pointer-events:none}
+
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon{animation:loading .8s linear infinite}@keyframes loading{from{transform:rotate(0)}to{transform:rotate(360deg)}}.create-view-dialog .bk-dialog-tool{display:none}.create-view-dialog .bk-dialog-body{margin:0px}.create-view-dialog .create-view-header{padding-left:20px;height:54px;line-height:54px;border-bottom:1px solid #dde4eb;font-weight:bold}.create-view-dialog .create-view-form{padding:20px 60px 20px 0;height:470px;overflow:auto}.create-view-dialog .create-view-form .relationship-label{margin-right:10px}.create-view-dialog .create-view-form .icon-info-circle{position:relative;top:2px;left:2px;color:#c3cdd7}.create-view-dialog .create-view-form .bk-tooltip-inner{max-width:268px}.create-view-dialog .create-view-form .rule-list-table{margin-top:10px;border:1px solid #dde4eb}.create-view-dialog .create-view-form .rule-list-table tbody{background:#fff}.create-view-dialog .create-view-form .rule-list-table th,.create-view-dialog .create-view-form .rule-list-table td{height:42px;color:#333C48;font-weight:normal;padding:10px}.create-view-dialog .create-view-form .rule-list-table td{vertical-align:top}.create-view-dialog .create-view-form .rule-list-table .delete-handler{padding:0 4px}.create-view-dialog .create-view-form .rule-list-table .delete-handler i{top:18px;position:relative;cursor:pointer}.create-view-dialog .create-view-form .add-new-item{position:relative;border:none}.create-view-dialog .create-view-form .add-new-item span{color:#3c96ff;cursor:pointer}.create-view-dialog .create-view-form .add-new-item .bk-icon{margin-right:4px;position:relative;top:1px}.create-view-dialog .create-view-form .bk-selector-node .text{color:#7b7d8a}.create-view-dialog .create-view-form .view-radio{margin-right:30px;margin-top:5px}.create-view-dialog .temp-operation-bar{margin-bottom:14px;padding-right:20px;text-align:right;border-top:1px solid #dde4eb}.create-view-dialog .temp-operation-bar .bk-button{margin-top:14px}
+
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon{animation:loading .8s linear infinite}@keyframes loading{from{transform:rotate(0)}to{transform:rotate(360deg)}}.pipeline-view-list{min-height:calc(100% - 40px)}.pipeline-view-list .view-list-content{margin:0 auto;padding-top:16px;width:1080px}.pipeline-view-list .view-table-wrapper{margin-top:16px}
+

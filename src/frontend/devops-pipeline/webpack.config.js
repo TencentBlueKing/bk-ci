@@ -20,13 +20,14 @@
 const path = require('path')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
 
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
     const urlPrefix = env && env.name ? `${env.name}.` : ''
     const extUrlPrefix = env && env.name ? `${env.name}-` : ''
-    const dist = path.join(__dirname, '../devops/pipeline')
+    const dist = path.join(__dirname, `../${env.dist}/pipeline`)
     const config = webpackBaseConfig({
         env,
         argv,
@@ -34,7 +35,7 @@ module.exports = (env, argv) => {
             pipeline: './src/main.js'
         },
         publicPath: '/pipeline/',
-        dist,
+        dist: '/pipeline',
         port: 8006
     })
     config.plugins = [
@@ -54,7 +55,8 @@ module.exports = (env, argv) => {
         new webpack.DllReferencePlugin({
             context: __dirname,
             manifest: require('./dist/manifest.json')
-        })
+        }),
+        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist/*'), to: `${dist}/` }])
     ]
     return config
 }
