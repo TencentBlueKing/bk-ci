@@ -45,7 +45,7 @@ module.exports = (env, argv) => {
         // brace 优化，只提取需要的 theme
         new webpack.ContextReplacementPlugin(/brace\/theme$/, /^\.\/(monokai)$/),
         new HtmlWebpackPlugin({
-            filename: `${dist}/index.html`,
+            filename: `${dist}/frontend#pipeline#index.html`,
             template: 'index.html',
             inject: true,
             VENDOR_LIBS: `${isProd ? '/pipeline' : ''}/main.dll.js?v=${Math.random()}`,

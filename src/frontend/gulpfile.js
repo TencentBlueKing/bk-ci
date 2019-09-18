@@ -9,13 +9,13 @@ function copy () {
 }
 
 function build (cb) {
-    const spinner = new Ora('Building library').start()
+    const spinner = new Ora('building bk-ci frontend project').start()
     require('child_process').exec(`yarn build -- -- --env.dist=${dist}`, (err, res) => {
         if (err) {
             console.log(err)
             process.exit(1)
         }
-        spinner.succeed(`Finished building library`)
+        spinner.succeed(`Finished building bk-ci frontend project`)
         cb()
     })
 }
