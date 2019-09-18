@@ -1,0 +1,38 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon{animation:loading .8s linear infinite}@keyframes loading{from{transform:rotate(0)}to{transform:rotate(360deg)}}.devops-empty-tips{width:913px;margin:139px auto 0;text-align:center}.devops-empty-tips .title{margin:0 0 24px;color:#333;font-size:22px;font-weight:normal}.devops-empty-tips .desc{margin-bottom:28px;color:#7b7d8a;font-size:14px}.devops-empty-tips .btns-row{font-size:0}.devops-empty-tips .btns-row .bk-button+.bk-button{margin-left:10px}
+
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon{animation:loading .8s linear infinite}@keyframes loading{from{transform:rotate(0)}to{transform:rotate(360deg)}}.environment-create .table-node-head,.environment-create .table-node-row{display:flex;align-items:center}.environment-create .env-header{display:flex;justify-content:space-between;padding:18px 20px;width:100%;height:60px;border-bottom:1px solid #DDE4EB;background-color:#fff;box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03)}.environment-create .env-header .header-text{font-size:16px}.environment-create .env-header .icon-arrows-left{margin-right:4px;cursor:pointer;color:#3c96ff;font-size:16px;font-weight:600}.environment-create .create-env-form{padding:40px 20px}.environment-create .create-env-form .bk-form-radio{margin-right:20px}.environment-create .env-name-input,.environment-create .env-desc-input{width:540px}.environment-create .env-type-item{line-height:28px}.environment-create .env-source-content{width:926px;height:346px;border:1px solid #dde4eb}.environment-create .source-type-radio{display:flex;justify-content:space-between;padding-left:14px;height:42px;line-height:38px;border-bottom:1px solid #dde4eb}.environment-create .empty-node-selected{text-align:center}.environment-create .empty-prompt{display:inline-block;margin-top:116px;color:#c3cdd7}.environment-create .show-node-dialog{cursor:pointer;color:#3c96ff}.environment-create .handler-result-step{margin:20px 0 26px 116px}.environment-create .handler-result-step .bk-button{width:90px}.environment-create .table-node-body{height:258px;overflow:auto}.environment-create .table-node-head,.environment-create .table-node-row{padding:0 20px;height:43px;font-size:14px;color:#333C48}.environment-create .table-node-row{border-top:1px solid #dde4eb;color:#737987;font-size:12px}.environment-create .node-item-name{flex:5}.environment-create .node-item-ip,.environment-create .node-item-status,.environment-create .node-item-type,.environment-create .node-item-agstatus{flex:2}.environment-create .node-item-agstatus{text-align:right}.environment-create .preview-node-btn{float:right;padding-right:20px;line-height:42px;width:82px;cursor:pointer;color:#3c96ff;font-size:14px}.environment-create .normal-status-node{color:#30D878}.environment-create .abnormal-status-node{color:#ff5656}.environment-create .refresh-status-node{color:#3c96ff}.environment-create .unable-import{border-color:#e6e6e6;background:#fafafa;color:#ccc}
+

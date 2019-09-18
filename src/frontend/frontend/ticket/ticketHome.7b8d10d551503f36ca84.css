@@ -1,0 +1,40 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon{animation:loading .8s linear infinite}@keyframes loading{from{transform:rotate(0)}to{transform:rotate(360deg)}}.collapse-transition{-webkit-transition:.2s height ease-in-out, .2s padding-top ease-in-out, .2s padding-bottom ease-in-out;-moz-transition:.2s height ease-in-out, .2s padding-top ease-in-out, .2s padding-bottom ease-in-out;transition:.2s height ease-in-out, .2s padding-top ease-in-out, .2s padding-bottom ease-in-out}.bk-menu{position:relative}.bkc-menu-item{cursor:pointer}.bkc-menu-child-item:hover{color:#3c96ff}.bkc-menu-title-wrapper{height:48px;line-height:48px;font-size:14px;padding:0 50px 0 25px;position:relative}.bkc-menu-title-wrapper:hover{color:#3c96ff}.bkc-menu-title-wrapper:hover .left-icon{color:#3c96ff}.bkc-menu-title-wrapper.hide{display:none}.bkc-menu-title-wrapper.disable{cursor:not-allowed;color:#c3cdd7}.bkc-menu-title-wrapper.selected{background-color:#ebf4ff;color:#3c96ff}.bkc-menu-title-wrapper.selected .left-icon{color:#3c96ff}.bkc-menu-title-wrapper.open{color:#3c96ff}.bkc-menu-title-wrapper.open .left-icon{color:#3c96ff}.bkc-menu-title-wrapper.child-selected{font-weight:700}.bkc-menu-title-wrapper .biz-badge{position:absolute;right:20px;top:17px}.bkc-menu-title-wrapper .left-icon{vertical-align:middle;font-size:20px;position:absolute;top:14px;color:#c4cdd6}.bkc-menu-title-wrapper .left-icon.disable{cursor:not-allowed;color:#c3cdd7}.bkc-menu-title-wrapper .right-icon{position:absolute;right:20px;top:17px;font-size:12px;-webkit-transition:transform linear .2s;transition:transform linear .2s}.bkc-menu-title-wrapper .right-icon.open{color:#3c96ff;-webkit-transform:rotate(180deg);transform:rotate(180deg)}.bkc-menu-title-wrapper .bkc-menu-title{margin-left:40px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bkc-menu-child-title-wrapper{font-size:14px;height:36px;line-height:36px;padding-left:65px;position:relative}.bkc-menu-child-title-wrapper.selected{background-color:#ebf4ff;color:#3c96ff}
+
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */.spin-icon{animation:loading .8s linear infinite}@keyframes loading{from{transform:rotate(0)}to{transform:rotate(360deg)}}.side-nav{position:relative;height:100%;padding-bottom:100px}.side-nav .biz-pm-dropdown .bk-selector-list{top:60px !important}.main-menu{padding-bottom:15px;margin:20px 0 15px 0;border-bottom:1px solid #dde4eb}.sub-menu .title{font-size:14px;font-weight:bold;text-align:left;color:#c3cdd7;padding-left:27px;margin:15px 0 15px 0;display:inline-block}.side-menu-list{padding-top:20px}.side-menu-list .title{margin-left:25px;margin-bottom:15px;font-size:14px;font-weight:bold;color:#c3cdd7}.side-menu-list .side-menu-item:first-child{margin-bottom:30px}.side-menu-list .side-menu-item:first-child+.side-menu-item{border-top:1px solid #ebf0f5}.side-menu-list .side-menu-item+.side-menu-item{padding-top:34px}.side-menu-nav{height:60px;padding:0 25px;border-bottom:1px solid #dde4eb;font-size:16px;color:#333948;display:flex;align-items:center}.side-menu-nav .nav-icon{margin-right:10px}.side-menu-nav i{padding-left:10px;color:#c4cdd6;cursor:pointer}.default-sidemenu-icon{display:inline-block;width:32px;height:32px;line-height:32px;border-radius:50%;color:#fff;text-align:center;font-size:20px;background-color:#737987}.biz-copyright{font-size:12px;color:#b7c0ca;width:100%;position:absolute;bottom:25px;text-align:center;line-height:20px;padding:0 15px}
+
+.credential-certificate-wrapper{height:100%}.credential-certificate-wrapper .bk-table th:first-child,.credential-certificate-wrapper .bk-table td:first-child{padding-left:20px}.sub-view-port{height:calc(100% - 60px);overflow:auto}
+

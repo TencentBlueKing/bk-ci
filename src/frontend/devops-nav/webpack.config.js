@@ -45,14 +45,14 @@ const path = require('path')
 const webpackBaseConfig = require('../webpack.base')
 const webpack = require('webpack')
 
-module.exports = (env, argv) => {
-  const dist = path.join(__dirname, '../devops/console')
+module.exports = (env = {}, argv) => {
+  const dist = path.join(__dirname, `../${env.dist}/console`)
   const config = webpackBaseConfig({
     env,
     argv,
     entry: './src/index',
     publicPath: '/console/',
-    dist,
+    dist: '/console',
     port: 8080
   })
   config.module.rules = [
