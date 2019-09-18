@@ -77,7 +77,8 @@ module.exports = (env = {}, argv) => {
     ...config.plugins,
     new HtmlWebpackPlugin({
       template: './src/index.html',
-      filename: `${dist}/index.html`,
+      
+      filename: `${dist}/frontend#console#index.html`,
       inject: false
     }),
     new AssetPlugin(),

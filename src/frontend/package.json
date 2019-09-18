@@ -12,23 +12,13 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run public:external --parallel",
-    "public": "gulp"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "node ./formatCommitMsg.js"
-    }
+    "public": "gulp -d frontend"
   },
   "workspaces": [
-    "devops-artifactory",
     "devops-codelib",
     "devops-environment",
-    "devops-experience",
     "devops-atomstore",
-    "devops-quality",
     "devops-ticket",
-    "devops-turbo",
-    "devops-vs",
     "devops-pipeline",
     "devops-nav"
   ]
