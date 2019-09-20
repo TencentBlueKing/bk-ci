@@ -1,4 +1,4 @@
-USE devops_ee_environment;
+USE devops_ci_environment;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
