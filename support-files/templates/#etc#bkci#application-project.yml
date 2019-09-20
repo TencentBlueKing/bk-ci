@@ -7,7 +7,7 @@ spring:
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21912
 server:
-  port: __DEVOPS_PROJECT_API_PORT__
+  port: __BKCI_PROJECT_API_PORT__
 
 # 蓝鲸登录平台API地址，对接蓝鲸平台时才需要用到
 bk_login:
