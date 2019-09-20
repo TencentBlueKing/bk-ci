@@ -7,8 +7,8 @@ spring:
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21914
 server:
-  port: __DEVOPS_LOG_API_PORT__
+  port: __BKCI_LOG_API_PORT__
 
 elasticsearch:
-  ip: __DEVOPS_ES_IP__
-  port: __DEVOPS_ES_PORT__
+  ip: __BKCI_ES_IP__
+  port: __BKCI_ES_PORT__

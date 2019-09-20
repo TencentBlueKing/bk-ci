@@ -31,9 +31,9 @@ config = {
       ip = {
         "127.0.0.1"
       },
-      port = __DEVOPS_CONSUL_PORT__,
-      domain = "__DEVOPS_CONSUL_DOMAIN__",
-      tag = "__DEVOPS_CONSUL_TAG__",
+      port = __BKCI_CONSUL_PORT__,
+      domain = "__BKCI_CONSUL_DOMAIN__",
+      tag = "__BKCI_CONSUL_TAG__",
     },
     redis = {
       host = "__REDIS_CLUSTER_HOST__",
@@ -54,8 +54,8 @@ config = {
     service_ip_whitelist = {
         -- 本地ip
         "127.0.0.1",
-        "__DEVOPS_GATEWAY_IP0__",
-        "__DEVOPS_GATEWAY_IP1__",
+        "__BKCI_GATEWAY_IP0__",
+        "__BKCI_GATEWAY_IP1__",
     }
   }
   
