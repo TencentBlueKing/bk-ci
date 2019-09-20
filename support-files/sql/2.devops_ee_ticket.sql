@@ -1,4 +1,4 @@
-USE devops_ee_ticket;
+USE devops_ci_ticket;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
