@@ -7,14 +7,14 @@ spring:
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21916
 server:
-  port: __DEVOPS_REPOSITORY_API_PORT__
+  port: __BKCI_REPOSITORY_API_PORT__
 
 # github repository
 github:
   clientId: __GITHUB_CLIENT_ID__
   clientSecret: __GITHUB_CLIENT_SECRET__
-  callbackUrl: https://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__/external/api/external/github/oauth/callback
-  redirectUrl: http://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__/console/codelib
+  callbackUrl: https://__BKCI_FQDN__:__BKCI_HTTP_PORT__/external/api/external/github/oauth/callback
+  redirectUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
   appUrl: https://github.com/apps/__GITHUB_APP__
   signSecret: __GITHUB_SIGN_SECRET__
 
