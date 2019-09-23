@@ -7,12 +7,12 @@ spring:
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21918
 server:
-  port: __DEVOPS_STORE_API_PORT__
+  port: __BKCI_STORE_API_PORT__
 
 store:
   profileUrlPrefix: http://__PAAS_USER_AVATARS_URL__
-  atomDetailBaseUrl: http://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__/console/store/atomStore/detail/atom/
-  templateDetailBaseUrl: http://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__/console/store/atomStore/detail/template/
+  atomDetailBaseUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/atom/
+  templateDetailBaseUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/template/
 
 file:
   allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
