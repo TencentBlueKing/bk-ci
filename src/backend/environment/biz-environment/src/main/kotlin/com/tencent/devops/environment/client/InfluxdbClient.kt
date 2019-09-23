@@ -50,16 +50,17 @@ class InfluxdbClient {
         val queryStr =
             "SELECT last(\"n_cpus\") FROM \"system\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND time >= now() - 7d and time <= now() - 30s; SELECT last(\"total\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/ AND time >= now() - 7d and time <= now() - 30s; SELECT max(\"total\") FROM \"disk\" WHERE \"agentId\" =~ /^$agentHashId\$/ and time >= now() - 7d and time <= now() - 30s"
         logger.info("queryStr: $queryStr")
+
+        var nCpus = "0"
+        var memTotal = "0"
+        var diskTotal = "0"
+
         val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
-            ?: return AgentHostInfo("0", "0", "0")
+            ?: return AgentHostInfo(nCpus, memTotal, diskTotal)
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
             throw OperationException("query influxdb failed")
         }
-
-        var nCpus = ""
-        var memTotal = ""
-        var diskTotal = ""
 
         try {
             val nCpusSerie = queryResult.results[0].series
