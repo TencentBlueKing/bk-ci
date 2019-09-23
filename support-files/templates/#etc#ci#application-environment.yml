@@ -11,3 +11,8 @@ server:
 
 environment:
   agent-package: __INSTALL_PATH__/__MODULE__/agent-package
+
+influxdb:
+  server: __INFLUXDB_SERVER__
+  userName: __INFLUXDB_USERNAME__
+  password: __INFLUXDB_PASSWORD__
