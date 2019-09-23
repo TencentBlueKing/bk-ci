@@ -1,4 +1,4 @@
-USE devops_ee_store;
+USE devops_ci_store;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
