@@ -31,13 +31,13 @@ config = {
       ip = {
         "127.0.0.1"
       },
-      port = __DEVOPS_CONSUL_PORT__,
-      domain = "__DEVOPS_CONSUL_DOMAIN__",
-      tag = "__DEVOPS_CONSUL_TAG__",
+      port = __BKCI_CONSUL_PORT__,
+      domain = "__BKCI_CONSUL_DOMAIN__",
+      tag = "__BKCI_CONSUL_TAG__",
     },
     redis = {
-      host = "__REDIS_CLUSTER_HOST__",
-      port = __REDIS_CLUSTER_PORT__,
+      host = "__REDIS_IP0__",
+      port = __REDIS_PORT__,
       pass = "__REDIS_PASS__",  -- redis 密码，没有密码的话，把这行注释掉
       database = 0,         -- 默认选择db0
       max_idle_time = 600000, -- 保留在连接池的时间
@@ -54,8 +54,8 @@ config = {
     service_ip_whitelist = {
         -- 本地ip
         "127.0.0.1",
-        "__DEVOPS_GATEWAY_IP0__",
-        "__DEVOPS_GATEWAY_IP1__",
+        "__BKCI_GATEWAY_IP0__",
+        "__BKCI_GATEWAY_IP1__",
     }
   }
   

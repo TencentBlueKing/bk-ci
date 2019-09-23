@@ -10,7 +10,7 @@ PROJECT_NAME=bkci
 # 服务相关修改
 SERVICE_NAME=ticket
 # HTTP端口的是占位符号 需要根据application-ticket.yml中设置的端口来替换
-HTTP_PORT=__DEVOPS_TICKET_API_PORT__
+HTTP_PORT=__BKCI_TICKET_API_PORT__
 
 # 详细的日志console.log开关，放开注释即可打开
 NOHUPLOG=/dev/null
