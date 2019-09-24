@@ -27,6 +27,7 @@
 dependencies {
     compile project(":common:common-auth:common-auth-sample")
     compile project(":artifactory:biz-artifactory")
+    compile project(":artifactory:biz-artifactory-blueking")
     compile project(":artifactory:biz-artifactory-store") // 对接研发商店
     compile project(":artifactory:biz-artifactory-sample") // sample 是开源版实现
 }

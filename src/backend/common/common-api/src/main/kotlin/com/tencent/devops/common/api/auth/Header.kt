@@ -31,6 +31,7 @@ package com.tencent.devops.common.api.auth
  * Powered By Tencent
  */
 const val AUTH_HEADER_USER_ID: String = "X-DEVOPS-UID"
+const val AUTH_HEADER_DEVOPS_BG_ID = "X-DEVOPS-BG-ID"
 const val AUTH_HEADER_USER_ID_DEFAULT_VALUE: String = "admin"
 // const val AUTH_HEADER_BUILD_ID: String = "X-DEVOPS-BID"
 // const val AUTH_HEADER_VM_SEQ_ID: String = "X-DEVOPS-VM-SID"
