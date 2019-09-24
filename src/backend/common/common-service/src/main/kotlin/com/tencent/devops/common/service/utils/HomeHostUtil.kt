@@ -52,6 +52,6 @@ object HomeHostUtil {
 
     fun outerApiServerHost(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsOuteApirHostGateWay!!
+        return commonConfig.devopsOuteApiHostGateWay!!
     }
 }

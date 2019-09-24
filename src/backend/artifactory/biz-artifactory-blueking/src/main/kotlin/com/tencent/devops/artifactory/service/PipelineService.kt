@@ -14,7 +14,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.common.auth.api.BkAuthPermissionApi
 import com.tencent.devops.common.auth.api.BkAuthResourceType
-import com.tencent.devops.common.auth.code.BkAuthServiceCode
 import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceJfrogResource
@@ -27,7 +26,7 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class PipelineService @Autowired constructor(
-    private val authPermissionApi: BkAuthPermissionApi,
+    private val bkAuthPermissionApi: BkAuthPermissionApi,
     private val jFrogPropertiesApi: JFrogPropertiesApi,
     private val jFrogService: JFrogService,
     private val client: Client,
@@ -357,13 +356,13 @@ class PipelineService @Autowired constructor(
     }
 
     fun validatePermission(user: String, projectId: String, pipelineId: String, bkAuthPermission: BkAuthPermission): Boolean {
-        return authPermissionApi.validateUserResourcePermission(user, pipelineAuthServiceCode, resourceType, projectId, pipelineId, bkAuthPermission)
+        return bkAuthPermissionApi.validateUserResourcePermission(user, pipelineAuthServiceCode, resourceType, projectId, pipelineId, bkAuthPermission)
     }
 
     fun filterPipeline(user: String, projectId: String, bkAuthPermission: BkAuthPermission): List<String> {
         val startTimestamp = System.currentTimeMillis()
         try {
-            return authPermissionApi.getUserResourceByPermission(
+            return bkAuthPermissionApi.getUserResourceByPermission(
                 user,
                 pipelineAuthServiceCode,
                 resourceType,
