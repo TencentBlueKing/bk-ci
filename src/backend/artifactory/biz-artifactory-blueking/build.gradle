@@ -25,8 +25,15 @@
  */
 
 dependencies {
+    compile project(":common:common-service")
+    compile project(":common:common-web")
+    compile project(":common:common-client")
+    compile project(":common:common-archive")
+    compile project(":common:common-db")
+    compile project(":common:common-auth:common-auth-api")
+    compile("com.amazonaws:aws-java-sdk-s3")
+    compile "net.coobird:thumbnailator:0.4.8"
     compile project(":artifactory:model-artifactory-blueking")
-    compile project(":artifactory:biz-artifactory")
     compile project(":artifactory:api-artifactory-blueking")
     compile project(":common:common-auth:common-auth-blueking")
     compile project(":common:common-archive:common-archive-blueking")
