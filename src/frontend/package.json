@@ -9,7 +9,7 @@
     "yargs": "^14.0.0"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
+    "start": "lerna bootstrap",
     "build": "lerna run public:external --parallel",
     "public": "gulp -d frontend"
   },
