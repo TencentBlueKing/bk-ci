@@ -1,11 +1,22 @@
 <template>
     <div class="devops-accordion-item">
-        <header @click="toggleContent" class="devops-accordion-item-header">
-            <icon class="icon-angle-down" :size="12" name="angle-down" :class="{ &quot;open&quot;: isContentShow }" />
-            <slot name="header"></slot>
+        <header
+            class="devops-accordion-item-header"
+            @click="toggleContent"
+        >
+            <icon
+                class="icon-angle-down"
+                :size="12"
+                name="angle-down"
+                :class="{ &quot;open&quot;: isContentShow }"
+            />
+            <slot name="header" />
         </header>
-        <div v-show="isContentShow" class="devops-accordion-item-content">
-            <slot name="content"></slot>
+        <div
+            v-show="isContentShow"
+            class="devops-accordion-item-content"
+        >
+            <slot name="content" />
         </div>
     </div>
 </template>
@@ -23,12 +34,12 @@
         
         @Watch('initContentShow')
         updateIsContentShow (val: boolean): void {
-            this.isContentShow = val
+          this.isContentShow = val
         }
 
         toggleContent () {
-            this.isContentShow = !this.isContentShow
-            this.$emit('update:contentShow', this.isContentShow)
+          this.isContentShow = !this.isContentShow
+          this.$emit('update:contentShow', this.isContentShow)
         }
     }
 </script>

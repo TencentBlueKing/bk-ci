@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "description": "",
     "dependencies": {
+        "vuex-class": "^0.3.0"
+    },
+    "devDependencies": {
+        "vue-template-compiler": "^2.5.16",
         "babel-loader": "^7.1.4",
         "babel-plugin-istanbul": "^4.1.6",
         "babel-plugin-lodash": "^3.3.2",
@@ -21,13 +25,8 @@
         "mini-css-extract-plugin": "^0.4.0",
         "sass-loader": "^7.0.1",
         "url-loader": "^1.0.1",
-        "vue-property-decorator": "^6.0.0",
-        "vue-template-compiler": "^2.5.16",
-        "vuex-class": "^0.3.0",
         "webpack": "^4.8.1",
-        "webpack-dev-server": "^3.1.4"
-    },
-    "devDependencies": {
+        "webpack-dev-server": "^3.1.4",
         "babel-core": "^6.26.3",
         "babel-eslint": "~10.0.2",
         "babel-plugin-transform-class-properties": "^6.24.1",
@@ -49,11 +48,12 @@
     },
     "scripts": {
         "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
-        "public:external": "cross-env NODE_ENV=external webpack --mode production"
+        "public:staging": "cross-env NODE_ENV=dev webpack --mode production",
+        "public:test": "cross-env NODE_ENV=test webpack --mode production",
+        "public": "cross-env NODE_ENV=master webpack --mode production"
     },
     "repository": {
         "type": "git",
-        "url": ""
-    },
-    "license": "ISC"
+        "url": "https://git.code.oa.com/bkdevops/bk-ci/tree/master/src/frontend/devops-codelib"
+    }
 }

@@ -1,9 +1,20 @@
 <template>
-    <step0 ref="step" :is-error="isError" v-if="stepIndex === 0" />
-    <div v-else class="quick-start-step-wrapper">
+    <step0
+        v-if="stepIndex === 0"
+        ref="step"
+        :is-error="isError"
+    />
+    <div
+        v-else
+        class="quick-start-step-wrapper"
+    >
         <aside>
             <ul class="step-list">
-                <li v-for="(step, index) in stepList" :key="index" :class="{ &quot;step&quot;: true, &quot;done&quot;: isDone(index + 1), &quot;active&quot;: isActive(index + 1) }">
+                <li
+                    v-for="(step, index) in stepList"
+                    :key="index"
+                    :class="{ &quot;step&quot;: true, &quot;done&quot;: isDone(index + 1), &quot;active&quot;: isActive(index + 1) }"
+                >
                     <span v-if="isDone(index + 1) || (isActive(index + 1) && index + 1 === stepList.length) "><i class="bk-icon icon-check-1" /></span>
                     <span v-else>{{ index + 1 }}</span>
                     <p>{{ step }}</p>
@@ -11,7 +22,11 @@
             </ul>
         </aside>
         <main>
-            <component ref="step" :is-error="isError" :is="currentStep" />
+            <component
+                :is="currentStep"
+                ref="step"
+                :is-error="isError"
+            />
         </main>
     </div>
 </template>
@@ -24,12 +39,12 @@
     import Step2 from './Step2.vue'
     import Step3 from './Step3.vue'
     @Component({
-        components: {
-            Step0,
-            Step1,
-            Step2,
-            Step3
-        }
+      components: {
+        Step0,
+        Step1,
+        Step2,
+        Step3
+      }
     })
     export default class QuickStartSteps extends Vue {
         @Prop({ required: true, default: [] })
@@ -46,19 +61,19 @@
         }
 
         isDone (index: number): boolean {
-            return index < this.stepIndex
+          return index < this.stepIndex
         }
 
         isActive (index: number): boolean {
-            return index === this.stepIndex
+          return index === this.stepIndex
         }
 
         validate () {
-            return !(this.$refs.step.validate && !this.$refs.step.validate())
+          return !(this.$refs.step.validate && !this.$refs.step.validate())
         }
 
         get currentStep (): string {
-            return `Step${this.stepIndex}`
+          return `Step${this.stepIndex}`
         }
     }
 </script>
