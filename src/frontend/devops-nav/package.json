@@ -4,7 +4,6 @@
   "description": "devops common",
   "main": "index.ts",
   "scripts": {
-    "postinstall": "npm run dll",
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
     "dll": "webpack --config webpack.dll.config.js --mode production",
     "public": "npm run dll && webpack --mode production",
