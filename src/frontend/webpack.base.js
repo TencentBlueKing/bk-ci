@@ -7,11 +7,6 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = ({ entry, publicPath, dist, PORT = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
-    // const nodeEnv = process.env.NODE_ENV || 'dev'
-    // const envPrefix = env && env.prefix ? env.prefix : nodeEnv
-    // const envDomain = env && env.domain ? env.domain : 'static.devops.oa.com'
-    // const publicPath = `http://${envPrefix === 'master' ? '' : `${envPrefix}.`}${envDomain}`
-    // const isMaster = envPrefix === 'master'
     const buildDist = path.join(__dirname, env.dist, dist)
     return {
         entry,
