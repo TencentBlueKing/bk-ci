@@ -1,6 +1,6 @@
 <template>
     <div class="step-wrapper">
-        <i class="bk-icon icon-check-circle quick-acess-success-icon"></i>
+        <i class="bk-icon icon-check-circle quick-acess-success-icon" />
         <p>你已在[{{ demo.projectName }}]下成功创建了一个交付流水线</p>
 
         <a :href="pipelineUrl">
@@ -18,8 +18,8 @@
         @State demo!: ObjectMap
 
         get pipelineUrl (): string {
-            const { pipelineId, projectId } = this.demo
-            return `/console/pipeline/${projectId}/${pipelineId}/edit`
+          const { pipelineId, projectId } = this.demo
+          return `/console/pipeline/${projectId}/${pipelineId}/edit`
         }
     }
 </script>

@@ -4,8 +4,8 @@
   "description": "devops-pipeline",
   "author": "",
   "scripts": {
+    "postinstall": "npm run dll",
     "dev": "webpack-dev-server --mode development --progress --env.name=dev",
-    "allclean": "rimraf dist && rimraf cddist && rimraf cidist",
     "dll": "webpack --mode production --config webpack.dll.config.js",
     "public": "npm run dll && webpack --mode production",
     "public:external": "npm run public -- --env.name=external"
@@ -24,7 +24,7 @@
     "stompjs": "^2.3.3",
     "vee-validate": "^2.0.3",
     "vue": "^2.6.10",
-    "vue-echarts": "^2.6.0",
+    "vue-echarts": "^3.0.9",
     "vue-router": "^2.8.1",
     "vuedraggable": "^2.16.0",
     "vuex": "^2.4.0",
@@ -71,7 +71,6 @@
     "express": "^4.15.5",
     "extract-text-webpack-plugin": "^3.0.0",
     "faker": "^4.1.0",
-    "file-loader": "^0.11.2",
     "friendly-errors-webpack-plugin": "^1.6.1",
     "ghooks": "^2.0.4",
     "gulp-inject": "^4.3.1",
