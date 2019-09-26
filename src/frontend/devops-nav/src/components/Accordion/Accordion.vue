@@ -1,6 +1,6 @@
 <template>
     <div class="devops-accordion">
-        <slot></slot>
+        <slot />
     </div>
 </template>
 
