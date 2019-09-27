@@ -17,42 +17,22 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file main entry
- */
+function ReplacePlugin (options) {
+    // Configure your plugin with options...
+    this.options = options
+}
+  
+ReplacePlugin.prototype.apply = function (compiler) {
+    compiler.plugin('compilation', (compilation) => {
+        compilation.plugin('html-webpack-plugin-before-html-processing', (data) => {
+            Object.keys(this.options).map(key => {
+                const reg = new RegExp(key, 'g')
+                const val = this.options[key]
+                data.html = data.html.replace(reg, val)
+            })
+            return data
+        })
+    })
+}
 
-import Vue from 'vue'
-import App from './App'
-import createRouter from './router'
-import store from './store'
-import focus from './directives/focus/index.js'
-
-import VeeValidate from 'vee-validate'
-import ExtendsCustomRules from './utils/customRules'
-import validDictionary from './utils/validDictionary'
-import PortalVue from 'portal-vue' // eslint-disable-line
-
-import bkMagic from 'bk-magic-vue'
-// 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
-Vue.use(PortalVue)
-ExtendsCustomRules(VeeValidate.Validator.extend)
-VeeValidate.Validator.localize(validDictionary)
-
-Vue.use(VeeValidate, {
-    fieldsBagName: 'veeFields',
-    locale: 'cn'
-})
-
-Vue.use(focus)
-Vue.use(bkMagic)
-
-global.pass3Vue = new Vue({
-    el: '#app',
-    router: createRouter(store),
-    store,
-    components: {
-        App
-    },
-    template: '<App/>'
-})
+module.exports = ReplacePlugin
