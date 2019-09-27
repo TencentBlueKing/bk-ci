@@ -5,20 +5,17 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 // const TerserPlugin = require('terser-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-module.exports = ({ entry, publicPath, dist, PORT = 8080, argv, env }) => {
+module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
-    // const nodeEnv = process.env.NODE_ENV || 'dev'
-    // const envPrefix = env && env.prefix ? env.prefix : nodeEnv
-    // const envDomain = env && env.domain ? env.domain : 'static.devops.oa.com'
-    // const publicPath = `http://${envPrefix === 'master' ? '' : `${envPrefix}.`}${envDomain}`
-    // const isMaster = envPrefix === 'master'
-    const buildDist = path.join(__dirname, env.dist, dist)
+    const isMaster = process.env.NODE_ENV === 'master'
+    const envDist = env && env.dist ? env.dist : 'frontend'
+    const buildDist = path.join(__dirname, envDist, dist)
     return {
         entry,
         output: {
             publicPath,
-            chunkFilename: isDev ? '[name].js' : '[name].[chunkhash].js',
-            filename: isDev ? '[name].js' : '[name].[contentHash].min.js',
+            chunkFilename: isMaster ? '[name].js' : '[name].[chunkhash].js',
+            filename: isMaster ? '[name].js' : '[name].[contentHash].min.js',
             path: buildDist
         },
         module: {
@@ -106,7 +103,7 @@ module.exports = ({ entry, publicPath, dist, PORT = 8080, argv, env }) => {
             historyApiFallback: true,
             noInfo: false,
             disableHostCheck: true,
-            port: PORT
+            port
         }
     }
 }

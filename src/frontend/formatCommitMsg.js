@@ -4,7 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const { exec } = require('child_process')
 
-const gitPath = path.join(process.env.HUSKY_GIT_PARAMS)
+const gitPath = path.join(__dirname, '../..', process.env.HUSKY_GIT_PARAMS)
 const commitMsg = fs.readFileSync(gitPath, 'utf-8')
 const typesEnum = [
     'story',
