@@ -16,7 +16,9 @@ function copy () {
 
 function build (cb) {
     const spinner = new Ora('building bk-ci frontend project').start()
-    require('child_process').exec(`yarn build -- -- --env.dist=${dist}`, (err, res) => {
+    require('child_process').exec(`yarn build -- -- --env.dist=${dist}`, {
+        maxBuffer: 5000 * 1024
+    }, (err, res) => {
         if (err) {
             console.log(err)
             process.exit(1)
