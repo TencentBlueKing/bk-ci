@@ -30,9 +30,9 @@ config = {
       ip = {
         "127.0.0.1"
       },
-      port = __DEVOPS_CONSUL_DNS_PORT__,
-      domain = "__DEVOPS_CONSUL_DOMAIN__",
-      tag = "__DEVOPS_CONSUL_TAG__",
+      port = __BKCI_CONSUL_DNS_PORT__,
+      domain = "__BKCI_CONSUL_DOMAIN__",
+      tag = "__BKCI_CONSUL_TAG__",
     },
     redis = {
       host = "__REDIS_IP0__",
@@ -46,7 +46,7 @@ config = {
       ip = "__IAM_IP0__",
       port = "__IAM_HTTP_PORT__",
       host = "__IAM_HOST__",
-      url = "/bkiam/api/v1/auth/access-tokens",     -- 接口路径
+      url = "__IAM_TOKEN_URL__",     -- 接口路径
       app_code = "__APP_CODE__",
       app_secret = "__APP_TOKEN__",
     },

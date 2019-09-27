@@ -21,9 +21,10 @@ usage_and_exit () {
 }
 
 target_file_path () {
+    local module=$MODULE
     local tpl_file=${1##*/}
     local _target_file
-	_target_file=../${tpl_file//#//}
+	_target_file=../$module/${tpl_file//#//}
 
     echo ${_target_file%.tpl}
 }
