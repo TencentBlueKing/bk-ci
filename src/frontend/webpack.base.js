@@ -5,7 +5,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 // const TerserPlugin = require('terser-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-module.exports = ({ entry, publicPath, dist, PORT = 8080, argv, env }) => {
+module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
     const buildDist = path.join(__dirname, env.dist, dist)
     return {
@@ -101,7 +101,7 @@ module.exports = ({ entry, publicPath, dist, PORT = 8080, argv, env }) => {
             historyApiFallback: true,
             noInfo: false,
             disableHostCheck: true,
-            port: PORT
+            port
         }
     }
 }
