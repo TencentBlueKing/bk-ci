@@ -103,8 +103,8 @@ module.exports = (env = {}, argv) => {
     }),
     new CopyWebpackPlugin([{ from: path.join(__dirname, './src/assets/static'), to: `${dist}/static` }]),
     ...(isDev ? [new ReplacePlugin({
-      '__HTTP_SCHEMA__://__DEVOPS_FQDN__/ms': `${urlPrefix}/ms`,
-      '__HTTP_SCHEMA__://__DEVOPS_FQDN__': ''
+      '__HTTP_SCHEMA__://__BKCI_FQDN__/ms': `${urlPrefix}/ms`,
+      '__HTTP_SCHEMA__://__BKCI_FQDN__': ''
     })] : [])
   ]
   return config
