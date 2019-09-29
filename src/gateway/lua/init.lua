@@ -21,8 +21,8 @@ config = {
   static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
   docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
   static_dir_codecc = "__INSTALL_PATH__/codecc/frontend",
-  http_schema = "__HTTP_SCHEMA__",   -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接,设置无效
-  paas_domain = "__PAAS_FQDN__",  -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接,设置无效
+  http_schema = "__HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
+  paas_domain = "__PAAS_FQDN__",   -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
   service_name = "",  -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
   allow_hosts = {
   },
@@ -31,21 +31,29 @@ config = {
     ip = {
       "127.0.0.1"
     },
-    port = 8600,
-    domain = "bkdevops",
-    tag = "devops",
+    port = __BKCI_CONSUL_DNS_PORT__,
+    domain = "__BKCI_CONSUL_DOMAIN__",
+    tag = "__BKCI_CONSUL_TAG__",
   },
   redis = {
     host = "__REDIS_IP0__",
     port = __REDIS_PORT__,
     pass = "__REDIS_PASS__",  -- redis 密码，没有密码的话，把这行注释掉
-    database = 1,
+    database = __REDIS_DB__,         -- 默认选择db0
     max_idle_time = 600000, -- 保留在连接池的时间
     pool_size = 10         -- 连接池的大小
   },
+  oauth = {  -- 对接蓝鲸权限中心才需要的配置
+    ip = "__IAM_IP0__",
+    port = "__IAM_HTTP_PORT__",
+    host = "__IAM_HOST__",
+    url = "__IAM_TOKEN_URL__",     -- 接口路径
+    app_code = "__APP_CODE__",
+    app_secret = "__APP_TOKEN__",
+  },
   service_ip_whitelist = {
-    -- local
-    "127.0.0.1",
+      -- 本地ip
+      "127.0.0.1",
   }
 }
 

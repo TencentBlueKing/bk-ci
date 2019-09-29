@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 _M = {}
 
-function _M:get_ticket(bk_token)
+function _M:get_ticket(bk_ticket)
     --- 初始化HTTP连接
     local httpc = http.new()
     --- 开始连接
@@ -28,9 +28,12 @@ function _M:get_ticket(bk_token)
 
     --- 组装请求body
     local requestBody = {
+        env_name = config.oauth.env, 
+        app_code = config.oauth.app_code, 
+        app_secret = config.oauth.app_secret, 
         grant_type =  "authorization_code",  
-        id_provider = "bk_login", 
-        bk_token = bk_token
+        id_provider = "bk_login_ied", 
+        bk_ticket = bk_ticket
     }
 
     --- 转换请求内容
@@ -44,15 +47,14 @@ function _M:get_ticket(bk_token)
     --- 发送请求
     -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
     local url = config.oauth.url
+    ngx.log(ngx.ERR, "get_ticket url: ", url)
     local res, err = httpc:request({
         path = url,
         method = "POST",
         headers = {
         ["Host"] = config.oauth.host,
         ["Accept"] = "application/json",
-        ["Content-Type"] = "application/json",
-        ["X-BK-APP-CODE"] = config.oauth.app_code,
-        ["X-BK-APP-SECRET"] = config.oauth.app_secret
+        ["Content-Type"] = "application/json"
         }, 
         body = requestBodyJson
     })
