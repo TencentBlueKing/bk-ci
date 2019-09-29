@@ -26,7 +26,7 @@ exec("git branch | grep '*' | sed 's/* //'", (error, stdout, stderr) => {
     
     const branchName = stdout.trim()
 
-    if (['dev', 'test', 'master'].includes(branchName)) {
+    if (['dev', 'develop', 'test', 'master'].includes(branchName)) {
         process.exit(0)
     }
     const [type, id] = branchName.split('_')
