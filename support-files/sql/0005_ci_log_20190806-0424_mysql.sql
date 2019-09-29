@@ -1,4 +1,4 @@
-USE devops_ee_log;
+USE devops_ci_log;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;

@@ -6,9 +6,9 @@ spring:
 # consul config do not need to change
   cloud:
     consul:
-      port: __DEVOPS_CONSUL_PORT__
+      port: __BKCI_CONSUL_PORT__
       discovery:
-        tags: __DEVOPS_CONSUL_TAG__
+        tags: __BKCI_CONSUL_TAG__
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
@@ -37,7 +37,7 @@ server:
 
 # gateway for system
 devopsGateway:
-  build: http://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__        # for build agent like dev.devops.blueking.com:80
-  host: http://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__         # for web many be same to buildGateWay
-  api: http://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__          # for api many be same to host
-  outer: http://__DEVOPS_FQDN__:__DEVOPS_HTTP_PORT__        # for internet domain
+  build: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__        # for build agent like dev.devops.blueking.com:80
+  host: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__         # for web many be same to buildGateWay
+  api: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__          # for api many be same to host
+  outer: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__        # for internet domain

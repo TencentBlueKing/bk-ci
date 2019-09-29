@@ -1,4 +1,4 @@
-USE devops_ee_project;
+USE devops_ci_project;
 SET NAMES utf8mb4;
 
 INSERT INTO `t_service`(`id`, `name`, `service_type_id`, `link`, `link_new`, `inject_type`, `iframe_url`, `css_url`, `js_url`, `show_project_list`, `show_nav`, `project_id_type`, `status`, `created_user`, `created_time`, `updated_user`, `updated_time`, `deleted`, `gray_css_url`, `gray_js_url`, `weight`) VALUES (3, '代码库(Code)', 2, 'devops/codelib/', '/codelib/', 'amd', '', '/codelib/codelib.css', '/codelib/codelib.js', b'1', b'1', 'path', 'ok', 'system', '2019-06-05 17:12:47', 'system', '2019-06-05 17:12:47', b'0', '', '', NULL);

@@ -1,4 +1,4 @@
-USE devops_ee_artifactory;
+USE devops_ci_artifactory;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
