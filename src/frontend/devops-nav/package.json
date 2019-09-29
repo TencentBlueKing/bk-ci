@@ -4,12 +4,10 @@
   "description": "devops common",
   "main": "index.ts",
   "scripts": {
-    "postinstall": "npm run dll",
-    "dll": "webpack --config webpack.dll.config.js --mode production",
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
-    "public:staging": "cross-env NODE_ENV=dev webpack --mode production",
-    "public:test": "cross-env NODE_ENV=test webpack --mode production",
-    "public": "cross-env NODE_ENV=master webpack --mode production"
+    "dll": "webpack --config webpack.dll.config.js --mode production",
+    "public": "npm run dll && webpack --mode production",
+    "public:external": "cross-env NODE_ENV=external npm run public --"
   },
   "author": "",
   "license": "ISC",

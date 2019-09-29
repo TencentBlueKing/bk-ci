@@ -56,9 +56,8 @@
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
-    "public:staging": "cross-env NODE_ENV=dev webpack --mode production",
-    "public:test": "cross-env NODE_ENV=test webpack --mode production",
-    "public": "cross-env NODE_ENV=master webpack --mode production"
+    "public:external": "cross-env NODE_ENV=external webpack --mode production",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
