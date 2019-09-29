@@ -23,11 +23,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="icon" href="/console/static/favicon.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="/console/static/favicon.ico" type="image/x-icon" />
-    <link rel='preload' as='script' href="/console/static/vue.min.js" />
-    <link rel='preload' as='script' href="/console/static/vuex.min.js" />
-    <link rel='preload' as='script' href="/console/static/vue-router.min.js" />
+    <link rel="icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
+    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js" />
+    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js" />
+    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js" />
     
     <!-- devops:css -->
     <% for (key in htmlWebpackPlugin.files.css) { %>
@@ -39,7 +39,7 @@
 <body>
     <script>
             var ajax = new XMLHttpRequest();
-            ajax.open("GET", "/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
+            ajax.open("GET", "<%=htmlWebpackPlugin.options.urlPrefix %>/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
             ajax.send();
             ajax.onload = function(e) {
                 var div = document.createElement('div');
@@ -61,9 +61,9 @@
         </div>
     </div>
     </div>
-    <script src="/console/static/vue.min.js"></script>
-    <script src="/console/static/vuex.min.js"></script>
-    <script src="/console/static/vue-router.min.js"></script>
+    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js"></script>
+    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js"></script>
+    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js"></script>
     <!-- devops:assets -->
     <!-- end devops:assets -->
     

@@ -24,15 +24,15 @@
         <meta name=viewport content="width=device-width,initial-scale=1">
         <meta http-equiv=X-UA-Compatible content="ie=edge">
         <meta http-equiv="Pragma" content="no-cache" />
-        <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon" />
-        <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon" />
-        <link rel="stylesheet" href="/common-lib/log/log.1.0.5.min.css">
+        <link rel="icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/static/images/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/static/images/favicon.ico" type="image/x-icon" />
+        <link rel="stylesheet" href="<%=htmlWebpackPlugin.options.urlPrefix %>/common-lib/log/log.1.0.5.min.css">
         <meta charset="utf-8">
         <title>流水线</title>
 
         <script>
             var ajax = new XMLHttpRequest();
-            ajax.open("GET", "/svg-sprites/pipeline_sprite.svg?t=" + Math.random(), true);
+            ajax.open("GET", "<%=htmlWebpackPlugin.options.urlPrefix %>/svg-sprites/pipeline_sprite.svg?t=" + Math.random(), true);
             ajax.send();
             ajax.onload = function(e) {
                 var div = document.createElement('div');
@@ -45,11 +45,11 @@
 <body>
     <div id="app"></div>
     <script src="<%= htmlWebpackPlugin.options.VENDOR_LIBS%>"></script>
-    <script defer src="/common-lib/log/log.1.0.5.min.js"></script>
-    <script src="/console/static/vue.min.js"></script>
-    <script src="/console/static/vuex.min.js"></script>
-    <script src="/console/static/vue-router.min.js"></script>
-    <script src="/console/static/devops-utils.js?t="></script>
+    <script defer src="<%=htmlWebpackPlugin.options.urlPrefix %>/common-lib/log/log.1.0.5.min.js"></script>
+    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js"></script>
+    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js"></script>
+    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js"></script>
+    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/devops-utils.js?t="></script>
     <script>
         var AJAX_URL_PIRFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'
         var WEB_URL_PIRFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/console'
