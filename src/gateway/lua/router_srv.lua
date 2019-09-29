@@ -47,7 +47,6 @@ if access_util then
   end
 end 
 
-ngx.log(ngx.ERR, "config.service_name:",config.service_name)
 local service_name = ngx.var.service
 if config.service_name ~= nil and config.service_name ~= "" then
   service_name = config.service_name
