@@ -28,7 +28,7 @@ end
 local ticket = oauthUtil:get_ticket(bk_token)
 
 --- 设置用户信息
-ngx.header["x-devops-uid"] = ticket.identity.username
+ngx.header["x-devops-uid"] = ticket.username
 ngx.header["x-devops-bk-token"] = bk_token
 ngx.header["x-devops-access-token"] = ticket.access_token
 ngx.exit(200)
