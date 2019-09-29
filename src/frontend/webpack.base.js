@@ -78,7 +78,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             }),
             new webpack.HashedModuleIdsPlugin(),
             new MiniCssExtractPlugin({
-                filename: isDev ? '[name].css' : '[name].[chunkHash].css',
+                filename: isMaster ? '[name].[chunkHash].css' : '[name].css',
                 chunkName: '[id].css'
             })
         ],
