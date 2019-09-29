@@ -46,6 +46,7 @@ config = {
     },
     oauth = {  -- 对接蓝鲸权限中心才需要的配置
       ip = "__IAM_IP0__",
+      env = "__BKCI_ENV__",
       port = __IAM_HTTP_PORT__,
       host = "__IAM_HOST__",
       url = "__IAM_TOKEN_URL__",     -- 接口路径
