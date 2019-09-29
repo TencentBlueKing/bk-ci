@@ -16,120 +16,17 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-const path = require('path')
-const webpack = require('webpack')
-const cssExtractPlugin = require('mini-css-extract-plugin')
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
-const TerserPlugin = require('terser-webpack-plugin')
+const webpackBaseConfig = require('../webpack.base')
 
 module.exports = (env, argv) => {
-    const nodeEnv = process.env.NODE_ENV || 'dev'
-    const envPrefix = env && env.prefix ? env.prefix : nodeEnv
-    const publicPath = '/store/'
-    const isMaster = envPrefix === 'master'
-    return {
+    return webpackBaseConfig({
+        env,
+        argv,
         entry: {
             store: './src/index'
         },
-        output: {
-            publicPath,
-            filename: isMaster ? '[name].[contenthash].min.js' : '[name].js'
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.vue$/,
-                    include: path.resolve('src'),
-                    loader: 'vue-loader'
-                },
-                {
-                    test: /\.js$/,
-                    include: path.resolve('src'),
-                    use: [
-                        {
-                            loader: 'babel-loader'
-                        }
-                    ]
-                },
-                {
-                    test: /\.css/,
-                    use: ['style-loader', 'css-loader']
-                },
-                {
-                    test: /.scss$/,
-                    use: [cssExtractPlugin.loader, 'css-loader', 'sass-loader']
-                },
-                {
-                    test: /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/,
-                    loader: 'url-loader'
-                },
-                {
-                    test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-                    loader: 'url-loader',
-                    options: {
-                        limit: 10000
-                    }
-                },
-                {
-                    test: /\.(js|vue)$/,
-                    loader: 'eslint-loader',
-                    enforce: "pre",
-                    include: [path.resolve('src')],
-                    exclude: /node_modules/,
-                    options: {
-                        formatter: require('eslint-friendly-formatter'),
-                        fix: true
-                    }
-                }
-            ]
-        },
-        plugins: [
-            new VueLoaderPlugin(),
-            new webpack.HashedModuleIdsPlugin(),
-            new cssExtractPlugin({
-                filename: isMaster ? '[name].[chunkHash].css' : '[name].css',
-                chunkName: '[id].css'
-            })//,
-            // new BundleAnalyzerPlugin()
-        ],
-        resolve: {
-            extensions: ['.js', '.vue', '.json'],
-            alias: {
-                '@': path.resolve('src'),
-                'vue$': 'vue/dist/vue.esm.js'
-            }
-        },
-        externals: {
-            'vue': 'Vue',
-            'vue-router': 'VueRouter',
-            'vuex': 'Vuex'
-        },
-        optimization: {
-            namedChunks: true,
-            minimizer: [
-                new TerserPlugin({
-                  cache: true,
-                  parallel: true,
-                  sourceMap: true, // Must be set to true if using source-maps in production
-                  terserOptions: {
-                    output: {
-                        comments: false
-                    },
-                    compress: {
-                        drop_console: true
-                    }
-                  }
-                })
-            ]
-        },
-        devServer: {
-            contentBase: path.join(__dirname, 'dist'),
-            historyApiFallback: true,
-            noInfo: false,
-            disableHostCheck: true,
-            port: 80
-        }
-    }
+        publicPath: '/store/',
+        dist: '/store',
+        port: 8003
+    })
 }

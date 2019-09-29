@@ -38,25 +38,25 @@ class CommonConfig {
     /**
      * DevOps 构建机网关地址
      */
-    @Value("\${devopsGateway.build}")
+    @Value("\${devopsGateway.build:#{null}}")
     val devopsBuildGateway: String? = null
 
     /**
      * DevOps API网关地址
      */
-    @Value("\${devopsGateway.host}")
+    @Value("\${devopsGateway.host:#{null}}")
     val devopsHostGateway: String? = null
 
     /**
      * DevOps API网关地址
      */
-    @Value("\${devopsGateway.api}")
+    @Value("\${devopsGateway.api:#{null}}")
     val devopsApiGateway: String? = null
 
     /**
      * DevOps 外部地址
      */
-    @Value("\${devopsGateway.outer}")
+    @Value("\${devopsGateway.outer:#{null}}")
     val devopsOuterHostGateWay: String? = null
 
     /**
@@ -64,4 +64,10 @@ class CommonConfig {
      */
     @Value("\${devopsGateway.outerApi}")
     val devopsOuteApiHostGateWay: String? = null
+
+    /**
+     * 微服务端口
+     */
+    @Value("\${server.port:80}")
+    val serverPort:Int = 80
 }

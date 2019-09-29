@@ -1,0 +1,18 @@
+# Project Service Template 服务配置文件模板
+spring:
+  datasource:
+    url: jdbc:mysql://__MYSQL_IP0__:__MYSQL_PORT__/devops_ci_project?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: __MYSQL_USER__
+    password: __MYSQL_PASS__
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21912
+server:
+  port: __BKCI_PROJECT_API_PORT__
+
+# 蓝鲸登录平台API地址，对接蓝鲸平台时才需要用到
+bk_login:
+  path: https://__PAAS_FQDN__:__PAAS_HTTP_PORT__/api/c/compapi/v2/bk_login/
+  getUser: get_user/
+  getAllUser: get_all_users/
+  bk_app_code: __APP_CODE__
+  bk_app_secret: __APP_TOKEN__

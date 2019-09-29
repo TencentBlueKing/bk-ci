@@ -1,0 +1,349 @@
+{
+  "system": "bk_ci",
+  "operations": [
+    {
+      "operation": "upset_perm_templates",
+      "data": {
+        "perm_template_name": "CI管理员",
+        "template_id": "bk_ci_administrator",
+        "desc": "初始化CI管理员权限模板",
+        "resource_types_actions": [
+          {
+            "scope_type_id": "system",
+            "resource_type_id": "project",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "system",
+            "resource_type_id": "project",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "system",
+            "resource_type_id": "project",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "system",
+            "resource_type_id": "project",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "system",
+            "resource_type_id": "project",
+            "action_id": "list"
+          },
+          {
+            "scope_type_id": "system",
+            "resource_type_id": "project",
+            "action_id": "manage"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "download"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "share"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "list"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "pipeline",
+            "action_id": "execute"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "repertory",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "repertory",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "repertory",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "repertory",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "repertory",
+            "action_id": "use"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "repertory",
+            "action_id": "list"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "credential",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "credential",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "credential",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "credential",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "credential",
+            "action_id": "use"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "credential",
+            "action_id": "list"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "cert",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "cert",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "cert",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "cert",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "cert",
+            "action_id": "use"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "cert",
+            "action_id": "list"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "environment",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "environment",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "environment",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "environment",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "environment",
+            "action_id": "use"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "environment",
+            "action_id": "list"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "node",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "node",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "node",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "node",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "node",
+            "action_id": "use"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "node",
+            "action_id": "list"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "deploy"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "move"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "copy"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "share"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "list"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "custom_dir",
+            "action_id": "mkdir"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "rule",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "rule",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "rule",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "rule",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "rule",
+            "action_id": "list"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "rule",
+            "action_id": "enable"
+          },
+
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "group",
+            "action_id": "view"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "group",
+            "action_id": "edit"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "group",
+            "action_id": "create"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "group",
+            "action_id": "delete"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "group",
+            "action_id": "list"
+          },
+          {
+            "scope_type_id": "project",
+            "resource_type_id": "group",
+            "action_id": "enable"
+          }
+        ]
+      }
+    }
+  ]
+}

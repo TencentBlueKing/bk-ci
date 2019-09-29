@@ -30,6 +30,7 @@ package com.tencent.devops.common.api.pojo
  * 构建机地域
  */
 enum class Zone(name: String) {
+    DEFAULT("默认"),
     SHENZHEN("深圳"),
     SHANGHAI("上海"),
     CHENGDU("成都"),

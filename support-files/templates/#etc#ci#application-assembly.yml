@@ -1,0 +1,81 @@
+# 服务配置文件模板
+spring:
+  datasource:
+    url: jdbc:mysql://__MYSQL_IP0__:__MYSQL_PORT__/devops_ci_process?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: __MYSQL_USER__
+    password: __MYSQL_PASS__
+
+server:
+  port: 21900
+
+# 以下配置为从其他文件同步而来，用作单实例的部署所用
+artifactory:
+  archiveLocalBasePath: __INSTALL_PATH__/public/artifactory
+
+environment:
+  agent-package: __INSTALL_PATH__/__MODULE__/agent-package
+
+elasticsearch:
+  ip: __BKCI_ES_IP__
+  port: __BKCI_ES_PORT__
+
+store:
+  profileUrlPrefix: http://__PAAS_USER_AVATARS_URL__
+  atomDetailBaseUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/atom/
+  templateDetailBaseUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/template/
+
+file:
+  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
+  maxUploadFileSize: 52428800
+
+# github repository
+github:
+  clientId: __GITHUB_CLIENT_ID__
+  clientSecret: __GITHUB_CLIENT_SECRET__
+  callbackUrl: https://__BKCI_FQDN__:__BKCI_HTTP_PORT__/external/api/external/github/oauth/callback
+  redirectUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
+  appUrl: https://github.com/apps/__GITHUB_APP__
+  signSecret: __GITHUB_SIGN_SECRET__
+
+#git typo repository
+git:
+  # many be no work for gitlab
+  gitlabUrl: http://__GITLAB_URL__    # or use git repository config
+  gitlabApiUrl: http://__GITLAB_URL__/api/v4
+
+#svn open api url
+svn:
+  apiUrl: http://__SVN_URL__
+  apiKey: __SVN_API_KEY__
+  webhookApiUrl: http://__SVN_URL__/webhooks
+
+# 蓝鲸登录平台API地址，对接蓝鲸平台时才需要用到
+bk_login:
+  path: https://__PAAS_FQDN__:__PAAS_HTTP_PORT__/api/c/compapi/v2/bk_login/
+  getUser: get_user/
+  getAllUser: get_all_users/
+  bk_app_code: __APP_CODE__
+  bk_app_secret: __APP_TOKEN__
+
+
+logo:
+  allowUploadLogoTypes: jpg,png,svg
+  allowUploadLogoWidth: 200
+  allowUploadLogoHeight: 200
+  maxUploadLogoSize: 2097152
+
+aes:
+  aesKey: "J%k^yO{?vt}3tXpG"
+  aesMock: "******"
+
+cert:
+  aes-key: "gHi(xG9Af)jEvCx&"
+
+credential:
+  mixer: "******"
+  aes-key: "G/I%yP{?ST}2TXPg"
+
+influxdb:
+  server: __INFLUXDB_SERVER__
+  userName: __INFLUXDB_USERNAME__
+  password: __INFLUXDB_PASSWORD__

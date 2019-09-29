@@ -1,0 +1,24 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "ghooks": "^2.0.4",
+    "gulp": "^4.0.2",
+    "lerna": "^3.16.4",
+    "ora": "^3.4.0",
+    "yargs": "^14.0.0"
+  },
+  "scripts": {
+    "start": "lerna bootstrap",
+    "build": "lerna run public:external --parallel",
+    "public": "gulp -d frontend"
+  },
+  "workspaces": [
+    "devops-codelib",
+    "devops-environment",
+    "devops-atomstore",
+    "devops-ticket",
+    "devops-pipeline",
+    "devops-nav"
+  ]
+}
