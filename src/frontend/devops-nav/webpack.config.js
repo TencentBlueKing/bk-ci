@@ -37,7 +37,8 @@
  */
 
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const AssetPlugin = require('./webpack/assets-webpack-plugin')
+const AssetPlugin = require('../webpackPlugin/assets-webpack-plugin')
+const ReplacePlugin = require('../webpackPlugin/replace-webpack-plugin')
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -46,7 +47,10 @@ const webpackBaseConfig = require('../webpack.base')
 const webpack = require('webpack')
 
 module.exports = (env = {}, argv) => {
-  const dist = path.join(__dirname, `../${env.dist}/console`)
+  const isDev = argv.mode === 'development'
+  const urlPrefix = env && env.name ? env.name : ''
+  const envDist = env && env.dist ? env.dist : 'frontend'
+  const dist = path.join(__dirname, `../${envDist}/console`)
   const config = webpackBaseConfig({
     env,
     argv,
@@ -77,8 +81,8 @@ module.exports = (env = {}, argv) => {
     ...config.plugins,
     new HtmlWebpackPlugin({
       template: './src/index.html',
-      
-      filename: `${dist}/frontend#console#index.html`,
+      filename: isDev ? 'index.html' : `${dist}/frontend#console#index.html`,
+      urlPrefix,
       inject: false
     }),
     new AssetPlugin(),
@@ -97,7 +101,11 @@ module.exports = (env = {}, argv) => {
       context: __dirname,
       manifest: require('./src/assets/static/manifest.json')
     }),
-    new CopyWebpackPlugin([{ from: path.join(__dirname, './src/assets/static'), to: `${dist}/static` }])
+    new CopyWebpackPlugin([{ from: path.join(__dirname, './src/assets/static'), to: `${dist}/static` }]),
+    ...(isDev ? [new ReplacePlugin({
+      '__HTTP_SCHEMA__://__BKCI_FQDN__/ms': `${urlPrefix}/ms`,
+      '__HTTP_SCHEMA__://__BKCI_FQDN__': ''
+    })] : [])
   ]
   return config
 }

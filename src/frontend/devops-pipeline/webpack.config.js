@@ -19,22 +19,24 @@
 
 const path = require('path')
 const webpack = require('webpack')
+const ReplacePlugin = require('../webpackPlugin/replace-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
 
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
-    const urlPrefix = env && env.name ? `${env.name}.` : ''
+    const urlPrefix = env && env.name ? `${env.name}` : ''
+    const envDist = env && env.dist ? env.dist : 'frontend'
     const extUrlPrefix = env && env.name ? `${env.name}-` : ''
-    const dist = path.join(__dirname, `../${env.dist}/pipeline`)
+    const dist = path.join(__dirname, `../${envDist}/pipeline`)
     const config = webpackBaseConfig({
         env,
         argv,
         entry: {
             pipeline: './src/main.js'
         },
-        publicPath: '/pipeline/',
+        publicPath: '/',
         dist: '/pipeline',
         port: 8006
     })
@@ -45,7 +47,7 @@ module.exports = (env, argv) => {
         // brace 优化，只提取需要的 theme
         new webpack.ContextReplacementPlugin(/brace\/theme$/, /^\.\/(monokai)$/),
         new HtmlWebpackPlugin({
-            filename: `${dist}/frontend#pipeline#index.html`,
+            filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
             inject: true,
             VENDOR_LIBS: `${isProd ? '/pipeline' : ''}/main.dll.js?v=${Math.random()}`,
@@ -56,7 +58,10 @@ module.exports = (env, argv) => {
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
-        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist/*'), to: `${dist}/` }])
+        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist'), to: dist }]),
+        ...(isProd ? [] : [new ReplacePlugin({
+            '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
+        })])
     ]
     return config
 }

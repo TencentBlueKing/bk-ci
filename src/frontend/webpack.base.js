@@ -7,13 +7,15 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
-    const buildDist = path.join(__dirname, env.dist, dist)
+    const isMaster = process.env.NODE_ENV === 'master'
+    const envDist = env && env.dist ? env.dist : 'frontend'
+    const buildDist = path.join(__dirname, envDist, dist)
     return {
         entry,
         output: {
             publicPath,
-            chunkFilename: isDev ? '[name].js' : '[name].[chunkhash].js',
-            filename: isDev ? '[name].js' : '[name].[contentHash].min.js',
+            chunkFilename: isMaster ? '[name].[chunkhash].js' : '[name].js',
+            filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
             path: buildDist
         },
         module: {
