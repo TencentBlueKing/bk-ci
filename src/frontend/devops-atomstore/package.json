@@ -49,9 +49,14 @@
     "webpack": "^4.8.1",
     "webpack-dev-server": "^3.1.4"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://git.code.oa.com/bkdevops/bk-ci/tree/master/src/frontend/devops-atomstore"
+  },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
-    "public:external": "cross-env NODE_ENV=external webpack --mode production"
-  },
-  "license": "ISC"
+    "public:staging": "cross-env NODE_ENV=dev webpack --mode production",
+    "public:test": "cross-env NODE_ENV=test webpack --mode production",
+    "public": "cross-env NODE_ENV=master webpack --mode production"
+  }
 }

@@ -4,10 +4,12 @@
   "description": "devops-pipeline",
   "author": "",
   "scripts": {
-    "dev": "webpack-dev-server --mode development --progress --env.name=dev",
-    "dll": "webpack --mode production --config webpack.dll.config.js",
-    "public": "npm run dll && webpack --mode production",
-    "public:external": "npm run public -- --env.name=external"
+    "postinstall": "npm run dll",
+    "dll": "webpack --config webpack.dll.config.js --mode production",
+    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+    "public:staging": "cross-env NODE_ENV=dev webpack --mode production",
+    "public:test": "cross-env NODE_ENV=test webpack --mode production",
+    "public": "cross-env NODE_ENV=master webpack --mode production"
   },
   "dependencies": {
     "bk-magic-vue": "2.0.8-beta.13",

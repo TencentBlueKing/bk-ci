@@ -33,7 +33,8 @@ import validDictionary from './utils/validDictionary'
 import PortalVue from 'portal-vue' // eslint-disable-line
 
 import bkMagic from 'bk-magic-vue'
-
+// 全量引入 bk-magic-vue 样式
+require('bk-magic-vue/dist/bk-magic-vue.min.css')
 Vue.use(PortalVue)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 VeeValidate.Validator.localize(validDictionary)

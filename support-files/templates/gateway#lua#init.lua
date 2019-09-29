@@ -46,7 +46,7 @@ config = {
       ip = "__IAM_IP0__",
       port = "__IAM_HTTP_PORT__",
       host = "__IAM_HOST__",
-      url = "/bkiam/api/v1/auth/access-tokens",     -- 接口路径
+      url = "__IAM_TOKEN_URL__",     -- 接口路径
       app_code = "__APP_CODE__",
       app_secret = "__APP_TOKEN__",
     },
