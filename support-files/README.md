@@ -23,7 +23,7 @@
    - 这个命令将会：
      - 读取bkenv.properties中值，替换掉support-files/templates/下所有文件中的占变量位符号
      - 按support-files/templates/目录下文件名，改名并移动到相对应的部署目录下
-     - 比如 #etc#bkci#common.yml 会移到 /data/bkee/etc/bkci/common.yml
+     - 比如 #etc#bkci#common.yml 会移到 /data/bkee/etc/ci/common.yml
 
 
 

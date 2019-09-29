@@ -20,6 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 config = {
     static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
     docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
+    static_dir_codecc = "__INSTALL_PATH__/codecc/frontend",
     http_schema = "__HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
     paas_domain = "__PAAS_FQDN__",   -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
     service_name = "",  -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
