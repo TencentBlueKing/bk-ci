@@ -52,7 +52,6 @@ if config.service_name ~= nil and config.service_name ~= "" then
   service_name = config.service_name
 end
 
-ngx.log(ngx.ERR, "service_name:",service_name)
 if not service_name then
   ngx.log(ngx.ERR, "failed with no service name")
   ngx.exit(503)
