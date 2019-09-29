@@ -1,4 +1,4 @@
-use devops_ee_repository;
+use devops_ci_repository;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
