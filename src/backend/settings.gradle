@@ -52,11 +52,13 @@ include ":project"
 include ":project:api-project"
 include ":project:api-project-sample"
 include ":project:api-project-blueking"
+include ":project:api-project-ee"
 include ":project:api-project-op"
 include ":project:biz-project"
 include ":project:biz-project-blueking"
 include ":project:biz-project-sample"
 include ":project:biz-project-op"
+include ":project:biz-project-ee"
 include ":project:boot-project"
 include ":project:model-project"
 
@@ -158,3 +160,5 @@ include ":experience:api-experience-blueking"
 
 include ":notify"
 include ":notify:api-notify-blueking"
+include 'project'
+

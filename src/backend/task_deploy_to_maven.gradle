@@ -56,7 +56,12 @@ uploadArchives {
             repository(url: mavenRepoDeployUrl) {
                 authentication(userName: mavenRepoUsername, password: mavenRepoPassword)
             }
+
+            snapshotRepository(url: MAVEN_REPO_SNAPSHOT_DEPLOY_URL) {
+                authentication(userName: MAVEN_REPO_SNAPSHOT_USERNAME, password: MAVEN_REPO_SNAPSHOT_PASSWORD)
+            }
         }
+
     }
 }
 

@@ -29,7 +29,6 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.MessageCodeDetail
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.OpMessageCodeResource
 import com.tencent.devops.project.pojo.code.AddMessageCodeRequest
 import com.tencent.devops.project.pojo.code.MessageCodeResp
 import com.tencent.devops.project.pojo.code.UpdateMessageCodeRequest
@@ -38,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpMessageCodeResourceImpl @Autowired constructor(private val messageCodeDetailService: MessageCodeDetailService) :
-    OpMessageCodeResource {
+        OpMessageCodeResource {
 
     override fun addMessageCodeDetail(addMessageCodeRequest: AddMessageCodeRequest): Result<Boolean> {
         return messageCodeDetailService.addMessageCodeDetail(addMessageCodeRequest)

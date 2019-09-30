@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api
+package com.tencent.devops.project
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -117,7 +117,8 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{validateType}/names/{name}/validate")
+//    @Path("/{validateType}/names/{name}/validate")
+    @Path("/validateType/{validateType}/names/{name}/validate")
     @ApiOperation("校验项目名称和项目英文名")
     fun validate(
         @ApiParam("userId", required = true)
@@ -132,5 +133,58 @@ interface UserProjectResource {
         @ApiParam("项目ID")
         @QueryParam("project_id")
         projectId: String?
+    ): Result<Boolean>
+
+    @PUT
+//    @Path("/{project_id}")
+    @Path("/projectId/{project_id}")
+    @ApiOperation("修改项目")
+    fun updateV2(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("project_id")
+            projectId: String,
+            @ApiParam(value = "项目信息", required = true)
+            projectUpdateInfo: ProjectUpdateInfo
+    ): Result<Boolean>
+
+    @PUT
+//    @Path("/{project_id}/logo")
+    @Path("/projectId/{project_id}/logo")
+    @ApiOperation("更改项目logo")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun updateLogoV2(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("project_id")
+            projectId: String,
+            @ApiParam("文件", required = true)
+            @FormDataParam("logo")
+            inputStream: InputStream,
+            @FormDataParam("logo")
+            disposition: FormDataContentDisposition
+    ): Result<Boolean>
+
+    @PUT
+//    @Path("/{validateType}/names/{name}/validate")
+    @Path("/validateType/{validateType}/names/{name}/validate")
+    @ApiOperation("校验项目名称和项目英文名")
+    fun validateV2(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("校验的是项目名称或者项目英文名")
+            @PathParam("validateType")
+            validateType: ProjectValidateType,
+            @ApiParam("项目名称或者项目英文名")
+            @PathParam("name")
+            name: String,
+            @ApiParam("项目ID")
+            @QueryParam("project_id")
+            projectId: String?
     ): Result<Boolean>
 }

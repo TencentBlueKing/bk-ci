@@ -107,7 +107,7 @@ class ProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo) {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String {
         validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
 
@@ -157,6 +157,7 @@ class ProjectServiceImpl @Autowired constructor(
             )
             try {
                 projectDao.create(dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId)
+                return projectId
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
                 throw OperationException("项目名或者英文名重复")
