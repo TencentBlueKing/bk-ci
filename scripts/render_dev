@@ -4,7 +4,7 @@
 set -o nounset                              # Treat unset variables as an error
 
 set -a
-BK_ENV_FILE=./bkenv_dev.properties
+BK_ENV_FILE=./ci_env_dev.properties
 [ -r $BK_ENV_FILE ] && source $BK_ENV_FILE
 set +a
 
