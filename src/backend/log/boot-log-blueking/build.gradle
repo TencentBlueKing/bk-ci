@@ -28,4 +28,4 @@ dependencies {
     compile project(":log:biz-log-blueking")
 }
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+apply from: "$rootDir/task_spring_boot_package.gradle"
