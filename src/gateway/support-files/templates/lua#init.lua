@@ -54,10 +54,6 @@ config = {
       app_secret = "__APP_TOKEN__",
     },
     service_ip_whitelist = {
-        -- 本地ip
-        "127.0.0.1",
-        "__BKCI_GATEWAY_IP0__",
-        "__BKCI_GATEWAY_IP1__",
     }
   }
   
