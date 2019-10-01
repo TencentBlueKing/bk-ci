@@ -162,6 +162,6 @@ include ":notify"
 include ":notify:api-notify-blueking"
 include ":notify:biz-notify-blueking"
 include ":notify:model-notify"
-include ":notify:boot-notify"
+include ":notify:boot-notify-blueking"
 include ":notify"
 
