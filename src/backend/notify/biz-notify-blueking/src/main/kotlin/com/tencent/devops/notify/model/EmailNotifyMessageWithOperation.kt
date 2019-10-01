@@ -1,5 +1,7 @@
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
+
 class EmailNotifyMessageWithOperation : EmailNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0

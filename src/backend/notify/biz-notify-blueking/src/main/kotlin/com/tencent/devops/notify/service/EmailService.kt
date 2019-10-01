@@ -1,8 +1,8 @@
 package com.tencent.devops.notify.service
 
-import com.tencent.devops.notify.model.EmailNotifyMessage
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
-import com.tencent.devops.notify.model.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 
 interface EmailService {
     fun sendMqMsg(message: EmailNotifyMessage)

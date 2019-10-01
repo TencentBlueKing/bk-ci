@@ -1,8 +1,8 @@
 package com.tencent.devops.notify.service
 
-import com.tencent.devops.notify.model.NotificationResponseWithPage
-import com.tencent.devops.notify.model.SmsNotifyMessage
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.SmsNotifyMessage
 
 interface SmsService {
     fun sendMqMsg(message: SmsNotifyMessage)

@@ -1,8 +1,8 @@
 package com.tencent.devops.notify.service
 
-import com.tencent.devops.notify.model.NotificationResponseWithPage
-import com.tencent.devops.notify.model.RtxNotifyMessage
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
 
 interface RtxService {
     fun sendMqMsg(message: RtxNotifyMessage)

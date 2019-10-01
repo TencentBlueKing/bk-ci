@@ -5,12 +5,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.OpNotifyResource
-import com.tencent.devops.notify.model.BaseMessage
-import com.tencent.devops.notify.model.EmailNotifyMessage
-import com.tencent.devops.notify.model.NotificationResponseWithPage
-import com.tencent.devops.notify.model.RtxNotifyMessage
-import com.tencent.devops.notify.model.SmsNotifyMessage
-import com.tencent.devops.notify.model.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.*
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
