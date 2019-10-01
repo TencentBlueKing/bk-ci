@@ -1,7 +1,3 @@
-plugins {
-    id 'java'
-}
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -28,25 +24,16 @@ plugins {
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-subprojects {
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-        compile "org.jetbrains.kotlin:kotlin-reflect"
-        testCompile "junit:junit"
-        testCompile "org.springframework.boot:spring-boot-starter-test"
-    }
-}
+package com.tencent.devops.notify
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
-group 'com.tencent.bk.devops'
-version '0.1.0-SNAPSHOT'
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
-sourceCompatibility = 1.8
+@MicroService
+@ComponentScan("com.tencent.devops.notify")
+class Application
 
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }
