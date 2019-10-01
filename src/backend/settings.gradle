@@ -173,4 +173,13 @@ include ":experience"
 include ":experience:api-experience-blueking"
 
 include ":notify"
+<<<<<<< HEAD
 include ":notify:api-notify"
+=======
+include ":notify:api-notify-blueking"
+include ":notify:biz-notify-blueking"
+include ":notify:model-notify"
+include ":notify:boot-notify"
+include ":notify"
+
+>>>>>>> notify
