@@ -496,18 +496,18 @@ class TemplateService @Autowired constructor(
 
     @Suppress("UNCHECKED_CAST")
     fun listAllTemplate(
-        projectId: String,
-        userId: String,
+        projectId: String?,
         templateType: TemplateType?,
+        templateIds: Collection<String>?,
         page: Int?,
         pageSize: Int?
     ): OptionalTemplateList {
-        logger.info("[$projectId|$userId|$templateType|$page|$pageSize] List template")
+        logger.info("[$projectId|$templateType|$page|$pageSize] List template")
         val result = mutableMapOf<String, OptionalTemplate>()
         val templateCount = templateDao.countTemplate(dslContext, projectId, true, templateType, null, null)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val templates = templateDao.listTemplate(context, projectId, true, templateType, null, null, page, pageSize)
+            val templates = templateDao.listTemplate(context, projectId, true, templateType, templateIds, null, page, pageSize)
 
             val constrainedTemplateList = mutableListOf<String>()
             val templateIdList = mutableSetOf<String>()
@@ -517,8 +517,7 @@ class TemplateService @Autowired constructor(
                 }
                 templateIdList.add(tempTemplate["templateId"] as String)
             }
-            val srcTemplateRecords =
-                templateDao.listTemplate(context, null, null, null, constrainedTemplateList, null, null, null)
+            val srcTemplateRecords = templateDao.listTemplate(context, null, null, null, constrainedTemplateList, null, null, null)
             val srcTemplates = srcTemplateRecords?.associateBy { it["templateId"] as String }
 
             val settings = pipelineSettingDao.getSettings(context, templateIdList).map { it.pipelineId to it }.toMap()
@@ -533,7 +532,8 @@ class TemplateService @Autowired constructor(
                     record
                 }
 
-                if (templateRecord != null) {
+                if (templateRecord == null) {
+                } else {
                     val modelStr = templateRecord["template"] as String
                     val version = templateRecord["version"] as Long
 
@@ -541,20 +541,17 @@ class TemplateService @Autowired constructor(
                     val setting = settings[templateId]
                     val logoUrl = record["logoUrl"] as? String
                     val categoryStr = record["category"] as? String
-                    val key =
-                        if (type == TemplateType.CONSTRAINT.name) record["srcTemplateId"] as String else templateId
+                    val key = if (type == TemplateType.CONSTRAINT.name) record["srcTemplateId"] as String else templateId
                     result[key] = OptionalTemplate(
                         name = setting?.name ?: model.name,
                         templateId = templateId,
+                        projectId = templateRecord["projectId"] as String,
                         version = version,
                         versionName = templateRecord["versionName"] as String,
                         templateType = type,
                         templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
                         logoUrl = logoUrl ?: "",
-                        category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
-                            categoryStr,
-                            List::class.java
-                        ) as List<String> else listOf(),
+                        category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(categoryStr, List::class.java) as List<String> else listOf(),
                         stages = model.stages
                     )
                 }
@@ -568,6 +565,7 @@ class TemplateService @Autowired constructor(
             templates = result
         )
     }
+
 
     fun getTemplate(projectId: String, userId: String, templateId: String, version: Long?): TemplateModelDetail {
         var templates = templateDao.listTemplate(dslContext, projectId, templateId)

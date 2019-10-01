@@ -41,6 +41,8 @@ data class OptionalTemplate(
     val name: String,
     @ApiModelProperty("模版ID", required = true)
     val templateId: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
     @ApiModelProperty("版本ID", required = true)
     val version: Long,
     @ApiModelProperty("最新版本号", required = true)

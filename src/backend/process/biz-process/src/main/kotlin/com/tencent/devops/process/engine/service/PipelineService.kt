@@ -59,6 +59,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineSettingService
@@ -1130,6 +1131,29 @@ class PipelineService @Autowired constructor(
         watch.stop()
         logger.info("count|projectId=$projectId|watch=$watch")
         return grayNum
+    }
+
+    fun getPipelineByIds(projectId: String, pipelineIds: Set<String>): List<SimplePipeline> {
+        if (pipelineIds.isEmpty()) return listOf()
+        if (projectId.isBlank()) return listOf()
+
+        val watch = StopWatch()
+        watch.start("s_r_list_b_ps")
+        val pipelines = pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, pipelineIds)
+        val templatePipelineIds = templatePipelineDao.listByPipelines(dslContext, pipelineIds).map { it.pipelineId }
+        watch.stop()
+        logger.info("getPipelineByIds|[$projectId]|watch=$watch")
+        return pipelines.map {
+            SimplePipeline(
+                it.projectId,
+                it.pipelineId,
+                it.pipelineName,
+                it.pipelineDesc,
+                it.taskCount,
+                it.delete,
+                templatePipelineIds.contains(it.pipelineId)
+            )
+        }
     }
 
     fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Map<String, String> {

@@ -39,7 +39,7 @@ dependencies {
     compile project(":common:common-archive:common-archive-blueking")
     compile project(":process:api-process-blueking")
     compile project(":experience:api-experience-blueking")
-    compile project(":notify:api-notify-blueking")
+    compile project(":notify:api-notify")
     compile project(":project:api-project-blueking")
 }
 

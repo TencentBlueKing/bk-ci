@@ -20,7 +20,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.model.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.project.api.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

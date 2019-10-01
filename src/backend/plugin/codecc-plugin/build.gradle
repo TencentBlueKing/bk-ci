@@ -1,0 +1,2 @@
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

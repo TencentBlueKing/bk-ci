@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -129,6 +130,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(pipelineService.isPipelineRunning(projectId, buildId, channelCode))
+    }
+
+    override fun getPipelineByIds(projectId: String, pipelineIds: Set<String>): Result<List<SimplePipeline>> {
+        return Result(pipelineService.getPipelineByIds(projectId, pipelineIds))
     }
 
     override fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {

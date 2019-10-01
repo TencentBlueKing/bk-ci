@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -193,6 +194,17 @@ interface ServicePipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<Long>
+
+    @ApiOperation("根据流水线id获取流水线名字")
+    @POST
+    @Path("/{projectId}/getPipelines")
+    fun getPipelineByIds(
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线id列表", required = true)
+        pipelineIds: Set<String>
+    ): Result<List<SimplePipeline>>
 
     @ApiOperation("根据流水线id获取流水线名字")
     @POST

@@ -228,7 +228,7 @@ class PTemplateDao {
         storeFlag: Boolean?
     ): Int {
         with(TTemplate.T_TEMPLATE) {
-            val conditions = kotlin.collections.mutableListOf<Condition>()
+            val conditions = mutableListOf<Condition>()
             if (projectId != null) {
                 if (includePublicFlag != null && includePublicFlag) {
                     conditions.add(PROJECT_ID.eq(projectId).or(TYPE.eq(com.tencent.devops.process.pojo.template.TemplateType.PUBLIC.name)))
@@ -259,7 +259,7 @@ class PTemplateDao {
         projectId: String?,
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
-        templateIdList: List<String>?,
+        templateIdList: Collection<String>?,
         storeFlag: Boolean?,
         page: Int?,
         pageSize: Int?
@@ -274,6 +274,29 @@ class PTemplateDao {
                 conditions.add(a.PROJECT_ID.eq(projectId))
             }
         }
+
+        return listTemplateByProjectCondition(
+            dslContext = dslContext,
+            templateType = templateType,
+            templateIdList = templateIdList,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize,
+            a = a,
+            conditions = conditions
+        )
+    }
+
+    fun listTemplateByProjectCondition(
+        dslContext: DSLContext,
+        templateType: TemplateType?,
+        templateIdList: Collection<String>?,
+        storeFlag: Boolean?,
+        page: Int?,
+        pageSize: Int?,
+        a: TTemplate,
+        conditions: MutableList<Condition>
+    ): Result<out Record>? {
         if (templateType != null) {
             conditions.add(a.TYPE.eq(templateType.name))
         }
@@ -297,7 +320,8 @@ class PTemplateDao {
             a.CREATED_TIME.`as`("createdTime"),
             a.SRC_TEMPLATE_ID.`as`("srcTemplateId"),
             a.TEMPLATE.`as`("template"),
-            a.CATEGORY.`as`("category")
+            a.CATEGORY.`as`("category"),
+            a.PROJECT_ID.`as`("projectId")
         )
             .from(a)
             .join(t)
