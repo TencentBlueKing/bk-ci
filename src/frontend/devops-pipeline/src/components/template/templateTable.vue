@@ -21,7 +21,7 @@
                                     <img :src="row.logoUrl" class="pipeline-icon" v-if="row.logoUrl">
                                     <logo size="40" name="pipeline" v-else></logo>
                                 </td>
-                                <td width="16%" :class="{ 'template-name': isManagerUser }" :title="row.name">
+                                <td width="16%" :class="[{ 'manager-user': isManagerUser }, 'template-name']" :title="row.name">
                                     <span @click="editTemplate(row)">{{row.name}}</span>
                                 </td>
                                 <td width="10%" class="template-version" :title="row.versionName">{{ row.versionName }}</td>
@@ -436,10 +436,14 @@
                         }
                         &.template-name {
                             max-width: 192px;
-                            color: $primaryColor;
                             padding: 0;
                             span {
                                 margin: 8px 13px;
+                            }
+                        }
+                        &.manager-user {
+                            color: $primaryColor;
+                            span {
                                 cursor: pointer;
                             }
                         }

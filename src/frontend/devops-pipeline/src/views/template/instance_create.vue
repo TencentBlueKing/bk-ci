@@ -12,7 +12,6 @@
         <div class="sub-view-port" v-if="showContent">
             <div class="template-information">
                 <div class="template-introduction">
-                    <!--<img src="@/scss/logo/pipeline.svg" class="template-logo">-->
                     <logo name="pipeline" class="template-logo"></logo>
                     <div class="template-name">{{ template.templateName }}</div>
                     <div class="template-creator"><span>创建人：</span>{{ template.creator }}</div>

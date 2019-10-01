@@ -29,6 +29,7 @@
                         <span v-if="row.artifactoryType === 'PIPELINE'">流水线仓库</span>
                     </div>
                     <div class="table-part-item part-item-handler">
+                        <!-- <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" title="到版本仓库查看"></i> -->
                         <i class="bk-icon icon-new-download handler-btn" v-if="hasPermission" title="下载"
                             @click="requestUrl(row, 'download')"></i>
                         <span class="handler-btn-tool qrcode"
@@ -51,12 +52,6 @@
                                 <p> 你没有该流水线的下载构件权限，无法下载</p>
                             </template>
                         </bk-popover>
-                        <!--<bk-popover placement="left" v-if="!hasPermission">
-                            <i class="bk-icon icon-qrcode disabled-btn"></i>
-                            <template slot="content">
-                                <p> 你没有该流水线的下载构件权限，无法下载</p>
-                            </template>
-                        </bk-popover>-->
                     </div>
                 </div>
             </div>
@@ -79,8 +74,8 @@
                     v-bkloading="{
                         isLoading: sideSliderConfig.isLoading
                     }">
-                    <bk-tab :active="'detailInfo'" type="unborder-card">
-                        <bk-tab-panel name="detailInfo" label="基础信息">
+                    <tab :active-name="'detailInfo'">
+                        <tab-panel name="detailInfo" title="基础信息">
                             <div class="detail-info">
                                 <div class="detail-info-label"><span>Info</span></div>
                                 <ul>
@@ -102,8 +97,8 @@
                                     </li>
                                 </ul>
                             </div>
-                        </bk-tab-panel>
-                        <bk-tab-panel name="metaDate" label="元数据" v-if="!lastClickItem.folder">
+                        </tab-panel>
+                        <tab-panel name="metaDate" title="元数据" v-if="!lastClickItem.folder">
                             <table class="bk-table has-thead-bordered has-table-striped" v-if="Object.keys(sideSliderConfig.data.meta).length">
                                 <thead>
                                     <tr>
@@ -122,8 +117,8 @@
                             <div v-else>
                                 <div style="text-align:center;padding: 30px 0;">暂无元数据</div>
                             </div>
-                        </bk-tab-panel>
-                    </bk-tab>
+                        </tab-panel>
+                    </tab>
                 </div>
             </template>
         </bk-sideslider>
@@ -143,7 +138,6 @@
                 showContent: false,
                 hasPermission: true,
                 curIndexItemUrl: '',
-                emptyTitle: 'wushuhsdjkghafjko',
                 iconExts: {
                     txt: ['.json', '.txt', '.md'],
                     zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar'],
@@ -393,9 +387,33 @@
                     return value
                 }
             },
-            isApkOrIpa (row) {
-                const type = row.name.toUpperCase().substring(row.name.lastIndexOf('.') + 1)
-                return type === 'APK' || type === 'IPA'
+            async copyToCustom (artifactory) {
+                let message, theme
+                try {
+                    const { projectId, pipelineId, buildNo } = this.$route.params
+                    const params = {
+                        files: [artifactory.name],
+                        copyAll: false
+                    }
+                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                        projectId,
+                        pipelineId,
+                        buildId: buildNo,
+                        params
+                    })
+                    if (res) {
+                        message = '保存成功'
+                        theme = 'success'
+                    }
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    this.$showTips({
+                        message,
+                        theme
+                    })
+                }
             }
         }
     }
@@ -539,6 +557,13 @@
         .handler-btn-tool {
             position: relative;
             display: inline-block;
+        }
+        .icon-copy {
+            fill: $fontWeightColor;
+            cursor: pointer;
+            &:hover {
+                fill: $primaryColor;
+            }
         }
         .artifactory-slider-info {
             padding: 5px 50px;

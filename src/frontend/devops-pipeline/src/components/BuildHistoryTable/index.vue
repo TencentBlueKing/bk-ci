@@ -5,6 +5,7 @@
             :data="data"
             :row-class-name="handleRowStyle"
             @row-click="handleRowClick"
+            @header-dragend="handleDragend"
             empty-text="搜索结果为空"
             size="small">
             <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
@@ -26,10 +27,10 @@
                 </template>
                 <template v-else-if="col.prop === 'material'" v-slot="props">
                     <template v-if="Array.isArray(props.row.material) && props.row.material.length > 0">
-                        <div v-for="material in props.row.material" :key="material.aliasName" class="material-item">
+                        <div @click.stop="" v-for="material in props.row.material" :key="material.aliasName" class="material-item">
                             <p :title="generateMaterial(material)" :class="{ 'show-commit-times': material.commitTimes > 1 }">{{ generateMaterial(material) }}</p>
                             <span class="material-commit-id" v-if="material.newCommitId" :title="material.newCommitId" @click.stop="goCodeRecords(props.row, material.aliasName)">
-                                <span>{{ material.newCommitId.slice(0, 8) }}</span>
+                                <span class="commit-nums">{{ material.newCommitId.slice(0, 8) }}</span>
                                 <span class="commit-times" v-if="material.commitTimes > 1">{{ material.commitTimes }} commit</span>
                             </span>
                         </div>
@@ -87,16 +88,21 @@
                     </p> -->
                 </template>
                 <template v-else-if="col.prop === 'remark'" v-slot="props">
-                    <p class="remark-cell" :title="props.row.remark">
-
-                        <span v-if="activeRemarkIndex === props.row.index && props.row.active">
-                            <i v-if="isChangeRemark" class="bk-icon icon-circle-2-1 spin-icon" />
-                            <textarea v-else v-bk-focus="1" rows="5" class="remark-input" v-model.trim="tempRemark" @click.stop @keypress.enter.prevent="triggerRemarkBlur" @blur="handleRemarkChange(props.row)" />
-                        </span>
-                        <span v-else :class="{ 'remark-span': true, active: props.row.active }" @click.stop="activeRemarkInput(props.row)">
+                    <div class="remark-cell">
+                        <span :class="{ 'remark-span': true, active: props.row.active }" :title="props.row.remark">
                             {{ props.row.remark || '--' }}
                         </span>
-                    </p>
+                        <bk-popover ref="remarkPopup" trigger="click" theme="light" placement="left">
+                            <i class="bk-icon icon-edit remark-entry" @click.stop="activeRemarkInput(props.row)" />
+                            <div slot="content">
+                                <bk-input type="textarea" ref="remarkInput" rows="3" class="remark-input" v-model.trim="tempRemark" />
+                                <div class="remark-edit-footer">
+                                    <bk-button size="small" theme="primary" @click="handleRemarkChange(props.row)">确认</bk-button>
+                                    <bk-button size="small" @click="resetRemark">取消</bk-button>
+                                </div>
+                            </div>
+                        </bk-popover>
+                    </div>
                 </template>
                 <template v-else v-slot="props">
                     {{ props.row[col.prop] }}
@@ -119,6 +125,7 @@
                             <span class="artifact-size">{{ artifactory.size }}</span>
                         </p>
                         <i class="bk-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
+                        <Logo class="icon-copy" name="copy" size="12" v-if="artifactory.artifactoryType === 'PIPELINE'" @click.stop.native="copyToCustom(artifactory)"></Logo>
                     </li>
                     <footer v-if="needShowAll" @click.stop="showAllArtifactory" class="history-text-link">显示全部</footer>
                 </ul>
@@ -223,11 +230,24 @@
                 const { data, visibleIndex } = this
                 return data[visibleIndex] && data[visibleIndex].artifactories ? data[visibleIndex].artifactories : []
             },
+            currentBuildId () {
+                const { data, visibleIndex } = this
+                return data[visibleIndex] && data[visibleIndex].id
+            },
             needShowAll () {
                 return this.data[this.visibleIndex].needShowAll
             },
             columnList () {
-                return this.columns.map(key => BUILD_HISTORY_TABLE_COLUMNS_MAP[key])
+                return this.columns.map(key => this.column[key])
+            },
+            column () {
+                Object.keys(BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
+                    if (item === 'material') {
+                        const localStorageVal = localStorage.getItem('materialWidth')
+                        BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal || 500
+                    }
+                })
+                return BUILD_HISTORY_TABLE_COLUMNS_MAP
             }
         },
         watch: {
@@ -239,12 +259,20 @@
             activeRemarkInput (row) {
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
+                const instance = this.getRemarkPopupInstance(row.index)
+                if (instance) {
+                    instance.show()
+                    this.$nextTick(() => {
+                        const el = this.$refs.remarkInput && this.$refs.remarkInput[row.index]
+                        el && el.focus()
+                    })
+                }
+            },
+            getRemarkPopupInstance (activeRemarkIndex) {
+                return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance && this.$refs.remarkPopup[activeRemarkIndex].instance.instances && this.$refs.remarkPopup[activeRemarkIndex].instance.instances[0]
             },
             retryable (row) {
                 return row.pipelineVersion === this.currentPipelineVersion && ['QUEUE', 'SUCCEED', 'RUNNING'].indexOf(row.status) < 0
-            },
-            triggerRemarkBlur (e) {
-                e.target.blur()
             },
             async handleRemarkChange (row) {
                 try {
@@ -260,6 +288,7 @@
                             theme: 'success',
                             message: '修改备注成功'
                         })
+                        this.resetRemark()
                     } else {
                         this.resetRemark()
                     }
@@ -271,17 +300,21 @@
                 }
             },
             resetRemark () {
-                this.isChangeRemark = false
-                this.tempRemark = ''
-                this.activeRemarkIndex = -1
+                const remarkPopupInstance = this.getRemarkPopupInstance(this.activeRemarkIndex)
+                remarkPopupInstance && remarkPopupInstance.hide()
+
+                this.$nextTick(() => {
+                    this.isChangeRemark = false
+                    this.tempRemark = ''
+                    this.activeRemarkIndex = -1
+                })
             },
             generateMaterial (material) {
-                return material ? `${material.aliasName}${material.branchName ? `@${material.branchName}` : ''}` : '--'
+                return material ? `${material.aliasName || '--'}${material.branchName ? `@${material.branchName}` : ''}` : '--'
             },
             handleRowStyle ({ row, rowIndex }) {
                 return rowIndex === this.activeIndex ? 'expand-row is-row-hover' : 'is-row-hover'
             },
-
             handleRowClick (row, e) {
                 this.hideArtifactoriesPopup()
                 if (this.activeIndex === row.index) {
@@ -290,6 +323,9 @@
                 } else {
                     this.activeIndex = row.index
                 }
+            },
+            handleDragend (newWidth, oldWidth, column) {
+                if (column.property === 'material') localStorage.setItem('materialWidth', newWidth)
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
                 const { projectId, pipelineId } = this.$route.params
@@ -346,26 +382,44 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
-                    // if (key === 'url') {
-                    //     let res = await this.$store.dispatch('soda/requestExternalUrl', {
-                    //         projectId: this.projectId,
-                    //         artifactoryType: row.artifactoryType,
-                    //         path: row.path
-                    //     })
-
-                    //     this.curIndexItemUrl = res.url
-                    // } else {
                     const res = await this.$store.dispatch('soda/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
                     window.open(res.url, '_self')
-                    // }
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
 
+                    this.$showTips({
+                        message,
+                        theme
+                    })
+                }
+            },
+            async copyToCustom (artifactory) {
+                let message, theme
+                try {
+                    const { projectId, pipelineId } = this.$route.params
+                    const params = {
+                        files: [artifactory.name],
+                        copyAll: false
+                    }
+                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                        projectId,
+                        pipelineId,
+                        buildId: this.currentBuildId,
+                        params
+                    })
+                    if (res) {
+                        message = '保存成功'
+                        theme = 'success'
+                    }
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
                     this.$showTips({
                         message,
                         theme
@@ -466,9 +520,9 @@
         padding: 2px 0;
         font-size: 12px;
         cursor: pointer;
-        color: $fontWeightColor;
+        color: #333333;
         > a {
-            color: $fontWeightColor;
+            color: #333333;
         }
         &:hover {
             color: $primaryColor;
@@ -509,13 +563,16 @@
         }
         .bk-table-body-wrapper {
             tr:hover {
+                .remark-entry {
+                    display: inline-block;
+                }
                 .bk-icon.running-icon {
                     cursor: pointer;
                     animation: none;
                     font-size: 8px;
                     &:before {
                         content: "\E953";
-                        border: 1px solid $fontWeightColor;
+                        border: 1px solid #333333;
                         padding: 2px;
                         border-radius: 50%;
                     }
@@ -553,7 +610,6 @@
         .material-item {
             display: flex;
             p.show-commit-times  {
-                max-width: 160px;
                 @include ellipsis();
             }
             .material-commit-id {
@@ -561,12 +617,17 @@
                 color: $primaryColor;
                 padding: 0 6px;
                 display: flex;
+                .commit-nums {
+                    min-width: 64px;
+                }
                 .commit-times {
                     padding: 0 6px;
                     margin-left: 4px;
-                    background: $fontWeightColor;
+                    min-width: 82px;
+                    background: #333333;
                     color: white;
                     border-radius: 20px;
+                    text-align: center;
                     @include ellipsis();
                 }
             }
@@ -591,6 +652,7 @@
         }
         .remark-cell {
             position: relative;
+            display: flex;
             .remark-span {
                 cursor: pointer;
                 display: -webkit-box;
@@ -600,23 +662,16 @@
                 &.active {
                     -webkit-line-clamp: 5;
                 }
+
+            }
+            .remark-entry {
+                display: none;
+                cursor: pointer;
+                vertical-align: middle;
+                margin-left: 10px;
                 &:hover {
                     color: $primaryColor;
                 }
-            }
-            .remark-input {
-                background-color: transparent;
-                border: 1px solid #e4e4e4;
-                border-radius: 2px;
-                width: 100%;
-                outline: none;
-                resize: none;
-                &:read-only {
-                    border: 0;
-                }
-            }
-            .icon-circle-2-1 {
-                display: inline-block;
             }
         }
     }
@@ -701,8 +756,15 @@
                     margin-left: 30px;
                 }
                 .download-link {
-                    padding: 0 18px;
+                    margin-right: 18px;
                     font-weight: bold;
+                }
+                .icon-copy {
+                    fill: $fontWeightColor;
+                    cursor: pointer;
+                    &:hover {
+                        fill: $primaryColor;
+                    }
                 }
             }
             > footer {
@@ -710,5 +772,10 @@
                 line-height: 35px;
             }
         }
+    }
+
+    .remark-edit-footer {
+        margin: 10px 0;
+        text-align: right;
     }
 </style>

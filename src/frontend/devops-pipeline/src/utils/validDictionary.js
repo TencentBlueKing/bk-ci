@@ -44,7 +44,7 @@ const dictionary = {
             },
             pullmode: field => '字段不能为空',
             excludeEmptyCapital: field => `字段不能为空，只支持英文小写、数字、下划线以及/`,
-            mutualGroup: field => `字段不能为空，只支持英文、数字`,
+            mutualGroup: field => `字段不能为空，只支持英文、数字或填写变量`,
             nonVarRule: field => '该字段不需要包含${}'
         }
     }

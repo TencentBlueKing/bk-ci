@@ -306,6 +306,12 @@ export function convertTime (ms) {
     return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
 }
 
+export function coverStrTimer (ms) {
+    const time = new Date(ms)
+
+    return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+}
+
 export function convertMiniTime (ms) {
     const time = new Date(ms)
 
@@ -533,7 +539,7 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
 export function navConfirm ({ content, title }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
-            reject(new Error('error')); return
+            reject(new Error('')); return
         }
 
         window.globalVue.$leaveConfirm({ content, title })
@@ -552,7 +558,7 @@ export function getQueryParamList (arr = [], key) {
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
-    } else {
-        return ''
+    } else if (arr && typeof arr === 'string') {
+        return `${key}=${arr}`
     }
 }

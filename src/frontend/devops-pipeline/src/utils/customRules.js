@@ -62,9 +62,9 @@ const customeRules = {
         }
     },
     mutualGroup: {
-        getMessage: field => `${field}字段不能为空，只支持英文、数字`,
+        getMessage: field => `${field}字段不能为空，只支持英文、数字或填写变量`,
         validate: function (value, args) {
-            return /^[A-Za-z0-9]+$/g.test(value)
+            return /^[A-Za-z0-9]+$/g.test(value) || /^\${(.*)}$/g.test(value)
         }
     },
     nonVarRule: {

@@ -16,7 +16,8 @@
         mixins: [mixins],
         props: {
             datePickerConf: {
-                type: Object
+                type: Object,
+                default: () => ({})
             }
         },
         computed: {
@@ -30,16 +31,20 @@
                 }
             },
             date () {
-                return this.value ? convertTime(this.value) : ''
+                return this.value ? this.datePickerConf.type === 'datetimerange' ? this.value : convertTime(this.value) : ''
             }
         },
         methods: {
             handleDateChange (date) {
-                const timeStamp = +new Date(date)
-                if (timeStamp === this.value) {
-                    return
+                if (this.datePickerConf.type === 'datetimerange') {
+                    this.handleChange(this.name, date)
+                } else {
+                    const timeStamp = +new Date(date)
+                    if (timeStamp === this.value) {
+                        return
+                    }
+                    this.handleChange(this.name, timeStamp)
                 }
-                this.handleChange(this.name, timeStamp)
             }
         }
     }

@@ -65,9 +65,9 @@
                                 <p class="temp-title" :title="item.name">
                                     {{ item.name }}
                                 </p>
-                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)">安装</p>
-                                <p class="permission-tips" v-if="item.isInstall && !item.isFlag">无安装权限</p>
-                                <p class="permission-tips" v-if="!item.isInstall">已安装</p>
+                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">安装</p>
+                                <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">无安装权限</p>
+                                <p class="permission-tips" v-if="!item.isInstall" :title="item.name">已安装</p>
                             </li>
                         </ul>
                     </div>
@@ -78,7 +78,7 @@
                         <div class="temp-info-detail">
                             <template v-if="!isActiveTempEmpty">
                                 <div class="pipeline-input">
-                                    <input type="text" ref="pipelineName" class="bk-form-input" placeholder="请输入流水线名称" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate="&quot;required&quot;" />
+                                    <input type="text" ref="pipelineName" class="bk-form-input" placeholder="请输入流水线名称" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
                                     <span v-show="errors.has(&quot;newPipelineName&quot;)" class="validate-fail-border-effect"></span>
                                 </div>
@@ -95,7 +95,7 @@
                                     <div class="from-group" v-for="(filter, index) in tagGroupList" :key="index">
                                         <label>{{filter.name}}</label>
                                         <bk-select
-                                            v-model="labelSelected"
+                                            v-model="filter.labelValue"
                                             multiple="true">
                                             <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
                                             </bk-option>
@@ -159,8 +159,7 @@
                 newPipelineName: '',
                 searchName: '',
                 templateType: 'FREEDOM',
-                curCategory: '',
-                labelSelected: []
+                curCategory: ''
             }
         },
 
@@ -340,7 +339,11 @@
             },
             async createNewPipeline () {
                 const { author, atomNum, icon, ...pipeline } = this.activeTemp
-                Object.assign(pipeline, { name: this.newPipelineName, labels: this.labelSelected })
+                let labels = []
+                this.tagGroupList.forEach((item) => {
+                    if (item.labelValue) labels = labels.concat(item.labelValue)
+                })
+                Object.assign(pipeline, { name: this.newPipelineName, labels })
 
                 const keys = Object.keys(this.activeTemp)
                 if (keys.length <= 0) {
@@ -349,11 +352,14 @@
                 }
 
                 if (this.templateType === 'CONSTRAINT') {
+                    const code = this.activeTemp.code || ''
+                    const currentTemplate = this.pipelineTemplate[code] || this.activeTemp
+
                     this.$router.push({
                         name: 'createInstance',
                         params: {
-                            templateId: this.activeTemp.templateId,
-                            curVersionId: this.activeTemp.version,
+                            templateId: currentTemplate.templateId,
+                            curVersionId: currentTemplate.version,
                             pipelineName: pipeline.name
                         }
                     })
@@ -754,6 +760,7 @@
                         }
                     }
                     .view-pipeline {
+                        display: inline-block;
                         color: $iconPrimaryColor;
                         cursor: pointer;
                         &.disabled {

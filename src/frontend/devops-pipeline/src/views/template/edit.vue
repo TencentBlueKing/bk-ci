@@ -31,6 +31,28 @@
                                 </template>
                             </bk-table-column>
                         </bk-table>
+                        <!--<table class="bk-table version-list-table">
+                            <thead>
+                                <tr>
+                                    <th width="25%">版本号</th>
+                                    <th width="35%">更新时间</th>
+                                    <th width="20%">最后更新人</th>
+                                    <th width="20%">操作</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr :key="index" v-for="(obj, index) in versionList">
+                                    <td>{{ obj.name }}</td>
+                                    <td>{{ localConvertMStoString(obj.updateTime) }}</td>
+                                    <td>{{ obj.creator }}</td>
+                                    <td class="handler-btn">
+                                        <span class="loading-btn" @click.stop="requestTemplateByVersion(obj.version)">加载</span>
+                                        <span class="del-btn" @click.stop="deleteVersion(obj)" :class="{ &quot;disabled-edit&quot;: !template.hasPermission || currentVersionId === obj.version || template.templateType === &quot;CONSTRAINT&quot; }">删除</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>-->
                     </section>
                 </template>
             </bk-sideslider>
@@ -43,7 +65,7 @@
             width="400"
             @confirm="saveTemplate">
             <div>
-                <form-field required="true" label="保存到版本" :is-error="errors.has(&quot;versionName&quot;)" :error-msg="errors.first(&quot;versionName&quot;)">
+                <form-field v-if="showVersionDialog" required="true" label="保存到版本" :is-error="errors.has(&quot;versionName&quot;)" :error-msg="errors.first(&quot;versionName&quot;)">
                     <auto-complete v-validate="'required'" :list="versionList" name="versionName" open-list="true" placeholder="搜索或创建版本" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
                 </form-field>
             </div>
@@ -131,10 +153,13 @@
         },
         mounted () {
             this.addLeaveListenr()
+            this.requestQualityAtom()
+            this.requestMatchTemplateRules()
         },
         beforeDestroy () {
             this.setPipeline()
             this.removeLeaveListenr()
+            this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
             this.leaveConfirm(to, from, next)
@@ -146,7 +171,8 @@
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',
-                'requestTemplate'
+                'requestTemplate',
+                'updateContainer'
             ]),
             handleVersionChange (name, value) {
                 this.saveVersionName = value
@@ -196,6 +222,8 @@
                 if (this.saveVersionName.endsWith('(当前)')) {
                     this.saveVersionName = this.saveVersionName.substr(0, this.saveVersionName.length - 4)
                 }
+                // 清除流水线参数渲染过程中添加的key
+                this.formatParams(this.pipeline)
                 let result
                 try {
                     this.isSaving = true
@@ -266,6 +294,17 @@
                         }).catch(() => {})
                 }
             },
+            requestQualityAtom () {
+                this.$store.dispatch('soda/requestQualityAtom', {
+                    projectId: this.projectId
+                })
+            },
+            requestMatchTemplateRules () {
+                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                    projectId: this.projectId,
+                    templateId: this.templateId
+                })
+            },
             exit () {
                 this.$router.push({
                     name: 'pipelinesTemplate'
@@ -279,6 +318,26 @@
                 } else {
                     next(true)
                 }
+            },
+            formatParams (pipeline) {
+                const params = this.pipeline && this.pipeline.stages[0].containers[0].params
+                const templateParams = this.pipeline && this.pipeline.stages[0].containers[0].templateParams
+                const paramList = params && this.getParams(params)
+                const templateParamList = templateParams && this.getParams(templateParams)
+                this.updateContainer({
+                    container: this.pipeline.stages[0].containers[0],
+                    newParam: {
+                        params: paramList,
+                        templateParams: templateParamList
+                    }
+                })
+            },
+            getParams (params) {
+                const result = params.map(param => {
+                    const { paramIdKey, ...temp } = param
+                    return temp
+                })
+                return result
             },
             addLeaveListenr () {
                 window.addEventListener('beforeunload', this.leaveSure)
@@ -305,7 +364,7 @@
             min-height: 20px;
         }
         .bk-dialog-body {
-            height: 270px;
+            height: 300px;
         }
         .bk-label {
             font-size: 14px;
@@ -317,6 +376,9 @@
     .template-edit {
         .version-list-wrapper {
             margin: 20px;
+        }
+        .scroll-wraper {
+            overflow: initial;
         }
     }
 

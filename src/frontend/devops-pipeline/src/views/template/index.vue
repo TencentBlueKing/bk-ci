@@ -57,6 +57,9 @@
                     icon: ''
                 }
             }
+        },
+        created () {
+            this.$store.dispatch('requestProjectDetail', { projectId: this.$route.params.projectId })
         }
     }
 </script>

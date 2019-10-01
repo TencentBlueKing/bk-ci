@@ -24,6 +24,8 @@ export const MULTIPLE = 'MULTIPLE'
 export const SVN_TAG = 'SVN_TAG'
 export const CODE_LIB = 'CODE_LIB'
 export const CONTAINER_TYPE = 'CONTAINER_TYPE'
+export const ARTIFACTORY = 'ARTIFACTORY'
+export const SUB_PIPELINE = 'SUB_PIPELINE'
 
 function paramType (typeConst) {
     return type => type === typeConst
@@ -57,7 +59,7 @@ export const DEFAULT_PARAM = {
     },
     [MULTIPLE]: {
         id: 'multiple',
-        defaultValue: [],
+        defaultValue: '',
         desc: '',
         options: [],
         type: MULTIPLE,
@@ -97,6 +99,26 @@ export const DEFAULT_PARAM = {
         type: CONTAINER_TYPE,
         typeDesc: '构建资源',
         required: true
+    },
+    [ARTIFACTORY]: {
+        id: 'artifactory',
+        defaultValue: '',
+        desc: '',
+        options: [],
+        glob: '*',
+        properties: {},
+        type: ARTIFACTORY,
+        typeDesc: '版本仓库过滤器',
+        required: true
+    },
+    [SUB_PIPELINE]: {
+        id: 'subPipeline',
+        defaultValue: '',
+        desc: '',
+        options: [],
+        type: SUB_PIPELINE,
+        typeDesc: '子流水线',
+        required: true
     }
 }
 
@@ -112,7 +134,9 @@ export const ParamComponentMap = {
     [MULTIPLE]: 'Selector',
     [SVN_TAG]: 'Selector',
     [CODE_LIB]: 'Selector',
-    [CONTAINER_TYPE]: 'Selector'
+    [CONTAINER_TYPE]: 'Selector',
+    [ARTIFACTORY]: 'Selector',
+    [SUB_PIPELINE]: 'Selector'
 }
 
 export const BOOLEAN_LIST = [
@@ -127,7 +151,7 @@ export const BOOLEAN_LIST = [
 ]
 
 export const SVN_PATH_OPTION = {
-    url: '/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=CODE_SVN&page=1&pageSize=100',
+    url: '/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=CODE_SVN&page=1&pageSize=500',
     paramId: 'repositoryHashId',
     paramName: 'aliasName',
     searchable: true,
@@ -139,6 +163,13 @@ export const CODE_LIB_OPTION = {
     paramName: 'aliasName',
     searchable: true,
     hasAddItem: true
+}
+
+export const SUB_PIPELINE_OPTION = {
+    url: '/process/api/user/pipelines/{projectId}/hasPermissionList?permission=EXECUTE&excludePipelineId={pipelineId}&limit=-1',
+    paramId: 'pipelineName',
+    paramName: 'pipelineName',
+    searchable: true
 }
 
 export const CODE_LIB_TYPE = [
@@ -163,3 +194,5 @@ export const isMultipleParam = paramType(MULTIPLE)
 export const isSvnParam = paramType(SVN_TAG)
 export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
+export const isArtifactoryParam = paramType(ARTIFACTORY)
+export const isSubPipelineParam = paramType(SUB_PIPELINE)

@@ -12,16 +12,20 @@
                 <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
                     {{ containerSerialNum }}
                 </status-icon>
-                <p class="container-name" :title="container.name">
-                    <span>{{ container.status === 'PREPARE_ENV' ? '准备构建环境中' : container.name }}</span>
+                <p class="container-name">
+                    <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? '准备构建环境中' : container.name }}</span>
                 </p>
-                <container-type :container="container" v-if="!showCheckedToatal"></container-type>
-
-                <bk-checkbox v-if="showCheckedToatal" class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled" @click.stop></bk-checkbox>
-                <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">登录调试</bk-button>
+                <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
+                <span title="复制job" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
+                    <Logo name="copy" size="18"></Logo>
+                </span>
+                <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
+                <span @click.stop v-if="showCheckedToatal && canSkipElement">
+                    <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
+                </span>
             </h3>
         </show-tooltip>
-        <atom-list :container="container" :editable="editable" :is-preview="isPreview" :stage-index="stageIndex" :container-index="containerIndex" :container-status="container.status">
+        <atom-list :container="container" :editable="editable" :is-preview="isPreview" :can-skip-element="canSkipElement" :stage-index="stageIndex" :container-index="containerIndex" :container-status="container.status">
         </atom-list>
     </div>
 </template>
@@ -33,13 +37,15 @@
     import AtomList from './AtomList'
     import showTooltip from '@/components/common/showTooltip'
     import StatusIcon from './StatusIcon'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
             StatusIcon,
             ContainerType,
             AtomList,
-            showTooltip
+            showTooltip,
+            Logo
         },
         props: {
             container: Object,
@@ -54,6 +60,10 @@
             isPreview: {
                 type: Boolean,
                 default: false
+            },
+            canSkipElement: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -64,7 +74,8 @@
         },
         computed: {
             ...mapState('atom', [
-                'execDetail'
+                'execDetail',
+                'pipeline'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -74,6 +85,10 @@
             showCheckedToatal () {
                 const { isTriggerContainer, container, $route } = this
                 return $route.path.indexOf('preview') > 0 && !isTriggerContainer(container)
+            },
+            showCopyJob () {
+                const { isTriggerContainer, container, $route } = this
+                return $route.path.indexOf('edit') > 0 && !isTriggerContainer(container) && this.editable
             },
             containerSerialNum () {
                 return `${this.stageIndex + 1}-${this.containerIndex + 1}`
@@ -138,8 +153,26 @@
                 'togglePropertyPanel',
                 'addAtom',
                 'deleteAtom',
-                'updateContainer'
+                'updateContainer',
+                'setPipelineEditing',
+                'deleteContainer',
+                'deleteStage'
             ]),
+            deleteJob () {
+                const { containerIndex, stageIndex } = this
+                const containers = this.pipeline.stages[stageIndex].containers || []
+
+                if (containers.length === 1) {
+                    this.deleteStage({
+                        stageIndex
+                    })
+                } else {
+                    this.deleteContainer({
+                        stageIndex,
+                        containerIndex
+                    })
+                }
+            },
             updateCruveConnectHeight () {
                 if (!this.$refs.stageContainer) {
                     return
@@ -158,6 +191,24 @@
                         containerIndex
                     }
                 })
+            },
+            copyContainer () {
+                try {
+                    const copyContainer = JSON.parse(JSON.stringify(this.container))
+                    const { containerId, ...container } = copyContainer
+                    container.elements = container.elements.map(element => {
+                        const { id, ...ele } = element
+                        return ele
+                    })
+                    this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
+                    this.setPipelineEditing(true)
+                } catch (e) {
+                    console.error(e)
+                    this.$showTips({
+                        theme: 'error',
+                        message: '复制Job失败'
+                    })
+                }
             }
         }
     }
@@ -167,7 +218,7 @@
     @import "./Stage";
     .soda-stage-container {
         text-align: left;
-        margin: 0 0 26px $StageMargin;
+        margin: 0 $StageMargin/2 26px $StageMargin/2;
         position: relative;
 
         // 实心圆点
@@ -201,6 +252,7 @@
                 display: none;
             }
         }
+
         .container-title {
             display: flex;
             height: $itemHeight;
@@ -210,27 +262,58 @@
             align-items: center;
             position: relative;
             margin: 0 0 16px 0;
-            cursor: pointer;
             width: 240px;
             z-index: 3;
             > .container-name {
-                flex: 1;
-                padding: 0 15px;
                 @include ellipsis();
-                &:hover {
+                flex: 1;
+                padding: 0 12px;
+                span:hover {
                     color: $primaryColor;
                 }
             }
+
             .atom-canskip-checkbox {
-                margin-right: 6px
+                margin-right: 6px;
             }
             input[type=checkbox] {
-                border-radius: 3px
+                border-radius: 3px;
             }
             .debug-btn {
                 position: absolute;
                 height: 100%;
                 right: 0;
+            }
+            .copyJob {
+                display: none;
+                margin-right: 10px;
+                fill: #c4c6cd;
+                cursor: pointer;
+                &:hover {
+                    fill: $primaryColor;
+                }
+            }
+            .close {
+                @include add-plus-icon(#2E2E3A, #2E2E3A, #c4c6cd, 16px, true);
+                @include add-plus-icon-hover($dangerColor, $dangerColor, white);
+                border: none;
+                display: none;
+                margin-right: 10px;
+                transform: rotate(45deg);
+                cursor: pointer;
+                &:before, &:after {
+                    left: 7px;
+                    top: 4px;
+                }
+            }
+
+            &:hover {
+                .copyJob, .close {
+                    display: block;
+                }
+                .hover-hide {
+                    display: none;
+                }
             }
 
             // 实线
@@ -303,6 +386,7 @@
             border-left-color: $lineColor;
         }
         .container-title {
+            cursor: pointer;
             background-color: $fontWeightColor;
 
             &.RUNNING {
@@ -324,7 +408,7 @@
             &:after {
                 border-top-color: $lineColor;
             }
-            > .container-name:hover {
+            > .container-name span:hover {
                 color: white;
             }
         }

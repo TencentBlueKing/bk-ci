@@ -62,5 +62,34 @@ export default {
         value (value, oldValue) {
             value !== oldValue && this.$emit('input', value)
         }
+    },
+    methods: {
+        getResponseData (response, dataPath = 'data.records') {
+            try {
+                switch (true) {
+                    case Array.isArray(response.data):
+                        return response.data
+                    case Array.isArray(response.data.record):
+                        return response.data.record
+                    default:
+                        const path = dataPath.split('.')
+                        let result = response
+                        let pos = 0
+                        while (path[pos] && result) {
+                            const key = path[pos]
+                            result = result[key]
+                            pos++
+                        }
+                        if (pos === path.length && Array.isArray(result)) {
+                            return result
+                        } else {
+                            throw Error('获取列表数据失败')
+                        }
+                }
+            } catch (e) {
+                console.error('获取列表数据失败', e)
+                return []
+            }
+        }
     }
 }

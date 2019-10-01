@@ -19,7 +19,7 @@
                     </div>
                     <template v-else>
                         <draggable v-model="globalParams" :options="paramsDragOptions">
-                            <accordion v-for="(param, index) in globalParams" :key="index" :is-error="errors.any(`param-${index}`)">
+                            <accordion v-for="(param, index) in globalParams" :key="param.paramIdKey" :is-error="errors.any(`param-${param.id}`)">
                                 <header class="param-header" slot="header">
                                     <span>{{ param.id }}</span>
                                     <i v-if="!disabled && settingKey !== &quot;templateParams&quot;" @click.stop.prevent="editParamShow(index)" class="bk-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
@@ -28,81 +28,91 @@
                                 </header>
                                 <bk-form slot="content">
                                     <div class="params-flex-col">
-                                        <bk-form-item label="变量类型" class="flex-colspan-7">
+                                        <bk-form-item label="变量类型" class="flex-col-span-1">
                                             <selector
-                                                :data-vv-scope="`param-${index}`"
+                                                :popover-min-width="246"
+                                                :data-vv-scope="`param-${param.id}`"
                                                 :disabled="disabled"
                                                 name="type"
                                                 :list="paramsList"
-                                                :handle-change="(name, value) => handleParamTypeChange(name, value, getParamIndex(param.id))"
+                                                :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
                                                 :value="param.type"
                                             />
                                         </bk-form-item>
-                                        <bk-form-item class="flex-colspan-2" v-if="settingKey !== 'templateParams'">
-                                            <atom-checkbox :disabled="disabled" text="执行时显示" :value="param.required" name="required" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" />
+                                        <bk-form-item class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
+                                            <atom-checkbox :disabled="disabled" text="执行时显示" :value="param.required" name="required" :handle-change="(name, value) => handleUpdateParam(name, value, index)" />
                                         </bk-form-item>
                                     </div>
                                     <div class="params-flex-col pt10">
-                                        <bk-form-item label="名称" :is-error="errors.has(`param-${index}.id`)" :error-msg="errors.first(`param-${index}.id`)">
-                                            <vuex-input :data-vv-scope="`param-${index}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(&quot;,&quot;)}`" name="id" placeholder="请输入名称" :value="param.id" />
+                                        <bk-form-item class="flex-col-span-1" label="名称" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
+                                            <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(&quot;,&quot;)}`" name="id" placeholder="请输入名称" :value="param.id" />
                                         </bk-form-item>
-                                        <bk-form-item label="默认值" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${index}.defaultValue`)" :error-msg="errors.first(`param-${index}.defaultValue`)" :desc="showTips">
+                                        <bk-form-item class="flex-col-span-1" label="默认值" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
                                             <selector
+                                                :popover-min-width="250"
                                                 v-if="isSelectorParam(param.type)"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))"
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :list="transformOpt(param.options)"
                                                 :multi-select="isMultipleParam(param.type)"
                                                 name="defaultValue"
-                                                :data-vv-scope="`param-${index}`"
+                                                :data-vv-scope="`param-${param.id}`"
                                                 placeholder="请输入默认值"
                                                 :disabled="disabled"
                                                 :value="getSelectorDefaultVal(param)"
                                             >
                                             </selector>
                                             <enum-input
-                                                style="line-height: 30px"
                                                 v-if="isBooleanParam(param.type)"
                                                 name="defaultValue"
                                                 :list="boolList"
                                                 :disabled="disabled"
-                                                :data-vv-scope="`param-${index}`"
-                                                :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))"
+                                                :data-vv-scope="`param-${param.id}`"
+                                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" name="defaultValue" :data-vv-scope="`param-${index}`" placeholder="请输入默认值" :value="param.defaultValue" />
-                                            <request-selector v-if="isCodelibParam(param.type)" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" :data-vv-scope="`param-${index}`"></request-selector>
-                                            <request-selector v-if="isBuildResourceParam(param.type)" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" :data-vv-scope="`param-${index}`"></request-selector>
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isArtifactoryParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" placeholder="请输入默认值" :value="param.defaultValue" />
+                                            <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
+                                            <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
+                                            <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                         </bk-form-item>
                                     </div>
 
-                                    <bk-form-item v-if="isSelectorParam(param.type)" label="下拉选项" desc="用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个" :is-error="errors.has(`param-${index}.options`)" :error-msg="errors.first(`param-${index}.options`)">
-                                        <vuex-textarea v-validate.initial="&quot;excludeComma&quot;" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, getParamIndex(param.id))" name="options" :data-vv-scope="`param-${index}`" placeholder="多行记录请换行输入" :value="getOptions(param)"></vuex-textarea>
+                                    <bk-form-item v-if="isSelectorParam(param.type)" label="下拉选项" desc="用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
+                                        <vuex-textarea v-validate.initial="&quot;excludeComma&quot;" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" placeholder="多行记录请换行输入" :value="getOptions(param)"></vuex-textarea>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isSvnParam(param.type)" label="请选择svn代码库" :is-error="errors.has(`param-${index}.repoHashId`)" :error-msg="errors.first(`param-${index}.repoHashId`)">
-                                        <request-selector v-bind="svnPathOption" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" :data-vv-scope="`param-${index}`" v-validate.initial="&quot;required&quot;"></request-selector>
+                                    <bk-form-item v-if="isSvnParam(param.type)" label="请选择svn代码库" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
+                                        <request-selector v-bind="svnPathOption" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="&quot;required&quot;"></request-selector>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isSvnParam(param.type)" label="代码库相对目录" :is-error="errors.has(`param-${index}.relativePath`)" :error-msg="errors.first(`param-${index}.relativePath`)">
-                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" name="relativePath" :data-vv-scope="`param-${index}`" placeholder="请填写代码库相对目录,如为空则会拉取所选代码库的根路径下的子目录" :value="param.relativePath"></vuex-input>
+                                    <bk-form-item v-if="isSvnParam(param.type)" label="代码库相对目录" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
+                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="relativePath" :data-vv-scope="`param-${param.id}`" placeholder="请填写代码库相对目录,如为空则会拉取所选代码库的根路径下的子目录" :value="param.relativePath"></vuex-input>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isCodelibParam(param.type)" label="请选择代码库类型" :is-error="errors.has(`param-${index}.scmType`)" :error-msg="errors.first(`param-${index}.scmType`)">
-                                        <selector :disabled="disabled" :list="codeTypeList" :handle-change="(name, value) => handleCodeTypeChange(name, value, getParamIndex(param.id))" name="scmType" :data-vv-scope="`param-${index}`" placeholder="" :value="param.scmType"></selector>
+                                    <bk-form-item v-if="isCodelibParam(param.type)" label="请选择代码库类型" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
+                                        <selector :disabled="disabled" :list="codeTypeList" :handle-change="(name, value) => handleCodeTypeChange(name, value, index)" name="scmType" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.scmType"></selector>
                                     </bk-form-item>
 
                                     <template v-if="isBuildResourceParam(param.type)">
-                                        <bk-form-item label="请选择构建环境" :is-error="errors.has(`param-${index}.os`)" :error-msg="errors.first(`param-${index}.os`)">
-                                            <selector :disabled="disabled" :list="baseOSList" :handle-change="(name, value) => handleBuildResourceChange(name, value, getParamIndex(param.id), param)" name="os" :data-vv-scope="`param-${index}`" placeholder="" :value="param.containerType.os"></selector>
+                                        <bk-form-item label="请选择构建环境" :is-error="errors.has(`param-${param.id}.os`)" :error-msg="errors.first(`param-${param.id}.os`)">
+                                            <selector :popover-min-width="510" :disabled="disabled" :list="baseOSList" :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)" name="os" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.containerType.os"></selector>
                                         </bk-form-item>
 
-                                        <bk-form-item label="请选择构建资源类型" :is-error="errors.has(`param-${index}.buildType`)" :error-msg="errors.first(`param-${index}.buildType`)">
-                                            <selector :disabled="disabled" :list="getBuildTypeList(param.containerType.os)" setting-key="type" :handle-change="(name, value) => handleBuildResourceChange(name, value, getParamIndex(param.id), param)" name="buildType" :data-vv-scope="`param-${index}`" placeholder="" :value="param.containerType.buildType"></selector>
+                                        <bk-form-item label="请选择构建资源类型" :is-error="errors.has(`param-${param.id}.buildType`)" :error-msg="errors.first(`param-${param.id}.buildType`)">
+                                            <selector :popover-min-width="510" :disabled="disabled" :list="getBuildTypeList(param.containerType.os)" setting-key="type" :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)" name="buildType" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.containerType.buildType"></selector>
                                         </bk-form-item>
                                     </template>
 
+                                    <bk-form-item v-if="isArtifactoryParam(param.type)" label="过滤规则" :is-error="errors.has(`param-${param.id}.glob`)" :error-msg="errors.first(`param-${param.id}.glob`)">
+                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" placeholder="支持*通配符，若为空则无法匹配到文件路径" :value="param.glob"></vuex-input>
+                                    </bk-form-item>
+
+                                    <bk-form-item v-if="isArtifactoryParam(param.type)" label="元数据" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
+                                        <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="'新增元数据'" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
+                                    </bk-form-item>
+
                                     <bk-form-item label="描述">
-                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, getParamIndex(param.id))" name="desc" placeholder="请输入参数描述" :value="param.desc" />
+                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" placeholder="请输入参数描述" :value="param.desc" />
                                     </bk-form-item>
                                 </bk-form>
                             </accordion>
@@ -114,7 +124,6 @@
                     </template>
                 </template>
             </accordion>
-
         </template>
     </div>
 </template>
@@ -129,6 +138,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
     import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
@@ -140,12 +150,15 @@
         isMultipleParam,
         isCodelibParam,
         isSvnParam,
+        isArtifactoryParam,
+        isSubPipelineParam,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING,
         SVN_PATH_OPTION,
         CODE_LIB_OPTION,
-        CODE_LIB_TYPE
+        CODE_LIB_TYPE,
+        SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
 
     const BOOLEAN = [
@@ -169,7 +182,8 @@
             Selector,
             draggable,
             VuexTextarea,
-            RequestSelector
+            RequestSelector,
+            KeyValueNormal
         },
         mixins: [validMixins],
         props: {
@@ -201,6 +215,8 @@
         },
         data () {
             return {
+                paramIdCount: 0,
+                renderParams: [],
                 showTips: '若value为版本号,则不能包含“”""等符号；\n如果参数类型为复选框，选择多个值时将以a,b的方式传递给流水线'
             }
         },
@@ -244,10 +260,13 @@
             codeTypeList () {
                 return CODE_LIB_TYPE
             },
+            subPipelineOption () {
+                return SUB_PIPELINE_OPTION
+            },
             globalParams: {
                 get () {
                     const allVersionKeyList = Object.keys(this.versionConfig)
-                    return this.params.filter(p => !allVersionKeyList.includes(p.id))
+                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id))
                 },
                 set (params) {
                     this.updateContainerParams(this.settingKey, [...params, ...this.versions])
@@ -278,13 +297,26 @@
                 return !!buildNo
             }
         },
+
+        watch: {
+            params (newVal) {
+                this.renderParams = this.getParams(newVal)
+            }
+        },
+
+        mounted () {
+            this.renderParams = this.getParams(this.params)
+        },
+
         methods: {
             isStringParam,
             isBooleanParam,
             isMultipleParam,
             isSvnParam,
             isCodelibParam,
+            isArtifactoryParam,
             isBuildResourceParam,
+            isSubPipelineParam,
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
@@ -299,18 +331,51 @@
                 return defaultValue
             },
             handleParamTypeChange (key, value, paramIndex) {
-                this.handleChange([
-                    ...this.params.slice(0, paramIndex),
+                const newGlobalParams = [
+                    ...this.globalParams.slice(0, paramIndex),
                     {
                         ...deepCopy(DEFAULT_PARAM[value]),
-                        id: this.params[paramIndex].id
+                        id: this.globalParams[paramIndex].id,
+                        paramIdKey: this.globalParams[paramIndex].paramIdKey
                     },
-                    ...this.params.slice(paramIndex + 1)
+                    ...this.globalParams.slice(paramIndex + 1)
+                ]
+                
+                this.handleChange([
+                    ...newGlobalParams,
+                    ...this.versions
                 ])
             },
+
+            handleUpdateParamId (key, value, paramIndex) {
+                try {
+                    const param = this.globalParams[paramIndex]
+                    const preValue = param[key]
+                    if (preValue !== value) {
+                        Object.assign(param, {
+                            [key]: value
+                        })
+
+                        this.handleChange([
+                            ...this.renderParams
+                        ])
+                        this.$nextTick(() => {
+                            if (this.$refs[`paramId${paramIndex}Input`] && this.$refs[`paramId${paramIndex}Input`][0]) {
+                                this.$refs[`paramId${paramIndex}Input`][0].$el.focus()
+                            }
+                            setTimeout(() => { // hack remove error
+                                this.errors.clear(`param-${preValue}`)
+                            }, 0)
+                        })
+                    }
+                } catch (e) {
+                    console.log('update error', e)
+                }
+            },
+
             handleUpdateParam (key, value, paramIndex) {
                 try {
-                    const param = this.params[paramIndex]
+                    const param = this.globalParams[paramIndex]
                     if (isMultipleParam(param.type) && key === 'defaultValue') {
                         Object.assign(param, {
                             [key]: value.join(',')
@@ -322,7 +387,7 @@
                     }
 
                     this.handleChange([
-                        ...this.params
+                        ...this.renderParams
                     ])
                 } catch (e) {
                     console.log('update error', e)
@@ -334,7 +399,8 @@
                 if (isAdd) {
                     const param = {
                         ...deepCopy(DEFAULT_PARAM[STRING]),
-                        id: `param${Math.floor(Math.random() * 100)}`
+                        id: `param${Math.floor(Math.random() * 100)}`,
+                        paramIdKey: `paramIdKey-${this.paramIdCount++}`
                     }
                     if (this.settingKey === 'templateParams') {
                         Object.assign(param, { 'required': false })
@@ -351,7 +417,7 @@
 
             editParamShow (paramIndex) {
                 let isShow = false
-                const param = this.params[paramIndex]
+                const param = this.globalParams[paramIndex]
                 if (param) {
                     isShow = param.required
                 }
@@ -372,7 +438,7 @@
                     }
 
                     this.handleUpdateParam(name, opts, index)
-                    const param = this.params[index]
+                    const param = this.renderParams[index]
                     if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
                         const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
                         if (isMultipleParam(param.type)) {
@@ -400,6 +466,14 @@
                 this.handleUpdateParam('defaultValue', '', index)
             },
 
+            handleProperties (key, value, index) {
+                const properties = {}
+                value.map(val => {
+                    properties[val.key] = val.value
+                })
+                this.handleUpdateParam(key, properties, index)
+            },
+
             getBuildResourceUrl ({ os, buildType }) {
                 return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
             },
@@ -417,10 +491,6 @@
             handleChange (params) {
                 this.updateContainerParams(this.settingKey, params)
             },
-            // 返回匹配的params下标
-            getParamIndex (paramId) {
-                return this.params.findIndex(item => item.id === paramId)
-            },
 
             getOptions (param) {
                 try {
@@ -428,6 +498,32 @@
                 } catch (e) {
                     return ''
                 }
+            },
+
+            getProperties (param) {
+                try {
+                    return Object.keys(param.properties).map(item => {
+                        return {
+                            key: item,
+                            value: param.properties[item]
+                        }
+                    })
+                } catch (e) {
+                    return []
+                }
+            },
+
+            // 全局参数添加遍历的key值
+            getParams (params) {
+                const allVersionKeyList = Object.keys(this.versionConfig)
+                const result = params.map(item => {
+                    const temp = { ...item }
+                    if (!allVersionKeyList.includes(item.id)) {
+                        temp.paramIdKey = typeof item.paramIdKey !== 'undefined' ? item.paramIdKey : `paramIdKey-${this.paramIdCount++}`
+                    }
+                    return temp
+                })
+                return result
             },
 
             transformOpt (opts) {
@@ -455,37 +551,24 @@
                 flex: 1;
                 padding-right: 8px;
                 margin-top: 0;
+                line-height: 30px;
                 &:last-child {
                     padding-right: 0;
                 }
                 &+.bk-form-item {
-                    margin-top: 0;
+                    margin-top: 0 !important;
                 }
                 span.bk-form-help {
                     display: block;
                 }
             }
-            .flex-colspan-2 {
-                flex: 2;
-                .bk-form-radio {
-                    margin-right: 18px;
-                    &:last-child {
-                        margin-right: 0;
-                    }
+            .flex-col-span-1 {
+                flex: 1;
+                overflow: hidden;
+                label.bk-label {
+                    height: 30px;
+                    line-height: 30px;
                 }
-                .bk-form-content {
-                    margin-top: 35px;
-                }
-                .atom-checkbox {
-                    padding-right: 0;
-                    padding-left: 8px;
-                    input {
-                        margin-right: 10px;
-                    }
-                }
-            }
-            .flex-colspan-7 {
-                flex: 7;
             }
         }
         .content .text-link {

@@ -13,7 +13,7 @@
                         :data="viewList"
                         size="small">
                         <bk-table-column label="名称" prop="name"></bk-table-column>
-                        <bk-table-column label="类型" prop="projectId" :formatter="showViewType"></bk-table-column>
+                        <bk-table-column label="类型" prop="projected" :formatter="showViewType"></bk-table-column>
                         <bk-table-column label="描述" prop="creator"></bk-table-column>
                         <bk-table-column label="操作" width="150">
                             <template slot-scope="props">

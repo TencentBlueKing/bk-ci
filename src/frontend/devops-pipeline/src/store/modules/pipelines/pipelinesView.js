@@ -19,12 +19,10 @@
 
 import ajax from '@/utils/request'
 import {
-    PROCESS_API_URL_PREFIX,
-    BACKEND_API_URL_PREFIX
+    PROCESS_API_URL_PREFIX
 } from '@/store/constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
-const backendPrefix = `/${BACKEND_API_URL_PREFIX}/api`
 
 const state = {
     pageLoading: false,
@@ -133,7 +131,7 @@ const actions = {
         })
     },
     requestUserInfo ({ commit }, { projectId }) {
-        return ajax.get(`${backendPrefix}/ci/projects/user/roles/${projectId}/`).then(response => {
+        return ajax.get(`/project/api/user/users/projects/${projectId}/roles/list/`).then(response => {
             return response.data
         })
     }

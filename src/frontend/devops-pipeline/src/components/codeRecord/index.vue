@@ -7,7 +7,6 @@
         <!-- 代码变更记录 -->
         <vertical-tab v-if="codeCommitList.length && showContent" :tabs="tabs" :init-tab-index="initIndex">
         </vertical-tab>
-            
         <div class="artifactory-empty" v-else-if="showContent && !codeCommitList.length">
             <div class="no-data-right">
                 <img src="../../images/box.png">

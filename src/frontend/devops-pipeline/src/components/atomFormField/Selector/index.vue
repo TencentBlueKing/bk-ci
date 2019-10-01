@@ -6,21 +6,23 @@
         :searchable="searchable"
         :multiple="multiSelect"
         :clearable="clearable"
-        @selected="onSelect"
         @toggle="toggleVisible"
         :placeholder="placeholder"
         :search-key="displayKey"
+        @change="onChange"
         @edit="editItem"
+        :popover-options="popoverOptions"
     >
         <bk-option
             v-for="item in list"
             :key="item[settingKey]"
             :id="item[settingKey]"
             :name="item[displayKey]"
+            :disabled="item.disabled"
         >
         </bk-option>
         <div slot="extension">
-            <slot name="props"></slot>
+            <slot></slot>
         </div>
     </bk-select>
 </template>
@@ -78,10 +80,24 @@
                 default: () => () => {}
             }
         },
+        computed: {
+            popoverOptions () {
+                return {
+                    popperOptions: {
+                        modifiers: {
+                            preventOverflow: {
+                                boundariesElement: 'window'
+                            }
+                        }
+                    }
+                }
+            }
+        },
         methods: {
-            onSelect (id, data) {
-                const { name } = this
-                this.handleChange(name, id)
+            onChange (val, oldVal) {
+                if (val !== oldVal) {
+                    this.handleChange(this.name, val)
+                }
             },
             editItem (index) {
                 this.edit(index)
@@ -89,3 +105,29 @@
         }
     }
 </script>
+
+<style lang="scss">
+    @import "../../../scss/conf";
+    .bkdevops-option-name {
+        width: 100%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        &.selected {
+            width: calc(100% - 24px)
+        }
+    }
+    .bk-selector-create-item {
+        a {
+            display: block;
+            color: $fontWeightColor;
+        }
+
+        &:hover {
+            &, a {
+                color: $primaryColor !important;
+            }
+        }
+    }
+
+</style>

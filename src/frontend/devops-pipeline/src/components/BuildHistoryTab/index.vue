@@ -11,29 +11,23 @@
             @cancel="resetColumns">
             <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="['可选列表', '已选列表']" @change="handleColumnsChange"></bk-transfer>
         </bk-dialog>
-        <bk-sideslider
-            class="pipeline-history-side-slider"
-            :is-show.sync="isLogSliderShow"
-            :title="`查看日志${currentBuildNum ? `（#${currentBuildNum}）` : ''}`"
-            :quick-close="true"
-            :width="820">
-            <template slot="content">
-                <pipeline-log v-if="currentBuildNo" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
-            </template>
-        </bk-sideslider>
-
+        <template v-if="currentBuildNo">
+            <pipeline-log :title="`查看日志${currentBuildNum ? `（#${currentBuildNum}）` : ''}`" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
+        </template>
     </div>
 </template>
 
 <script>
-    import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    // import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    import webSocketMessage from '@/utils/webSocketMessage'
     import PipelineLog from '@/components/Log'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, BUILD_HISTORY_TABLE_COLUMNS_MAP } from '@/utils/pipelineConst'
-    import { mapGetters, mapActions } from 'vuex'
-    import { throttle } from '@/utils/util'
+    import { mapGetters, mapActions, mapState } from 'vuex'
+    import { throttle, coverStrTimer } from '@/utils/util'
     import { bus } from '@/utils/bus'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
@@ -51,7 +45,8 @@
 
         props: {
             isColumnsSelectPopupVisible: Boolean,
-            showFilterBar: Boolean
+            showFilterBar: Boolean,
+            toggleFilterBar: Function
         },
 
         data () {
@@ -68,8 +63,9 @@
                 currentBuildNo: '',
                 currentBuildNum: '',
                 currentShowStatus: false,
-                isLogSliderShow: false,
-                buildList: []
+                buildList: [],
+                triggerList: [],
+                queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime']
             }
         },
 
@@ -77,11 +73,40 @@
             ...mapGetters({
                 'historyPageStatus': 'pipelines/getHistoryPageStatus'
             }),
+            ...mapState('atom', [
+                'isPropertyPanelVisible'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            queryStr () {
+                return this.historyPageStatus.queryStr
+            },
+            filterData () {
+                return [
+                    {
+                        value: 'commitid',
+                        id: 'materialCommitId'
+                    },
+                    {
+                        value: 'commitMessage',
+                        id: 'materialCommitMessage'
+                    },
+                    {
+                        value: '触发方式',
+                        id: 'trigger',
+                        remote: true,
+                        multiable: true,
+                        children: this.triggerList
+                    },
+                    {
+                        value: '备注',
+                        id: 'remark'
+                    }
+                ]
             },
             emptyTipsConfig () {
                 const { hasNoPermission, buildList, isLoading, historyPageStatus: { isQuerying } } = this
@@ -121,13 +146,15 @@
                 this.setHistoryPageStatus({
                     scrollTop: 0
                 })
-                this.$nextTick(() => {
+                this.$nextTick(async () => {
                     const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
                     if (scrollTable) {
                         scrollTable.scrollTo(0, 0)
                     }
-                    this.requestHistory(1)
-                    this.initWebSocket()
+                    this.isLoading = true
+                    await this.requestHistory(1)
+                    this.isLoading = false
+                    // this.initWebSocket()
                 })
             },
             buildList (list, oldList) {
@@ -137,16 +164,23 @@
                         this.animateScroll(scrollTop)
                     })
                 }
+            },
+            queryStr (newStr) {
+                let hashParam = ''
+                if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
+                this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
             }
         },
 
-        created () {
-            const { historyPageStatus: { currentPage, pageSize } } = this
+        async created () {
+            await this.handlePathQuery()
+            const { currentPage, pageSize } = this
             const len = currentPage * pageSize
             this.queryBuildHistory(1, len)
         },
 
-        mounted () {
+        async mounted () {
+            await this.handleRemoteMethod()
             const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
             this.throttleScroll = throttle(this.handleScroll, 500)
             if (scrollTable) {
@@ -156,11 +190,12 @@
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
             }
-            this.initWebSocket()
+            // this.initWebSocket()
+            webSocketMessage.installWsMessage(this.updateBuildHistoryList)
         },
 
         updated () {
-            if (!this.isLogSliderShow) {
+            if (!this.isPropertyPanelVisible) {
                 this.currentBuildNo = ''
                 this.currentBuildNum = ''
                 this.currentShowStatus = false
@@ -168,12 +203,13 @@
         },
 
         beforeDestroy () {
-            pipelineWebsocket.disconnect()
+            // pipelineWebsocket.disconnect()
             const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
             if (scrollTable) {
                 scrollTable.removeEventListener('scroll', this.throttleScroll)
             }
             this.resetHistoryFilterCondition()
+            webSocketMessage.unInstallWsMessage()
         },
 
         methods: {
@@ -182,6 +218,9 @@
                 'requestExecPipeline',
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
+            ]),
+            ...mapActions('atom', [
+                'togglePropertyPanel'
             ]),
             animateScroll (scrollTop, speed = 0) {
                 const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
@@ -217,15 +256,14 @@
                     scrollLoadMore(target.scrollTop)
                 }
             },
+            // initWebSocket () {
+            //     const subscribe = `/topic/pipelineHistory/${this.pipelineId}`
 
-            initWebSocket () {
-                const subscribe = `/topic/pipelineHistory/${this.pipelineId}`
-
-                pipelineWebsocket.connect(this.projectId, subscribe, {
-                    success: () => this.updateBuildHistoryList(),
-                    error: (message) => this.$showTips({ message, theme: 'error' })
-                })
-            },
+            //     pipelineWebsocket.connect(this.projectId, subscribe, {
+            //         success: () => this.updateBuildHistoryList(),
+            //         error: (message) => this.$showTips({ message, theme: 'error' })
+            //     })
+            // },
 
             changeProject () {
                 this.$toggleProjectMenu(true)
@@ -252,10 +290,78 @@
             },
 
             showLog (buildId, buildNum, status) {
-                this.isLogSliderShow = true
+                this.togglePropertyPanel({
+                    isShow: true
+                })
+
                 this.currentBuildNo = buildId
                 this.currentBuildNum = buildNum
                 this.currentShowStatus = status
+            },
+
+            async handlePathQuery () {
+                const { $route, historyPageStatus: { queryMap } } = this
+                const pathQuery = $route.query
+                const newSearchKey = []
+                const queryArr = Object.keys(pathQuery)
+                const searchKeyArr = queryArr.filter(item => !this.queryStrMap.includes(item))
+
+                if (queryArr.includes('trigger')) await this.handleRemoteMethod()
+                if (queryArr.length) {
+                    const newQuery = {}
+                    queryArr.map(item => {
+                        if (['status', 'materialAlias'].includes(item)) {
+                            newQuery[item] = pathQuery[item].split(',')
+                        } else if (pathQuery.startTimeStartTime && pathQuery.endTimeEndTime) {
+                            newQuery.startTimeStartTime = pathQuery.startTimeStartTime
+                            newQuery.endTimeEndTime = pathQuery.endTimeEndTime
+                            newQuery.dateTimeRange = [coverStrTimer(parseInt($route.query.startTimeStartTime)), coverStrTimer(parseInt($route.query.endTimeEndTime))]
+                        } else {
+                            newQuery[item] = pathQuery[item]
+                        }
+                    })
+
+                    searchKeyArr.map(val => {
+                        const newItem = this.filterData.filter(item => item.id === val)
+                        if (newItem[0]) {
+                            newItem[0].values = [{ id: pathQuery[val] }]
+                            if (val === 'trigger') {
+                                newItem[0].values = []
+                                pathQuery[val].split(',').map(item => {
+                                    newItem[0].values.push({
+                                        id: item,
+                                        value: this.triggerList.find(val => val.id === item) && this.triggerList.find(val => val.id === item).value
+                                    })
+                                })
+                            } else {
+                                newItem[0].values[0].value = pathQuery[val]
+                            }
+                            newSearchKey.push(newItem[0])
+                        }
+                    })
+                    this.setHistoryPageStatus({
+                        queryMap: {
+                            ...queryMap,
+                            query: {
+                                ...queryMap.query,
+                                ...newQuery
+                            },
+                            searchKey: newSearchKey
+                        }
+                    })
+                    this.toggleFilterBar()
+                }
+            },
+
+            async handleRemoteMethod () {
+                try {
+                    const { $route: { params }, $ajax } = this
+                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/trigger`
+                    const res = await $ajax.get(url)
+                    this.triggerList = res.data
+                } catch (e) {
+
+                }
             },
 
             async queryBuildHistory (page = 1, pageSize) {
@@ -274,6 +380,7 @@
                     this.isLoadingMore = true
                     await this.requestHistory(this.historyPageStatus.currentPage + 1)
                 } catch (e) {
+                    console.log(e)
                     this.$showTips({
                         message: '加载出错',
                         theme: 'error'

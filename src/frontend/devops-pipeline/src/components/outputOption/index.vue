@@ -1,12 +1,12 @@
 <template>
     <div class="output-option-wrapper">
-        <vertical-tab :tabs="tabs"></vertical-tab>
         <div class="output-option-empty" v-if="isEmptyNav">
             <div class="no-data-right">
                 <img src="../../images/box.png">
                 <p>暂时没有产出物报告</p>
             </div>
         </div>
+        <vertical-tab v-else :tabs="tabs"></vertical-tab>
     </div>
 </template>
 
@@ -24,7 +24,6 @@
         data () {
             return {
                 optionList: [],
-                hasWetestTab: false,
                 hasThirdPartyReport: false,
                 pipelineReportList: [],
                 thirdPartyReportList: [],
@@ -86,8 +85,9 @@
                         pipelineId,
                         buildId: buildNo
                     }
-
-                    const reportRes = await this.requestReportList(params)
+                    const [reportRes] = await Promise.all([
+                        this.requestReportList(params)
+                    ])
 
                     if (reportRes.length) {
                         this.thirdPartyReportList = []
@@ -121,7 +121,7 @@
         }
         .report-iframe-content {
             // overflow: hidden;
-            height: 90%;
+            height: 95%;
             margin-top: 20px;
             width: 100%;
             // min-width: 1280px;

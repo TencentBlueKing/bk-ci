@@ -38,6 +38,7 @@
             return {
                 isLoading: true,
                 hasNoPermission: false,
+                leaving: false,
                 noPermissionTipsConfig: {
                     title: '没有权限',
                     desc: '你没有查看该流水线的权限，请切换项目或申请相应权限',
@@ -96,8 +97,9 @@
             '$route.params.pipelineId': function (pipelineId, oldId) {
                 this.init()
             },
-            pipeline () {
+            pipeline (val) {
                 this.isLoading = false
+                if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
                 if (error.code === 403) {
@@ -113,6 +115,9 @@
         beforeDestroy () {
             this.setPipeline()
             this.removeLeaveListenr()
+            this.setPipelineEditing(false)
+            this.setSaveStatus(false)
+            this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
             if (from.name !== to.name) {
@@ -129,13 +134,15 @@
                 'requestPipeline',
                 'togglePropertyPanel',
                 'setPipeline',
-                'setPipelineEditing'
+                'setPipelineEditing',
+                'setSaveStatus'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
                 'updatePipelineSetting'
             ]),
             init () {
+                this.isLoading = true
                 this.requestPipeline(this.$route.params)
                 this.requestPipelineSetting(this.$route.params)
             },
@@ -147,12 +154,21 @@
                 })
             },
             leaveConfirm (to, from, next) {
-                if (this.isEditing) {
-                    navConfirm({ content: CONFIRM_MSG, title: CONFIRM_TITLE })
-                        .then(() => next())
-                        .catch(() => next(false))
-                } else {
-                    next(true)
+                if (!this.leaving) {
+                    if (this.isEditing) {
+                        this.leaving = true
+                        navConfirm({ content: CONFIRM_MSG, title: CONFIRM_TITLE })
+                            .then(() => {
+                                next(true)
+                                this.leaving = false
+                            })
+                            .catch(() => {
+                                next(false)
+                                this.leaving = false
+                            })
+                    } else {
+                        next(true)
+                    }
                 }
             },
             addLeaveListenr () {
@@ -164,6 +180,12 @@
             leaveSure (e) {
                 e.returnValue = CONFIRM_MSG
                 return CONFIRM_MSG
+            },
+            requestMatchTemplateRules (templateId) {
+                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                    projectId: this.projectId,
+                    templateId
+                })
             }
         }
     }
@@ -171,8 +193,14 @@
 
 <style lang="scss">
     .bkdevops-pipeline-edit-wrapper {
-        padding: 7px 25px 20px 25px;
         display: flex;
+        .bk-tab-header {
+            padding: 7px 25px 0;
+            box-sizing: content-box;
+        }
+        .bk-tab-section {
+            padding: 0 25px 20px;
+        }
         .scroll-container {
             margin-top: -20px;
             margin-left: -30px;

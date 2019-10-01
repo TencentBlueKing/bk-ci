@@ -37,9 +37,6 @@
                 'getAllContainers',
                 'isCodePullAtom'
             ]),
-            isThirdDocker () {
-                return this.container && this.container.dispatchType && this.container.dispatchType.buildType === 'DOCKER' && ['tlinux1.2', 'tlinux2.2'].indexOf(this.container.dispatchType.value) === -1
-            },
             pipelineStages () {
                 const { getAllContainers } = this
                 return getAllContainers(this.pipeline.stages || []) || []
@@ -174,7 +171,7 @@
                 })
             },
             setSvnVersionState () {
-                if (this.isThirdParty || this.isThirdDocker) {
+                if (this.isThirdParty) {
                     this.newModel.svnVersion && this.newModel.svnVersion.list.map(item => {
                         item.disabled = false
                     })

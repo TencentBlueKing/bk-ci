@@ -12,7 +12,7 @@
             @blur="hideAll" />
 
         <div class="bk-selector-list" v-show="(showList || openList) && localList.length">
-            <ul>
+            <ul class="ul-container">
                 <li
                     v-for="(data, index) in list"
                     class="bk-selector-list-item"
@@ -147,3 +147,11 @@
         }
     }
 </script>
+
+<style lang="scss">
+
+    .ul-container {
+        max-height: 180px;
+        overflow: scroll;
+    }
+</style>

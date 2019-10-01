@@ -45,11 +45,11 @@ export const ATOM_OPTION = {
         default: false
     },
     timeout: {
-        rule: { 'numeric': true, 'max_value': 2880 },
+        rule: { 'numeric': true, 'max_value': 10080 },
         component: 'vuex-input',
         label: '插件执行超时时间(单位分钟)',
-        desc: '请填写0-2880之间的整数，0表示系统允许的最大超时时间',
-        placeholder: '请填写0-2880之间的整数，0表示系统允许的最大超时时间',
+        desc: '请填写0-10080之间的整数，0表示系统允许的最大超时时间',
+        placeholder: '请填写0-10080之间的整数，0表示系统允许的最大超时时间',
         default: '900'
     },
     runCondition: {
