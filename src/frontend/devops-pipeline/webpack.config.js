@@ -36,7 +36,7 @@ module.exports = (env, argv) => {
         entry: {
             pipeline: './src/main.js'
         },
-        publicPath: '/',
+        publicPath: '/pipeline/',
         dist: '/pipeline',
         port: 8006
     })

@@ -6,11 +6,15 @@
     "gulp": "^4.0.2",
     "lerna": "^3.16.4",
     "ora": "^3.4.0",
-    "yargs": "^14.0.0"
+    "yargs": "^14.0.0",
+    "husky": "^3.0.7"
   },
   "scripts": {
     "start": "lerna bootstrap",
-    "build": "lerna run public:external --parallel",
+    "build:dev": "lerna run public:dev --parallel",
+    "build:test": "lerna run public:test --parallel",
+    "build:master": "lerna run public:master --parallel",
+    "build:external": "lerna run public:external --parallel",
     "public": "gulp -d frontend"
   },
   "workspaces": [

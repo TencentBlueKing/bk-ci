@@ -48,6 +48,9 @@
     },
     "scripts": {
         "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
+        "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
+        "public:test": "cross-env NODE_ENV=test webpack --mode production",
+        "public:master": "cross-env NODE_ENV=master webpack --mode production",
         "public:external": "cross-env NODE_ENV=external webpack --mode production"
     },
     "repository": {
