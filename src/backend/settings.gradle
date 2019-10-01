@@ -174,3 +174,11 @@ include ":experience:api-experience-blueking"
 
 include ":notify"
 include ":notify:api-notify"
+
+include ":external"
+include ":external:api-external"
+include ":external:biz-external"
+include ":external:biz-external-blueking"
+include ":external:boot-external"
+include ":external:boot-external-blueking"
+include ":external:model-external"
