@@ -76,4 +76,27 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun getV2(englishName: String): Result<ProjectVO?> {
         return Result(projectService.getByEnglishName(englishName))
     }
+
+    override fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String): Result<List<ProjectVO>> {
+        return Result(projectService.getProjectByGroup(userId, bgName, deptName, centerName))
+    }
+
+    override fun getPreUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
+        return Result(projectService.getOrCreatePreProject(userId, accessToken))
+    }
+
+    override fun getPreUserProjectV2(userId: String, accessToken: String): Result<ProjectVO?> {
+        return Result(projectService.getOrCreatePreProject(userId, accessToken))
+    }
+
+    override fun getProjectEnNamesByOrganization(userId: String, bgId: Long, deptName: String?, centerName: String?): Result<List<String>> {
+        return Result(
+                projectService.getProjectEnNamesByOrganization(
+                        userId = userId,
+                        bgId = bgId,
+                        deptName = deptName,
+                        centerName = centerName,
+                        interfaceName = "/service/projects/enNames/organization"
+                )
+        )    }
 }

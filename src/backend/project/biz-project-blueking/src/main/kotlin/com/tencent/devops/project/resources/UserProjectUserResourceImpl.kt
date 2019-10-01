@@ -26,19 +26,24 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.user.UserProjectUserResource
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.UserCacheService
 import com.tencent.devops.project.service.UserService
+import com.tencent.devops.project.user.api.UserProjectUserResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserProjectUserResourceImpl @Autowired constructor(
     private val userService: UserService,
-    private val userCacheService: UserCacheService
+    private val userCacheService: UserCacheService,
+    private val projectService: ProjectService,
+    private val pipelineAuthServiceCode: BkPipelineAuthServiceCode
 ) : UserProjectUserResource {
 
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
@@ -55,5 +60,13 @@ class UserProjectUserResourceImpl @Autowired constructor(
 
     override fun getDetail(userId: String, bkToken: String): Result<UserDeptDetail> {
         return Result(userCacheService.getDetailFromCache(userId))
+    }
+
+    override fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
+        return projectService.getProjectUsers(accessToken, userId, projectCode)
+    }
+
+    override fun getProjectUserRoles(accessToken: String, userId: String, projectCode: String): Result<List<UserRole>> {
+        return Result(projectService.getProjectUserRoles(accessToken, userId, projectCode, pipelineAuthServiceCode))
     }
 }

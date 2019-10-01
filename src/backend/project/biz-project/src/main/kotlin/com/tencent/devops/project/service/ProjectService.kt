@@ -26,10 +26,8 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectUpdateInfo
-import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.project.pojo.*
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
@@ -74,6 +72,9 @@ interface ProjectService {
     fun list(userId: String): List<ProjectVO>
 
     fun list(projectCodes: Set<String>): List<ProjectVO>
+
+    fun getAllProject(): List<ProjectVO>
+
     /**
      * 获取用户已的可访问项目列表=
      */
@@ -82,4 +83,27 @@ interface ProjectService {
     fun getNameByCode(projectCodes: String): HashMap<String, String>
     fun grayProjectSet(): Set<String>
     fun updateEnabled(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean>
+
+    fun getProjectEnNamesByOrganization(
+            userId: String,
+            bgId: Long?,
+            deptName: String?,
+            centerName: String?,
+            interfaceName: String? = "Anon interface"
+    ): List<String>
+
+    fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO
+
+    fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO>
+
+    fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+
+    fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?>
+
+    fun getProjectUserRoles(
+            accessToken: String,
+            userId: String,
+            projectCode: String,
+            serviceCode: AuthServiceCode
+    ): List<UserRole>
 }

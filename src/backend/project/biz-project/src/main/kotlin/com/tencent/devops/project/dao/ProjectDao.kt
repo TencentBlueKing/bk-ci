@@ -99,6 +99,13 @@ class ProjectDao {
         }
     }
 
+    fun getAllProject(dslContext: DSLContext): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            val query = dslContext.selectFrom(this)
+            query.fetch()
+        }
+    }
+
     /**
      * 根据英文名称(projectCode)查询name
      */
@@ -115,6 +122,89 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId)).fetchOne()
+        }
+    }
+
+    /**
+     * 根据组织架构来查询name
+     */
+    fun listByGroup(
+            dslContext: DSLContext,
+            bgName: String?,
+            deptName: String?,
+            centerName: String?
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (!bgName.isNullOrBlank()) {
+                conditions.add(
+                        BG_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        bgName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            if (!deptName.isNullOrBlank()) {
+                conditions.add(
+                        DEPT_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        deptName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            if (!centerName.isNullOrBlank()) {
+                conditions.add(
+                        CENTER_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        centerName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    /**
+     * 根据bgId+deptName+centerName来查询
+     */
+    fun listByOrganization(
+            dslContext: DSLContext,
+            bgId: Long?,
+            deptName: String?,
+            centerName: String?
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (bgId != null) {
+                conditions.add(BG_ID.eq(bgId))
+            }
+            if (!deptName.isNullOrBlank()) {
+                conditions.add(
+                        DEPT_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        deptName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            if (!centerName.isNullOrBlank()) {
+                conditions.add(
+                        CENTER_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        centerName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
@@ -242,6 +332,17 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
                 .where(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
+    fun updateUsableStatus(dslContext: DSLContext, userId: String, projectId: String, enabled: Boolean): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                    .set(ENABLED, enabled)
+                    .set(UPDATED_AT, LocalDateTime.now())
+                    .set(UPDATOR, userId)
+                    .where(ENGLISH_NAME.eq(projectId))
+                    .execute()
         }
     }
 

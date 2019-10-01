@@ -30,11 +30,12 @@ import com.tencent.devops.model.project.tables.TActivity
 import com.tencent.devops.model.project.tables.records.TActivityRecord
 import com.tencent.devops.project.pojo.ActivityInfo
 import com.tencent.devops.project.pojo.ActivityStatus
+import com.tencent.devops.project.pojo.OPActivityUpdate
+import com.tencent.devops.project.pojo.OPActivityVO
 import com.tencent.devops.project.pojo.enums.ActivityType
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ActivityDao {
@@ -76,6 +77,50 @@ class ActivityDao {
             return dslContext.selectFrom(this)
                 .where(TYPE.eq(type.name))
                 .fetch()
+        }
+    }
+
+
+    fun delete(dslContext: DSLContext, activityId: Long) {
+        with(TActivity.T_ACTIVITY) {
+            dslContext.deleteFrom(this).where(ID.eq(activityId)).execute()
+        }
+    }
+
+    fun get(dslContext: DSLContext, activityId: Long): TActivityRecord? {
+        with(TActivity.T_ACTIVITY) {
+            return dslContext.selectFrom(this)
+                    .where(ID.eq(activityId))
+                    .fetchOne()
+        }
+    }
+
+    fun listOPActivity(dslContext: DSLContext): List<OPActivityVO> {
+        with(TActivity.T_ACTIVITY) {
+            return dslContext.selectFrom(this)
+                    .fetch().map {
+                        OPActivityVO(
+                                it.id,
+                                it.name,
+                                it.link,
+                                it.type,
+                                it.status,
+                                it.creator, DateTimeUtil.toDateTime(it.createTime)
+                        )
+                    } ?: ArrayList<OPActivityVO>()
+        }
+    }
+
+    fun upDate(dslContext: DSLContext, activityId: Long, opActivityUpdate: OPActivityUpdate): Boolean {
+        with(TActivity.T_ACTIVITY) {
+            val result = dslContext.update(this)
+                    .set(NAME, opActivityUpdate.name)
+                    .set(LINK, opActivityUpdate.link)
+                    .set(TYPE, opActivityUpdate.type)
+                    .set(STATUS, opActivityUpdate.status)
+                    .where(ID.eq(activityId))
+                    .execute()
+            return result > 0
         }
     }
 }

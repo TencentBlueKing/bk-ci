@@ -24,8 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project
+package com.tencent.devops.project.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -90,6 +92,9 @@ interface ServiceProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @ApiOperation(" 校验用户是否项目成员")
     fun verifyUserProjectPermission(
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -121,6 +126,9 @@ interface ServiceProjectResource {
     @Path("projectCode/{projectCode}/users/{userId}/verify")
     @ApiOperation(" 校验用户是否项目成员")
     fun verifyUserProjectPermissionV2(
+            @ApiParam("PAAS_CC Token", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+            accessToken: String,
             @ApiParam("项目代码", required = true)
             @PathParam("projectCode")
             projectCode: String,
@@ -138,4 +146,66 @@ interface ServiceProjectResource {
             @PathParam("projectId")
             englishName: String
     ): Result<ProjectVO?>
+
+    @GET
+    @Path("/getProjectByGroup")
+    @ApiOperation("根据组织架构查询所有项目")
+    fun getProjectByGroup(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("bgName", required = false)
+            @QueryParam("bgName")
+            bgName: String?,
+            @ApiParam("deptName", required = false)
+            @QueryParam("deptName")
+            deptName: String?,
+            @ApiParam("centerName", required = false)
+            @QueryParam("centerName")
+            centerName: String
+    ): Result<List<ProjectVO>>
+
+
+    @GET
+    @Path("/preBuild/userProject/{userId}")
+    @ApiOperation("查询用户项目")
+    fun getPreUserProject(
+            @ApiParam("用户ID", required = true)
+            @PathParam("userId")
+            userId: String,
+            @ApiParam("accessToken", required = true)
+            @QueryParam("accessToken")
+            accessToken: String
+    ): Result<ProjectVO?>
+
+    @GET
+//    @Path("/preBuild/userProject/{userId}")
+    @Path("/preBuild/userProject/userId/{userId}")
+    @ApiOperation("查询用户项目")
+    fun getPreUserProjectV2(
+            @ApiParam("用户ID", required = true)
+            @PathParam("userId")
+            userId: String,
+            @ApiParam("accessToken", required = true)
+            @QueryParam("accessToken")
+            accessToken: String
+    ): Result<ProjectVO?>
+
+    @GET
+    @Path("/enNames/organization")
+    @ApiOperation("查询用户项目")
+    fun getProjectEnNamesByOrganization(
+            @ApiParam("用户ID", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("BG_ID", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_BG_ID)
+            bgId: Long,
+            @ApiParam("部门名称", required = true)
+            @QueryParam("deptName")
+            deptName: String?,
+            @ApiParam("中心名称", required = true)
+            @QueryParam("centerName")
+            centerName: String?
+    ): Result<List<String>>
 }

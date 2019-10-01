@@ -24,22 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.user
+package com.tencent.devops.project.user.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
+import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PROJECT_USER"], description = "项目列表用户接口")
@@ -71,4 +69,35 @@ interface UserProjectUserResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         bkToken: String
     ): Result<UserDeptDetail>
+
+
+    @GET
+    @Path("/projects/{projectCode}/list")
+    @ApiOperation(" 查看项目下的成员列表")
+    fun getProjectUsers(
+            @ApiParam("PAAS_CC Token", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+            accessToken: String,
+            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("项目代码", required = true)
+            @PathParam("projectCode")
+            projectCode: String
+    ): Result<List<String>?>
+
+    @GET
+    @Path("/projects/{projectCode}/roles/list")
+    @ApiOperation(" 查看项目下的成员列表")
+    fun getProjectUserRoles(
+            @ApiParam("PAAS_CC Token", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+            accessToken: String,
+            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("projectCode")
+            projectCode: String
+    ): Result<List<UserRole>>
 }

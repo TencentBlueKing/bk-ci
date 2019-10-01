@@ -98,4 +98,18 @@ class UserProjectResourceImpl @Autowired constructor(
         projectService.validate(validateType, name, projectId)
         return Result(true)
     }
+
+    override fun getV2(projectId: String): Result<ProjectVO> {
+        return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
+    }
+
+    override fun enable(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean> {
+        projectService.updateUsableStatus(userId, projectId, enabled)
+        return Result(true)
+    }
+
+    override fun enableV2(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean> {
+        projectService.updateUsableStatus(userId, projectId, enabled)
+        return Result(true)
+    }
 }

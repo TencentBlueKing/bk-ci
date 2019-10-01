@@ -28,6 +28,7 @@ dependencies {
     compile project(":project:biz-project")
     compile project(":project:biz-project-blueking")
     compile project(":project:api-project-op")
+    compile project(":project:api-project-ee")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

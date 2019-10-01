@@ -29,6 +29,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.MessageCodeDetail
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.OpMessageCodeResource
 import com.tencent.devops.project.pojo.code.AddMessageCodeRequest
 import com.tencent.devops.project.pojo.code.MessageCodeResp
 import com.tencent.devops.project.pojo.code.UpdateMessageCodeRequest
@@ -64,5 +65,17 @@ class OpMessageCodeResourceImpl @Autowired constructor(private val messageCodeDe
 
     override fun getMessageCodeDetail(messageCode: String): Result<MessageCodeDetail?> {
         return messageCodeDetailService.getMessageCodeDetail(messageCode)
+    }
+
+    override fun getMessageCodeDetailV2(messageCode: String): Result<MessageCodeDetail?> {
+        return messageCodeDetailService.getMessageCodeDetail(messageCode)
+    }
+
+    override fun refreshMessageCodeCacheV2(messageCode: String): Result<Boolean> {
+        return messageCodeDetailService.refreshMessageCodeCache(messageCode)
+    }
+
+    override fun updateMessageCodeDetailV2(messageCode: String, updateMessageCodeRequest: UpdateMessageCodeRequest): Result<Boolean> {
+        return messageCodeDetailService.updateMessageCodeDetail(messageCode, updateMessageCodeRequest)
     }
 }

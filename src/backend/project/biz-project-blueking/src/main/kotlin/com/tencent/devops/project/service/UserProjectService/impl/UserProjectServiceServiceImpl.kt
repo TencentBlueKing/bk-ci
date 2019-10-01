@@ -1,41 +1,20 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
-package com.tencent.devops.project.service.impl
+package com.tencent.devops.project.service.UserProjectService.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.dao.FavoriteDao
+import com.tencent.devops.project.dao.GrayTestDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.*
-import com.tencent.devops.project.service.UserProjectServiceService
+import com.tencent.devops.project.pojo.service.OPPServiceVO
+import com.tencent.devops.project.pojo.service.ServiceCreateInfo
+import com.tencent.devops.project.pojo.service.ServiceListVO
+import com.tencent.devops.project.pojo.service.ServiceUpdateUrls
+import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.service.UserProjectService.UserProjectServiceService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -47,10 +26,18 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val serviceTypeDao: ServiceTypeDao,
     private val serviceDao: ServiceDao,
+    private val grayTestDao: GrayTestDao,
     private val favoriteDao: FavoriteDao,
     private val gray: Gray,
     private val redisOperation: RedisOperation
 ) : UserProjectServiceService {
+    override fun updateServiceUrls(
+        userId: String,
+        name: String,
+        serviceUpdateUrls: ServiceUpdateUrls
+    ): Result<Boolean> {
+        return Result(serviceDao.updateUrls(dslContext, userId, name, serviceUpdateUrls))
+    }
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
@@ -71,7 +58,8 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                     tServiceRecord.showNav,
                     tServiceRecord.projectIdType,
                     favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
-                    tServiceRecord.weight ?: 0
+                    tServiceRecord.logoUrl,
+                    tServiceRecord.webSocket
                 )
             )
         } else {
@@ -87,20 +75,6 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     }
 
     /**
-     * 批量修改服务url
-     */
-    override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
-        if(serviceUrlUpdateInfoList == null) {
-            return Result(data = true)
-        }
-        serviceUrlUpdateInfoList.forEach {
-            serviceDao.updateUrlByName(dslContext, it)
-
-        }
-        return Result(data = true)
-    }
-
-    /**
      * 删除服务
      */
     override fun deleteService(userId: String, serviceId: Long): Result<Boolean> {
@@ -112,34 +86,40 @@ class UserProjectServiceServiceImpl @Autowired constructor(
      */
     override fun listOPService(userId: String): Result<List<OPPServiceVO>> {
         val tServiceList = serviceDao.getServiceList(dslContext)
-        val serviceVOList = ArrayList<OPPServiceVO>()
+        val oPPServiceVOList = ArrayList<OPPServiceVO>()
         tServiceList.map { tServiceRecord ->
-            serviceVOList.add(
-                OPPServiceVO(
-                    tServiceRecord.id,
-                    tServiceRecord.name ?: "",
-                    tServiceRecord.serviceTypeId,
-                    tServiceRecord.showProjectList,
-                    tServiceRecord.showNav,
-                    tServiceRecord.status,
-                    tServiceRecord.link,
-                    tServiceRecord.linkNew,
-                    tServiceRecord.injectType,
-                    tServiceRecord.iframeUrl,
-                    tServiceRecord.cssUrl,
-                    tServiceRecord.jsUrl,
-                    tServiceRecord.grayCssUrl,
-                    tServiceRecord.grayJsUrl,
-                    tServiceRecord.projectIdType,
-                    tServiceRecord.createdUser ?: "",
-                    DateTimeUtil.toDateTime(tServiceRecord.createdTime),
-                    tServiceRecord.updatedUser ?: "",
-                    DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
-                )
+            oPPServiceVOList.add(
+                generateOppServiceVO(tServiceRecord)
             )
         }
 
-        return Result(serviceVOList)
+        return Result(oPPServiceVOList)
+    }
+
+    private fun generateOppServiceVO(tServiceRecord: TServiceRecord): OPPServiceVO {
+        return OPPServiceVO(
+            tServiceRecord.id,
+            tServiceRecord.name ?: "",
+            tServiceRecord.serviceTypeId,
+            tServiceRecord.showProjectList,
+            tServiceRecord.showNav,
+            tServiceRecord.status,
+            tServiceRecord.link,
+            tServiceRecord.linkNew,
+            tServiceRecord.injectType,
+            tServiceRecord.iframeUrl,
+            tServiceRecord.cssUrl,
+            tServiceRecord.jsUrl,
+            tServiceRecord.grayCssUrl,
+            tServiceRecord.grayJsUrl,
+            tServiceRecord.projectIdType,
+            tServiceRecord.logoUrl,
+            tServiceRecord.webSocket,
+            tServiceRecord.createdUser ?: "",
+            DateTimeUtil.toDateTime(tServiceRecord.createdTime),
+            tServiceRecord.updatedUser ?: "",
+            DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
+        )
     }
 
     /**
@@ -148,29 +128,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     override fun createService(userId: String, serviceCreateInfo: ServiceCreateInfo): Result<OPPServiceVO> {
         val tServiceRecord = serviceDao.create(dslContext, userId, serviceCreateInfo)
         if (tServiceRecord != null) {
-            return Result(
-                OPPServiceVO(
-                    tServiceRecord.id,
-                    tServiceRecord.name ?: "",
-                    tServiceRecord.serviceTypeId,
-                    tServiceRecord.showProjectList,
-                    tServiceRecord.showNav,
-                    tServiceRecord.status,
-                    tServiceRecord.link,
-                    tServiceRecord.linkNew,
-                    tServiceRecord.injectType,
-                    tServiceRecord.iframeUrl,
-                    tServiceRecord.cssUrl,
-                    tServiceRecord.jsUrl,
-                    tServiceRecord.grayCssUrl,
-                    tServiceRecord.grayJsUrl,
-                    tServiceRecord.projectIdType,
-                    tServiceRecord.createdUser ?: "",
-                    DateTimeUtil.toDateTime(tServiceRecord.createdTime),
-                    tServiceRecord.updatedUser ?: "",
-                    DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
-                )
-            )
+            return Result(generateOppServiceVO(tServiceRecord))
         }
         return Result(500, "服务添加失败")
     }
@@ -178,13 +136,13 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     /**
      * 修改服务关注
      */
-    override fun updateCollected(userId: String, serviceId: Long, collector: Boolean): Result<Boolean> {
+    override fun updateCollected(userId: String, service_id: Long, collector: Boolean): Result<Boolean> {
         if (collector) {
-            if (favoriteDao.create(dslContext, userId, serviceId) > 0) {
+            if (favoriteDao.create(dslContext, userId, service_id) > 0) {
                 return Result(0, "服务收藏成功", "", true)
             }
         } else {
-            if (favoriteDao.delete(dslContext, userId, serviceId) > 0) {
+            if (favoriteDao.delete(dslContext, userId, service_id) > 0) {
                 return Result(0, "服务取消收藏成功", "", true)
             }
         }
@@ -197,21 +155,23 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         try {
             val serviceListVO = ArrayList<ServiceListVO>()
 
-            val serviceTypeMap = serviceTypeDao.getAllIdAndTitle(dslContext)
+            val serviceTypeMap = serviceTypeDao.getAllIdAndTitle(dslContext).map {
+                it.value1() to it.value2()
+            }.toMap()
 
             val groupService = serviceDao.getServiceList(dslContext).groupBy { it.serviceTypeId }
 
+            val grayTest = grayTestDao.listByUser(dslContext, userId).map { it.server_id to it.status }.toMap()
+
             val favorServices = favoriteDao.list(dslContext, userId).map { it.serviceId }.toList()
 
-            serviceTypeMap.forEach { serviceType ->
-                val typeId = serviceType.id
-                val typeName = serviceType.title
+            serviceTypeMap.forEach { typeId, typeName ->
                 val services = ArrayList<ServiceVO>()
 
                 val s = groupService[typeId]
 
                 s?.forEach {
-                    val status = it.status
+                    val status = grayTest[it.id] ?: it.status
                     val favor = favorServices.contains(it.id)
                     services.add(
                         ServiceVO(
@@ -230,17 +190,13 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                             it.showNav ?: false,
                             it.projectIdType ?: "",
                             favor,
-                            it.weight ?: 0
+                            it.logoUrl,
+                            it.webSocket
                         )
                     )
                 }
 
-                serviceListVO.add(
-                    ServiceListVO(
-                        typeName,
-                        serviceType.weight ?: 0,
-                        services.sortedByDescending { it.weigHt })
-                )
+                serviceListVO.add(ServiceListVO(typeName, services))
             }
 
             return Result(0, "OK", serviceListVO)
@@ -279,7 +235,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             services.forEach {
-                val type = serviceTypeDao.create(context, userId, it.title, it.weigHt)
+                val type = serviceTypeDao.create(context, userId, it.title)
                 it.children.forEach { s ->
                     serviceDao.create(context, userId, type.id, s)
                 }

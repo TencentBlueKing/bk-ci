@@ -24,9 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project
+package com.tencent.devops.project.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -55,6 +57,8 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserProjectResource {
 
+
+    //TODO: 待和家锐确认原有字段删除是否有影响
     @GET
     @Path("/")
     @ApiOperation("查询所有项目")
@@ -117,8 +121,7 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @PUT
-//    @Path("/{validateType}/names/{name}/validate")
-    @Path("/validateType/{validateType}/names/{name}/validate")
+    @Path("/{validateType}/names/{name}/validate")
     @ApiOperation("校验项目名称和项目英文名")
     fun validate(
         @ApiParam("userId", required = true)
@@ -186,5 +189,52 @@ interface UserProjectResource {
             @ApiParam("项目ID")
             @QueryParam("project_id")
             projectId: String?
+    ): Result<Boolean>
+
+    @GET
+//    @Path("/{english_name}")
+    @Path("/enName/{english_name}")
+    @ApiOperation("获取项目信息")
+    fun getV2(
+            @ApiParam("项目ID英文名标识", required = true)
+            @PathParam("english_name")
+            projectId: String
+    ): Result<ProjectVO>
+
+    @PUT
+    @Path("/{project_id}/enable")
+    @ApiOperation("启用或停用项目")
+    fun enable(
+            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("PAAS_CC Token", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+            accessToken: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("project_id")
+            projectId: String,
+            @ApiParam("待变更的新状态", required = true)
+            @QueryParam("enabled")
+            enabled: Boolean
+    ): Result<Boolean>
+
+    @PUT
+//    @Path("/{project_id}/enable")
+    @Path("/project_id/{project_id}/enable")
+    @ApiOperation("启用或停用项目")
+    fun enableV2(
+            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("PAAS_CC Token", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+            accessToken: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("project_id")
+            projectId: String,
+            @ApiParam("待变更的新状态", required = true)
+            @QueryParam("enabled")
+            enabled: Boolean
     ): Result<Boolean>
 }

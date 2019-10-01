@@ -49,7 +49,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpMessageCodeResource {
-
     @ApiOperation("获取返回码信息")
     @GET
     @Path("/")
@@ -100,5 +99,38 @@ interface OpMessageCodeResource {
         messageCode: String,
         @ApiParam(value = "返回码更新请求报文体", required = true)
         updateMessageCodeRequest: UpdateMessageCodeRequest
+    ): Result<Boolean>
+
+
+    @ApiOperation("获取返回码信息")
+    @GET
+    //    @Path("/{messageCode}")
+    @Path("/messageCode/{messageCode}")
+    fun getMessageCodeDetailV2(
+            @ApiParam(value = "返回码", required = true)
+            @PathParam("messageCode")
+            messageCode: String
+    ): Result<MessageCodeDetail?>
+
+    @ApiOperation("刷新返回码在redis的缓存")
+    @GET
+//    @Path("/{messageCode}/refresh")
+    @Path("/messageCode/{messageCode}/refresh")
+    fun refreshMessageCodeCacheV2(
+            @ApiParam(value = "返回码", required = true)
+            @PathParam("messageCode")
+            messageCode: String
+    ): Result<Boolean>
+
+    @ApiOperation("更新返回码信息")
+    @PUT
+//    @Path("/{messageCode}")
+    @Path("/messageCode/{messageCode}")
+    fun updateMessageCodeDetailV2(
+            @ApiParam(value = "返回码", required = true)
+            @PathParam("messageCode")
+            messageCode: String,
+            @ApiParam(value = "返回码更新请求报文体", required = true)
+            updateMessageCodeRequest: UpdateMessageCodeRequest
     ): Result<Boolean>
 }

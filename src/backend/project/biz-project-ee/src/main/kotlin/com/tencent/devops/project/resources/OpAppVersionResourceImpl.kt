@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpAppVersionResourceImpl @Autowired constructor(private val appVersionService: AppVersionService) :
-    OpAppVersionResource {
+        OpAppVersionResource {
     override fun updateAppVersion(appVersionId: Long, appVersionRequest: AppVersionRequest): Result<Int> {
         return Result(data = appVersionService.setAppVersion(appVersionId, appVersionRequest))
     }
@@ -66,5 +66,17 @@ class OpAppVersionResourceImpl @Autowired constructor(private val appVersionServ
             }
         }
         return Result(data = result)
+    }
+
+    override fun getAppVersionV2(appVersionId: Long): Result<AppVersion?> {
+        return Result(data = appVersionService.getAppVersion(appVersionId))
+    }
+
+    override fun updateAppVersionV2(appVersionId: Long, appVersionRequest: AppVersionRequest): Result<Int> {
+        return Result(data = appVersionService.setAppVersion(appVersionId, appVersionRequest))
+    }
+
+    override fun deleteAppVersionV2(appVersionId: Long): Result<Int> {
+        return Result(data = appVersionService.deleteAppVersion(appVersionId))
     }
 }

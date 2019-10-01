@@ -1,4 +1,4 @@
-package com.tencent.devops.project.service
+package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID

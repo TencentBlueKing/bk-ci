@@ -27,12 +27,9 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.OPProjectServiceResource
 import com.tencent.devops.project.api.ServiceProjectServiceResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.*
-import com.tencent.devops.project.service.GrayTestService
-import com.tencent.devops.project.service.ServiceTypeService
 import com.tencent.devops.project.service.UserProjectServiceService
 import org.slf4j.LoggerFactory
 
