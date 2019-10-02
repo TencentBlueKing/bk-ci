@@ -8,9 +8,7 @@ data class BuildCheckParams(
     val pipelineId: String,
     val buildId: String,
     val buildNo: String,
-    val interceptTaskName: String,
     val startTime: Long,
     val taskId: String,
-    val position: String,
-    val templateId: String?
+    val position: String
 )

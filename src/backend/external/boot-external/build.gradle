@@ -24,8 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.exception
+dependencies {
+    compile project(":common:common-auth:common-auth-sample")
+    compile project(":external:biz-external")
+}
 
-import com.tencent.devops.common.api.exception.OperationException
-
-class GithubApiException(val code: Int, message: String) : OperationException(message)
+apply from: "$rootDir/task_spring_boot_package.gradle"
