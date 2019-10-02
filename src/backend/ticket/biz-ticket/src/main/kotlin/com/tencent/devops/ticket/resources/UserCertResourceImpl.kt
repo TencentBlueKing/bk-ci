@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.ticket.api.UserCertResource
+import com.tencent.devops.ticket.api.v2.UserCertResource
 import com.tencent.devops.ticket.pojo.Cert
 import com.tencent.devops.ticket.pojo.CertAndroidInfo
 import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
