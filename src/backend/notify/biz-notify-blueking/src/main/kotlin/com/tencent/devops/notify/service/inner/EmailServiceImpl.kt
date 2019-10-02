@@ -16,12 +16,13 @@ import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_EMAIL
 import com.tencent.devops.notify.dao.EmailNotifyDao
-import com.tencent.devops.notify.model.EmailNotifyMessage
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
-import com.tencent.devops.notify.model.NotificationResponse
-import com.tencent.devops.notify.model.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.NotificationResponse
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.utils.CommonUtils
+import org.bouncycastle.asn1.x500.style.RFC4519Style.title
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired

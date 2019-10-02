@@ -4,7 +4,7 @@ import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 
 @MicroService
-class Application1
+class Application
 
 //@MicroService
 //@ComponentScan("com.tencent.devops.notify")

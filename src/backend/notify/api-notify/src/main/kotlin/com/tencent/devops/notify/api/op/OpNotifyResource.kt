@@ -1,12 +1,7 @@
 package com.tencent.devops.notify.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.notify.model.BaseMessage
-import com.tencent.devops.notify.model.EmailNotifyMessage
-import com.tencent.devops.notify.model.NotificationResponseWithPage
-import com.tencent.devops.notify.model.RtxNotifyMessage
-import com.tencent.devops.notify.model.SmsNotifyMessage
-import com.tencent.devops.notify.model.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.*
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

@@ -1,5 +1,7 @@
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
+
 class RtxNotifyMessageWithOperation : RtxNotifyMessage() {
     var id: String? = null
     var batchId: String? = null

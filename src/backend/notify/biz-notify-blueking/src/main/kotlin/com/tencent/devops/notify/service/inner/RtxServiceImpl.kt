@@ -14,10 +14,10 @@ import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.notify.dao.RtxNotifyDao
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import com.tencent.devops.notify.model.NotificationResponse
-import com.tencent.devops.notify.model.NotificationResponseWithPage
-import com.tencent.devops.notify.model.RtxNotifyMessage
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.NotificationResponse
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.utils.ChineseStringUtil
 import com.tencent.devops.notify.utils.CommonUtils

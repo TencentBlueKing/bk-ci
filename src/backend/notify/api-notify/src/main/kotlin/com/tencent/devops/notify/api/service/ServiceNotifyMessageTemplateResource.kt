@@ -1,7 +1,7 @@
 package com.tencent.devops.notify.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.notify.model.SendNotifyMessageTemplateRequest
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

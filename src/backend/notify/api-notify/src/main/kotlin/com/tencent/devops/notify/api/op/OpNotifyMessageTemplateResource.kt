@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.notify.model.NotifyMessageCommonTemplate
-import com.tencent.devops.notify.model.NotifyMessageTemplate
 import com.tencent.devops.notify.model.NotifyTemplateMessageRequest
+import com.tencent.devops.notify.pojo.NotifyMessageTemplate
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

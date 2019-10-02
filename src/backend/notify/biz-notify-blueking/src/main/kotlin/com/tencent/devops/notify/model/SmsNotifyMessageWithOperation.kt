@@ -1,5 +1,7 @@
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.notify.pojo.SmsNotifyMessage
+
 class SmsNotifyMessageWithOperation : SmsNotifyMessage() {
     var id: String? = null
     var batchId: String? = null
