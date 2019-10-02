@@ -29,7 +29,7 @@ package com.tencent.devops.ticket.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.ticket.api.BuildCredentialResource
+import com.tencent.devops.ticket.api.v2.BuildCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,5 +61,26 @@ class BuildCredentialResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid publicKey")
         }
         return Result(credentialService.buildGet(buildId, credentialId, publicKey))
+    }
+
+    override fun getDetail(
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        credentialId: String
+    ): Result<Map<String, String>> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (vmSeqId.isBlank()) {
+            throw ParamBlankException("Invalid vmSeqId")
+        }
+        if (vmName.isBlank()) {
+            throw ParamBlankException("Invalid vmName")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        return Result(credentialService.buildGetDetail(buildId, credentialId))
     }
 }
