@@ -62,4 +62,25 @@ class BuildCredentialResourceImpl @Autowired constructor(
         }
         return Result(credentialService.buildGet(buildId, credentialId, publicKey))
     }
+
+    override fun getDetail(
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        credentialId: String
+    ): Result<Map<String, String>> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (vmSeqId.isBlank()) {
+            throw ParamBlankException("Invalid vmSeqId")
+        }
+        if (vmName.isBlank()) {
+            throw ParamBlankException("Invalid vmName")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        return Result(credentialService.buildGetDetail(buildId, credentialId))
+    }
 }

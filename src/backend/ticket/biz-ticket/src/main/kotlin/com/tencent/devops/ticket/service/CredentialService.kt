@@ -327,6 +327,28 @@ class CredentialService @Autowired constructor(
         return serviceGet(buildBasicInfo.projectId, credentialId, publicKey)
     }
 
+    fun buildGetDetail(buildId: String, credentialId: String): Map<String, String> {
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
+        if (buildBasicInfoResult.isNotOk()) {
+            throw RemoteServiceException("Failed to build the basic information based on the buildId")
+        }
+        val buildBasicInfo = buildBasicInfoResult.data ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
+        val credentialInfo = serviceGet(buildBasicInfo.projectId, credentialId)
+        val keyMap = CredentialType.getKeyMap(credentialInfo.credentialType.name)
+        val credentialMap = mutableMapOf<String, String?>()
+        credentialMap["v1"] = credentialInfo.v1
+        credentialMap["v2"] = credentialInfo.v2
+        credentialMap["v3"] = credentialInfo.v3
+        credentialMap["v4"] = credentialInfo.v4
+
+        val ret = mutableMapOf<String, String>()
+        keyMap.forEach { (k, v) ->
+            ret[v] = credentialMap[k] ?: ""
+        }
+
+        return ret
+    }
+
     fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo {
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
 
