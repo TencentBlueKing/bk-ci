@@ -1,8 +1,7 @@
 <template>
     <bk-dialog
-        v-if="renderObj.id"
         v-model="showDialog"
-        class="devops-announcement-dialog"
+        ext-cls="devops-announcement-dialog"
         ok-text="立即体验"
         :width="828"
         :has-footer="false"
@@ -72,10 +71,17 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     @import '../../assets/scss/conf';
 
     .devops-announcement-dialog {
+        // .bk-dialog-tool {
+        //     display: none;
+        // }
+        .bk-dialog-body {
+            margin: 0px;
+            padding: 0px !important;
+        }
         .new-service-content {
             padding: 20px;
             height: 547px;
