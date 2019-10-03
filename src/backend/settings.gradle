@@ -120,6 +120,7 @@ include ":ticket:biz-ticket"
 include ":ticket:biz-ticket-sample"
 include ":ticket:biz-ticket-blueking"
 include ":ticket:boot-ticket"
+include ":ticket:boot-ticket-blueking"
 include ":ticket:model-ticket"
 
 include ":store"
