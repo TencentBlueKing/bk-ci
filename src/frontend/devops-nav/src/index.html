@@ -73,6 +73,7 @@
         var DOCS_URL_PREFIX = 'https://bk.tencent.com/docs/ci'  // 文档中心域名
     </script>
     
+    
     <script>
         var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
         // 动态加载js
@@ -83,7 +84,7 @@
             if (fOnload) { 
                 oScript.onload = fOnload
             }
-             
+            
             oScript.setAttribute('src', src)
             oScript.setAttribute('defer', '')
             oHead.appendChild(oScript)
@@ -118,10 +119,19 @@
         function setCookie(cname, cvalue, domain){
             document.cookie = cname + "=" + cvalue + "; " + 'domain=' + domain + '; path=/';
         }
+        
+        function setProjectIdCookie (projectId) {
+            try {
+                setCookie(X_DEVOPS_PROJECT_ID, '', 'oa.com')
+                setCookie(X_DEVOPS_PROJECT_ID, projectId, 'oa.com')
+            } catch (e) {
+                console.warn('you have no project')
+            }
+        }
 
         function matchPathProjectId () {
             try {
-                var reg = /^\/console\/\w+\/(\w+)?/
+                var reg = /^\/console\/\w+\/([\w\-]+)?/
                 if (location.pathname.match(/^\/console\/perm\/(\w+)?/)){
                     var query = location.search.slice(1)
                     var queryArr = query.split('&')
@@ -145,6 +155,7 @@
         }
 
         var pathPid = matchPathProjectId() || localStorage.getItem('projectId')
+        setProjectIdCookie(pathPid)
         
     </script>
     <script>
@@ -184,7 +195,7 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
         }
 
-
+    
         function getServiceObject (serviceList) {
             var serviceMap = {}
             var iframeRoutes = []
@@ -199,7 +210,9 @@
                     } else {
                         children[j].iframe_url = children[j].iframe_url.replace('http://dev.static.devops.oa.com', WEBSITE_URL)
                     }
+
                     serviceMap[mod] = children[j]
+                    
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
                             path: mod + (children[j].show_project_list ? '/:projectId?' : ''),
@@ -209,7 +222,8 @@
                                 showNav: children[j].show_nav,
                                 projectIdType: children[j].project_id_type,
                                 header: serviceTitle,
-                                logo: mod
+                                logo: mod,
+                                webSocket: (children[j].webSocket || '').split(',')
                             }
                         })
                     }
@@ -221,14 +235,7 @@
             }
         }
 
-        Promise.all([
-            fetchAllProjects(),
-            fetchAllServices(),
-            requestUser()
-        ]).then(function (response) {
-            var projectList = response[0]
-            var allServices = response[1]
-            var userInfo = response[2]
+        function init (projectList, allServices, userInfo) {
             var path = location.pathname.replace('/console', '')
             var headTag = document.head || document.getElementsByTagName('head')[0]
             var pathReg = /^\/(\w+)\/?/
@@ -240,6 +247,9 @@
 
             var defaultPid = projectList[0] && projectList[0].project_code
             var isPidOk = isValidPid(projectList, pathPid)
+            if (!isPidOk && defaultPid) {
+                setProjectIdCookie(defaultPid)
+            }
 
 
             window.allServices = allServices
@@ -261,10 +271,75 @@
             }else {
                 loadJsAssets()
             }
+        }
+        
+        
+        var CACHE_PREFIX = '_cache_'
+        window.setLsCacheItem = function (key, value) {
+            if (key && typeof key === 'string') {
+                var cacheKey = CACHE_PREFIX + key
+                localStorage.setItem(cacheKey, JSON.stringify(value))
+            }
+        }
+
+        window.getLsCacheItem = function (key) {
+            if (key && typeof key === 'string') {
+                var cacheKey = CACHE_PREFIX + key
+                var cacheJson = localStorage.getItem(cacheKey)
+                try {
+                    return JSON.parse(cacheJson)
+                } catch (e) {
+                    return null
+                }
+            }
+        }
+
+        function fetchData() {
+            return Promise.all([
+                fetchAllProjects(),
+                fetchAllServices(),
+                requestUser()
+            ]).then(response => {
+                var cahceArray = [ 'projectList', 'allServices', 'userInfo' ]
+                var actionArray = [ 'setProjectList', 'setServices', 'setUserInfo' ]
+                for(var i = 0; i < cahceArray.length; i++) {
+                    if (window.vuexStore && typeof window.vuexStore.dispatch === 'function') {
+                        window.vuexStore.dispatch(actionArray[i], response[i])
+                    }
+                    window.setLsCacheItem(cahceArray[i], response[i])
+                }
+                return response
+            })
+        }
+
+        function getData () {
+            return new Promise((resolve, reject) => {
+                var projectList = window.getLsCacheItem('projectList')
+                var allServices = window.getLsCacheItem('allServices')
+                var userInfo = window.getLsCacheItem('userInfo')
+                
+                
+
+                fetchData().then(response => {
+                    resolve(response)
+                }).catch(e => {
+                    console.error(e)
+                    if (projectList && allServices && userInfo) {
+                        resolve([ projectList, allServices, userInfo ])
+                        return
+                    }
+
+                    reject(false)
+                }) 
+            })
+        }
+
+        getData().then(response => {
+            init(...response)
         }).catch(function (e) {
             console.log(e)
             printError(e.status, e.message)
-        })        
+        })  
         
 
         function printError (status, msg) {

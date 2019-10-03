@@ -90,7 +90,8 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],
             alias: {
                 '@': path.resolve('src'),
-                'vue$': 'vue/dist/vue.esm.js'
+                'vue$': 'vue/dist/vue.esm.js',
+                '@locale': path.resolve(__dirname, 'locale')
             }
         },
         externals: {

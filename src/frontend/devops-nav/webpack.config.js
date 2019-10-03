@@ -107,5 +107,10 @@ module.exports = (env = {}, argv) => {
       '__HTTP_SCHEMA__://__BKCI_FQDN__': ''
     })] : [])
   ]
+  config.devServer.historyApiFallback = {
+    rewrites: [
+        { from: /^\/console/, to: '/console/index.html' }
+    ]
+  }
   return config
 }

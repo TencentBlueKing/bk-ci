@@ -6,9 +6,7 @@
                     <span
                         slot="header"
                         class="home-accordion-header"
-                    >
-                        最近访问服务
-                    </span>
+                    >{{ $t('recentVisiteService') }}</span>
                     <div
                         slot="content"
                         class="recent-visit-service-list"
@@ -31,7 +29,7 @@
                             class="no-recent-service"
                         >
                             暂无最近访问服务，请查看
-                            <span @click="updateShowAllService(true)">所有服务</span>
+                            <span @click="updateShowAllService(true)">{{ $t('allService') }}</span>
                         </p>
                     </div>
                 </accordion-item>
@@ -43,7 +41,7 @@
                         slot="header"
                         class="all-service-header"
                     >
-                        所有服务
+                        {{ $t('allService') }}
                         <span class="service-count">共{{ serviceCount }}个服务</span>
                     </p>
                     <NavBox
