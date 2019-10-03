@@ -6,7 +6,6 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
@@ -16,6 +15,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -24,6 +24,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_SCM_GIT"], description = "Service Code GIT resource")
@@ -137,9 +138,9 @@ interface ServiceGitResource {
         @ApiParam(value = "代码库名称", required = true)
         @QueryParam("repositoryName")
         repositoryName: String,
-        @ApiParam("样例工程路径", required = true)
+        @ApiParam("样例工程路径", required = false)
         @QueryParam("sampleProjectPath")
-        sampleProjectPath: String,
+        sampleProjectPath: String?,
         @ApiParam(value = "命名空间ID", required = false)
         @QueryParam("namespaceId")
         namespaceId: Int?,
@@ -243,6 +244,26 @@ interface ServiceGitResource {
         token: String
     ): Result<GitMrInfo>
 
+    @ApiOperation("下载git仓库")
+    @GET
+    @Path("/downloadGitRepoFile")
+    fun downloadGitRepoFile(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam("commit hash值、分支名或tag", required = false)
+        @QueryParam("sha")
+        sha: String?,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @Context
+        response: HttpServletResponse
+    )
+
     @ApiOperation("获取mr信息")
     @GET
     @Path("/getMergeRequestReviewersInfo")
@@ -260,22 +281,4 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<GitMrReviewInfo>
-
-    @ApiOperation("获取mr信息")
-    @GET
-    @Path("/getMergeRequestChangeInfo")
-    fun getMergeRequestChangeInfo(
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
-        @QueryParam("repoName")
-        repoName: String,
-        @ApiParam(value = "合并请求的 id", required = true)
-        @QueryParam("mrId")
-        mrId: Long,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
-        @QueryParam("tokenType")
-        tokenType: TokenTypeEnum,
-        @ApiParam(value = "token", required = true)
-        @QueryParam("token")
-        token: String
-    ): Result<GitMrChangeInfo>
 }

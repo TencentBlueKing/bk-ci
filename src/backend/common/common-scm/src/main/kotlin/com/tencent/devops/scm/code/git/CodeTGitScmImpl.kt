@@ -29,6 +29,7 @@ package com.tencent.devops.scm.code.git
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.GitApi
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import org.eclipse.jgit.api.Git
@@ -43,12 +44,12 @@ class CodeTGitScmImpl constructor(
     private var passPhrase: String?,
     private val token: String,
     private val event: String? = null,
-    private val apiUrl: String
+    val gitConfig: GitConfig
 ) : IScm {
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
-        val gitBranch = gitApi.getBranch(apiUrl, token, projectName, branch)
+        val gitBranch = gitApi.getBranch(gitConfig.tGitApiUrl, token, projectName, branch)
         return RevisionInfo(
             gitBranch.commit.id,
             gitBranch.commit.message,
@@ -57,10 +58,10 @@ class CodeTGitScmImpl constructor(
     }
 
     override fun getBranches() =
-        gitApi.listBranches(apiUrl, token, projectName)
+        gitApi.listBranches(gitConfig.tGitApiUrl, token, projectName)
 
     override fun getTags() =
-        gitApi.listTags(apiUrl, token, projectName)
+        gitApi.listTags(gitConfig.tGitApiUrl, token, projectName)
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
@@ -118,10 +119,32 @@ class CodeTGitScmImpl constructor(
             throw ScmException("Git hook url为空", ScmType.CODE_TGIT.name)
         }
         try {
-            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
+            gitApi.addWebhook(gitConfig.tGitApiUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
             throw ScmException("Git Token不正确", ScmType.CODE_TGIT.name)
         }
+    }
+
+    override fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean) {
+        if (token.isEmpty()) {
+            throw RuntimeException("Git Token为空")
+        }
+        try {
+            gitApi.addCommitCheck(gitConfig.tGitApiUrl, token, projectName, commitId, state, targetUrl, context, description, block)
+        } catch (e: ScmException) {
+            throw RuntimeException("Git Token不正确")
+        }
+    }
+
+    override fun addMRComment(mrId: Long, comment: String) {
+    }
+
+    override fun lock(repoName: String, applicant: String, subPath: String) {
+        logger.info("Git can not lock")
+    }
+
+    override fun unlock(repoName: String, applicant: String, subPath: String) {
+        logger.info("Git can not unlock")
     }
 
     companion object {

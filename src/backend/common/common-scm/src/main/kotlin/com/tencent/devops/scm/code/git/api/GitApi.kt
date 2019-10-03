@@ -54,6 +54,8 @@ open class GitApi() {
         private const val OPERATION_TAG = "拉标签"
         private const val OPERATION_ADD_WEBHOOK = "添加WEBHOOK"
         private const val OPERATION_LIST_WEBHOOK = "查询WEBHOOK"
+        private const val OPERATION_ADD_COMMIT_CHECK = "添加COMMIT CHECK"
+        private const val OPERATION_ADD_MR_COMMENT = "添加MR COMMENT"
     }
 
     fun listBranches(host: String, token: String, projectName: String): List<String> {
@@ -134,6 +136,47 @@ open class GitApi() {
 
         // Add the wed hook
         addHook(host, token, projectName, hookUrl, event)
+    }
+
+    fun addCommitCheck(host: String, token: String, projectName: String, commitId: String, state: String, detailUrl: String, context: String, description: String, block: Boolean) {
+        val params = mapOf(
+            "state" to state,
+            "target_url" to detailUrl,
+            "description" to description,
+            "context" to context,
+            "block" to block
+        )
+
+        val body = JsonUtil.getObjectMapper().writeValueAsString(params)
+        val request = post(host, token, "projects/${urlEncode(projectName)}/commit/$commitId/statuses", body)
+        try {
+            callMethod(OPERATION_ADD_COMMIT_CHECK, request, GitCommitCheck::class.java)
+        } catch (t: GitApiException) {
+            if (t.code == 403) {
+                throw GitApiException(t.code, "Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有master权限")
+            }
+            throw t
+        }
+    }
+
+    // 文档：http://x.code.oa.com/Code/Git/blob/master/help/api/comments.md
+    fun addMRComment(host: String, token: String, projectName: String, requestId: Long, message: String) {
+        val params = mapOf(
+            "body" to message
+        )
+
+        val body = JsonUtil.getObjectMapper().writeValueAsString(params)
+        val url = "projects/${urlEncode(projectName)}/merge_requests/$requestId/notes"
+        logger.info("add mr comment for project($projectName): url($url), $params")
+        val request = post(host, token, url, body)
+        try {
+            callMethod(OPERATION_ADD_MR_COMMENT, request, GitMRComment::class.java)
+        } catch (t: GitApiException) {
+            if (t.code == 403) {
+                throw GitApiException(t.code, "添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有master权限")
+            }
+            throw t
+        }
     }
 
     private fun addHook(

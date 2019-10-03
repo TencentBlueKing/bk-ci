@@ -152,6 +152,35 @@ class CodeSvnScmImpl constructor(
         }
     }
 
+    override fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean) {
+    }
+
+    override fun addMRComment(mrId: Long, comment: String) {
+    }
+
+    // curl -XPOST -H "ApiKey: 802c80e122304505be073e1f29b8bf2c" -H "Content-type: application/json" -d '{"repname":"iedbk","applicant":"johuang","subpath":["bluekingCI_proj/trunk/project_example"]}' http://code.oa.com/rest/svn/lock
+    override fun lock(repoName: String, applicant: String, subPath: String) {
+        logger.info("Start to lock the repo $repoName")
+        try {
+            // TODO check if already locked
+
+            SVNApi.lock(repoName, applicant, subPath, svnConfig)
+        } catch (e: Exception) {
+            logger.warn("Fail to lock the repo:$subPath", e)
+            throw OperationException("lock失败")
+        }
+    }
+
+    override fun unlock(repoName: String, applicant: String, subPath: String) {
+        logger.info("Start to unlock the repo $repoName")
+        try {
+            SVNApi.unlock(repoName, applicant, subPath, svnConfig)
+        } catch (e: Exception) {
+            logger.warn("Fail to unlock the repo:$repoName", e)
+            throw OperationException("unlock失败")
+        }
+    }
+
     private fun getBranchNames(repository: SVNRepository): Set<String> {
         try {
             val nodeKind = repository.checkPath("branches", repository.latestRevision)

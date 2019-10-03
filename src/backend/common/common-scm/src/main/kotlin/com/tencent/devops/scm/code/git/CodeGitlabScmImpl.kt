@@ -29,8 +29,10 @@ package com.tencent.devops.scm.code.git
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.GitApi
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
 class CodeGitlabScmImpl constructor(
@@ -38,8 +40,10 @@ class CodeGitlabScmImpl constructor(
     override val branchName: String?,
     override val url: String,
     private val token: String,
-    private val apiUrl: String
+    gitConfig: GitConfig
 ) : IScm {
+
+    private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitlabApiUrl, repoUrl = url)
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
@@ -87,6 +91,20 @@ class CodeGitlabScmImpl constructor(
         } catch (e: ScmException) {
             throw ScmException("GitLab Token不正确", ScmType.CODE_GITLAB.name)
         }
+    }
+
+    override fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean) {
+    }
+
+    override fun addMRComment(mrId: Long, comment: String) {
+    }
+
+    override fun lock(repoName: String, applicant: String, subPath: String) {
+        logger.info("gitlab can not lock")
+    }
+
+    override fun unlock(repoName: String, applicant: String, subPath: String) {
+        logger.info("gitlab can not unlock")
     }
 
     companion object {

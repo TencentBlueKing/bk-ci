@@ -29,6 +29,7 @@ package com.tencent.devops.scm.code.git
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.GitOauthApi
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import org.eclipse.jgit.api.Git
@@ -43,11 +44,11 @@ class CodeGitScmOauthImpl constructor(
     private val passPhrase: String?,
     private val token: String,
     private val event: String? = null,
-    private val apiUrl: String
+    private val gitConfig: GitConfig
 ) : IScm {
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
-        val gitBranch = gitOauthApi.getBranch(apiUrl, token, projectName, branch)
+        val gitBranch = gitOauthApi.getBranch(gitConfig.gitUrl, token, projectName, branch)
         return RevisionInfo(
             gitBranch.commit.id,
             gitBranch.commit.message,
@@ -56,10 +57,10 @@ class CodeGitScmOauthImpl constructor(
     }
 
     override fun getBranches() =
-        gitOauthApi.listBranches(apiUrl, token, projectName)
+        gitOauthApi.listBranches(gitConfig.gitUrl, token, projectName)
 
     override fun getTags() =
-        gitOauthApi.listTags(apiUrl, token, projectName)
+        gitOauthApi.listTags(gitConfig.gitUrl, token, projectName)
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
@@ -118,12 +119,34 @@ class CodeGitScmOauthImpl constructor(
             throw ScmException("Git hook url为空", ScmType.CODE_GIT.name)
         }
         try {
-            gitOauthApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
+            gitOauthApi.addWebhook(gitConfig.gitUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
             throw ScmException("Git Token不正确", ScmType.CODE_GIT.name)
         }
     }
 
+    override fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean) {
+        if (token.isEmpty()) {
+            throw RuntimeException("Git Token为空")
+        }
+        try {
+            gitOauthApi.addCommitCheck(gitConfig.gitUrl, token, projectName, commitId, state, targetUrl, context, description, block)
+        } catch (e: ScmException) {
+            throw RuntimeException("Git Token不正确")
+        }
+    }
+
+    override fun addMRComment(mrId: Long, comment: String) {
+        gitOauthApi.addMRComment(gitConfig.gitUrl, token, projectName, mrId, comment)
+    }
+
+    override fun lock(repoName: String, applicant: String, subPath: String) {
+        logger.info("Git oauth can not lock")
+    }
+
+    override fun unlock(repoName: String, applicant: String, subPath: String) {
+        logger.info("Git oauth can not unlock")
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitScmOauthImpl::class.java)
         private val gitOauthApi = GitOauthApi()
