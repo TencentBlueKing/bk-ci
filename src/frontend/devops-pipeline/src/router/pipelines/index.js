@@ -31,6 +31,8 @@ const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */
 const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/instance.vue')
 const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/instance_create.vue')
 
+const atomManage = () => import(/* webpackChunkName: "atomManage" */'../../views/list/atomManage.vue')
+
 // 客户端流水线任务子页 - subpages
 const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../../views/subpages')
 // 客户端流水线任务历史 - history
@@ -80,9 +82,17 @@ const routes = [
                         component: pipelinesTemplate
                     },
                     {
+                        path: 'atomManage',
+                        name: 'atomManage',
+                        component: atomManage
+                    },
+                    {
                         path: ':type?',
                         name: 'pipelinesList',
-                        component: pipelinesNewList
+                        component: pipelinesNewList,
+                        meta: {
+                            webSocket: true
+                        }
                     }
                 ]
             },
@@ -142,7 +152,7 @@ const routes = [
                     },
                     {
                         // 执行历史
-                        path: 'history',
+                        path: 'history/:type?',
                         name: 'pipelinesHistory',
                         component: pipelinesHistory,
                         meta: {

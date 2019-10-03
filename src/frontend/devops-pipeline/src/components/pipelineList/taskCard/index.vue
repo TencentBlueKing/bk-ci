@@ -1,8 +1,7 @@
 <template>
     <div class="task-card" :class="`${config.isRunning ? `task-${config.status}` : ''}`">
-        <!-- <div v-if="!hasPermission" class="card-overflow"> -->
-        <!--<bk-button class="apply-button" theme="success">申请权限</bk-button>-->
-        <!-- </div> -->
+        <div v-if="!hasPermission" class="card-overflow">
+        </div>
         <bk-button
             class="apply-button"
             theme="success"
@@ -46,12 +45,12 @@
         <template v-if="!config.isRunning">
             <div class="task-card-content" @click.stop="cardContentClick">
                 <template v-if="config.content.length">
-                    <p class="content-row" v-for="row of config.content" :key="row.key">
+                    <p class="content-row" v-for="(row, cindex) of config.content" :key="row.key">
                         <span class="row-key">{{ row.key }}</span>
                         :
                         <span
                             class="row-value"
-                            :class="!index ? config.status : ''"
+                            :class="!cindex ? config.status : ''"
                         >{{ row.value }}</span>
                     </p>
                 </template>
@@ -183,6 +182,7 @@
              *  参数为pipelineId的触发全局bus事件
              */
             emitEventHandler (eventName, pipelineId) {
+                console.log(eventName)
                 bus.$emit(eventName, pipelineId)
             },
             /**

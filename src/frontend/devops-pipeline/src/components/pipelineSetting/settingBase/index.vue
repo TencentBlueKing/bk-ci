@@ -11,7 +11,11 @@
                         v-for="(filter, index) in tagGroupList"
                         :key="index">
                         <label class="group-title">{{filter.name}}</label>
-                        <bk-select v-model="pipelineSetting.labels" multiple>
+                        <bk-select :value="labelValues[index]"
+                            @selected="handleLabelSelect(index, arguments)"
+                            @clear="handleLabelSelect(index, [[]])"
+                            multiple
+                        >
                             <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
                             </bk-option>
                         </bk-select>
@@ -43,7 +47,7 @@
                     <div class="opera-lock-item">
                         <label class="opera-lock-label">最大排队时长：</label>
                         <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="waitQueueTimeMinute" placeholder="请输入" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:1440|min_value:60&quot;" v-model.number="pipelineSetting.waitQueueTimeMinute">
+                            <input type="text" name="waitQueueTimeMinute" placeholder="请输入" class="bk-form-input" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" v-model.number="pipelineSetting.waitQueueTimeMinute">
                             <div class="group-box group-append">
                                 <div class="group-text">分钟</div>
                             </div>
@@ -52,7 +56,8 @@
                     </div>
                 </div>
             </div>
-            <div class="handle-btn" style="margin-left: 146px;margin-top: 30px">
+
+            <div class="handle-btn" style="margin-left: 146px;">
                 <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">保存</bk-button>
                 <bk-button @click="exit">取消</bk-button>
             </div>
@@ -63,7 +68,6 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import Clipboard from 'clipboard'
     export default {
         components: {
             FormField
@@ -121,6 +125,18 @@
                 key += this.tagGroupList.length < 3 ? this.tagGroupList.length < 2 ? '' : 'column-2' : 'column-3'
                 classObj[key] = true
                 return classObj
+            },
+            labelValues () {
+                const labels = this.pipelineSetting.labels
+                return this.tagGroupList.map((tag) => {
+                    const currentLables = tag.labels || []
+                    const value = []
+                    currentLables.forEach((label) => {
+                        const index = labels.findIndex((item) => (item === label.id))
+                        if (index > -1) value.push(label.id)
+                    })
+                    return value
+                })
             }
         },
         watch: {
@@ -133,6 +149,7 @@
                     } else {
                         this.noPermission = false
                     }
+                    this.curNavTab.name === 'success' ? this.pipelineSubscription = this.pipelineSetting.successSubscription : this.pipelineSubscription = this.pipelineSetting.failSubscription
                     this.isLoading = false
                     if (!this.isEditing && JSON.stringify(oldVal) !== '{}' && newVal !== null && !this.resetFlag) {
                         this.isEditing = true
@@ -144,23 +161,20 @@
         },
         created () {
             this.requestTemplateSetting(this.$route.params)
-
             this.requestGrouptLists()
-
-            this.clipboard = new Clipboard('.copy-icon').on('success', e => {
-                this.$showTips({
-                    theme: 'success',
-                    message: '内容复制成功'
-                })
-            })
-        },
-        beforeDestroy () {
-            this.clipboard.destroy()
         },
         methods: {
             ...mapActions('soda', [
                 'requestTemplateSetting'
             ]),
+            handleLabelSelect (index, arg) {
+                let labels = []
+                this.labelValues.forEach((value, valueIndex) => {
+                    if (valueIndex === index) labels = labels.concat(arg[0])
+                    else labels = labels.concat(value)
+                })
+                this.pipelineSetting.labels = labels
+            },
             isStateChange () {
                 this.$emit('setState', {
                     isLoading: this.isLoading,

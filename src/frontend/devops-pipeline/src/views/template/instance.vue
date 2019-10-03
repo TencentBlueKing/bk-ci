@@ -9,15 +9,28 @@
                 <span class="inner-header-title" slot="left">实例管理</span>
             </div>
         </inner-header>
-        <div class="sub-view-port" v-if="showContent && instanceList.length">
-            <div class="instance-handle-row">
-                <bk-button size="normal" class="batch-update" @click="handleBitch()"><span>批量更新</span></bk-button>
-                <bk-button theme="primary" size="normal" @click="createInstance()"><span>创建新实例</span></bk-button>
-            </div>
+        <div class="sub-view-port" v-if="showContent && showInstanceList">
+            <section class="info-header">
+                <div class="instance-handle-row">
+                    <bk-button size="normal" class="batch-update" @click="handleBitch()"><span>批量更新</span></bk-button>
+                    <bk-button theme="primary" size="normal" @click="createInstance()"><span>创建新实例</span></bk-button>
+                </div>
+                <bk-input
+                    :placeholder="'搜索'"
+                    :clearable="true"
+                    :right-icon="'bk-icon icon-search'"
+                    v-model="searchKey"
+                    @enter="query"
+                    @clear="query">
+                </bk-input>
+            </section>
             <section class="instance-table">
                 <bk-table
                     :data="instanceList"
                     size="small"
+                    :pagination="pagination"
+                    @page-change="handlePageChange"
+                    @page-limit-change="pageLimitChange"
                     @select="selectItem"
                     @select-all="selectItem"
                 >
@@ -54,7 +67,7 @@
                 </bk-table>
             </section>
         </div>
-        <empty-tips v-if="showContent && !instanceList.length"
+        <empty-tips v-if="showContent && !showInstanceList"
             :title="emptyTipsConfig.title"
             :desc="emptyTipsConfig.desc"
             :btns="emptyTipsConfig.btns">
@@ -94,6 +107,8 @@
                 showComparedInstance: false,
                 dialogLoading: false,
                 isInit: false,
+                searchable: false,
+                searchKey: '',
                 instanceVersion: '',
                 currentVersion: '',
                 currentVersionId: '',
@@ -111,6 +126,12 @@
                 loading: {
                     isLoading: false,
                     title: ''
+                },
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10,
+                    limitList: [10, 20, 30]
                 },
                 emptyTipsConfig: {
                     title: '创建第一个实例',
@@ -135,6 +156,9 @@
             },
             templateId () {
                 return this.$route.params.templateId
+            },
+            showInstanceList () {
+                return this.showContent && (this.instanceList.length || this.searchable)
             }
         },
         watch: {
@@ -145,23 +169,26 @@
             }
         },
         async mounted () {
-            await this.requestInstanceList()
+            await this.requestInstanceList(this.pagination.current, this.pagination.limit)
         },
         methods: {
-            async requestInstanceList () {
-                const { $store, loading } = this
+            async requestInstanceList (page, pageSize) {
+                const { $store, loading, searchKey } = this
 
                 loading.isLoading = true
-
+                
                 try {
+                    const params = { searchKey, page, pageSize }
                     const res = await $store.dispatch('pipelines/requestInstanceList', {
                         projectId: this.projectId,
-                        templateId: this.templateId
+                        templateId: this.templateId,
+                        params
                     })
                     this.currentVersionId = res.latestVersion.version
                     // this.versionList = res.versions
                     this.currentVersionName = res.latestVersion.versionName
                     this.instanceList = res.instances
+                    this.pagination.count = res.count
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -194,6 +221,20 @@
             },
             selectItem (items) {
                 this.selectItemList = items
+            },
+            async handlePageChange (page) {
+                this.pagination.current = page
+                await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+            },
+            async pageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+                await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+            },
+            async query () {
+                this.searchable = true
+                this.pagination.current = 1
+                await this.requestInstanceList(this.pagination.current, this.pagination.limit)
             },
             updateInstance (row) {
                 if (row.hasPermission) {
@@ -335,6 +376,14 @@
             padding: 20px;
             height: calc(100% - 60px);
             overflow: auto;
+        }
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+        }
+        .bk-form-control {
+            display: inline-table;
+            width: 200px;
         }
         .instance-handle-row {
             display: flex;

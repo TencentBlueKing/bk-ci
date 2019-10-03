@@ -23,8 +23,7 @@
                         </list-create-header>
 
                         <section class="pipeline-list-content">
-                            <div class="pipeline-list-cards clearfix"
-                                v-if="layout === 'card'">
+                            <div class="pipeline-list-cards clearfix" v-if="layout === 'card'">
                                 <task-card
                                     v-for="(card, index) of pipelineList"
                                     :has-permission="card.hasPermission"
@@ -35,8 +34,7 @@
                                 </task-card>
                             </div>
 
-                            <div class="pipeline-list-table"
-                                v-if="layout === 'table'">
+                            <div class="pipeline-list-table" v-if="layout === 'table'">
                                 <task-table
                                     :list="pipelineList">
                                 </task-table>
@@ -135,7 +133,8 @@
 </template>
 
 <script>
-    import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    // import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    import webSocketMessage from '@/utils/webSocketMessage'
     import { mapGetters, mapState } from 'vuex'
     import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import { bus } from '@/utils/bus'
@@ -258,14 +257,13 @@
                     this.initPage()
                     this.showContent = true
                 }
-            },
-
-            projectId: {
-                handler (val) {
-                    this.initWebSocket(val)
-                },
-                immediate: true
             }
+            // projectId: {
+            //     handler (val) {
+            //         this.initWebSocket(val)
+            //     },
+            //     immediate: true
+            // }
         },
 
         created () {
@@ -302,10 +300,12 @@
 
         mounted () {
             this.initPage()
+            webSocketMessage.installWsMessage(this.updatePipelineStatus)
         },
 
         beforeDestroy () {
-            pipelineWebsocket.disconnect()
+            // pipelineWebsocket.disconnect()
+            webSocketMessage.unInstallWsMessage()
         },
 
         methods: {
@@ -407,18 +407,17 @@
                 console.timeEnd('init')
                 this.togglePageLoading(false)
             },
+            // initWebSocket (projectId) {
+            //     const subscribe = `/topic/pipelineStatus/${projectId}`
 
-            initWebSocket (projectId) {
-                const subscribe = `/topic/pipelineStatus/${projectId}`
-
-                pipelineWebsocket.connect(projectId, subscribe, {
-                    success: (res) => {
-                        const data = JSON.parse(res.body)
-                        this.updatePipelineStatus(data)
-                    },
-                    error: (message) => this.$showTips({ message, theme: 'error' })
-                })
-            },
+            //     pipelineWebsocket.connect(projectId, subscribe, {
+            //         success: (res) => {
+            //             const data = JSON.parse(res.body)
+            //             this.updatePipelineStatus(data)
+            //         },
+            //         error: (message) => this.$showTips({ message, theme: 'error' })
+            //     })
+            // },
 
             requestTemplatePermission () {
                 this.$store.dispatch('pipelines/requestTemplatePermission', this.projectId).then((res) => {

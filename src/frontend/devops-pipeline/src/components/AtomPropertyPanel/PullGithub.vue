@@ -1,7 +1,7 @@
 <template>
     <div class="pull-code-panel bk-form bk-form-vertical">
         <template>
-            <template v-for="(obj, key) in atomPropsModel">
+            <template v-for="(obj, key) in newModel">
                 <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                     <component :is="obj.component" :container="container" :element="element" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleMethods" :value="element[key]" v-bind="obj"></component>
                 </form-field>
@@ -17,7 +17,13 @@
     export default {
         name: 'pull-github',
         mixins: [atomMixin, validMixins],
+        data () {
+            return {
+                newModel: {}
+            }
+        },
         created () {
+            this.newModel = JSON.parse(JSON.stringify(this.atomPropsModel))
             if (!this.element.repositoryType) {
                 this.handleUpdateElement('repositoryType', 'ID')
             }
@@ -33,11 +39,11 @@
             },
             handleChooseCodelibType (name, value) {
                 if (value === 'ID') {
-                    this.atomPropsModel.repositoryHashId.hidden = false
-                    this.atomPropsModel.repositoryName.hidden = true
+                    this.newModel.repositoryHashId.hidden = false
+                    this.newModel.repositoryName.hidden = true
                 } else if (value === 'NAME') {
-                    this.atomPropsModel.repositoryHashId.hidden = true
-                    this.atomPropsModel.repositoryName.hidden = false
+                    this.newModel.repositoryHashId.hidden = true
+                    this.newModel.repositoryName.hidden = false
                 }
                 this.handleUpdateElement(name, value)
             }
@@ -45,7 +51,7 @@
     }
 </script>
 
-<style lang="scss">
+<style>
     .no-support {
         text-align: center;
     }

@@ -232,11 +232,9 @@ export default {
                 const containerModal = getters.getContainerModalByType(container.baseOS)
                 if (previewEnvKey && containerModal) {
                     const buildType = buildEnvMap[previewEnvKey]
-                    const buildResourceId = container[previewEnvKey]
-                    const buildResourceValue = getters.getBuildResourceNameById(containerModal, buildType, buildResourceId)
                     Vue.set(container, 'dispatchType', {
                         buildType,
-                        value: buildResourceValue,
+                        value: '',
                         workspace: container.thirdPartyWorkspace || ''
                     })
                     delete container[previewEnvKey]
@@ -255,15 +253,6 @@ export default {
             }
         }
         return container
-    },
-    getBuildResourceNameById: state => (containerModal, buildType, buildResourceId) => {
-        try {
-            const resource = containerModal.resources[buildType].resources.find(resource => resource.id === buildResourceId)
-            return resource.name
-        } catch (error) {
-            console.warn(error, buildType, containerModal)
-            return ''
-        }
     },
     isDockerBuildResource: state => container => {
         return container && ((container.dispatchType && container.dispatchType.buildType === 'DOCKER') || container.dockerBuildVersion)

@@ -5,7 +5,7 @@
 
 <script>
     import VerticalTab from './VerticalTab'
-
+    
     export default {
         name: 'base-setting-tab',
         components: {

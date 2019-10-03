@@ -10,8 +10,9 @@
                     <div class="group-col" v-for="(filter, index) in tagGroupList" :key="index">
                         <label class="group-title">{{filter.name}}</label>
                         <bk-select
-                            :value="pipelineSetting.labels"
-                            @selected="handleLabelSelect"
+                            :value="labelValues[index]"
+                            @selected="handleLabelSelect(index, arguments)"
+                            @clear="handleLabelSelect(index, [[]])"
                             multiple>
                             <bk-option v-for="item in filter.labels" :key="item.id" :id="item.id" :name="item.name"
                             ></bk-option>
@@ -30,7 +31,6 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import { mapGetters } from 'vuex'
-    import Clipboard from 'clipboard'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
@@ -51,19 +51,22 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            labelValues () {
+                const labels = this.pipelineSetting.labels
+                return this.tagGroupList.map((tag) => {
+                    const currentLables = tag.labels || []
+                    const value = []
+                    currentLables.forEach((label) => {
+                        const index = labels.findIndex((item) => (item === label.id))
+                        if (index > -1) value.push(label.id)
+                    })
+                    return value
+                })
             }
         },
         created () {
-            this.clipboard = new Clipboard('.copy-icon').on('success', e => {
-                this.$showTips({
-                    theme: 'success',
-                    message: '内容复制成功'
-                })
-            })
             this.requestGrouptLists()
-        },
-        beforeDestroy () {
-            this.clipboard.destroy()
         },
         methods: {
             /** *
@@ -74,6 +77,7 @@
                     const res = await this.$store.dispatch('pipelines/requestGetGroupLists', {
                         projectId: this.projectId
                     })
+
                     this.$store.commit('pipelines/updateGroupLists', res)
                     // this.dataList = this.tagGroupList
                 } catch (err) {
@@ -83,8 +87,13 @@
                     })
                 }
             },
-            handleLabelSelect (value) {
-                this.handleBaseInfoChange('labels', value)
+            handleLabelSelect (index, arg) {
+                let labels = []
+                this.labelValues.forEach((value, valueIndex) => {
+                    if (valueIndex === index) labels = labels.concat(arg[0])
+                    else labels = labels.concat(value)
+                })
+                this.handleBaseInfoChange('labels', labels)
             }
         }
     }

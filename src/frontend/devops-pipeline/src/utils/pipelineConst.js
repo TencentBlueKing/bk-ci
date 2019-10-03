@@ -24,7 +24,7 @@ export const jobConst = {
     NONE: '无编译环境'
 }
 
-export const CONFIRM_MSG = '离开后，新编辑的数据将丢失'
+export const CONFIRM_MSG = '离开后，新编辑的数据将会丢失'
 
 export const CONFIRM_TITLE = '确认要离开'
 
@@ -48,7 +48,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         index: 1,
         prop: 'material',
         label: '源材料',
-        width: 360
+        width: localStorage.getItem('materialWidth') ? localStorage.getItem('materialWidth') : 500
     },
     startType: {
         index: 2,
@@ -148,6 +148,7 @@ export const statusMap = {
     SUCCEED: '执行成功',
     REVIEW_ABORT: '已驳回',
     HEARTBEAT_TIMEOUT: '心跳超时',
+    QUALITY_CHECK_FAIL: '执行失败',
     QUEUE: '排队',
     QUEUE_TIMEOUT: '排队超时',
     EXEC_TIMEOUT: '执行超时'

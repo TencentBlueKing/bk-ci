@@ -74,6 +74,9 @@ export const SET_STORE_SEARCH = 'SET_STORE_SEARCH'
 export const SET_EXECUTE_STATUS = 'SET_EXECUTE_STATUS'
 export const SET_SAVE_STATUS = 'SET_SAVE_STATUS'
 
+export const SET_PIPELINE_STAGE = 'SET_PIPELINE_STAGE'
+export const SET_PIPELINE_CONTAINER = 'SET_PIPELINE_CONTAINER'
+
 export const buildNoRules = [
     {
         value: 'CONSISTENT',
@@ -103,3 +106,5 @@ export const defaultBuildNo = {
     buildNo: '0',
     buildNoType: buildNoRules[2].value
 }
+
+export const SET_AUTH_EDITING = 'SET_AUTH_EDITING'

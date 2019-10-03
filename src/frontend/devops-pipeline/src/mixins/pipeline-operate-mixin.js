@@ -39,7 +39,8 @@ export default {
         ...mapState('atom', [
             'pipeline',
             'executeStatus',
-            'saveStatus'
+            'saveStatus',
+            'authSettingEditing'
         ]),
         projectId () {
             return this.$route.params.projectId
@@ -66,7 +67,9 @@ export default {
         ...mapActions('atom', [
             'setPipelineEditing',
             'setExecuteStatus',
-            'setSaveStatus'
+            'setSaveStatus',
+            'setAuthEditing',
+            'updateContainer'
         ]),
         async fetchPipelineList () {
             try {
@@ -383,6 +386,8 @@ export default {
             if (inValid) {
                 throw new Error(message)
             }
+            // 清除流水线参数渲染过程中添加的key
+            this.formatParams(pipeline)
             const finalSetting = {
                 ...pipelineSetting,
                 projectId: $route.params.projectId
@@ -410,6 +415,7 @@ export default {
                     return false
                 }
                 this.setPipelineEditing(false)
+                this.setAuthEditing(false)
                 this.$showTips({
                     message: '流水线保存成功',
                     theme: 'success'
@@ -431,7 +437,7 @@ export default {
             }
         },
 
-        async saveAsPipelineTemplate (projectId, pipelineId, templateName, copySetting = false) {
+        async saveAsPipelineTemplate (projectId, pipelineId, templateName, isCopySetting = false) {
             try {
                 if (!templateName) {
                     throw new Error('模板名称不能为空')
@@ -439,7 +445,7 @@ export default {
                 await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/saveAsTemplate`, {
                     pipelineId,
                     templateName,
-                    copySetting
+                    isCopySetting
                 })
                 this.$showTips({
                     message: '另存为模板成功',
@@ -489,6 +495,19 @@ export default {
         goToApplyPerm (role = 'role_viewer') {
             const url = `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&${role}=pipeline:${this.$route.params.pipelineId}`
             window.open(url, '_blank')
+        },
+        formatParams (pipeline) {
+            const params = pipeline.stages[0].containers[0].params
+            const paramList = params && params.map(param => {
+                const { paramIdKey, ...temp } = param
+                return temp
+            })
+            this.updateContainer({
+                container: this.pipeline.stages[0].containers[0],
+                newParam: {
+                    params: paramList
+                }
+            })
         }
     }
 }

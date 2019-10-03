@@ -3,7 +3,7 @@
         <aside>
             <slot name="tab">
                 <ul class="bkdevops-vertical-tab-list">
-                    <li v-for="(tab, index) in tabs" :class="{ 'active': tabActiveIndex === index }" :key="tab.id" @click="handleTabClick(index)">
+                    <li v-for="(tab, index) in tabs" :class="{ 'active': tabActiveIndex === index }" :key="tab.id" @click="handleTabClick(index)" :title="tab.name">
                         {{ tab.name }}
                     </li>
                 </ul>
@@ -24,6 +24,7 @@
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
     import thirdPartyReport from '@/components/outputOption/thirdParty_report'
     import IframeReport from '@/components/outputOption/IframeReport'
+    import TrendTable from '@/components/trendData/TrendTable'
 
     export default {
         name: 'vertical-tab',
@@ -33,7 +34,8 @@
             CleanPolicy,
             CodeRecordTable,
             thirdPartyReport,
-            IframeReport
+            IframeReport,
+            TrendTable
         },
         props: {
             tabs: {
@@ -73,6 +75,7 @@
 
 <style lang="scss">
     @import "../../scss/conf";
+    @import '../../scss/mixins/ellipsis';
     .bkdevops-vertical-tab {
         display: flex;
         border: 1px solid $borderWeightColor;
@@ -85,8 +88,10 @@
                     cursor: pointer;
                     height: 44px;
                     line-height: 44px;
-                    padding-left: 30px;
-                    font-size: 12px;
+                    font-size: 14px;
+                    padding: 0 20px;
+                    width: 100%;
+                    @include ellipsis();
                     &.active {
                         color: $primaryColor;
                         background-color: #e0ecff;
@@ -96,7 +101,7 @@
         }
         > section {
             flex: 1;
-            padding: 30px 44px;
+            padding: 30px 25px;
             background-color: white;
             overflow: auto;
 

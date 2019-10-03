@@ -12,6 +12,7 @@
                                         <i class="bk-icon icon-angle-up" :disabled="execDetail.latestBuildNum === execDetail.buildNum || isLoading" @click="switchBuildNum(1)" />
                                         <i class="bk-icon icon-angle-down" :disabled="1 === execDetail.buildNum || isLoading" @click="switchBuildNum(-1)" />
                                     </p>
+                                    <i class="bk-icon icon-txt" title="完整日志" @click="showLog"></i>
                                 </template>
                             </div>
                         </bread-crumb-item>
@@ -92,6 +93,9 @@
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import showTooltip from '@/components/common/showTooltip'
 
+    const tabMap = {
+        'trendData': '安装包趋势'
+    }
     export default {
         components: {
             innerHeader,
@@ -135,12 +139,6 @@
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
             }),
-            hasCodeccAtom () {
-                if (this.execDetail && this.execDetail.model) {
-                    return this.getAllElements(this.execDetail.model.stages).some(element => element['@type'] === 'linuxPaasCodeCCScript')
-                }
-                return false
-            },
             templateFormConfig () {
                 return [{
                     name: 'templateName',
@@ -221,7 +219,7 @@
                     },
                     handleSelected: this.handleSelected
                 }, {
-                    selectedValue: this.$route.meta.title
+                    selectedValue: this.$route.params.type && tabMap[this.$route.params.type] ? tabMap[this.$route.params.type] : '执行历史'
                 }]
             }
         },
@@ -232,9 +230,7 @@
         },
         created () {
             this.fetchPipelineList()
-            if (!this.longProjectId) {
-                this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
-            }
+            this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
         },
         methods: {
             ...mapActions('pipelines', [
@@ -242,7 +238,8 @@
                 'requestExecPipeline'
             ]),
             ...mapActions('atom', [
-                'requestPipelineExecDetailByBuildNum'
+                'requestPipelineExecDetailByBuildNum',
+                'togglePropertyPanel'
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
@@ -282,6 +279,12 @@
                         this.isLoading = false
                     }
                 }
+            },
+            showLog () {
+                this.togglePropertyPanel({
+                    isShow: true,
+                    isComplete: true
+                })
             },
             startExcuete () {
                 bus.$emit('start-execute')
@@ -335,17 +338,19 @@
             },
             resetDialog () {
                 this.isDialogShow = false
-                this.tempPipline = {
-                    name: '',
-                    desc: ''
-                }
-                this.dialogConfig = {
-                    title: '',
-                    formData: {},
-                    formConfig: [],
-                    handleDialogConfirm: () => {},
-                    handleDialogCancel: () => {}
-                }
+                setTimeout(() => {
+                    this.tempPipline = {
+                        name: '',
+                        desc: ''
+                    }
+                    this.dialogConfig = {
+                        title: '',
+                        formData: {},
+                        formConfig: [],
+                        handleDialogConfirm: () => {},
+                        handleDialogCancel: () => {}
+                    }
+                }, 200)
             },
             showTemplateDialog () {
                 this.isDialogShow = true
@@ -507,6 +512,14 @@
                         }
                     }
                 }
+                .icon-txt {
+                    font-size: 18px;
+                    font-weight: normal;
+                    cursor: pointer;
+                    &:hover {
+                        color: $primaryColor;
+                    }
+                }
             }
         }
     }
@@ -524,6 +537,7 @@
         // display: flex;
         // overflow: hidden;
         // flex-direction: column;
+        min-height: 100%;
         border: 0;
         background-color: transparent;
         &-setting {
@@ -558,10 +572,11 @@
         }
         .bk-tab-section {
             width: 100%;
+            min-height: calc(100% - 60px);
             padding: 0;
             margin-top: 10px;
             flex: 1;
-            overflow: hidden;
+            // overflow: hidden;
             .bk-tab-content {
                 height: 100%;
                 display: flex;

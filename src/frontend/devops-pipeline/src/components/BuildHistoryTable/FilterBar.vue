@@ -2,12 +2,13 @@
     <div class="build-history-filter-bar">
         <div class="history-filter-select" v-for="item in filterConfig" :key="item.id">
             <label :for="item.id">{{item.label}}：</label>
-            <selector
+            <component :is="item.component"
                 :style="`width: ${item.width}px`"
                 :name="item.name"
                 :id="item.id"
                 :value="item.value"
                 :options-conf="item.optionsConf"
+                :date-picker-conf="item.datePickerConf"
                 :handle-change="item.handleChange"
             />
         </div>
@@ -29,13 +30,17 @@
 
 <script>
     import Selector from '@/components/AtomFormComponent/Selector'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput'
+    import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { getQueryParamList } from '../../utils/util'
+    import { getQueryParamList, debounce } from '../../utils/util'
     
     export default {
         name: 'filter-bar',
         components: {
-            Selector
+            Selector,
+            SelectInput,
+            TimePicker
         },
         props: {
             setHistoryPageStatus: Function,
@@ -55,8 +60,9 @@
                     label: '状态',
                     name: 'status',
                     value: this.query.status,
-                    width: 220,
+                    width: 160,
                     handleChange: this.handleFilterItemChange,
+                    component: 'selector',
                     optionsConf: {
                         url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/status`,
                         searchable: true,
@@ -70,12 +76,13 @@
                     id: 'materialAlias',
                     label: '代码库',
                     name: 'materialAlias',
-                    width: 320,
+                    width: 220,
                     value: this.query.materialAlias,
-                    handleChange: (...args) => {
+                    component: 'select-input',
+                    handleChange: debounce((...args) => {
                         this.query.materialBranch = []
                         this.handleFilterItemChange(...args)
-                    },
+                    }, 500),
                     optionsConf: {
                         url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/repo`,
                         searchable: true,
@@ -88,15 +95,28 @@
                     id: 'materialBranch',
                     label: '分支',
                     name: 'materialBranch',
-                    width: 220,
+                    width: 160,
                     value: this.query.materialBranch,
-                    handleChange: this.handleFilterItemChange,
+                    component: 'select-input',
+                    handleChange: debounce(this.handleFilterItemChange, 500),
                     optionsConf: {
                         url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/branchName?${getQueryParamList(this.query.materialAlias, 'alias')}`,
                         searchable: true,
                         multiple: true,
                         clearable: true,
                         placeholder: 'materialBranch'
+                    }
+                }, {
+                    id: 'dateTimeRange',
+                    label: '日期',
+                    name: 'dateTimeRange',
+                    width: 320,
+                    value: this.query.dateTimeRange,
+                    component: 'time-picker',
+                    handleChange: debounce(this.handleDateRangeChange, 500),
+                    datePickerConf: {
+                        format: 'yyyy-MM-dd HH:mm:ss',
+                        type: 'datetimerange'
                     }
                 }]
             },
@@ -137,6 +157,28 @@
                 })
                 this.startQuery()
             },
+            handleDateRangeChange (name, value) {
+                const newQuery = {
+                    ...this.query,
+                    [name]: value,
+                    startTimeStartTime: undefined,
+                    endTimeEndTime: undefined
+                }
+                if (!!value[0] && !!value[1]) {
+                    const startTime = Date.parse(new Date(value[0])) || ''
+                    const endTime = Date.parse(new Date(value[1])) || ''
+                    newQuery.startTimeStartTime = [startTime]
+                    newQuery.endTimeEndTime = [endTime]
+                }
+                this.setHistoryPageStatus({
+                    queryMap: {
+                        searchKey: this.searchKey,
+                        query: newQuery
+                    }
+                })
+                
+                this.startQuery()
+            },
             async handleRemoteMethod (...args) {
                 if (this.triggerList.length > 0) return this.triggerList
                 try {
@@ -175,23 +217,13 @@
         margin: 0 0 10px 0;
         max-height: 66px;
         .history-filter-select {
+            font-size: 12px;
             display: flex;
             align-items: center;
             margin-right: 12px;
             .bk-selector{
                 flex: 1;
-                // &.open {
-                //     background-color: #5C6270;
-                //     .bk-selector-input {
-                //         color: white;
-                //     }
-                // }
             }
-            // .bk-selector-input {
-            //     flex: 1;
-            //     border: 0;
-            //     background-color: transparent;
-            // }
         }
         .search-select {
             flex: 1;
@@ -200,6 +232,7 @@
         .search-history-btn {
             cursor: pointer;
             padding: 0 10px;
+            font-size: 14px;
             &:hover {
                 color: #3c96ff;
             }

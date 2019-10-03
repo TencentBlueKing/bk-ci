@@ -43,7 +43,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
                 },
                 {
-                    test: /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/,
+                    test: /\.(png|jpe?g|gif|svg|webp|cur)(\?.*)?$/,
                     loader: 'url-loader',
                     options: {
                         limit: 10000,

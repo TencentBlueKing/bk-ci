@@ -112,7 +112,7 @@
         height: 32px;
         line-height: 32px;
         border-radius: 10px;
-
+        
         &.active,
         &.disabled:hover {
             background-color: #f5f5f5;

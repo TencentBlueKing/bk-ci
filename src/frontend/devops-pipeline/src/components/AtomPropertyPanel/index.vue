@@ -1,6 +1,6 @@
 <template>
-    <section @click="toggleAtomSelectorPopup(false)" v-if="element" slot="content" :class="{ &quot;atom-property-panel&quot;: true }">
-        <header class="property-panel-header">
+    <bk-sideslider class="sodaci-property-panel" width="640" :quick-close="true" :is-show.sync="visible">
+        <header class="property-panel-header" slot="header">
             <div class="atom-name-edit">
                 <input v-show="nameEditing" v-bk-focus="1" @blur="toggleEditName(false)" @keydown.enter="toggleEditName(false)" class="bk-form-input" name="name" v-validate.initial="&quot;required|max:30&quot;" @@keyup.enter="toggleEditName" @input="handleEditName" placeholder="请输入名称" :value="element.name" />
                 <p v-if="!nameEditing">{{ atomCode ? element.name : '待选择插件' }}</p>
@@ -8,72 +8,89 @@
             </div>
             <reference-variable :global-envs="globalEnvs" :stages="stages" :container="container" />
         </header>
-        <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
-            <div class="atom-type-selector bk-form-row bk-form bk-form-vertical">
-                <form-field :inline="true" label="插件" :is-error="errors.has(&quot;@type&quot;)" :error-msg="errors.first(&quot;@type&quot;)">
-                    <div class="atom-select-entry">
-                        <template v-if="atom">
-                            <span :title="atom.name" class="atom-selected-name">{{ atom.name }}</span>
-                            <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">重选</bk-button>
-                        </template>
-                        <template v-else-if="!atomCode">
-                            <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">请在左侧选择一个插件</bk-button>
-                        </template>
-                        <template v-else>
-                            <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">重选</bk-button>
-                        </template>
+        <section @click="toggleAtomSelectorPopup(false)" slot="content" v-if="element" class="atom-property-panel">
+            <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
+                <div class="atom-type-selector bk-form-row bk-form bk-form-vertical">
+                    <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has(&quot;@type&quot;) }">
+                        <label title="插件" class="bk-label atom-form-label">插件</label>
+                        <bk-popover placement="right" theme="light" class="form-field-icon atom-name-field" v-if="atom && (atom.summary || atom.docsLink)">
+                            <i class="bk-icon icon-info-circle"></i>
+                            <div slot="content" style="font-size: 12px; width: 350px; min-height: 100px;">
+                                <div class="atom-desc-content">
+                                    <p v-if="atom.summary">描述：{{ atom.summary }}</p>
+                                    <p v-else>暂无描述</p>
+                                    <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">了解更多</a>
+                                </div>
+                            </div>
+                        </bk-popover>
+                        <div class="bk-form-content">
+                            <div class="atom-select-entry">
+                                <template v-if="atom">
+                                    <span :title="atom.name" class="atom-selected-name">{{ atom.name }}</span>
+                                    <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">重选</bk-button>
+                                </template>
+                                <template v-else-if="!atomCode">
+                                    <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">请在左侧选择一个插件</bk-button>
+                                </template>
+                                <template v-else>
+                                    <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">重选</bk-button>
+                                </template>
+                            </div>
+                        </div>
                     </div>
-                </form-field>
-                <form-field v-if="hasVersionList" :desc="`主版本号.latest：表示执行时使用对应\n 主版本号下最新版本的插件`" label="版本">
-                    <bk-select :value="element.version" :clearable="false"
-                        placeholder="请选择插件版本"
-                        name="version"
-                        @selected="handleUpdateVersion"
-                        :disabled="!editable"
-                    >
-                        <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
-                    </bk-select>
-                </form-field>
-            </div>
-            <div class="atom-form-content">
-                <div class="no-atom-tips" v-if="!atom && atomCode">
-                    <div class="no-atom-tips-icon">
-                        <i class="bk-icon icon-info-circle-shape" size="14" />
-                    </div>
-                    <p>当前插件没有可用版本。可能是插件已取消发布或者发布流程进行中。</p>
+                    <form-field v-if="hasVersionList" :desc="`主版本号.latest：表示执行时使用对应\n 主版本号下最新版本的插件`" label="版本">
+                        <bk-select :value="element.version" :clearable="false"
+                            placeholder="请选择插件版本"
+                            name="version"
+                            @selected="handleUpdateVersion"
+                            :disabled="!editable"
+                        >
+                            <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
+                        </bk-select>
+                    </form-field>
                 </div>
-                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable }">
-                    <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
-                    <div
-                        v-if="atom.atomModal"
-                        :is="AtomComponent"
-                        :element-index="elementIndex"
-                        :container-index="containerIndex"
-                        :stage-index="stageIndex"
-                        :element="element"
-                        :container="container"
-                        :stage="stage"
-                        :atom-props-model="atom.atomModal.props"
-                        :set-parent-validate="setAtomValidate"
-                        :disabled="!editable"
-                        class="atom-content">
+                <div class="atom-form-content">
+                    <div class="no-atom-tips" v-if="!atom && atomCode">
+                        <div class="no-atom-tips-icon">
+                            <i class="bk-icon icon-info-circle-shape" size="14" />
+                        </div>
+                        <p>当前插件没有可用版本。可能是插件已取消发布或者发布流程进行中。</p>
                     </div>
-                    <div class="atom-option">
-                        <atom-option
-                            v-if="element[&quot;@type&quot;] !== &quot;manualTrigger&quot;"
+
+                    <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable }">
+                        <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
+                        <div
+                            v-if="atom.atomModal"
+                            :is="AtomComponent"
                             :element-index="elementIndex"
                             :container-index="containerIndex"
                             :stage-index="stageIndex"
                             :element="element"
                             :container="container"
+                            :stage="stage"
+                            :atom-props-model="atom.atomModal.props"
                             :set-parent-validate="setAtomValidate"
-                        >
-                        </atom-option>
+                            :disabled="!editable"
+                            class="atom-content">
+                        </div>
+                        <div class="atom-option">
+                            <atom-option
+                                v-if="element[&quot;@type&quot;] !== &quot;manualTrigger&quot;"
+                                :element-index="elementIndex"
+                                :container-index="containerIndex"
+                                :stage-index="stageIndex"
+                                :element="element"
+                                :container="container"
+                                :set-parent-validate="setAtomValidate"
+                            >
+                            </atom-option>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </bk-sideslider>
+
 </template>
 
 <script>
@@ -93,6 +110,7 @@
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
     import IosCertInstall from './IosCertInstall'
+    import CrossDistribute from './CrossDistribute'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
     import ReportArchive from './ReportArchive'
     import PullGithub from './PullGithub'
@@ -101,6 +119,7 @@
     import ReferenceVariable from './ReferenceVariable'
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
+    import SubPipelineCall from './SubPipelineCall'
     import Logo from '@/components/Logo'
 
     export default {
@@ -116,6 +135,7 @@
             CodePullGitX,
             CodePullSvn,
             IosCertInstall,
+            CrossDistribute,
             CodeGithubWebHookTrigger,
             ReportArchive,
             CodeSvnWebHookTrigger,
@@ -123,6 +143,7 @@
             NormalAtomV2,
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
+            SubPipelineCall,
             Logo
         },
         props: {
@@ -130,16 +151,25 @@
             containerIndex: Number,
             stageIndex: Number,
             stages: Array,
-            editable: Boolean
+            editable: Boolean,
+            isInstanceTemplate: Boolean
         },
         data () {
             return {
                 nameEditing: false,
                 isSetted: false,
+                isSupportVersion: true,
+                curVersionRelativeRules: [],
                 ruleDetailMessage: {}
             }
         },
         computed: {
+            ...mapState('soda', [
+                'ruleList',
+                'qualityAtom',
+                'templateRuleList',
+                'refreshLoading'
+            ]),
             ...mapGetters('atom', [
                 'getAtomModal',
                 'getAtomModalKey',
@@ -159,13 +189,31 @@
                 'atomMap',
                 'atomModalMap',
                 'fetchingAtmoModal',
-                'atomVersionList'
+                'atomVersionList',
+                'isPropertyPanelVisible'
             ]),
+            visible: {
+                get () {
+                    return this.isPropertyPanelVisible
+                },
+                set (value) {
+                    this.toggleAtomSelectorPopup(value)
+                    this.togglePropertyPanel({
+                        isShow: value
+                    })
+                }
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            templateId () {
+                return this.$route.params.templateId
+            },
+            isTemplatePanel () {
+                return this.$route.path.indexOf('template') > 0
             },
             stage () {
                 const { stageIndex, getStage, stages } = this
@@ -184,6 +232,24 @@
                 const element = getElement(container, elementIndex)
                 return element
             },
+            isIncludeRule () {
+                return (this.checkAtomIsIncludeRule(this.ruleList) && !this.isTemplatePanel) || (this.isInstanceTemplate && this.checkAtomIsIncludeRule(this.templateRuleList))
+            },
+            isQualityAtom () {
+                return this.qualityAtom.some(item => item.type === this.element.atomCode) && this.isSupportVersion && !this.isInstanceTemplate
+            },
+            showSetRuleTips () {
+                return this.isQualityAtom && !this.isIncludeRule && !this.isIncludeTemplateRule && !this.curVersionRelativeRules.length
+            },
+            isIncludeTemplateRule () {
+                return this.checkAtomIsIncludeRule(this.templateRuleList) && this.isTemplatePanel
+            },
+            showRuleList () {
+                return this.isIncludeRule || this.isIncludeTemplateRule || this.curVersionRelativeRules.length
+            },
+            renderRelativeRuleList () {
+                return this.isSupportVersion && this.curVersionRelativeRules.length ? this.curVersionRelativeRules : this.isTemplatePanel ? this.relativeTemplateRuleList : this.relativeRuleList
+            },
             atomCode () {
                 if (this.element) {
                     const isThrid = this.element.atomCode && this.element['@type'] !== this.element.atomCode
@@ -194,6 +260,9 @@
                     }
                 }
                 return ''
+            },
+            atomVersion () {
+                return this.element.version || this.getDefaultVersion(this.atomCode)
             },
             atom () {
                 const { atomMap, atomCode, element, getDefaultVersion, getAtomModal } = this
@@ -219,6 +288,16 @@
                         }
                 }
             },
+            relativeRuleList () {
+                if (!this.isTemplatePanel && this.isInstanceTemplate) {
+                    return this.getRelativeRule(this.ruleList.concat(this.templateRuleList))
+                } else {
+                    return this.getRelativeRule(this.ruleList)
+                }
+            },
+            relativeTemplateRuleList () {
+                return this.getRelativeRule(this.templateRuleList)
+            },
             hasVersionList () {
                 return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
             },
@@ -243,6 +322,8 @@
                         return CodePullSvn
                     case 'iosCertInstall':
                         return IosCertInstall
+                    case 'acrossProjectDistribution':
+                        return CrossDistribute
                     case 'reportArchive':
                     case 'reportArchiveService':
                         return ReportArchive
@@ -256,6 +337,8 @@
                         return CodeGithubWebHookTrigger
                     case 'pushImageToThirdRepo':
                         return PushImageToThirdRepo
+                    case 'subPipelineCall':
+                        return SubPipelineCall
                     default:
                         return NormalAtom
                 }
@@ -273,6 +356,10 @@
                         atomCode
                     })
                 }
+            },
+            atomVersion (newVal) {
+                this.isSetted = false
+                this.requestAtomVersionMatch(newVal)
             },
             'errors.items': {
                 deep: true,
@@ -304,7 +391,11 @@
                 'updateAtomType',
                 'fetchAtoms',
                 'fetchAtomModal',
-                'fetchAtomVersionList'
+                'fetchAtomVersionList',
+                'togglePropertyPanel'
+            ]),
+            ...mapActions('soda', [
+                'updateRefreshQualityLoading'
             ]),
             toggleEditName (show) {
                 this.nameEditing = show
@@ -342,9 +433,44 @@
                 }
             },
             handleUpdateVersion (id) {
-                console.lod(id)
                 if (this.element && this.element.version !== id) {
                     this.updateAtomModal(this.atomCode, id)
+                }
+            },
+            requestInterceptAtom () {
+                this.$store.dispatch('soda/requestInterceptAtom', {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId
+                })
+            },
+            async requestAtomVersionMatch (version) {
+                try {
+                    let res
+                    if (this.isTemplatePanel) {
+                        res = await this.$store.dispatch('soda/requestTemplateCheckVersion', {
+                            projectId: this.projectId,
+                            templateId: this.templateId,
+                            atomCode: this.element.atomCode,
+                            version
+                        })
+                    } else {
+                        res = await this.$store.dispatch('soda/requestPipelineCheckVersion', {
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            atomCode: this.element.atomCode,
+                            version
+                        })
+                    }
+                    if (res) {
+                        this.isSupportVersion = res.controlPoint
+                        this.curVersionRelativeRules = []
+                        if (res.ruleList && res.controlPoint) this.curVersionRelativeRules = res.ruleList
+                    }
+                } catch (err) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: err.message || err
+                    })
                 }
             },
             updateAtomModal (atomCode, version) {
@@ -362,6 +488,51 @@
                     atomCode,
                     atomIndex: elementIndex
                 })
+            },
+            checkAtomIsIncludeRule (ruleList) {
+                const hasVaildRule = ruleList.some(item =>
+                    item.taskId === this.element.atomCode
+                    && (item.ruleList.every(rule => !rule.gatewayId)
+                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                )
+                return hasVaildRule
+            },
+            getRelativeRule (rules) {
+                const result = []
+                rules.map(rule => {
+                    if (rule.taskId === this.element.atomCode && rule.ruleList.every(rule => !rule.gatewayId)) {
+                        result.push(rule)
+                    } else if (rule.taskId === this.element.atomCode
+                        && rule.ruleList.some(val => this.element.name.indexOf(val.gatewayId) > -1)) {
+                        const temp = {
+                            ...rule,
+                            ruleList: rule.ruleList.filter(item => this.element.name.indexOf(item.gatewayId) > -1)
+                        }
+                        return result.push(temp)
+                    }
+                    return false
+                })
+
+                return result
+            },
+            toSetRule () {
+                this.isSetted = true
+                const url = `${WEB_URL_PIRFIX}/quality/${this.projectId}/createRule/?${this.isTemplatePanel ? 'templateId' : 'pipelineId'}=${this.isTemplatePanel ? this.templateId : this.pipelineId}&element=${this.element.atomCode}`
+                window.open(url, '_blank')
+            },
+            requestMatchTemplateRules () {
+                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                    projectId: this.projectId,
+                    templateId: this.templateId
+                })
+            },
+            refresh () {
+                this.updateRefreshQualityLoading(true)
+                if (this.isTemplatePanel) {
+                    this.requestMatchTemplateRules()
+                } else {
+                    this.requestInterceptAtom()
+                }
             }
         }
     }
@@ -408,9 +579,40 @@
     .atom-main-content {
         font-size: 12px;
     }
+    .atom-desc-content {
+        padding: 12px;
+        a {
+            display: inline-block;
+            margin-top: 16px;
+            font-size: 12px;
+            color: $primaryColor;
+        }
+    }
+    .quality-setting-tips {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        .quality-rule-link {
+            margin-left: -6px;
+            color: $primaryColor;
+            cursor: pointer;
+        }
+        .refresh-btn {
+            color: $primaryColor;
+            cursor: pointer;
+        }
+        .executing-job {
+            position: relative;
+            top: 2px;
+            margin-right: 20px;
+            &:before {
+                display: inline-block;
+                animation: rotating infinite .6s linear;
+            }
+        }
+    }
     .atom-content {
         margin-bottom: 20px;
-        padding: 0 4px;
         .empty-tips {
             text-align: center;
             font-size: 14px;
@@ -423,15 +625,13 @@
         margin-bottom: 50px;
     }
     .property-panel-header {
-        position: absolute;
-        left: 30px;
-        top: 0;
+        font-size: 14px;
+        font-weight:normal;
         display: flex;
         justify-content: space-between;
         align-items: center;
         height: 60px;
         width: calc(100% - 30px);
-        padding-left: 20px;
         border-bottom: 1px solid #e6e6e6;
 
         .atom-name-edit {

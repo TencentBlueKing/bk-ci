@@ -1,6 +1,7 @@
 <template>
-    <div v-if="commitList.length">
-        <p class="prompt-tips">提示：本次流水线的版本号变化范围：
+    <div class="code-record-table-container" v-if="commitList.length">
+        <p class="prompt-tips">
+            提示：本次流水线的版本号变化范围：
             <span v-if="commitList.length > 1">
                 <span>{{ formatCommitId(lastCommit.commit) }}</span>
                 <span>-</span>
@@ -12,20 +13,27 @@
         </p>
         <bk-table :data="commitList">
             <bk-table-column label="备注" prop="comment"></bk-table-column>
-            <bk-table-column width="150" label="Commit" prop="commit">
-                <template slot-scope="props">
-                    <span :title="props.row.commit">{{ formatCommitId(props.row.commit) }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column width="150" label="提交人" prop="committer"></bk-table-column>
-            <bk-table-column width="200" label="提交时间" prop="commitTime" :formatter="formatTimeColumn"></bk-table-column>
-            
+            <bk-table-column
+                :width="150"
+                label="Commit"
+                prop="commit"
+                :formater="row => formatCommitId(row.commit)"
+            ></bk-table-column>
+            <bk-table-column :width="150" label="提交人" prop="committer"></bk-table-column>
+            <bk-table-column
+                :width="200"
+                label="提交时间"
+                prop="commitTime"
+                :formatter="formatTimeColumn"
+            ></bk-table-column>
         </bk-table>
     </div>
     <div v-else class="code-records-empty">
         <div class="no-data-right">
             <img src="../../images/box.png">
-            <p><span>{{ label }}</span>暂时没有变更记录</p>
+            <p>
+                <span>{{ label }}</span>暂时没有变更记录
+            </p>
         </div>
     </div>
 </template>
@@ -66,3 +74,13 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .code-record-table-container {
+        overflow: auto;
+        height: 100%;
+        .prompt-tips {
+            margin-bottom: 12px;
+        }
+    }
+</style>

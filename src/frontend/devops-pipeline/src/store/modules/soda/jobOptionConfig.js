@@ -38,12 +38,12 @@ export const JOB_OPTION = {
         default: true
     },
     timeout: {
-        rule: { 'numeric': true, 'max_value': 2880 },
+        rule: { 'numeric': true, 'max_value': 10080 },
         component: 'vuex-input',
         required: true,
         label: 'Job执行超时时间(单位分钟)',
-        desc: '请填写0-2880之间的整数，0表示系统允许的最大超时时间',
-        placeholder: '请填写0-2880之间的整数，0表示系统允许的最大超时时间',
+        desc: '请填写0-10080之间的整数，0表示系统允许的最大超时时间',
+        placeholder: '请填写0-10080之间的整数，0表示系统允许的最大超时时间',
         default: '900'
     },
     runCondition: {
@@ -108,10 +108,10 @@ export const JOB_MUTUAL = {
         default: false
     },
     timeout: {
-        rule: { 'numeric': true, 'max_value': 2880, 'min_value': 1 },
+        rule: { 'numeric': true, 'max_value': 10080, 'min_value': 1 },
         component: 'vuex-input',
         label: '最长等待时间（单位分钟）',
-        placeholder: '请填写1-2880之间的整数',
+        placeholder: '请填写1-10080之间的整数',
         default: '900',
         required: true,
         isHidden: (mutexGroup) => {

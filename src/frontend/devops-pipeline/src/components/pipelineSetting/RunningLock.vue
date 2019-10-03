@@ -13,7 +13,7 @@
             <div class="opera-lock-item">
                 <label class="opera-lock-label">最大排队时长：</label>
                 <div>
-                    <vuex-input input-type="number" name="waitQueueTimeMinute" placeholder="请输入" v-validate.initial="&quot;required|numeric|max_value:1440|min_value:60&quot;" :value="pipelineSetting.waitQueueTimeMinute" :handle-change="handleRunningLockChange" />
+                    <vuex-input input-type="number" name="waitQueueTimeMinute" placeholder="请输入" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" :value="pipelineSetting.waitQueueTimeMinute" :handle-change="handleRunningLockChange" />
                     <span>分钟</span>
                     <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
                 </div>

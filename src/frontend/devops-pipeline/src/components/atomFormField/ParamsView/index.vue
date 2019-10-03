@@ -37,6 +37,7 @@
     }]
 
     export default {
+        name: 'params-view',
         components: {
             VuexInput,
             SelectInput

@@ -1,7 +1,7 @@
 <template>
     <div class="build-params-comp">
         <ul v-bkloading="{ isLoading: !buildParams }" v-if="isExecDetail">
-            <li class="param-item" v-for="param in buildParams" :key="param.key">
+            <li :class="{ 'param-item': true, 'diff-param-item': isDefaultDiff(param) }" v-for="param in buildParams" :key="param.key">
                 <vuex-input :disabled="true" name="key" :value="param.key" />
                 <span>=</span>
                 <vuex-input :disabled="true" name="value" :value="param.value" />
@@ -40,6 +40,9 @@
                             </form-field>
                         </div>
                     </template>
+                    <form-field class="params-flex-col">
+                        <atom-checkbox :disabled="disabled" text="执行时显示" :value="execuVisible" name="required" :handle-change="handleBuildNoChange" />
+                    </form-field>
                 </div>
             </accordion>
 
@@ -53,6 +56,7 @@
     import Accordion from '@/components/atomFormField/Accordion'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '../validMixins'
     import { isMultipleParam, DEFAULT_PARAM, STRING } from '@/store/modules/atom/paramsConfig'
@@ -63,7 +67,8 @@
             Accordion,
             VuexInput,
             FormField,
-            EnumInput
+            EnumInput,
+            AtomCheckbox
         },
         mixins: [validMixins],
         props: {
@@ -153,6 +158,9 @@
             isExecDetail () {
                 const { buildNo } = this.$route.params
                 return !!buildNo
+            },
+            execuVisible () {
+                return this.buildNo && this.buildNo.required ? this.buildNo.required : false
             }
         },
         created () {
@@ -171,6 +179,10 @@
                 'updateContainer',
                 'requestBuildParams'
             ]),
+            isDefaultDiff ({ key, value }) {
+                const param = this.params.find(param => param.id === key)
+                return param && key ? param.defaultValue !== value : false
+            },
             getVersionById (id) {
                 return this.versions.find(v => v.id === id) || {}
             },
@@ -271,6 +283,9 @@
         margin: 20px 0;
         .params-flex-col {
             display: flex;
+            &:last-child {
+                margin-top: 20px;
+            }
             .bk-form-item {
                 flex: 1;
                 padding-right: 8px;
@@ -389,6 +404,12 @@
         margin-bottom: 10px;
         > span {
             margin: 0 10px;
+        }
+        &.diff-param-item {
+            .bk-form-input[name=value] {
+                color: #45E35F !important;
+            }
+
         }
     }
 </style>

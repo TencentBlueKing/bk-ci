@@ -29,6 +29,7 @@
     import atomFieldMixin from '../atomFieldMixin'
 
     export default {
+        name: 'route-tips',
         mixins: [atomFieldMixin],
         props: {
             visible: {

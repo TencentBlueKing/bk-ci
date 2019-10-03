@@ -5,14 +5,14 @@
             <bk-table
                 :data="envsData"
                 :show-header="false"
-                size="small"
+                :size="'small'"
             >
                 <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
                     <template v-if="col.prop === 'clipboard'" v-slot="props">
                         <i class="bk-icon icon-clipboard env-copy-icon" :data-clipboard-text="&quot;${&quot; + props.row.name + &quot;}&quot;"></i>
                     </template>
                     <template v-else v-slot="props">
-                        {{ props.row[col.prop] }}
+                        <span :title="props.row[col.prop]">{{ props.row[col.prop] }}</span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -161,18 +161,21 @@
                 right: 0;
                 top: 52px;
                 z-index: 1111;
-                width: 585px;
+                width: 640px;
                 margin-bottom: 10px;
                 box-shadow: 0 3px 7px 0 rgba(0,0,0,0.1);
                 transition: all .3s ease;
 
+                /deep/ .bk-table-row {
+                    line-height: 42px;
+                }
                 &:before {
                     content: '';
                     position: absolute;
                     border: 1px solid $borderWeightColor;
                     border-bottom-color: transparent;
                     border-right-color: transparent;
-                    right: 20px;
+                    right: 74px;
                     top: -5px;
                     width: 8px;
                     height: 8px;

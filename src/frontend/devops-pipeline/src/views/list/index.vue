@@ -49,6 +49,11 @@
                                 :class="{ 'selected-item': routeName === 'pipelinesTemplate' }"
                                 @click="routerToManage('pipelinesTemplate')">模板管理</a>
                         </li>
+                        <li>
+                            <a href="javascript:;" class="text-link" id="toggleManage"
+                                :class="{ 'selected-item': routeName === 'atomManage' }"
+                                @click="routerToManage('atomManage')">插件管理</a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -100,14 +105,22 @@
             },
             dropdownTitle () {
                 let title
-                if (this.routeName === 'pipelinesGroup') {
-                    title = '标签管理'
-                } else if (this.routeName === 'pipelinesView') {
-                    title = '视图管理'
-                } else if (this.routeName === 'pipelinesTemplate') {
-                    title = '模板管理'
-                } else {
-                    title = '更多'
+                switch (this.routeName) {
+                    case 'pipelinesGroup':
+                        title = '标签管理'
+                        break
+                    case 'pipelinesView':
+                        title = '视图管理'
+                        break
+                    case 'pipelinesTemplate':
+                        title = '模板管理'
+                        break
+                    case 'atomManage':
+                        title = '插件管理'
+                        break
+                    default:
+                        title = '更多'
+                        break
                 }
                 return title
             },

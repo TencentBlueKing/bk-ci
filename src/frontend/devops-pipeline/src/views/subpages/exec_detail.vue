@@ -40,33 +40,44 @@
                 </bk-tab-panel>
             </bk-tab>
         </template>
-
-        <bk-sideslider v-if="editingElementPos && execDetail" v-bind="sidePanelConfig" :is-show.sync="isPropertyPanelShow" :quick-close="true">
-            <template slot="content">
+        <template v-if="editingElementPos && execDetail">
+            <template v-if="showLog">
                 <pipeline-log
                     class="log-panel"
-                    v-if="showLog"
+                    v-bind="sidePanelConfig"
                     :build-no="$route.params.buildNo"
                     :build-num="execDetail.buildNum"
                     :show-export="true"
                     :build-tag="getElementId"
                     :execute-count="getExecuteCount"
                 />
+            </template>
+            <template v-else-if="showContainerPanel">
                 <container-property-panel
-                    v-else-if="showContainerPanel"
+                    :title="sidePanelConfig.title"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
                     :stages="execDetail.model.stages"
                     :editable="false"
                 />
             </template>
-        </bk-sideslider>
+        </template>
+        <template v-if="execDetail">
+            <pipeline-log v-if="showCompleteLog"
+                class="log-panel"
+                :title="`查看日志${execDetail.buildNum ? `（#${execDetail.buildNum}）` : ''}`"
+                :build-no="$route.params.buildNo"
+                :build-num="execDetail.buildNum"
+                :show-export="true"
+            />
+        </template>
     </section>
 </template>
 
 <script>
     import { mapState, mapActions } from 'vuex'
-    import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    // import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    import webSocketMessage from '@/utils/webSocketMessage'
     import stages from '@/components/Stages'
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
@@ -122,6 +133,7 @@
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
+                'isShowCompleteLog',
                 'fetchingAtomList'
             ]),
             ...mapState([
@@ -165,6 +177,10 @@
             showLog () {
                 const { editingElementPos, $route: { params } } = this
                 return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
+            },
+            showCompleteLog () {
+                const { isShowCompleteLog, $route: { params } } = this
+                return isShowCompleteLog && params.buildNo
             },
             showContainerPanel () {
                 const { editingElementPos } = this
@@ -221,16 +237,6 @@
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
             },
-            isPropertyPanelShow: {
-                get () {
-                    return this.isPropertyPanelVisible
-                },
-                set (value) {
-                    this.togglePropertyPanel({
-                        isShow: value
-                    })
-                }
-            },
             showRetryIcon () {
                 return this.execDetail && (this.execDetail.latestVersion === this.execDetail.curVersion) && ['RUNNING', 'QUEUE', 'SUCCEED'].indexOf(this.execDetail.status) < 0
             }
@@ -239,12 +245,16 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                if (this.$route.hash) { // 带上elementId时，弹出日志弹窗
+                    const isBuildId = /^#(e|T)-+/.test(this.$route.hash) // 检查是否是合法的elementId
+                    isBuildId && this.showElementLog(this.$route.hash.slice(1))
+                }
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
                     if (val !== oldVal) {
                         this.requestPipelineExecDetail(this.routerParams)
-                        this.initWebSocket(val)
+                        // this.initWebSocket(val)
                     }
                 }
             },
@@ -256,8 +266,10 @@
             }
         },
 
-        created () {
+        mounted () {
             this.requestPipelineExecDetail(this.routerParams)
+            webSocketMessage.installWsMessage(this.setPipelineDetail)
+            // this.initWebSocket()
         },
 
         beforeDestroy () {
@@ -265,7 +277,8 @@
             this.togglePropertyPanel({
                 isShow: false
             })
-            pipelineWebsocket.disconnect()
+            webSocketMessage.unInstallWsMessage()
+            // pipelineWebsocket.disconnect()
         },
 
         methods: {
@@ -286,17 +299,25 @@
                 })
             },
 
-            initWebSocket () {
-                const projectId = this.routerParams.projectId
-                const subscribe = `/topic/pipelineDetail/${this.routerParams.buildNo}`
-
-                pipelineWebsocket.connect(projectId, subscribe, {
-                    success: (res) => {
-                        const data = JSON.parse(res.body)
-                        this.setPipelineDetail(data)
-                    },
-                    error: (message) => this.$showTips({ message, theme: 'error' })
+            showElementLog (elementId) {
+                let eleIndex, conIndex
+                const staIndex = this.execDetail.model.stages.findIndex(stage => {
+                    conIndex = stage.containers.findIndex(container => {
+                        eleIndex = container.elements.findIndex(element => element.id === elementId)
+                        return eleIndex > -1
+                    })
+                    return conIndex > -1
                 })
+                if (staIndex > -1) {
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos: {
+                            stageIndex: staIndex,
+                            containerIndex: conIndex,
+                            elementIndex: eleIndex
+                        }
+                    })
+                }
             }
         }
     }
@@ -312,7 +333,7 @@
         .pipeline-detail-tab-card {
             height: 100%;
             .bk-tab-section {
-                height: calc(100% - 52px);
+                height: calc(100% - 60px);
                 padding-bottom: 10px;
             }
         }

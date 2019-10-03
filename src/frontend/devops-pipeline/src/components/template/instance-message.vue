@@ -1,15 +1,13 @@
 <template>
-    <bk-dialog v-if="showInstanceMessage"
-        width="600"
+    <bk-dialog
         ext-cls="instance-message-dialog"
         padding="0"
-        :is-show.sync="showInstanceMessage"
+        v-model="showInstanceMessage"
         :has-header="instanceMessageConfig.hasHeader"
-        :has-footer="instanceMessageConfig.hasFooter"
+        :show-footer="instanceMessageConfig.hasFooter"
         :close-icon="instanceMessageConfig.closeIcon"
-        :quick-close="instanceMessageConfig.quickClose">
-        <template
-            slot="content">
+        :mask-close="instanceMessageConfig.quickClose">
+        <template>
             <section class="create-pipeline-content"
                 v-bkloading="{
                     isLoading: instanceMessageConfig.loading
@@ -72,6 +70,12 @@
 <style lang='scss'>
     @import './../../scss/conf';
     .instance-message-dialog {
+        .bk-dialog-tool {
+            display: none;
+        }
+        .bk-dialog-body {
+            margin: 0px;
+        }
         .create-pipeline-content {
             padding: 30px 20px;
             min-height: 360px;

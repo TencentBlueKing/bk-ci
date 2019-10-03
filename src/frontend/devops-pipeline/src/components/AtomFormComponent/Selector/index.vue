@@ -9,6 +9,7 @@
         @selected="handleSelect"
         @toggle="toggleVisible"
         @clear="handleClear"
+        :popover-options="popoverOptions"
     >
         <bk-option
             v-for="item in list"
@@ -54,6 +55,17 @@
             }
         },
         computed: {
+            popoverOptions () {
+                return {
+                    popperOptions: {
+                        modifiers: {
+                            preventOverflow: {
+                                boundariesElement: 'window'
+                            }
+                        }
+                    }
+                }
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -74,6 +86,25 @@
             hasUrl () {
                 return this.mergedOptionsConf && this.mergedOptionsConf.url && typeof this.mergedOptionsConf.url === 'string'
             },
+            urlParamKeys () {
+                if (this.hasUrl) {
+                    const paramKey = this.mergedOptionsConf.url.match(/\{(.*?)\}/g)
+                    return paramKey ? paramKey.map(key => key.replace(/\{(.*?)\}/, '$1')) : []
+                }
+                return []
+            },
+            isLackParam () {
+                return this.urlParamKeys.some(key => {
+                    return this.queryParams.hasOwnProperty(key) && (typeof this.queryParams[key] === 'undefined' || this.queryParams[key] === null || this.queryParams[key] === '')
+                })
+            },
+            queryParams () {
+                const { atomValue = {}, $route: { params = {} } } = this
+                return {
+                    ...params,
+                    ...atomValue
+                }
+            },
             dropdownConf () {
                 const { searchable, tools, multiple, clearable } = this.mergedOptionsConf
                 return {
@@ -85,7 +116,7 @@
             },
             addItemUrl () {
                 const { webUrl, urlParse, mergedOptionsConf: { itemTargetUrl }, $route: { params } } = this
-                const originUrl = /^http:\/\//.test(itemTargetUrl) ? itemTargetUrl : webUrl + itemTargetUrl
+                const originUrl = /^(http|https):\/\//.test(itemTargetUrl) ? itemTargetUrl : webUrl + itemTargetUrl
 
                 return urlParse(originUrl, params)
             }
@@ -143,8 +174,8 @@
                 return []
             },
             transformList (res) {
-                // 正常情况
-                return (res.data.records || res.data || []).map(item => {
+                const list = this.getResponseData(res, this.mergedOptionsConf.dataPath)
+                return list.map(item => {
                     if (typeof item === 'string') {
                         return {
                             id: item,
@@ -159,6 +190,10 @@
                 })
             },
             async freshList () {
+                if (this.isLackParam) { // 缺少参数时，选择列表置空
+                    this.list = []
+                    return
+                }
                 try {
                     const { atomValue = {}, transformList, $route: { params = {} }, mergedOptionsConf } = this
                     const changeUrl = this.urlParse(mergedOptionsConf.url, {

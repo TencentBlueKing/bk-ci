@@ -175,7 +175,6 @@
 
     .pipeline-template-list {
         padding-bottom: 20px;
-        overflow: hidden;
         .template-list-content {
             margin: 0 auto;
             padding-top: 16px;

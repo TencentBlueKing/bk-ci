@@ -70,7 +70,7 @@
                                                 <input type="text"
                                                     class="bk-form-input input-text"
                                                     placeholder="支持模糊匹配"
-                                                    maxlength="20"
+                                                    maxlength="40"
                                                     :name="`item-${index}`" id="pipelineName"
                                                     v-validate="{ required: true }"
                                                     v-model="row.pipelineName"
@@ -130,7 +130,6 @@
         },
         data () {
             return {
-                isManagerUser: true,
                 title: '',
                 multiSelect: true,
                 staffHacCheckYet: false,
@@ -168,6 +167,11 @@
             }),
             projectId () {
                 return this.$route.params.projectId
+            },
+            isManagerUser () {
+                return this.userInfo.find(val => {
+                    return val.role_name === 'manager'
+                })
             }
         },
         watch: {

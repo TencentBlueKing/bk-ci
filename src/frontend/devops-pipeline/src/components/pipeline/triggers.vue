@@ -14,28 +14,29 @@
             </slot>
         </div>
 
-        <bk-dialog
-            title="请输入流水线运行参数"
-            width="800"
-            :close-icon="false"
-            v-model="isDialogShow"
-            @confirm="confirmHandler"
-            @cancel="cancelHandler">
-            <section class="bk-form dialog-params-form">
-                <pipeline-params-form ref="paramsForm" :param-values="paramValues" :handle-param-change="handleParamChange" :params="paramList"></pipeline-params-form>
-            </section>
-        </bk-dialog>
+        <!-- <div v-if="isDialogShow">
+            <bk-dialog
+                title="请输入流水线运行参数"
+                width="800"
+                :close-icon="false"
+                v-model="isDialogShow"
+                @confirm="confirmHandler"
+                @cancel="cancelHandler">
+                <section class="bk-form dialog-params-form">
+                    <pipeline-params-form ref="paramsForm" :param-values="paramValues" :handle-param-change="handleParamChange" :params="paramList"></pipeline-params-form>
+                </section>
+            </bk-dialog>
+        </div> -->
     </div>
 </template>
 
 <script>
-    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    // import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import { bus } from '@/utils/bus'
     import { mapActions } from 'vuex'
-
     export default {
         components: {
-            PipelineParamsForm
+            // PipelineParamsForm
         },
         props: {
             beforeExec: {
@@ -57,7 +58,7 @@
         },
         data () {
             return {
-                isDialogShow: false,
+                // isDialogShow: false,
                 paramList: [],
                 paramValues: {},
                 disabled: false
@@ -106,6 +107,7 @@
                 if (this.disabled || this.status === 'running' || !this.canManualStartup) return
                 this.setExecuteStatus(true)
                 this.disabled = true
+                this.setExecuteStatus(true)
                 // debugger
                 if (this.beforeExec && typeof this.beforeExec === 'function') {
                     if (!await this.beforeExec(true)) {
@@ -124,7 +126,26 @@
                         })
                         if (res.canManualStartup) {
                             this.paramList = res.properties.filter(p => p.required)
-                            if (res.canElementSkip) {
+                            // if (res.canElementSkip) {
+                            //     this.$store.commit('pipelines/updateCurAtomPrams', res)
+                            //     this.$router.push({
+                            //         name: 'pipelinesPreview',
+                            //         params: {
+                            //             projectId: this.projectId,
+                            //             pipelineId: this.pipelineId
+                            //         }
+                            //     })
+                            // } else if (this.paramList.length && !res.canElementSkip) {
+                            //     this.isDialogShow = true
+                            //     this.paramValues = this.paramList.reduce((values, param) => {
+                            //         values[param.id] = param.defaultValue
+                            //         return values
+                            //     }, {})
+                            // } else {
+                            //     await this.execPipeline()
+                            // }
+
+                            if (res.canElementSkip || this.paramList.length || (res.buildNo && res.buildNo.required)) {
                                 this.$store.commit('pipelines/updateCurAtomPrams', res)
                                 this.$router.push({
                                     name: 'pipelinesPreview',
@@ -133,12 +154,6 @@
                                         pipelineId: this.pipelineId
                                     }
                                 })
-                            } else if (this.paramList.length && !res.canElementSkip) {
-                                this.isDialogShow = true
-                                this.paramValues = this.paramList.reduce((values, param) => {
-                                    values[param.id] = param.defaultValue
-                                    return values
-                                }, {})
                             } else {
                                 await this.execPipeline()
                             }
@@ -177,7 +192,6 @@
                     pipelineId: this.pipelineId
                 })
                 this.disabled = false
-                this.setExecuteStatus(false)
             },
             /**
              *  点击确定的回调函数

@@ -1,6 +1,6 @@
 <template>
-    <selector :tools="tools" :name="name" :edit="edit" :placeholder="isLoading ? &quot;获取数据中...&quot; : placeholder" :handle-change="handleChange" :list="list" :toggle-visible="toggleVisible" :is-loading="isLoading" :value="value" :searchable="searchable" :multi-select="multiSelect" :disabled="disabled || isLoading">
-        <template v-if="hasAddItem" slot="props">
+    <selector :popover-min-width="popoverMinWidth" :tools="tools" :name="name" :edit="edit" :placeholder="isLoading ? &quot;获取数据中...&quot; : placeholder" :handle-change="handleChange" :list="list" :toggle-visible="toggleVisible" :is-loading="isLoading" :value="value" :searchable="searchable" :multi-select="multiSelect" :disabled="disabled || isLoading">
+        <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
                 <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
                     <i class="bk-icon icon-plus-circle" />
@@ -15,6 +15,7 @@
     import atomFieldMixin from '../atomFieldMixin'
     import Selector from '../Selector'
     export default {
+        name: 'request-selector',
         components: {
             Selector
         },
@@ -59,6 +60,9 @@
             multiSelect: {
                 type: Boolean,
                 default: false
+            },
+            popoverMinWidth: {
+                type: Number
             }
         },
         data () {
