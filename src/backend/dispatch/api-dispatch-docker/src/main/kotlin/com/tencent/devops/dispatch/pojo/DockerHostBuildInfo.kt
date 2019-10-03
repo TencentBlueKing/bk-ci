@@ -39,5 +39,8 @@ data class DockerHostBuildInfo(
     val imageName: String,
     val containerId: String,
     @JsonProperty("wsInHost")
-    val wsInHost: Boolean
+    val wsInHost: Boolean,
+    val registryUser: String?,
+    val registryPwd: String?,
+    val imageType: String?
 )

@@ -110,6 +110,33 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    /**
+     * 2 天之前的构建如果还在running获取queue的都置为失败
+     */
+    fun updateExpireBuilds(
+        dslContext: DSLContext,
+        ids: Set<Int>
+    ): Int {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.update(this)
+                .set(STATUS, PipelineTaskStatus.FAILURE.status)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(ID.`in`(ids))
+                .execute()
+        }
+    }
+
+    fun getExpireBuilds(
+        dslContext: DSLContext
+    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(STATUS.`in`(PipelineTaskStatus.QUEUE.status, PipelineTaskStatus.RUNNING.status))
+                .and(UPDATED_TIME.lessThan(LocalDateTime.now().minusDays(2)))
+                .fetch()
+        }
+    }
+
     fun getPreBuildAgent(
         dslContext: DSLContext,
         projectId: String,
