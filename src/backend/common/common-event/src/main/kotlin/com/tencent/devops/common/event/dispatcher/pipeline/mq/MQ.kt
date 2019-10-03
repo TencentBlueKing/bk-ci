@@ -125,6 +125,26 @@ object MQ {
     const val ROUTE_GITHUB_PR = "r.engine.github.pr"
     const val QUEUE_GITHUB_PR = "q.engine.github.pr"
 
+    // SVN代码仓库webhook请求回调
+    const val EXCHANGE_SVN_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.svn.event"
+    const val ROUTE_SVN_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.svn.event"
+    const val QUEUE_SVN_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.svn.event"
+
+    // CodeGit代码仓库webhook请求回调
+    const val EXCHANGE_GIT_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.git.event"
+    const val ROUTE_GIT_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.git.event"
+    const val QUEUE_GIT_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.git.event"
+
+    // Gitlab代码仓库webhook请求回调
+    const val EXCHANGE_GITLAB_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.gitlab.event"
+    const val ROUTE_GITLAB_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.gitlab.event"
+    const val QUEUE_GITLAB_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.gitlab.event"
+
+    // Github代码仓库webhook请求回调
+    const val EXCHANGE_GITHUB_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.github.event"
+    const val ROUTE_GITHUB_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.github.event"
+    const val QUEUE_GITHUB_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.github.event"
+
     // 广播清理文件
     const val EXCHANGE_BKJOB_CLEAR_JOB_TMP_FANOUT = "e.bkjob.clear.file.fanout"
     const val ROUTE_BKJOB_CLEAR_JOB_TMP_EVENT = "r.bkjob.clear.file"

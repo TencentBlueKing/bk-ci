@@ -45,7 +45,12 @@ interface IScm {
 
     fun addWebHook(hookUrl: String)
 
-    fun createBranch(branch: String, ref: String) {}
+    fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean)
+    fun addMRComment(mrId: Long, comment: String)
+
+    fun lock(repoName: String, applicant: String, subPath: String)
+    fun unlock(repoName: String, applicant: String, subPath: String)
+	fun createBranch(branch: String, ref: String) {}
     fun deleteBranch(branch: String) {}
 
     fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean)

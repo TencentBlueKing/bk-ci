@@ -39,10 +39,7 @@ data class PipelineBuildLessDockerShutdownEvent(
     override val pipelineId: String,
     override val userId: String,
     val buildId: String,
-    val vmSeqId: String,
-    val agentId: String,
-    val secretKey: String,
-    val dockerImage: String,
+    val dockerContainerId: String,
     val startTime: Long = System.currentTimeMillis(),
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0

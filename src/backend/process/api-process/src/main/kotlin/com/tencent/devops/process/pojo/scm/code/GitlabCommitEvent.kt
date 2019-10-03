@@ -1,33 +1,81 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.process.pojo.scm.code
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+/**
+ * {
+　　"object_kind":"push",
+　　"event_name":"push",
+　　"before":"fe19454a8e03c7daa47d7fbf176f3cf62487f0ef",
+　　"after":"f60e4eccb2a20610c4e8d43784791060b35c2690",
+　　"ref":"refs/heads/4.x",
+　　"checkout_sha":"f60e4eccb2a20610c4e8d43784791060b35c2690",
+　　"message":null,
+　　"user_id":138,
+　　"user_name":"rdeng",
+　　"user_username":"rdeng",
+　　"user_email":"rdeng@tencent.com",
+　　"user_avatar":null,
+　　"project_id":477,
+　　"project":{
+　　　　"name":"soda-backend",
+　　　　"description":"蓝盾客户端构建后端工程",
+　　　　"web_url":"http://gitlab-paas.open.oa.com/devops/soda-backend",
+　　　　"avatar_url":null,
+　　　　"git_ssh_url":"git@gitlab-paas.open.oa.com:devops/soda-backend.git",
+　　　　"git_http_url":"http://gitlab-paas.open.oa.com/devops/soda-backend.git",
+　　　　"namespace":"devops",
+　　　　"visibility_level":0,
+　　　　"path_with_namespace":"devops/soda-backend",
+　　　　"default_branch":"master",
+　　　　"ci_config_path":null,
+　　　　"homepage":"http://gitlab-paas.open.oa.com/devops/soda-backend",
+　　　　"url":"git@gitlab-paas.open.oa.com:devops/soda-backend.git",
+　　　　"ssh_url":"git@gitlab-paas.open.oa.com:devops/soda-backend.git",
+　　　　"http_url":"http://gitlab-paas.open.oa.com/devops/soda-backend.git"
+　　},
+　　"commits":[
+　　　　{
+　　　　　　"id":"5aaf1189b29f1ede1a3118461acf61ebbc27a22b",
+　　　　　　"message":"Update svn web hook logic",
+　　　　　　"timestamp":"2018-03-16T16:44:23+08:00",
+　　　　　　"url":"http://gitlab-paas.open.oa.com/devops/soda-backend/commit/5aaf1189b29f1ede1a3118461acf61ebbc27a22b",
+　　　　　　"author":{
+　　　　　　　　"name":"rdeng",
+　　　　　　　　"email":"rdeng@tencent.com"
+　　　　　　},
+　　　　　　"added":[
+　　　　　　　　"api/api-process/src/main/kotlin/com/tencent/soda/process/api/ExternalScmResource.kt",
+　　　　　　　　"api/api-process/src/main/kotlin/com/tencent/soda/process/pojo/scm/code/ScmWebhookMatcher.kt",
+　　　　　　　　"api/api-process/src/main/kotlin/com/tencent/soda/process/pojo/scm/code/git/GitCommitEvent.kt",
+　　　　　　　　"api/api-process/src/main/kotlin/com/tencent/soda/process/pojo/scm/code/svn/PostCommitEvent.kt",
+　　　　　　　　"api/api-process/src/main/kotlin/com/tencent/soda/process/pojo/scm/code/svn/PostCommitEventFile.kt",
+　　　　　　　　"service/service-process/src/main/kotlin/com/tencent/soda/process/resources/ExternalScmResourceImpl.kt"
+　　　　　　],
+　　　　　　"modified":[
+　　　　　　　　"common/common-pipeline/src/main/kotlin/com/tencent/soda/common/pipeline/pojo/element/trigger/CodeGitWebHookTriggerElement.kt",
+　　　　　　　　"common/common-pipeline/src/main/kotlin/com/tencent/soda/common/pipeline/pojo/element/trigger/CodeGitlabWebHookTriggerElement.kt",
+　　　　　　　　"service/service-process/src/main/kotlin/com/tencent/soda/process/service/BuildService.kt",
+　　　　　　　　"service/service-process/src/main/kotlin/com/tencent/soda/process/service/ScmService.kt",
+　　　　　　　　"service/service-process/src/main/kotlin/com/tencent/soda/process/service/VMBuildService.kt"
+　　　　　　],
+　　　　　　"removed":[
+
+　　　　　　]
+　　　　}
+　　],
+　　"total_commits_count":3,
+　　"repository":{
+　　　　"name":"soda-backend",
+　　　　"url":"git@gitlab-paas.open.oa.com:devops/soda-backend.git",
+　　　　"description":"蓝盾客户端构建后端工程",
+　　　　"homepage":"http://gitlab-paas.open.oa.com/devops/soda-backend",
+　　　　"git_http_url":"http://gitlab-paas.open.oa.com/devops/soda-backend.git",
+　　　　"git_ssh_url":"git@gitlab-paas.open.oa.com:devops/soda-backend.git",
+　　　　"visibility_level":0
+　　}
+}
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitlabCommitEvent(
     val object_kind: String,

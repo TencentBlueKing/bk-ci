@@ -34,6 +34,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
+import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
@@ -45,6 +46,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import javax.servlet.http.HttpServletResponse
 
 @SuppressWarnings("ALL")
 object OkhttpUtils {
@@ -199,6 +201,22 @@ object OkhttpUtils {
                 }
             }
         }
+    }
+
+    fun downloadFile(url: String, response: HttpServletResponse) {
+        logger.info("downloadFile url is:$url")
+        val httpResponse = getFileHttpResponse(url)
+        FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
+    }
+
+    private fun getFileHttpResponse(url: String): Response {
+        val request = Request.Builder().url(url).get().build()
+        val httpResponse = doLongHttp(request)
+        if (!httpResponse.isSuccessful) {
+            logger.error("FAIL|Download file from $url| message=${httpResponse.message()}| code=${httpResponse.code()}")
+            throw RemoteServiceException(httpResponse.message())
+        }
+        return httpResponse
     }
 
     private fun sslSocketFactory(): SSLSocketFactory {

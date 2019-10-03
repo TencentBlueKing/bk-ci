@@ -27,10 +27,12 @@
 package com.tencent.devops.scm.config
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Configuration
 
 /**
  * Git通用配置
  */
+@Configuration
 class GitConfig {
 
     @Value("\${git.tGitUrl}")
@@ -65,4 +67,26 @@ class GitConfig {
 
     @Value("\${git.redirectAtomMarketUrl}")
     val redirectAtomMarketUrl: String = ""
+
+    @Value("\${scm.git.gitHookUrl:}")
+    val gitHookUrl: String = ""
+
+    /* github config */
+    @Value("\${scm.github.signSecret:}")
+    val signSecret: String = ""
+
+    @Value("\${scm.github.clientId:}")
+    val githubClientId: String = ""
+
+    @Value("\${scm.github.clientSecret:}")
+    val githubClientSecret: String = ""
+
+    @Value("\${scm.github.webhookUrl:}")
+    val githubWebhookUrl: String = ""
+
+    @Value("\${scm.github.redirectUrl:}")
+    val githubRedirectUrl: String = ""
+
+    @Value("\${scm.github.appUrl:}")
+    val githubAppUrl: String = ""
 }

@@ -31,6 +31,7 @@ import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitOauthApi
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -62,10 +63,10 @@ class CodeGitScmOauthImpl constructor(
     }
 
     override fun getBranches() =
-        gitOauthApi.listBranches(gitConfig.gitApiUrl, token, projectName)
+        gitOauthApi.listBranches(gitConfig.gitUrl, token, projectName)
 
     override fun getTags() =
-        gitOauthApi.listTags(gitConfig.gitApiUrl, token, projectName)
+        gitOauthApi.listTags(gitConfig.gitUrl, token, projectName)
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
@@ -124,7 +125,7 @@ class CodeGitScmOauthImpl constructor(
             throw ScmException("Git hook url为空", ScmType.CODE_GIT.name)
         }
         try {
-            gitOauthApi.addWebhook(gitConfig.gitApiUrl, token, projectName, hookUrl, event)
+            gitOauthApi.addWebhook(gitConfig.gitUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
             throw ScmException("Git Token不正确", ScmType.CODE_GIT.name)
         }

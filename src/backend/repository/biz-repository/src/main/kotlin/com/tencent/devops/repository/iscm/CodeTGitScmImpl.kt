@@ -31,6 +31,7 @@ import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.CODE_TGIT_URL
 import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import org.eclipse.jgit.api.Git

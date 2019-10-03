@@ -35,5 +35,8 @@ data class ContainerInfo(
     val containerId: String,
     val address: String,
     val token: String,
-    val buildEnv: String?
+    val buildEnv: String?,
+    val registryUser: String?,
+    val registryPwd: String?,
+    val imageType: String?
 )

@@ -43,5 +43,9 @@ data class DebugStartParam(
     @ApiModelProperty("镜像名称", required = true)
     val imageName: String,
     @ApiModelProperty("环境变量", required = true)
-    val buildEnv: Map<String, String>?
+    val buildEnv: Map<String, String>?,
+    @ApiModelProperty("镜像类型(bkdevops或thrid)", required = true)
+    val imageType: String?,
+    @ApiModelProperty("镜像仓库凭证ID", required = true)
+    val credentialId: String?
 )

@@ -1,4 +1,4 @@
-package com.tencent.devops.repository
+package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -22,8 +22,8 @@ interface ServiceOauthResource {
     @GET
     @Path("/git/{userId}")
     fun gitGet(
-            @ApiParam("用户ID", required = true)
-            @PathParam("userId")
-            userId: String
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
     ): Result<GitToken?>
 }

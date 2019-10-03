@@ -1,41 +1,134 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.process.pojo.scm.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+/**
+    {
+        "ref":"tag01",
+        "ref_type":"tag",
+        "master_branch":"master",
+        "description":"Netty; Spring; Hibernate; Druid; Redis",
+        "pusher_type":"user",
+        "repository":{
+            "id":64402349,
+            "node_id":"MDEwOlJlcG9zaXRvcnk2NDQwMjM0OQ==",
+            "name":"Netty",
+            "full_name":"AaronSheng/Netty",
+            "private":false,
+            "owner":{
+                "login":"AaronSheng",
+                "id":8223080,
+                "node_id":"MDQ6VXNlcjgyMjMwODA=",
+                "avatar_url":"https://avatars3.githubusercontent.com/u/8223080?v=4",
+                "gravatar_id":"",
+                "url":"https://api.github.com/users/AaronSheng",
+                "html_url":"https://github.com/AaronSheng",
+                "followers_url":"https://api.github.com/users/AaronSheng/followers",
+                "following_url":"https://api.github.com/users/AaronSheng/following{/other_user}",
+                "gists_url":"https://api.github.com/users/AaronSheng/gists{/gist_id}",
+                "starred_url":"https://api.github.com/users/AaronSheng/starred{/owner}{/repo}",
+                "subscriptions_url":"https://api.github.com/users/AaronSheng/subscriptions",
+                "organizations_url":"https://api.github.com/users/AaronSheng/orgs",
+                "repos_url":"https://api.github.com/users/AaronSheng/repos",
+                "events_url":"https://api.github.com/users/AaronSheng/events{/privacy}",
+                "received_events_url":"https://api.github.com/users/AaronSheng/received_events",
+                "type":"User",
+                "site_admin":false
+            },
+            "html_url":"https://github.com/AaronSheng/Netty",
+            "description":"Netty; Spring; Hibernate; Druid; Redis",
+            "fork":false,
+            "url":"https://api.github.com/repos/AaronSheng/Netty",
+            "forks_url":"https://api.github.com/repos/AaronSheng/Netty/forks",
+            "keys_url":"https://api.github.com/repos/AaronSheng/Netty/keys{/key_id}",
+            "collaborators_url":"https://api.github.com/repos/AaronSheng/Netty/collaborators{/collaborator}",
+            "teams_url":"https://api.github.com/repos/AaronSheng/Netty/teams",
+            "hooks_url":"https://api.github.com/repos/AaronSheng/Netty/hooks",
+            "issue_events_url":"https://api.github.com/repos/AaronSheng/Netty/issues/events{/number}",
+            "events_url":"https://api.github.com/repos/AaronSheng/Netty/events",
+            "assignees_url":"https://api.github.com/repos/AaronSheng/Netty/assignees{/user}",
+            "branches_url":"https://api.github.com/repos/AaronSheng/Netty/branches{/branch}",
+            "tags_url":"https://api.github.com/repos/AaronSheng/Netty/tags",
+            "blobs_url":"https://api.github.com/repos/AaronSheng/Netty/git/blobs{/sha}",
+            "git_tags_url":"https://api.github.com/repos/AaronSheng/Netty/git/tags{/sha}",
+            "git_refs_url":"https://api.github.com/repos/AaronSheng/Netty/git/refs{/sha}",
+            "trees_url":"https://api.github.com/repos/AaronSheng/Netty/git/trees{/sha}",
+            "statuses_url":"https://api.github.com/repos/AaronSheng/Netty/statuses/{sha}",
+            "languages_url":"https://api.github.com/repos/AaronSheng/Netty/languages",
+            "stargazers_url":"https://api.github.com/repos/AaronSheng/Netty/stargazers",
+            "contributors_url":"https://api.github.com/repos/AaronSheng/Netty/contributors",
+            "subscribers_url":"https://api.github.com/repos/AaronSheng/Netty/subscribers",
+            "subscription_url":"https://api.github.com/repos/AaronSheng/Netty/subscription",
+            "commits_url":"https://api.github.com/repos/AaronSheng/Netty/commits{/sha}",
+            "git_commits_url":"https://api.github.com/repos/AaronSheng/Netty/git/commits{/sha}",
+            "comments_url":"https://api.github.com/repos/AaronSheng/Netty/comments{/number}",
+            "issue_comment_url":"https://api.github.com/repos/AaronSheng/Netty/issues/comments{/number}",
+            "contents_url":"https://api.github.com/repos/AaronSheng/Netty/contents/{+path}",
+            "compare_url":"https://api.github.com/repos/AaronSheng/Netty/compare/{base}...{head}",
+            "merges_url":"https://api.github.com/repos/AaronSheng/Netty/merges",
+            "archive_url":"https://api.github.com/repos/AaronSheng/Netty/{archive_format}{/ref}",
+            "downloads_url":"https://api.github.com/repos/AaronSheng/Netty/downloads",
+            "issues_url":"https://api.github.com/repos/AaronSheng/Netty/issues{/number}",
+            "pulls_url":"https://api.github.com/repos/AaronSheng/Netty/pulls{/number}",
+            "milestones_url":"https://api.github.com/repos/AaronSheng/Netty/milestones{/number}",
+            "notifications_url":"https://api.github.com/repos/AaronSheng/Netty/notifications{?since,all,participating}",
+            "labels_url":"https://api.github.com/repos/AaronSheng/Netty/labels{/name}",
+            "releases_url":"https://api.github.com/repos/AaronSheng/Netty/releases{/id}",
+            "deployments_url":"https://api.github.com/repos/AaronSheng/Netty/deployments",
+            "created_at":"2016-07-28T14:29:18Z",
+            "updated_at":"2018-12-06T08:45:43Z",
+            "pushed_at":"2018-12-06T09:59:38Z",
+            "git_url":"git://github.com/AaronSheng/Netty.git",
+            "ssh_url":"git@github.com:AaronSheng/Netty.git",
+            "clone_url":"https://github.com/AaronSheng/Netty.git",
+            "svn_url":"https://github.com/AaronSheng/Netty",
+            "homepage":null,
+            "size":66,
+            "stargazers_count":1,
+            "watchers_count":1,
+            "language":"Java",
+            "has_issues":true,
+            "has_projects":true,
+            "has_downloads":true,
+            "has_wiki":true,
+            "has_pages":false,
+            "forks_count":0,
+            "mirror_url":null,
+            "archived":false,
+            "open_issues_count":0,
+            "license":null,
+            "forks":0,
+            "open_issues":0,
+            "watchers":1,
+            "default_branch":"master"
+        },
+        "sender":{
+            "login":"AaronSheng",
+            "id":8223080,
+            "node_id":"MDQ6VXNlcjgyMjMwODA=",
+            "avatar_url":"https://avatars3.githubusercontent.com/u/8223080?v=4",
+            "gravatar_id":"",
+            "url":"https://api.github.com/users/AaronSheng",
+            "html_url":"https://github.com/AaronSheng",
+            "followers_url":"https://api.github.com/users/AaronSheng/followers",
+            "following_url":"https://api.github.com/users/AaronSheng/following{/other_user}",
+            "gists_url":"https://api.github.com/users/AaronSheng/gists{/gist_id}",
+            "starred_url":"https://api.github.com/users/AaronSheng/starred{/owner}{/repo}",
+            "subscriptions_url":"https://api.github.com/users/AaronSheng/subscriptions",
+            "organizations_url":"https://api.github.com/users/AaronSheng/orgs",
+            "repos_url":"https://api.github.com/users/AaronSheng/repos",
+            "events_url":"https://api.github.com/users/AaronSheng/events{/privacy}",
+            "received_events_url":"https://api.github.com/users/AaronSheng/received_events",
+            "type":"User",
+            "site_admin":false
+        }
+    }
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubCreateEvent(
-    val before: String,
-    val after: String,
     val ref: String,
+    val ref_type: String,
     val repository: GithubRepository,
-    val commits: List<GithubCommit>,
-    val head_commit: GithubCommit,
     override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {
