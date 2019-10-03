@@ -1,9 +1,15 @@
 <template>
     <div class="bk-option-content">
         <slot>
-            <div class="bk-option-content-default" :title="name">
-                <span class="bk-option-name">{{name}}</span>
-                <i class="bk-option-icon bk-icon icon-check-1" v-if="multiple && isSelected"></i>
+            <div
+                class="bk-option-content-default"
+                :title="name"
+            >
+                <span class="bk-option-name">{{ name }}</span>
+                <i
+                    v-if="multiple && isSelected"
+                    class="bk-option-icon bk-icon icon-check-1"
+                />
             </div>
         </slot>
     </div>

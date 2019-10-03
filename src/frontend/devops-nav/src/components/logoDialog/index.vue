@@ -84,10 +84,10 @@
         curImage: string = ''
 
         get logoDialogConf (): object {
-          return {
-            hasHeader: false,
-            quickClose: false
-          }
+            return {
+                hasHeader: false,
+                quickClose: false
+            }
         }
     }
 </script>

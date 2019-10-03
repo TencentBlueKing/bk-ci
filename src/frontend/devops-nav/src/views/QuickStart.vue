@@ -44,18 +44,18 @@
     import QuickStartSteps from '../components/QuickStartSteps/index.vue'
 
     @Component({
-      components: {
-        QuickStartSteps
-      }
+        components: {
+            QuickStartSteps
+        }
     })
     export default class QuickStart extends Vue {
         stepIndex: number = 0
         done: boolean = false
         isLoading: boolean = false
         stepList: string[] = [
-          '配置项目',
-          '配置流水线',
-          '完成'
+            '配置项目',
+            '配置流水线',
+            '完成'
         ]
         isError: boolean = false
 
@@ -68,47 +68,47 @@
         }
 
         next (): void {
-          if (this.$refs.step.validate()) {
-            this.isError = false
-            this.stepIndex++
-          } else {
-            this.isError = true
-          }
+            if (this.$refs.step.validate()) {
+                this.isError = false
+                this.stepIndex++
+            } else {
+                this.isError = true
+            }
         }
 
         prev (): void {
-          this.stepIndex--
+            this.stepIndex--
         }
 
         @Watch('demo')
         watchDemo (demo) {
-          this.isError = !this.$refs.step.validate()
+            this.isError = !this.$refs.step.validate()
         }
 
         async doCreate () {
-          try {
-            if (!this.demo) {
-              throw new Error('请选择对应的项目')
+            try {
+                if (!this.demo) {
+                    throw new Error('请选择对应的项目')
+                }
+                const { projectId, projectName } = this.demo
+                this.isLoading = true
+                const { id } = await this.createDemo({
+                    projectId,
+                    projectName
+                })
+                this.setDemoPipelineId({
+                    pipelineId: id
+                })
+                this.done = true
+                this.next()
+            } catch (e) {
+                this.$bkMessage({
+                    message: e.message,
+                    theme: 'error'
+                })
+            } finally {
+                this.isLoading = false
             }
-            const { projectId, projectName } = this.demo
-            this.isLoading = true
-            const { id } = await this.createDemo({
-              projectId,
-              projectName
-            })
-            this.setDemoPipelineId({
-              pipelineId: id
-            })
-            this.done = true
-            this.next()
-          } catch (e) {
-            this.$bkMessage({
-              message: e.message,
-              theme: 'error'
-            })
-          } finally {
-            this.isLoading = false
-          }
         }
     }
 </script>

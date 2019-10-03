@@ -15,10 +15,15 @@ import {
     SET_POPUP_SHOW,
     UPDATE_HEADER_CONFIG,
     CLOSE_PREVIEW_TIPS,
-    TOGGLE_MODULE_LOADING
+    TOGGLE_MODULE_LOADING,
+    UPDATE_CURRENT_PAGE
 } from './constants'
 
 const mutations: MutationTree<RootState> = {
+    [UPDATE_CURRENT_PAGE]: (state: RootState, page: object) => {
+        Vue.set(state, 'currentPage', page)
+        return state
+    },
     [UPDATE_HEADER_CONFIG]: (state: RootState, headerConfig: object) => {
         Vue.set(state, 'headerConfig', {
             ...state.headerConfig,

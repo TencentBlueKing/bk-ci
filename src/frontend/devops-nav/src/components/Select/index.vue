@@ -1,5 +1,6 @@
 <template>
-    <div class="bk-select"
+    <div
+        class="bk-select"
         :class="{
             'is-focus': focus,
             'is-disabled': disabled,
@@ -8,21 +9,27 @@
             'is-unselected': isUnselected,
             'is-default-trigger': !$scopedSlots.trigger
         }"
-        :data-placeholder="localPlaceholder">
+        :data-placeholder="localPlaceholder"
+    >
         <template v-if="!$scopedSlots.trigger">
             <template v-if="loading">
-                <icon class="bk-select-loading spin-icon" name="circle-2-1"></icon>
+                <icon
+                    class="bk-select-loading spin-icon"
+                    name="circle-2-1"
+                />
             </template>
             <template v-else>
-                <i class="bk-select-angle bk-icon icon-angle-down"></i>
-                <i class="bk-select-clear bk-icon icon-close"
+                <i class="bk-select-angle bk-icon icon-angle-down" />
+                <i
                     v-if="clearable && !isUnselected && !disabled && !readonly"
-                    @click.prevent.stop="reset">
-                </i>
+                    class="bk-select-clear bk-icon icon-close"
+                    @click.prevent.stop="reset"
+                />
             </template>
         </template>
-        <bk-popover class="bk-select-dropdown"
+        <bk-popover
             ref="selectDropdown"
+            class="bk-select-dropdown"
             trigger="click"
             placement="bottom-start"
             theme="light bk-select-dropdown"
@@ -31,29 +38,48 @@
             :distance="16"
             :on-show="handleDropdownShow"
             :on-hide="handleDropdownHide"
-            :tippy-options="popoverOptions">
-            <slot name="trigger" v-bind="$props">
-                <div class="bk-select-name" :title="selectedName">
+            :tippy-options="popoverOptions"
+        >
+            <slot
+                name="trigger"
+                v-bind="$props"
+            >
+                <div
+                    class="bk-select-name"
+                    :title="selectedName"
+                >
                     {{ selectedName }}
                 </div>
             </slot>
-            <div slot="content" class="bk-select-dropdown-content" v-bkloading="{ isLoading: remoteSearchLoading }"
-                :style="popoverStyle">
-                <input class="bk-select-search-input"
+            <div
+                slot="content"
+                v-bkloading="{ isLoading: remoteSearchLoading }"
+                class="bk-select-dropdown-content"
+                :style="popoverStyle"
+            >
+                <input
+                    v-if="searchable"
                     ref="searchInput"
+                    v-model="searchValue"
+                    class="bk-select-search-input"
                     type="text"
                     :placeholder="localPlaceholder"
-                    v-if="searchable"
-                    v-model="searchValue"
-                    @keydown="handleKeydown($event)">
-                <ul class="bk-options" ref="optionList"
+                    @keydown="handleKeydown($event)"
+                >
+                <ul
+                    ref="optionList"
+                    class="bk-options"
                     :class="{
                         'bk-options-single': !multiple
                     }"
                     :style="{
                         maxHeight: scrollHeight + 'px'
-                    }">
-                    <li class="bk-option" v-for="(option, index) in filterOptions" :key="option.id"
+                    }"
+                >
+                    <li
+                        v-for="(option, index) in filterOptions"
+                        :key="option.id"
+                        class="bk-option"
                         :class="{
                             'is-selected': isSelect(option),
                             'is-disabled': option.disabled,
@@ -61,19 +87,35 @@
                         }"
                         @click.stop="handleOptionClick(option)"
                     >
-                        <slot name="option" v-bind="slotOption(option)">
-                            <devops-option v-bind="option" :is-selected="isSelect(option)" :multiple="multiple"></devops-option>
+                        <slot
+                            name="option"
+                            v-bind="slotOption(option)"
+                        >
+                            <devops-option
+                                v-bind="option"
+                                :is-selected="isSelect(option)"
+                                :multiple="multiple"
+                            />
                         </slot>
                     </li>
                 </ul>
-                <div class="bk-select-empty" v-if="!options.length">
+                <div
+                    v-if="!options.length"
+                    class="bk-select-empty"
+                >
                     {{ emptyText }}
                 </div>
-                <div class="bk-select-empty" v-else-if="searchable && unmatchedCount === options.length">
+                <div
+                    v-else-if="searchable && unmatchedCount === options.length"
+                    class="bk-select-empty"
+                >
                     {{ emptyText }}
                 </div>
-                <div class="bk-select-extension" v-if="$slots.extension">
-                    <slot name="extension"></slot>
+                <div
+                    v-if="$slots.extension"
+                    class="bk-select-extension"
+                >
+                    <slot name="extension" />
                 </div>
             </div>
         </bk-popover>

@@ -2,6 +2,7 @@
 /// <reference path='./index.d.ts' />
 interface RootState {
     services: object[]
+    currentPage: object | null,
     user: object | null
     projectList: object[] | null
     related: Link[] | null
@@ -48,6 +49,6 @@ interface Project {
     is_secrecy?: boolean
     cc_app_name?: string
     approval_status?: number
-    is_offlined?: boolean
+    enabled?: boolean
     gray?: boolean
 }

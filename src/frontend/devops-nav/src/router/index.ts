@@ -3,7 +3,6 @@ import Router from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
-import request from '../utils/request'
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -15,8 +14,6 @@ const Index = () => import('../views/Index.vue')
 const Home = () => import('../views/Home.vue')
 
 const IFrame = () => import('../views/IFrame.vue')
-
-const QuickStart = () => import('../views/QuickStart.vue')
 
 const ProjectManage = () => import('../views/ProjectManage.vue')
 
@@ -49,15 +46,6 @@ const routes = [
                 path: '',
                 name: 'home',
                 component: Home,
-                meta: {
-                    showProjectList: false,
-                    showNav: true
-                }
-            },
-            {
-                path: 'quickstart',
-                name: 'quickstart',
-                component: QuickStart,
                 meta: {
                     showProjectList: false,
                     showNav: true
@@ -106,12 +94,14 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-        
+
         window.currentPage = currentPage
+        store.dispatch('updateCurrentPage', currentPage) // update currentPage
         if (!currentPage) { // console 首页
             next()
             return
         }
+        
         const { css_url, js_url } = currentPage
         
         
@@ -182,7 +172,7 @@ function parseOS (): string {
 }
 
 function getProjectId (store, params): string {
-    const projectId = localStorage.getItem('projectId') || store.getters.onlineProjectList[0].project_code
+    const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].project_code
     return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
 }
 

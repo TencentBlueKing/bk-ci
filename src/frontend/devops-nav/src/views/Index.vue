@@ -29,7 +29,7 @@
                         desc="你并非该项目组成员或者该项目不存在，请切换项目试试"
                     >
                         <bk-button
-                            type="primary"
+                            theme="primary"
                             @click="switchProject"
                         >
                             切换项目
@@ -37,7 +37,7 @@
                     </empty-tips>
 
                     <empty-tips
-                        v-else-if="isOfflineProject"
+                        v-else-if="isDisableProject"
                         title="项目已禁用"
                         desc="该项目已被禁用，请切换项目试试，或重新启用该项目"
                     >
@@ -75,16 +75,17 @@
     import eventBus from '../utils/eventBus'
 
     @Component({
-      components: {
-        Header,
-        LoginDialog
-      }
+        components: {
+            Header,
+            LoginDialog
+        }
     })
     export default class Index extends Vue {
         @State projectList
         @State headerConfig
         @State isShowPreviewTips
-        @Getter onlineProjectList
+        @Getter enableProjectList
+        @Getter disableProjectList
         @Getter approvalingProjectList
         @Action closePreviewTips
 
@@ -92,75 +93,75 @@
         showExplorerTips: string = localStorage.getItem('showExplorerTips')
 
         get loadingOption (): object {
-          return {
-            isLoading: this.projectList === null
-          }
+            return {
+                isLoading: this.projectList === null
+            }
         }
 
         get hasProject (): boolean {
-          return this.projectList.some(project => project.project_code === this.$route.params.projectId)
+            return this.projectList.some(project => project.project_code === this.$route.params.projectId)
         }
 
-        get isOfflineProject (): boolean {
-          const project = this.projectList.find(project => project.project_code === this.$route.params.projectId)
-          return project ? project.is_offlined : false
+        get isDisableProject (): boolean {
+            const project = this.disableProjectList.find(project => project.project_code === this.$route.params.projectId)
+            return project ? !project.enabled : false
         }
 
         get isApprovalingProject (): boolean {
-          return !!this.approvalingProjectList.find(project => project.project_code === this.$route.params.projectId)
+            return !!this.approvalingProjectList.find(project => project.project_code === this.$route.params.projectId)
         }
 
         get isOnlineProject (): boolean {
-          return !!this.onlineProjectList.find(project => project.project_code === this.$route.params.projectId)
+            return !!this.enableProjectList.find(project => project.project_code === this.$route.params.projectId)
         }
 
         get hasProjectList (): boolean {
-          return this.headerConfig.showProjectList
+            return this.headerConfig.showProjectList
         }
 
         get chromeExplorer () :boolean {
-          const explorer = window.navigator.userAgent
-          return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
+            const explorer = window.navigator.userAgent
+            return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
         }
 
         @Watch('$route.path')
         routeChange (name: string): void {
-          this.hasProjectList && this.saveProjectId()
+            this.hasProjectList && this.saveProjectId()
         }
 
         switchProject () {
-          this.iframeUtil.toggleProjectMenu(true)
+            this.iframeUtil.toggleProjectMenu(true)
         }
 
         closeExplorerTips () {
-          localStorage.setItem('showExplorerTips', 'false')
-          this.closePreviewTips()
+            localStorage.setItem('showExplorerTips', 'false')
+            this.closePreviewTips()
         }
 
         saveProjectId (): void {
-          const { $route, projectList } = this
-          if (projectList.find(project => (project.project_code === $route.params.projectId && !project.is_offlined && (project.approval_status === 2 || project.approval_status === 1)))) {
-            localStorage.setItem('projectId', $route.params.projectId)
-          }
+            const { $route, projectList } = this
+            if (projectList.find(project => (project.project_code === $route.params.projectId && project.enabled && (project.approval_status === 2 || project.approval_status === 1)))) {
+                localStorage.setItem('projectId', $route.params.projectId)
+            }
         }
 
         created () {
-          this.hasProjectList && this.saveProjectId()
-          eventBus.$on('toggle-login-dialog', (isShow) => {
-            this.showLoginDialog = isShow
-          })
-
-          if (this.showExplorerTips === null) {
-            localStorage.setItem('showExplorerTips', 'true')
-            this.showExplorerTips = localStorage.getItem('showExplorerTips')
-          }
-          eventBus.$on('update-project-id', projectId => {
-            this.$router.replace({
-              params: {
-                projectId
-              }
+            this.hasProjectList && this.saveProjectId()
+            eventBus.$on('toggle-login-dialog', (isShow) => {
+                this.showLoginDialog = isShow
             })
-          })
+
+            if (this.showExplorerTips === null) {
+                localStorage.setItem('showExplorerTips', 'true')
+                this.showExplorerTips = localStorage.getItem('showExplorerTips')
+            }
+            eventBus.$on('update-project-id', projectId => {
+                this.$router.replace({
+                    params: {
+                        projectId
+                    }
+                })
+            })
         }
     }
 </script>

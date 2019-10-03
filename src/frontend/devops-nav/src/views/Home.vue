@@ -42,7 +42,8 @@
                         class="all-service-header"
                     >
                         {{ $t('allService') }}
-                        <span class="service-count">共{{ serviceCount }}个服务</span>
+                        
+                        <span class="service-count">{{ $t("sumService", { serviceCount }) }}</span>
                     </p>
                     <NavBox
                         slot="content"
@@ -55,20 +56,27 @@
             </accordion>
 
             <div class="bkdevops-box">
-                <h2>一站式研发解决方案</h2>
-                <span style="left: 112px;">需求</span>
-                <span style="left: 247px;">开发</span>
-                <span style="left: 382px;">测试</span>
-                <span style="left: 518px;">部署</span>
-                <span style="left: 652px;">运营</span>
-                <router-link
-                    class="bkdevops-button"
-                    :to="{ name: &quot;quickstart&quot; }"
-                >
-                    <!--<bk-button theme="primary" icon-right="angle-double-right">
-                        新手接入
-                    </bk-button>-->
-                </router-link>
+                <h2>{{ $t('slogan') }}</h2>
+                <span
+                    slot="b"
+                    style="left: 112px;"
+                >{{ $t('issueLabel') }}</span>
+                <span
+                    slot="c"
+                    style="left: 247px;"
+                >{{ $t('developLabel') }}</span>
+                <span
+                    slot="d"
+                    style="left: 382px;"
+                >{{ $t('testLabel') }}</span>
+                <span
+                    slot="e"
+                    style="left: 518px;"
+                >{{ $t('deployLabel') }}</span>
+                <span
+                    slot="f"
+                    style="left: 652px;"
+                >{{ $t('operationLabel') }}</span>
             </div>
 
             <div class="devops-news">
@@ -147,12 +155,12 @@
     import { urlJoin } from '../utils/util'
 
     @Component({
-      components: {
-        NavBox,
-        Accordion,
-        AccordionItem,
-        Logo
-      }
+        components: {
+            NavBox,
+            Accordion,
+            AccordionItem,
+            Logo
+        }
     })
     export default class Home extends Vue {
         @State services
@@ -163,39 +171,39 @@
         DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
 
         get recentVisitService (): object[] {
-          const recentVisitService = localStorage.getItem('recentVisitService')
-          const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-          return recentVisitServiceList.map(service => {
-            const serviceObj = window.serviceObject.serviceMap[service.key] || {}
-            return {
-              ...service,
-              ...serviceObj
-            }
-          })
+            const recentVisitService = localStorage.getItem('recentVisitService')
+            const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
+            return recentVisitServiceList.map(service => {
+                const serviceObj = window.serviceObject.serviceMap[service.key] || {}
+                return {
+                    ...service,
+                    ...serviceObj
+                }
+            })
         }
 
         get serviceCount (): number {
-          return this.services.reduce((sum, service) => {
-            sum += service.children.length
-            return sum
-          }, 0)
+            return this.services.reduce((sum, service) => {
+                sum += service.children.length
+                return sum
+            }, 0)
         }
 
         updateShowAllService (show: boolean): void {
-          this.isAllServiceListShow = show
+            this.isAllServiceListShow = show
         }
 
         addConsole (link: string): string {
-          return urlJoin('/console/', link)
+            return urlJoin('/console/', link)
         }
 
         created () {
-          this.fetchLinks({
-            type: 'news'
-          })
-          this.fetchLinks({
-            type: 'related'
-          })
+            this.fetchLinks({
+                type: 'news'
+            })
+            this.fetchLinks({
+                type: 'related'
+            })
         }
     }
 </script>

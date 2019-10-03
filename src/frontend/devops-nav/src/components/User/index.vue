@@ -51,9 +51,9 @@
     import { clickoutside } from '../../directives/index'
 
     @Component({
-      directives: {
-        clickoutside
-      }
+        directives: {
+            clickoutside
+        }
     })
     export default class User extends Vue {
         @Prop()
@@ -69,27 +69,27 @@
         @Action togglePopupShow
 
         toggleUserInfo (show: boolean) :void {
-          this.show = !this.show
+            this.show = !this.show
         }
 
         hideUserInfo () : void {
-          this.show = false
+            this.show = false
         }
 
         @Watch('show')
         handleShow (show, oldVal) {
-          if (show !== oldVal) {
-            this.togglePopupShow(show)
-          }
+            if (show !== oldVal) {
+                this.togglePopupShow(show)
+            }
         }
 
         get menu (): object[] {
-          return [
-            {
-              to: '/console/pm',
-              label: '项目管理'
-            }
-          ]
+                return [
+                    {
+                        to: '/console/pm',
+                        label: '项目管理'
+                    }
+                ]
         }
     }
 </script>

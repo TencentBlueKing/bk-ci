@@ -7,7 +7,6 @@
         :title="title"
         ok-text="去申请"
         @confirm="toApplyPermission"
-        @cancel="handleClose"
     >
         <main class="ask-permission-table">
             <bk-table
@@ -50,22 +49,18 @@
         showDialog: boolean = false
 
         created () {
-          eventBus.$on('update-permission-props', props => {
-            Object.keys(props).map(prop => {
-              this[prop] = props[prop]
+            eventBus.$on('update-permission-props', props => {
+                Object.keys(props).map(prop => {
+                    this[prop] = props[prop]
+                })
+                this.showDialog = true
             })
-            this.showDialog = true
-          })
-        }
-
-        handleClose (done) {
-          done()
         }
 
         toApplyPermission (done) {
-          window.open(this.applyPermissionUrl, '_blank')
-          done()
-          this.showDialog = false
+            window.open(this.applyPermissionUrl, '_blank')
+            done()
+            this.showDialog = false
         }
     }
 </script>

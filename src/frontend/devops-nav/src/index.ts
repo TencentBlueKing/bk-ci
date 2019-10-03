@@ -13,7 +13,7 @@ import EmptyTips from '@/components/EmptyTips/index.vue'
 import ShowTooltip from '@/components/ShowTooltip/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
 import iframeUtil from '@/utils/iframeUtil'
-import setupLocale from '../../locale'
+import locale from '../../locale'
 
 import VeeValidate from 'vee-validate'
 import ExtendsCustomRules from './utils/customRules'
@@ -21,6 +21,8 @@ import validDictionary from './utils/validDictionary'
 import showAskPermissionDialog from './components/AskPermissionDialog'
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
+// 全量引入 bk-magic-vue 样式
+require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 import './assets/scss/index.scss'
 
 declare module 'vue/types/vue' {
@@ -31,8 +33,6 @@ declare module 'vue/types/vue' {
         iframeUtil: any
     }
 }
-// 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 
 // @ts-ignore
 Vue.use(VeeValidate, {
@@ -51,16 +51,16 @@ Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 
-const { i18n, dynamicLoadModule, setLocale  } = setupLocale(Vue)
-const router = createRouter(store, dynamicLoadModule)
+
+const router = createRouter(store, locale.dynamicLoadModule)
 window.eventBus = eventBus
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
-Vue.prototype.$setLocale = setLocale
+Vue.prototype.$setLocale = locale.setLocale
 
 window.devops = new Vue({
     el: '#devops-root',
-    i18n,
+    i18n: locale.i18n,
     router,
     store,
     render (h) {

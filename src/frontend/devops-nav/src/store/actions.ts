@@ -1,5 +1,6 @@
 import { ActionTree, ActionContext } from 'vuex'
 import Request from '../utils/request'
+import { transformObj } from '../utils/util'
 import {
     SET_USER_INFO,
     SET_PROJECT_LIST,
@@ -18,20 +19,25 @@ import {
     SET_POPUP_SHOW,
     UPDATE_HEADER_CONFIG,
     CLOSE_PREVIEW_TIPS,
-    TOGGLE_MODULE_LOADING
+    TOGGLE_MODULE_LOADING,
+    UPDATE_CURRENT_PAGE,
+    SET_SERVICES
 } from './constants'
 
 const actions: ActionTree<RootState, any> = {
+    updateCurrentPage ({ commit }: ActionContext<RootState, any>, page: object) {
+        commit(UPDATE_CURRENT_PAGE, page)
+    },
     toggleModuleLoading ({ commit }: ActionContext<RootState, any>, moduleLoading: boolean) {
         commit(TOGGLE_MODULE_LOADING, moduleLoading)
     },
     upadteHeaderConfig ({ commit }: ActionContext<RootState, any>, headerConfig: object) {
         commit(UPDATE_HEADER_CONFIG, headerConfig)
     },
-    setUserInfo ({ commit }: ActionContext<RootState, any>, payload: any) {
-        commit(SET_USER_INFO, payload)
+    setUserInfo ({ commit }: ActionContext<RootState, any>, user: User) {
+        commit(SET_USER_INFO, { user: transformObj(user) })
     },
-    async toggleServiceCollect ({ commit }: ActionContext<RootState, any>, { serviceId, isCollected }: any) {
+    async toggleServiceCollect (_, { serviceId, isCollected }: any) {
         return Request.put(`${PROJECT_API_URL_PREFIX}/user/services/${serviceId}?collector=${isCollected}`)
     },
     async fetchLinks ({ commit }, { type }) {
@@ -45,14 +51,23 @@ const actions: ActionTree<RootState, any> = {
             commit(FETCH_ERROR, e)
         }
     },
-    createDemo ({ commit }, payload) {
+    createDemo (_, payload) {
         return Request.post(`${PROCESS_API_URL_PREFIX}/user/accesses/`, payload)
     },
-    async getProjects ({ commit }) {
-        const projectList = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/`)
+    setProjectList ({ commit }: ActionContext<RootState, any>, projectList: object) {
         commit(SET_PROJECT_LIST, { projectList })
     },
-    checkProjectField ({ commit }, { field, value, projectId }) {
+    setServices ({ commit }: ActionContext<RootState, any>, services: object[]) {
+        console.log(services)
+        commit(SET_SERVICES, { services })
+    },
+    async getProjects ({ dispatch }: ActionContext<RootState, any>, includeDisable = false) {
+        const res: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/?includeDisable=${includeDisable}`)
+        const projectList: Project[] = res
+        dispatch('setProjectList', projectList)
+        window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
+    },
+    checkProjectField (_, { field, value, projectId }) {
         if (field === 'project_name') {
             return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${field}/validate/?project_name=${value}${projectId ? `&project_id=${projectId}` : ''}`)
         } else {
@@ -62,8 +77,11 @@ const actions: ActionTree<RootState, any> = {
     ajaxUpdatePM ({ commit }, { id, data }) {
         return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${id}/`, data)
     },
-    ajaxAddPM ({ commit }, data) {
+    ajaxAddPM (_, data) {
         return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/`, data)
+    },
+    toggleProjectEnable (_, { projectId, enabled }) {
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/enable?enabled=${enabled}`)
     },
     selectDemoProject ({ commit }, { project }) {
         commit(SET_DEMO_PROJECT, {
@@ -81,23 +99,25 @@ const actions: ActionTree<RootState, any> = {
     resetNewProject ({ commit }, project = EMPTY_PROJECT) {
         commit(RESET_NEW_PROJECT, project)
     },
-    toggleProjectDialog ({ commit, dispatch }, payload) {
-        commit(RESET_NEW_PROJECT, payload.project || EMPTY_PROJECT)
+    toggleProjectDialog ({ commit }, payload) {
         commit(TOGGLE_PROJECT_DIALOG, payload)
+        if (payload.project) {
+            commit(UPDATE_NEW_PROJECT, payload.project)
+        }
     },
-    togglePopupShow ({ commit, dispatch }, payload) {
+    togglePopupShow ({ commit }, payload) {
         commit(SET_POPUP_SHOW, payload)
     },
-    getDocList ({ commit }) {
+    getDocList () {
         return Request.get(`${BACKEND_API_URL_PREFIX}/ci/docs/?format=json`)
     },
-    changeProjectLogo ({ commit }, { projectId, formData }) {
+    changeProjectLogo (_, { projectId, formData }) {
         return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/logo/`, formData)
     },
-    closePreviewTips ({ commit, dispatch }) {
+    closePreviewTips ({ commit }) {
         commit(CLOSE_PREVIEW_TIPS)
     },
-    getAnnouncement ({ commit }) {
+    getAnnouncement () {
         return Request.get(`${SUPPORT_API_URL_PREFIX}/user/notice/valid`)
     }
 }

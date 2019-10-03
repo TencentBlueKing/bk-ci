@@ -9,10 +9,14 @@
         :close-icon="false"
         :quick-close="false"
         :title="renderObj.noticeTitle"
-        @confirm="toLink(renderObj.redirectUrl)">
+        @confirm="toLink(renderObj.redirectUrl)"
+    >
         <main class="new-service-content">
             <div class="announcement-content">
-                <div class="content-detail" v-html="renderObj.noticeContent"></div>
+                <div
+                    class="content-detail"
+                    v-html="renderObj.noticeContent"
+                />
             </div>
         </main>
     </bk-dialog>
