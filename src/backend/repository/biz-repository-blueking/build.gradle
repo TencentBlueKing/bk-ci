@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":repository:biz-repository")
+    compile project(":repository:biz-repository-blueking")
     compile project(":common:common-auth:common-auth-blueking")
 }
 

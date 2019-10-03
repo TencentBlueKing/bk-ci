@@ -28,7 +28,6 @@ package com.tencent.devops.scm.code.git
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.IScm
-import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import org.eclipse.jgit.api.Git

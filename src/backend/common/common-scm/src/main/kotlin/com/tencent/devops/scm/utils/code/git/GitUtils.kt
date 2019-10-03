@@ -49,4 +49,23 @@ object GitUtils {
         }
         return groups[1]!!.value to groups[2]!!.value
     }
+
+    /**
+     * 根据apiUrl与真正的仓库url，判断出真正的apiUrl
+     */
+    fun getGitApiUrl(apiUrl: String, repoUrl: String): String {
+        val urlDomainAndRepoName = getDomainAndRepoName(repoUrl)
+        val parseApiUri = partApiUrl(apiUrl) ?: return apiUrl
+        return if (urlDomainAndRepoName.second != parseApiUri.second) { // 如果域名不一样，则以仓库域名为准
+            "${parseApiUri.first}${urlDomainAndRepoName.first}/${parseApiUri.third}"
+        } else {
+            apiUrl
+        }
+    }
+
+    private fun partApiUrl(apiUrl: String): Triple<String, String, String>? {
+        val groups = Regex("(http[s]?://)([-.a-z0-9A-Z]+)/(.*)").find(apiUrl)?.groups
+                ?: return null
+        return Triple(groups[1]!!.value, groups[2]!!.value, groups[3]!!.value) // http[s]//, xxx.com, api/v4
+    }
 }

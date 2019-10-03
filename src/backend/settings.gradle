@@ -107,8 +107,11 @@ include ":artifactory:model-artifactory-blueking"
 
 include ":repository"
 include ":repository:api-repository"
+include ":repository:api-repository-ee"
+include ":repository:api-repository-blueking"
 include ":repository:biz-repository"
 include ":repository:biz-repository-sample"
+include ":repository:biz-repository-ee"
 include ":repository:biz-repository-blueking"
 include ":repository:boot-repository"
 include ":repository:model-repository"
@@ -186,3 +189,5 @@ include ":external:biz-external-blueking"
 include ":external:boot-external"
 include ":external:boot-external-blueking"
 include ":external:model-external"
+include 'repository'
+

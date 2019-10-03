@@ -27,6 +27,7 @@
 package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.repository.tables.TRepositoryCommit
 import com.tencent.devops.model.repository.tables.records.TRepositoryCommitRecord
 import com.tencent.devops.repository.pojo.commit.CommitData
@@ -86,32 +87,37 @@ class CommitDao {
     }
 
     fun getLatestCommitById(
-        dslContext: DSLContext,
-        pipelineId: String,
-        elementId: String,
-        repoId: Long
-    ): TRepositoryCommitRecord? {
+            dslContext: DSLContext,
+            pipelineId: String,
+            elementId: String,
+            repoId: Long,
+            page: Int?,
+            pageSize: Int?
+    ): Result<TRepositoryCommitRecord>? {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
         with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(ELEMENT_ID.eq(elementId)).and(REPO_ID.eq(repoId)))
-                .orderBy(COMMIT_TIME.desc())
-                .limit(1)
-                .fetchOne()
+                    .where(PIPELINE_ID.eq(pipelineId).and(ELEMENT_ID.eq(elementId)).and(REPO_ID.eq(repoId)))
+                    .orderBy(COMMIT_TIME.desc())
+                    .limit(sqlLimit.offset, sqlLimit.limit)
+                    .fetch()
         }
     }
 
     fun getLatestCommitByName(
-        dslContext: DSLContext,
-        pipelineId: String,
-        elementId: String,
-        repoName: String
-    ): TRepositoryCommitRecord? {
+            dslContext: DSLContext,
+            pipelineId: String,
+            elementId: String,
+            repoName: String,
+            page: Int?,
+            pageSize: Int?
+    ): Result<TRepositoryCommitRecord>? {
         with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(ELEMENT_ID.eq(elementId)).and(REPO_NAME.eq(repoName)))
-                .orderBy(COMMIT_TIME.desc())
-                .limit(1)
-                .fetchOne()
+                    .where(PIPELINE_ID.eq(pipelineId).and(ELEMENT_ID.eq(elementId)).and(REPO_NAME.eq(repoName)))
+                    .orderBy(COMMIT_TIME.desc())
+                    .fetch()
         }
     }
+
 }

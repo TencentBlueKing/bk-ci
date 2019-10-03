@@ -46,4 +46,5 @@ object RepositoryMessageCode {
     const val USER_UPDATE_GIT_CODE_REPOSITORY_FAIL = "2115002" // 更新GIT代码库失败，请稍后再试
     const val USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2115003" // GIT代码添加成员{0}失败，请稍后再试
     const val USER_GIT_REPOSITORY_MOVE_GROUP_FAIL = "2115004" // 代码库迁移至{0}项目组失败，请稍后再试
+    const val USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL = "16150005" // GIT代码库删除成员{0}失败，请稍后再试
 }

@@ -57,6 +57,11 @@ class BuildRepositoryResourceImpl @Autowired constructor(
         return Result(repositoryService.buildGet(buildId, buildConfig(repositoryId, repositoryType)))
     }
 
+    override fun getV2(buildId: String, vmSeqId: String, vmName: String, repositoryHashId: String): Result<Repository> {
+        checkParam(buildId, vmSeqId, vmName, repositoryHashId)
+        return Result(repositoryService.buildGet(buildId, buildConfig(repositoryHashId, null)))
+    }
+
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String, repositoryId: String) {
         val message = when {
             buildId.isBlank() -> "Invalid buildId"
