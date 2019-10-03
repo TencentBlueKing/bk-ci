@@ -43,7 +43,7 @@ data class CodeSvnRepository(
     @ApiModelProperty("svn项目名称", example = "xx/yy_proj", required = true)
     override val projectName: String,
     @ApiModelProperty("用户名", required = true)
-    override val userName: String,
+    override var userName: String,
     @ApiModelProperty("项目id", required = true)
     override val projectId: String?,
     @ApiModelProperty("仓库hash id", required = false)

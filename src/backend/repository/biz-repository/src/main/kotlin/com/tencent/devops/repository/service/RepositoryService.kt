@@ -16,13 +16,10 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.common.auth.api.BkAuthResourceType
-import com.tencent.devops.common.auth.code.BkAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.ServiceBuildResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.dao.CommitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
