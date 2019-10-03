@@ -32,7 +32,7 @@
     import atomFieldMixin from '../atomFieldMixin'
 
     export default {
-        name: 'atom-complete',
+        name: 'auto-complete',
         mixins: [atomFieldMixin],
         props: {
             name: {

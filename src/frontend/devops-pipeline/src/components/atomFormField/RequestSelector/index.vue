@@ -15,6 +15,7 @@
     import atomFieldMixin from '../atomFieldMixin'
     import Selector from '../Selector'
     export default {
+        name: 'request-selector',
         components: {
             Selector
         },

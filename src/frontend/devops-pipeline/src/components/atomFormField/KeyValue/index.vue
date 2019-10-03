@@ -18,6 +18,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
 
     export default {
+        name: 'key-value',
         components: {
             VuexInput
         },

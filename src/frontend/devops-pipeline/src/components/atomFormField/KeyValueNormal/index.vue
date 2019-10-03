@@ -34,6 +34,7 @@
     import validMixins from '@/components/validMixins'
 
     export default {
+        name: 'key-value-normal',
         components: {
             VuexInput,
             FormField
