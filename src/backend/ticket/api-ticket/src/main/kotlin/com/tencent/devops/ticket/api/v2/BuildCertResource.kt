@@ -24,13 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.api
+package com.tencent.devops.ticket.api.v2
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CertAndroid
+import com.tencent.devops.ticket.pojo.CertEnterprise
+import com.tencent.devops.ticket.pojo.CertIOS
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -43,15 +45,15 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_CREDENTIAL"], description = "构建-凭据资源")
-@Path("/build/credentials")
+@Api(tags = ["BUILD_CERT"], description = "构建-证书资源")
+@Path("/build/certs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildCredentialResource {
-    @ApiOperation("构建机获取凭据")
-    @Path("/{credentialId}/")
+interface BuildCertResource {
+    @ApiOperation("按证书ID获取ios加密的证书内容")
+    @Path("/ios/certs/{certId}/")
     @GET
-    fun get(
+    fun queryIos(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -61,11 +63,53 @@ interface BuildCredentialResource {
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @ApiParam("凭据ID", required = true)
-        @PathParam("credentialId")
-        credentialId: String,
+        @ApiParam("证书ID", required = true)
+        @PathParam("certId")
+        certId: String,
         @ApiParam("Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
-    ): Result<CredentialInfo>
+    ): Result<CertIOS>
+
+    @ApiOperation("按证书ID获取ios企业加密的证书内容")
+    @Path("/enterprise/certs/{certId}/")
+    @GET
+    fun queryEnterprise(
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @ApiParam(value = "构建机名称", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+        vmName: String,
+        @ApiParam("证书ID", required = true)
+        @PathParam("certId")
+        certId: String,
+        @ApiParam("Base64编码的加密公钥", required = true)
+        @QueryParam("publicKey")
+        publicKey: String
+    ): Result<CertEnterprise>
+
+    @ApiOperation("按证书ID获取android加密的证书内容")
+    @Path("/android/certs/{certId}/")
+    @GET
+    fun queryAndroid(
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @ApiParam(value = "构建机名称", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+        vmName: String,
+        @ApiParam("证书ID", required = true)
+        @PathParam("certId")
+        certId: String,
+        @ApiParam("Base64编码的加密公钥", required = true)
+        @QueryParam("publicKey")
+        publicKey: String
+    ): Result<CertAndroid>
 }
