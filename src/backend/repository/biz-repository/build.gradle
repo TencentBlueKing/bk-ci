@@ -32,6 +32,7 @@ dependencies {
     compile project(":common:common-scm")
     compile project(":ticket:api-ticket")
     compile project(":process:api-process")
+    compile project(":scm:api-scm")
     compile project(":repository:api-repository")
     compile project(":repository:model-repository")
     compile project(":common:common-db")

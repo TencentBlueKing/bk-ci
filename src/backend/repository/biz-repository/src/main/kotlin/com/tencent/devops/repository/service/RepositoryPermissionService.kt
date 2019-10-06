@@ -27,6 +27,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.BkAuthResourceType
 
 interface RepositoryPermissionService {
     fun validatePermission(
@@ -54,4 +55,35 @@ interface RepositoryPermissionService {
     fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String)
     fun editResource(projectId: String, repositoryId: Long, repositoryName: String)
     fun deleteResource(projectId: String, repositoryId: Long)
+
+    fun getUserResourcesByPermissions(
+            user: String,
+            projectCode: String,
+            permissions: Set<BkAuthPermission>
+    ): Map<BkAuthPermission, List<String>>
+
+    fun getUserResourceByPermission(
+            user: String,
+            projectCode: String,
+            permission: BkAuthPermission
+    ): List<String>
+
+    fun validateUserResourcePermission(
+            user: String,
+            projectCode: String,
+            permission: BkAuthPermission
+    ): Boolean
+
+    fun validateUserResourcePermission(
+            user: String,
+            projectCode: String,
+            resourceCode: String,
+            permission: BkAuthPermission
+    ): Boolean
+
+    fun modifyResource(
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
+    )
 }

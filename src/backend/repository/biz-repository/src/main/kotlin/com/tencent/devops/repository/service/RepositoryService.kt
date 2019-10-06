@@ -43,10 +43,12 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.github.GithubRepository
-import com.tencent.devops.repository.pojo.scm.GitRepositoryResp
 import com.tencent.devops.repository.service.scm.GitOauthService
 import com.tencent.devops.repository.utils.CredentialUtils
-import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.api.ServiceScmResource
+import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.ticket.api.v2.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -909,10 +911,8 @@ class RepositoryService @Autowired constructor(
     }
 
     private fun filterRepository(user: String, projectId: String, bkAuthPermission: BkAuthPermission): List<Long> {
-        val resourceCodeList = authPermissionApi.getUserResourceByPermission(
+        val resourceCodeList = repositoryPermissionService.getUserResourceByPermission(
             user,
-            BkAuthServiceCode.CODE,
-            BkAuthResourceType.CODE_REPERTORY,
             projectId,
             bkAuthPermission
         )
@@ -924,23 +924,19 @@ class RepositoryService @Autowired constructor(
         projectId: String,
         bkAuthPermissions: Set<BkAuthPermission>
     ): Map<BkAuthPermission, List<Long>> {
-        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
+        val permissionResourcesMap = repositoryPermissionService.getUserResourcesByPermissions(
             user,
-            BkAuthServiceCode.CODE,
-            BkAuthResourceType.CODE_REPERTORY,
             projectId,
             bkAuthPermissions
-        )
+       )
         return permissionResourcesMap.mapValues {
             it.value.map { it.toLong() }
         }
     }
 
     private fun validatePermission(user: String, projectId: String, bkAuthPermission: BkAuthPermission): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        return repositoryPermissionService.validateUserResourcePermission(
             user,
-            BkAuthServiceCode.CODE,
-            BkAuthResourceType.CODE_REPERTORY,
             projectId,
             bkAuthPermission
         )
@@ -952,10 +948,8 @@ class RepositoryService @Autowired constructor(
         repositoryId: Long,
         bkAuthPermission: BkAuthPermission
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        return repositoryPermissionService.validateUserResourcePermission(
             user,
-            BkAuthServiceCode.CODE,
-            BkAuthResourceType.CODE_REPERTORY,
             projectId,
             repositoryId.toString(),
             bkAuthPermission
@@ -963,20 +957,16 @@ class RepositoryService @Autowired constructor(
     }
 
     private fun createResource(user: String, projectId: String, repositoryId: Long, repositoryName: String) {
-        authResourceApi.createResource(
+        repositoryPermissionService.createResource(
             user,
-            BkAuthServiceCode.CODE,
-            BkAuthResourceType.CODE_REPERTORY,
             projectId,
-            repositoryId.toString(),
+            repositoryId,
             repositoryName
         )
     }
 
     private fun editResource(projectId: String, repositoryId: Long, repositoryName: String) {
-        authResourceApi.modifyResource(
-            BkAuthServiceCode.CODE,
-            BkAuthResourceType.CODE_REPERTORY,
+        repositoryPermissionService.modifyResource(
             projectId,
             repositoryId.toString(),
             repositoryName
@@ -984,11 +974,9 @@ class RepositoryService @Autowired constructor(
     }
 
     private fun deleteResource(projectId: String, repositoryId: Long) {
-        authResourceApi.deleteResource(
-            BkAuthServiceCode.CODE,
-            BkAuthResourceType.CODE_REPERTORY,
+        repositoryPermissionService.deleteResource(
             projectId,
-            repositoryId.toString()
+            repositoryId
         )
     }
 

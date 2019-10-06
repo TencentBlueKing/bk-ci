@@ -71,13 +71,6 @@ class Client @Autowired constructor(
         private const val connectTimeoutSeconds = 5L
     }
 
-    @Value("\${scm.ip:#{null}}")
-    private val scmIp: String? = null
-
-    private val scmIpList = ArrayList<String>()
-
-    private var hasParseScmIp = false
-
     private val beanCaches: LoadingCache<KClass<*>, *> = CacheBuilder.newBuilder()
         .maximumSize(1000).build(object : CacheLoader<KClass<*>, Any>() {
             override fun load(p0: KClass<*>): Any {
@@ -211,31 +204,6 @@ class Client @Autowired constructor(
         return MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag).url()
     }
 
-    // devnet区域的，只能直接通过ip访问
-    fun <T : Any> getScm(clz: KClass<T>): T {
-        val ip = chooseScm()
-        val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
-        return Feign.builder()
-                .client(feignClient)
-                .errorDecoder(clientErrorDecoder)
-                .encoder(jacksonEncoder)
-                .decoder(jacksonDecoder)
-                .contract(jaxRsContract)
-                .requestInterceptor(requestInterceptor)
-                .target(clz.java, "http://$ip/api")
-    }
-
-    private fun chooseScm(): String {
-        parseScmIp()
-        if (scmIpList.isEmpty()) {
-            throw RuntimeException("The scm ip($scmIp) is not config")
-        }
-
-        val copy = ArrayList(scmIpList)
-        copy.shuffle()
-        return copy[0]
-    }
-
     private fun findServiceName(clz: KClass<*>): String {
         // 单体结构，不分微服务的方式
         if (!assemblyServiceName.isNullOrBlank()) {
@@ -253,30 +221,4 @@ class Client @Autowired constructor(
             }
         }
     }
-
-    private fun parseScmIp() {
-        if (hasParseScmIp) {
-            return
-        }
-        synchronized(scmIpList) {
-            if (hasParseScmIp) {
-                return
-            }
-            if (scmIp.isNullOrEmpty()) {
-                logger.warn("The scm ip is empty")
-            } else {
-                scmIp!!.split(",").forEach {
-                    val ip = it.trim()
-                    if (ip.isEmpty()) {
-                        logger.warn("Contain blank scm ip in configuration")
-                        return@forEach
-                    }
-                    logger.info("Adding the scm ip($ip)")
-                    scmIpList.add(ip)
-                }
-            }
-            hasParseScmIp = true
-        }
-    }
-
 }
