@@ -164,4 +164,9 @@ object MQ {
     const val EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT = "e.engine.pipeline.setting.change.fanout"
     const val ROUTE_PIPELINE_SETTING_CHANGE = "r.engine.pipeline.setting.change"
     const val QUEUE_PIPELINE_SETTING_CHANGE = "q.engine.pipeline.setting.change"
+
+    // webSocket消息
+    const val EXCHANGE_WEBSOCKET_TMP_FANOUT = "e.websocket.fanout"
+    const val ROUTE_WEBSOCKET_TMP_EVENT = "r.websocket.file"
+    const val QUEUE_WEBSOCKET_TMP_EVENT = "q.websocket.file"
 }

@@ -1308,6 +1308,17 @@ class PipelineService @Autowired constructor(
         return result
     }
 
+    // 获取整条流水线的所有运行状态
+    fun getPipelineAllStatus(userId: String, projectId: String, pipeline: String): List<Pipeline>? {
+        val pipelines = setOf(pipeline)
+        val pipelineList = getPipelineStatus(userId, projectId, pipelines)
+        return if (pipelineList.isEmpty()) {
+            null
+        } else {
+            return pipelineList
+        }
+    }
+
     // 旧接口
     fun getPipelineIdAndProjectIdByBuildId(buildId: String): Pair<String, String> {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)

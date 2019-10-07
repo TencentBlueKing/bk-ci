@@ -238,4 +238,19 @@ interface ServicePipelineResource {
         @ApiParam("构建id", required = true)
         buildIds: Set<String>
     ): Result<Map<String/*buildId*/, String/*buildNo*/>>
+
+    @ApiOperation("获取流水线完整状态")
+    @GET
+    @Path("projectId/{projectId}/pipelineId/{pipelineId}/allStatus")
+    fun getAllstatus(
+            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_USER_ID)
+            userId: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("projectId")
+            projectId: String,
+            @ApiParam("流水线ID", required = true)
+            @PathParam("pipelineId")
+            pipelineId: String
+    ): Result<List<Pipeline>?>
 }

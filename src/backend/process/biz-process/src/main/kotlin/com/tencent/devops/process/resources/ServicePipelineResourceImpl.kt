@@ -152,6 +152,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getBuildNoByByPair(buildIds))
     }
 
+    override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {
+        return Result(pipelineService.getPipelineAllStatus(userId, projectId, pipelineId))
+    }
+
     private fun checkParams(userId: String, projectId: String, pipelineId: String) {
         checkUserId(userId)
         checkProjectId(projectId)

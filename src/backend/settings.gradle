@@ -47,6 +47,7 @@ include ":common:common-auth:common-auth-sample"
 include ":common:common-auth:common-auth-blueking"
 include ":common:common-notify"
 include ":common:common-notify:common-notify-blueking"
+include ":common:common-websocket"
 
 include ":project"
 include ":project:api-project"
@@ -203,3 +204,7 @@ include ":scm:biz-scm"
 include ":scm:biz-scm-blueking"
 include ":scm:boot-scm"
 include ":scm:boot-scm-blueking"
+
+include ":websocket"
+include ":websocket:biz-websocket-blueking"
+
