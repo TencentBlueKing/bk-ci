@@ -29,7 +29,7 @@ package com.tencent.devops.ticket.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.ticket.api.v2.BuildCertResource
+import com.tencent.devops.ticket.api.BuildCertResource
 import com.tencent.devops.ticket.pojo.CertAndroid
 import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertIOS

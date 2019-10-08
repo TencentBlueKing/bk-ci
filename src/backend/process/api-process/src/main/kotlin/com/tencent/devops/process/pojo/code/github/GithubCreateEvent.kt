@@ -24,19 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.github
+package com.tencent.devops.process.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubCreateEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val repository: GithubRepository,
-    val commits: List<GithubCommit>,
-    val head_commit: GithubCommit,
-    override val sender: GithubSender
+        val before: String,
+        val after: String,
+        val ref: String,
+        val repository: GithubRepository,
+        val commits: List<GithubCommit>,
+        val head_commit: GithubCommit,
+        override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "create"

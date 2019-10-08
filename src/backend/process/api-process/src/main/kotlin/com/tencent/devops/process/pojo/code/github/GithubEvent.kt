@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.github
+package com.tencent.devops.process.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
@@ -35,12 +35,12 @@ abstract class GithubEvent(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubCommit(
-    val id: String,
-    val timestamp: String,
-    val url: String,
-    val message: String,
-    val author: GithubUser,
-    val committer: GithubUser
+        val id: String,
+        val timestamp: String,
+        val url: String,
+        val message: String,
+        val author: GithubUser,
+        val committer: GithubUser
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

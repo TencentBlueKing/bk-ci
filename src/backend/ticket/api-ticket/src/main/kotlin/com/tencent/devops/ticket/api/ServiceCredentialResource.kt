@@ -24,12 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.api.v2
+package com.tencent.devops.ticket.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.ticket.pojo.Credential
+import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -37,30 +39,40 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.OPTIONS
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_CREDENTIAL"], description = "构建-凭据资源")
-@Path("/build/credentials")
+@Api(tags = ["SERVICE_CREDENTIAL"], description = "服务-凭据资源")
+@Path("/service/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildCredentialResource {
-    @ApiOperation("构建机获取凭据")
-    @Path("/{credentialId}/")
+interface ServiceCredentialResource {
+    @ApiOperation("新增凭据")
+    @Path("/projects/{projectId}/")
+    @POST
+    fun create(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("凭据", required = true)
+        credential: CredentialCreate
+    ): Result<Boolean>
+
+    @ApiOperation("其他服务获取凭据")
+    @Path("/projects/{projectId}/certs/{credentialId}/")
     @GET
     fun get(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
@@ -69,21 +81,30 @@ interface BuildCredentialResource {
         publicKey: String
     ): Result<CredentialInfo>
 
-    @ApiOperation("插件获取凭据")
-    @Path("/{credentialId}/detail")
-    @GET
-    fun getDetail(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String,
+    @ApiOperation("检查凭据是否存在")
+    @Path("/projects/{projectId}/certs/{credentialId}/")
+    @OPTIONS
+    fun check(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String
-    ): Result<Map<String, String>>
+    )
+
+    @ApiOperation("其他服务获取凭据列表")
+    @Path("/projects/{projectId}/")
+    @GET
+    fun list(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<Credential>>
 }

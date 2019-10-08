@@ -3,16 +3,16 @@ package com.tencent.devops.process.engine.service.code
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.pojo.scm.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.scm.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 class SvnWebHookMatcher(
-    val event: SvnCommitEvent,
-    private val pipelineWebhookService: PipelineWebhookService
+        val event: SvnCommitEvent,
+        private val pipelineWebhookService: PipelineWebhookService
 ) : ScmWebhookMatcher {
 
     companion object {

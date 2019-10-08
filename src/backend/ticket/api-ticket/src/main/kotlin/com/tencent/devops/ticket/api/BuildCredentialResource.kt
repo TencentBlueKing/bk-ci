@@ -24,12 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.api.v2
+package com.tencent.devops.ticket.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import io.swagger.annotations.Api
@@ -44,27 +43,24 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_AGENT_CREDENTIAL"], description = "构建-凭据资源")
-@Path("/buildAgent/builds/credentials")
+@Api(tags = ["BUILD_CREDENTIAL"], description = "构建-凭据资源")
+@Path("/build/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildAgentCredentialResource {
+interface BuildCredentialResource {
     @ApiOperation("构建机获取凭据")
-    @Path("/credentials/{credentialId}/")
+    @Path("/{credentialId}/")
     @GET
     fun get(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
-        agentId: String,
-        @ApiParam("秘钥", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
-        secretKey: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @ApiParam(value = "构建机名称", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+        vmName: String,
         @ApiParam("凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
@@ -72,4 +68,22 @@ interface BuildAgentCredentialResource {
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CredentialInfo>
+
+    @ApiOperation("插件获取凭据")
+    @Path("/{credentialId}/detail")
+    @GET
+    fun getDetail(
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @ApiParam(value = "构建机名称", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+        vmName: String,
+        @ApiParam("凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String
+    ): Result<Map<String, String>>
 }

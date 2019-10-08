@@ -48,7 +48,7 @@ import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.pojo.GitRepositoryResp
-import com.tencent.devops.ticket.api.v2.ServiceCredentialResource
+import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory

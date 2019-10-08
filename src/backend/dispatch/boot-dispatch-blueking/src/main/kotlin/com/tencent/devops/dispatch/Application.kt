@@ -1,9 +1,9 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ * BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 is licensed under the MIT license.
  *
  * A copy of the MIT License is included in this file.
  *
@@ -24,11 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.github
+package com.tencent.devops.dispatch
 
-data class GithubWebhook(
-    val event: String,
-    val guid: String,
-    val signature: String,
-    val body: String
-)
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@MicroService
+@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.dispatch")
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
+}

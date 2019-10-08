@@ -1,9 +1,9 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ * BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 is licensed under the MIT license.
  *
  * A copy of the MIT License is included in this file.
  *
@@ -24,50 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.github
+package com.tencent.devops.dispatch
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+const val QUEUE_BUILD = "queue_build"
+const val QUEUE_BUILD_NEED_END = "queue_build_need_end"
+const val EXCHANGE_BUILD = "exchange_build"
+const val ROUTE_BUILD = "build"
+const val ROUTE_BUILD_NEED_END = "build_need_end"
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-abstract class GithubEvent(
-    open val sender: GithubSender
-)
+const val EXCHANGE_BUILD_ABORT = "exchange_build_abort"
+const val ROUTE_BUILD_ABORT = "route_build_abort"
+const val QUEUE_BUILD_ABORT = "queue_build_abort"
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GithubCommit(
-    val id: String,
-    val timestamp: String,
-    val url: String,
-    val message: String,
-    val author: GithubUser,
-    val committer: GithubUser
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GithubUser(
-    val name: String,
-    val email: String,
-    val username: String
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GithubPusher(
-    val name: String,
-    val email: String
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GithubRepository(
-    val name: String,
-    val full_name: String,
-    val git_url: String,
-    val ssh_url: String,
-    val clone_url: String
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GithubSender(
-    val login: String,
-    val type: String,
-    val avatar_url: String
-)
+const val QUEUE_TASK_BEGIN = "queue_dispatch_vm_task_begin"
+const val QUEUE_TASK_END = "queue_dispatch_vm_task_end"
+const val QUEUE_TASK_NEDD_END = "queue_dispatch_vm_task_need_end"
+const val EXCHANGE_TASK = "exchange_vm_task"
+const val ROUTE_TASK_BEGIN = "dispatch_vm_task_begin"
+const val ROUTE_TASK_END = "dispatch_vm_task_end"
+const val ROUTE_TASK_NEDD_END = "dispatch_vm_task_need_end"

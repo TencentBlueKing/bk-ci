@@ -28,8 +28,8 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.scm.code.WebhookCommit
-import com.tencent.devops.process.pojo.scm.code.github.GithubWebhook
+import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
