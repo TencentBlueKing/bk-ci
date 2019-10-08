@@ -148,7 +148,7 @@
             postData () {
                 const data = new FormData()
                 const keys = Object.keys(this.formData) || []
-                const unPostArry = ['clientCrt', 'serverCrt', 'clientKey', 'serverKey', 'remark']
+                const unPostArry = ['clientCrtFileName', 'serverCrtFileName', 'clientKeyFileName', 'serverKeyFileName', 'remark']
 
                 keys.forEach((key) => {
                     const index = unPostArry.findIndex(x => x === key)
@@ -186,7 +186,6 @@
                         if (_boolean) {
                             this.formData.clientCrtFileName = fileName
                             this.formData.clientCrt = files[0]
-                            validateKey = 'clientCrtFileName'
                         } else {
                             this.formData.serverCrtFileName = fileName
                             this.formData.serverCrt = files[0]
@@ -197,7 +196,6 @@
                         if (_boolean) {
                             this.formData.clientKeyFileName = fileName
                             this.formData.clientKey = files[0]
-                            validateKey = 'clientKeyFileName'
                         } else {
                             this.formData.serverKeyFileName = fileName
                             this.formData.serverKey = files[0]
@@ -205,8 +203,9 @@
                         }
                         break
                 }
-
-                this.$validator.validate(validateKey)
+                if (validateKey) {
+                    this.$validator.validate(validateKey)
+                }
             }
         }
     }

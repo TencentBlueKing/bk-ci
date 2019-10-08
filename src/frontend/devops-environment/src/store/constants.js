@@ -21,7 +21,6 @@ export const nodeTypeMap = {
     'CC': 'CC',
     'CMDB': 'CMDB',
     'BCSVM': 'BCS虚拟机',
-    'DEVCLOUD': '腾讯自研云（云devnet资源）',
     'THIRDPARTY': '第三方构建机',
     'TSTACK': 'TStack虚拟机',
     'OTHER': '其他',

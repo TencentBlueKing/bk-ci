@@ -1,67 +1,66 @@
+
 <template>
     <div class="biz-container">
-        <div class="biz-side-bar">
-            <side-bar
-                :nav="sideMenuNav"
-                :side-menu-list="sideMenuList"
-                :sub-system-name="'credentialCertificate'">
-            </side-bar>
-        </div>
-        <router-view style="width: 100%"></router-view>
+        <aside-nav :nav="nav" :menu-click="menuClick">
+            <router-view slot="content" style="width: 100%"></router-view>
+        </aside-nav>
     </div>
 </template>
 
 <script>
-    import sideBar from '@/components/devops/side-nav'
-
     export default {
-        components: {
-            'side-bar': sideBar
-        },
-        data () {
-            return {
-                sideMenuNav: {
+        computed: {
+            nav () {
+                return {
                     icon: 'environment',
                     title: '环境管理',
-                    url: `${DOCS_URL_PREFIX}/所有服务/环境管理/summary.html`
-                },
-                sideMenuList: [
-                    {
-                        list: [
-                            {
-                                id: 'envList',
-                                name: '环境',
-                                icon: 'icon-env',
-                                showChildren: false,
-                                children: [
-                                    {
-                                        id: 'createEnv',
-                                        name: '新增环境',
-                                        icon: 'icon-env'
-                                    },
-                                    {
-                                        id: 'envDetail',
-                                        name: '环境详情',
-                                        icon: 'icon-env'
-                                    }
-                                ]
-                            },
-                            {
-                                id: 'nodeList',
-                                name: '节点',
-                                icon: 'icon-node',
-                                showChildren: false,
-                                children: [
-                                    {
-                                        id: 'nodeDetail',
-                                        name: '节点详情',
-                                        icon: 'icon-node'
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
+                    url: `${DOCS_URL_PREFIX}/所有服务/环境管理/summary.html`,
+                    menu: [
+                        {
+                            id: 'envList',
+                            name: '环境',
+                            icon: 'icon-env',
+                            showChildren: false,
+                            children: [
+                                {
+                                    id: 'createEnv',
+                                    name: '新增环境',
+                                    icon: 'icon-env'
+                                },
+                                {
+                                    id: 'envDetail',
+                                    name: '环境详情',
+                                    icon: 'icon-env'
+                                }
+                            ]
+                        },
+                        {
+                            id: 'nodeList',
+                            name: '节点',
+                            icon: 'icon-node',
+                            showChildren: false,
+                            children: [
+                                {
+                                    id: 'createNode',
+                                    name: '新增节点',
+                                    icon: 'icon-node'
+                                },
+                                {
+                                    id: 'nodeDetail',
+                                    name: '节点详情',
+                                    icon: 'icon-node'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        methods: {
+            menuClick (name) {
+                this.$router.push({
+                    name
+                })
             }
         }
     }
@@ -79,6 +78,7 @@
     }
     .sub-view-port {
         height: calc(100% - 60px);
+        padding: 20px;
         overflow: auto;
     }
 </style>

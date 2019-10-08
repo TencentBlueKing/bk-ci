@@ -5,7 +5,11 @@
             class="record-table"
             :outer-border="false"
             :data="recordList"
-            :empty-text="'暂无数据'">
+            @page-change="handlePageChange"
+            @page-limit-change="handlePageLimitChange"
+            :pagination="pagination"
+            :empty-text="'暂无数据'"
+        >
             <bk-table-column label="时间" prop="actionTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.actionTime) }}
@@ -17,41 +21,22 @@
                 </template>
             </bk-table-column>
         </bk-table>
-        <full-paging v-if="recordList.length"
-            :size="'small'"
-            :page-count-config.sync="pageCountConfig"
-            :paging-config.sync="pagingConfig"
-            @page-count-changed="pageCountChanged"
-            @page-changed="pageChanged">
-        </full-paging>
     </div>
 </template>
 
 <script>
-    import fullPaging from '@/components/common/full-paging'
     import { convertTime } from '@/utils/util'
     import { bus } from '@/utils/bus'
 
     export default {
-        components: {
-            fullPaging
-        },
         data () {
             return {
                 recordList: [],
-                pageCountConfig: {
-                    totalCount: 30,
-                    list: [
-                        { id: 10, name: 10 },
-                        { id: 20, name: 20 },
-                        { id: 50, name: 50 },
-                        { id: 100, name: 100 }
-                    ],
-                    perPageCountSelected: 10
-                },
-                pagingConfig: {
-                    totalPage: 10,
-                    curPage: 1
+                pagination: {
+                    count: 30,
+                    current: 1,
+                    limitList: [10, 20, 50, 100],
+                    limit: 10
                 }
             }
         },
@@ -66,11 +51,11 @@
         created () {
             bus.$off('refreshAction')
             bus.$on('refreshAction', () => {
-                this.requestActionList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+                this.requestActionList(this.pagination.current, this.pagination.limit)
             })
         },
         mounted () {
-            this.requestActionList(1, 10)
+            this.requestActionList(this.pagination.current, this.pagination.limit)
         },
         methods: {
             async requestActionList (page, pageSize) {
@@ -82,8 +67,7 @@
                         pageSize: pageSize || 10
                     })
                     this.recordList.splice(0, this.recordList.length, ...res.records || [])
-                    this.pageCountConfig.totalCount = res.count
-                    this.pagingConfig.totalPage = Math.ceil(this.pageCountConfig.totalCount / pageSize)
+                    this.pagination.count = res.count
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -94,12 +78,14 @@
                     })
                 }
             },
-            async pageCountChanged () {
-                this.pagingConfig.curPage = 1
-                await this.requestActionList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+            handlePageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+                this.requestActionList(this.pagination.current, this.pagination.limit)
             },
-            async pageChanged () {
-                await this.requestActionList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+            handlePageChange (newPage) {
+                this.pagination.current = newPage
+                this.requestActionList(newPage, this.pagination.limit)
             },
             /**
              * 处理时间格式

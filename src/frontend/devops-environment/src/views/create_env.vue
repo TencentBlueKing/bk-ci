@@ -1,11 +1,11 @@
 <template>
     <div class="environment-create">
-        <div class="env-header">
-            <div class="title">
+        <content-header class="env-header">
+            <div slot="left" class="title">
                 <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
                 <span class="header-text">新建环境</span>
             </div>
-        </div>
+        </content-header>
 
         <section
             class="sub-view-port"
@@ -69,7 +69,6 @@
                                     <div class="table-node-item node-item-name">主机名</div>
                                     <div class="table-node-item node-item-type">节点类型</div>
                                     <div class="table-node-item node-item-status">节点状态</div>
-                                    <div class="table-node-item node-item-agstatus">Agent状态</div>
                                 </div>
                                 <div class="table-node-body">
                                     <div class="table-node-row" v-for="(row, index) of previewNodeList" :key="index">
@@ -83,15 +82,7 @@
                                             <span class="node-type">{{ getNodeTypeMap[row.nodeType] }}</span>
                                         </div>
                                         <div class="table-node-item node-item-status">
-                                            <span class="node-name">{{ row.nodeStatus }}</span>
-                                        </div>
-                                        <div class="table-node-item node-item-agstatus">
-                                            <span class="node-status" v-if="row.nodeType === 'BCSVM'"
-                                                :class="row.agentStatus ? 'normal-status-node' : 'refresh-status-node' ">{{ row.agentStatus ? '正常' : '刷新中' }}
-                                            </span>
-                                            <span class="node-status" v-else
-                                                :class="row.agentStatus ? 'normal-status-node' : 'abnormal-status-node' ">{{ row.agentStatus ? '正常' : '刷新中' }}
-                                            </span>
+                                            <span class="node-name">{{ getNodeStatusMap[row.nodeStatus] }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -696,18 +687,9 @@
         align-items: center;
     }
     .environment-create {
-        .env-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .header-text {
-                font-size: 16px;
-            }
+        height: 100%;
+        overflow: hidden;
+        .title {
             .icon-arrows-left {
                 margin-right: 4px;
                 cursor: pointer;
@@ -791,7 +773,7 @@
         }
 
         .node-item-name {
-            flex: 5;
+            flex: 3;
         }
 
         .node-item-ip,

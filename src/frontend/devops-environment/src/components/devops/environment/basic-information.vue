@@ -23,9 +23,8 @@
                     <div class="display-item" v-if="isEditCount">
                         <input type="number" class="bk-form-input parallelTaskCount-input"
                             name="parallelTaskCount"
-                            ref="parallelTaskCount"
-                            :placeholder="`请输入${nodeDetails.maxParallelTaskCount}及以下的数值， 0表示不限制`"
-                            v-validate.initial="`required|between:0,${nodeDetails.maxParallelTaskCount}|decimal:0`"
+                            :placeholder="`请输入100及以下的数值， 0表示不限制`"
+                            v-validate.initial="`required|between:0,100|decimal:0`"
                             v-model="parallelTaskCount"
                             :class="{ 'is-danger': errors.has('parallelTaskCount') }">
                     </div>

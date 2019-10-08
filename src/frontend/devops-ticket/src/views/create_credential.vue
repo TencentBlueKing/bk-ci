@@ -1,11 +1,11 @@
 <template>
 
-    <section class="certificate-list">
-        <inner-header>
+    <section class="credential-certificate-content">
+        <content-header>
             <template slot="left">
                 <span class="inner-header-title">新增凭据</span>
             </template>
-        </inner-header>
+        </content-header>
 
         <section
             class="sub-view-port"
@@ -110,7 +110,6 @@
 </template>
 
 <script>
-    import innerHeader from '@/components/devops/inner_header'
     import empty from '@/components/common/empty'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
@@ -123,7 +122,6 @@
             'vue-input': VuexInput,
             'vue-textarea': VuexTextarea,
             'bk-empty': empty,
-            innerHeader,
             emptyTips,
             Selector
         },
@@ -383,10 +381,8 @@
     .credential-setting {
         width: 100%;
         max-width: initial;
-        padding: 42px 0 0 37px;
         .bk-form-wrapper {
             max-width: 750px;
-            margin-top: -15px
         }
         .bk-label {
             margin-top: 13px;

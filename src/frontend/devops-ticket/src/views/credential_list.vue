@@ -1,10 +1,10 @@
 <template>
-    <article class="credential-list">
-        <inner-header>
+    <article class="credential-certificate-content">
+        <content-header>
             <template slot="left">
-                <span class="inner-header-title">我的凭据</span>
+                <span>我的凭据</span>
             </template>
-        </inner-header>
+        </content-header>
 
         <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
             <div v-if="showContent && renderList.length" class="table-container">
@@ -33,14 +33,12 @@
 </template>
 
 <script>
-    import innerHeader from '@/components/devops/inner_header'
     import { mapState } from 'vuex'
     import EmptyTips from '@/components/devops/emptyTips'
 
     export default {
         components: {
-            EmptyTips,
-            'inner-header': innerHeader
+            EmptyTips
         },
         data () {
             return {
@@ -202,7 +200,4 @@
 
 <style lang="scss">
     @import './../scss/conf';
-    .table-container {
-        margin: 35px;
-    }
 </style>
