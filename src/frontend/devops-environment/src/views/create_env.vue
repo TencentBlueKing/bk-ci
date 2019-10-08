@@ -1,11 +1,11 @@
 <template>
     <div class="environment-create">
-        <div class="env-header">
-            <div class="title">
+        <content-header class="env-header">
+            <div slot="left" class="title">
                 <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
                 <span class="header-text">新建环境</span>
             </div>
-        </div>
+        </content-header>
 
         <section
             class="sub-view-port"
@@ -696,18 +696,9 @@
         align-items: center;
     }
     .environment-create {
-        .env-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .header-text {
-                font-size: 16px;
-            }
+        height: 100%;
+        overflow: hidden;
+        .title {
             .icon-arrows-left {
                 margin-right: 4px;
                 cursor: pointer;

@@ -1,11 +1,11 @@
 <template>
     <div class="env-detail-wrapper">
-        <div class="env-detail-header">
-            <div class="title">
+        <content-header class="env-detail-header">
+            <template slot="left">
                 <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
-                <span class="header-text">{{ curEnvDetail.name }}</span>
-            </div>
-        </div>
+                {{ curEnvDetail.name }}
+            </template>
+        </content-header>
 
         <div class="env-detail-container"
             v-bkloading="{
@@ -1161,19 +1161,6 @@
         overflow: hidden;
 
         .env-detail-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-
-            .header-text {
-                font-size: 16px;
-            }
-
             .icon-arrows-left {
                 margin-right: 4px;
                 cursor: pointer;

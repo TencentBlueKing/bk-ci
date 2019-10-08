@@ -1,10 +1,11 @@
 <template>
     <div class="environment-list-wrapper">
-        <div class="env-header">
-            <div class="title">环境</div>
-            <div class="handler-btn" v-if="showContent && envList.length"
-                @click="toCreateEnv">新增</div>
-        </div>
+        <content-header class="env-header">
+            <div slot="left">环境</div>
+            <div slot="right" v-if="showContent && envList.length">
+                <bk-button theme="primary" @click="toCreateEnv">新增</bk-button>
+            </div>
+        </content-header>
 
         <section class="sub-view-port"
             v-bkloading="{
@@ -198,7 +199,8 @@
     @import './../scss/conf';
 
     .environment-list-wrapper {
-
+        height: 100%;
+        overflow: hidden;
         .env-header {
             display: flex;
             justify-content: space-between;
@@ -209,24 +211,6 @@
             background-color: #fff;
             box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
         }
-
-        .handler-btn {
-            margin-top: -4px;
-            width: 76px;
-            height: 32px;
-            line-height: 32px;
-            display: inline-block;
-            text-align: center;
-            cursor: pointer;
-            background-color: $primaryColor;
-            font-size: 14px;
-            color: #fff;
-        }
-
-        .sub-view-port {
-            padding: 20px;
-        }
-
         .env-item-row {
             cursor: pointer;
         }
