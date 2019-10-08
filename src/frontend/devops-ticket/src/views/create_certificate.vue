@@ -232,7 +232,7 @@
                 // 先检验数据合法性
                 const validResult = await this.$refs[this.certType].validCertForm()
                 if (validResult) return
-                const url = `certs/${this.projectId}/${this.certType}`
+                const url = `certs/projects/${this.projectId}/types/${this.certType}`
                 const formData = this.$refs[this.certType].postData
                 const config = { headers: { } }
                 let message = ''
