@@ -16,13 +16,6 @@
                     <span class="selected-node-prompt">
                         已选择<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>个节点
                     </span>
-                    <bk-popover placement="right" v-if="isCC || isCmdbNode">
-                        <i class="bk-icon icon-info-circle"></i>
-                        <template slot="content">
-                            <p v-if="isCC" style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">用户可以导入CC中责任人或备份责任人为当前用户的节点（服务器），如果看不到要导入的节点，可以修改机器责任人后再导入或找责任人代为导入</p>
-                            <p v-if="isCmdbNode" style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">用户可以导入CMDB中责任人或备份责任人为当前用户的节点（服务器），如果看不到要导入的节点，可以修改机器责任人后再导入或找责任人代为导入</p>
-                        </template>
-                    </bk-popover>
                 </div>
                 <div class="search-input-row">
                     <div class="biz-search-input">
@@ -103,8 +96,7 @@
                     </div>
                 </div>
                 <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
-                    <span v-if="(isCC || isCmdbNode) && !selectHandlercConf.curTotalCount">暂未找到主机负责人或备份负责人是你的主机，请联系对应负责人来添加</span>
-                    <span v-else>暂无数据</span>
+                    <span>暂无数据</span>
                 </div>
             </div>
         </div>
@@ -132,14 +124,6 @@
             cancelFn: Function,
             changeCreatedUser: Function,
             query: Function,
-            isCmdbNode: {
-                type: Boolean,
-                default: false
-            },
-            isCC: {
-                type: Boolean,
-                default: false
-            },
             searchInfo: {
                 type: Object,
                 default: {
@@ -211,7 +195,7 @@
             },
             paste (event) {
                 const value = event.clipboardData.getData('text')
-                let valParams = value.replace(/\r\n/g, ' ')
+                let valParams = value.replace(/[\r\n]/g, ' ')
                 valParams = valParams.replace(/\t/g, ' ')
                 let target = valParams.split(' ')
                 target = target.filter(item => {

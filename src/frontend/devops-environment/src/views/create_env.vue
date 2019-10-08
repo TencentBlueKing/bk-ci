@@ -69,7 +69,6 @@
                                     <div class="table-node-item node-item-name">主机名</div>
                                     <div class="table-node-item node-item-type">节点类型</div>
                                     <div class="table-node-item node-item-status">节点状态</div>
-                                    <div class="table-node-item node-item-agstatus">Agent状态</div>
                                 </div>
                                 <div class="table-node-body">
                                     <div class="table-node-row" v-for="(row, index) of previewNodeList" :key="index">
@@ -83,15 +82,7 @@
                                             <span class="node-type">{{ getNodeTypeMap[row.nodeType] }}</span>
                                         </div>
                                         <div class="table-node-item node-item-status">
-                                            <span class="node-name">{{ row.nodeStatus }}</span>
-                                        </div>
-                                        <div class="table-node-item node-item-agstatus">
-                                            <span class="node-status" v-if="row.nodeType === 'BCSVM'"
-                                                :class="row.agentStatus ? 'normal-status-node' : 'refresh-status-node' ">{{ row.agentStatus ? '正常' : '刷新中' }}
-                                            </span>
-                                            <span class="node-status" v-else
-                                                :class="row.agentStatus ? 'normal-status-node' : 'abnormal-status-node' ">{{ row.agentStatus ? '正常' : '刷新中' }}
-                                            </span>
+                                            <span class="node-name">{{ getNodeStatusMap[row.nodeStatus] }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -782,7 +773,7 @@
         }
 
         .node-item-name {
-            flex: 5;
+            flex: 3;
         }
 
         .node-item-ip,

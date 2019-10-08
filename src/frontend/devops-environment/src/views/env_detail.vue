@@ -872,8 +872,6 @@
              * 节点全选
              */
             toggleAllSelect () {
-                this.selectHandlercConf.allNodeSelected = !this.selectHandlercConf.allNodeSelected
-
                 if (this.selectHandlercConf.allNodeSelected) {
                     this.importNodeList.forEach(item => {
                         if (item.isDisplay && !item.isEixtEnvNode) {
@@ -1106,10 +1104,6 @@
                 this.lastselectConfIndex = 0
                 this.lastSelectConfig = newItem
                 this.configList.unshift(newItem)
-            },
-            toInstall () {
-                const url = `${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%8E%AF%E5%A2%83%E7%AE%A1%E7%90%86/installGseAgentGuide.html`
-                window.open(url, '_blank')
             },
             importNewNode () {
                 this.searchInfo = {

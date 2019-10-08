@@ -395,10 +395,6 @@
                     this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
                 }
             },
-            toInstall () {
-                const url = `${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%8E%AF%E5%A2%83%E7%AE%A1%E7%90%86/installGseAgentGuide.html`
-                window.open(url, '_blank')
-            },
             /**
              * 删除节点
              */
