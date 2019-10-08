@@ -13,7 +13,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     return {
         entry,
         output: {
-            publicPath,
+            publicPath: isDev ? `http://dev.static.devops.oa.com${publicPath}` : publicPath,
             chunkFilename: isMaster ? '[name].[chunkhash].js' : '[name].js',
             filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
             path: buildDist
@@ -36,11 +36,11 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.css$/,
-                    use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader']
+                    use: [MiniCssExtractPlugin.loader, 'css-loader']
                 },
                 {
                     test: /\.scss$/,
-                    use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
+                    use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(png|jpe?g|gif|svg|webp|cur)(\?.*)?$/,
@@ -100,7 +100,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             'vuex': 'Vuex'
         },
         devServer: {
-            contentBase: buildDist,
+            contentBase: path.join(__dirname, envDist),
             historyApiFallback: true,
             noInfo: false,
             disableHostCheck: true,

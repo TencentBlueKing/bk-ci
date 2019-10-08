@@ -4,7 +4,7 @@
   "description": "devops-pipeline",
   "author": "",
   "scripts": {
-    "dev": "webpack-dev-server --mode development --progress --env.name=dev",
+    "dev": "webpack-dev-server --mode development --progress",
     "dll": "webpack --mode production --config webpack.dll.config.js",
     "public": "npm run dll && webpack --mode production",
     "public:dev": "cross-env NODE_ENV=dev  npm run public --",
