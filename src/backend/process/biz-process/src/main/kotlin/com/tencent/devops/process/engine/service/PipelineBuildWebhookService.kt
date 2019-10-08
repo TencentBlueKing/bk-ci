@@ -25,13 +25,13 @@ import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
 import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
-import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
+import com.tencent.devops.process.pojo.code.GitlabCommitEvent
 import com.tencent.devops.process.pojo.scm.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.scm.code.ScmWebhookMatcher.WebHookParams
 import com.tencent.devops.process.pojo.scm.code.WebhookCommit
 import com.tencent.devops.process.pojo.scm.code.git.GitEvent
-import com.tencent.devops.process.pojo.scm.code.git.GitMergeRequestEvent
-import com.tencent.devops.process.pojo.scm.code.git.GitPushEvent
+import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.process.pojo.code.git.GitPushEvent
 import com.tencent.devops.process.pojo.scm.code.git.GitTagPushEvent
 import com.tencent.devops.process.pojo.scm.code.github.GithubCreateEvent
 import com.tencent.devops.process.pojo.scm.code.github.GithubEvent

@@ -50,14 +50,9 @@ interface IScm {
 
     fun lock(repoName: String, applicant: String, subPath: String)
     fun unlock(repoName: String, applicant: String, subPath: String)
+
 	fun createBranch(branch: String, ref: String) {}
     fun deleteBranch(branch: String) {}
-
-    fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean)
-    fun addMRComment(mrId: Long, comment: String)
-
-    fun lock(repoName: String, applicant: String, subpath: String)
-    fun unlock(repoName: String, applicant: String, subpath: String)
 
     fun getCommits(branch: String?, all: Boolean, page: Int, size: Int): List<GitCommit> = emptyList()
     fun getCommitDiff(sha: String): List<GitDiff> = emptyList()

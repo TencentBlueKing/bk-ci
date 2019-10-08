@@ -1,9 +1,9 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ * BK-CI 钃濋哺鎸佺画闆嗘垚骞冲彴 is licensed under the MIT license.
  *
  * A copy of the MIT License is included in this file.
  *
@@ -24,21 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code
+package com.tencent.devops.dispatch
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+const val QUEUE_BUILD = "queue_build"
+const val QUEUE_BUILD_NEED_END = "queue_build_need_end"
+const val EXCHANGE_BUILD = "exchange_build"
+const val ROUTE_BUILD = "build"
+const val ROUTE_BUILD_NEED_END = "build_need_end"
 
-data class WebhookCommit(
-    val userId: String,
-    val pipelineId: String,
-    val params: MutableMap<String, Any>,
+const val EXCHANGE_BUILD_ABORT = "exchange_build_abort"
+const val ROUTE_BUILD_ABORT = "route_build_abort"
+const val QUEUE_BUILD_ABORT = "queue_build_abort"
 
-    val repositoryConfig: RepositoryConfig,
-    val repoName: String,
-    val commitId: String,
-    val block: Boolean,
-    val eventType: CodeEventType,
-    val codeType: CodeType
-)
+const val QUEUE_TASK_BEGIN = "queue_dispatch_vm_task_begin"
+const val QUEUE_TASK_END = "queue_dispatch_vm_task_end"
+const val QUEUE_TASK_NEDD_END = "queue_dispatch_vm_task_need_end"
+const val EXCHANGE_TASK = "exchange_vm_task"
+const val ROUTE_TASK_BEGIN = "dispatch_vm_task_begin"
+const val ROUTE_TASK_END = "dispatch_vm_task_end"
+const val ROUTE_TASK_NEDD_END = "dispatch_vm_task_need_end"
