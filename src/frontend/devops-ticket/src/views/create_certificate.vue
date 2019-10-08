@@ -1,10 +1,10 @@
 <template>
-    <section class="certificate-list">
-        <inner-header>
+    <section class="credential-certificate-content">
+        <content-header>
             <template slot="left">
                 <span class="inner-header-title">新增证书</span>
             </template>
-        </inner-header>
+        </content-header>
 
         <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
             <empty-tips v-if="!hasPermission && showContent"
@@ -13,14 +13,18 @@
                 :btns="emptyTipsConfig.btns"
             >
             </empty-tips>
-            <div class="bk-form cert-setting" v-if="certType">
-                <div class="bk-form-wrapper" v-if="hasPermission && showContent">
+            <!-- <div class="bk-form cert-setting" v-if="certType">
+                <div class="bk-form-wrapper" v-if="hasPermission && showContent"> -->
+            <div class="cert-setting" v-if="certType">
+                <div class="bk-form" v-if="hasPermission && showContent">
                     <!-- 证书类型 start -->
                     <div class="bk-form-item is-required cert-input-item">
                         <label class="bk-label">证书类型：</label>
                         <div class="bk-form-content">
-                            <bk-radio-group v-model="certType" @change="changeType">
-                                <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit">
+                            <!-- <bk-radio-group v-model="certType" @change="changeType">
+                                <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit"> -->
+                            <bk-radio-group class="cert-type-group" v-model="certType" @change="changeType">
+                                <bk-radio class="cert-type-group-item" v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit">
                                     <i class="bk-icon" :class="item.icon"></i>
                                     {{ item.label }}
                                 </bk-radio>
@@ -78,7 +82,6 @@
 </template>
 
 <script>
-    import innerHeader from '@/components/devops/inner_header'
     import emptyTips from '@/components/devops/emptyTips'
     import ios from '../components/centificate/ios'
     import android from '../components/centificate/android'
@@ -87,7 +90,6 @@
 
     export default {
         components: {
-            innerHeader,
             emptyTips,
             ios,
             android,
@@ -305,10 +307,46 @@
     }
     .cert-setting {
         width: 100%;
-        max-width: initial;
-        padding: 42px 0 0 37px;
-        .bk-form-wrapper {
-            margin-top: -30px;
+        .cert-input-item {
+            .bk-form-content .bk-form-input {
+                width: 350px;
+            }
+        }
+        .file-input {
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #000;
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            height: 32px;
+            line-height: 32px;
+            box-sizing: border-box;
+            font-size: 12px;
+            vertical-align: middle;
+            margin-left: 10px;
+            .file-input-wrap {
+                width: 100%;
+                position: relative;
+                opacity: 1;
+                height: 32px;
+                overflow: hidden;
+                span {
+                    padding: 6px 24px
+                }
+                .file-input-btn {
+                    position: absolute;
+                    right: 0;
+                    opacity: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 32px;
+                }
+            }
+            &:hover {
+                border: 1px solid $primaryColor;
+            }
         }
     }
     .cert-textarea-item {
@@ -324,5 +362,15 @@
     }
     .fade-leave-active {
         display: none;
+    }
+     .cert-type-group {
+        height: 32px;
+        line-height: 32px;
+        .cert-type-group-item {
+            margin-right: 20px;
+        }
+    }
+    .cert-input-item {
+        margin-bottom: 20px;
     }
 </style>
