@@ -28,6 +28,7 @@ dependencies {
     compile project(":common:common-client")
     compile project(":common:common-service")
     compile project(":common:common-db")
+    compile project(":common:common-websocket")
     compile project(":store:api-store")
     compile project(":project:api-project")
     compile project(":process:api-process")

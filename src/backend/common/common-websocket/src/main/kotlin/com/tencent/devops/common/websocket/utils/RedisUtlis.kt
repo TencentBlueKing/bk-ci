@@ -1,5 +1,6 @@
 package com.tencent.devops.common.websocket.utils
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import java.util.concurrent.TimeUnit

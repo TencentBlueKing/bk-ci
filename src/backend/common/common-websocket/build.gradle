@@ -4,4 +4,7 @@ dependencies {
     compile project(":common:common-event")
     compile project(":common:common-redis")
     compileOnly "org.springframework.boot:spring-boot-starter-amqp"
+
+    compile project(":store:api-store")
+    compile project(":common:common-client")
 }

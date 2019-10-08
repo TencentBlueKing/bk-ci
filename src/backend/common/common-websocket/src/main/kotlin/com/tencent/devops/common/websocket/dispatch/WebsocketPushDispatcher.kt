@@ -37,4 +37,28 @@ class WebsocketPushDispatcher(
             logger.error("Fail to dispatch the event($events)", e)
         }
     }
+
+    fun dispatchBackup(vararg events: IWebsocketPush) {
+        try {
+            events.forEach { event ->
+                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+                val routeKey = eventType.routeKey
+//                logger.info("WebsocketPushDispatcher: buildId:${event.buildId},pipelineId:${event.pipelineId},project:${event.projectId},type:${event.pushType.name}")
+                if (event.isPushBySession() && event.isPushByPage()) {
+                    event.buildMessage(event)
+                    val sendMessage = event.buildSendMessage()
+                    rabbitTemplate.convertAndSend(eventType.exchange, routeKey, sendMessage) { message ->
+                        if (eventType.delayMills > 0) { // 事件类型固化默认值
+                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                        }
+                        message
+                    }
+                } else {
+                    logger.info("WebsocketPushDispatcher--未命中,无需推送。 event:$event")
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Fail to dispatch the event($events)", e)
+        }
+    }
 }

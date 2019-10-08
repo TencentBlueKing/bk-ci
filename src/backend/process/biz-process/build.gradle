@@ -33,6 +33,7 @@ dependencies {
     compile project(":common:common-log")
     compile project(":common:common-auth:common-auth-api")
     compile project(":common:common-db")
+    compile project(":common:common-websocket")
 
     compile project(":log:api-log")
     compile project(":scm:api-scm")

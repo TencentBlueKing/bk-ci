@@ -1,9 +1,11 @@
 package com.tencent.devops.common.websocket.dispatch.push
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.IPath
 import com.tencent.devops.common.websocket.dispatch.WebsocketPushDispatcher
 import com.tencent.devops.common.websocket.dispatch.message.MqMessage
+import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.RedisUtlis
@@ -14,6 +16,7 @@ abstract class IWebsocketPush(
     open val pathClass: IPath,
     open val pushType: WebSocketType,
     open val redisOperation: RedisOperation,
+    open val objectMapper: ObjectMapper,
     open var page: String?,
     open var notifyPost: NotifyPost
 ) {
@@ -45,4 +48,8 @@ abstract class IWebsocketPush(
     abstract fun isPushByPage(): Boolean
 
     abstract fun mqMessage(): MqMessage
+
+    abstract fun buildSendMessage(): SendMessage
+
+    abstract fun buildMessage(messageInfo: IWebsocketPush)
 }
