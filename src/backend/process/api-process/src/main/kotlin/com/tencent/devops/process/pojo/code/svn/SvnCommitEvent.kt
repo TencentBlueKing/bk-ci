@@ -24,9 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.svn
+package com.tencent.devops.process.pojo.code.svn
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEventFile
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SvnCommitEvent(

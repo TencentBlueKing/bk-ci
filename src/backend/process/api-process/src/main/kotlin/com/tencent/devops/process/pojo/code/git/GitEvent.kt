@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.git
+package com.tencent.devops.process.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
@@ -47,13 +47,13 @@ data class GitCommitRepository(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCommit(
-    val id: String,
-    val message: String,
-    val timestamp: String,
-    val author: GitCommitAuthor,
-    val modified: List<String>?,
-    val added: List<String>?,
-    val removed: List<String>?
+        val id: String,
+        val message: String,
+        val timestamp: String,
+        val author: GitCommitAuthor,
+        val modified: List<String>?,
+        val added: List<String>?,
+        val removed: List<String>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

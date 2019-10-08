@@ -2,11 +2,11 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.process.pojo.scm.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.scm.code.github.GithubCreateEvent
-import com.tencent.devops.process.pojo.scm.code.github.GithubEvent
-import com.tencent.devops.process.pojo.scm.code.github.GithubPullRequestEvent
-import com.tencent.devops.process.pojo.scm.code.github.GithubPushEvent
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.utils.GITHUB_PR_NUMBER
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.github.GithubRepository

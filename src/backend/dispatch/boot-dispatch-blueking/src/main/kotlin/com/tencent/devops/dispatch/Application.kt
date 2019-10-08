@@ -24,23 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.git
+package com.tencent.devops.dispatch
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitPushEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val checkout_sha: String?,
-    val user_name: String,
-    val project_id: Long,
-    val repository: GitCommitRepository,
-    val commits: List<GitCommit>,
-    val total_commits_count: Int
-) : GitEvent() {
-    companion object {
-        const val classType = "push"
-    }
+@MicroService
+@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.dispatch")
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }

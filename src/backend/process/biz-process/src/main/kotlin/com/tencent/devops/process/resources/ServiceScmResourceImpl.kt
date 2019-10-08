@@ -6,8 +6,8 @@ import com.tencent.devops.process.api.ServiceScmResource
 import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
 import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
-import com.tencent.devops.process.pojo.scm.code.WebhookCommit
-import com.tencent.devops.process.pojo.scm.code.github.GithubWebhook
+import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 

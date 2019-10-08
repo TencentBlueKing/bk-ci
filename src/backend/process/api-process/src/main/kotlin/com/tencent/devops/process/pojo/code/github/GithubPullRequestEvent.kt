@@ -24,17 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.scm.code.github
+package com.tencent.devops.process.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubPullRequestEvent(
-    val action: String,
-    val number: Int,
-    val pull_request: GithubPullRequest,
-    val repository: GithubRepository,
-    override val sender: GithubSender
+        val action: String,
+        val number: Int,
+        val pull_request: GithubPullRequest,
+        val repository: GithubRepository,
+        override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "pull_request"
@@ -42,9 +42,9 @@ data class GithubPullRequestEvent(
 }
 
 data class GithubPullRequest(
-    val url: String,
-    val head: GithubPullRequestBranch,
-    val base: GithubPullRequestBranch
+        val url: String,
+        val head: GithubPullRequestBranch,
+        val base: GithubPullRequestBranch
 )
 
 data class GithubPullRequestBranch(

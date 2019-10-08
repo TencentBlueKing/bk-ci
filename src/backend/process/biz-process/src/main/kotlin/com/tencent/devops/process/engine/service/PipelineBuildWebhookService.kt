@@ -26,18 +26,18 @@ import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
 import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.GitlabCommitEvent
-import com.tencent.devops.process.pojo.scm.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.scm.code.ScmWebhookMatcher.WebHookParams
-import com.tencent.devops.process.pojo.scm.code.WebhookCommit
-import com.tencent.devops.process.pojo.scm.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.WebHookParams
+import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
-import com.tencent.devops.process.pojo.scm.code.git.GitTagPushEvent
-import com.tencent.devops.process.pojo.scm.code.github.GithubCreateEvent
-import com.tencent.devops.process.pojo.scm.code.github.GithubEvent
-import com.tencent.devops.process.pojo.scm.code.github.GithubPullRequestEvent
-import com.tencent.devops.process.pojo.scm.code.github.GithubPushEvent
-import com.tencent.devops.process.pojo.scm.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.process.pojo.code.github.GithubPushEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.util.DateTimeUtils
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
@@ -433,12 +433,12 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     private fun getStartParams(
-        projectId: String,
-        element: Element,
-        repo: Repository,
-        matcher: ScmWebhookMatcher,
-        variables: Map<String, String>,
-        params: WebHookParams
+            projectId: String,
+            element: Element,
+            repo: Repository,
+            matcher: ScmWebhookMatcher,
+            variables: Map<String, String>,
+            params: WebHookParams
     ): Map<String, Any> {
         val mrRequestId = matcher.getMergeRequestId()
         val startParams = mutableMapOf<String, Any>()
