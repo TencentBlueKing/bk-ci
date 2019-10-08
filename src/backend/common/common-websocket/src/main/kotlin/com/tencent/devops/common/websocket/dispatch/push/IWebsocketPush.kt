@@ -3,9 +3,7 @@ package com.tencent.devops.common.websocket.dispatch.push
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.IPath
-import com.tencent.devops.common.websocket.dispatch.WebsocketPushDispatcher
 import com.tencent.devops.common.websocket.dispatch.message.MqMessage
-import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.RedisUtlis
@@ -27,7 +25,7 @@ abstract class IWebsocketPush(
     open fun isPushBySession(): Boolean
     {
         val sessionIdList = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
-        WebsocketPushDispatcher.logger.info("WebsocketPushDispatcher: userId:$userId, sessionList:$sessionIdList")
+        logger.info("WebsocketPushDispatcher: userId:$userId, sessionList:$sessionIdList")
         if (sessionIdList != null) {
             if (sessionIdList.contains(",")) {
                 sessionIdList.split(",").forEach {
@@ -48,8 +46,6 @@ abstract class IWebsocketPush(
     abstract fun isPushByPage(): Boolean
 
     abstract fun mqMessage(): MqMessage
-
-    abstract fun buildSendMessage(): SendMessage
 
     abstract fun buildMessage(messageInfo: IWebsocketPush)
 }

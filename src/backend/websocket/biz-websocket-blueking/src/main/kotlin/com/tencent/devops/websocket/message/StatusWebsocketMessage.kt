@@ -8,8 +8,6 @@ import com.tencent.devops.common.websocket.dispatch.message.PipelineMqMessage
 import com.tencent.devops.common.websocket.pojo.MessageInfo
 import com.tencent.devops.common.websocket.utils.PageUtils
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.process.api.ServicePipelineResource
-import com.tencent.devops.process.pojo.PipelineStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -73,31 +71,31 @@ class StatusWebsocketMessage @Autowired constructor(
 
         val currentTimestamp = System.currentTimeMillis()
 
-        val status = client.get(ServicePipelineResource::class)
-            .getAllstatus(messageInfo.userId, messageInfo.projectId!!, messageInfo.pipelineId!!).data
-        if (status != null) {
-            val result = status.map {
-                it.pipelineId to PipelineStatus(
-                    it.taskCount,
-                    it.buildCount,
-                    it.lock,
-                    it.canManualStartup,
-                    it.latestBuildStartTime,
-                    it.latestBuildEndTime,
-                    it.latestBuildStatus,
-                    it.latestBuildNum,
-                    it.latestBuildTaskName,
-                    it.latestBuildEstimatedExecutionSeconds,
-                    it.latestBuildId,
-                    currentTimestamp,
-                    it.runningBuildCount,
-                    it.hasCollect
-                )
-            }.toMap()
+//        val status = client.get(ServicePipelineResource::class)
+//            .getAllstatus(messageInfo.userId, messageInfo.projectId!!, messageInfo.pipelineId!!).data
+//        if (status != null) {
+//            val result = status.map {
+//                it.pipelineId to PipelineStatus(
+//                    it.taskCount,
+//                    it.buildCount,
+//                    it.lock,
+//                    it.canManualStartup,
+//                    it.latestBuildStartTime,
+//                    it.latestBuildEndTime,
+//                    it.latestBuildStatus,
+//                    it.latestBuildNum,
+//                    it.latestBuildTaskName,
+//                    it.latestBuildEstimatedExecutionSeconds,
+//                    it.latestBuildId,
+//                    currentTimestamp,
+//                    it.runningBuildCount,
+//                    it.hasCollect
+//                )
+//            }.toMap()
 
+            val result = null
             if (notifyPost != null) {
                 notifyPost.message = objectMapper.writeValueAsString(result)
             }
-        }
     }
 }

@@ -62,7 +62,7 @@ class CommonConfig {
     /**
      * DevOps 外部API地址
      */
-    @Value("\${devopsGateway.outerApi}")
+    @Value("\${devopsGateway.outerApi:#{null}}")
     val devopsOuteApiHostGateWay: String? = null
 
     /**

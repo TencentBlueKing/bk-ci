@@ -8,7 +8,6 @@ import com.tencent.devops.common.websocket.dispatch.message.MqMessage
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMqMessage
 import com.tencent.devops.common.websocket.pojo.MessageInfo
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.process.api.BuildBuildResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -68,14 +67,15 @@ class DetailWebsocketMessage @Autowired constructor(
     private fun buildMessage(messageInfo: MessageInfo) {
         val notifyPost = messageInfo.notifyPost
         try {
-            val modelDetail = client.get(BuildBuildResource::class)
-                .getBuildDetail(
-                    messageInfo.projectId!!,
-                    messageInfo.pipelineId!!,
-                    messageInfo.buildId!!,
-                    ChannelCode.BS
-                )
-                .data
+//            val modelDetail = client.get(BuildBuildResource::class)
+//                .getBuildDetail(
+//                    messageInfo.projectId!!,
+//                    messageInfo.pipelineId!!,
+//                    messageInfo.buildId!!,
+//                    ChannelCode.BS
+//                )
+//                .data
+            val modelDetail = null
             if (notifyPost != null) {
                 notifyPost.message = objectMapper.writeValueAsString(modelDetail)
             }

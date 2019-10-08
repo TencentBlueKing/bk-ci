@@ -2,9 +2,9 @@ package com.tencent.devops.common.websocket.dispatch.message
 
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 
-class SendMessage(
-        val userId: String,
-        var page: String?,
-        var associationPage: List<String>,
-        var notifyPost: NotifyPost
+abstract class SendMessage(
+        open val userId: String,
+        open var page: String?,
+        open val sessionList: List<String>?,
+        open var notifyPost: NotifyPost
 )

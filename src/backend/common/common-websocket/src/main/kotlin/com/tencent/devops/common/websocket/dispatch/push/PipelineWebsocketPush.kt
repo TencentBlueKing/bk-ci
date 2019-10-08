@@ -69,12 +69,4 @@ data class PipelineWebsocketPush(
         return
     }
 
-    override fun buildSendMessage(): SendMessage {
-        return SendMessage(
-                userId = userId,
-                page = page,
-                associationPage = emptyList(),
-                notifyPost = notifyPost
-        )
-    }
 }

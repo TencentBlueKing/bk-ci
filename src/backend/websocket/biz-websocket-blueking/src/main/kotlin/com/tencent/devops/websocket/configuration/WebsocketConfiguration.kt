@@ -2,9 +2,10 @@ package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.dispatch.WebsocketPushDispatcher
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
-import com.tencent.devops.websocket.listener.WebsocketListener
+import com.tencent.devops.websocket.listener.NewWebSocketListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -26,10 +27,10 @@ import java.net.InetAddress
 class WebsocketConfiguration {
 
     @Value("\${queueConcurrency.pipelineErrorNotify:1}")
-    private val pipelineErrorNotifyConcurrency: Int? = null
+    private val pipelineWebSocketConcurrency: Int? = null
 
     @Bean
-    fun websocketPushDispatcher(rabbitTemplate: RabbitTemplate) = WebsocketPushDispatcher(rabbitTemplate)
+    fun websocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
 
     /**
      * 构建广播交换机
@@ -63,15 +64,15 @@ class WebsocketConfiguration {
 
     @Bean
     fun pipelineErrorNotifyListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired messageConverter: Jackson2JsonMessageConverter,
-        @Autowired pipelineErrorNotifyQueue: Queue,
-        @Autowired buildListener: WebsocketListener
+            @Autowired connectionFactory: ConnectionFactory,
+            @Autowired rabbitAdmin: RabbitAdmin,
+            @Autowired messageConverter: Jackson2JsonMessageConverter,
+            @Autowired pipelineWebSocketQueue: Queue,
+            @Autowired buildListener: NewWebSocketListener
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineErrorNotifyQueue.name)
-        val concurrency = pipelineErrorNotifyConcurrency!!
+        container.setQueueNames(pipelineWebSocketQueue.name)
+        val concurrency = pipelineWebSocketConcurrency!!
         container.setMaxConcurrentConsumers(Math.max(10, concurrency))
         container.setRabbitAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
