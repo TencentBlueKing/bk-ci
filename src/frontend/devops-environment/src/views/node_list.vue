@@ -62,7 +62,7 @@
                     <bk-table-column label="状态" prop="nodeStatus">
                         <template slot-scope="props">
                             <div class="table-node-item node-item-status"
-                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
+                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE'">
                                 <span class="node-status-icon normal-stutus-icon"></span>
                                 <span class="node-status">正常</span>
                             </div>
@@ -85,7 +85,7 @@
                                 </div>
                                 <!-- 状态值 -->
                                 <span class="install-agent"
-                                    v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
+                                    v-if="props.row.nodeStatus === 'RUNNING'"
                                     @click="installAgent(props.row)">
                                     {{ getNodeStatusMap[props.row.nodeStatus] }}
                                 </span>
@@ -108,7 +108,7 @@
                             <div class="table-node-item node-item-handler"
                                 :class="{ 'over-handler': isMultipleBtn }">
                                 <span class="node-handle delete-node-text"
-                                    v-if="props.row.canDelete && !['TSTACK', 'DEVCLOUD'].includes(props.row.nodeType)"
+                                    v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
                                     @click.stop="confirmDelete(props.row, index)"
                                 >删除</span>
                                 <span class="node-handle delete-node-text"
@@ -527,8 +527,8 @@
                     if (res) {
                         this.constructToolConf.isShow = true
                         if (node) {
-                            const gateway = node.nodeType === 'DEVCLOUD' ? 'shenzhen' : node.gateway
-                            this.constructImportForm.model = node.nodeType === 'DEVCLOUD' ? 'LINUX' : node.osName.toUpperCase()
+                            const gateway = node.gateway
+                            this.constructImportForm.model = node.osName.toUpperCase()
                             this.requestGateway(gateway, node)
                         } else {
                             this.constructImportForm.model = 'MACOS'
@@ -578,7 +578,7 @@
                         this.constructImportForm.location = this.gatewayList[0].zoneName
                     }
 
-                    if (node && node.nodeType === 'THIRDPARTY') { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
+                    if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
                         this.requestDevCommand()
@@ -657,7 +657,7 @@
                 }
             },
             installAgent (node) {
-                if (['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) {
+                if (['THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = '确定'
@@ -810,7 +810,7 @@
                 })
             },
             canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
+                return row.nodeType === 'THIRDPARTY'
             }
         }
     }
