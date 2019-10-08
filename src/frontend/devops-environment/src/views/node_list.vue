@@ -1,131 +1,129 @@
 <template>
     <div class="node-list-wrapper">
-        <div class="node-header">
-            <div class="title">节点</div>
-            <div class="header-handler-row" v-if="nodeList.length > 0">
+        <content-header class="env-header">
+            <div slot="left">节点</div>
+            <div slot="right" v-if="nodeList.length > 0">
                 <bk-button theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">导入节点</bk-button>
             </div>
-        </div>
-        <div class="node-container" v-bkloading="{
+        </content-header>
+        <section class="sub-view-port" v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
         }">
-            <section class="sub-view-port">
-                <bk-table v-if="showContent && nodeList.length"
-                    size="medium"
-                    class="node-table-wrapper"
-                    :data="nodeList">
-                    <bk-table-column label="别名" prop="displayName">
-                        <template slot-scope="props">
-                            <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
-                                <div class="edit-content">
-                                    <input type="text" class="bk-form-input env-name-input"
-                                        maxlength="30"
-                                        name="nodeName"
-                                        v-validate="'required'"
-                                        v-model="curEditNodeDisplayName"
-                                        :class="{ 'is-danger': errors.has('nodeName') }">
-                                    <div class="handler-btn">
-                                        <span class="edit-base save" @click="saveEdit(props.row)">保存</span>
-                                        <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">取消</span>
-                                    </div>
+            <bk-table v-if="showContent && nodeList.length"
+                size="medium"
+                class="node-table-wrapper"
+                :data="nodeList">
+                <bk-table-column label="别名" prop="displayName">
+                    <template slot-scope="props">
+                        <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
+                            <div class="edit-content">
+                                <input type="text" class="bk-form-input env-name-input"
+                                    maxlength="30"
+                                    name="nodeName"
+                                    v-validate="'required'"
+                                    v-model="curEditNodeDisplayName"
+                                    :class="{ 'is-danger': errors.has('nodeName') }">
+                                <div class="handler-btn">
+                                    <span class="edit-base save" @click="saveEdit(props.row)">保存</span>
+                                    <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">取消</span>
                                 </div>
                             </div>
-                            <div class="table-node-item node-item-id" v-else>
-                                <span class="node-name"
-                                    :class="{ 'pointer': canShowDetail(props.row) }"
-                                    :title="props.row.displayName"
-                                    @click="toNodeDetail(props.row)"
-                                >{{ props.row.displayName || '-' }}</span>
-                                <i class="bk-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
+                        </div>
+                        <div class="table-node-item node-item-id" v-else>
+                            <span class="node-name"
+                                :class="{ 'pointer': canShowDetail(props.row) }"
+                                :title="props.row.displayName"
+                                @click="toNodeDetail(props.row)"
+                            >{{ props.row.displayName || '-' }}</span>
+                            <i class="bk-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="内网IP" prop="ip" min-width="80">
+                    <template slot-scope="props">
+                        {{ props.row.ip || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="操作系统" prop="osName">
+                    <template slot-scope="props">
+                        {{ props.row.osName || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="来源/导入人" prop="createdUser" min-width="120">
+                    <template slot-scope="props">
+                        <div>
+                            <span class="node-name">{{ getNodeTypeMap[props.row.nodeType] || '-' }}</span>
+                            <span>({{ props.row.createdUser }})</span>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="状态" prop="nodeStatus">
+                    <template slot-scope="props">
+                        <div class="table-node-item node-item-status"
+                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE'">
+                            <span class="node-status-icon normal-stutus-icon"></span>
+                            <span class="node-status">正常</span>
+                        </div>
+                        <div class="table-node-item node-item-status">
+                            <!-- 状态icon -->
+                            <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
+                            <span class="node-status-icon abnormal-stutus-icon"
+                                v-if="failStatus.includes(props.row.nodeStatus)">
+                            </span>
+                            <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                v-if="runningStatus.includes(props.row.nodeStatus)">
+                                <div class="rotate rotate1"></div>
+                                <div class="rotate rotate2"></div>
+                                <div class="rotate rotate3"></div>
+                                <div class="rotate rotate4"></div>
+                                <div class="rotate rotate5"></div>
+                                <div class="rotate rotate6"></div>
+                                <div class="rotate rotate7"></div>
+                                <div class="rotate rotate8"></div>
                             </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="内网IP" prop="ip" min-width="80">
-                        <template slot-scope="props">
-                            {{ props.row.ip || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="操作系统" prop="osName">
-                        <template slot-scope="props">
-                            {{ props.row.osName || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="来源/导入人" prop="createdUser" min-width="120">
-                        <template slot-scope="props">
-                            <div>
-                                <span class="node-name">{{ getNodeTypeMap[props.row.nodeType] || '-' }}</span>
-                                <span>({{ props.row.createdUser }})</span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="状态" prop="nodeStatus">
-                        <template slot-scope="props">
-                            <div class="table-node-item node-item-status"
-                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
-                                <span class="node-status-icon normal-stutus-icon"></span>
-                                <span class="node-status">正常</span>
-                            </div>
-                            <div class="table-node-item node-item-status">
-                                <!-- 状态icon -->
-                                <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
-                                <span class="node-status-icon abnormal-stutus-icon"
-                                    v-if="failStatus.includes(props.row.nodeStatus)">
-                                </span>
-                                <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                    v-if="runningStatus.includes(props.row.nodeStatus)">
-                                    <div class="rotate rotate1"></div>
-                                    <div class="rotate rotate2"></div>
-                                    <div class="rotate rotate3"></div>
-                                    <div class="rotate rotate4"></div>
-                                    <div class="rotate rotate5"></div>
-                                    <div class="rotate rotate6"></div>
-                                    <div class="rotate rotate7"></div>
-                                    <div class="rotate rotate8"></div>
-                                </div>
-                                <!-- 状态值 -->
-                                <span class="install-agent"
-                                    v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
-                                    @click="installAgent(props.row)">
-                                    {{ getNodeStatusMap[props.row.nodeStatus] }}
-                                </span>
-                                <span class="node-status" v-else>{{ getNodeStatusMap[props.row.nodeStatus] }}</span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="创建/导入时间" prop="createTime" min-width="80">
-                        <template slot-scope="props">
-                            {{ props.row.createTime || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="最后修改时间" prop="lastModifyTime" min-width="80">
-                        <template slot-scope="props">
-                            {{ props.row.lastModifyTime || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="操作" width="160">
-                        <template slot-scope="props">
-                            <div class="table-node-item node-item-handler"
-                                :class="{ 'over-handler': isMultipleBtn }">
-                                <span class="node-handle delete-node-text"
-                                    v-if="props.row.canDelete && !['TSTACK', 'DEVCLOUD'].includes(props.row.nodeType)"
-                                    @click.stop="confirmDelete(props.row, index)"
-                                >删除</span>
-                                <span class="node-handle delete-node-text"
-                                    v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
-                                    @click.stop="toNodeApplyPerm(props.row)"
-                                >申请权限</span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
+                            <!-- 状态值 -->
+                            <span class="install-agent"
+                                v-if="props.row.nodeStatus === 'RUNNING'"
+                                @click="installAgent(props.row)">
+                                {{ getNodeStatusMap[props.row.nodeStatus] }}
+                            </span>
+                            <span class="node-status" v-else>{{ getNodeStatusMap[props.row.nodeStatus] }}</span>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="创建/导入时间" prop="createTime" min-width="80">
+                    <template slot-scope="props">
+                        {{ props.row.createTime || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="最后修改时间" prop="lastModifyTime" min-width="80">
+                    <template slot-scope="props">
+                        {{ props.row.lastModifyTime || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="操作" width="160">
+                    <template slot-scope="props">
+                        <div class="table-node-item node-item-handler"
+                            :class="{ 'over-handler': isMultipleBtn }">
+                            <span class="node-handle delete-node-text"
+                                v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
+                                @click.stop="confirmDelete(props.row, index)"
+                            >删除</span>
+                            <span class="node-handle delete-node-text"
+                                v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
+                                @click.stop="toNodeApplyPerm(props.row)"
+                            >申请权限</span>
+                        </div>
+                    </template>
+                </bk-table-column>
+            </bk-table>
 
-                <empty-node v-if="showContent && !nodeList.length"
-                    :to-import-node="toImportNode"
-                    :empty-info="emptyInfo"
-                ></empty-node>
-            </section>
-        </div>
+            <empty-node v-if="showContent && !nodeList.length"
+                :to-import-node="toImportNode"
+                :empty-info="emptyInfo"
+            ></empty-node>
+        </section>
         <third-construct :construct-tool-conf="constructToolConf"
             :construct-import-form="constructImportForm"
             :connect-node-detail="connectNodeDetail"
@@ -397,10 +395,6 @@
                     this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
                 }
             },
-            toInstall () {
-                const url = `${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%8E%AF%E5%A2%83%E7%AE%A1%E7%90%86/installGseAgentGuide.html`
-                window.open(url, '_blank')
-            },
             /**
              * 删除节点
              */
@@ -527,8 +521,8 @@
                     if (res) {
                         this.constructToolConf.isShow = true
                         if (node) {
-                            const gateway = node.nodeType === 'DEVCLOUD' ? 'shenzhen' : node.gateway
-                            this.constructImportForm.model = node.nodeType === 'DEVCLOUD' ? 'LINUX' : node.osName.toUpperCase()
+                            const gateway = node.gateway
+                            this.constructImportForm.model = node.osName.toUpperCase()
                             this.requestGateway(gateway, node)
                         } else {
                             this.constructImportForm.model = 'MACOS'
@@ -578,7 +572,7 @@
                         this.constructImportForm.location = this.gatewayList[0].zoneName
                     }
 
-                    if (node && node.nodeType === 'THIRDPARTY') { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
+                    if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
                         this.requestDevCommand()
@@ -657,7 +651,7 @@
                 }
             },
             installAgent (node) {
-                if (['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) {
+                if (['THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = '确定'
@@ -810,7 +804,7 @@
                 })
             },
             canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
+                return row.nodeType === 'THIRDPARTY'
             }
         }
     }
@@ -828,53 +822,13 @@
         min-width: 1126px;
         height: 100%;
         overflow: hidden;
-        .node-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid $borderWeightColor;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-        }
 
-        .header-handler-row {
-            position: relative;
-            top: -4px;
-
-            .create-node-btn,
-            .import-node-btn,
-            .import-vmbuild-btn {
-                width: 76px;
-                height: 32px;
-                line-height: 30px;
-            }
-
-            .bk-icon {
-                margin-left: 0;
-                position: relative;
-                top: 0;
-                font-size: 12px;
-            }
-
-            .import-vmbuild-btn {
-                width: 150px;
-            }
+        .import-vmbuild-btn {
+            width: 100px;
         }
 
         .create-node-btn {
             margin-right: 6px;
-        }
-
-        .node-container {
-            overflow: auto;
-            height: calc(100% - 60px);
-        }
-
-        .sub-view-port {
-            padding: 20px;
-            height: auto;
         }
 
         .prompt-operator,
