@@ -5,6 +5,9 @@
             class="pipeline-table"
             :outer-border="false"
             :data="pipelineList"
+            :pagination="pagination"
+            @page-change="handlePageChange"
+            @page-limit-change="handlePageLimitChange"
             :empty-text="'暂无数据'">
             <bk-table-column label="流水线" prop="pipelineName" min-width="200">
                 <template slot-scope="props">
@@ -44,42 +47,23 @@
                 </template>
             </bk-table-column>
         </bk-table>
-        <full-paging v-if="pipelineList.length"
-            :size="'small'"
-            :page-count-config.sync="pageCountConfig"
-            :paging-config.sync="pagingConfig"
-            @page-count-changed="pageCountChanged"
-            @page-changed="pageChanged">
-        </full-paging>
     </div>
 </template>
 
 <script>
-    import fullPaging from '@/components/common/full-paging'
     import { convertTime } from '@/utils/util'
     import { bus } from '@/utils/bus'
 
     export default {
-        components: {
-            fullPaging
-        },
         data () {
             return {
                 loopTimer: '',
                 pipelineList: [],
-                pageCountConfig: {
-                    totalCount: 30,
-                    list: [
-                        { id: 10, name: 10 },
-                        { id: 20, name: 20 },
-                        { id: 50, name: 50 },
-                        { id: 100, name: 100 }
-                    ],
-                    perPageCountSelected: 10
-                },
-                pagingConfig: {
-                    totalPage: 10,
-                    curPage: 1
+                pagination: {
+                    current: 1,
+                    count: 30,
+                    limitList: [10, 20, 50, 100],
+                    limit: 10
                 },
                 statusMap: {
                     'QUEUE': '排队中',
@@ -100,12 +84,12 @@
         created () {
             bus.$off('refreshBuild')
             bus.$on('refreshBuild', () => {
-                this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+                this.requestBuildList(this.pagination.current, this.pagination.limit)
                 this.loopCheck()
             })
         },
         async mounted () {
-            await this.requestBuildList(1, 10)
+            await this.requestBuildList(this.pagination.current, this.pagination.limit)
             this.loopCheck()
         },
         beforeDestroy () {
@@ -122,8 +106,7 @@
                         pageSize: pageSize
                     })
                     this.pipelineList.splice(0, this.pipelineList.length, ...res.records || [])
-                    this.pageCountConfig.totalCount = res.count
-                    this.pagingConfig.totalPage = Math.ceil(this.pageCountConfig.totalCount / pageSize)
+                    this.pagination.count = res.count
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -134,13 +117,15 @@
                     })
                 }
             },
-            async pageCountChanged () {
-                this.pagingConfig.curPage = 1
-                await this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+            async handlePageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+                await this.requestBuildList(1, limit)
                 this.loopCheck()
             },
-            async pageChanged () {
-                await this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+            async handlePageChange (curPage) {
+                this.pagination.current = curPage
+                await this.requestBuildList(curPage, this.pagination.limit)
                 this.loopCheck()
             },
             /**
@@ -153,7 +138,7 @@
                 if (needLoop) {
                     this.loopTimer = setTimeout(async () => {
                         try {
-                            await this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+                            await this.requestBuildList(this.pagination.current, this.pagination.limit)
                             this.loopCheck()
                         } catch (err) {
                             this.$bkMessage({

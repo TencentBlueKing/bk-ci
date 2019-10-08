@@ -71,7 +71,7 @@
             }
 
             .import-node-btn {
-                width: 150px;
+                width: 100px;
             }
         }
     }
