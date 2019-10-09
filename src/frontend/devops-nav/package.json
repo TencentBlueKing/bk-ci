@@ -71,7 +71,7 @@
   "dependencies": {
     "@types/js-cookie": "^2.1.0",
     "axios": "^0.18.0",
-    "bk-magic-vue": "2.0.8-beta.13",
+    "bk-magic-vue": "2.1.6-beta.3",
     "bluebird": "^3.5.1",
     "js-cookie": "^2.2.0",
     "popper.js": "^1.14.4",
