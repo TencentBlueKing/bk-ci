@@ -207,6 +207,6 @@ include ":scm:boot-scm-blueking"
 
 include ":websocket"
 include ":websocket:biz-websocket-blueking"
-include ":websocket:boot-websocket-blueking"
+include ":websocket:boot-websocket-tencent"
 include 'websocket'
 
