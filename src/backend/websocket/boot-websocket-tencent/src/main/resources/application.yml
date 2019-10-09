@@ -7,3 +7,6 @@ spring:
 
 server:
   port: 21916
+
+thread:
+  min: 8
