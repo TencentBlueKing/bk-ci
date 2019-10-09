@@ -44,7 +44,10 @@ class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
     override fun toResponse(exception: ErrorCodeException): Response {
         logger.error("Failed with errorCode client exception:$exception")
         val status = Response.Status.BAD_REQUEST
-        val errorMsg = MessageCodeUtil.generateResponseDataObject<String>(exception.errorCode)
+        val errorMsg = MessageCodeUtil.generateResponseDataObject<String>(
+            messageCode = exception.errorCode,
+            params = exception.params
+        )
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(
                 Result<Void>(
