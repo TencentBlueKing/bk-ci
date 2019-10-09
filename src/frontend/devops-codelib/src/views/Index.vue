@@ -6,6 +6,15 @@
                 <i class="bk-icon icon-plus"></i>
                 <span>关联代码库</span>
             </bk-button>
+            <bk-input placeholder="请输入别名，按回车进行搜索"
+                class="codelib-search"
+                :clearable="true"
+                :right-icon="'bk-icon icon-search'"
+                v-model="aliasName"
+                @enter="refreshCodelibList(projectId, page, pageSize, aliasName)"
+                @change="clearAliasName"
+            >
+            </bk-input>
             <code-lib-table v-bind="codelibs" :switch-page="switchPage"></code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" title="代码库" desc="代码库服务（Code）是将 SVN 及 GIT 的代码库与用户、凭据等进行关联，统一项目代码库的配置管理，便利于流水线代码库原子的编排。">
@@ -48,6 +57,7 @@
                 defaultPagesize: 10,
                 startPage: 1,
                 showCodelibDialog: false,
+                aliasName: '',
                 projectList: []
             }
         },
@@ -98,6 +108,10 @@
                 'checkOAuth'
             ]),
 
+            clearAliasName () {
+                if (this.aliasName === '') this.refreshCodelibList()
+            },
+
             switchPage (page, pageSize) {
                 const { projectId } = this
                 this.refreshCodelibList(projectId, page, pageSize)
@@ -106,11 +120,13 @@
             refreshCodelibList (
                 projectId = this.projectId,
                 page = this.startPage,
-                pageSize = this.defaultPagesize
+                pageSize = this.defaultPagesize,
+                aliasName = this.aliasName
             ) {
                 this.isLoading = true
                 this.requestList({
                     projectId,
+                    aliasName,
                     page,
                     pageSize
                 })
@@ -136,7 +152,6 @@
             },
 
             powerValidate (url) {
-                // console.log(url)
                 window.open(url, '_self')
             },
 
@@ -172,5 +187,11 @@
 .codelib-content {
     min-height: 100%;
     padding: 20px 30px 0;
+    .codelib-search {
+        position: absolute;
+        top: 20px;
+        left: 180px;
+        width: 240px;
+    }
 }
 </style>
