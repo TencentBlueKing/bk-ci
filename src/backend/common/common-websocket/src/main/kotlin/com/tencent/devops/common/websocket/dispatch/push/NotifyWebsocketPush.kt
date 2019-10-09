@@ -5,6 +5,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.IPath
+import com.tencent.devops.common.websocket.dispatch.message.NotifyMessage
 import com.tencent.devops.common.websocket.dispatch.message.NotifyMqMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.pojo.NotifyPost
@@ -59,14 +60,5 @@ class NotifyWebsocketPush(
 
     override fun buildMessage(messageInfo: IWebsocketPush) {
         return
-    }
-
-    override fun buildSendMessage(): SendMessage {
-        return SendMessage(
-                userId = userId,
-                page = page,
-                associationPage = emptyList(),
-                notifyPost = notifyPost
-        )
     }
 }

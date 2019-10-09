@@ -2,7 +2,6 @@ package com.tencent.devops.store.websocket
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.dispatch.WebsocketPushDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType

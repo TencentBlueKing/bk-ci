@@ -24,50 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.config
-
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
-
-/**
- * 通用配置
- */
-@Component
-class CommonConfig {
-
-    /**
-     * DevOps 构建机网关地址
-     */
-    @Value("\${devopsGateway.build:#{null}}")
-    val devopsBuildGateway: String? = null
-
-    /**
-     * DevOps API网关地址
-     */
-    @Value("\${devopsGateway.host:#{null}}")
-    val devopsHostGateway: String? = null
-
-    /**
-     * DevOps API网关地址
-     */
-    @Value("\${devopsGateway.api:#{null}}")
-    val devopsApiGateway: String? = null
-
-    /**
-     * DevOps 外部地址
-     */
-    @Value("\${devopsGateway.outer:#{null}}")
-    val devopsOuterHostGateWay: String? = null
-
-    /**
-     * DevOps 外部API地址
-     */
-    @Value("\${devopsGateway.outerApi:#{null}}")
-    val devopsOuteApiHostGateWay: String? = null
-
-    /**
-     * 微服务端口
-     */
-    @Value("\${server.port:80}")
-    val serverPort:Int = 80
+dependencies {
+    compile project(":websocket:biz-websocket-blueking")
 }
+
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
