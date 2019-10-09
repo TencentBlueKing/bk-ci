@@ -8,11 +8,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.repository.tables.TRepositoryGtiToken
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

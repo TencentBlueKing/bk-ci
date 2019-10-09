@@ -27,7 +27,6 @@
 package com.tencent.devops.repository.iscm
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitOauthApi
@@ -40,14 +39,14 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
 
 class CodeGitScmOauthImpl constructor(
-    override val projectName: String,
-    override val branchName: String?,
-    override val url: String,
-    private val privateKey: String?,
-    private val passPhrase: String?,
-    private val token: String,
-    private val gitConfig: GitConfig,
-    private val event: String? = null
+        override val projectName: String,
+        override val branchName: String?,
+        override val url: String,
+        private val privateKey: String?,
+        private val passPhrase: String?,
+        private val token: String,
+        private val gitConfig: GitConfig,
+        private val event: String? = null
 ) : IScm {
 
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitApiUrl, repoUrl = url)

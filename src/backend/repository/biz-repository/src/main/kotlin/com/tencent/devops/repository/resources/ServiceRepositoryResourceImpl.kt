@@ -203,4 +203,28 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         repositoryService.userDelete(userId, projectId, repositoryHashId)
         return Result(true)
     }
+
+    override fun hasPermissionListV2(userId: String, projectId: String, repositoryType: ScmType?, permission: Permission): Result<Page<RepositoryInfo>> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        val bkAuthPermission = when (permission) {
+            Permission.DELETE -> BkAuthPermission.DELETE
+            Permission.LIST -> BkAuthPermission.LIST
+            Permission.VIEW -> BkAuthPermission.VIEW
+            Permission.EDIT -> BkAuthPermission.EDIT
+            Permission.USE -> BkAuthPermission.USE
+        }
+        val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
+        val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
+        return Result(Page(0, 9999, result.count, result.records))
+    }
+
+    override fun deleteV2(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
+        repositoryService.userDelete(userId, projectId, repositoryHashId)
+        return Result(true)
+    }
 }

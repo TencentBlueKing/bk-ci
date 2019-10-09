@@ -3,11 +3,11 @@ package com.tencent.devops.repository.resources.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.scm.TokenCheckResult
 import com.tencent.devops.repository.pojo.scm.request.CommitCheckRequest
 import com.tencent.devops.repository.service.scm.ScmOauthService
+import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.RevisionInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

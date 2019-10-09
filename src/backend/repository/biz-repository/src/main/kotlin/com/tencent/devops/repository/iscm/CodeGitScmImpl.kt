@@ -27,7 +27,6 @@
 package com.tencent.devops.repository.iscm
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
@@ -46,7 +45,7 @@ class CodeGitScmImpl constructor(
         private val privateKey: String?,
         private val passPhrase: String?,
         private val token: String,
-        gitConfig: GitConfig,
+        private val gitConfig: GitConfig,
         private val event: String? = null
 ) : IScm {
 

@@ -41,7 +41,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubResourceImpl @Autowired constructor(
-        private val githubTokenService: GithubTokenService
+        private val githubTokenService: GithubTokenService,
+        private val githubService: GithubService,
+        private val githubOAuthService: GithubOAuthService
 ) : ServiceGithubResource {
     override fun createAccessToken(
         userId: String,
@@ -55,5 +57,39 @@ class ServiceGithubResourceImpl @Autowired constructor(
 
     override fun getAccessToken(userId: String): Result<GithubToken?> {
         return Result(githubTokenService.getAccessToken(userId))
+    }
+
+    override fun getFileContent(projectName: String, ref: String, filePath: String): Result<String> {
+        return Result(githubService.getFileContent(projectName, ref, filePath))
+    }
+
+    override fun getGithubAppUrl(): Result<String> {
+        return Result(githubOAuthService.getGithubAppUrl())
+    }
+
+    override fun addCheckRuns(
+            accessToken: String,
+            projectName: String,
+            checkRuns: GithubCheckRuns
+    ): Result<GithubCheckRunsResponse> {
+        return Result(githubService.addCheckRuns(accessToken, projectName, checkRuns))
+    }
+
+    override fun updateCheckRuns(
+            accessToken: String,
+            projectName: String,
+            checkRunId: Int,
+            checkRuns: GithubCheckRuns
+    ): Result<Boolean> {
+        githubService.updateCheckRuns(accessToken, projectName, checkRunId, checkRuns)
+        return Result(true)
+    }
+
+    override fun getGithubBranch(accessToken: String, projectName: String, branch: String?): Result<GithubBranch?> {
+        return Result(githubService.getBranch(accessToken, projectName, branch))
+    }
+
+    override fun getGithubTag(accessToken: String, projectName: String, tag: String): Result<GithubTag?> {
+        return Result(githubService.getTag(accessToken, projectName, tag))
     }
 }

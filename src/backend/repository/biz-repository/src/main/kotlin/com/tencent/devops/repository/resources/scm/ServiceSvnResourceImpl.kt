@@ -2,9 +2,9 @@ package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.scm.SvnFileInfo
 import com.tencent.devops.repository.service.scm.SvnService
+import com.tencent.devops.scm.api.ServiceSvnResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

@@ -5,8 +5,6 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceGithubResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -16,6 +14,8 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.github.GithubRepository
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
+import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.api.ServiceSvnResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

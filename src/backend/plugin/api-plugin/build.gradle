@@ -27,6 +27,8 @@
 dependencies {
     compile project(":common:common-web")
     compile project(":common:common-event")
+    compile project(":common:common-archive:common-archive-blueking")
+    compile project(":common:common-api")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

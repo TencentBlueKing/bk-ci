@@ -2,7 +2,6 @@ package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -13,6 +12,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.scm.GitRepositoryResp
 import com.tencent.devops.repository.service.scm.GitService
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

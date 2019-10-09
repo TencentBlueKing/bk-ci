@@ -6,8 +6,8 @@ import org.springframework.context.annotation.ComponentScan
 
 @MicroService
 @ComponentScan("com.tencent.devops.notify")
-class Application
+class Application1
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(Application1::class, args)
 }

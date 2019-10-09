@@ -4,6 +4,9 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.repository.service.scm.ScmService
+import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.RevisionInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

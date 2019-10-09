@@ -71,4 +71,82 @@ interface ServiceGithubResource {
         userId: String
     ): Result<GithubToken?>
 
+    @ApiOperation("获取github文件内容")
+    @GET
+    @Path("/getFileContent")
+    fun getFileContent(
+            @ApiParam("projectName", required = true)
+            @QueryParam("projectName")
+            projectName: String,
+            @ApiParam("ref", required = true)
+            @QueryParam("ref")
+            ref: String,
+            @ApiParam("filePath", required = true)
+            @QueryParam("filePath")
+            filePath: String
+    ): Result<String>
+
+    @ApiOperation("获取github触发原子配置")
+    @GET
+    @Path("/githubAppUrl")
+    fun getGithubAppUrl(): Result<String>
+
+    @ApiOperation("创建github checkRuns")
+    @POST
+    @Path("/checkRuns")
+    fun addCheckRuns(
+            @ApiParam("accessToken", required = true)
+            @QueryParam("accessToken")
+            accessToken: String,
+            @ApiParam("projectName", required = true)
+            @QueryParam("projectName")
+            projectName: String,
+            checkRuns: GithubCheckRuns
+    ): Result<GithubCheckRunsResponse>
+
+    @ApiOperation("更新github checkRuns")
+    @PUT
+    @Path("/checkRuns")
+    fun updateCheckRuns(
+            @ApiParam("accessToken", required = true)
+            @QueryParam("accessToken")
+            accessToken: String,
+            @ApiParam("projectName", required = true)
+            @QueryParam("projectName")
+            projectName: String,
+            @ApiParam("checkRunId", required = true)
+            @QueryParam("checkRunId")
+            checkRunId: Int,
+            checkRuns: GithubCheckRuns
+    ): Result<Boolean>
+
+    @ApiOperation("获取github指定分支")
+    @GET
+    @Path("/getGithubBranch")
+    fun getGithubBranch(
+            @ApiParam("accessToken", required = true)
+            @QueryParam("accessToken")
+            accessToken: String,
+            @ApiParam("projectName", required = true)
+            @QueryParam("projectName")
+            projectName: String,
+            @ApiParam("branch", required = false)
+            @QueryParam("branch")
+            branch: String?
+    ): Result<GithubBranch?>
+
+    @ApiOperation("获取github指定tag")
+    @GET
+    @Path("/getGithubTag")
+    fun getGithubTag(
+            @ApiParam("accessToken", required = true)
+            @QueryParam("accessToken")
+            accessToken: String,
+            @ApiParam("projectName", required = true)
+            @QueryParam("projectName")
+            projectName: String,
+            @ApiParam("tag", required = true)
+            @QueryParam("tag")
+            tag: String
+    ): Result<GithubTag?>
 }
