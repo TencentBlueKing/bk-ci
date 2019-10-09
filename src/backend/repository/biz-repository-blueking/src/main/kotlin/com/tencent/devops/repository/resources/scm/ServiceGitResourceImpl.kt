@@ -46,13 +46,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.refreshToken(userId, accessToken))
     }
 
-    override fun getAuthUrl(
-        userId: String,
-        projectId: String?,
-        repoHashId: String?,
-        redirectUrlType: String?
-    ): Result<String> {
-        return Result(gitService.getAuthUrl(userId, projectId, repoHashId, redirectUrlType))
+    override fun getAuthUrl(authParamJsonStr: String): Result<String> {
+        return Result(gitService.getAuthUrl(authParamJsonStr))
     }
 
     override fun getToken(userId: String, code: String): Result<GitToken> {

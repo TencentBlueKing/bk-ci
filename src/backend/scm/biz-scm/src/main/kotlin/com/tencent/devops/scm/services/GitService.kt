@@ -231,7 +231,7 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitlabFileContent(repoName: String, filePath: String, ref: String, accessToken: String): String {
+    fun getGitlabFileContent(repoUrl:String, repoName: String, filePath: String, ref: String, accessToken: String): String {
         logger.info("[$repoName|$filePath|$ref|$accessToken] Start to get the gitlab file content")
         val startEpoch = System.currentTimeMillis()
         try {

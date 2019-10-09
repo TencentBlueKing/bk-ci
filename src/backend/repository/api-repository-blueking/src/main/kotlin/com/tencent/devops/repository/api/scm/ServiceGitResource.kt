@@ -49,18 +49,9 @@ interface ServiceGitResource {
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-            @ApiParam("用户id", required = true)
-            @QueryParam("userId")
-            userId: String,
-            @ApiParam("项目id", required = false)
-            @QueryParam("projectId")
-            projectId: String?,
-            @ApiParam("仓库的HashId", required = false)
-            @QueryParam("repoHashId")
-            repoHashId: String?,
-            @ApiParam("重定向url类型", required = false)
-            @QueryParam("redirectUrlType")
-            redirectUrlType: String?
+            @ApiParam("参数json串", required = true)
+            @QueryParam("authParamJsonStr")
+            authParamJsonStr: String
     ): Result<String>
 
     @ApiOperation("获取用户的token")

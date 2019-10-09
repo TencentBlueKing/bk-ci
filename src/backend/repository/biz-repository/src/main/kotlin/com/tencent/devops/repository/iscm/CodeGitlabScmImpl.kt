@@ -27,9 +27,9 @@
 package com.tencent.devops.repository.iscm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.GitApi
-import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
@@ -42,7 +42,7 @@ class CodeGitlabScmImpl constructor(
     override val branchName: String?,
     override val url: String,
     private val token: String,
-    private val gitConfig: GitConfig
+    gitConfig: GitConfig
 ) : IScm {
 
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitlabApiUrl, repoUrl = url)

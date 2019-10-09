@@ -151,12 +151,8 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getAuthUrl(userId: String, projectId: String?, repoHashId: String?, redirectUrlType: String?): String {
-        val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId!!).toString() else ""
-        val proId = projectId ?: ""
-        val type = redirectUrlType ?: ""
-        val state = "$type;$userId;$proId;$repoId;BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
-        return "${gitConfig.gitApiUrl}/oauth/authorize?client_id=${gitConfig.clientId}&redirect_uri=${gitConfig.gitHookUrl}&response_type=code&state=$state"
+    fun getAuthUrl(authParamJsonStr: String): String {
+        return "$gitUrl/oauth/authorize?client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
     }
 
     fun getToken(userId: String, code: String): GitToken {

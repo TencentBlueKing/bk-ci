@@ -12,6 +12,7 @@ import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.RepostioryScmService
 import com.tencent.devops.scm.api.ServiceGitResource
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
@@ -28,7 +29,8 @@ class GitOauthService @Autowired constructor(
         private val dslContext: DSLContext,
         private val gitTokenDao: GitTokenDao,
         private val client: Client,
-        private val redisOperation: RedisOperation
+        private val redisOperation: RedisOperation,
+        private val repositoryScmService: RepostioryScmService
 ) {
 
     private val aesKey = "func_v%o/Tx{puc}9xVge_pepe"
@@ -48,7 +50,7 @@ class GitOauthService @Autowired constructor(
         val accessToken = getAccessToken(userId) ?: return AuthorizeResult(403, getAuthUrl(authParams))
         val authResult = AuthorizeResult(200, "")
         return try {
-            authResult.project.addAll(client.getScm(ServiceGitResource::class).getProject(accessToken.accessToken, userId).data ?: listOf())
+            authResult.project.addAll(repositoryScmService.getProject(accessToken.accessToken, userId))
             authResult
         } catch (e: Exception) {
             logger.info("get oauth project fail: ${e.message}")
@@ -64,14 +66,20 @@ class GitOauthService @Autowired constructor(
                 "atomCode" to atomCode,
                 "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
         )
-        val accessToken = getAccessToken(userId) ?: return AuthorizeResult(403, getAuthUrl(null, userId, null, redirectUrlType!!.type))
+        val accessToken = getAccessToken(userId) ?: return AuthorizeResult(403, getAuthUrl(authParams))
         logger.info("isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
     }
 
-    private fun getAuthUrl(projectId: String?, userId: String, repoHashId: String?, redirectUrlType: String?): String {
-        return client.get(ServiceGitResource::class).getAuthUrl(userId, projectId, repoHashId, redirectUrlType).data
-                ?: ""
+//    private fun getAuthUrl(projectId: String?, userId: String, repoHashId: String?, redirectUrlType: String?): String {
+//        return client.get(ServiceGitResource::class).getAuthUrl(userId, projectId, repoHashId, redirectUrlType).data
+//                ?: ""
+//    }
+
+    private fun getAuthUrl(authParams: Map<String, String?>): String {
+        val authParamJsonStr = URLEncoder.encode(JsonUtil.toJson(authParams), "UTF-8")
+        logger.info("getAuthUrl authParamJsonStr is: $authParamJsonStr")
+        return repositoryScmService.getAuthUrl(authParamJsonStr)
     }
 
     fun gitCallback(code: String, state: String): Response {
@@ -81,9 +89,9 @@ class GitOauthService @Autowired constructor(
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val userId = authParams["userId"] as String
-        val token = client.getScm(ServiceGitResource::class).getToken(userId, code).data ?: throw RuntimeException("get token fail")
+        val token = repositoryScmService.getToken(userId, code) ?: throw RuntimeException("get token fail")
         saveAccessToken(userId, token)
-        val redirectUrl = client.getScm(ServiceGitResource::class).getRedirectUrl(state).data ?: ""
+        val redirectUrl = repositoryScmService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
         return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build()).build()
     }
@@ -123,7 +131,8 @@ class GitOauthService @Autowired constructor(
     }
 
     private fun refreshToken(userId: String, gitToken: GitToken): GitToken {
-        val token = client.get(ServiceGitResource::class).refreshToken(userId, gitToken).data!!
+        val token = repositoryScmService.refreshToken(userId, gitToken)
+//        val token = client.get(ServiceGitResource::class).refreshToken(userId, gitToken).data!!
         saveAccessToken(userId, token)
         token.accessToken = AESUtil.decrypt(aesKey, token.accessToken)
         token.refreshToken = AESUtil.decrypt(aesKey, token.refreshToken)

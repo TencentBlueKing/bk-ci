@@ -12,6 +12,7 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.github.GithubRepository
+import com.tencent.devops.repository.service.github.GithubService
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -25,10 +26,12 @@ import java.util.Base64
 
 @Service
 class RepoFileService @Autowired constructor(
-    private val repositoryService: RepositoryService,
-    private val gitTokenDao: GitTokenDao,
-    private val dslContext: DSLContext,
-    private val client: Client
+        private val repositoryService: RepositoryService,
+        private val gitTokenDao: GitTokenDao,
+        private val dslContext: DSLContext,
+        private val client: Client,
+        private val githubService: GithubService,
+        private val repositoryScmService: RepostioryScmService
 ) {
 
     companion object {
@@ -113,11 +116,15 @@ class RepoFileService @Autowired constructor(
         val credInfo = getCredential(repo.projectId ?: "", repo)
         val svnType = repo.svnType?.toUpperCase() ?: "SSH"
         return if (svnType == "HTTP") {
-            client.getScm(ServiceSvnResource::class).getFileContent(repo.url, repo.userName, svnType, filePath, reversion,
-                    credInfo.username, credInfo.privateKey).data ?: ""
+//            client.getScm(ServiceSvnResource::class).getFileContent(repo.url, repo.userName, svnType, filePath, reversion,
+//                    credInfo.username, credInfo.privateKey).data ?: ""
+            repositoryScmService.getSvnFileContent(repo.url, repo.userName, svnType, filePath, reversion,
+                   credInfo.username, credInfo.privateKey)
         } else {
-            client.getScm(ServiceSvnResource::class).getFileContent(repo.url, repo.userName, if (svnType.isBlank()) "SSH" else svnType, filePath, reversion,
-                    credInfo.privateKey, credInfo.passPhrase).data ?: ""
+//            client.getScm(ServiceSvnResource::class).getSvnFileContent(repo.url, repo.userName, if (svnType.isBlank()) "SSH" else svnType, filePath, reversion,
+//                    credInfo.privateKey, credInfo.passPhrase).data ?: ""
+            repositoryScmService.getSvnFileContent(repo.url, repo.userName, if (svnType.isBlank()) "SSH" else svnType, filePath, reversion,
+                   credInfo.privateKey, credInfo.passPhrase)
         }
     }
 
@@ -129,26 +136,35 @@ class RepoFileService @Autowired constructor(
         }
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGitSingleFile for projectName: $projectName")
-        return client.getScm(ServiceGitResource::class).getGitFileContent(projectName!!, filePath.removePrefix("/"), repo.authType, token, ref).data ?: ""
+        return repositoryScmService.getGitFileContent(projectName!!, filePath.removePrefix("/"), repo.authType, token, ref)
+//        return client.getScm(ServiceGitResource::class).getGitFileContent(projectName!!, filePath.removePrefix("/"), repo.authType, token, ref).data ?: ""
     }
 
     private fun getGitlabSingleFile(repo: CodeGitlabRepository, filePath: String, ref: String, subModule: String?): String {
         logger.info("getGitlabSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
         val token = getCredential(repo.projectId ?: "", repo).privateKey
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
-        return client.getScm(ServiceGitResource::class).getGitlabFileContent(
+        return repositoryScmService.getGitlabFileContent(
                 repoUrl = repo.url,
                 repoName = projectName ?: "",
                 filePath = filePath,
                 ref = ref,
                 accessToken = token
-        ).data ?: ""
+        )
+//        return client.getScm(ServiceGitResource::class).getGitlabFileContent(
+//                repoUrl = repo.url,
+//                repoName = projectName ?: "",
+//                filePath = filePath,
+//                ref = ref,
+//                accessToken = token
+//        ).data ?: ""
     }
 
     private fun getGithubFile(repo: GithubRepository, filePath: String, ref: String, subModule: String?): String {
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGithubFile for projectName: $projectName")
-        return client.get(ServiceGithubResource::class).getFileContent(projectName!!, ref, filePath).data ?: ""
+//        return client.get(ServiceGithubResource::class).getFileContent(projectName!!, ref, filePath).data ?: ""
+        return githubService.getFileContent(projectName!!, ref, filePath)
     }
 
     private fun getCredential(projectId: String, repository: Repository): Credential {
