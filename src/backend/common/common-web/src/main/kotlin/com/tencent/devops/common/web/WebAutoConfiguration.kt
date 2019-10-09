@@ -68,10 +68,7 @@ class WebAutoConfiguration {
 
     @Bean("jasyptStringEncryptor")
     @Primary
-    fun stringEncryptor(@Value("\${enc.key:u*SlyPq'-8CwMZD20ok?}") key: String): DefaultEncryptor {
-        println("string encryptor key: $key")
-        return DefaultEncryptor(key)
-    }
+    fun stringEncryptor(@Value("\${enc.key:rAFOey00bcuMNMrt}") key: String) = DefaultEncryptor(key)
 
     @Bean
     fun versionInfoResource() = VersionInfoResource()
