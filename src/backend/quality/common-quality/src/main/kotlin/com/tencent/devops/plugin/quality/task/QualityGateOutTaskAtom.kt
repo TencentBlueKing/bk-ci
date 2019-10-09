@@ -89,6 +89,8 @@ class QualityGateOutTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val elementId = task.taskId
         val buildNo = runVariables[PIPELINE_BUILD_NUM].toString()
+        val templateId = task.templateId
+        val interceptTaskName = param.interceptTaskName ?: ""
 
         logger.info("[$buildId]|QUALITY_OUT|taskId=$elementId|quality check")
 
@@ -102,7 +104,8 @@ class QualityGateOutTaskAtom @Autowired constructor(
         val startTime = LocalDateTime.now()
 
         val checkResult = try {
-            val buildCheckParams = BuildCheckParams(projectId, pipelineId, buildId, buildNo, startTime.timestamp(), interceptTask, ControlPointPosition.AFTER_POSITION)
+            val buildCheckParams = BuildCheckParams(projectId, pipelineId, buildId, buildNo, interceptTaskName,
+                    startTime.timestamp(), interceptTask, ControlPointPosition.AFTER_POSITION, templateId)
             QualityUtils.check(client, buildCheckParams)
         } catch (t: Throwable) {
             logger.error("[$buildId]|QUALITY_OUT|taskId=$elementId|quality check fail", t)

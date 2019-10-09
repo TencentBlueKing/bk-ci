@@ -91,6 +91,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
         fun makePipelineBuildTasks(
             projectId: String,
             pipelineId: String,
+            templateId: String?,
             buildId: String,
             stageId: String,
             container: Container,
@@ -110,6 +111,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 PipelineBuildTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    templateId = templateId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
@@ -135,6 +137,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 PipelineBuildTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    templateId = templateId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
