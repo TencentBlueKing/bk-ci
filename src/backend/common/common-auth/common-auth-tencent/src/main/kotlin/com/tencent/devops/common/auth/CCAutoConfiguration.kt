@@ -24,9 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.exception
+package com.tencent.devops.common.auth
 
-/**
- * 根据错误码会反查错误信息，用于改造现有直接抛出一些错误的异常
- */
-open class ErrorCodeException(val errorCode: String, defaultMessage: String?, val params: Array<String>? = null) : RuntimeException(defaultMessage)
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.auth.api.BSAuthTokenApi
+import com.tencent.devops.common.auth.api.BSCCProjectApi
+import com.tencent.devops.common.auth.api.BkCCProperties
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.core.Ordered
+
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class CCAutoConfiguration {
+
+    @Bean
+    @Primary
+    fun bkCCProperties() = BkCCProperties()
+
+    @Bean
+    @Primary
+    fun bkCCProjectApi(
+        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        bkCCProperties: BkCCProperties,
+        objectMapper: ObjectMapper,
+        bsAuthTokenApi: BSAuthTokenApi
+    ) =
+        BSCCProjectApi(bkCCProperties, objectMapper, bsAuthTokenApi, bsPipelineAuthServiceCode)
+}

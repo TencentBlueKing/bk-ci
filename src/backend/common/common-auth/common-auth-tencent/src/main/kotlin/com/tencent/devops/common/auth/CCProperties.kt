@@ -24,9 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.exception
+package com.tencent.devops.common.auth
 
-/**
- * 根据错误码会反查错误信息，用于改造现有直接抛出一些错误的异常
- */
-open class ErrorCodeException(val errorCode: String, defaultMessage: String?, val params: Array<String>? = null) : RuntimeException(defaultMessage)
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+@Component
+class CCProperties {
+    @Value("\${cc.testUrl:#{null}}")
+    val testUrl: String? = null
+    @Value("\${cc.prodUrl:#{null}}")
+    val prodUrl: String? = null
+}

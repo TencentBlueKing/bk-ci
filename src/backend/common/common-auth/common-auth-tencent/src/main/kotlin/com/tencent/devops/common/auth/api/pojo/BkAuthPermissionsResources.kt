@@ -24,9 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.exception
+package com.tencent.devops.common.auth.api.pojo
 
-/**
- * 根据错误码会反查错误信息，用于改造现有直接抛出一些错误的异常
- */
-open class ErrorCodeException(val errorCode: String, defaultMessage: String?, val params: Array<String>? = null) : RuntimeException(defaultMessage)
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class BkAuthPermissionsResources(
+    @JsonProperty("policy_code")
+    val policyCode: String,
+    @JsonProperty("resource_type")
+    val resourceType: String,
+    @JsonProperty("resource_code_list")
+    val resourceCodeList: List<String>
+)

@@ -24,9 +24,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.exception
+package com.tencent.devops.common.auth.jmx
 
-/**
- * 根据错误码会反查错误信息，用于改造现有直接抛出一些错误的异常
- */
-open class ErrorCodeException(val errorCode: String, defaultMessage: String?, val params: Array<String>? = null) : RuntimeException(defaultMessage)
+import org.springframework.jmx.export.annotation.ManagedAttribute
+import org.springframework.jmx.export.annotation.ManagedResource
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
+
+@ManagedResource
+class AuthApiPerformanceBean {
+
+    private val executeCount = AtomicInteger(0)
+    private val executeElapse = AtomicLong(0)
+    private val calculateCount = AtomicInteger(0)
+    private val executeFailure = AtomicInteger(0)
+
+    @Synchronized
+    fun execute(elapse: Long, success: Boolean) {
+        executeElapse.addAndGet(elapse)
+        executeCount.incrementAndGet()
+        calculateCount.incrementAndGet()
+        if (!success) {
+            executeFailure.incrementAndGet()
+        }
+    }
+
+    @Synchronized
+    @ManagedAttribute
+    fun getExecutePerformance(): Double {
+        val elapse = executeElapse.getAndSet(0)
+        val count = calculateCount.getAndSet(0)
+        return if (count == 0) {
+            0.0
+        } else {
+            elapse.toDouble() / count
+        }
+    }
+
+    @ManagedAttribute
+    fun getExecuteCount() = executeCount.get()
+
+    @ManagedAttribute
+    fun getExecuteFailure() = executeFailure.get()
+}

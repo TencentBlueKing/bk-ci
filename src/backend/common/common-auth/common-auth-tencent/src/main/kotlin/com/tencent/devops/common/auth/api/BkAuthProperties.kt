@@ -24,9 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.exception
+package com.tencent.devops.common.auth.api
 
-/**
- * 根据错误码会反查错误信息，用于改造现有直接抛出一些错误的异常
- */
-open class ErrorCodeException(val errorCode: String, defaultMessage: String?, val params: Array<String>? = null) : RuntimeException(defaultMessage)
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+@Component
+data class BkAuthProperties(
+    @Value("\${auth.nvName:#{null}}")
+    val envName: String? = null,
+    @Value("\${auth.idProvider:#{null}}")
+    val idProvider: String? = null,
+    @Value("\${auth.grantType:#{null}}")
+    val grantType: String? = null,
+    @Value("\${auth.url:#{null}}")
+    val url: String? = null,
+    @Value("\${auth.bcsSecret:#{null}}")
+    val bcsSecret: String? = null,
+    @Value("\${auth.codeSecret:#{null}}")
+    val codeSecret: String? = null,
+    @Value("\${auth.pipelineSecret:#{null}}")
+    val pipelineSecret: String? = null,
+    @Value("\${auth.artifactorySecret:#{null}}")
+    val artifactorySecret: String? = null,
+    @Value("\${auth.ticketSecret:#{null}}")
+    val ticketSecret: String? = null,
+    @Value("\${auth.environmentSecret:#{null}}")
+    val environmentSecret: String? = null,
+    @Value("\${auth.experienceSecret:#{null}}")
+    val experienceSecret: String? = null,
+    @Value("\${auth.thirdPartyAgentSecret:#{null}}")
+    val thirdPartyAgentSecret: String? = null,
+    @Value("\${auth.vsSecret:#{null}}")
+    val vsSecret: String? = null,
+    @Value("\${auth.qualitySecret:#{null}}")
+    val qualitySecret: String? = null,
+    @Value("\${auth.wetestSecret:#{null}}")
+    val wetestSecret: String? = null
+)
