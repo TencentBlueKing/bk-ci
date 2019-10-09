@@ -47,7 +47,7 @@ import org.springframework.core.Ordered
  * Powered By Tencent
  */
 @Configuration
-@PropertySource("classpath:/common-web.properties", "dev-gray-common.yml")
+@PropertySource("classpath:/common-web.properties", "classpath:/dev-gray-common.yml")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(JerseyAutoConfiguration::class)
@@ -68,7 +68,10 @@ class WebAutoConfiguration {
 
     @Bean("jasyptStringEncryptor")
     @Primary
-    fun stringEncryptor(@Value("\${enc.key:u*SlyPq'-8CwMZD20ok?}") key: String) = DefaultEncryptor(key)
+    fun stringEncryptor(@Value("\${enc.key:u*SlyPq'-8CwMZD20ok?}") key: String): DefaultEncryptor {
+        println("string encryptor key: $key")
+        return DefaultEncryptor(key)
+    }
 
     @Bean
     fun versionInfoResource() = VersionInfoResource()
