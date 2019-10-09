@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":log:biz-log")
+    compile project(":common:common-auth:common-auth-blueking")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
