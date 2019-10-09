@@ -115,7 +115,7 @@ include ":repository:biz-repository"
 include ":repository:biz-repository-sample"
 include ":repository:biz-repository-tencent"
 include ":repository:biz-repository-blueking"
-include ":repository:boot-repository"
+include ":repository:boot-repository-tencent"
 include ":repository:model-repository"
 
 include ":ticket"
