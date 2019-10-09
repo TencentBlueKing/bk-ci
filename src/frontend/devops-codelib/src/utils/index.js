@@ -56,12 +56,14 @@ export function parsePathAlias (type, path, authType, svnType) {
 }
 
 export function parsePathRegion (path) {
-    const regRegion = /\/\/(.*)(tc-svn|tc-scm|sh-svn([0-9]*)|bj-svn|bj-scm|gz-svn|svn-cd1|group-svn1\.group)\.tencent\.com\//i
+    const regRegion = /\/\/(.*)(tc-svn|tc-scm|sh-svn([0-9]*)|bj-svn|bj-scm|scm-gy|gz-svn|svn-cd1|group-svn1\.group)\.tencent\.com\//i
     const regionResult = path.match(regRegion)
     let region = ''
     if (regionResult) {
         region = regionResult[2].replace(/(\w+)-(.*)/, '$1').toUpperCase()
-        if (region === 'SVN') {
+        if (regionResult[2] === 'scm-gy') {
+            region = 'GY'
+        } else if (region === 'SVN') {
             region = 'CD'
         }
     }

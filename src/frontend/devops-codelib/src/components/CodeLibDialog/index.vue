@@ -1,5 +1,5 @@
 <template>
-    <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false">
+    <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false" :loading="loading" @confirm="submitCodelib" @cancel="handleCancel">
         <h3 slot="header" class="bk-dialog-title">{{title}}</h3>
         <form class="bk-form" v-bkloading="{ isLoading: saving || fetchingCodelibDetail }">
             <div class="bk-form-item is-required" v-if="isGit">
@@ -120,12 +120,6 @@
                 <!-- 访问凭据 end -->
             </div>
         </form>
-        <div slot="footer">
-            <div class="footer-handler">
-                <bk-button theme="primary" @click="submitCodelib">确定</bk-button>
-                <bk-button theme="default" @click="handleCancel">取消</bk-button>
-            </div>
-        </div>
     </bk-dialog>
 </template>
 
@@ -152,6 +146,7 @@
         data () {
             return {
                 isLoadingTickets: false,
+                loading: false,
                 saving: true,
                 urlErrMsg: '',
                 hasValidate: false,
@@ -219,14 +214,6 @@
                     .replace(/^\S*?([github|git|tgit])/i, '$1')
             },
             codelibConfig () {
-                console.log(
-                    '0000',
-                    getCodelibConfig(
-                        this.codelibTypeName,
-                        this.codelib.svnType,
-                        this.codelib.authType
-                    ) || {}
-                )
                 return (
                     getCodelibConfig(
                         this.codelibTypeName,
@@ -287,7 +274,7 @@
                         url
                     }
 
-                    param.aliasName = alias
+                    param.aliasName = this.codelib.aliasName || alias
                     this.urlErrMsg = msg
                     this.updateCodelib(param)
                 }
@@ -304,11 +291,6 @@
                 }
             },
             urlPlaceholder () {
-                console.log(
-                    'URL PLACE HOLDER',
-                    this.codelib.authType,
-                    this.codelibConfig.label
-                )
                 return (
                     this.placeholders['url'][this.codelib.authType]
                     || this.placeholders['url'][this.codelibConfig.label]
@@ -377,6 +359,7 @@
                     repositoryHashId
                 } = this
                 const params = Object.assign({}, codelib, { userName: username })
+                this.loading = true
                 try {
                     const valid = await this.$validator.validate()
 
@@ -393,6 +376,7 @@
                         this.toggleCodelibDialog(false)
                         this.hasValidate = false
                         this.saving = true
+                        this.codelib.url = ''
                         this.$bkMessage({
                             message: repositoryHashId
                                 ? '修改代码库成功'
@@ -425,6 +409,8 @@
                         })
                     }
                     this.saving = false
+                } finally {
+                    this.$nextTick(() => (this.loading = false))
                 }
             },
 
@@ -439,8 +425,13 @@
                 this.hasValidate = false
                 this.saving = true
                 this.$validator.reset()
-                this.toggleCodelibDialog({
-                    showCodelibDialog: false
+                this.updateCodelib({
+                    url: '',
+                    aliasName: '',
+                    credentialId: '',
+                    projectName: '',
+                    authType: '',
+                    svnType: ''
                 })
             },
             authTypeChange (codelib) {
