@@ -6,7 +6,6 @@ import Vue from 'vue'
 import createRouter from '@/router'
 import store from '@/store'
 import eventBus from '@/utils/eventBus'
-import App from './views/App.vue'
 import Logo from './components/Logo/index.vue'
 import iframeUtil from './utils/iframeUtil'
 import Icon from './components/Icon/index.vue'
@@ -14,8 +13,9 @@ import EmptyTips from './components/EmptyTips/index.vue'
 import ShowTooltip from './components/ShowTooltip/index.vue'
 import DevopsFormItem from './components/DevopsFormItem/index.vue'
 import AsideNav from './components/AsideNav/index.vue'
-// import ContentHeader from './components/ContentHeader/index.vue'
+import ContentHeader from './components/ContentHeader/index.vue'
 import BigSelect from './components/Select/index.vue'
+import App from './views/App.vue'
 
 import createLocale from '../../locale'
 
@@ -49,7 +49,7 @@ ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.use(bkMagic)
 Vue.component('AsideNav', AsideNav)
-// Vue.component('ContentHeader', ContentHeader)
+Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)
 Vue.component('Icon', Icon)
 Vue.component('EmptyTips', EmptyTips)
