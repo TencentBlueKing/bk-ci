@@ -40,6 +40,7 @@ module.exports = (env, argv) => {
         dist: '/pipeline',
         port: 8006
     })
+    config.plugins.pop()
     config.plugins = [
         ...config.plugins,
         // brace 优化，只提取需要的语法

@@ -13,12 +13,12 @@
             nav () {
                 return {
                     icon: 'environment',
-                    title: '环境管理',
+                    title: this.$t('environment.environmentManage'),
                     url: `${DOCS_URL_PREFIX}/所有服务/环境管理/summary.html`,
                     menu: [
                         {
                             id: 'envList',
-                            name: '环境',
+                            name: this.$t('environment.environment'),
                             icon: 'icon-env',
                             showChildren: false,
                             children: [

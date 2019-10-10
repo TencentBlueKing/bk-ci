@@ -26,8 +26,8 @@ export default (r) => {
             return
         }
         console.log(`@locale/${module}/${locale}.js`)
-        return import(/*webpackChunkName: "lang-[request]"*/ `@locale/${module}/${locale}.js`).then(response => {
-            const messages = response.default
+        return axios.get(`${WEBSITE_URL}/${module}/${locale}.json`).then(response => {
+            const messages = response.data
             
             i18n.setLocaleMessage(locale, {
                 ...i18n.messages[locale],
