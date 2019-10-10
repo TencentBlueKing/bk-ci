@@ -2,7 +2,7 @@ import VueI18n from 'vue-i18n'
 import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
-const DEFAULT_LOCALE = 'en-US'
+const DEFAULT_LOCALE = 'zh-CN'
 const loadedModule = {}
 
 export default (r) => {
@@ -26,7 +26,9 @@ export default (r) => {
             return
         }
         console.log(`@locale/${module}/${locale}.js`)
-        return axios.get(`${WEBSITE_URL}/${module}/${locale}.json`).then(response => {
+        return axios.get(`${WEBSITE_URL}/${module}/${locale}.json`, {
+            crossdomain: true
+        }).then(response => {
             const messages = response.data
             
             i18n.setLocaleMessage(locale, {
