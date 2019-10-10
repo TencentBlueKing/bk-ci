@@ -86,34 +86,36 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
-    override fun createGitCodeRepository(
-            userId: String,
-            token: String,
-            repositoryName: String,
-            sampleProjectPath: String,
-            namespaceId: Int?,
-            visibilityLevel: VisibilityLevelEnum?,
-            tokenType: TokenTypeEnum
-    ): Result<GitRepositoryResp?> {
-        return gitService.createGitCodeRepository(userId, token, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
-    }
-
-    override fun addGitProjectMember(
-            userIdList: List<String>,
-            repositorySpaceName: String,
-            gitAccessLevel: GitAccessLevelEnum,
-            token: String,
-            tokenType: TokenTypeEnum
-    ): Result<Boolean> {
-        return gitService.addGitProjectMember(userIdList, repositorySpaceName, gitAccessLevel, token, tokenType)
-    }
-
-    override fun deleteGitProjectMember(
-            userIdList: List<String>,
-            repositorySpaceName: String,
-            token: String,
-            tokenType: TokenTypeEnum
-    ): Result<Boolean> {
-        return gitService.deleteGitProjectMember(userIdList, repositorySpaceName, token, tokenType)
-    }
+//    //TODO: ÄÚ²¿°æ¶ÀÓÐ
+//
+//    override fun createGitCodeRepository(
+//            userId: String,
+//            token: String,
+//            repositoryName: String,
+//            sampleProjectPath: String,
+//            namespaceId: Int?,
+//            visibilityLevel: VisibilityLevelEnum?,
+//            tokenType: TokenTypeEnum
+//    ): Result<GitRepositoryResp?> {
+//        return gitService.createGitCodeRepository(userId, token, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
+//    }
+//
+//    override fun addGitProjectMember(
+//            userIdList: List<String>,
+//            repositorySpaceName: String,
+//            gitAccessLevel: GitAccessLevelEnum,
+//            token: String,
+//            tokenType: TokenTypeEnum
+//    ): Result<Boolean> {
+//        return gitService.addGitProjectMember(userIdList, repositorySpaceName, gitAccessLevel, token, tokenType)
+//    }
+//
+//    override fun deleteGitProjectMember(
+//            userIdList: List<String>,
+//            repositorySpaceName: String,
+//            token: String,
+//            tokenType: TokenTypeEnum
+//    ): Result<Boolean> {
+//        return gitService.deleteGitProjectMember(userIdList, repositorySpaceName, token, tokenType)
+//    }
 }

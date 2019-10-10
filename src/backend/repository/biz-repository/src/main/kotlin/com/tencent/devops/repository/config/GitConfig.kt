@@ -45,26 +45,29 @@ class GitConfig {
     val gitlabHookUrl: String = ""
 
     /* git config*/
-    @Value("\${scm.git.url:}")
+    @Value("\${repository.tencent.scm.git.url:}")
     val gitUrl: String = ""
 
-    @Value("\${scm.git.apiUrl:}")
+    @Value("\${repository.tencent.scm.git.apiUrl:}")
     val gitApiUrl: String = ""
 
-    @Value("\${scm.git.clientId:}")
+    @Value("\${repository.tencent.scm.git.clientId:}")
     val clientId: String = ""
 
-    @Value("\${scm.git.clientSecret:}")
+    @Value("\${repository.tencent.scm.git.clientSecret:}")
     val clientSecret: String = ""
 
-    @Value("\${scm.git.redirectUrl:}")
+    @Value("\${repository.tencent.scm.git.redirectUrl:}")
     val redirectUrl: String = ""
 
-    @Value("\${scm.git.redirectAtomMarketUrl:}")
+    @Value("\${repository.tencent.scm.git.redirectAtomMarketUrl:}")
     val redirectAtomMarketUrl: String = ""
 
     @Value("\${scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
+
+    @Value("\${repository.tencent.scm.git.callbackUrl}")
+    val callbackUrl: String = ""
 
     /* github config */
     @Value("\${scm.github.signSecret:}")

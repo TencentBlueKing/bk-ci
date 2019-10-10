@@ -53,36 +53,6 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
     }
 
-    @Value("\${git.url}")
-    private lateinit var gitUrl: String
-
-    @Value("\${git.clientId}")
-    private lateinit var clientId: String
-
-    @Value("\${git.clientSecret}")
-    private lateinit var clientSecret: String
-
-    @Value("\${git.callbackUrl}")
-    private lateinit var callbackUrl: String
-
-    @Value("\${git.redirectUrl}")
-    private lateinit var redirectUrl: String
-
-    @Value("\${git.public.account}")
-    private lateinit var gitPublicAccount: String
-
-    @Value("\${git.public.email}")
-    private lateinit var gitPublicEmail: String
-
-    @Value("\${git.public.secret}")
-    private lateinit var gitPublicSecret: String
-
-    @Value("\${git.redirectAtomMarketUrl}")
-    private lateinit var redirectAtomMarketUrl: String
-
-    @Value("\${git.redirectAtomRepositoryUrl}")
-    private lateinit var redirectAtomRepositoryUrl: String
-
     private val executorService = Executors.newFixedThreadPool(2)
 
     fun getProject(accessToken: String, userId: String): List<Project> {
@@ -151,8 +121,9 @@ class GitService @Autowired constructor(
         }
     }
 
+    //TODO：处理完配置问题再修复
     fun getAuthUrl(authParamJsonStr: String): String {
-        return "$gitUrl/oauth/authorize?client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
+        return "${gitConfig.gitUrl}/oauth/authorize?client_id=${gitConfig.clientId}&redirect_uri=${gitConfig.callbackUrl}&response_type=code&state=$authParamJsonStr"
     }
 
     fun getToken(userId: String, code: String): GitToken {
@@ -253,242 +224,244 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun createGitCodeRepository(
-            userId: String,
-            token: String,
-            repositoryName: String,
-            sampleProjectPath: String,
-            namespaceId: Int?,
-            visibilityLevel: VisibilityLevelEnum?,
-            tokenType: TokenTypeEnum
-    ): Result<GitRepositoryResp?> {
-        logger.info("createGitRepository userId is:$userId,token is:$token, repositoryName is:$repositoryName, sampleProjectPath is:$sampleProjectPath")
-        logger.info("createGitRepository  namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType")
-        val url = StringBuilder("$gitUrl/api/v3/projects")
-        setToken(tokenType, url, token)
-        logger.info("createGitRepository token is:$token, url>> $url")
-        val params = mutableMapOf<String, Any?>()
-        params["name"] = repositoryName
-        if (null != visibilityLevel) {
-            params["namespace_id"] = namespaceId
-        }
-        if (null != visibilityLevel) {
-            params["visibility_level"] = visibilityLevel.level
-            if (visibilityLevel == VisibilityLevelEnum.LOGIN_PUBLIC) {
-                params["fork_enabled"] = true // 如果项目设置为开源就打开fork设置开关
-            }
-        }
-        val request = Request.Builder()
-                .url(url.toString())
-                .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), JsonUtil.toJson(params)))
-                .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
-            logger.info("createGitRepository token is:$token, response>> $data")
-            val dataMap = JsonUtil.toMap(data)
-            val atomRepositoryUrl = dataMap["http_url_to_repo"]
-            if (StringUtils.isEmpty(atomRepositoryUrl)) {
-                val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL)
-                logger.info("createOAuthCodeRepository validateResult>> $validateResult")
-                // 把工蜂的错误提示抛出去
-                return Result(validateResult.status, "${validateResult.message}（git error:$data）")
-            }
-            val nameSpaceName = dataMap["name_with_namespace"] as String
-            // 把需要创建项目代码库的用户加入为对应项目的owner用户
-            executorService.submit<Result<Boolean>> {
-                // 添加插件的开发成员
-                addGitProjectMember(listOf(userId), nameSpaceName, GitAccessLevelEnum.MASTER, token, tokenType)
-                // 把样例工程代码添加到用户的仓库
-                initRepositoryInfo(userId, sampleProjectPath, token, tokenType, repositoryName, atomRepositoryUrl as String)
-            }
-            return Result(GitRepositoryResp(nameSpaceName, atomRepositoryUrl as String))
-        }
-    }
 
-    fun initRepositoryInfo(
-            userId: String,
-            sampleProjectPath: String,
-            token: String,
-            tokenType: TokenTypeEnum,
-            repositoryName: String,
-            atomRepositoryUrl: String
-    ): Result<Boolean> {
-        logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,atomRepositoryUrl is:$atomRepositoryUrl")
-        logger.info("initRepositoryInfo token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
-        val atomTmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
-        logger.info("initRepositoryInfo atomTmpWorkspace is:${atomTmpWorkspace.absolutePath}")
-        try {
-            // 1、clone插件示例工程代码到插件工作空间下
-            val credentialSetter = if (tokenType == TokenTypeEnum.OAUTH) {
-                CodeGitOauthCredentialSetter(token)
-            } else {
-                CodeGitUsernameCredentialSetter(gitPublicAccount, gitPublicSecret)
-            }
-            CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}", atomTmpWorkspace)
-            // 2、删除下载下来示例工程的git信息
-            val atomFileDir = atomTmpWorkspace.listFiles()[0]
-            logger.info("initRepositoryInfo atomFileDir is:${atomFileDir.absolutePath}")
-            val atomGitFileDir = File(atomFileDir, ".git")
-            if (atomGitFileDir.exists()) {
-                FileSystemUtils.deleteRecursively(atomGitFileDir)
-            }
-            // 3、重新生成git信息
-            CommonScriptUtils.execute("git init", atomFileDir)
-            // 4、添加远程仓库
-            CommonScriptUtils.execute("git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}", atomFileDir)
-            // 5、给文件添加git信息
-            CommonScriptUtils.execute("git config user.email \"$gitPublicEmail\"", atomFileDir)
-            CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)
-            CommonScriptUtils.execute("git add .", atomFileDir)
-            // 6、提交本地文件
-            CommonScriptUtils.execute("git commit -m \"init\"", atomFileDir)
-            // 7、提交代码到远程仓库
-            CommonScriptUtils.execute("git push origin master", atomFileDir)
-            logger.info("initRepositoryInfo finish")
-        } catch (e: Exception) {
-            logger.error("initRepositoryInfo error is:", e)
-            return Result(false)
-        } finally {
-            FileSystemUtils.deleteRecursively(atomTmpWorkspace)
-        }
-        return Result(true)
-    }
+    //TODO: 内部版有，企业版没有，不知怎么处理。
+//    fun createGitCodeRepository(
+//            userId: String,
+//            token: String,
+//            repositoryName: String,
+//            sampleProjectPath: String,
+//            namespaceId: Int?,
+//            visibilityLevel: VisibilityLevelEnum?,
+//            tokenType: TokenTypeEnum
+//    ): Result<GitRepositoryResp?> {
+//        logger.info("createGitRepository userId is:$userId,token is:$token, repositoryName is:$repositoryName, sampleProjectPath is:$sampleProjectPath")
+//        logger.info("createGitRepository  namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType")
+//        val url = StringBuilder("$gitUrl/api/v3/projects")
+//        setToken(tokenType, url, token)
+//        logger.info("createGitRepository token is:$token, url>> $url")
+//        val params = mutableMapOf<String, Any?>()
+//        params["name"] = repositoryName
+//        if (null != visibilityLevel) {
+//            params["namespace_id"] = namespaceId
+//        }
+//        if (null != visibilityLevel) {
+//            params["visibility_level"] = visibilityLevel.level
+//            if (visibilityLevel == VisibilityLevelEnum.LOGIN_PUBLIC) {
+//                params["fork_enabled"] = true // 如果项目设置为开源就打开fork设置开关
+//            }
+//        }
+//        val request = Request.Builder()
+//                .url(url.toString())
+//                .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), JsonUtil.toJson(params)))
+//                .build()
+//        OkhttpUtils.doHttp(request).use { response ->
+//            val data = response.body()!!.string()
+//            logger.info("createGitRepository token is:$token, response>> $data")
+//            val dataMap = JsonUtil.toMap(data)
+//            val atomRepositoryUrl = dataMap["http_url_to_repo"]
+//            if (StringUtils.isEmpty(atomRepositoryUrl)) {
+//                val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL)
+//                logger.info("createOAuthCodeRepository validateResult>> $validateResult")
+//                // 把工蜂的错误提示抛出去
+//                return Result(validateResult.status, "${validateResult.message}（git error:$data）")
+//            }
+//            val nameSpaceName = dataMap["name_with_namespace"] as String
+//            // 把需要创建项目代码库的用户加入为对应项目的owner用户
+//            executorService.submit<Result<Boolean>> {
+//                // 添加插件的开发成员
+//                addGitProjectMember(listOf(userId), nameSpaceName, GitAccessLevelEnum.MASTER, token, tokenType)
+//                // 把样例工程代码添加到用户的仓库
+//                initRepositoryInfo(userId, sampleProjectPath, token, tokenType, repositoryName, atomRepositoryUrl as String)
+//            }
+//            return Result(GitRepositoryResp(nameSpaceName, atomRepositoryUrl as String))
+//        }
+//    }
+//
+//    fun initRepositoryInfo(
+//            userId: String,
+//            sampleProjectPath: String,
+//            token: String,
+//            tokenType: TokenTypeEnum,
+//            repositoryName: String,
+//            atomRepositoryUrl: String
+//    ): Result<Boolean> {
+//        logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,atomRepositoryUrl is:$atomRepositoryUrl")
+//        logger.info("initRepositoryInfo token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
+//        val atomTmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
+//        logger.info("initRepositoryInfo atomTmpWorkspace is:${atomTmpWorkspace.absolutePath}")
+//        try {
+//            // 1、clone插件示例工程代码到插件工作空间下
+//            val credentialSetter = if (tokenType == TokenTypeEnum.OAUTH) {
+//                CodeGitOauthCredentialSetter(token)
+//            } else {
+//                CodeGitUsernameCredentialSetter(gitPublicAccount, gitPublicSecret)
+//            }
+//            CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}", atomTmpWorkspace)
+//            // 2、删除下载下来示例工程的git信息
+//            val atomFileDir = atomTmpWorkspace.listFiles()[0]
+//            logger.info("initRepositoryInfo atomFileDir is:${atomFileDir.absolutePath}")
+//            val atomGitFileDir = File(atomFileDir, ".git")
+//            if (atomGitFileDir.exists()) {
+//                FileSystemUtils.deleteRecursively(atomGitFileDir)
+//            }
+//            // 3、重新生成git信息
+//            CommonScriptUtils.execute("git init", atomFileDir)
+//            // 4、添加远程仓库
+//            CommonScriptUtils.execute("git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}", atomFileDir)
+//            // 5、给文件添加git信息
+//            CommonScriptUtils.execute("git config user.email \"$gitPublicEmail\"", atomFileDir)
+//            CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)
+//            CommonScriptUtils.execute("git add .", atomFileDir)
+//            // 6、提交本地文件
+//            CommonScriptUtils.execute("git commit -m \"init\"", atomFileDir)
+//            // 7、提交代码到远程仓库
+//            CommonScriptUtils.execute("git push origin master", atomFileDir)
+//            logger.info("initRepositoryInfo finish")
+//        } catch (e: Exception) {
+//            logger.error("initRepositoryInfo error is:", e)
+//            return Result(false)
+//        } finally {
+//            FileSystemUtils.deleteRecursively(atomTmpWorkspace)
+//        }
+//        return Result(true)
+//    }
 
-    fun addGitProjectMember(userIdList: List<String>, repoName: String, gitAccessLevel: GitAccessLevelEnum, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
-        logger.info("addGitProjectMember token is:$token, userIdList is:$userIdList,repoName is:$repoName,gitAccessLevel is:$gitAccessLevel,tokenType is:$tokenType")
-        var gitUserInfo: GitUserInfo?
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
-        val url = StringBuilder("$gitUrl/api/v3/projects/$encodeProjectName/members")
-        setToken(tokenType, url, token)
-        userIdList.forEach {
-            val gitUserInfoResult = getGitUserInfo(it, token, tokenType)
-            logger.info("the gitUserInfoResult is :$gitUserInfoResult")
-            if (gitUserInfoResult.isNotOk()) {
-                return Result(gitUserInfoResult.status, gitUserInfoResult.message, false)
-            } else {
-                gitUserInfo = gitUserInfoResult.data
-            }
-            val params = mutableMapOf<String, Any?>()
-            params["id"] = repoName
-            params["user_id"] = gitUserInfo!!.id
-            params["access_level"] = gitAccessLevel.level
-            val request = Request.Builder()
-                    .url(url.toString())
-                    .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), JsonUtil.toJson(params)))
-                    .build()
-            OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body()!!.string()
-                logger.info("addGitProjectMember token is:$token, response>> $data")
-                if (!StringUtils.isEmpty(data)) {
-                    val dataMap = JsonUtil.toMap(data)
-                    val message = dataMap["message"]
-                    if (!StringUtils.isEmpty(message)) {
-                        val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL, arrayOf(it))
-                        logger.info("addGitProjectMember validateResult>> $validateResult")
-                        // 把工蜂的错误提示抛出去
-                        return Result(validateResult.status, "${validateResult.message}（git error:$message）")
-                    }
-                }
-            }
-        }
-        return Result(true)
-    }
+//    fun addGitProjectMember(userIdList: List<String>, repoName: String, gitAccessLevel: GitAccessLevelEnum, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
+//        logger.info("addGitProjectMember token is:$token, userIdList is:$userIdList,repoName is:$repoName,gitAccessLevel is:$gitAccessLevel,tokenType is:$tokenType")
+//        var gitUserInfo: GitUserInfo?
+//        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
+//        val url = StringBuilder("$gitUrl/api/v3/projects/$encodeProjectName/members")
+//        setToken(tokenType, url, token)
+//        userIdList.forEach {
+//            val gitUserInfoResult = getGitUserInfo(it, token, tokenType)
+//            logger.info("the gitUserInfoResult is :$gitUserInfoResult")
+//            if (gitUserInfoResult.isNotOk()) {
+//                return Result(gitUserInfoResult.status, gitUserInfoResult.message, false)
+//            } else {
+//                gitUserInfo = gitUserInfoResult.data
+//            }
+//            val params = mutableMapOf<String, Any?>()
+//            params["id"] = repoName
+//            params["user_id"] = gitUserInfo!!.id
+//            params["access_level"] = gitAccessLevel.level
+//            val request = Request.Builder()
+//                    .url(url.toString())
+//                    .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), JsonUtil.toJson(params)))
+//                    .build()
+//            OkhttpUtils.doHttp(request).use { response ->
+//                val data = response.body()!!.string()
+//                logger.info("addGitProjectMember token is:$token, response>> $data")
+//                if (!StringUtils.isEmpty(data)) {
+//                    val dataMap = JsonUtil.toMap(data)
+//                    val message = dataMap["message"]
+//                    if (!StringUtils.isEmpty(message)) {
+//                        val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL, arrayOf(it))
+//                        logger.info("addGitProjectMember validateResult>> $validateResult")
+//                        // 把工蜂的错误提示抛出去
+//                        return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+//                    }
+//                }
+//            }
+//        }
+//        return Result(true)
+//    }
 
-    fun deleteGitProjectMember(userIdList: List<String>, repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
-        logger.info("deleteGitProjectMember token is:$token, userIdList is:$userIdList,repoName is:$repoName,tokenType is:$tokenType")
-        var gitUserInfo: GitUserInfo?
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
-        val url = StringBuilder("$gitUrl/api/v3/projects/$encodeProjectName/members")
-        userIdList.forEach {
-            val gitUserInfoResult = getGitUserInfo(it, token, tokenType)
-            logger.info("the gitUserInfoResult is :$gitUserInfoResult")
-            if (gitUserInfoResult.isNotOk()) {
-                return Result(gitUserInfoResult.status, gitUserInfoResult.message, false)
-            } else {
-                gitUserInfo = gitUserInfoResult.data
-            }
-            if (null != gitUserInfo) {
-                val gitProjectMemberInfoResult = getGitProjectMemberInfo(gitUserInfo!!.id, repoName, token, tokenType)
-                logger.info("the gitProjectMemberInfoResult is :$gitProjectMemberInfoResult")
-                val gitProjectMemberInfo: GitUserInfo?
-                if (gitProjectMemberInfoResult.isNotOk()) {
-                    return Result(gitProjectMemberInfoResult.status, gitProjectMemberInfoResult.message, false)
-                } else {
-                    gitProjectMemberInfo = gitProjectMemberInfoResult.data
-                }
-                if (null == gitProjectMemberInfo) {
-                    return@forEach // 兼容历史插件的成员可能未关联代码库的情况
-                }
-                url.append("/${gitUserInfo!!.id}")
-                setToken(tokenType, url, token)
-                val request = Request.Builder()
-                        .url(url.toString())
-                        .delete()
-                        .build()
-                OkhttpUtils.doHttp(request).use { response ->
-                    val data = response.body()!!.string()
-                    logger.info("deleteGitProjectMember token is:$token, response>> $data")
-                    if (!StringUtils.isEmpty(data)) {
-                        val dataMap = JsonUtil.toMap(data)
-                        val message = dataMap["message"]
-                        if (!StringUtils.isEmpty(message)) {
-                            val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL, arrayOf(it))
-                            logger.info("deleteGitProjectMember validateResult>> $validateResult")
-                            // 把工蜂的错误提示抛出去
-                            return Result(validateResult.status, "${validateResult.message}（git error:$message）")
-                        }
-                    }
-                }
-            }
-        }
-        return Result(true)
-    }
+//    fun deleteGitProjectMember(userIdList: List<String>, repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
+//        logger.info("deleteGitProjectMember token is:$token, userIdList is:$userIdList,repoName is:$repoName,tokenType is:$tokenType")
+//        var gitUserInfo: GitUserInfo?
+//        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
+//        val url = StringBuilder("$gitUrl/api/v3/projects/$encodeProjectName/members")
+//        userIdList.forEach {
+//            val gitUserInfoResult = getGitUserInfo(it, token, tokenType)
+//            logger.info("the gitUserInfoResult is :$gitUserInfoResult")
+//            if (gitUserInfoResult.isNotOk()) {
+//                return Result(gitUserInfoResult.status, gitUserInfoResult.message, false)
+//            } else {
+//                gitUserInfo = gitUserInfoResult.data
+//            }
+//            if (null != gitUserInfo) {
+//                val gitProjectMemberInfoResult = getGitProjectMemberInfo(gitUserInfo!!.id, repoName, token, tokenType)
+//                logger.info("the gitProjectMemberInfoResult is :$gitProjectMemberInfoResult")
+//                val gitProjectMemberInfo: GitUserInfo?
+//                if (gitProjectMemberInfoResult.isNotOk()) {
+//                    return Result(gitProjectMemberInfoResult.status, gitProjectMemberInfoResult.message, false)
+//                } else {
+//                    gitProjectMemberInfo = gitProjectMemberInfoResult.data
+//                }
+//                if (null == gitProjectMemberInfo) {
+//                    return@forEach // 兼容历史插件的成员可能未关联代码库的情况
+//                }
+//                url.append("/${gitUserInfo!!.id}")
+//                setToken(tokenType, url, token)
+//                val request = Request.Builder()
+//                        .url(url.toString())
+//                        .delete()
+//                        .build()
+//                OkhttpUtils.doHttp(request).use { response ->
+//                    val data = response.body()!!.string()
+//                    logger.info("deleteGitProjectMember token is:$token, response>> $data")
+//                    if (!StringUtils.isEmpty(data)) {
+//                        val dataMap = JsonUtil.toMap(data)
+//                        val message = dataMap["message"]
+//                        if (!StringUtils.isEmpty(message)) {
+//                            val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL, arrayOf(it))
+//                            logger.info("deleteGitProjectMember validateResult>> $validateResult")
+//                            // 把工蜂的错误提示抛出去
+//                            return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return Result(true)
+//    }
 
-    fun getGitProjectMemberInfo(memberId: Int, repoName: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
-        logger.info("getGitProjectMemberInfo memberId is:$memberId,repoName is:$repoName,token is:$token,tokenType is:$tokenType")
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
-        val url = StringBuilder("$gitUrl/api/v3/projects/$encodeProjectName/members/$memberId")
-        setToken(tokenType, url, token)
-        val request = Request.Builder()
-                .url(url.toString())
-                .get()
-                .build()
-        OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
-            logger.info("getGitProjectMemberInfo token is:$token, response>> $data")
-            if (!StringUtils.isEmpty(data)) {
-                val dataMap = JsonUtil.toMap(data)
-                val message = dataMap["message"]
-                if (StringUtils.isEmpty(message)) {
-                    return Result(JsonUtil.to(data, GitUserInfo::class.java))
-                }
-            }
-            return Result(data = null)
-        }
-    }
-
-    fun getGitUserInfo(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
-        logger.info("getGitUserInfo token is:$token, userId is:$userId,tokenType is:$tokenType")
-        val url = StringBuilder("$gitUrl/api/v3/users/$userId")
-        setToken(tokenType, url, token)
-        val request = Request.Builder()
-                .url(url.toString())
-                .get()
-                .build()
-        OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
-            logger.info("getGitUserInfo token is:$token, response>> $data")
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            if (!StringUtils.isEmpty(data)) {
-                val dataMap = JsonUtil.toMap(data)
-                val message = dataMap["message"]
-                if (StringUtils.isEmpty(message)) {
-                    return Result(JsonUtil.to(data, GitUserInfo::class.java))
-                }
-            }
-            return Result(data = null)
-        }
-    }
+//    fun getGitProjectMemberInfo(memberId: Int, repoName: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
+//        logger.info("getGitProjectMemberInfo memberId is:$memberId,repoName is:$repoName,token is:$token,tokenType is:$tokenType")
+//        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
+//        val url = StringBuilder("$gitUrl/api/v3/projects/$encodeProjectName/members/$memberId")
+//        setToken(tokenType, url, token)
+//        val request = Request.Builder()
+//                .url(url.toString())
+//                .get()
+//                .build()
+//        OkhttpUtils.doHttp(request).use {
+//            val data = it.body()!!.string()
+//            logger.info("getGitProjectMemberInfo token is:$token, response>> $data")
+//            if (!StringUtils.isEmpty(data)) {
+//                val dataMap = JsonUtil.toMap(data)
+//                val message = dataMap["message"]
+//                if (StringUtils.isEmpty(message)) {
+//                    return Result(JsonUtil.to(data, GitUserInfo::class.java))
+//                }
+//            }
+//            return Result(data = null)
+//        }
+//    }
+//
+//    fun getGitUserInfo(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
+//        logger.info("getGitUserInfo token is:$token, userId is:$userId,tokenType is:$tokenType")
+//        val url = StringBuilder("$gitUrl/api/v3/users/$userId")
+//        setToken(tokenType, url, token)
+//        val request = Request.Builder()
+//                .url(url.toString())
+//                .get()
+//                .build()
+//        OkhttpUtils.doHttp(request).use {
+//            val data = it.body()!!.string()
+//            logger.info("getGitUserInfo token is:$token, response>> $data")
+//            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+//            if (!StringUtils.isEmpty(data)) {
+//                val dataMap = JsonUtil.toMap(data)
+//                val message = dataMap["message"]
+//                if (StringUtils.isEmpty(message)) {
+//                    return Result(JsonUtil.to(data, GitUserInfo::class.java))
+//                }
+//            }
+//            return Result(data = null)
+//        }
+//    }
 
     fun getGitProjectInfo(id: String, token: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
         logger.info("getGitUserInfo token is:$token, id is:$id,tokenType is:$tokenType")
