@@ -15,26 +15,26 @@
             <div class="env-parameter-tab">
                 <div class="env-detail-nav">
                     <div class="tab-nav-item node-list" :class="{ activeItem: curItemTab === 'node' }"
-                        @click="changeTab('node')">节点</div>
+                        @click="changeTab('node')">{{ $t('environment.node') }}</div>
                     <div class="tab-nav-item config-item" :class="{ activeItem: curItemTab === 'config' }"
-                        @click="changeTab('config')">配置项</div>
+                        @click="changeTab('config')">{{ $t('environment.configItem') }}</div>
                     <div class="tab-nav-item base-item" :class="{ activeItem: curItemTab === 'base' }"
-                        @click="changeTab('base')">基本信息</div>
+                        @click="changeTab('base')">{{ $t('environment.basicInfo') }}</div>
                 </div>
 
                 <div class="node-content-wrapper" v-if="curItemTab === 'node'">
                     <div class="node-content-header">
-                        <bk-button theme="primary" @click="importNewNode">导入</bk-button>
+                        <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
                     </div>
                     <div class="node-table" v-if="showContent && nodeList.length">
                         <div class="table-head">
-                            <div class="table-node-item node-item-ip">名称</div>
+                            <div class="table-node-item node-item-ip">{{ $t('environment.envInfo.name') }}</div>
                             <div class="table-node-item node-item-name">IP</div>
-                            <div class="table-node-item node-item-type">来源/导入人</div>
-                            <div class="table-node-item node-item-os">操作系统</div>
-                            <div class="table-node-item node-item-area">区域</div>
-                            <div class="table-node-item node-item-status">主机状态</div>
-                            <div class="table-node-item node-item-handler node-header-head">操作</div>
+                            <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
+                            <div class="table-node-item node-item-os">{{ $t('environment.envInfo.os') }}</div>
+                            <div class="table-node-item node-item-area">{{ $t('environment.envInfo.gateway') }}</div>
+                            <div class="table-node-item node-item-status">{{ $t('environment.envInfo.cpuStatus') }}</div>
+                            <div class="table-node-item node-item-handler node-header-head">{{ $t('environment.operation') }}</div>
                         </div>
                         <div class="table-node-body" ref="scrollBox">
                             <div class="table-row" v-for="(row, index) of nodeList" :key="index">
@@ -59,7 +59,7 @@
                                 </div>
                                 <div class="table-node-item node-item-status">
                                     <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                        v-if="row.nodeStatus === '正在创建中'">
+                                        v-if="row.nodeStatus === $t('environment.nodeInfo.normal')">
                                         <div class="rotate rotate1"></div>
                                         <div class="rotate rotate2"></div>
                                         <div class="rotate rotate3"></div>
@@ -69,15 +69,15 @@
                                         <div class="rotate rotate7"></div>
                                         <div class="rotate rotate8"></div>
                                     </div>
-                                    <span class="node-status-icon normal-stutus-icon" v-if="row.nodeStatus === '正常'"></span>
+                                    <span class="node-status-icon normal-stutus-icon" v-if="row.nodeStatus === $t('environment.nodeInfo.normal')"></span>
                                     <span class="node-status-icon abnormal-stutus-icon"
-                                        v-if="row.nodeStatus === '异常' || row.nodeStatus === '未知' || row.nodeStatus === '已删除' || row.nodeStatus === '失联'">
+                                        v-if="row.nodeStatus === $t('environment.nodeInfo.abnormal') || row.nodeStatus === $t('environment.nodeInfo.unknown') || row.nodeStatus === $t('environment.nodeInfo.deleted') || row.nodeStatus === $t('environment.nodeInfo.loss')">
                                     </span>
 
                                     <span class="node-status">{{ row.nodeStatus }}</span>
                                 </div>
                                 <div class="table-node-item node-item-handler">
-                                    <span class="node-delete delete-node-text" @click.stop="confirmDelete(row, index)">移除</span>
+                                    <span class="node-delete delete-node-text" @click.stop="confirmDelete(row, index)">{{ $t('environment.remove') }}</span>
                                 </div>
                             </div>
                         </div>
