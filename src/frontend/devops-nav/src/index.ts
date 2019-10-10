@@ -9,6 +9,7 @@ import eventBus from '@/utils/eventBus'
 import App from '@/views/App.vue'
 import Logo from '@/components/Logo/index.vue'
 import Icon from '@/components/Icon/index.vue'
+import AsideNav from '@/components/AsideNav/index.vue'
 import EmptyTips from '@/components/EmptyTips/index.vue'
 import ShowTooltip from '@/components/ShowTooltip/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
@@ -44,7 +45,7 @@ VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.use(bkMagic)
-
+Vue.component('AsideNav', AsideNav)
 Vue.component('Logo', Logo)
 Vue.component('Icon', Icon)
 Vue.component('EmptyTips', EmptyTips)
