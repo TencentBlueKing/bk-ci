@@ -14,7 +14,7 @@ import EmptyTips from './components/EmptyTips/index.vue'
 import ShowTooltip from './components/ShowTooltip/index.vue'
 import DevopsFormItem from './components/DevopsFormItem/index.vue'
 import AsideNav from './components/AsideNav/index.vue'
-import ContentHeader from './components/ContentHeader/index.vue'
+// import ContentHeader from './components/ContentHeader/index.vue'
 import BigSelect from './components/Select/index.vue'
 
 import createLocale from '../../locale'
