@@ -9,5 +9,14 @@
     "developLabel": "Develop",
     "testLabel": "Test",
     "deployLabel": "Deploy",
-    "operationLabel": "Operation"
+    "operationLabel": "Operation",
+    "learnMore": "了解更多",
+    "relatedLink": "相关链接",
+    "noRecentVisiteService": "暂无最近访问服务，请查看",
+    "latestNews": "最新动态",
+    "latest": "最新",
+    "bkdevopsTitle": "蓝盾DevOps平台",
+    "bkdevopsTarget": "用蓝盾流水线加速你的交付",
+    "bkdevopsDesc": "蓝鲸团队打造的一站式DevOps研发平台，从业务安全出发，贯穿产品研发、测试和运营的全生命周期；助力业务平滑过渡到敏捷研发模式，打造一站式研发运维体系，持续快速交付高质量的产品。",
+    "bkdevopsWay": "持续交付强调更快、更可靠、低成本的自动化软件交付，蓝盾流水线（Pipeline）提供可视化、一键式部署服务，和持续集成无缝集成，支持并行部署。"
 }
