@@ -1,17 +1,19 @@
 <template>
     <div class="bk-devops-nav-content-header">
         <div class="bk-devops-navcontent-header-left">
-            <slot name="left"></slot>
+            <slot name="left" />
         </div>
         <div class="bk-devops-navcontent-header-right">
-            <slot name="right"></slot>
+            <slot name="right" />
         </div>
     </div>
 </template>
 
 <script lang="ts">
     import Vue from 'vue'
-    
+    import { Component } from 'vue-property-decorator'
+
+    @Component
     export default class ContentHeader extends Vue {
     }
 </script>

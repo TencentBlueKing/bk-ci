@@ -2656,10 +2656,10 @@ binary-extensions@^1.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.13.1.tgz#598afe54755b2868a5330d2aff9d4ebb53209b65"
   integrity sha512-Un7MIEDdUC5gNpcGDV97op1Ywk748MpHcFTHoYs6qnj1Z3j7I53VG3nwZhKzoBZmbdRNnb6WRdFlwl7tSDuZGw==
 
-bk-magic-vue@2.0.8-beta.13:
-  version "2.0.8-beta.13"
-  resolved "https://registry.yarnpkg.com/bk-magic-vue/-/bk-magic-vue-2.0.8-beta.13.tgz#069087ee45cacef0170b5b475f33de6aed5404e5"
-  integrity sha512-EVjhtW7Dmkhm0C++Di/J6mDoLQmQR4mOkrV57hYtWNaXOefX6SjCaXE6bbHPwz7hCpNddLX6XDLlUgS55PNEdw==
+bk-magic-vue@2.1.6-beta.3:
+  version "2.1.6-beta.3"
+  resolved "http://r.tnpm.oa.com/bk-magic-vue/download/bk-magic-vue-2.1.6-beta.3.tgz#a383c1653e62f49cfbb37924c157ee03c5d492ac"
+  integrity sha1-o4PBZT5i9Jz7s3kkwVfuA8XUkqw=
 
 block-stream@*:
   version "0.0.9"
@@ -13737,6 +13737,11 @@ vue-hot-reload-api@^2.3.0:
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz#532955cc1eb208a3d990b3a9f9a70574657e08f2"
   integrity sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==
+
+vue-i18n@^8.14.1:
+  version "8.14.1"
+  resolved "http://r.tnpm.oa.com/vue-i18n/download/vue-i18n-8.14.1.tgz#0ca0a2742c14e0144481655157fffcc7cc313e50"
+  integrity sha1-DKCidCwU4BREgWVRV//8x8wxPlA=
 
 vue-loader@^15.0.9, vue-loader@^15.4.2:
   version "15.7.1"

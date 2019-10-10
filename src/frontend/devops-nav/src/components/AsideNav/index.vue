@@ -1,26 +1,49 @@
 <template>
-    <bk-navigation class="bkdevops-aside-nav" :theme-color="navTheme.themeColor" :default-open="true" :header-title="headerTitle">
+    <bk-navigation
+        class="bkdevops-aside-nav"
+        :theme-color="navTheme.themeColor"
+        :default-open="true"
+        :header-title="headerTitle"
+    >
         <template slot="side-header">
-            <logo :name="nav.icon" size="32" class="title-icon" />
+            <logo
+                :name="nav.icon"
+                size="32"
+                class="title-icon"
+            />
             <span class="title-desc">{{ nav.title }}</span>
-            <i v-if="nav.url" class="bk-icon icon-question-circle" @click="goToDoc(nav.url)"></i>
+            <i
+                v-if="nav.url"
+                class="bk-icon icon-question-circle"
+                @click="goToDoc(nav.url)"
+            />
         </template>
-        <div slot="header-set" class="header-right-set">
-            <slot name="header-right"></slot>
+        <div
+            slot="header-set"
+            class="header-right-set"
+        >
+            <slot name="header-right" />
         </div>
         
         <div slot="menu">
-            <bk-navigation-menu ref="menu" @select="() => {}" :default-active="$route.name" v-bind="navTheme" :toggle-active="nav.toggle">
+            <bk-navigation-menu
+                ref="menu"
+                :default-active="$route.name"
+                v-bind="navTheme"
+                :toggle-active="nav.toggle"
+                @select="() => {}"
+            >
                 <bk-navigation-menu-item
                     v-for="item in nav.menu"
                     :key="item.id"
                     v-bind="item"
-                    @click="menuClick">
-                    <span>{{item.name}}</span>
+                    @click="menuClick"
+                >
+                    <span>{{ item.name }}</span>
                 </bk-navigation-menu-item>
             </bk-navigation-menu>
         </div>
-        <slot name="content"></slot>
+        <slot name="content" />
     </bk-navigation>
 </template>
 

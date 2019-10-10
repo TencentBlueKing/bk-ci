@@ -180,7 +180,7 @@
         methods: {
             init () {
                 const params = this.$route.params || {}
-                this.certType = params.certType || 'ios'
+                this.certType = params.certType ? params.certType.toLowerCase() : 'ios'
                 this.isEdit = this.$route.name === 'editCert'
 
                 if (this.isEdit) {
@@ -205,7 +205,7 @@
 
             async requestCertDetail (callBack) {
                 this.loading.isLoading = true
-                const certType = this.$route.params.certType
+                const certType = this.$route.params.certType.toLowerCase()
                 const certId = this.$route.params.certId
                 try {
                     this.certData = await this.$store.dispatch('ticket/requestCertDetail', {

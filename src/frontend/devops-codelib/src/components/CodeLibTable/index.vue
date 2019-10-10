@@ -4,6 +4,7 @@
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageCountChange"
+        v-bkloading="{ isLoading }"
     >
         <bk-table-column type="index" label="序列" align="center" width="60"></bk-table-column>
         <bk-table-column label="别名" prop="aliasName"></bk-table-column>
@@ -39,8 +40,20 @@
             }
         },
 
+        data () {
+            return {
+                pagination: {
+                    current: this.page,
+                    count: this.count,
+                    limit: this.pageSize
+                },
+                isLoading: false
+            }
+        },
+
         computed: {
             ...mapState('codelib', ['gitOAuth']),
+
             currentPage: {
                 get () {
                     return this.page
@@ -49,15 +62,23 @@
                     this.switchPage(page, this.pageSize)
                 }
             },
+
             projectId () {
                 return this.$route.params.projectId
+            }
+        },
+
+        watch: {
+            page (val) {
+                this.pagination.current = val
             },
-            pagination () {
-                return {
-                    current: this.page,
-                    count: this.count,
-                    limit: this.pageSize
-                }
+
+            count (val) {
+                this.pagination.count = val
+            },
+
+            pageSize (val) {
+                this.pagination.limit = val
             }
         },
 
@@ -92,6 +113,8 @@
             },
 
             handlePageCountChange (limit) {
+                if (this.pagination.limit === limit) return
+
                 this.pagination.current = 1
                 this.pagination.limit = limit
                 this.switchPage(1, limit)
@@ -130,19 +153,11 @@
                 this.$bkInfo({
                     subHeader,
                     title: `确认`,
-                    confirmFn: async () => {
-                        try {
-                            const {
-                                projectId,
-                                currentPage,
-                                pageSize,
-                                count,
-                                totalPages
-                            } = this
-                            await this.deleteRepo({
-                                projectId,
-                                repositoryHashId
-                            })
+                    confirmFn: () => {
+                        const { projectId, currentPage, pageSize, count, totalPages } = this
+                        this.isLoading = true
+
+                        this.deleteRepo({ projectId, repositoryHashId }).then(() => {
                             this.$bkMessage({
                                 message: `代码库${aliasName}删除成功`,
                                 theme: 'success'
@@ -162,12 +177,14 @@
                             } else {
                                 this.switchPage(currentPage, pageSize)
                             }
-                        } catch (e) {
+                        }).catch((e) => {
                             this.$bkMessage({
                                 message: e.message,
                                 theme: 'error'
                             })
-                        }
+                        }).finally(() => {
+                            this.isLoading = false
+                        })
                     }
                 })
             }

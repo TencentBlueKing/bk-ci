@@ -6,14 +6,18 @@ import Vue from 'vue'
 import createRouter from '@/router'
 import store from '@/store'
 import eventBus from '@/utils/eventBus'
-import App from '@/views/App.vue'
-import Logo from '@/components/Logo/index.vue'
-import Icon from '@/components/Icon/index.vue'
-import EmptyTips from '@/components/EmptyTips/index.vue'
-import ShowTooltip from '@/components/ShowTooltip/index.vue'
-import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
-import iframeUtil from '@/utils/iframeUtil'
-import locale from '../../locale'
+import Logo from './components/Logo/index.vue'
+import iframeUtil from './utils/iframeUtil'
+import Icon from './components/Icon/index.vue'
+import EmptyTips from './components/EmptyTips/index.vue'
+import ShowTooltip from './components/ShowTooltip/index.vue'
+import DevopsFormItem from './components/DevopsFormItem/index.vue'
+import AsideNav from './components/AsideNav/index.vue'
+import ContentHeader from './components/ContentHeader/index.vue'
+import BigSelect from './components/Select/index.vue'
+import App from './views/App.vue'
+
+import createLocale from '../../locale'
 
 import VeeValidate from 'vee-validate'
 import ExtendsCustomRules from './utils/customRules'
@@ -44,23 +48,25 @@ VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.use(bkMagic)
-
+Vue.component('AsideNav', AsideNav)
+Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)
 Vue.component('Icon', Icon)
 Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
+Vue.component('BigSelect', BigSelect)
 
-
-const router = createRouter(store, locale.dynamicLoadModule)
+const { i18n, dynamicLoadModule, setLocale } = createLocale(require.context('@locale/nav/', false, /\.json$/))
+const router = createRouter(store, dynamicLoadModule)
 window.eventBus = eventBus
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
-Vue.prototype.$setLocale = locale.setLocale
+Vue.prototype.$setLocale = setLocale
 
 window.devops = new Vue({
     el: '#devops-root',
-    i18n: locale.i18n,
+    i18n,
     router,
     store,
     render (h) {
