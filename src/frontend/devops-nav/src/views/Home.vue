@@ -28,7 +28,7 @@
                             v-else
                             class="no-recent-service"
                         >
-                            暂无最近访问服务，请查看
+                            {{ $t("noRecentVisiteService") }}
                             <span @click="updateShowAllService(true)">{{ $t('allService') }}</span>
                         </p>
                     </div>
@@ -67,7 +67,7 @@
             <div class="devops-news">
                 <header>
                     <p class="title">
-                        最新动态
+                        {{ $t("latestNews") }}
                     </p>
                 </header>
 
@@ -81,7 +81,7 @@
                             target="_blank"
                             :href="item.link"
                         >
-                            <span v-if="index === 0">[最新]</span>
+                            <span v-if="index === 0">[{{ $t("latest") }}]</span>
                             {{ item.name }}
                         </a>
                         <span>{{ item.create_time }}</span>
@@ -91,29 +91,29 @@
         </section>
         <aside>
             <article>
-                <h2>蓝盾DevOps平台</h2>
+                <h2>{{ $t("bkdevopsTitle") }}</h2>
                 <p>
-                    蓝鲸团队打造的一站式DevOps研发平台，从业务安全出发，贯穿产品研发、测试和运营的全生命周期；助力业务平滑过渡到敏捷研发模式，打造一站式研发运维体系，持续快速交付高质量的产品。
+                    {{ $t("bkdevopsDesc") }}
                     <a
                         :href="DOCS_URL_PREFIX"
                         class="more"
                         target="_blank"
-                    >了解更多</a>
+                    >{{ $t("learnMore") }}</a>
                 </p>
             </article>
             <article>
-                <h2>用蓝盾流水线加速你的交付</h2>
+                <h2>{{ $t("bkdevopsTarget") }}</h2>
                 <p>
-                    持续交付强调更快、更可靠、低成本的自动化软件交付，蓝盾流水线（Pipeline）提供可视化、一键式部署服务，和持续集成无缝集成，支持并行部署。
+                    {{ $t("bkdevopsWay") }}
                     <a
                         :href="`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`"
                         target="_blank"
                         class="more"
-                    >了解更多</a>
+                    >{{ $t("learnMore") }}</a>
                 </p>
             </article>
             <article>
-                <h2>相关链接</h2>
+                <h2>{{ $t("relatedLink") }}</h2>
                 <div>
                     <a
                         v-for="item in related"

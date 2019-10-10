@@ -49,7 +49,7 @@ Vue.use(VeeValidate, {
 Vue.use(focus)
 Vue.use(bkMagic)
 
-const { i18n } = createLocale(require.context('@locale/pipeline/', false, /\.js/))
+const { i18n } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
 
 global.pass3Vue = new Vue({
     el: '#app',

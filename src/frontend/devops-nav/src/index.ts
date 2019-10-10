@@ -57,7 +57,7 @@ Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 
-const { i18n, dynamicLoadModule, setLocale } = createLocale(require.context('@locale/nav/', false, /\.js/))
+const { i18n, dynamicLoadModule, setLocale } = createLocale(require.context('@locale/nav/', false, /\.json$/))
 const router = createRouter(store, dynamicLoadModule)
 window.eventBus = eventBus
 Vue.prototype.iframeUtil = iframeUtil(router)

@@ -69,14 +69,16 @@ function getLocalModuleId (module, locale) {
 function importAll (r) {
     let localeList = []
     const messages = r.keys().reduce((acc, key) => {
-        const mod = r(key).default
-        const matchLocaleKey = key.match(/\/([\w-]+)?\.js$/)
+        const mod = r(key)
+        
+        const matchLocaleKey = key.match(/\/([\w-]+)?\.json$/)
         const localeKey = (matchLocaleKey ? matchLocaleKey[1] : '')
         if (localeKey) {
             acc[localeKey] = {
                 ...lang[localeKey.replace('-', '')],
                 ...mod
             }
+            
             localeList.push(localeKey)
         }
         return acc
