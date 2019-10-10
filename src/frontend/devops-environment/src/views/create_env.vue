@@ -31,7 +31,7 @@
                         v-validate="'required'">
                     </bk-input>
                 </devops-form-item>
-                <bk-form-item :label="$t('environment.envRemark')" :property="'desc'">
+                <bk-form-item :label="$t('environment.envInfo.envRemark')" :property="'desc'">
                     <bk-input
                         class="env-desc-input"
                         :placeholder="$t('environment.pleaseEnter')"
@@ -41,12 +41,12 @@
                         v-model="createEnvForm.desc">
                     </bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('environment.envType')" class="env-type-item" :required="true" :property="'envType'">
+                <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
                     <bk-radio-group v-model="createEnvForm.envType">
-                        <bk-radio :value="'BUILD'">{{ $t('environment.buildEnvType') }}</bk-radio>
+                        <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item :label="$t('environment.nodeSource')" :required="true" :property="'source'">
+                <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
                     <div class="env-source-content">
                         <div class="source-type-radio">
                             <bk-radio-group v-model="createEnvForm.source">

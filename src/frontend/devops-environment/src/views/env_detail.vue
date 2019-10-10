@@ -31,9 +31,9 @@
                             <div class="table-node-item node-item-ip">{{ $t('environment.envInfo.name') }}</div>
                             <div class="table-node-item node-item-name">IP</div>
                             <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
-                            <div class="table-node-item node-item-os">{{ $t('environment.envInfo.os') }}</div>
-                            <div class="table-node-item node-item-area">{{ $t('environment.envInfo.gateway') }}</div>
-                            <div class="table-node-item node-item-status">{{ $t('environment.envInfo.cpuStatus') }}</div>
+                            <div class="table-node-item node-item-os">{{ $t('environment.nodeInfo.os') }}</div>
+                            <div class="table-node-item node-item-area">{{ $t('environment.nodeInfo.gateway') }}</div>
+                            <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
                             <div class="table-node-item node-item-handler node-header-head">{{ $t('environment.operation') }}</div>
                         </div>
                         <div class="table-node-body" ref="scrollBox">
@@ -89,14 +89,14 @@
                 <div class="config-content-wrapper" v-if="curItemTab === 'config'">
                     <div class="config-content-header">
                         <bk-button theme="primary" :disabled="lastselectConfIndex > -1"
-                            @click="createConfigItem">新增配置项</bk-button>
+                            @click="createConfigItem">{{ $t('environment.addConfItem') }}</bk-button>
                     </div>
                     <div class="config-table" v-if="showContent && configList.length">
                         <div class="table-head config-head">
-                            <div class="table-config-item config-item-key">键</div>
-                            <div class="table-config-item config-item-value">值</div>
-                            <div class="table-config-item config-item-type">类型</div>
-                            <div class="table-config-item config-item-handler">操作</div>
+                            <div class="table-config-item config-item-key">{{ $t('environment.envInfo.key') }}</div>
+                            <div class="table-config-item config-item-value">{{ $t('environment.envInfo.value') }}</div>
+                            <div class="table-config-item config-item-type">{{ $t('environment.envInfo.type') }}</div>
+                            <div class="table-config-item config-item-handler">{{ $t('environment.operation') }}</div>
                         </div>
                         <div class="table-config-body">
                             <div class="table-row config-row" v-for="(row, index) of configList" :key="index">
