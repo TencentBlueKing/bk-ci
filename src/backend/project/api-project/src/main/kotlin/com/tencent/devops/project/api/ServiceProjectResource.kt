@@ -61,7 +61,7 @@ interface ServiceProjectResource {
     ): Result<List<ProjectVO>>
 
     @POST
-    @Path("/")
+    @Path("/newProject")
     @ApiOperation("创建项目")
     fun create(
             @ApiParam("userId", required = true)
