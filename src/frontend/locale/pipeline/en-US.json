@@ -1,4 +1,4 @@
-export default {
+{
     "pipeline": "Pipeline",
     "labelManage": "Label Manage",
     "viewManage": "View Manage",

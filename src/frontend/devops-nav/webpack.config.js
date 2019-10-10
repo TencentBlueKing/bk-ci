@@ -77,6 +77,7 @@ module.exports = (env = {}, argv) => {
       ]
     }
   ]
+  config.plugins.pop()
   config.plugins = [
     ...config.plugins,
     new HtmlWebpackPlugin({

@@ -12,8 +12,11 @@ import Icon from '@/components/Icon/index.vue'
 import AsideNav from '@/components/AsideNav/index.vue'
 import EmptyTips from '@/components/EmptyTips/index.vue'
 import ShowTooltip from '@/components/ShowTooltip/index.vue'
+import ContentHeader from './components/ContentHeader/index.vue'
+import BigSelect from './components/Select/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
 import iframeUtil from '@/utils/iframeUtil'
+
 import createLocale from '../../locale'
 
 import VeeValidate from 'vee-validate'
@@ -46,11 +49,13 @@ ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.use(bkMagic)
 Vue.component('AsideNav', AsideNav)
+Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)
 Vue.component('Icon', Icon)
 Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
+Vue.component('BigSelect', BigSelect)
 
 const { i18n, dynamicLoadModule, setLocale } = createLocale(require.context('@locale/nav/', false, /\.js/))
 const router = createRouter(store, dynamicLoadModule)

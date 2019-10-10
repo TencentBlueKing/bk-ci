@@ -1,4 +1,4 @@
-export default {
+{
     "pipeline": "流水线",
     "labelManage": "标签管理",
     "viewManage": "视图管理",
