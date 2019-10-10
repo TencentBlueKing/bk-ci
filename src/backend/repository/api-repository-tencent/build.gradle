@@ -26,7 +26,6 @@
 
 dependencies {
     compile project(":common:common-api")
-    compile project(":common:common-scm")
     compile project(":repository:api-repository")
 //    compile project(":repository:model-repository")
 }
