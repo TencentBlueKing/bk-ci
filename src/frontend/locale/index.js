@@ -17,6 +17,39 @@ export default (r) => {
     })
 
     locale.i18n((key, value) => i18n.t(key, value))
+
+
+    function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
+        
+        const localeModuleId = getLocalModuleId(module, locale)
+        if (loadedModule[localeModuleId]) {
+            return
+        }
+        console.log(`@locale/${module}/${locale}.js`)
+        return import(/*webpackChunkName: "lang-[request]"*/ `@locale/${module}/${locale}.js`).then(response => {
+            const messages = response.default
+            
+            i18n.setLocaleMessage(locale, {
+                ...i18n.messages[locale],
+                [ module ]: messages
+            })
+            loadedModule[localeModuleId] = true
+        })
+    }
+
+    function setLocale (locale) {
+        Object.keys(loadedModule).map(mod => {
+            const [ , module ] = mod.split('_')
+            if (!loadedModule[getLocalModuleId(module, locale)]) {
+                dynamicLoadModule(module, locale)
+            }
+        })
+        i18n.locale = locale
+        axios.defaults.headers.common['Accept-Language'] = locale
+        document.querySelector('html').setAttribute('lang', locale)
+        return locale
+    }
+    
  
     return {
         i18n,
@@ -51,35 +84,4 @@ function importAll (r) {
         localeList,
         messages
     }
-}
-
-function setLocale (locale) {
-    Object.keys(loadedModule).map(mod => {
-        const [ , module ] = mod.split('_')
-        if (!loadedModule[getLocalModuleId(module, locale)]) {
-            dynamicLoadModule(module, locale)
-        }
-    })
-    i18n.locale = locale
-    axios.defaults.headers.common['Accept-Language'] = locale
-    document.querySelector('html').setAttribute('lang', locale)
-    return locale
-}
-
-function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
-        
-    const localeModuleId = getLocalModuleId(module, locale)
-    if (loadedModule[localeModuleId]) {
-        return
-    }
-
-    return import(`@locale/${module}/${locale}.js`).then(response => {
-        const messages = response.default
-        
-        i18n.setLocaleMessage(locale, {
-            ...i18n.messages[locale],
-            [ module ]: messages
-        })
-        loadedModule[localeModuleId] = true
-    })
 }
