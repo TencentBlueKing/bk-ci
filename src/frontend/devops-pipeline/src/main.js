@@ -31,6 +31,7 @@ import VeeValidate from 'vee-validate'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import PortalVue from 'portal-vue' // eslint-disable-line
+import createLocale from '../../locale'
 
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
@@ -48,9 +49,12 @@ Vue.use(VeeValidate, {
 Vue.use(focus)
 Vue.use(bkMagic)
 
+const { i18n } = createLocale(require.context('@locale/pipeline/', false, /\.js/))
+
 global.pass3Vue = new Vue({
     el: '#app',
     router: createRouter(store),
+    i18n,
     store,
     components: {
         App

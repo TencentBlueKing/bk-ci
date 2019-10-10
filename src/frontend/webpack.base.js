@@ -14,7 +14,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     return {
         entry,
         output: {
-            publicPath: isDev ? `http://dev.static.devops.oa.com${publicPath}` : publicPath,
+            publicPath: isDev ? `http://v2.dev.static.devops.oa.com${publicPath}` : publicPath,
             chunkFilename: isMaster ? '[name].[chunkhash].js' : '[name].js',
             filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
             path: buildDist

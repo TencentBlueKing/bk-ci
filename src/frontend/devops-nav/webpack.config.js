@@ -112,5 +112,6 @@ module.exports = (env = {}, argv) => {
         { from: /^\/console/, to: '/console/index.html' }
     ]
   }
+  config.output.publicPath = '/console/'
   return config
 }

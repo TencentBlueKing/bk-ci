@@ -13,7 +13,7 @@ import EmptyTips from '@/components/EmptyTips/index.vue'
 import ShowTooltip from '@/components/ShowTooltip/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
 import iframeUtil from '@/utils/iframeUtil'
-import locale from '../../locale'
+import createLocale from '../../locale'
 
 import VeeValidate from 'vee-validate'
 import ExtendsCustomRules from './utils/customRules'
@@ -51,16 +51,16 @@ Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 
-
-const router = createRouter(store, locale.dynamicLoadModule)
+const { i18n, dynamicLoadModule, setLocale } = createLocale(require.context('@locale/nav/', false, /\.js/))
+const router = createRouter(store, dynamicLoadModule)
 window.eventBus = eventBus
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
-Vue.prototype.$setLocale = locale.setLocale
+Vue.prototype.$setLocale = setLocale
 
 window.devops = new Vue({
     el: '#devops-root',
-    i18n: locale.i18n,
+    i18n,
     router,
     store,
     render (h) {

@@ -57,26 +57,11 @@
 
             <div class="bkdevops-box">
                 <h2>{{ $t('slogan') }}</h2>
-                <span
-                    slot="b"
-                    style="left: 112px;"
-                >{{ $t('issueLabel') }}</span>
-                <span
-                    slot="c"
-                    style="left: 247px;"
-                >{{ $t('developLabel') }}</span>
-                <span
-                    slot="d"
-                    style="left: 382px;"
-                >{{ $t('testLabel') }}</span>
-                <span
-                    slot="e"
-                    style="left: 518px;"
-                >{{ $t('deployLabel') }}</span>
-                <span
-                    slot="f"
-                    style="left: 652px;"
-                >{{ $t('operationLabel') }}</span>
+                <span style="left: 112px;">{{ $t('issueLabel') }}</span>
+                <span style="left: 247px;">{{ $t('developLabel') }}</span>
+                <span style="left: 382px;">{{ $t('testLabel') }}</span>
+                <span style="left: 518px;">{{ $t('deployLabel') }}</span>
+                <span style="left: 652px;">{{ $t('operationLabel') }}</span>
             </div>
 
             <div class="devops-news">

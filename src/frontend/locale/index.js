@@ -5,18 +5,27 @@ import axios from 'axios'
 const DEFAULT_LOCALE = 'en-US'
 const loadedModule = {}
 
-Vue.use(VueI18n)
-    
-const { messages, localeList } = importAll(require.context('@locale/nav/', false, /\.js/))
+export default (r) => {
+    Vue.use(VueI18n)
+    const { messages, localeList } = importAll(r)
 
-// export localeList
-const i18n = new VueI18n({
-    locale: DEFAULT_LOCALE,
-    fallbackLocale: DEFAULT_LOCALE,
-    messages
-})
+    // export localeList
+    const i18n = new VueI18n({
+        locale: DEFAULT_LOCALE,
+        fallbackLocale: DEFAULT_LOCALE,
+        messages
+    })
 
-locale.i18n((key, value) => i18n.t(key, value))
+    locale.i18n((key, value) => i18n.t(key, value))
+ 
+    return {
+        i18n,
+        setLocale,
+        localeList,
+        dynamicLoadModule
+    }
+}
+
 
 function getLocalModuleId (module, locale) {
     return `${locale}_${module}`
@@ -73,11 +82,4 @@ function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         })
         loadedModule[localeModuleId] = true
     })
-}
-
-export default {
-    i18n,
-    setLocale,
-    localeList,
-    dynamicLoadModule
 }
