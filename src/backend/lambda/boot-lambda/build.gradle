@@ -24,24 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import javax.annotation.PostConstruct
-
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
-
-    @Autowired(required = false)
-    private var objectMapper: ObjectMapper? = null
-
-    @PostConstruct
-    fun registerSubtypesObjectMapper() {
-        ElementSubTypeRegisterLoader.registerElement(objectMapper)
-    }
+dependencies {
+    compile project(":common:common-auth:common-auth-sample")
+    compile project(":lambda:biz-lambda")
+    compile project(":lambda:biz-lambda-sample") // sample 是开源版实现
 }
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

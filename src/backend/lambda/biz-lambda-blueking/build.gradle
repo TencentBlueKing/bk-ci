@@ -24,24 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import javax.annotation.PostConstruct
-
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
-
-    @Autowired(required = false)
-    private var objectMapper: ObjectMapper? = null
-
-    @PostConstruct
-    fun registerSubtypesObjectMapper() {
-        ElementSubTypeRegisterLoader.registerElement(objectMapper)
-    }
+dependencies {
+    compile project(":common:common-kafka")
+    compile project(":common:common-es")
+    compile project(":common:common-event")
+    compile project(":common:common-db")
+    compile project(":common:common-client")
+    compile project(":process:api-process")
+    compile project(":project:api-project")
+    compile project(":lambda:api-lambda-blueking")
+    compile project(":process:model-process")
+    compile project(":lambda:model-lambda")
+    testCompile project(":common:common-test")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

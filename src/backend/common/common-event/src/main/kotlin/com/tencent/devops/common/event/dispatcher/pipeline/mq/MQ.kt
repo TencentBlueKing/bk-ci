@@ -144,4 +144,44 @@ object MQ {
     const val EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT = "e.engine.pipeline.setting.change.fanout"
     const val ROUTE_PIPELINE_SETTING_CHANGE = "r.engine.pipeline.setting.change"
     const val QUEUE_PIPELINE_SETTING_CHANGE = "q.engine.pipeline.setting.change"
+
+    // 构建启动广播exchange
+    const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
+    const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
+
+    const val QUEUE_PIPELINE_BUILD_FINISH_LAMBDA = "q.engine.pipeline.build.lambda"
+
+    const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"
+
+    // 插件结束后续广播exchange
+    const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "e.engine.pipeline.build.element.finish"
+    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
+    // 接收上述广播的队列
+    const val QUEUE_PIPELINE_BUILD_ELEMENT_FINISH_LAMBDA = "q.engine.pipeline.build.element.lambda"
+    const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
+
+    // SVN代码仓库webhook请求回调
+    const val EXCHANGE_SVN_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.svn.event"
+    const val ROUTE_SVN_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.svn.event"
+    const val QUEUE_SVN_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.svn.event"
+
+    // CodeGit代码仓库webhook请求回调
+    const val EXCHANGE_GIT_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.git.event"
+    const val ROUTE_GIT_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.git.event"
+    const val QUEUE_GIT_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.git.event"
+
+    // Gitlab代码仓库webhook请求回调
+    const val EXCHANGE_GITLAB_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.gitlab.event"
+    const val ROUTE_GITLAB_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.gitlab.event"
+    const val QUEUE_GITLAB_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.gitlab.event"
+
+    // Github代码仓库webhook请求回调
+    const val EXCHANGE_GITHUB_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.github.event"
+    const val ROUTE_GITHUB_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.github.event"
+    const val QUEUE_GITHUB_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.github.event"
+
+    // webSocket消息
+    const val EXCHANGE_WEBSOCKET_TMP_FANOUT = "e.websocket.fanout"
+    const val ROUTE_WEBSOCKET_TMP_EVENT = "r.websocket.file"
+    const val QUEUE_WEBSOCKET_TMP_EVENT = "q.websocket.file"
 }
