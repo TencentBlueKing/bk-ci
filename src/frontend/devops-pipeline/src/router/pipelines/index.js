@@ -43,6 +43,8 @@ const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'.
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../../views/subpages/edit.vue')
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../../views/subpages/preview.vue')
+// 插件前端task.json在线调试
+const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../../views/atomDebug.vue')
 
 const routes = [
     {
@@ -121,6 +123,11 @@ const routes = [
                         component: templateInstanceCreate
                     }
                 ]
+            },
+            {
+                path: 'atomDebug',
+                name: 'atomDebug',
+                component: atomDebug
             },
             {
                 path: ':pipelineId',
