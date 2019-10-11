@@ -27,10 +27,12 @@
 package com.tencent.devops.scm.config
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Configuration
 
 /**
  * SVN通用配置
  */
+@Configuration
 class SVNConfig {
 
     @Value("\${svn.apiUrl}")

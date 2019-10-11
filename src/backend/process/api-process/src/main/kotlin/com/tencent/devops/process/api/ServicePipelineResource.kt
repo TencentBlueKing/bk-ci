@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -196,6 +197,17 @@ interface ServicePipelineResource {
 
     @ApiOperation("根据流水线id获取流水线名字")
     @POST
+    @Path("/{projectId}/getPipelines")
+    fun getPipelineByIds(
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线id列表", required = true)
+        pipelineIds: Set<String>
+    ): Result<List<SimplePipeline>>
+
+    @ApiOperation("根据流水线id获取流水线名字")
+    @POST
     @Path("/{projectId}/getPipelineNames")
     fun getPipelineNameByIds(
         @ApiParam("项目id", required = true)
@@ -226,4 +238,19 @@ interface ServicePipelineResource {
         @ApiParam("构建id", required = true)
         buildIds: Set<String>
     ): Result<Map<String/*buildId*/, String/*buildNo*/>>
+
+    @ApiOperation("获取流水线完整状态")
+    @GET
+    @Path("projectId/{projectId}/pipelineId/{pipelineId}/allStatus")
+    fun getAllstatus(
+            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_USER_ID)
+            userId: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("projectId")
+            projectId: String,
+            @ApiParam("流水线ID", required = true)
+            @PathParam("pipelineId")
+            pipelineId: String
+    ): Result<List<Pipeline>?>
 }

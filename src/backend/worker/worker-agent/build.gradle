@@ -33,5 +33,8 @@ dependencies {
     compile project(":worker:worker-api-sdk")
     compile project(":worker:worker-plugin-scm")
     compile project(":worker:worker-plugin-archive")
+
+    compile project (":plugin:codecc-plugin:worker-plugin-codecc")
+
     compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
 }

@@ -78,18 +78,21 @@ class CommitService @Autowired constructor(
     }
 
     fun getLatestCommit(
-        pipelineId: String,
-        elementId: String,
-        repositoryId: String,
-        repositoryType: RepositoryType?
-    ): CommitData? {
-        return if (repositoryType == null || repositoryType == RepositoryType.ID) {
+            pipelineId: String,
+            elementId: String,
+            repositoryId: String,
+            repositoryType: RepositoryType?,
+            page: Int?,
+            pageSize: Int?
+    ): List<CommitData> {
+        val commitList = if (repositoryType == null || repositoryType == RepositoryType.ID) {
             val repoId = HashUtil.decodeOtherIdToLong(repositoryId)
-            val data = commitDao.getLatestCommitById(dslContext, pipelineId, elementId, repoId)
-            if (data == null) {
-                null
-            } else {
-                CommitData(
+            commitDao.getLatestCommitById(dslContext, pipelineId, elementId, repoId, page, pageSize) ?: return listOf()
+        } else {
+            commitDao.getLatestCommitByName(dslContext, pipelineId, elementId, repositoryId, page, pageSize) ?: return listOf()
+        }
+        return commitList.map { data ->
+            CommitData(
                     data.type,
                     pipelineId,
                     data.buildId,
@@ -100,26 +103,7 @@ class CommitService @Autowired constructor(
                     data.repoId.toString(),
                     null,
                     data.elementId
-                )
-            }
-        } else {
-            val data = commitDao.getLatestCommitByName(dslContext, pipelineId, elementId, repositoryId)
-            if (data == null) {
-                null
-            } else {
-                CommitData(
-                    data.type,
-                    pipelineId,
-                    data.buildId,
-                    data.commit,
-                    data.committer,
-                    data.commitTime.timestampmilli(),
-                    data.comment,
-                    null,
-                    data.repoName,
-                    data.elementId
-                )
-            }
+            )
         }
     }
 }

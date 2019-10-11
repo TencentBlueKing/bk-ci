@@ -52,7 +52,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Repository
-class AtomDao {
+class AtomDao : AtomBaseDao() {
 
     fun addAtomFromOp(
         dslContext: DSLContext,

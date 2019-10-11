@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":plugin:codecc-plugin:common-codecc")
+    compile project(":worker:worker-common")
+    compile project(":worker:worker-plugin-scm")
+}
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

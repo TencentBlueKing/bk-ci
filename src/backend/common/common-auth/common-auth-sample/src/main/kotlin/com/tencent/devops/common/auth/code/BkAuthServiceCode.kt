@@ -38,7 +38,8 @@ enum class BkAuthServiceCode(val value: String) {
     PIPELINE(BK_DEVOPS_SCOPE),
     TICKET(BK_DEVOPS_SCOPE),
     ENVIRONMENT(BK_DEVOPS_SCOPE),
-    PROJECT(BK_DEVOPS_SCOPE);
+    PROJECT(BK_DEVOPS_SCOPE),
+    QUALITY(BK_DEVOPS_SCOPE);
 
     companion object {
         fun get(value: String): BkAuthServiceCode {

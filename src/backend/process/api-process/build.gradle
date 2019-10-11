@@ -29,6 +29,7 @@ dependencies {
     compile project(":common:common-event")
     compile project(":store:api-store")
     compile project(":artifactory:api-artifactory")
+    compile project(":ticket:api-ticket")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

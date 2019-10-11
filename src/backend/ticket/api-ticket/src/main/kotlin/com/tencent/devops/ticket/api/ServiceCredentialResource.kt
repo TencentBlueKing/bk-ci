@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceCredentialResource {
     @ApiOperation("新增凭据")
-    @Path("/{projectId}/")
+    @Path("/projects/{projectId}/")
     @POST
     fun create(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -67,7 +67,7 @@ interface ServiceCredentialResource {
     ): Result<Boolean>
 
     @ApiOperation("其他服务获取凭据")
-    @Path("/{projectId}/{credentialId}/")
+    @Path("/projects/{projectId}/certs/{credentialId}/")
     @GET
     fun get(
         @ApiParam("项目ID", required = true)
@@ -82,7 +82,7 @@ interface ServiceCredentialResource {
     ): Result<CredentialInfo>
 
     @ApiOperation("检查凭据是否存在")
-    @Path("/{projectId}/{credentialId}/")
+    @Path("/projects/{projectId}/certs/{credentialId}/")
     @OPTIONS
     fun check(
         @ApiParam("项目ID", required = true)
@@ -94,7 +94,7 @@ interface ServiceCredentialResource {
     )
 
     @ApiOperation("其他服务获取凭据列表")
-    @Path("/{projectId}/")
+    @Path("/projects/{projectId}/")
     @GET
     fun list(
         @ApiParam("项目ID", required = true)

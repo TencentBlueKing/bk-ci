@@ -26,12 +26,15 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.model.project.tables.TService
+import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class ServiceDao {

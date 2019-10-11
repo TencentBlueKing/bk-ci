@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.code.BkCodeAuthServiceCode
 import com.tencent.devops.common.auth.code.BkEnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BkProjectAuthServiceCode
+import com.tencent.devops.common.auth.code.BkQualityAuthServiceCode
 import com.tencent.devops.common.auth.code.BkRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BkTicketAuthServiceCode
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -85,4 +86,7 @@ class AuthAutoConfiguration {
 
     @Bean
     fun ticketAuthServiceCode() = BkTicketAuthServiceCode()
+
+    @Bean
+    fun qualityAuthServiceCode() = BkQualityAuthServiceCode()
 }

@@ -41,7 +41,7 @@ data class CodeGitlabRepository(
     @ApiModelProperty("gitlab项目名称", example = "soda/soda_ci_example_proj", required = true)
     override val projectName: String,
     @ApiModelProperty("用户名", required = true)
-    override val userName: String,
+    override var userName: String,
     @ApiModelProperty("项目id", required = true)
     override val projectId: String?,
     @ApiModelProperty("仓库hash id", required = false)

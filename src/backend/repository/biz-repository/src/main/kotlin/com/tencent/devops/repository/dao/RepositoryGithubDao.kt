@@ -26,8 +26,10 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.TRepositoryGithub
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubRecord
+import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -87,6 +89,24 @@ class RepositoryGithubDao {
                 .set(UPDATED_TIME, now)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
+        }
+    }
+
+    fun updateRepositoryInfo(dslContext: DSLContext, repositoryId: Long, updateRepositoryInfoRequest: UpdateRepositoryInfoRequest) {
+        with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+            val baseStep = dslContext.update(this)
+            if (!updateRepositoryInfoRequest.projectName.isNullOrEmpty()) {
+                baseStep.set(PROJECT_NAME, updateRepositoryInfoRequest.projectName)
+            }
+            if (!updateRepositoryInfoRequest.userId.isNullOrEmpty()) {
+                baseStep.set(USER_NAME, updateRepositoryInfoRequest.userId)
+            }
+            if (!updateRepositoryInfoRequest.credentialId.isNullOrEmpty()) {
+                baseStep.set(CREDENTIAL_ID, updateRepositoryInfoRequest.credentialId)
+            }
+            baseStep.set(UPDATED_TIME, LocalDateTime.now())
+                    .where(REPOSITORY_ID.eq(repositoryId))
+                    .execute()
         }
     }
 }

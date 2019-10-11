@@ -41,7 +41,7 @@ data class CodeGitRepository(
     @ApiModelProperty("git项目名称", example = "soda/soda_ci_example_proj", required = true)
     override val projectName: String,
     @ApiModelProperty("用户名", required = true)
-    override val userName: String,
+    override var userName: String,
     @ApiModelProperty("仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
     @ApiModelProperty("项目id", required = true)

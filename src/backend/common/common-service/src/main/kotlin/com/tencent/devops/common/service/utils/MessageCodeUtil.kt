@@ -80,7 +80,7 @@ class MessageCodeUtil @Autowired constructor() {
          */
         fun <T> generateResponseDataObject(
             messageCode: String,
-            params: Array<String>
+            params: Array<String>?
         ): Result<T> {
             return generateResponseDataObject(messageCode, params, null)
         }

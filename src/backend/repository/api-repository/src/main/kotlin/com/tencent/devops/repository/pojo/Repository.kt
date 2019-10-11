@@ -44,7 +44,7 @@ interface Repository {
     val url: String
     val credentialId: String
     val projectName: String
-    val userName: String
+    var userName: String
     val projectId: String?
     val repoHashId: String?
 

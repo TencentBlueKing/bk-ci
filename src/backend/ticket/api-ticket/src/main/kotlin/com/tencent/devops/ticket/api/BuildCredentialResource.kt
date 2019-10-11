@@ -68,4 +68,22 @@ interface BuildCredentialResource {
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CredentialInfo>
+
+    @ApiOperation("插件获取凭据")
+    @Path("/{credentialId}/detail")
+    @GET
+    fun getDetail(
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @ApiParam(value = "构建机名称", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+        vmName: String,
+        @ApiParam("凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String
+    ): Result<Map<String, String>>
 }

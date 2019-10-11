@@ -78,6 +78,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -146,7 +147,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val client: Client,
-    private val buildStartupParamService: BuildStartupParamService
+    private val buildStartupParamService: BuildStartupParamService,
+    private val templatePipelineDao: TemplatePipelineDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -256,7 +258,9 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildTask(buildId: String, taskId: String): PipelineBuildTask? {
         val t = pipelineBuildTaskDao.get(dslContext, buildId, taskId)
         return if (t != null) {
-            pipelineBuildTaskDao.convert(t)
+            val template = templatePipelineDao.get(dslContext, t.pipelineId)
+            val templateId = template?.templateId
+            pipelineBuildTaskDao.convert(t, templateId)
         } else {
             null
         }
@@ -275,8 +279,13 @@ class PipelineRuntimeService @Autowired constructor(
         )
         val result = mutableListOf<PipelineBuildTask>()
         if (list.isNotEmpty()) {
+            val pipelineIds = list.map { it.pipelineId }.toSet()
+            val map = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
+                    .map { it.pipelineId to it.templateId }
+                    .toMap()
+
             list.forEach {
-                result.add(pipelineBuildTaskDao.convert(it)!!)
+                result.add(pipelineBuildTaskDao.convert(it, map[it.pipelineId])!!)
             }
         }
         return result
@@ -286,8 +295,13 @@ class PipelineRuntimeService @Autowired constructor(
         val list = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
         val result = mutableListOf<PipelineBuildTask>()
         if (list.isNotEmpty()) {
+            val pipelineIds = list.map { it.pipelineId }.toSet()
+            val map = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
+                    .map { it.pipelineId to it.templateId }
+                    .toMap()
+
             list.forEach {
-                result.add(pipelineBuildTaskDao.convert(it)!!)
+                result.add(pipelineBuildTaskDao.convert(it, map[it.pipelineId])!!)
             }
         }
         return result
@@ -799,6 +813,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     PipelineBuildTask(
                                         projectId = pipelineInfo.projectId,
                                         pipelineId = pipelineInfo.pipelineId,
+                                        templateId = pipelineInfo.templateId,
                                         buildId = buildId,
                                         stageId = stageId,
                                         containerId = containerId,
@@ -1040,7 +1055,7 @@ class PipelineRuntimeService @Autowired constructor(
 
         buildTaskList.add(
             DispatchVMStartupTaskAtom.makePipelineBuildTask(
-                pipelineInfo.projectId, pipelineInfo.pipelineId, buildId, stageId,
+                pipelineInfo.projectId, pipelineInfo.pipelineId, pipelineInfo.templateId, buildId, stageId,
                 container, containerSeq, taskSeq, userId
             )
         )
@@ -1103,7 +1118,7 @@ class PipelineRuntimeService @Autowired constructor(
 
             buildTaskList.addAll(
                 DispatchVMShutdownTaskAtom.makePipelineBuildTasks(
-                    pipelineInfo.projectId, pipelineInfo.pipelineId, buildId, stageId,
+                    pipelineInfo.projectId, pipelineInfo.pipelineId, pipelineInfo.templateId, buildId, stageId,
                     container, containerSeq, taskSeq, userId
                 )
             )
@@ -1448,7 +1463,7 @@ class PipelineRuntimeService @Autowired constructor(
                 projectCode = projectId,
                 page = 1,
                 pageSize = null,
-                searchProps = SearchProps(props = mapOf("pipelineId" to pipelineId, "buildId" to buildId))
+                searchProps = SearchProps(fileNames = listOf(), props = mapOf("pipelineId" to pipelineId, "buildId" to buildId))
             ).data!!.records
         )
         logger.info("ArtifactFileList size: ${fileInfoList.size}")

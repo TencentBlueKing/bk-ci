@@ -45,6 +45,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getProjectByUser(userName))
     }
 
+    // TODO: 内部版、企业版path一致，入参不一致，是否需要把该接口拆到子模块内区
     override fun verifyUserProjectPermission(projectCode: String, userId: String): Result<Boolean> {
         return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
     }

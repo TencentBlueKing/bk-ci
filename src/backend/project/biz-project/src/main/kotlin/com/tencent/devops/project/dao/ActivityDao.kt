@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.model.project.tables.TActivity
 import com.tencent.devops.model.project.tables.records.TActivityRecord
 import com.tencent.devops.project.pojo.ActivityInfo
@@ -36,6 +37,7 @@ import com.tencent.devops.project.pojo.enums.ActivityType
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class ActivityDao {

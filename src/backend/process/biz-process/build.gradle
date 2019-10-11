@@ -33,13 +33,23 @@ dependencies {
     compile project(":common:common-log")
     compile project(":common:common-auth:common-auth-api")
     compile project(":common:common-db")
+    compile project(":common:common-websocket")
+
+    compile project(":log:api-log")
+    compile project(":scm:api-scm")
+    compile project(":external:api-external")
     compile project(":log:api-log")
     compile project(":store:api-store")
     compile project(":dispatch:api-dispatch")
     compile project(":project:api-project")
     compile project(":artifactory:api-artifactory")
     compile project(":process:api-process")
+    compile project(":quality:api-quality")
+    compile project(":quality:common-quality")
+    compile project(":plugin:api-plugin")
+
     compile project(":process:model-process")
+
     compile "com.zaxxer:HikariCP"
     compile "mysql:mysql-connector-java"
     compile "org.springframework.boot:spring-boot-starter-websocket"

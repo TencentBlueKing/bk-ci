@@ -309,12 +309,13 @@ class PipelineInfoDao {
         }
     }
 
-    fun convert(t: TPipelineInfoRecord?): PipelineInfo? {
+    fun convert(t: TPipelineInfoRecord?, templateId: String?): PipelineInfo? {
         return if (t != null) {
             with(t) {
                 PipelineInfo(
                     projectId,
                     pipelineId,
+                    templateId,
                     pipelineName,
                     pipelineDesc,
                     version,

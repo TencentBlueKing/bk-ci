@@ -37,17 +37,17 @@ data class UserDeptDetail(
     @JsonProperty("bg_name")
     val bgName: String,
     @JsonProperty("bg_id")
-    val bgId: Int,
+    val bgId: String,
     @JsonProperty("dept_name")
     val deptName: String,
     @JsonProperty("bg_id")
-    val deptId: Int,
+    val deptId: String,
     @JsonProperty("center_name")
     val centerName: String,
     @JsonProperty("center_id")
-    val centerId: Int,
+    val centerId: String,
     @JsonProperty("group_id")
-    val groupId: Int,
+    val groupId: String,
     @JsonProperty("group_name")
     val groupName: String
 )

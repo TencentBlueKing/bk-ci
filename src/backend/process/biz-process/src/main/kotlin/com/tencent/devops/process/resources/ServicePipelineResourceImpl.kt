@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -131,6 +132,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.isPipelineRunning(projectId, buildId, channelCode))
     }
 
+    override fun getPipelineByIds(projectId: String, pipelineIds: Set<String>): Result<List<SimplePipeline>> {
+        return Result(pipelineService.getPipelineByIds(projectId, pipelineIds))
+    }
+
     override fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {
         return Result(pipelineService.getPipelineNameByIds(projectId, pipelineIds))
     }
@@ -145,6 +150,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
     override fun getBuildNoByBuildIds(buildIds: Set<String>): Result<Map<String, String>> {
         return Result(pipelineService.getBuildNoByByPair(buildIds))
+    }
+
+    override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {
+        return Result(pipelineService.getPipelineAllStatus(userId, projectId, pipelineId))
     }
 
     private fun checkParams(userId: String, projectId: String, pipelineId: String) {
