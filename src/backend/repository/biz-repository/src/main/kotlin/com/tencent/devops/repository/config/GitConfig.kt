@@ -35,13 +35,14 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class GitConfig {
 
-    @Value("\${scm.tGit.apiUrl:}")
+//    @Value("\${scm.tGit.apiUrl:}")
+    @Value("\${repository.tencent.external.tGit.apiUrl:}")
     val tGitApiUrl: String = ""
 
-    @Value("\${scm.gitlab.apiUrl:}")
+    @Value("\${repository.tencent.external.gitlab.apiUrl:}")
     val gitlabApiUrl: String = ""
 
-    @Value("\${scm.gitlab.gitlabHookUrl:}")
+    @Value("\${repository.tencent.external.gitlab.gitlabHookUrl:}")
     val gitlabHookUrl: String = ""
 
     /* git config*/
@@ -63,28 +64,28 @@ class GitConfig {
     @Value("\${repository.tencent.scm.git.redirectAtomMarketUrl:}")
     val redirectAtomMarketUrl: String = ""
 
-    @Value("\${scm.git.gitHookUrl:}")
+    @Value("\${repository.tencent.scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
 
     @Value("\${repository.tencent.scm.git.callbackUrl}")
     val callbackUrl: String = ""
 
     /* github config */
-    @Value("\${scm.github.signSecret:}")
+    @Value("\${repository.tencent.external.github.signSecret:}")
     val signSecret: String = ""
 
-    @Value("\${scm.github.clientId:}")
+    @Value("\${repository.tencent.external.github.clientId:}")
     val githubClientId: String = ""
 
-    @Value("\${scm.github.clientSecret:}")
+    @Value("\${repository.tencent.external.github.clientSecret:}")
     val githubClientSecret: String = ""
 
     @Value("\${scm.github.webhookUrl:}")
     val githubWebhookUrl: String = ""
 
-    @Value("\${scm.github.redirectUrl:}")
+    @Value("\${repository.tencent.external.github.redirectUrl:}")
     val githubRedirectUrl: String = ""
 
-    @Value("\${scm.github.appUrl:}")
+    @Value("\${repository.tencent.external.github.appUrl:}")
     val githubAppUrl: String = ""
 }

@@ -31,20 +31,26 @@ import org.springframework.stereotype.Component
 
 @Component
 class AuthProperties {
+    //TODO
     @Value("\${auth.idProvider:#{null}}")
     val idProvider: String? = null
+//    val idProvider: String? = "client"
     @Value("\${auth.grantType:#{null}}")
     val grantType: String? = null
+//    val grantType: String? = "client_credentials"
     @Value("\${auth.principalType:#{null}}")
     val principalType: String? = null
     @Value("\${auth.envName:#{null}}")
     val envName: String? = null
     @Value("\${auth.url:#{null}}")
     val url: String? = null
+//    val url: String? = "http://authapi-dev.open.oa.com"
     @Value("\${auth.appCode:#{null}}")
     val appCode: String? = null
+//    val appCode: String? = "asb"
     @Value("\${auth.appSecret:#{null}}")
     val appSecret: String? = null
+//    val appSecret: String? = ""
 
     @Value("\${auth.bkloginUrl:#{null}}")
     val bkloginUrl: String? = null

@@ -48,10 +48,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 
 @Configuration
 @ConditionalOnWebApplication
+// TODO: 内部版如此扫描，外部版没有
+@PropertySource("classpath:/common-auth.properties")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class AuthAutoConfiguration {
 
