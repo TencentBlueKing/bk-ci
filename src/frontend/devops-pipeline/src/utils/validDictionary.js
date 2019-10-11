@@ -18,14 +18,13 @@
  */
 
 const dictionary = {
-    cn: {
+    'cn': {
         messages: {
             alpha: field => '字段只能包含字母',
-            required: field => '字段不能为空',
             unique: field => '字段不能重复',
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
-            varRule: field => `只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
+            varRule: field => `${field}只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
             numeric: field => '字段只能包含数字',
             regex: (field, regex) => {
                 return `字段不符合(${regex})正则表达式规则`
@@ -42,6 +41,34 @@ const dictionary = {
             min_value: (field, args) => {
                 return `最小不能少于${args}`
             },
+            pullmode: field => '字段不能为空',
+            excludeEmptyCapital: field => `字段不能为空，只支持英文小写、数字、下划线以及/`,
+            mutualGroup: field => `字段不能为空，只支持英文、数字或填写变量`,
+            nonVarRule: field => '该字段不需要包含${}'
+        }
+    },
+    'en-US': {
+        messages: {
+            unique: field => `${field}字段不能重复`,
+            excludeComma: field => '字段不能包含英文逗号',
+            string: field => '字段只能包含数字，字母和下划线',
+            numeric: field => '字段只能包含数字',
+            regex: (field, regex) => {
+                return `字段不符合(${regex})正则表达式规则`
+            },
+            max: (field, args) => {
+                return `字段长度不能超过${args}个字符`
+            },
+            min: (field, args) => {
+                return `字段长度不能少于${args}个字符`
+            },
+            max_value: (field, args) => {
+                return `最大不能超过${args}`
+            },
+            min_value: (field, args) => {
+                return `最小不能少于${args}`
+            },
+            varRule: field => `${field}只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
             pullmode: field => '字段不能为空',
             excludeEmptyCapital: field => `字段不能为空，只支持英文小写、数字、下划线以及/`,
             mutualGroup: field => `字段不能为空，只支持英文、数字或填写变量`,
