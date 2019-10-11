@@ -11,10 +11,10 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthPermissionApi
 import com.tencent.devops.common.auth.api.BkAuthResourceType
-import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceJfrogResource
 import org.slf4j.LoggerFactory
@@ -26,11 +26,11 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class PipelineService @Autowired constructor(
-    private val bkAuthPermissionApi: BkAuthPermissionApi,
+    private val bkAuthPermissionApi: BSAuthPermissionApi,
     private val jFrogPropertiesApi: JFrogPropertiesApi,
     private val jFrogService: JFrogService,
     private val client: Client,
-    private val pipelineAuthServiceCode: BkPipelineAuthServiceCode
+    private val pipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) {
     private val resourceType = BkAuthResourceType.PIPELINE_DEFAULT
 

@@ -26,8 +26,8 @@
 
 dependencies {
     compile project(":project:biz-project")
-    compile project(":project:api-project-blueking")
-    compile project(":common:common-auth:common-auth-blueking")
+    compile project(":project:api-project-tencent")
+    compile project(":common:common-auth:common-auth-tencent")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

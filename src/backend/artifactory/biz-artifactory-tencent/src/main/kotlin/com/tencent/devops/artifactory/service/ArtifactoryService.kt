@@ -23,9 +23,8 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthResourceType
-import com.tencent.devops.common.auth.code.BkAuthServiceCode
+import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,8 +44,7 @@ class ArtifactoryService @Autowired constructor(
     val pipelineService: PipelineService,
     val customDirService: CustomDirService,
     val jFrogPropertiesApi: JFrogPropertiesApi,
-    val shortUrlApi: ShortUrlApi,
-    val authProjectApi: BkAuthProjectApi
+    val shortUrlApi: ShortUrlApi
 ) {
     fun hasDownloadPermission(
         userId: String,

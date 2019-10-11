@@ -25,7 +25,22 @@
  */
 
 dependencies {
-    compile project(":artifactory:biz-artifactory-blueking")
+    compile project(":common:common-service")
+    compile project(":common:common-web")
+    compile project(":common:common-client")
+    compile project(":common:common-archive")
+    compile project(":common:common-db")
+    compile project(":common:common-auth:common-auth-api")
+    compile("com.amazonaws:aws-java-sdk-s3")
+    compile "net.coobird:thumbnailator:0.4.8"
+    compile project(":artifactory:model-artifactory-tencent")
+    compile project(":artifactory:api-artifactory-tencent")
+    compile project(":common:common-auth:common-auth-tencent")
+    compile project(":common:common-archive:common-archive-tencent")
+    compile project(":process:api-process-tencent")
+    compile project(":experience:api-experience-tencent")
+    compile project(":notify:api-notify")
+    compile project(":project:api-project-tencent")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"

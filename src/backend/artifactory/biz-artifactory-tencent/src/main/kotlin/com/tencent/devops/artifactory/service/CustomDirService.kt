@@ -13,8 +13,8 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
-import com.tencent.devops.common.auth.api.BkAuthProjectApi
-import com.tencent.devops.common.auth.code.BkArtifactoryAuthServiceCode
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,11 +27,11 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class CustomDirService @Autowired constructor(
-    private val authProjectApi: BkAuthProjectApi,
+    private val authProjectApi: BSAuthProjectApi,
     private val jFrogPropertiesApi: JFrogPropertiesApi,
     private val pipelineService: PipelineService,
     private val jFrogService: JFrogService,
-    private val artifactoryAuthServiceCode: BkArtifactoryAuthServiceCode
+    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) {
     fun list(userId: String, projectId: String, argPath: String): List<FileInfo> {
         validatePermission(userId, projectId)
