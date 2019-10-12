@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":project:biz-project")
+    compile project(":project:api-project")
     compile project(":project:api-project-tencent")
     compile project(":common:common-auth:common-auth-tencent")
 }

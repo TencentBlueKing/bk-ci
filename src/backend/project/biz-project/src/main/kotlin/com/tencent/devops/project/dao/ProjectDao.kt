@@ -99,6 +99,13 @@ class ProjectDao {
         }
     }
 
+    fun getAllProject(dslContext: DSLContext): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            val query = dslContext.selectFrom(this)
+            query.fetch()
+        }
+    }
+
     /**
      * 根据英文名称(projectCode)查询name
      */
@@ -115,6 +122,89 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId)).fetchOne()
+        }
+    }
+
+    /**
+     * 根据组织架构来查询name
+     */
+    fun listByGroup(
+            dslContext: DSLContext,
+            bgName: String?,
+            deptName: String?,
+            centerName: String?
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (!bgName.isNullOrBlank()) {
+                conditions.add(
+                        BG_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        bgName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            if (!deptName.isNullOrBlank()) {
+                conditions.add(
+                        DEPT_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        deptName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            if (!centerName.isNullOrBlank()) {
+                conditions.add(
+                        CENTER_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        centerName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    /**
+     * 根据bgId+deptName+centerName来查询
+     */
+    fun listByOrganization(
+            dslContext: DSLContext,
+            bgId: Long?,
+            deptName: String?,
+            centerName: String?
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (bgId != null) {
+                conditions.add(BG_ID.eq(bgId))
+            }
+            if (!deptName.isNullOrBlank()) {
+                conditions.add(
+                        DEPT_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        deptName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            if (!centerName.isNullOrBlank()) {
+                conditions.add(
+                        CENTER_NAME.like(
+                                "%" + URLDecoder.decode(
+                                        centerName,
+                                        "UTF-8"
+                                ) + "%"
+                        )
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
@@ -162,60 +252,64 @@ class ProjectDao {
     }
 
     fun create(
-        dslContext: DSLContext,
-        userId: String,
-        logoAddress: String,
-        projectCreateInfo: ProjectCreateInfo,
-        userDeptDetail: UserDeptDetail,
-        projectId: String
+            dslContext: DSLContext,
+            userId: String,
+            logoAddress: String,
+            projectCreateInfo: ProjectCreateInfo,
+            userDeptDetail: UserDeptDetail,
+            projectId: String,
+            channelCode: ProjectChannelCode = ProjectChannelCode.BS
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
-                this,
-                PROJECT_NAME,
-                PROJECT_ID,
-                ENGLISH_NAME,
-                DESCRIPTION,
-                BG_ID,
-                BG_NAME,
-                DEPT_ID,
-                DEPT_NAME,
-                CENTER_ID,
-                CENTER_NAME,
-                IS_SECRECY,
-                KIND,
-                CREATOR,
-                CREATED_AT,
-                PROJECT_TYPE,
-                APPROVAL_STATUS,
-                LOGO_ADDR,
-                CREATOR_BG_NAME,
-                CREATOR_DEPT_NAME,
-                CREATOR_CENTER_NAME
+                    this,
+                    PROJECT_NAME,
+                    PROJECT_ID,
+                    ENGLISH_NAME,
+                    DESCRIPTION,
+                    BG_ID,
+                    BG_NAME,
+                    DEPT_ID,
+                    DEPT_NAME,
+                    CENTER_ID,
+                    CENTER_NAME,
+                    IS_SECRECY,
+                    KIND,
+                    CREATOR,
+                    CREATED_AT,
+                    PROJECT_TYPE,
+                    APPROVAL_STATUS,
+                    LOGO_ADDR,
+                    CREATOR_BG_NAME,
+                    CREATOR_DEPT_NAME,
+                    CREATOR_CENTER_NAME,
+                    CHANNEL
             ).values(
-                projectCreateInfo.projectName,
-                projectId,
-                projectCreateInfo.englishName,
-                projectCreateInfo.description,
-                0,
-                "",
-                0,
-                "",
-                0,
-                "",
-                projectCreateInfo.secrecy,
-                projectCreateInfo.kind,
-                userId,
-                LocalDateTime.now(),
-                projectCreateInfo.projectType,
-                ApproveStatus.APPROVED.status,
-                logoAddress,
-                userDeptDetail.bgName,
-                userDeptDetail.deptName,
-                userDeptDetail.centerName
+                    projectCreateInfo.project_name,
+                    projectId,
+                    projectCreateInfo.english_name,
+                    projectCreateInfo.description,
+                    projectCreateInfo.bg_id,
+                    projectCreateInfo.bg_name,
+                    projectCreateInfo.dept_id,
+                    projectCreateInfo.dept_name,
+                    projectCreateInfo.center_id,
+                    projectCreateInfo.center_name,
+                    projectCreateInfo.is_secrecy,
+                    projectCreateInfo.kind,
+                    userId,
+                    LocalDateTime.now(),
+                    projectCreateInfo.project_type,
+                    ApproveStatus.APPROVED.status,
+                    logoAddress,
+                    userDeptDetail.bg_name,
+                    userDeptDetail.dept_name,
+                    userDeptDetail.center_name,
+                    channelCode.name
             ).execute()
         }
     }
+
 
     fun update(dslContext: DSLContext, userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Int {
         with(TProject.T_PROJECT) {
@@ -242,6 +336,17 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
                 .where(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
+    fun updateUsableStatus(dslContext: DSLContext, userId: String, projectId: String, enabled: Boolean): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                    .set(ENABLED, enabled)
+                    .set(UPDATED_AT, LocalDateTime.now())
+                    .set(UPDATOR, userId)
+                    .where(ENGLISH_NAME.eq(projectId))
+                    .execute()
         }
     }
 

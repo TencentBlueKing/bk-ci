@@ -31,7 +31,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class AuthProperties {
-    //TODO
     @Value("\${auth.idProvider:#{null}}")
     val idProvider: String? = null
 //    val idProvider: String? = "client"

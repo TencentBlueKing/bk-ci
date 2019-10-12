@@ -27,10 +27,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.OPPServiceVO
-import com.tencent.devops.project.pojo.service.ServiceCreateInfo
-import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.pojo.service.*
 
 /**
  * 用户服务列表中展示的业务服务的服务接口
@@ -65,6 +62,12 @@ interface UserProjectServiceService {
      * 更新服务信息
      */
     fun updateService(userId: String, serviceId: Long, serviceCreateInfo: ServiceCreateInfo): Result<Boolean>
+
+    /**
+     * 批量跟新服务URL信息
+     */
+    fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList:  List<ServiceUrlUpdateInfo>?): Result<Boolean>
+
 
     /**
      * 读取指定服务的信息

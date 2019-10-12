@@ -53,8 +53,6 @@ import org.springframework.core.Ordered
 
 @Configuration
 @ConditionalOnWebApplication
-// TODO: 内部版如此扫描，外部版没有
-@PropertySource("classpath:/common-auth.properties")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class AuthAutoConfiguration {
 
@@ -101,8 +99,8 @@ class AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bkAuthProjectApi(bkAuthPermissionApi: BkAuthPermissionApi) =
-        BkAuthProjectApi(bkAuthPermissionApi, projectAuthServiceCode())
+    fun bkAuthProjectApi(bkAuthPermissionApi: BkAuthPermissionApi,objectMapper: ObjectMapper, bkAuthProperties: BkAuthProperties, bkProjectAuthServiceCode: BkProjectAuthServiceCode, bkAuthTokenApi: BkAuthTokenApi) =
+            BkAuthProjectApi(bkAuthPermissionApi, bkAuthProperties, objectMapper, bkProjectAuthServiceCode, bkAuthTokenApi)
 
     @Bean
     fun bcsAuthServiceCode() = BkBcsAuthServiceCode()

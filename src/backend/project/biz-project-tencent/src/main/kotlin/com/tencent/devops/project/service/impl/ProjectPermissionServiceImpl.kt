@@ -26,63 +26,36 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
-import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectPermissionServiceImpl @Autowired constructor(
-    private val bkAuthProjectApi: AuthProjectApi,
-    private val bkAuthResourceApi: AuthResourceApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        return bkAuthProjectApi.getUserProjectsAvailable(projectAuthServiceCode, userId, null)
-    }
-
-    override fun getUserProjects(userId: String): List<String> {
-        return bkAuthProjectApi.getUserProjects(projectAuthServiceCode, userId, null)
-    }
-
-    override fun modifyResource(projectCode: String, projectName: String) {
-        bkAuthResourceApi.modifyResource(
-            serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCOPE,
-            resourceCode = projectCode,
-            resourceName = projectName
-        )
-    }
-
-    override fun deleteResource(projectCode: String) {
-
-        bkAuthResourceApi.deleteResource(
-            serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCOPE,
-            resourceCode = projectCode
-        )
+    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun createResources(userId: String, projectList: List<ResourceRegisterInfo>) {
-        bkAuthResourceApi.batchCreateResource(
-            serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
-            resourceList = projectList,
-            projectCode = BK_DEVOPS_SCOPE,
-            user = userId
-        )
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
-        val projectCodes = bkAuthProjectApi.getUserProjects(projectAuthServiceCode, userId, null)
-        return projectCodes.contains(projectCode)
+    override fun deleteResource(projectCode: String) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun modifyResource(projectCode: String, projectName: String) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getUserProjects(userId: String): List<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

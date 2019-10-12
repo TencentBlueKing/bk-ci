@@ -31,13 +31,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.dao.FavoriteDao
-import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.OPPServiceVO
-import com.tencent.devops.project.pojo.service.ServiceCreateInfo
-import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.UserProjectServiceService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -87,6 +83,20 @@ class UserProjectServiceServiceImpl @Autowired constructor(
      */
     override fun updateService(userId: String, serviceId: Long, serviceCreateInfo: ServiceCreateInfo): Result<Boolean> {
         return Result(serviceDao.update(dslContext, userId, serviceId, serviceCreateInfo))
+    }
+
+    /**
+     * 批量修改服务url
+     */
+    override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
+        if(serviceUrlUpdateInfoList == null) {
+            return Result(data = true)
+        }
+        serviceUrlUpdateInfoList.forEach {
+            serviceDao.updateUrlByName(dslContext, it)
+
+        }
+        return Result(data = true)
     }
 
     /**

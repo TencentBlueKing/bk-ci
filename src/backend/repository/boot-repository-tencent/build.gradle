@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":repository:biz-repository-blueking")
+    compile project(":repository:biz-repository-tencent")
 }
 
 
