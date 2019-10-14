@@ -1,9 +1,9 @@
 <template>
     <div class="node-list-wrapper">
         <content-header class="env-header">
-            <div slot="left">节点</div>
+            <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right" v-if="nodeList.length > 0">
-                <bk-button theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">导入节点</bk-button>
+                <bk-button theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -14,7 +14,7 @@
                 size="medium"
                 class="node-table-wrapper"
                 :data="nodeList">
-                <bk-table-column label="别名" prop="displayName">
+                <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName">
                     <template slot-scope="props">
                         <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
                             <div class="edit-content">
@@ -25,8 +25,8 @@
                                     v-model="curEditNodeDisplayName"
                                     :class="{ 'is-danger': errors.has('nodeName') }">
                                 <div class="handler-btn">
-                                    <span class="edit-base save" @click="saveEdit(props.row)">保存</span>
-                                    <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">取消</span>
+                                    <span class="edit-base save" @click="saveEdit(props.row)">{{ $t('environment.save') }}</span>
+                                    <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">{{ $t('environment.cancel') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -40,30 +40,30 @@
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="内网IP" prop="ip" min-width="80">
+                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')}IP`" prop="ip" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.ip || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column label="操作系统" prop="osName">
+                <bk-table-column :label="$t('environment.nodeInfo.os')" prop="osName">
                     <template slot-scope="props">
                         {{ props.row.osName || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column label="来源/导入人" prop="createdUser" min-width="120">
+                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
                     <template slot-scope="props">
                         <div>
-                            <span class="node-name">{{ getNodeTypeMap[props.row.nodeType] || '-' }}</span>
+                            <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
                             <span>({{ props.row.createdUser }})</span>
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="状态" prop="nodeStatus">
+                <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
                     <template slot-scope="props">
                         <div class="table-node-item node-item-status"
                             v-if="props.row.nodeStatus === 'BUILDING_IMAGE'">
                             <span class="node-status-icon normal-stutus-icon"></span>
-                            <span class="node-status">正常</span>
+                            <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
                         </div>
                         <div class="table-node-item node-item-status">
                             <!-- 状态icon -->
@@ -86,34 +86,38 @@
                             <span class="install-agent"
                                 v-if="props.row.nodeStatus === 'RUNNING'"
                                 @click="installAgent(props.row)">
-                                {{ getNodeStatusMap[props.row.nodeStatus] }}
+                                {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
                             </span>
-                            <span class="node-status" v-else>{{ getNodeStatusMap[props.row.nodeStatus] }}</span>
+                            <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                            <div class="install-agent"
+                                v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
+                                @click="installAgent(props.row)"
+                            >{{ `（${$t('environment.install')}Agent）` }}</div>
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="创建/导入时间" prop="createTime" min-width="80">
+                <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.createTime || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column label="最后修改时间" prop="lastModifyTime" min-width="80">
+                <bk-table-column :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.lastModifyTime || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column label="操作" width="160">
+                <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
                             <span class="node-handle delete-node-text"
                                 v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
                                 @click.stop="confirmDelete(props.row, index)"
-                            >删除</span>
+                            >{{ $t('environment.delete') }}</span>
                             <span class="node-handle delete-node-text"
                                 v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
                                 @click.stop="toNodeApplyPerm(props.row)"
-                            >申请权限</span>
+                            >{{ $t('environment.applyPermission') }}</span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -141,7 +145,6 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import emptyNode from './empty_node'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
@@ -174,7 +177,7 @@
                 // 页面loading
                 loading: {
                     isLoading: false,
-                    title: '数据加载中，请稍候'
+                    title: this.$t('environment.loadingTitle')
                 },
                 // 弹窗loading
                 dialogLoading: {
@@ -182,15 +185,15 @@
                     title: ''
                 },
                 emptyInfo: {
-                    title: '导入你的第一个节点',
-                    desc: '节点可以是你的开发机，也可以是团队公用的编译机'
+                    title: this.$t('environment.nodeInfo.emptyNode'),
+                    desc: this.$t('environment.nodeInfo.emptyNodeTips')
                 },
                 // 构建机弹窗配置
                 constructToolConf: {
                     isShow: false,
                     hasHeader: false,
                     quickClose: false,
-                    importText: '导入'
+                    importText: this.$t('environment.import')
                 },
                 // 构建机内容
                 constructImportForm: {
@@ -210,30 +213,26 @@
                 },
                 // 权限配置
                 emptyTipsConfig: {
-                    title: '没有权限',
-                    desc: `你在该项目【节点管理】下没有【创建】权限，请切换项目访问或申请`,
+                    title: this.$t('environment.noPermission'),
+                    desc: this.$t('environment.nodeInfo.noCreateNodePermissionTips'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('environment.switchProject')
                         },
                         {
                             type: 'success',
                             size: 'normal',
                             handler: this.goToApplyPerm,
-                            text: '去申请权限'
+                            text: this.$t('environment.applyPermission')
                         }
                     ]
                 }
             }
         },
         computed: {
-            ...mapGetters('environment', [
-                'getNodeTypeMap',
-                'getNodeStatusMap'
-            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -278,7 +277,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('environment.loadingTitle')
 
                 try {
                     this.requestList()
@@ -312,13 +311,6 @@
                         this.nodeList.push(item)
                     })
 
-                    // for (let i = 0; i < this.nodeList.length; i++) {
-                    //     if (this.nodeList[i].canDelete && !this.nodeList[i].canUse) {
-                    //         this.isMultipleBtn = true
-                    //         break
-                    //     }
-                    // }
-
                     if (this.nodeList.length) {
                         this.loopCheck()
                     }
@@ -338,32 +330,6 @@
              *  轮询整个列表状态
              */
             async loopCheck () {
-                // let {
-                //     timer
-                // } = this
-                // let res
-
-                // clearTimeout(timer)
-
-                // for (let i = 0; i < this.nodeList.length; i++) {
-                //     let target = this.nodeList[i]
-                //     if (target.nodeType === 'BCS虚拟机' && (target.nodeStatus === '异常' ||
-                //         target.nodeStatus === '正在创建中' ||
-                //         target.nodeStatus === '未知' ||
-                //         !target.agentStatus)) {
-                //         res = true
-                //         break
-                //     } else {
-                //         res = false
-                //     }
-                // }
-
-                // if (res) {
-                //     this.timer = setTimeout(async () => {
-                //         await this.requestList()
-                //     }, 10000)
-                // }
-
                 clearTimeout(this.timer)
 
                 if (this.nodeList.length) {
@@ -409,10 +375,10 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `确定删除节点(${row.nodeId})？`)
+                }, `${this.$t('environment.nodeInfo.deleteNodetips')}(${row.nodeId})？`)
 
                 this.$bkInfo({
-                    title: `删除`,
+                    title: this.$t('environment.delete'),
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -422,55 +388,11 @@
                                 params: params
                             })
 
-                            message = '删除成功'
+                            message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
                         } catch (err) {
                             message = err.data ? err.data.message : err
                             theme = 'error'
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestList()
-                        }
-                    }
-                })
-            },
-            /**
-             * 构建机信息
-             */
-            async changeCreatedUser (id) {
-                const h = this.$createElement
-                const content = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `是否修改主机责任人为当前用户？`)
-
-                this.$bkInfo({
-                    title: `修改导入人`,
-                    subHeader: content,
-                    confirmFn: async () => {
-                        let message, theme
-                        const params = {}
-                        try {
-                            await this.$store.dispatch('environment/changeCreatedUser', {
-                                projectId: this.projectId,
-                                nodeHashId: id,
-                                params
-                            })
-
-                            message = '修改成功'
-                            theme = 'success'
-                        } catch (err) {
-                            const message = err.message ? err.message : err
-                            const theme = 'error'
-
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
                         } finally {
                             this.$bkMessage({
                                 message,
@@ -529,7 +451,7 @@
                             this.requestGateway()
                         }
                     } else {
-                        message = '第三方构建机接入灰度公测中'
+                        message = this.$t('environment.nodeInfo.grayscalePublicBeta')
                         theme = 'warning'
 
                         this.$bkMessage({
@@ -654,11 +576,8 @@
                 if (['THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
-                    this.constructToolConf.importText = '确定'
+                    this.constructToolConf.importText = this.$t('environment.comfirm')
                     this.switchConstruct(node)
-                } else if (['CC', 'CMDB'].includes(node.nodeType)) {
-                    const url = `${DOCS_URL_PREFIX}/所有服务/环境管理/installGseAgentGuide.html`
-                    window.open(url, '_blank')
                 }
             },
             async toImportNode (type) {
@@ -670,7 +589,7 @@
             async confirmFn () {
                 if (!this.dialogLoading.isLoading) {
                     this.dialogLoading.isLoading = true
-                    this.constructToolConf.importText = this.constructToolConf.importText === '确定' ? '提交中...' : '导入中...'
+                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.comfirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
 
                     let message, theme
 
@@ -680,7 +599,7 @@
                             agentId: this.constructImportForm.agentId
                         })
 
-                        message = this.constructToolConf.importText === '提交中...' ? '提交成功' : '导入成功'
+                        message = this.constructToolConf.importText === `${this.$t('environment.submitting')}...` ? this.$t('environment.successfullySubmited') : this.$t('environment.successfullyImported')
                         theme = 'success'
                         this.constructToolConf.isShow = false
                     } catch (err) {
@@ -694,7 +613,7 @@
 
                         this.dialogLoading.isLoading = false
                         this.dialogLoading.isShow = false
-                        this.constructToolConf.importText = '导入'
+                        this.constructToolConf.importText = this.$t('environment.import')
                         this.requestList()
                     }
                 }
@@ -704,7 +623,7 @@
                     this.isAgent = false
                     this.constructToolConf.isShow = false
                     this.dialogLoading.isShow = false
-                    this.constructToolConf.importText = '导入'
+                    this.constructToolConf.importText = this.$t('environment.import')
                 }
             },
             editNodeName (node) {
@@ -732,7 +651,7 @@
                             params
                         })
 
-                        message = '修改成功'
+                        message = this.$t('environment.successfullyModified')
                         theme = 'success'
                     } catch (err) {
                         message = err.message ? err.message : err
@@ -764,42 +683,6 @@
                 this.nodeList.map(val => {
                     if (val.nodeHashId === nodeId) {
                         val.isEnableEdit = false
-                    }
-                })
-            },
-            async destoryNode (node) {
-                const h = this.$createElement
-                const content = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `确定销毁该节点？`)
-
-                this.$bkInfo({
-                    title: `确定`,
-                    subHeader: content,
-                    confirmFn: async () => {
-                        clearTimeout(this.timer)
-
-                        let message, theme
-                        try {
-                            await this.$store.dispatch('environment/toDestoryNode', {
-                                projectId: this.projectId,
-                                nodeHashId: node.nodeHashId
-                            })
-
-                            message = '提交成功'
-                            theme = 'success'
-                        } catch (err) {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestList()
-                        }
                     }
                 })
             },
