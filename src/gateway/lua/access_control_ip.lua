@@ -22,14 +22,20 @@ local _M = {}
 function _M:isAccess()
     local limit_req = require "resty.limit.req"
     -- 创建req_limit实例，每秒100次请求，100个等待，超过200个的请求全部拒绝
-    local lim, err = limit_req.new("build_limit_req_store", 100, 100)
+    -- 外部请求频率50,浮动20；构建机类请求频率20，浮动20
+    local lim = nil
+    if ngx.var.access_type == 'external' then
+        lim, err = limit_req.new("build_limit_req_store", 50, 20)
+    else
+        lim, err = limit_req.new("build_limit_req_store", 20, 20)
+    end
     -- 创建req_limit实例失败时
     if not lim then
         ngx.log(ngx.ERR, "failed to instantiate a resty.limit.req object: ", err)
         return false
     end
     -- 获取4字节的IP的KEY
-    local key = ngx.var.binary_remote_addr
+    local key = ngx.var.http_x_real_ip or ngx.var.binary_remote_addr or "0.0.0.0"
     -- 获取key目前的状态:delay非空的时候，说明接受请求，err是排队信息；delay为空的时候，说明拒绝请求，err是错误信息。
     local delay, err = lim:incoming(key, true)
     if not delay then
