@@ -79,10 +79,10 @@
                                             <span class="node-name">{{ row.name }}</span>
                                         </div>
                                         <div class="table-node-item node-item-type">
-                                            <span class="node-type">{{ getNodeTypeMap[row.nodeType] }}</span>
+                                            <span class="node-type">{{ $t('environment.nodeTypeMap')[row.nodeType] }}</span>
                                         </div>
                                         <div class="table-node-item node-item-status">
-                                            <span class="node-name">{{ getNodeStatusMap[row.nodeStatus] }}</span>
+                                            <span class="node-name">{{ $t('environment.nodeStatusMap')[row.nodeStatus] }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -99,7 +99,6 @@
         <node-select :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
-            :change-created-user="changeCreatedUser"
             :row-list="nodeList"
             :select-handlerc-conf="selectHandlercConf"
             :toggle-all-select="toggleAllSelect"
@@ -112,7 +111,6 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import emptyTips from '@/components/devops/emptyTips'
 
@@ -208,10 +206,6 @@
             }
         },
         computed: {
-            ...mapGetters('environment', [
-                'getNodeTypeMap',
-                'getNodeStatusMap'
-            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -630,50 +624,6 @@
                 } finally {
                     this.nodeDialogLoading.isLoading = false
                 }
-            },
-            /**
-             * 构建机信息
-             */
-            async changeCreatedUser (id) {
-                const h = this.$createElement
-                const content = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `${this.$t('environment.nodeInfo.modifyOperatorTips')}？`)
-
-                this.$bkInfo({
-                    title: `${this.$t('environment.nodeInfo.modifyImporter')}`,
-                    subHeader: content,
-                    confirmFn: async () => {
-                        let message, theme
-                        const params = {}
-                        try {
-                            await this.$store.dispatch('environment/changeCreatedUser', {
-                                projectId: this.projectId,
-                                nodeHashId: id,
-                                params
-                            })
-
-                            message = this.$t('environment.successfullyModified')
-                            theme = 'success'
-                        } catch (err) {
-                            const message = err.message ? err.message : err
-                            const theme = 'error'
-
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestNodeList()
-                        }
-                    }
-                })
             }
         }
     }

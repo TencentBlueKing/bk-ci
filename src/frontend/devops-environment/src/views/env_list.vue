@@ -67,8 +67,8 @@
                     title: ''
                 },
                 emptyInfo: {
-                    title: this.$t('environment.emptyEnv'),
-                    desc: this.$t('environment.emptyEnvTips')
+                    title: this.$t('environment.envInfo.emptyEnv'),
+                    desc: this.$t('environment.envInfo.emptyEnvTips')
                 }
             }
         },
@@ -115,7 +115,7 @@
                     const res = await this.$store.dispatch('environment/requestEnvList', {
                         projectId: this.projectId
                     })
-               
+
                     this.envList.splice(0, this.envList.length)
                     res.map(item => {
                         this.envList.push(item)

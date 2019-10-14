@@ -21,9 +21,9 @@
             </div>
             <div slot="right" class="node-handle">
                 <span class="copy-btn" @click="copyHandle">
-                    {{ nodeDetails.os === 'WINDOWS' ? '复制下载链接' : '复制安装命令'}}
+                    {{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.copyDownloadLink') : $t('environment.nodeInfo.copyInstallCommand')}}
                 </span>
-                <span class="download-btn" v-if="nodeDetails.os === 'WINDOWS'" @click="downloadHandle">下载安装包</span>
+                <span class="download-btn" v-if="nodeDetails.os === 'WINDOWS'" @click="downloadHandle">{{ $t('environment.nodeInfo.downloadInstallationPackage') }}</span>
                 <i class="bk-icon icon-refresh" @click="refresh"></i>
             </div>
         </content-header>
@@ -57,16 +57,16 @@
                 showContent: false,
                 editable: false,
                 basePrototypeList: [
-                    { id: 'hostname', name: '主机名', value: '' },
+                    { id: 'hostname', name: this.$t('environment.nodeInfo.cpuName'), value: '' },
                     { id: 'ip', name: 'IP', value: '' },
                     { id: 'ncpus', name: 'CPU', value: '' },
-                    { id: 'memTotal', name: '内存', value: '' },
-                    { id: 'createdUser', name: '拥有者', value: '' },
-                    { id: 'osName', name: '操作系统', value: '' }
+                    { id: 'memTotal', name: this.$t('environment.nodeInfo.ram'), value: '' },
+                    { id: 'createdUser', name: this.$t('environment.nodeInfo.owner'), value: '' },
+                    { id: 'osName', name: this.$t('environment.nodeInfo.cpuName'), value: '' }
                 ],
                 loading: {
                     isLoading: false,
-                    title: '数据加载中，请稍候'
+                    title: this.$t('environment.loadingTitle')
                 }
             }
         },
@@ -127,7 +127,7 @@
                 if (copyText(this.agentLink)) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: '复制成功'
+                        message: this.$t('environment.successfullyCopyed')
                     })
                 }
             },
@@ -138,7 +138,7 @@
                 if (!this.nodeDetails.displayName) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '请输入别名'
+                        message: this.$t('environment.nodeInfo.enterDisplayName')
                     })
                 } else {
                     const params = {
