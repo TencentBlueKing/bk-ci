@@ -47,6 +47,10 @@
                 // this.$store.dispatch('setProjectList', this.$projectList)
                 // this.$store.dispatch('getProjectList')
             })
+
+            window.globalVue.$on('order::syncLocale', locale => {
+                this.$setLocale(locale)
+            })
         },
         methods: {
             goHome (projectId) {
