@@ -7,16 +7,28 @@
         :placement="placement"
         always="isShow"
     >
-        <slot></slot>
-        <div slot="content" class="show-tooltip-content">
+        <slot />
+        <div
+            slot="content"
+            class="show-tooltip-content"
+        >
             {{ content }}
-            <div v-if="content" class="show-tooltip-footer">
-                <span class="close-tooltip-btn" @click="confirmBtn">{{ footer }}</span>
+            <div
+                v-if="content"
+                class="show-tooltip-footer"
+            >
+                <span
+                    class="close-tooltip-btn"
+                    @click="confirmBtn"
+                >{{ footer }}</span>
             </div>
         </div>
     </bk-popover>
-    <div class="show-tooltip" v-else>
-        <slot></slot>
+    <div
+        v-else
+        class="show-tooltip"
+    >
+        <slot />
     </div>
 </template>
 <script lang="ts">
@@ -29,10 +41,10 @@
         @Prop({ required: true })
         name: string
         @Prop({
-            default: 'bottom',
-            validator (value) {
-                return ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'].indexOf(value) !== -1
-            }
+          default: 'bottom',
+          validator (value) {
+            return ['top', 'top-start', 'top-end', 'bottom', 'bottom-start', 'bottom-end', 'left', 'left-start', 'left-end', 'right', 'right-start', 'right-end'].indexOf(value) !== -1
+          }
         })
         placement: string
 
@@ -54,40 +66,40 @@
         isShow: boolean = false
 
         $refs = {
-            showPopover: BkPopover
+          showPopover: BkPopover
         }
 
         get instance () {
-            return this.$refs.showPopover && this.$refs.showPopover.instance && this.$refs.showPopover.instance.instances && this.$refs.showPopover.instance.instances[0]
+          return this.$refs.showPopover && this.$refs.showPopover.instance && this.$refs.showPopover.instance.instances && this.$refs.showPopover.instance.instances[0]
         }
 
         created () {
-            const tooltipEventList = this.getTooltipEventList()
-            this.isShow = tooltipEventList.indexOf(this.name) < 0
+          const tooltipEventList = this.getTooltipEventList()
+          this.isShow = tooltipEventList.indexOf(this.name) < 0
         }
 
         beforeDestroy () {
-            if (this.instance && typeof this.instance.hide === 'function') {
-                this.instance.hide()
-            }
+          if (this.instance && typeof this.instance.hide === 'function') {
+            this.instance.hide()
+          }
         }
 
         getTooltipEventList () {
-            const tooltipEventList = localStorage.getItem('tooltipEventList')
-            return tooltipEventList ? JSON.parse(tooltipEventList) : []
+          const tooltipEventList = localStorage.getItem('tooltipEventList')
+          return tooltipEventList ? JSON.parse(tooltipEventList) : []
         }
 
         confirmBtn () {
-            const tooltipEventListString: string = localStorage.getItem('tooltipEventList')
-            const tooltipEventList: string[] = tooltipEventListString ? JSON.parse(tooltipEventListString) : []
-            tooltipEventList.push(this.name)
+          const tooltipEventListString: string = localStorage.getItem('tooltipEventList')
+          const tooltipEventList: string[] = tooltipEventListString ? JSON.parse(tooltipEventListString) : []
+          tooltipEventList.push(this.name)
 
-            localStorage.setItem('tooltipEventList', JSON.stringify(tooltipEventList))
-            this.isShow = false
-            if (this.instance && typeof this.instance.hide === 'function') {
-                this.instance.hide()
-            }
-            this.$emit('confirm')
+          localStorage.setItem('tooltipEventList', JSON.stringify(tooltipEventList))
+          this.isShow = false
+          if (this.instance && typeof this.instance.hide === 'function') {
+            this.instance.hide()
+          }
+          this.$emit('confirm')
         }
     }
 </script>

@@ -17,8 +17,22 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-module.exports = {
-    extends: [
-        '../.eslintrc.js'
-    ]
+function ReplacePlugin (options) {
+    // Configure your plugin with options...
+    this.options = options
 }
+  
+ReplacePlugin.prototype.apply = function (compiler) {
+    compiler.plugin('compilation', (compilation) => {
+        compilation.plugin('html-webpack-plugin-before-html-processing', (data) => {
+            Object.keys(this.options).map(key => {
+                const reg = new RegExp(key, 'g')
+                const val = this.options[key]
+                data.html = data.html.replace(reg, val)
+            })
+            return data
+        })
+    })
+}
+
+module.exports = ReplacePlugin

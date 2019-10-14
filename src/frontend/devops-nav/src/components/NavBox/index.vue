@@ -1,23 +1,59 @@
 <template>
     <div :class="{ &quot;nav-box&quot;: true, &quot;with-hover&quot;: withHover }">
-        <div class="menu-column" :style="{ width: `${columnWidth}px` }" v-for="(service, index) in services" :key="index">
+        <div
+            v-for="(service, index) in services"
+            :key="index"
+            class="menu-column"
+            :style="{ width: `${columnWidth}px` }"
+        >
             <ul class="service-item">
                 <h4>
-                    {{service.title}}
+                    {{ service.title }}
                 </h4>
-                <li v-for="child in service.children" :key="child.id" class="menu-item" :disabled="child.status !== &quot;ok&quot; && child.status !== &quot;new&quot; && child.status !== &quot;hot&quot;">
-                    <a @click.prevent="gotoPage(child)" :href="addConsole(child.link_new)">
-                        <i v-if="serviceIcon(child.name) === &quot;logo-bcs&quot;" class="bk-icon service-icon icon-logo-bcs">
-                            <span v-for="key in [1,2,3,4]" :class="`path${key}`" :key="key" />
+                <li
+                    v-for="child in service.children"
+                    :key="child.id"
+                    class="menu-item"
+                    :disabled="child.status !== &quot;ok&quot; && child.status !== &quot;new&quot; && child.status !== &quot;hot&quot;"
+                >
+                    <a
+                        :href="addConsole(child.link_new)"
+                        @click.prevent="gotoPage(child)"
+                    >
+                        <i
+                            v-if="serviceIcon(child.name) === &quot;logo-bcs&quot;"
+                            class="bk-icon service-icon icon-logo-bcs"
+                        >
+                            <span
+                                v-for="key in [1,2,3,4]"
+                                :key="key"
+                                :class="`path${key}`"
+                            />
                         </i>
-                        <i v-else :class="{ &quot;bk-icon&quot;: true, &quot;service-icon&quot;: true, [`icon-${serviceIcon(child.name)}`]: true }" />
+                        <i
+                            v-else
+                            :class="{ &quot;bk-icon&quot;: true, &quot;service-icon&quot;: true, [`icon-${serviceIcon(child.name)}`]: true }"
+                        />
                         {{ serviceName(child.name) }}
                         <span class="service-id">{{ serviceId(child.name) }}</span>
-                        <span class="new-service-icon" v-if="child.status === &quot;new&quot;">new</span>
+                        <span
+                            v-if="child.status === &quot;new&quot;"
+                            class="new-service-icon"
+                        >new</span>
                     </a>
                     <template v-if="showCollectStar">
-                        <i v-if="child.collected" @click.stop="toggleCollect(child, false)" title="已收藏" class="bk-icon collect-icon icon-star-shape" />
-                        <i v-else @click.stop="toggleCollect(child, true)" title="收藏" class="bk-icon collect-icon icon-star" />
+                        <i
+                            v-if="child.collected"
+                            title="已收藏"
+                            class="bk-icon collect-icon icon-star-shape"
+                            @click.stop="toggleCollect(child, false)"
+                        />
+                        <i
+                            v-else
+                            title="收藏"
+                            class="bk-icon collect-icon icon-star"
+                            @click.stop="toggleCollect(child, true)"
+                        />
                     </template>
                 </li>
             </ul>
@@ -47,66 +83,66 @@
         withHover: boolean
 
        iconMap: ObjectMap = {
-           'Teamwork': 'tapd',
-           'Cloud Drive': '',
-           'Code': 'code',
-           'Pipeline': 'pipeline',
-           'Exp': 'experience',
-           'Artifactory': 'artifactory',
-           'OSIS': '',
-           'CodeCC': 'codecc',
-           'WeTest': 'wetest',
-           'BCS': 'bcs',
-           'Eagle': '',
-           'SOP': '',
-           'AD': '',
-           'Job': 'job',
-           'Env': 'environment',
-           'Monitor': 'monitor',
-           'LogSearch': '',
-           'KingKong': '',
-           'Scan': '',
-           'Apk': 'apk',
-           'Vs': 'vs',
-           'Measure': 'measure',
-           'Perm': 'perm',
-           'Ticket': 'ticket',
-           'Gate': 'gate',
-           'Turbo': 'turbo',
-           'Store': 'store'
+         'Teamwork': 'tapd',
+         'Cloud Drive': '',
+         'Code': 'code',
+         'Pipeline': 'pipeline',
+         'Exp': 'experience',
+         'Artifactory': 'artifactory',
+         'OSIS': '',
+         'CodeCC': 'codecc',
+         'WeTest': 'wetest',
+         'BCS': 'bcs',
+         'Eagle': '',
+         'SOP': '',
+         'AD': '',
+         'Job': 'job',
+         'Env': 'environment',
+         'Monitor': 'monitor',
+         'LogSearch': '',
+         'KingKong': '',
+         'Scan': '',
+         'Apk': 'apk',
+         'Vs': 'vs',
+         'Measure': 'measure',
+         'Perm': 'perm',
+         'Ticket': 'ticket',
+         'Gate': 'gate',
+         'Turbo': 'turbo',
+         'Store': 'store'
        }
 
-       gotoPage ({ link_new }) {
-           const cAlias = window.currentPage && getServiceAliasByPath(window.currentPage.link_new)
-           const nAlias = getServiceAliasByPath(link_new)
-           const destUrl = this.addConsole(link_new)
+       gotoPage ({ link_new: linkNew }) {
+         const cAlias = window.currentPage && getServiceAliasByPath(window.currentPage['link_new'])
+         const nAlias = getServiceAliasByPath(linkNew)
+         const destUrl = this.addConsole(linkNew)
 
-           if (cAlias === nAlias && window.currentPage && window.currentPage.inject_type === 'iframe') {
-               eventBus.$emit('goHome')
-               return
-           }
-           this.$router.push(destUrl)
+         if (cAlias === nAlias && window.currentPage && window.currentPage['inject_type'] === 'iframe') {
+           eventBus.$emit('goHome')
+           return
+         }
+         this.$router.push(destUrl)
        }
 
        addConsole (link: string): string {
-           return urlJoin('/console', link)
+         return urlJoin('/console', link)
        }
 
        get showCollectStar (): boolean {
-           return typeof this.toggleCollect === 'function'
+         return typeof this.toggleCollect === 'function'
        }
 
        serviceName (name): string {
-           return name.slice(0, name.indexOf('('))
+         return name.slice(0, name.indexOf('('))
        }
 
        serviceId (name): string {
-           return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
+         return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
        }
 
        serviceIcon (name): string {
-           const iconName = this.iconMap[this.serviceId(name)]
-           return iconName ? `logo-${iconName}` : 'placeholder'
+         const iconName = this.iconMap[this.serviceId(name)]
+         return iconName ? `logo-${iconName}` : 'placeholder'
        }
     }
 </script>
