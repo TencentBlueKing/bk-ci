@@ -17,20 +17,17 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-function assetsPlugin(options) {
+function assetsPlugin (options) {
     // Configure your plugin with options...
 }
   
 assetsPlugin.prototype.apply = function (compiler) {
     compiler.plugin('compilation', (compilation) => {
-
         compilation.plugin('html-webpack-plugin-before-html-processing', data => {
-                const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
-                data.html = `${data.html.slice(0, assetsPos)} <script type='text/javascript' src='${data.assets.js[0]}'></script><script type='text/javascript'>window.jsAssets = ${JSON.stringify(data.assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
-                
-                return data
-            }
-        )
+            const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
+            data.html = `${data.html.slice(0, assetsPos)} <script type='text/javascript' src='${data.assets.js[0]}'></script><script type='text/javascript'>window.jsAssets = ${JSON.stringify(data.assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
+            return data
+        })
     })
 }
 

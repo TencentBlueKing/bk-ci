@@ -1,0 +1,13 @@
+{
+  "packages": [
+    "devops-nav",
+    "devops-pipeline",
+    "devops-codelib",
+    "devops-environment",
+    "devops-ticket",
+    "devops-atomstore"
+  ],
+  "npmClient": "yarn",
+  "version": "independent",
+  "useWorkspaces": true
+}

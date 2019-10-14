@@ -74,3 +74,8 @@ cert:
 credential:
   mixer: "******"
   aes-key: "G/I%yP{?ST}2TXPg"
+
+influxdb:
+  server: __INFLUXDB_SERVER__
+  userName: __INFLUXDB_USERNAME__
+  password: __INFLUXDB_PASSWORD__

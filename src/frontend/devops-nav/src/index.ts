@@ -31,7 +31,7 @@ declare module 'vue/types/vue' {
     }
 }
 // 全量引入 bk-magic-vue 样式
-require('style-loader!css-loader!bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 
 // @ts-ignore
 Vue.use(VeeValidate, {
