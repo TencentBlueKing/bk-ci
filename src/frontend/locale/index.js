@@ -2,7 +2,7 @@ import VueI18n from 'vue-i18n'
 import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
-const DEFAULT_LOCALE = 'en-US'
+const DEFAULT_LOCALE = 'zh-CN'
 const loadedModule = {}
 
 export default (r) => {

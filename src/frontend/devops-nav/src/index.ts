@@ -50,7 +50,7 @@ Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 
-const { i18n, dynamicLoadModule, setLocale } = createLocale(require.context('@locale/nav/', false, /\.json$/))
+const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/))
 
 // @ts-ignore
 Vue.use(VeeValidate, {
@@ -71,6 +71,7 @@ window.eventBus = eventBus
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
+Vue.prototype.$localeList = localeList
 
 window.devops = new Vue({
     el: '#devops-root',

@@ -150,9 +150,6 @@
 
         created () {
             this.hasProjectList && this.saveProjectId()
-            setTimeout(() => {
-                this.$showAskPermissionDialog({})
-            }, 3000)
             eventBus.$on('toggle-login-dialog', (isShow) => {
                 this.showLoginDialog = isShow
             })

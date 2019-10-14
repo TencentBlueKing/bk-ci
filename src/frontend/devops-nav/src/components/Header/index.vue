@@ -59,6 +59,7 @@
                 class="bk-icon icon-helper"
                 @click.stop="goToDocs"
             />
+            <locale-switcher />
             <User
                 class="user-info"
                 v-bind="user"
@@ -81,6 +82,7 @@
     import Logo from '../Logo/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import eventBus from '../../utils/eventBus'
     import * as cookie from 'js-cookie'
     import { urlJoin } from '../../utils/util'
@@ -91,7 +93,8 @@
             NavMenu,
             ProjectDialog,
             Logo,
-            DevopsSelect
+            DevopsSelect,
+            LocaleSwitcher
         }
     })
     export default class Header extends Vue {
