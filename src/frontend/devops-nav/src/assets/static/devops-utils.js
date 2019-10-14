@@ -262,8 +262,8 @@ const devopsUtil = {};
      * 同步locale
      * @method leaveCancelOrder
      */
-    exports[SYNC_LOCALE] = function () {
-        triggerEvent('change::' + SYNC_LOCALE)
+    exports[SYNC_LOCALE] = function (locale) {
+        triggerEvent('order::' + SYNC_LOCALE, locale)
     }
 
     for (const key in exports) {
