@@ -57,11 +57,11 @@
 
             <div class="bkdevops-box">
                 <h2>{{ $t('slogan') }}</h2>
-                <span style="left: 112px;">{{ $t('issueLabel') }}</span>
-                <span style="left: 247px;">{{ $t('developLabel') }}</span>
-                <span style="left: 382px;">{{ $t('testLabel') }}</span>
-                <span style="left: 518px;">{{ $t('deployLabel') }}</span>
-                <span style="left: 652px;">{{ $t('operationLabel') }}</span>
+                <span
+                    v-for="(item, index) in funcArray"
+                    :key="index"
+                    :style="{ left: item.left }"
+                >{{ item.label }}</span>
             </div>
 
             <div class="devops-news">
@@ -154,6 +154,14 @@
         @Action fetchLinks
         isAllServiceListShow: boolean = false
         DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
+
+        get funcArray (): object[] {
+            const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
+            return funcArray.map((item, index) => ({
+                label: this.$t(item),
+                left: `${index * 135 + 92}px`
+            }))
+        }
 
         get recentVisitService (): object[] {
             const recentVisitService = localStorage.getItem('recentVisitService')
@@ -301,6 +309,9 @@
                     position: absolute;
                     font-size: 16px;
                     bottom: 91px;
+                    width: 73px;
+                    @include ellipsis();
+                    text-align: center;
                 }
                 .bkdevops-button {
                     position: absolute;

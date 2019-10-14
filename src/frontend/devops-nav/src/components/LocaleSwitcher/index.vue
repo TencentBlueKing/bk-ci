@@ -22,7 +22,7 @@
             <li
                 v-for="item in $localeList"
                 :key="item"
-                @click="$setLocale(item)"
+                @click="switchLocale(item)"
             >
                 <icon
                     :name="item"
@@ -52,6 +52,12 @@
 
         toggleList (show) {
             this.showLocaleList = !this.showLocaleList
+        }
+
+        switchLocale (locale) {
+            // @ts-ignore
+            this.$setLocale(locale)
+            this.$nextTick(this.hideList)
         }
     }
 </script>

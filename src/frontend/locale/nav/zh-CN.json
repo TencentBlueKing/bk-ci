@@ -52,7 +52,7 @@
     "configPipeline": "配置流水线",
     "complete": "完成",
     "noProjectFtind": "请选择对应的项目",
-    "projectNnotFindProjectTipsame": "项目名称",
+    "projectName": "项目名称",
     "showDisableProject": "显示已停用项目",
     "projectDesc": "项目说明",
     "projectCreator": "创建者",

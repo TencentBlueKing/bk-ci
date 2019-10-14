@@ -73,7 +73,7 @@
                                     <p class="title">
                                         <template v-if="props.row.approval_status !== 2">
                                             <a
-                                                v-bk-tooltips="{ content: $t('noOperateAccess') }"
+                                                v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
                                                 href="javascript:void(0)"
                                                 class="bk-text-button is-disabled"
                                                 :title="$t('accessDeny.noOperateAccess')"
