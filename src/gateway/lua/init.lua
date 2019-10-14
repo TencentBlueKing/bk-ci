@@ -31,8 +31,20 @@ config = {
       "127.0.0.1"
     },
     port = 8600,
+    http_port = 8500,
     domain = "bkdevops",
     tag = "devops",
+    nodes_url = "/v1/catalog/nodes"
+  },
+  ns = {
+    ip = {
+      "127.0.0.1"
+    },
+    port = 8600,
+    http_port = 8500,
+    domain = "bkdevops",
+    tag = "devops",
+    nodes_url = "/v1/catalog/nodes"
   },
   redis = {
     host = "__REDIS_IP0__",
