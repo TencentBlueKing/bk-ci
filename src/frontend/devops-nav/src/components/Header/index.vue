@@ -15,7 +15,7 @@
                 <devops-select
                     ref="projectDropdown"
                     class="bkdevops-project-selector"
-                    placeholder="请选择项目"
+                    :placeholder="$t('selectProjectPlaceholder')"
                     :value="projectId"
                     :clearable="false"
                     :options="selectProjectList"
@@ -29,14 +29,14 @@
                             @click.stop.prevent="popProjectDialog()"
                         >
                             <i class="bk-icon icon-plus-circle" />
-                            <span class="text">新建项目</span>
+                            <span class="text">{{ $t('newProject') }}</span>
                         </div>
                         <div
                             class="bk-selector-create-item"
                             @click.stop.prevent="goToPm"
                         >
                             <i class="bk-icon icon-apps" />
-                            <span class="text">项目管理</span>
+                            <span class="text">{{ $t('projectManage') }}</span>
                         </div>
                     </template>
                 </devops-select>

@@ -2,7 +2,7 @@ import VueI18n from 'vue-i18n'
 import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
-const DEFAULT_LOCALE = 'zh-CN'
+const DEFAULT_LOCALE = 'en-US'
 const loadedModule = {}
 
 export default (r) => {
@@ -15,6 +15,8 @@ export default (r) => {
         fallbackLocale: DEFAULT_LOCALE,
         messages
     })
+
+    setLocale(DEFAULT_LOCALE)
 
     locale.i18n((key, value) => i18n.t(key, value))
 
@@ -39,17 +41,19 @@ export default (r) => {
         })
     }
 
-    function setLocale (locale) {
+    function setLocale (localeLang) {
         Object.keys(loadedModule).map(mod => {
             const [ , module ] = mod.split('_')
-            if (!loadedModule[getLocalModuleId(module, locale)]) {
-                dynamicLoadModule(module, locale)
+            if (!loadedModule[getLocalModuleId(module, localeLang)]) {
+                dynamicLoadModule(module, localeLang)
             }
         })
-        i18n.locale = locale
-        axios.defaults.headers.common['Accept-Language'] = locale
-        document.querySelector('html').setAttribute('lang', locale)
-        return locale
+        i18n.locale = localeLang
+        locale.use(lang[localeLang.replace('-', '')])
+        axios.defaults.headers.common['Accept-Language'] = localeLang
+        document.querySelector('html').setAttribute('lang', localeLang)
+        
+        return localeLang
     }
     
  

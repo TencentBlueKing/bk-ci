@@ -2,7 +2,7 @@
     <bk-dialog
         v-model="showDialog"
         ext-cls="devops-announcement-dialog"
-        ok-text="立即体验"
+        :ok-text="$t('expNow')"
         :width="828"
         :has-footer="false"
         :has-header="false"

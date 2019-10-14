@@ -7,12 +7,12 @@
             v-if="showExplorerTips === 'true' && isShowPreviewTips && !chromeExplorer"
             class="user-prompt"
         >
-            <p><i class="bk-icon icon-info-circle-shape" />推荐使用谷歌浏览器以获得更好的体验</p>
+            <p><i class="bk-icon icon-info-circle-shape" />{{ $t("recommendationLabel") }}</p>
             <div class="close-btn">
                 <span
                     class="close-remind"
                     @click="closeExplorerTips"
-                >不再提示</span>
+                >{{ $t("dismiss") }}</span>
                 <i
                     class="bk-icon icon-close"
                     @click="closePreviewTips"
@@ -25,33 +25,33 @@
                 <template v-if="hasProjectList">
                     <empty-tips
                         v-if="!hasProject"
-                        title="无该项目权限"
-                        desc="你并非该项目组成员或者该项目不存在，请切换项目试试"
+                        :title="$t('accessDeny.title')"
+                        :desc="$t('accessDeny.desc')"
                     >
                         <bk-button
                             theme="primary"
                             @click="switchProject"
                         >
-                            切换项目
+                            {{ $t('accessDeny.switchProject') }}
                         </bk-button>
                     </empty-tips>
 
                     <empty-tips
                         v-else-if="isDisableProject"
-                        title="项目已禁用"
-                        desc="该项目已被禁用，请切换项目试试，或重新启用该项目"
+                        :title="$t('accessDeny.projectBan')"
+                        :desc="$t('accessDeny.projectBanDesc')"
                     >
                         <bk-button
                             theme="primary"
                             @click="switchProject"
                         >
-                            切换项目
+                            {{ $t('accessDeny.switchProject') }}
                         </bk-button>
                         <a
                             target="_blank"
                             class="empty-btns-item"
                             href="/console/pm"
-                        ><bk-button theme="success">项目管理</bk-button></a>
+                        ><bk-button theme="success">{{ $t("projectManage") }}</bk-button></a>
                     </empty-tips>
 
                     <!--<empty-tips v-else-if='isApprovalingProject' title='无法访问该项目' desc='你正在访问的项目正在处于审核中，禁止访问'>
@@ -63,12 +63,14 @@
         </template>
 
         <login-dialog v-if="showLoginDialog" />
+        <ask-permission-dialog />
     </div>
 </template>
 
 <script lang="ts">
     import Vue from 'vue'
     import Header from '../components/Header/index.vue'
+    import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
     import LoginDialog from '../components/LoginDialog/index.vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { State, Getter, Action } from 'vuex-class'
@@ -77,7 +79,8 @@
     @Component({
         components: {
             Header,
-            LoginDialog
+            LoginDialog,
+            AskPermissionDialog
         }
     })
     export default class Index extends Vue {
@@ -147,6 +150,9 @@
 
         created () {
             this.hasProjectList && this.saveProjectId()
+            setTimeout(() => {
+                this.$showAskPermissionDialog({})
+            }, 3000)
             eventBus.$on('toggle-login-dialog', (isShow) => {
                 this.showLoginDialog = isShow
             })

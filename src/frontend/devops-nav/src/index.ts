@@ -20,6 +20,8 @@ import App from './views/App.vue'
 import createLocale from '../../locale'
 
 import VeeValidate from 'vee-validate'
+import validationENMessages from 'vee-validate/dist/locale/en';
+import validationCNMessages from 'vee-validate/dist/locale/zh_CN';
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import showAskPermissionDialog from './components/AskPermissionDialog'
@@ -38,15 +40,6 @@ declare module 'vue/types/vue' {
     }
 }
 
-// @ts-ignore
-Vue.use(VeeValidate, {
-    fieldsBagName: 'veeFields',
-    locale: 'cn'
-})
-
-VeeValidate.Validator.localize(validDictionary)
-ExtendsCustomRules(VeeValidate.Validator.extend)
-
 Vue.use(bkMagic)
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
@@ -58,6 +51,21 @@ Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 
 const { i18n, dynamicLoadModule, setLocale } = createLocale(require.context('@locale/nav/', false, /\.json$/))
+
+// @ts-ignore
+Vue.use(VeeValidate, {
+    i18nRootKey: 'validations', // customize the root path for validation messages.
+    i18n,
+    fieldsBagName: 'veeFields',
+    dictionary: {
+        'en-US': validationENMessages,
+        'zh-CN': validationCNMessages
+    }
+})
+
+VeeValidate.Validator.localize(validDictionary)
+ExtendsCustomRules(VeeValidate.Validator.extend)
+
 const router = createRouter(store, dynamicLoadModule)
 window.eventBus = eventBus
 Vue.prototype.iframeUtil = iframeUtil(router)
