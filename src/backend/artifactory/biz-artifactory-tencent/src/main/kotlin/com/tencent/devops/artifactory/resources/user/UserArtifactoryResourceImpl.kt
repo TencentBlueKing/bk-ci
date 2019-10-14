@@ -1,17 +1,20 @@
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory.resources.user
 
-import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
-import com.tencent.devops.artifactory.pojo.AppFileInfo
+import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
+import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.FilePipelineInfo
+import com.tencent.devops.artifactory.pojo.FolderSize
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.AppArtifactoryService
+import com.tencent.devops.artifactory.service.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.ArtifactoryService
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -20,11 +23,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
 
 @RestResource
-class AppArtifactoryResourceImpl @Autowired constructor(
-    private val artifactoryService: ArtifactoryService,
-    private val artifactorySearchService: ArtifactorySearchService,
-    private val appArtifactoryService: AppArtifactoryService
-) : AppArtifactoryResource {
+class UserArtifactoryResourceImpl @Autowired constructor(
+    val artifactoryService: ArtifactoryService,
+    val artifactorySearchService: ArtifactorySearchService,
+    val artifactoryDownloadService: ArtifactoryDownloadService
+) : UserArtifactoryResource {
+
+    override fun checkDevnetGateway(userId: String): Result<Boolean> {
+        return Result(true)
+    }
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<FileInfo>> {
         checkParameters(userId, projectId, path)
@@ -38,18 +45,6 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = artifactoryService.getOwnFileList(userId, projectId, limit.offset, limit.limit)
         return Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
-    override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<AppFileInfo>> {
-        checkParameters(userId, projectId)
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        val result = artifactoryService.getBuildFileList(userId, projectId, pipelineId, buildId)
-        return Result(result)
     }
 
     override fun search(userId: String, projectId: String, page: Int?, pageSize: Int?, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
@@ -77,41 +72,50 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(artifactoryService.getProperties(projectId, artifactoryType, path))
     }
 
+    override fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FolderSize> {
+        checkParameters(userId, projectId, path)
+        return Result(artifactoryService.folderSize(userId, projectId, artifactoryType, path))
+    }
+
+    override fun downloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
+        checkParameters(userId, projectId, path)
+        return Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+    }
+
+    override fun ioaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
+        checkParameters(userId, projectId, path)
+        return Result(artifactoryDownloadService.getIoaUrl(userId, projectId, artifactoryType, path))
+    }
+
+    override fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String, ttl: Int, downloadUsers: String): Result<Boolean> {
+        checkParameters(userId, projectId, path)
+        if (ttl < 0) {
+            throw InvalidParamException("Invalid ttl")
+        }
+        if (downloadUsers.isBlank()) {
+            throw InvalidParamException("Invalid downloadUsers")
+        }
+        artifactoryDownloadService.shareUrl(userId, projectId, artifactoryType, path, ttl, downloadUsers)
+        return Result(true)
+    }
+
     override fun externalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
         checkParameters(userId, projectId, path)
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
         }
-
-        var result = if (path.endsWith(".ipa")) {
-            appArtifactoryService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
-        } else {
-            appArtifactoryService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
-        }
-        return Result(result)
+        return Result(artifactoryDownloadService.getExternalUrl(userId, projectId, artifactoryType, path))
     }
 
-    override fun getFilePlist(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String,
-        experienceHashId: String?
-    ): String {
+    override fun getFilePipelineInfo(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FilePipelineInfo> {
         checkParameters(userId, projectId, path)
-        if (!path.endsWith(".ipa")) {
-            throw BadRequestException("Path must end with ipa.")
-        }
-        return appArtifactoryService.getPlistFile(userId, projectId, artifactoryType, path, 24*3600, false, experienceHashId)
+        return Result(artifactoryService.getFilePipelineInfo(userId, projectId, artifactoryType, path))
     }
 
-    override fun downloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
-        checkParameters(userId, projectId, path)
-        if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
-            throw BadRequestException("Path must end with ipa or apk")
-        }
-        val result = appArtifactoryService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, true)
-        return Result(result)
+    override fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq): Result<Boolean> {
+        checkParameters(userId, projectId)
+        artifactoryService.copyToCustom(userId, projectId, pipelineId, buildId, copyToCustomReq)
+        return Result(true)
     }
 
     private fun checkParameters(userId: String, projectId: String) {

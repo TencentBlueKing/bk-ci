@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo
+package com.tencent.devops.project.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

@@ -1,9 +1,11 @@
-package com.tencent.devops.artifactory.api.app
+package com.tencent.devops.artifactory.api.user
 
-import com.tencent.devops.artifactory.pojo.AppFileInfo
+import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.FilePipelineInfo
+import com.tencent.devops.artifactory.pojo.FolderSize
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
@@ -24,13 +26,13 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_ARTIFACTORY"], description = "版本仓库-仓库资源")
-@Path("/app/artifactories")
+@Api(tags = ["USER_ARTIFACTORY"], description = "版本仓库-仓库资源")
+@Path("/user/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface AppArtifactoryResource {
+interface UserArtifactoryResource {
     @ApiOperation("获取目录列表")
-    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/list")
     @GET
     fun list(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -64,24 +66,6 @@ interface AppArtifactoryResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
-
-    @ApiOperation("获取构建文件列表")
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/fileList")
-    @GET
-    fun getBuildFileList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<List<AppFileInfo>>
 
     @ApiOperation("根据元数据获取文件")
     @Path("/projects/{projectId}/search")
@@ -153,7 +137,67 @@ interface AppArtifactoryResource {
         path: String
     ): Result<List<Property>>
 
-    @ApiOperation("创建外部间接下载链接(ipa会转出plist链接)")
+    @ApiOperation("获取文件夹大小")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/folderSize")
+    @GET
+    fun folderSize(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<FolderSize>
+
+    @ApiOperation("创建下载链接")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
+    @POST
+    fun downloadUrl(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<Url>
+
+    @ApiOperation("创建分享链接")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/shareUrl")
+    @POST
+    fun shareUrl(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @ApiParam("有效时间(秒)", required = true)
+        @QueryParam("ttl")
+        ttl: Int,
+        @ApiParam("授权下载用户rtx(逗号分隔)", required = true)
+        @QueryParam("downloadUsers")
+        downloadUsers: String
+    ): Result<Boolean>
+
+    @ApiOperation("创建外部下载链接")
     @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
     @POST
     fun externalUrl(
@@ -171,32 +215,10 @@ interface AppArtifactoryResource {
         path: String
     ): Result<Url>
 
-    @ApiOperation("获取构建Ipa文件的Plist下载文件")
-    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/filePlist")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @GET
-    fun getFilePlist(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String,
-        @ApiParam("体验id", required = false)
-        @QueryParam("experienceHashId")
-        experienceHashId: String?
-    ): String
-
-    @ApiOperation("创建外部直接下载链接")
-    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
+    @ApiOperation("创建ioa下载链接")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/ioaUrl")
     @POST
-    fun downloadUrl(
+    fun ioaUrl(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -210,4 +232,51 @@ interface AppArtifactoryResource {
         @QueryParam("path")
         path: String
     ): Result<Url>
+
+    @ApiOperation("获取文件所属流水线信息")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/filePipelineInfo")
+    @GET
+    fun getFilePipelineInfo(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<FilePipelineInfo>
+
+    @ApiOperation("复制流水线构建归档到自定义仓库")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/copyToCustom")
+    @POST
+    fun copyToCustom(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("请求", required = true)
+        copyToCustomReq: CopyToCustomReq
+    ): Result<Boolean>
+
+    @ApiOperation("检测devnet网关的连通性")
+    @Path("/checkDevnetGateway")
+    @GET
+    fun checkDevnetGateway(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }
