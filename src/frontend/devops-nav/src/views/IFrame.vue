@@ -187,6 +187,14 @@
                 this.iframeUtil.syncUserInfo(childWin, user)
             }
         }
+
+        @Watch('$i18n.locale')
+        handleLocaleChange (locale) {
+            if (this.$refs.iframeEle) {
+                const childWin = this.$refs.iframeEle.contentWindow
+                this.iframeUtil.syncLocale(childWin, locale)
+            }
+        }
     }
 </script>
 
