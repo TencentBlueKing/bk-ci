@@ -33,8 +33,20 @@ config = {
         "127.0.0.1"
       },
       port = __BKCI_CONSUL_DNS_PORT__,
+      http_port = __BKCI_CONSUL_PORT__,
       domain = "__BKCI_CONSUL_DOMAIN__",
       tag = "__BKCI_CONSUL_TAG__",
+      nodes_url = "/v1/catalog/nodes"
+    },
+    ns_gray = {
+      ip = {
+        "127.0.0.1"
+      },
+      port = __BKCI_CONSUL_DNS_PORT__,
+      http_port = __BKCI_CONSUL_PORT__,
+      domain = "__BKCI_CONSUL_DOMAIN__",
+      tag = "__BKCI_CONSUL_TAG__",
+      nodes_url = "/v1/catalog/nodes"
     },
     redis = {
       host = "__REDIS_IP0__",

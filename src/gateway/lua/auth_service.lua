@@ -18,14 +18,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ]]
 
 -- 判断是否是白名单
-local service_ip_whitelist = config.service_ip_whitelist
 local isInServiceWhitelist = false
--- 白名单为空的时候
-if next(service_ip_whitelist) ~= nil then
-  isInServiceWhitelist, err = ipUtil:isInWhiteList(service_ip_whitelist)
-else 
+
+if next(config.service_ip_whitelist) ~= nil then 
+  -- 白名单为空的时候不为空的时候
+  local service_ip_whitelist = consulUtil.getAllWhitelistIp()
+  if next(service_ip_whitelist) ~= nil then
+    isInServiceWhitelist, err = ipUtil:isInWhiteList(service_ip_whitelist)
+  else
+    -- 白名单为空的时候
+    isInServiceWhitelist = true
+  end
+else
+  -- 白名单为空的时候
   isInServiceWhitelist = true
 end
+
 if not isInServiceWhitelist then
   ngx.log(ngx.ERR, "client ip do not in service_ip_whitelist: ", err)
   ngx.exit(403)
