@@ -3,20 +3,32 @@ import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
 const DEFAULT_LOCALE = 'zh-CN'
+const LS_KEY = 'devops_i18n_locale'
 const loadedModule = {}
+
+function getLsLocale () {
+    if (!localStorage) return DEFAULT_LOCALE
+    return localStorage.getItem(LS_KEY) || DEFAULT_LOCALE
+}
+
+function setLsLocale (locale) {
+    if (localStorage) {
+        localStorage.setItem(LS_KEY, locale)
+    }
+}
 
 export default (r) => {
     Vue.use(VueI18n)
     const { messages, localeList } = importAll(r)
-
+    const initLocale = getLsLocale()
     // export localeList
     const i18n = new VueI18n({
-        locale: DEFAULT_LOCALE,
-        fallbackLocale: DEFAULT_LOCALE,
+        locale: initLocale,
+        fallbackLocale: initLocale,
         messages
     })
 
-    setLocale(DEFAULT_LOCALE)
+    setLocale(initLocale)
 
     locale.i18n((key, value) => i18n.t(key, value))
 
@@ -49,6 +61,7 @@ export default (r) => {
             }
         })
         i18n.locale = localeLang
+        setLsLocale(localeLang)
         locale.use(lang[localeLang.replace('-', '')])
         axios.defaults.headers.common['Accept-Language'] = localeLang
         document.querySelector('html').setAttribute('lang', localeLang)
