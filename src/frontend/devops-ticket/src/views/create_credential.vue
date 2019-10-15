@@ -3,7 +3,7 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">新增凭据</span>
+                <span class="inner-header-title">{{ $t('ticket.createCredential') }}</span>
             </template>
         </content-header>
 
@@ -25,7 +25,7 @@
                 <div v-if="showContent && hasPermission" class="bk-form-wrapper">
                     <!-- 凭据类型 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">类型：</label>
+                        <label class="bk-label">{{ $t('ticket.type') }}：</label>
                         <div class="bk-form-content credential-type-content">
                             <selector
                                 :list="ticketType"
@@ -38,7 +38,7 @@
                             <bk-popover placement="right">
                                 <i class="bk-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/凭证管理/summary.html`">了解更多。</a> </div>
+                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/${$t('allService')}/${$t('ticket.credentialManage')}/summary.html`">{{ $t('ticket.learnMore') }}。</a> </div>
                                 </div>
                             </bk-popover>
 
@@ -48,9 +48,9 @@
 
                     <!-- 凭据名称 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">名称：</label>
+                        <label class="bk-label">{{ $t('ticket.name') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text" name="credentialId" v-validate="{ required: true, regex: /^[a-zA-Z0-9\.\_]{1,30}$/ }" class="bk-form-input" placeholder="凭据名称不能为空，且只支持英文大小写、数字、下划线和英文句号"
+                            <input type="text" name="credentialId" v-validate="{ required: true, regex: /^[a-zA-Z0-9\.\_]{1,30}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
                                 v-model="localConfig.credentialId"
                                 :class="{
                                     'is-danger': errors.has('credentialId')
@@ -59,7 +59,7 @@
                             >
                             <p class="error-tips"
                                 v-show="errors.has('credentialId')">
-                                凭据名称不能为空，且只支持英文大小写、数字、下划线和英文句号，长度不能超过30个字符
+                                {{ `${$t('ticket.credential.validateName')}，${$t('ticket.credential.nameLenLimit')}` }}
                             </p>
                         </div>
                     </div>
@@ -67,14 +67,14 @@
 
                     <!-- 凭据内容 start -->
                     <div v-for="(obj, key) in newModel" :key="key" :class="{ &quot;bk-form-item&quot;: true, &quot;is-required&quot;: obj.rules }">
-                        <label v-if="obj.label" class="bk-label">{{ obj.label }}：</label>
+                        <label v-if="obj.label" class="bk-label">{{ $t(obj.label) }}：</label>
                         <div class="bk-form-content">
                             <a v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" href="javascript:;" @click="toggleShowPwdCon(obj.modelName)"><i :class="showPwdCon[obj.modelName] ? 'bk-icon icon-hide' : 'bk-icon icon-eye'"></i></a>
-                            <component v-validate="(obj.label === 'ssh私钥' && localConfig.credential[obj.modelName] === '******') ? {} : obj.rule" v-if="obj.type !== 'password' || !showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" v-bind="obj" :class="{ 'is-danger': errors.has(key) }"></component>
-                            <component v-validate="obj.rule" v-if="obj.type === 'password' && showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" type="text" v-bind="obj" :class="{ 'is-danger': errors.has(key) }"></component>
+                            <component v-validate="($t(obj.label) === $t('ticket.credential.sshKey') && localConfig.credential[obj.modelName] === '******') ? {} : obj.rule" v-if="obj.type !== 'password' || !showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
+                            <component v-validate="obj.rule" v-if="obj.type === 'password' && showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" type="text" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
                             <p class="error-tips"
                                 v-show="errors.has(key)">
-                                {{obj.errorMsg}}
+                                {{$t(obj.errorMsg)}}
                             </p>
                         </div>
                     </div>
@@ -82,9 +82,9 @@
 
                     <!-- 凭据描述 start -->
                     <div class="bk-form-item cre-content">
-                        <label class="bk-label">描述：</label>
+                        <label class="bk-label">{{ $t('ticket.remark') }}：</label>
                         <div class="bk-form-content">
-                            <textarea class="bk-form-textarea" placeholder="请输入凭据描述" name="credentialDesc" v-validate="{ required: false, max: 50 }"
+                            <textarea class="bk-form-textarea" :placeholder="$t('ticket.credential.credentialRemark')" name="credentialDesc" v-validate="{ required: false, max: 50 }"
                                 :class="{
                                     'is-danger': errors.has('credentialDesc')
                                 }"
@@ -92,15 +92,15 @@
                             ></textarea>
                             <p class="error-tips"
                                 v-show="errors.has('credentialDesc')">
-                                凭据描述长度不能超过50个字符
+                                {{ $t('ticket.credential.remarkLenLimit') }}
                             </p>
                         </div>
                     </div>
                     <!-- 凭据描述 end -->
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">确定</bk-button>
-                        <bk-button @click="cancel">取消</bk-button>
+                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
             </div>
@@ -115,7 +115,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import Selector from '@/components/atomFormField/Selector'
     import emptyTips from '@/components/devops/emptyTips'
-    import { mapState, mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -143,7 +143,7 @@
                 },
                 loading: {
                     isLoading: true,
-                    title: '数据加载中，请稍候'
+                    title: this.$t('ticket.loadingTitle')
                 },
                 editInitCredential: {
                     v1: '******',
@@ -152,32 +152,29 @@
                     v4: '******'
                 },
                 emptyTipsConfig: {
-                    title: '没有权限',
-                    desc: `你在该项目[凭证管理]下没有[创建]权限，请切换项目访问或申请`,
+                    title: this.$t('ticket.noPermission'),
+                    desc: this.$t('ticket.credential.noCreateCredPermissionTips'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('ticket.switchProject')
                         },
                         {
                             type: 'success',
                             size: 'normal',
                             handler: this.goToApplyPerm,
-                            text: '去申请权限'
+                            text: this.$t('ticket.applyPermission')
                         }
                     ]
                 }
             }
         },
         computed: {
-            ...mapState('ticket', [
-                'ticket',
-                'ticketType'
-            ]),
             ...mapGetters('ticket', [
                 'getTicketByType',
+                'getTicketType',
                 'getDefaultCredential'
             ]),
             projectId () {
@@ -191,6 +188,9 @@
             },
             routeName () {
                 return this.$route.name
+            },
+            ticketType () {
+                return this.getTicketType()
             }
         },
         watch: {
@@ -265,7 +265,7 @@
                                     credential
                                 })
                             }
-                            message = '保存凭据成功'
+                            message = this.$t('ticket.credential.successfullysavedential')
                             theme = 'success'
                         } catch (err) {
                             message = err.message ? err.message : err

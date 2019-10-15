@@ -18,9 +18,6 @@
  */
 
 import Vue from 'vue'
-import {
-    
-} from './constant'
 
 const prefix = '/ticket/api'
 const vue = new Vue()
