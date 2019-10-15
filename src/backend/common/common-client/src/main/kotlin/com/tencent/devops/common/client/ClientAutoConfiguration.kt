@@ -27,8 +27,6 @@
 package com.tencent.devops.common.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.client.pojo.AllProperties
-import com.tencent.devops.common.client.pojo.EnvProperties
 import com.tencent.devops.common.service.ServiceAutoConfiguration
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +37,6 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfigurati
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 
@@ -54,23 +51,7 @@ import org.springframework.core.Ordered
 class ClientAutoConfiguration {
 
     @Bean
-    fun allProperties() = AllProperties()
-
-    @Bean
-    @Profile("prod")
-    fun prodProperties(allProperties: AllProperties) = EnvProperties(allProperties.gatewayProdUrl)
-
-    @Bean
-    @Profile("test")
-    fun testProperties(allProperties: AllProperties) = EnvProperties(allProperties.gatewayTestUrl)
-
-    @Bean
-    @Profile("qcloud")
-    fun qcloudProperties(allProperties: AllProperties) = EnvProperties(allProperties.gatewayTestUrl)
-
-    @Bean
-    @Profile("dev", "default")
-    fun devProperties(allProperties: AllProperties) = EnvProperties(allProperties.gatewayDevUrl)
+    fun commonConfig() = CommonConfig()
 
     @Bean
     fun clientErrorDecoder(objectMapper: ObjectMapper) = ClientErrorDecoder(objectMapper)
@@ -79,8 +60,8 @@ class ClientAutoConfiguration {
     @ConditionalOnMissingBean(Client::class)
     fun client(
         clientErrorDecoder: ClientErrorDecoder,
-        envProperties: EnvProperties,
+        commonConfig: CommonConfig,
         objectMapper: ObjectMapper,
         @Autowired(required = false) consulDiscoveryClient: ConsulDiscoveryClient?
-    ) = Client(consulDiscoveryClient, clientErrorDecoder, envProperties, objectMapper)
+    ) = Client(consulDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper)
 }
