@@ -32,45 +32,38 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("项目-新增模型")
 data class ProjectCreateInfo(
-//    @ApiModelProperty("项目名称")
-//    @JsonProperty("project_name")
-//    val projectName: String,
-//    @ApiModelProperty("英文缩写")
-//    @JsonProperty("english_name")
-//    val englishName: String,
-//    @ApiModelProperty("项目类型")
-//    @JsonProperty("project_type")
-//    val projectType: Int,
-//    @ApiModelProperty("描述")
-//    val description: String,
-//    @ApiModelProperty("是否保密")
-//    @get:JsonProperty("is_secrecy")
-//    var secrecy: Boolean,
-//    @ApiModelProperty("kind")
-//    val kind: Int
-
-        @ApiModelProperty("项目名称")
-        val projectName: String,
-        @ApiModelProperty("英文缩写")
-        val englishName: String,
-        @ApiModelProperty("项目类型")
-        val projectType: Int,
-        @ApiModelProperty("描述")
-        val description: String,
-        @ApiModelProperty("事业群ID")
-        val bgId: Long ?= 0,
-        @ApiModelProperty("事业群名字")
-        val bgName: String ?= "",
-        @ApiModelProperty("部门ID")
-        val deptId: Long ?= 0,
-        @ApiModelProperty("部门名称")
-        val deptName: String ?= "",
-        @ApiModelProperty("中心ID")
-        val centerId: Long ?= 0,
-        @ApiModelProperty("中心名称")
-        val centerName: String ?= "",
-        @ApiModelProperty("是否保密")
-        val isSecrecy: Boolean,
-        @ApiModelProperty("kind")
-        val kind: Int
+    @ApiModelProperty("项目名称")
+    @JsonProperty("project_name")
+    val projectName: String,
+    @ApiModelProperty("英文缩写")
+    @JsonProperty("english_name")
+    val englishName: String,
+    @ApiModelProperty("项目类型")
+    @JsonProperty("project_type")
+    val projectType: Int,
+    @ApiModelProperty("描述")
+    val description: String,
+    @ApiModelProperty("一级部门ID")
+    @JsonProperty("bg_id")
+    val bgId: Long,
+    @ApiModelProperty("一级部门名字")
+    @JsonProperty("bg_name")
+    val bgName: String,
+    @ApiModelProperty("二级部门ID")
+    @JsonProperty("dept_id")
+    val deptId: Long,
+    @ApiModelProperty("二级部门名称")
+    @JsonProperty("dept_name")
+    val deptName: String,
+    @ApiModelProperty("三级部门ID")
+    @JsonProperty("center_id")
+    val centerId: Long,
+    @ApiModelProperty("三级部门名称")
+    @JsonProperty("center_name")
+    val centerName: String,
+    @ApiModelProperty("是否保密")
+    @get:JsonProperty("is_secrecy")
+    var secrecy: Boolean,
+    @ApiModelProperty("kind")
+    val kind: Int
 )

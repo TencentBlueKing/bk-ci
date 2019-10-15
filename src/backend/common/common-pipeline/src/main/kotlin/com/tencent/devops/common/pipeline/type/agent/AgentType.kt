@@ -26,10 +26,6 @@
 
 package com.tencent.devops.common.pipeline.type.agent
 
-/**
- * deng
- * 2019-04-10
- */
 enum class AgentType {
     ID, // This is only for old pipeline, new pipelines will use name
     NAME

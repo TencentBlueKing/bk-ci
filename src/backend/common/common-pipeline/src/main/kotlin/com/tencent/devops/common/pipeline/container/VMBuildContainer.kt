@@ -44,7 +44,7 @@ data class VMBuildContainer(
     override var startEpoch: Long? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("原子运行时间", required = false, hidden = true)
+    @ApiModelProperty("插件运行时间", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("VM基础操作系统", required = true)
     val baseOS: VMBaseOS,

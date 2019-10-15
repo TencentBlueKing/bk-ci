@@ -33,7 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
-import com.tencent.devops.common.client.pojo.EnvProperties
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Feign
 import feign.RequestInterceptor
@@ -61,7 +61,7 @@ import kotlin.reflect.KClass
 class Client @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
     private val clientErrorDecoder: ClientErrorDecoder,
-    private val envProperties: EnvProperties,
+    private val commonConfig: CommonConfig,
     objectMapper: ObjectMapper
 ) {
 
@@ -103,6 +103,9 @@ class Client @Autowired constructor(
 
     private var hasParseScmIp = false
 
+    @Value("\${service-suffix:#{null}}")
+    private val serviceSuffix: String? = null
+
     fun <T : Any> get(clz: KClass<T>): T {
         return get(clz, "")
     }
@@ -130,7 +133,7 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
-            .target(clz.java, "http://${envProperties.gatewayUrl}/$serviceName/api")
+            .target(clz.java, buildGatewayUrl(path = "/$serviceName/api"))
     }
 
     // devnet区域的，只能直接通过ip访问
@@ -209,7 +212,7 @@ class Client @Autowired constructor(
         if (!assemblyServiceName.isNullOrBlank()) {
             return assemblyServiceName!!
         }
-        return interfaces.getOrPut(clz) {
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
                 serviceInterface.value
@@ -218,6 +221,25 @@ class Client @Autowired constructor(
                 val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
                 val matches = regex.find(packageName) ?: throw ClientException("无法根据接口\"$packageName\"分析所属的服务")
                 matches.groupValues[1]
+            }
+        }
+
+        return if (serviceSuffix.isNullOrBlank()) {
+            serviceName
+        } else {
+            "$serviceName$serviceSuffix"
+        }
+    }
+
+    private fun buildGatewayUrl(path: String): String {
+        return if (path.startsWith("http://") || path.startsWith("https://")) {
+            path
+        } else {
+            val gateway = commonConfig.devopsApiGateway!!
+            if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
+                "$gateway/${path.removePrefix("/")}"
+            } else {
+                "http://$gateway/${path.removePrefix("/")}"
             }
         }
     }

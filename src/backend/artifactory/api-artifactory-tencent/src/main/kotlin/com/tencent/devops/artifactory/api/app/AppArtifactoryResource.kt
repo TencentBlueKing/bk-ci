@@ -66,7 +66,7 @@ interface AppArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("获取构建文件列表")
-    @Path("/{projectId}/{pipelineId}/{buildId}/fileList")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/fileList")
     @GET
     fun getBuildFileList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -84,7 +84,7 @@ interface AppArtifactoryResource {
     ): Result<List<AppFileInfo>>
 
     @ApiOperation("根据元数据获取文件")
-    @Path("/{projectId}/search")
+    @Path("/projects/{projectId}/search")
     @POST
     fun search(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -104,7 +104,7 @@ interface AppArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件和属性")
-    @Path("/{projectId}/searchFileAndProperty")
+    @Path("/projects/{projectId}/searchFileAndProperty")
     @POST
     fun searchFileAndProperty(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -118,7 +118,7 @@ interface AppArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("获取文件信息")
-    @Path("/{projectId}/{artifactoryType}/show")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
     @GET
     fun show(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -136,7 +136,7 @@ interface AppArtifactoryResource {
     ): Result<FileDetail>
 
     @ApiOperation("获取文件元数据")
-    @Path("/{projectId}/{artifactoryType}/properties")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
     @GET
     fun properties(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -154,7 +154,7 @@ interface AppArtifactoryResource {
     ): Result<List<Property>>
 
     @ApiOperation("创建外部间接下载链接(ipa会转出plist链接)")
-    @Path("/{projectId}/{artifactoryType}/externalUrl")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
     @POST
     fun externalUrl(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -172,7 +172,7 @@ interface AppArtifactoryResource {
     ): Result<Url>
 
     @ApiOperation("获取构建Ipa文件的Plist下载文件")
-    @Path("/{projectId}/{artifactoryType}/filePlist")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/filePlist")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @GET
     fun getFilePlist(
@@ -194,7 +194,7 @@ interface AppArtifactoryResource {
     ): String
 
     @ApiOperation("创建外部直接下载链接")
-    @Path("/{projectId}/{artifactoryType}/downloadUrl")
+    @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
