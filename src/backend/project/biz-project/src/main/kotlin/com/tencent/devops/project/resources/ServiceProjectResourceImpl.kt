@@ -74,8 +74,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.create(userId, projectCreateInfo))
     }
 
-    override fun verifyUserProjectPermissionV2(projectCode: String, userId: String): Result<Boolean> {
-        return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
+
+    override fun verifyUserProjectPermissionV2(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
+        return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
     }
 
     override fun getV2(englishName: String): Result<ProjectVO?> {
