@@ -26,10 +26,6 @@
 
 package com.tencent.devops.process.pojo.template
 
-/**
- * deng
- * 2019-01-09
- */
 data class TemplateVersion(
     val version: Long,
     val versionName: String,

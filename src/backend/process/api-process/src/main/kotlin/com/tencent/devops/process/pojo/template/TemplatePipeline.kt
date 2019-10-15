@@ -26,11 +26,6 @@
 
 package com.tencent.devops.process.pojo.template
 
-/**
- * deng
- * 2019-01-08
- * 模板实例化的流水线
- */
 data class TemplatePipeline(
     val templateId: String,
     val versionName: String,

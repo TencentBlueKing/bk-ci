@@ -26,10 +26,6 @@
 
 package com.tencent.devops.process.pojo.template
 
-/**
- * deng
- * 2019-01-08
- */
 enum class TemplateType(val value: String) {
     CUSTOMIZE("自定义模板"),
     CONSTRAINT("来自商店"),
