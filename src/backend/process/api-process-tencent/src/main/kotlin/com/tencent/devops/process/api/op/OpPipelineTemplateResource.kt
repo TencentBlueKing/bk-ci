@@ -1,4 +1,4 @@
-package com.tencent.devops.process.api
+package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -14,7 +14,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 
 @Api(tags = ["OP_PIPELINE_TEMPLATE"], description = "OP-流水线-模板资源")
-@Path("/op/template/pipelines")
+@Path("/op/templates")
 interface OpPipelineTemplateResource {
 
     @ApiOperation("添加流水线模板")
