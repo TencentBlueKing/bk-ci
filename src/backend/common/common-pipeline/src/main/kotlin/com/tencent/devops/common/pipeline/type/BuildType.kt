@@ -31,4 +31,5 @@ import com.tencent.devops.common.api.pojo.OS
 enum class BuildType(val value: String, val osList: List<OS>, val enableApp: Boolean/*是否支持选择对应的构建依赖*/) {
     THIRD_PARTY_AGENT_ID("第三方构建机--节点", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false),
     THIRD_PARTY_AGENT_ENV("第三方构建机--环境", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false),
+    DOCKER("Linux构建镜像", listOf(OS.LINUX), true)
 }

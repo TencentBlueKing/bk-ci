@@ -61,6 +61,9 @@ abstract class DispatchType(
             is ThirdPartyAgentEnvDispatchType -> {
                 BuildType.THIRD_PARTY_AGENT_ENV
             }
+            is DockerDispatchType -> {
+                BuildType.DOCKER
+            }
             else -> {
                 throw InvalidParamException("Unknown build type - $this")
             }

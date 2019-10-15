@@ -26,10 +26,6 @@
 
 package com.tencent.devops.process.pojo.template
 
-/**
- * deng
- * 2019-01-08
- */
 data class TemplateInstances(
     val projectId: String,
     val templateId: String,

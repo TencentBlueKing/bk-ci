@@ -26,10 +26,6 @@
 
 package com.tencent.devops.process.pojo.template
 
-/**
- * deng
- * 2019-01-17
- */
 data class TemplateCompareModelResult(
     val versions: List<TemplateVersion>,
     val origin: TemplateCompareModel,
