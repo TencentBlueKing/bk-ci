@@ -51,6 +51,7 @@ const val PIPELINE_WEBHOOK_REPO_TYPE = "BK_CI_HOOK_REPO_TYPE"
 const val PIPELINE_WEBHOOK_BLOCK = "BK_CI_HOOK_BLOCK"
 const val PIPELINE_WEBHOOK_TYPE = "BK_CI_HOOK_TYPE"
 const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE"
+const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER"
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER"
@@ -75,6 +76,7 @@ const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
+const val PIPELINE_START_REPO_NAME = "BK_CI_REPOSITORY_NAME" // "pipeline.retry.start.task.id"
 
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"

@@ -29,10 +29,6 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.BuildType
 
-/**
- * deng
- * 2019-01-01
- */
 data class PipelineContainerMonitor(
     val osType: VMBaseOS,
     val buildType: BuildType,

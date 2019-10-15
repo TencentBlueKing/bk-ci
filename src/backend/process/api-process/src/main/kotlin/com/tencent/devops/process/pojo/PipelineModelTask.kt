@@ -32,5 +32,5 @@ data class PipelineModelTask(
     val taskId: String,
     val taskName: String,
     val classType: String,
-    val taskParmas: Map<String, Any>
+    val taskParam: Map<String, Any>
 )
