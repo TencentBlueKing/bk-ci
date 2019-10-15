@@ -31,6 +31,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -129,41 +130,41 @@ class ProjectDao {
      * 根据组织架构来查询name
      */
     fun listByGroup(
-            dslContext: DSLContext,
-            bgName: String?,
-            deptName: String?,
-            centerName: String?
+        dslContext: DSLContext,
+        bgName: String?,
+        deptName: String?,
+        centerName: String?
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = mutableListOf<Condition>()
             if (!bgName.isNullOrBlank()) {
                 conditions.add(
-                        BG_NAME.like(
-                                "%" + URLDecoder.decode(
-                                        bgName,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    BG_NAME.like(
+                        "%" + URLDecoder.decode(
+                            bgName,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             if (!deptName.isNullOrBlank()) {
                 conditions.add(
-                        DEPT_NAME.like(
-                                "%" + URLDecoder.decode(
-                                        deptName,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    DEPT_NAME.like(
+                        "%" + URLDecoder.decode(
+                            deptName,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             if (!centerName.isNullOrBlank()) {
                 conditions.add(
-                        CENTER_NAME.like(
-                                "%" + URLDecoder.decode(
-                                        centerName,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    CENTER_NAME.like(
+                        "%" + URLDecoder.decode(
+                            centerName,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             return dslContext.selectFrom(this).where(conditions).fetch()
@@ -174,10 +175,10 @@ class ProjectDao {
      * 根据bgId+deptName+centerName来查询
      */
     fun listByOrganization(
-            dslContext: DSLContext,
-            bgId: Long?,
-            deptName: String?,
-            centerName: String?
+        dslContext: DSLContext,
+        bgId: Long?,
+        deptName: String?,
+        centerName: String?
     ): Result<TProjectRecord>? {
         with(TProject.T_PROJECT) {
             val conditions = mutableListOf<Condition>()
@@ -186,22 +187,22 @@ class ProjectDao {
             }
             if (!deptName.isNullOrBlank()) {
                 conditions.add(
-                        DEPT_NAME.like(
-                                "%" + URLDecoder.decode(
-                                        deptName,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    DEPT_NAME.like(
+                        "%" + URLDecoder.decode(
+                            deptName,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             if (!centerName.isNullOrBlank()) {
                 conditions.add(
-                        CENTER_NAME.like(
-                                "%" + URLDecoder.decode(
-                                        centerName,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    CENTER_NAME.like(
+                        "%" + URLDecoder.decode(
+                            centerName,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             return dslContext.selectFrom(this).where(conditions).fetch()
@@ -252,64 +253,63 @@ class ProjectDao {
     }
 
     fun create(
-            dslContext: DSLContext,
-            userId: String,
-            logoAddress: String,
-            projectCreateInfo: ProjectCreateInfo,
-            userDeptDetail: UserDeptDetail,
-            projectId: String,
-            channelCode: ProjectChannelCode = ProjectChannelCode.BS
+        dslContext: DSLContext,
+        userId: String,
+        logoAddress: String,
+        projectCreateInfo: ProjectCreateInfo,
+        userDeptDetail: UserDeptDetail,
+        projectId: String,
+        channelCode: ProjectChannelCode = ProjectChannelCode.BS
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
-                    this,
-                    PROJECT_NAME,
-                    PROJECT_ID,
-                    ENGLISH_NAME,
-                    DESCRIPTION,
-                    BG_ID,
-                    BG_NAME,
-                    DEPT_ID,
-                    DEPT_NAME,
-                    CENTER_ID,
-                    CENTER_NAME,
-                    IS_SECRECY,
-                    KIND,
-                    CREATOR,
-                    CREATED_AT,
-                    PROJECT_TYPE,
-                    APPROVAL_STATUS,
-                    LOGO_ADDR,
-                    CREATOR_BG_NAME,
-                    CREATOR_DEPT_NAME,
-                    CREATOR_CENTER_NAME,
-                    CHANNEL
+                this,
+                PROJECT_NAME,
+                PROJECT_ID,
+                ENGLISH_NAME,
+                DESCRIPTION,
+                BG_ID,
+                BG_NAME,
+                DEPT_ID,
+                DEPT_NAME,
+                CENTER_ID,
+                CENTER_NAME,
+                IS_SECRECY,
+                KIND,
+                CREATOR,
+                CREATED_AT,
+                PROJECT_TYPE,
+                APPROVAL_STATUS,
+                LOGO_ADDR,
+                CREATOR_BG_NAME,
+                CREATOR_DEPT_NAME,
+                CREATOR_CENTER_NAME,
+                CHANNEL
             ).values(
-                    projectCreateInfo.project_name,
-                    projectId,
-                    projectCreateInfo.english_name,
-                    projectCreateInfo.description,
-                    projectCreateInfo.bg_id,
-                    projectCreateInfo.bg_name,
-                    projectCreateInfo.dept_id,
-                    projectCreateInfo.dept_name,
-                    projectCreateInfo.center_id,
-                    projectCreateInfo.center_name,
-                    projectCreateInfo.is_secrecy,
-                    projectCreateInfo.kind,
-                    userId,
-                    LocalDateTime.now(),
-                    projectCreateInfo.project_type,
-                    ApproveStatus.APPROVED.status,
-                    logoAddress,
-                    userDeptDetail.bg_name,
-                    userDeptDetail.dept_name,
-                    userDeptDetail.center_name,
-                    channelCode.name
+                projectCreateInfo.projectName,
+                projectId,
+                projectCreateInfo.englishName,
+                projectCreateInfo.description,
+                projectCreateInfo.bgId,
+                projectCreateInfo.bgName,
+                projectCreateInfo.deptId,
+                projectCreateInfo.deptName,
+                projectCreateInfo.centerId,
+                projectCreateInfo.centerName,
+                projectCreateInfo.secrecy,
+                projectCreateInfo.kind,
+                userId,
+                LocalDateTime.now(),
+                projectCreateInfo.projectType,
+                ApproveStatus.APPROVED.status,
+                logoAddress,
+                userDeptDetail.bgName,
+                userDeptDetail.deptName,
+                userDeptDetail.centerName,
+                channelCode.name
             ).execute()
         }
     }
-
 
     fun update(dslContext: DSLContext, userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Int {
         with(TProject.T_PROJECT) {
@@ -342,11 +342,11 @@ class ProjectDao {
     fun updateUsableStatus(dslContext: DSLContext, userId: String, projectId: String, enabled: Boolean): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
-                    .set(ENABLED, enabled)
-                    .set(UPDATED_AT, LocalDateTime.now())
-                    .set(UPDATOR, userId)
-                    .where(ENGLISH_NAME.eq(projectId))
-                    .execute()
+                .set(ENABLED, enabled)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .set(UPDATOR, userId)
+                .where(ENGLISH_NAME.eq(projectId))
+                .execute()
         }
     }
 
