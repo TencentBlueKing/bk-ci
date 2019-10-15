@@ -1,4 +1,8 @@
-INSERT INTO devops_ci_project.T_MESSAGE_CODE_DETAIL (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES 
+USE devops_ci_project;
+SET NAMES utf8mb4;
+DELETE FROM devops_ci_project.T_MESSAGE_CODE_DETAIL WHERE 1=1;
+
+INSERT INTO devops_ci_project.T_MESSAGE_CODE_DETAIL (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES
   ('40fb0ad10a8a11e9b8da14050aafaa15', '2100001', '00', '系统内部繁忙，请稍后再试', '系統內部繁忙，請稍後再試', 'System busy, please try again later'),
   ('41000cf40a8a11e9b8da14050aafaa15', '2100002', '00', '{0}不能为空', '{0}不能爲空', '{0} cannot be empty'),
   ('35e05d0e329911e9b8da14050aafaa15', '2100003', '00', '{0}已经存在系统，请换一个再试', '{0}已經存在系統，請換一個再試', '{0}  already exists in system, please try another one'),

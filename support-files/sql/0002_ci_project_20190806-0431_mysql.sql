@@ -1,12 +1,13 @@
 USE devops_ci_project;
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for T_ACTIVITY
 -- ----------------------------
-DROP TABLE IF EXISTS `T_ACTIVITY`;
-CREATE TABLE `T_ACTIVITY` (
+
+CREATE TABLE IF NOT EXISTS `T_ACTIVITY` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `TYPE` varchar(32) NOT NULL,
   `NAME` varchar(128) NOT NULL,
@@ -16,7 +17,7 @@ CREATE TABLE `T_ACTIVITY` (
   `CREATOR` varchar(32) NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `NAME_TYPE` (`NAME`,`TYPE`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for T_MESSAGE_CODE_DETAIL
@@ -98,10 +99,10 @@ CREATE TABLE `t_favorite` (
 ) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for t_project
+-- Table structure for T_PROJECTS
 -- ----------------------------
-DROP TABLE IF EXISTS `t_project`;
-CREATE TABLE `t_project` (
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -144,7 +145,7 @@ CREATE TABLE `t_project` (
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
   UNIQUE KEY `english_name` (`english_name`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for t_service
@@ -177,20 +178,20 @@ CREATE TABLE `t_service` (
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for t_service_type
+-- Table structure for T_SERVICE_TYPE
 -- ----------------------------
-DROP TABLE IF EXISTS `t_service_type`;
-CREATE TABLE `t_service_type` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `title` varchar(64) DEFAULT NULL COMMENT '标题名称',
-  `created_user` varchar(64) DEFAULT NULL COMMENT '创建人',
-  `created_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_user` varchar(64) DEFAULT NULL COMMENT '修改人',
-  `updated_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
-  `deleted` bit(1) DEFAULT NULL COMMENT '删除标识符',
+
+CREATE TABLE IF NOT EXISTS `T_SERVICE_TYPE` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `title` varchar(64) DEFAULT NULL,
+  `created_user` varchar(64) DEFAULT NULL,
+  `created_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updated_user` varchar(64) DEFAULT NULL,
+  `updated_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` bit(1) DEFAULT NULL,
   `weight` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `title` (`title`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
