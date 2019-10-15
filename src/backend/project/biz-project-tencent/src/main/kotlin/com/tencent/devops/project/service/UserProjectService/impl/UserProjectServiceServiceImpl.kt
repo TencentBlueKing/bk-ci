@@ -10,10 +10,7 @@ import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.ServiceUpdateUrls
-import com.tencent.devops.project.pojo.service.OPPServiceVO
-import com.tencent.devops.project.pojo.service.ServiceCreateInfo
-import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.UserProjectServiceService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -31,10 +28,11 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         private val gray: Gray,
         private val redisOperation: RedisOperation
 ) : UserProjectServiceService {
+
     override fun updateServiceUrls(
-        userId: String,
-        name: String,
-        serviceUpdateUrls: ServiceUpdateUrls
+            userId: String,
+            name: String,
+            serviceUpdateUrls: ServiceUpdateUrls
     ): Result<Boolean> {
         return Result(serviceDao.updateUrls(dslContext, userId, name, serviceUpdateUrls))
     }
@@ -43,24 +41,26 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
         if (tServiceRecord != null) {
             return Result(
-                ServiceVO(
-                    tServiceRecord.id ?: 0,
-                    tServiceRecord.name,
-                    tServiceRecord.link,
-                    tServiceRecord.linkNew,
-                    tServiceRecord.status, tServiceRecord.injectType,
-                    tServiceRecord.iframeUrl,
-                    tServiceRecord.cssUrl,
-                    tServiceRecord.jsUrl,
-                    tServiceRecord.grayCssUrl,
-                    tServiceRecord.grayJsUrl,
-                    tServiceRecord.showProjectList,
-                    tServiceRecord.showNav,
-                    tServiceRecord.projectIdType,
-                    favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
-                    tServiceRecord.logoUrl,
-                    tServiceRecord.webSocket
-                )
+                    ServiceVO(
+                            tServiceRecord.id ?: 0,
+                            tServiceRecord.name,
+                            tServiceRecord.link,
+                            tServiceRecord.linkNew,
+                            tServiceRecord.status, tServiceRecord.injectType,
+                            tServiceRecord.iframeUrl,
+                            tServiceRecord.cssUrl,
+                            tServiceRecord.jsUrl,
+                            tServiceRecord.grayCssUrl,
+                            tServiceRecord.grayJsUrl,
+                            tServiceRecord.showProjectList,
+                            tServiceRecord.showNav,
+                            tServiceRecord.projectIdType,
+                            favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
+                            //TODO: 内部版数据库没有weight字段，此处可能会抛异常。
+                            tServiceRecord.weight,
+                            tServiceRecord.logoUrl,
+                            tServiceRecord.webSocket
+                    )
             )
         } else {
             return Result(405, "无限ID,获取服务信息失败")
@@ -89,7 +89,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         val oPPServiceVOList = ArrayList<OPPServiceVO>()
         tServiceList.map { tServiceRecord ->
             oPPServiceVOList.add(
-                generateOppServiceVO(tServiceRecord)
+                    generateOppServiceVO(tServiceRecord)
             )
         }
 
@@ -98,27 +98,27 @@ class UserProjectServiceServiceImpl @Autowired constructor(
 
     private fun generateOppServiceVO(tServiceRecord: TServiceRecord): OPPServiceVO {
         return OPPServiceVO(
-            tServiceRecord.id,
-            tServiceRecord.name ?: "",
-            tServiceRecord.serviceTypeId,
-            tServiceRecord.showProjectList,
-            tServiceRecord.showNav,
-            tServiceRecord.status,
-            tServiceRecord.link,
-            tServiceRecord.linkNew,
-            tServiceRecord.injectType,
-            tServiceRecord.iframeUrl,
-            tServiceRecord.cssUrl,
-            tServiceRecord.jsUrl,
-            tServiceRecord.grayCssUrl,
-            tServiceRecord.grayJsUrl,
-            tServiceRecord.projectIdType,
-            tServiceRecord.logoUrl,
-            tServiceRecord.webSocket,
-            tServiceRecord.createdUser ?: "",
-            DateTimeUtil.toDateTime(tServiceRecord.createdTime),
-            tServiceRecord.updatedUser ?: "",
-            DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
+                tServiceRecord.id,
+                tServiceRecord.name ?: "",
+                tServiceRecord.serviceTypeId,
+                tServiceRecord.showProjectList,
+                tServiceRecord.showNav,
+                tServiceRecord.status,
+                tServiceRecord.link,
+                tServiceRecord.linkNew,
+                tServiceRecord.injectType,
+                tServiceRecord.iframeUrl,
+                tServiceRecord.cssUrl,
+                tServiceRecord.jsUrl,
+                tServiceRecord.grayCssUrl,
+                tServiceRecord.grayJsUrl,
+                tServiceRecord.projectIdType,
+                tServiceRecord.logoUrl,
+                tServiceRecord.webSocket,
+                tServiceRecord.createdUser ?: "",
+                DateTimeUtil.toDateTime(tServiceRecord.createdTime),
+                tServiceRecord.updatedUser ?: "",
+                DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
         )
     }
 
@@ -174,29 +174,31 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                     val status = grayTest[it.id] ?: it.status
                     val favor = favorServices.contains(it.id)
                     services.add(
-                        ServiceVO(
-                            it.id,
-                            it.name ?: "",
-                            it.link ?: "",
-                            it.linkNew ?: "",
-                            status,
-                            it.injectType ?: "",
-                            it.iframeUrl ?: "",
-                            getCSSUrl(it, projectId),
-                            getJSUrl(it, projectId),
-                            it.grayCssUrl ?: "",
-                            it.grayJsUrl ?: "",
-                            it.showProjectList ?: false,
-                            it.showNav ?: false,
-                            it.projectIdType ?: "",
-                            favor,
-                            it.logoUrl,
-                            it.webSocket
-                        )
+                            ServiceVO(
+                                    it.id,
+                                    it.name ?: "",
+                                    it.link ?: "",
+                                    it.linkNew ?: "",
+                                    status,
+                                    it.injectType ?: "",
+                                    it.iframeUrl ?: "",
+                                    getCSSUrl(it, projectId),
+                                    getJSUrl(it, projectId),
+                                    it.grayCssUrl ?: "",
+                                    it.grayJsUrl ?: "",
+                                    it.showProjectList ?: false,
+                                    it.showNav ?: false,
+                                    it.projectIdType ?: "",
+                                    favor,
+                                    it.weight,
+                                    it.logoUrl,
+                                    it.webSocket
+                            )
                     )
                 }
 
-                serviceListVO.add(ServiceListVO(typeName, services))
+                //TODO: 因内部版没有weigHt，weigHt默认给0
+                serviceListVO.add(ServiceListVO(typeName, 0, services))
             }
 
             return Result(0, "OK", serviceListVO)
@@ -235,12 +237,17 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             services.forEach {
-                val type = serviceTypeDao.create(context, userId, it.title)
+                val type = serviceTypeDao.create(context, userId, it.title, 0)
                 it.children.forEach { s ->
                     serviceDao.create(context, userId, type.id, s)
                 }
             }
         }
+    }
+
+    override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
+        //TODO:  内不版没有此方法
+        return Result(true)
     }
 
     companion object {

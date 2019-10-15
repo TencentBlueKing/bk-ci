@@ -28,9 +28,11 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -251,6 +253,73 @@ class ProjectDao {
         }
     }
 
+    fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.insertInto(
+                    this,
+                    APPROVAL_STATUS,
+                    APPROVAL_TIME,
+                    APPROVER,
+                    BG_ID,
+                    BG_NAME,
+                    CC_APP_ID,
+                    CENTER_ID,
+                    CENTER_NAME,
+                    CREATED_AT,
+                    CREATOR,
+                    DATA_ID,
+                    DEPLOY_TYPE,
+                    DEPT_ID,
+                    DEPT_NAME,
+                    DESCRIPTION,
+                    ENGLISH_NAME,
+                    EXTRA,
+                    IS_OFFLINED,
+                    IS_SECRECY,
+                    KIND,
+                    LOGO_ADDR,
+                    PROJECT_ID,
+                    PROJECT_NAME,
+                    PROJECT_TYPE,
+                    REMARK,
+                    UPDATED_AT,
+                    USE_BK,
+                    APPROVAL_STATUS
+            )
+                    .values(
+                            paasProject.approval_status,
+                            paasProject.approval_time,
+                            paasProject.approver,
+                            paasProject.bg_id,
+                            paasProject.bg_name,
+                            paasProject.cc_app_id,
+                            paasProject.center_id,
+                            paasProject.center_name,
+                            paasProject.created_at.time,
+                            paasProject.creator,
+                            paasProject.data_id,
+                            paasProject.deploy_type,
+                            paasProject.dept_id,
+                            paasProject.dept_name,
+                            paasProject.description,
+                            paasProject.english_name,
+                            paasProject.extra,
+                            paasProject.is_offlined,
+                            paasProject.is_secrecy,
+                            paasProject.kind,
+                            paasProject.logo_addr,
+                            paasProject.project_id,
+                            paasProject.project_name,
+                            paasProject.project_type,
+                            paasProject.remark,
+                            paasProject.updated_at?.time,
+                            paasProject.use_bk,
+                            ApproveStatus.APPROVED.status
+                    )
+                    .execute()
+        }
+    }
+
     fun create(
             dslContext: DSLContext,
             userId: String,
@@ -285,26 +354,26 @@ class ProjectDao {
                     CREATOR_CENTER_NAME,
                     CHANNEL
             ).values(
-                    projectCreateInfo.project_name,
+                    projectCreateInfo.projectName,
                     projectId,
-                    projectCreateInfo.english_name,
+                    projectCreateInfo.englishName,
                     projectCreateInfo.description,
-                    projectCreateInfo.bg_id,
-                    projectCreateInfo.bg_name,
-                    projectCreateInfo.dept_id,
-                    projectCreateInfo.dept_name,
-                    projectCreateInfo.center_id,
-                    projectCreateInfo.center_name,
-                    projectCreateInfo.is_secrecy,
+                    projectCreateInfo.bgId,
+                    projectCreateInfo.bgName,
+                    projectCreateInfo.deptId,
+                    projectCreateInfo.deptName,
+                    projectCreateInfo.centerId,
+                    projectCreateInfo.centerName,
+                    projectCreateInfo.isSecrecy,
                     projectCreateInfo.kind,
                     userId,
                     LocalDateTime.now(),
-                    projectCreateInfo.project_type,
+                    projectCreateInfo.projectType,
                     ApproveStatus.APPROVED.status,
                     logoAddress,
-                    userDeptDetail.bg_name,
-                    userDeptDetail.dept_name,
-                    userDeptDetail.center_name,
+                    userDeptDetail.bgName,
+                    userDeptDetail.deptName,
+                    userDeptDetail.centerName,
                     channelCode.name
             ).execute()
         }

@@ -99,8 +99,8 @@ class OPProjectServiceResourceImpl constructor(
         return Result(serviceTypeService.get(serviceTypeId))
     }
 
-    override fun addUserAuth(userId: String, grayTestCreate: GrayTestCreate): Result<Boolean> {
-        return Result(grayTestService.create(userId, grayTestCreate))
+    override fun addUserAuth(userId: String, grayTestInfo: GrayTestInfo): Result<GrayTestInfo> {
+        return Result(grayTestService.create(userId, grayTestInfo))
     }
 
     override fun updateUserAuth(userId: String, id: Long, grayTestInfo: GrayTestInfo): Result<Boolean> {
@@ -113,7 +113,7 @@ class OPProjectServiceResourceImpl constructor(
         return Result(true)
     }
 
-    override fun listGrayTestById(userId: String, id: Long): Result<GrayTestListInfo> {
+    override fun listGrayTestById(userId: String, id: Long): Result<GrayTestInfo> {
         return Result(grayTestService.get(id))
     }
 
@@ -185,7 +185,7 @@ class OPProjectServiceResourceImpl constructor(
         return Result(true)
     }
 
-    override fun listGrayTestByIdV2(userId: String, id: Long): Result<GrayTestListInfo> {
+    override fun listGrayTestByIdV2(userId: String, id: Long): Result<GrayTestInfo> {
         return Result(grayTestService.get(id))
     }
 }

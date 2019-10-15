@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
  * 2019-01-14
  */
 @Service
-class SyncCCAppNameJobService @Autowired constructor(private val projectService: ProjectService) {
+class SyncCCAppNameJobService @Autowired constructor(private val synProjectService: SynProjectService) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SyncCCAppNameJobService::class.java)
@@ -20,7 +20,7 @@ class SyncCCAppNameJobService @Autowired constructor(private val projectService:
     @Scheduled(cron = "0 0 4 * * ?") // 每天早上4点执行一次
     fun syncCCName() {
         logger.info("Start to sync project cc name")
-        val count = projectService.syncCCAppName()
+        val count = synProjectService.syncCCAppName()
         logger.info("Success to sync $count cc names")
     }
 }

@@ -2,8 +2,8 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
+import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
-import com.tencent.devops.project.pojo.service.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -53,17 +53,17 @@ class ServiceDao {
                     serviceVO.name,
                     typeId,
                     serviceVO.link,
-                    serviceVO.link_new,
+                    serviceVO.linkNew,
                     serviceVO.status,
-                    serviceVO.inject_type,
-                    serviceVO.iframe_url,
-                    serviceVO.css_url,
-                    serviceVO.js_url,
-                    serviceVO.gray_css_url,
-                    serviceVO.gray_js_url,
-                    serviceVO.show_project_list,
-                    serviceVO.show_nav,
-                    serviceVO.project_id_type,
+                    serviceVO.injectType,
+                    serviceVO.iframeUrl,
+                    serviceVO.cssUrl,
+                    serviceVO.jsUrl,
+                    serviceVO.grayCssUrl,
+                    serviceVO.grayJsUrl,
+                    serviceVO.showProjectList,
+                    serviceVO.showNav,
+                    serviceVO.projectIdType,
                     userId,
                     false
                 )

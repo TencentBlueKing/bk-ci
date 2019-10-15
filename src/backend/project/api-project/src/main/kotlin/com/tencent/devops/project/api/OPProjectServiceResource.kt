@@ -190,8 +190,8 @@ interface OPProjectServiceResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "创建信息", required = true)
-        grayTestCreate: GrayTestCreate
-    ): Result<Boolean>
+        grayTestInfo: GrayTestInfo
+    ): Result<GrayTestInfo>
 
     @PUT
     @Path("/grayTest/{id}")
@@ -229,7 +229,7 @@ interface OPProjectServiceResource {
         @ApiParam("灰度表ID", required = true)
         @PathParam("id")
         id: Long
-    ): Result<GrayTestListInfo>
+    ): Result<GrayTestInfo>
 
     @GET
     @Path("/grayTest")
@@ -412,5 +412,5 @@ interface OPProjectServiceResource {
             @ApiParam("灰度表ID", required = true)
             @PathParam("id")
             id: Long
-    ): Result<GrayTestListInfo>
+    ): Result<GrayTestInfo>
 }
