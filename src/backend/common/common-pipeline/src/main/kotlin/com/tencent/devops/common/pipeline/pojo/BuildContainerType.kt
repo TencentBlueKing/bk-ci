@@ -29,10 +29,6 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.type.BuildType
 
-/**
- * deng
- * 2019-04-11
- */
 data class BuildContainerType(
     val buildType: BuildType,
     val os: OS
