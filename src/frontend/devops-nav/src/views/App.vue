@@ -30,7 +30,7 @@
                 this.$router.replace('/maintaining')
             }
             this.$bkMessage({
-                message: e.message || '内部服务错误',
+                message: e.message || this.$t('NetworkError'),
                 theme: 'error'
             })
         }

@@ -21,10 +21,14 @@ import {
     CLOSE_PREVIEW_TIPS,
     TOGGLE_MODULE_LOADING,
     UPDATE_CURRENT_PAGE,
-    SET_SERVICES
+    SET_SERVICES,
+    TOGGLE_PERMISSION_DIALOG
 } from './constants'
 
 const actions: ActionTree<RootState, any> = {
+    togglePermissionDialog ({ commit }: ActionContext<RootState, any>, visible: boolean) {
+        this.commit(TOGGLE_PERMISSION_DIALOG, visible)  
+    },
     updateCurrentPage ({ commit }: ActionContext<RootState, any>, page: object) {
         commit(UPDATE_CURRENT_PAGE, page)
     },

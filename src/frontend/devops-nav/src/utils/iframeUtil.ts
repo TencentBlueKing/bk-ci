@@ -65,6 +65,11 @@ function iframeUtil (router: any) {
             ...tips
         })
     }
+
+
+    utilMap.syncLocale = function (target: object, locale: string) {
+        send(target, 'syncLocale', locale)
+    }
  
     utilMap.syncProjectList = function (target, projectList: object[]): void {
         send(target, 'syncProjectList', projectList)

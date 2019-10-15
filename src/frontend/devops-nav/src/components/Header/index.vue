@@ -15,7 +15,7 @@
                 <devops-select
                     ref="projectDropdown"
                     class="bkdevops-project-selector"
-                    placeholder="请选择项目"
+                    :placeholder="$t('selectProjectPlaceholder')"
                     :value="projectId"
                     :clearable="false"
                     :options="selectProjectList"
@@ -29,14 +29,14 @@
                             @click.stop.prevent="popProjectDialog()"
                         >
                             <i class="bk-icon icon-plus-circle" />
-                            <span class="text">新建项目</span>
+                            <span class="text">{{ $t('newProject') }}</span>
                         </div>
                         <div
                             class="bk-selector-create-item"
                             @click.stop.prevent="goToPm"
                         >
                             <i class="bk-icon icon-apps" />
-                            <span class="text">项目管理</span>
+                            <span class="text">{{ $t('projectManage') }}</span>
                         </div>
                     </template>
                 </devops-select>
@@ -59,6 +59,7 @@
                 class="bk-icon icon-helper"
                 @click.stop="goToDocs"
             />
+            <locale-switcher />
             <User
                 class="user-info"
                 v-bind="user"
@@ -81,6 +82,7 @@
     import Logo from '../Logo/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import eventBus from '../../utils/eventBus'
     import * as cookie from 'js-cookie'
     import { urlJoin } from '../../utils/util'
@@ -91,7 +93,8 @@
             NavMenu,
             ProjectDialog,
             Logo,
-            DevopsSelect
+            DevopsSelect,
+            LocaleSwitcher
         }
     })
     export default class Header extends Vue {

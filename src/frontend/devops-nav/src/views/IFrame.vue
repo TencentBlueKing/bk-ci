@@ -71,8 +71,8 @@
         leaveConfirm (to, from, next) {
             this.leaving = true
             this.$bkInfo({
-                title: '确认要离开',
-                subTitle: '离开后，新编辑的数据将丢失',
+                title: this.$t('leaveConfirmTitle'),
+                subTitle: this.$t('leaveConfirmMsg'),
                 confirmFn: () => {
                     this.src = null
                     this.$nextTick(() => {
@@ -185,6 +185,14 @@
             if (this.$refs.iframeEle) {
                 const childWin = this.$refs.iframeEle.contentWindow
                 this.iframeUtil.syncUserInfo(childWin, user)
+            }
+        }
+
+        @Watch('$i18n.locale')
+        handleLocaleChange (locale) {
+            if (this.$refs.iframeEle) {
+                const childWin = this.$refs.iframeEle.contentWindow
+                this.iframeUtil.syncLocale(childWin, locale)
             }
         }
     }

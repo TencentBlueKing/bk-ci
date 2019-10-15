@@ -46,13 +46,13 @@
                     <template v-if="showCollectStar">
                         <i
                             v-if="child.collected"
-                            title="已收藏"
+                            :title="$t('collected')"
                             class="bk-icon collect-icon icon-star-shape"
                             @click.stop="toggleCollect(child, false)"
                         />
                         <i
                             v-else
-                            title="收藏"
+                            :title="$t('toCollect')"
                             class="bk-icon collect-icon icon-star"
                             @click.stop="toggleCollect(child, true)"
                         />

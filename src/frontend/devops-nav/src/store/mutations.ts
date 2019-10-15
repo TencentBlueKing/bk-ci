@@ -16,10 +16,14 @@ import {
     UPDATE_HEADER_CONFIG,
     CLOSE_PREVIEW_TIPS,
     TOGGLE_MODULE_LOADING,
-    UPDATE_CURRENT_PAGE
+    UPDATE_CURRENT_PAGE,
+    TOGGLE_PERMISSION_DIALOG
 } from './constants'
 
 const mutations: MutationTree<RootState> = {
+    [TOGGLE_PERMISSION_DIALOG]: (state: RootState, visible: boolean) => {
+        Vue.set(state, 'isPermissionDialogShow', visible)
+    },
     [UPDATE_CURRENT_PAGE]: (state: RootState, page: object) => {
         Vue.set(state, 'currentPage', page)
         return state
