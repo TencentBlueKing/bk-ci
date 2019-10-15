@@ -4,6 +4,7 @@ import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
+import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -153,6 +154,18 @@ class ServiceDao {
                 .where(ID.eq(serviceId))
                 .and(DELETED.eq(false))
                 .execute()
+            return execute > 0
+        }
+    }
+
+    fun updateUrlByName(dslContext: DSLContext, serviceUrlUpdateInfo: ServiceUrlUpdateInfo): Boolean {
+        with(TService.T_SERVICE) {
+            val execute = dslContext.update(this)
+                    .set(JS_URL, serviceUrlUpdateInfo.jsUrl)
+                    .set(CSS_URL, serviceUrlUpdateInfo.cssUrl)
+                    .where(NAME.eq(serviceUrlUpdateInfo.name))
+                    .and(DELETED.eq(false))
+                    .execute()
             return execute > 0
         }
     }

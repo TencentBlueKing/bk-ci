@@ -1,4 +1,4 @@
-package com.tencent.devops.project.service.UserProjectService.impl
+package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.service.ServiceType

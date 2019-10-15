@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.dao.MessageCodeDetailDao
 import com.tencent.devops.project.pojo.code.AddMessageCodeRequest
 import com.tencent.devops.project.pojo.code.MessageCodeResp
 import com.tencent.devops.project.pojo.code.UpdateMessageCodeRequest
