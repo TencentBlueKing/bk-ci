@@ -37,7 +37,7 @@ data class VMBuildContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
-    override val name: String = "构建环境",
+    override var name: String = "构建环境",
     @ApiModelProperty("任务集合", required = true)
     override val elements: List<Element> = listOf(),
     override var status: String? = null,
