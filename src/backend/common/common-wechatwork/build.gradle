@@ -1,0 +1,6 @@
+dependencies {
+    compile project(":common:common-web")
+    compile "dom4j:dom4j"
+    compile "commons-codec:commons-codec:1.9"
+//    compile "org.ansj:ansj_seg:5.1.6"
+}

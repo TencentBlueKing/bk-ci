@@ -19,6 +19,9 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserScmResource {
+
+
+
     @ApiOperation("获取仓库最新版本")
     @GET
     @Path("/projects/{projectId}/repositories/{repositoryId}/latestRevision")
