@@ -7,10 +7,10 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.environment.client.TstackClient
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.tstack.TstackNodeDao
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.tstack.TstackNode
-import com.tencent.devops.environment.utils.NodeAuthUtils
 import org.apache.commons.lang.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -23,8 +23,8 @@ class TstackNodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val tstackNodeDao: TstackNodeDao,
     private val nodeDao: NodeDao,
-    private val nodeAuthUtils: NodeAuthUtils,
-    private val tstackClient: TstackClient
+    private val tstackClient: TstackClient,
+    private val environmentPermissionService: EnvironmentPermissionService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TstackNodeService::class.java)
@@ -109,7 +109,7 @@ class TstackNodeService @Autowired constructor(
                     user)
             val nodeRecord = nodeDao.get(context, projectId, nodeId)!!
             tstackNodeDao.setNodeIdAndProjectId(context, longId, nodeId, projectId)
-            nodeAuthUtils.batchCreateNodeResource(user, projectId, listOf(nodeRecord))
+            environmentPermissionService.deleteNode(projectId, nodeRecord.nodeId)
 
             nodeHashId = HashUtil.encodeLongId(nodeId)
         }
@@ -129,7 +129,7 @@ class TstackNodeService @Autowired constructor(
                 } else {
                     nodeDao.batchDeleteNode(context, projectId, listOf(tstackNode.nodeId))
                     tstackNodeDao.cleanNodeIdAndProjectId(context, longId)
-                    nodeAuthUtils.deleteResource(projectId, listOf(nodeRecord))
+                    environmentPermissionService.deleteNode(projectId, nodeRecord.nodeId)
                 }
             }
         }
