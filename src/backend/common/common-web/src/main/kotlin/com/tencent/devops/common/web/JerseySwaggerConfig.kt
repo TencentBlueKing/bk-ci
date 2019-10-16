@@ -44,8 +44,11 @@ class  JerseySwaggerConfig : JerseyConfig() {
     @Value("\${spring.application.packageName:#{null}}")
     private val packageName: String? = null
 
-    @Value("\${swagger.host:#{null}}")
-    private val swaggerHost: String? = null
+    @Value("\${spring.application.name:#{null}}")
+    private val service: String? = null
+
+    @Value("\${swagger.append.name:#{null}}")
+    private val swaggerAppendName: String? = null
 
     private val logger = LoggerFactory.getLogger(JerseySwaggerConfig::class.java)
     @PostConstruct
@@ -59,13 +62,13 @@ class  JerseySwaggerConfig : JerseyConfig() {
 
     private fun configSwagger() {
         if (packageName != null && packageName.isNotBlank()) {
-            if (swaggerHost.isNullOrBlank()) {
+            if (swaggerAppendName == "true") {
                 BeanConfig().apply {
                     title = applicationDesc
                     version = applicationVersion
                     resourcePackage = packageName
                     scan = true
-                    basePath = "/api"
+                    basePath = "/$service/api"
                 }
             } else {
                 BeanConfig().apply {
@@ -74,7 +77,6 @@ class  JerseySwaggerConfig : JerseyConfig() {
                     resourcePackage = packageName
                     scan = true
                     basePath = "/api"
-                    host = swaggerHost
                 }
             }
         }

@@ -6,7 +6,6 @@ import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
-import com.tencent.devops.dispatch.dao.PipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuildCreate
 import com.tencent.devops.dispatch.pojo.VM
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
