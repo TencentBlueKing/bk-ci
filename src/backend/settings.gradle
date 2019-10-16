@@ -49,6 +49,7 @@ include ":common:common-auth:common-auth-tencent"
 include ":common:common-notify"
 include ":common:common-notify:common-notify-blueking"
 include ":common:common-websocket"
+include ":common:common-wechatwork"
 
 include ":project"
 include ":project:api-project"
@@ -189,6 +190,15 @@ include ":boot-assembly"
 
 include ":experience"
 include ":experience:api-experience-tencent"
+include ":experience:biz-experience-tencent"
+include ":experience:boot-experience-tencent"
+include ":experience:model-experience-tencent"
+
+include ":support"
+include ":support:api-support-tencent"
+include ":support:biz-support-tencent"
+include ":support:boot-support-tencent"
+include ":support:model-support-tencent"
 
 include ":notify"
 include ":notify:api-notify"
