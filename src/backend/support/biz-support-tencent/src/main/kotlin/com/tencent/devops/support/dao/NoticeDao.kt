@@ -1,0 +1,97 @@
+package com.tencent.devops.support.dao
+
+import com.tencent.devops.model.support.tables.TNotice
+import com.tencent.devops.model.support.tables.records.TNoticeRecord
+import com.tencent.devops.support.model.app.NoticeRequest
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import sun.misc.MessageUtils.where
+import java.sql.Timestamp
+
+@Repository
+class NoticeDao {
+
+    fun getValidNotice(dslContext: DSLContext): TNoticeRecord? {
+        val currentTimestamp = System.currentTimeMillis()
+        with(TNotice.T_NOTICE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(EFFECT_DATE.le(Timestamp(currentTimestamp).toLocalDateTime()))
+            conditions.add(INVALID_DATE.ge(Timestamp(currentTimestamp).toLocalDateTime()))
+            val notices = dslContext
+                    .selectFrom(this)
+                    .where(conditions)
+                    .orderBy(ID.desc())
+                    .fetch()
+            return if (notices.size > 0)
+                notices[0]
+            else
+                null
+        }
+    }
+
+    fun getAllNotice(dslContext: DSLContext): Result<TNoticeRecord>? {
+        with(TNotice.T_NOTICE) {
+            return dslContext
+                    .selectFrom(this)
+                    .orderBy(ID.desc())
+                    .fetch()
+        }
+    }
+
+    fun getNotice(dslContext: DSLContext, id: Long): TNoticeRecord? {
+        with(TNotice.T_NOTICE) {
+            return dslContext.selectFrom(this)
+                    .where(ID.eq(id))
+                    .fetchOne()
+        }
+    }
+    fun deleteNotice(dslContext: DSLContext, id: Long): Int {
+        with(TNotice.T_NOTICE) {
+            return dslContext.deleteFrom(this)
+                    .where(ID.eq(id))
+                    .execute()
+        }
+    }
+    fun handleNotice(dslContext: DSLContext, id: Long?, noticeRequest: NoticeRequest): Int {
+        val currentTimestamp = System.currentTimeMillis()
+        with(TNotice.T_NOTICE) {
+            val effectDate = Timestamp(noticeRequest.effectDate).toLocalDateTime()
+            val invalidDate = Timestamp(noticeRequest.invalidDate).toLocalDateTime()
+            return if (id != null && exist(dslContext, id)) {
+                // 存在的时候，更新
+                dslContext.update(this)
+                        .set(NOTICE_TITLE, noticeRequest.noticeTitle)
+                        .set(EFFECT_DATE, effectDate)
+                        .set(INVALID_DATE, invalidDate)
+                        .set(UPDATE_DATE, Timestamp(currentTimestamp).toLocalDateTime())
+                        .set(NOTICE_CONTENT, noticeRequest.noticeContent)
+                        .set(REDIRECT_URL, noticeRequest.redirectUrl)
+                        .where(ID.eq(id))
+                        .execute()
+            } else {
+                // 不存在的时候,插入
+                dslContext.insertInto(this,
+                        NOTICE_TITLE,
+                        EFFECT_DATE,
+                        INVALID_DATE,
+                        NOTICE_CONTENT,
+                        REDIRECT_URL
+                ).values(
+                        noticeRequest.noticeTitle,
+                        effectDate,
+                        invalidDate,
+                        noticeRequest.noticeContent,
+                        noticeRequest.redirectUrl
+                ).execute()
+            }
+        }
+    }
+
+    fun exist(dslContext: DSLContext, id: Long): Boolean {
+        with(TNotice.T_NOTICE) {
+            return dslContext.selectFrom(this).where(ID.eq(id)).fetchOne() != null
+        }
+    }
+}
