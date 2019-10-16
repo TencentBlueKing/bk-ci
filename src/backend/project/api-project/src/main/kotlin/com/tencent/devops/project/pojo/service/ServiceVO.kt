@@ -73,5 +73,9 @@ data class ServiceVO(
     @ApiModelProperty("是否收藏")
     val collected: Boolean,
     @ApiModelProperty("权重")
-    val weigHt: Int
+    val weigHt: Int,
+    @ApiModelProperty("logo地址")
+    val logoUrl: String?,
+    @ApiModelProperty("支持webSocket的页面")
+    val webSocket: String?
 )

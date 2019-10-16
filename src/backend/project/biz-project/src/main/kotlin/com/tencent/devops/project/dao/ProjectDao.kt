@@ -28,9 +28,11 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -99,6 +101,13 @@ class ProjectDao {
         }
     }
 
+    fun getAllProject(dslContext: DSLContext): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            val query = dslContext.selectFrom(this)
+            query.fetch()
+        }
+    }
+
     /**
      * 根据英文名称(projectCode)查询name
      */
@@ -115,6 +124,89 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId)).fetchOne()
+        }
+    }
+
+    /**
+     * 根据组织架构来查询name
+     */
+    fun listByGroup(
+        dslContext: DSLContext,
+        bgName: String?,
+        deptName: String?,
+        centerName: String?
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (!bgName.isNullOrBlank()) {
+                conditions.add(
+                    BG_NAME.like(
+                        "%" + URLDecoder.decode(
+                            bgName,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+            }
+            if (!deptName.isNullOrBlank()) {
+                conditions.add(
+                    DEPT_NAME.like(
+                        "%" + URLDecoder.decode(
+                            deptName,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+            }
+            if (!centerName.isNullOrBlank()) {
+                conditions.add(
+                    CENTER_NAME.like(
+                        "%" + URLDecoder.decode(
+                            centerName,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    /**
+     * 根据bgId+deptName+centerName来查询
+     */
+    fun listByOrganization(
+        dslContext: DSLContext,
+        bgId: Long?,
+        deptName: String?,
+        centerName: String?
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (bgId != null) {
+                conditions.add(BG_ID.eq(bgId))
+            }
+            if (!deptName.isNullOrBlank()) {
+                conditions.add(
+                    DEPT_NAME.like(
+                        "%" + URLDecoder.decode(
+                            deptName,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+            }
+            if (!centerName.isNullOrBlank()) {
+                conditions.add(
+                    CENTER_NAME.like(
+                        "%" + URLDecoder.decode(
+                            centerName,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
@@ -161,13 +253,81 @@ class ProjectDao {
         }
     }
 
+    fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.insertInto(
+                    this,
+                    APPROVAL_STATUS,
+                    APPROVAL_TIME,
+                    APPROVER,
+                    BG_ID,
+                    BG_NAME,
+                    CC_APP_ID,
+                    CENTER_ID,
+                    CENTER_NAME,
+                    CREATED_AT,
+                    CREATOR,
+                    DATA_ID,
+                    DEPLOY_TYPE,
+                    DEPT_ID,
+                    DEPT_NAME,
+                    DESCRIPTION,
+                    ENGLISH_NAME,
+                    EXTRA,
+                    IS_OFFLINED,
+                    IS_SECRECY,
+                    KIND,
+                    LOGO_ADDR,
+                    PROJECT_ID,
+                    PROJECT_NAME,
+                    PROJECT_TYPE,
+                    REMARK,
+                    UPDATED_AT,
+                    USE_BK,
+                    APPROVAL_STATUS
+            )
+                    .values(
+                            paasProject.approval_status,
+                            paasProject.approval_time,
+                            paasProject.approver,
+                            paasProject.bg_id,
+                            paasProject.bg_name,
+                            paasProject.cc_app_id,
+                            paasProject.center_id,
+                            paasProject.center_name,
+                            paasProject.created_at.time,
+                            paasProject.creator,
+                            paasProject.data_id,
+                            paasProject.deploy_type,
+                            paasProject.dept_id,
+                            paasProject.dept_name,
+                            paasProject.description,
+                            paasProject.english_name,
+                            paasProject.extra,
+                            paasProject.is_offlined,
+                            paasProject.is_secrecy,
+                            paasProject.kind,
+                            paasProject.logo_addr,
+                            paasProject.project_id,
+                            paasProject.project_name,
+                            paasProject.project_type,
+                            paasProject.remark,
+                            paasProject.updated_at?.time,
+                            paasProject.use_bk,
+                            ApproveStatus.APPROVED.status
+                    )
+                    .execute()
+        }
+    }
+
     fun create(
         dslContext: DSLContext,
         userId: String,
         logoAddress: String,
         projectCreateInfo: ProjectCreateInfo,
         userDeptDetail: UserDeptDetail,
-        projectId: String
+        projectId: String,
+        channelCode: ProjectChannelCode = ProjectChannelCode.BS
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -191,18 +351,19 @@ class ProjectDao {
                 LOGO_ADDR,
                 CREATOR_BG_NAME,
                 CREATOR_DEPT_NAME,
-                CREATOR_CENTER_NAME
+                CREATOR_CENTER_NAME,
+                CHANNEL
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
                 projectCreateInfo.englishName,
                 projectCreateInfo.description,
-                0,
-                "",
-                0,
-                "",
-                0,
-                "",
+                projectCreateInfo.bgId,
+                projectCreateInfo.bgName,
+                projectCreateInfo.deptId,
+                projectCreateInfo.deptName,
+                projectCreateInfo.centerId,
+                projectCreateInfo.centerName,
                 projectCreateInfo.secrecy,
                 projectCreateInfo.kind,
                 userId,
@@ -212,7 +373,8 @@ class ProjectDao {
                 logoAddress,
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,
-                userDeptDetail.centerName
+                userDeptDetail.centerName,
+                channelCode.name
             ).execute()
         }
     }
@@ -242,6 +404,17 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
                 .where(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
+    fun updateUsableStatus(dslContext: DSLContext, userId: String, projectId: String, enabled: Boolean): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(ENABLED, enabled)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .set(UPDATOR, userId)
+                .where(ENGLISH_NAME.eq(projectId))
+                .execute()
         }
     }
 

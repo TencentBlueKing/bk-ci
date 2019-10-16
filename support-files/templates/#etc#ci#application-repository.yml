@@ -10,6 +10,29 @@ server:
   port: __BKCI_REPOSITORY_API_PORT__
 
 # github repository
+
+scm:
+  # github repository
+  github:
+    clientId: __GITHUB_CLIENT_ID__
+    clientSecret: __GITHUB_CLIENT_SECRET__
+    webhookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/external/api/external/github/oauth/callback
+    redirectUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/console/codelib
+    appUrl: https://github.com/apps/__GITHUB_APP__
+    signSecret: __GITHUB_SIGN_SECRET__
+
+  #gitlab typo repository
+  gitlab:
+    url: __GITLAB_URL__    
+    apiUrl: __GITLAB_URL__/api/v4
+    gitlabHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/ms/process/api/external/scm/gitlab/commit
+
+  #svn open api url
+  svn:
+    apiKey: __SVN_API_KEY__
+    openApi: __SVN_URL__
+    hookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/ms/process/api/external/scm/codesvn/commit
+
 github:
   clientId: __GITHUB_CLIENT_ID__
   clientSecret: __GITHUB_CLIENT_SECRET__

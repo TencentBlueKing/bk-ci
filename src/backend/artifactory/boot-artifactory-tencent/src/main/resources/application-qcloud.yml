@@ -1,0 +1,31 @@
+spring:
+  profiles: qcloud
+  rabbitmq:
+    virtual-host: bkdevops
+    username: bkdevops
+    password: bkdevops
+    addresses: 10.0.10.116:5672
+  datasource:
+    url: jdbc:mysql://10.0.10.116:8076/devops_artifactory?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: root
+    password: ST7gE1ri+=7v
+  redis:
+    database: 1
+    host: 10.0.10.116
+    password: wwq2015a1Yn
+    port: 6379
+  cloud:
+    consul:
+      discovery:
+        tags: prod
+
+server:
+  port: 8051
+
+jfrog:
+  url: http://bk.artifactory.oa.com
+  username: devops_pipeline_backend_api
+  password: ENC(LB0q+BrXyYIRkN6/WnztpvYd1lZaRjLJuO3wRjyb8oI=)
+
+gateway:
+  url: test.gw.open.oa.com

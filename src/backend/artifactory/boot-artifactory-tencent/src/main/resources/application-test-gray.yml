@@ -1,0 +1,15 @@
+spring:
+  profiles: test-gray
+  rabbitmq:
+    virtual-host: bkdevops
+    username: bkdevops
+    password: bkdevops
+    addresses: 9.84.189.231:5672
+    listener:
+      simple:
+        concurrency: 50
+    cache:
+      channel:
+        size: 100
+
+project.gray: true

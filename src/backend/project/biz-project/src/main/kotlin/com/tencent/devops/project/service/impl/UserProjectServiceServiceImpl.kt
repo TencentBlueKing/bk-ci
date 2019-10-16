@@ -34,10 +34,8 @@ import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.OPPServiceVO
-import com.tencent.devops.project.pojo.service.ServiceCreateInfo
-import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.pojo.ServiceUpdateUrls
+import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.UserProjectServiceService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -47,12 +45,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class UserProjectServiceServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val serviceTypeDao: ServiceTypeDao,
-    private val serviceDao: ServiceDao,
-    private val favoriteDao: FavoriteDao,
-    private val gray: Gray,
-    private val redisOperation: RedisOperation
+        private val dslContext: DSLContext,
+        private val serviceTypeDao: ServiceTypeDao,
+        private val serviceDao: ServiceDao,
+        private val favoriteDao: FavoriteDao,
+        private val gray: Gray,
+        private val redisOperation: RedisOperation
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -74,7 +72,9 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                     tServiceRecord.showNav,
                     tServiceRecord.projectIdType,
                     favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
-                    tServiceRecord.weight ?: 0
+                    tServiceRecord.weight ?: 0,
+                    tServiceRecord.logoUrl,
+                    tServiceRecord.webSocket
                 )
             )
         } else {
@@ -87,6 +87,20 @@ class UserProjectServiceServiceImpl @Autowired constructor(
      */
     override fun updateService(userId: String, serviceId: Long, serviceCreateInfo: ServiceCreateInfo): Result<Boolean> {
         return Result(serviceDao.update(dslContext, userId, serviceId, serviceCreateInfo))
+    }
+
+    /**
+     * 批量修改服务url
+     */
+    override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
+        if(serviceUrlUpdateInfoList == null) {
+            return Result(data = true)
+        }
+        serviceUrlUpdateInfoList.forEach {
+            serviceDao.updateUrlByName(dslContext, it)
+
+        }
+        return Result(data = true)
     }
 
     /**
@@ -120,6 +134,8 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                     tServiceRecord.grayCssUrl,
                     tServiceRecord.grayJsUrl,
                     tServiceRecord.projectIdType,
+                        tServiceRecord.logoUrl,
+                        tServiceRecord.webSocket,
                     tServiceRecord.createdUser ?: "",
                     DateTimeUtil.toDateTime(tServiceRecord.createdTime),
                     tServiceRecord.updatedUser ?: "",
@@ -154,6 +170,8 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                     tServiceRecord.grayCssUrl,
                     tServiceRecord.grayJsUrl,
                     tServiceRecord.projectIdType,
+                        tServiceRecord.logoUrl,
+                        tServiceRecord.webSocket,
                     tServiceRecord.createdUser ?: "",
                     DateTimeUtil.toDateTime(tServiceRecord.createdTime),
                     tServiceRecord.updatedUser ?: "",
@@ -219,7 +237,9 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                             it.showNav ?: false,
                             it.projectIdType ?: "",
                             favor,
-                            it.weight ?: 0
+                            it.weight ?: 0,
+                            it.logoUrl,
+                            it.webSocket
                         )
                     )
                 }
@@ -274,6 +294,10 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun updateServiceUrls(userId: String, name: String, serviceUpdateUrls: ServiceUpdateUrls): Result<Boolean> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     companion object {

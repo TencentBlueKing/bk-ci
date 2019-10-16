@@ -26,10 +26,8 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectUpdateInfo
-import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.project.pojo.*
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
@@ -44,7 +42,12 @@ interface ProjectService {
     /**
      * 创建项目信息
      */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo)
+    fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String
+
+    /**
+     * 创建项目信息
+     */
+    fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo)
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -53,12 +56,16 @@ interface ProjectService {
      */
     fun getByEnglishName(englishName: String): ProjectVO?
 
+    fun getByEnglishName(accessToken: String, englishName: String): ProjectVO
+
     /**
      * 修改项目信息
      */
     fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean
 
-    /**
+    fun update(userId: String, accessToken: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo)
+
+        /**
      * 更新Logo
      */
     fun updateLogo(
@@ -68,12 +75,25 @@ interface ProjectService {
         disposition: FormDataContentDisposition
     ): Result<Boolean>
 
+    fun updateLogo(
+            userId: String,
+            accessToken: String,
+            projectId: String,
+            inputStream: InputStream,
+            disposition: FormDataContentDisposition
+    ): Result<Boolean>
+
     /**
      * 获取所有项目信息
      */
     fun list(userId: String): List<ProjectVO>
 
+    fun list(accessToken: String, includeDisable: Boolean? = null): List<ProjectVO>
+
     fun list(projectCodes: Set<String>): List<ProjectVO>
+
+    fun getAllProject(): List<ProjectVO>
+
     /**
      * 获取用户已的可访问项目列表=
      */
@@ -82,4 +102,29 @@ interface ProjectService {
     fun getNameByCode(projectCodes: String): HashMap<String, String>
     fun grayProjectSet(): Set<String>
     fun updateEnabled(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean>
+
+    //TODO: 带bg属性，需考虑只用在内部版
+    fun getProjectEnNamesByOrganization(
+            userId: String,
+            bgId: Long?,
+            deptName: String?,
+            centerName: String?,
+            interfaceName: String? = "Anon interface"
+    ): List<String>
+
+    fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO
+
+    //TODO: 带bg属性，需考虑只用在内部版
+    fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO>
+
+    fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+
+    fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?>
+
+    fun getProjectUserRoles(
+            accessToken: String,
+            userId: String,
+            projectCode: String,
+            serviceCode: AuthServiceCode
+    ): List<UserRole>
 }

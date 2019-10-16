@@ -43,6 +43,24 @@ data class ProjectCreateInfo(
     val projectType: Int,
     @ApiModelProperty("描述")
     val description: String,
+    @ApiModelProperty("一级部门ID")
+    @JsonProperty("bg_id")
+    val bgId: Long,
+    @ApiModelProperty("一级部门名字")
+    @JsonProperty("bg_name")
+    val bgName: String,
+    @ApiModelProperty("二级部门ID")
+    @JsonProperty("dept_id")
+    val deptId: Long,
+    @ApiModelProperty("二级部门名称")
+    @JsonProperty("dept_name")
+    val deptName: String,
+    @ApiModelProperty("三级部门ID")
+    @JsonProperty("center_id")
+    val centerId: Long,
+    @ApiModelProperty("三级部门名称")
+    @JsonProperty("center_name")
+    val centerName: String,
     @ApiModelProperty("是否保密")
     @get:JsonProperty("is_secrecy")
     var secrecy: Boolean,

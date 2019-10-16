@@ -64,7 +64,18 @@ if service_name == "" then
   return
 end
 
-local ns_config = config.ns
+-- 获取灰度设置
+local devops_gray = grayUtil:get_gray()
+
+-- ngx.log(ngx.ERR, "devops_gray:", devops_gray )
+local ns_config = nil
+if devops_gray ~= true then
+  ns_config = config.ns
+  -- ngx.log(ngx.ERR, "ns_config" )
+else
+  ns_config = config.ns_gray
+  -- ngx.log(ngx.ERR, "ns_config_gray" )
+end 
 
 local query_subdomain = config.ns.tag .. "." .. service_name .. ".service." .. ns_config.domain
 

@@ -1,34 +1,10 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
+import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
+import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -42,7 +18,6 @@ class ServiceDao {
         with(TService.T_SERVICE) {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
-                .orderBy(WEIGHT.asc())
                 .fetch()
         }
     }
@@ -114,11 +89,12 @@ class ServiceDao {
                 SHOW_PROJECT_LIST,
                 SHOW_NAV,
                 PROJECT_ID_TYPE,
-                WEIGHT,
                 STATUS,
                 CREATED_USER,
                 CREATED_TIME,
-                DELETED
+                DELETED,
+                LOGO_URL,
+                WEB_SOCKET
             ).values(
                 serviceCreateInfo.name,
                 serviceCreateInfo.serviceTypeId,
@@ -133,11 +109,12 @@ class ServiceDao {
                 serviceCreateInfo.showProjectList,
                 serviceCreateInfo.showNav,
                 serviceCreateInfo.projectIdType,
-                serviceCreateInfo.weight,
                 serviceCreateInfo.status,
                 userId,
                 LocalDateTime.now(),
-                false
+                false,
+                serviceCreateInfo.logoUrl,
+                serviceCreateInfo.webSocket
             ).returning().fetchOne()
         }
     }
@@ -170,12 +147,25 @@ class ServiceDao {
                 .set(SHOW_NAV, serviceCreateInfo.showNav)
                 .set(PROJECT_ID_TYPE, serviceCreateInfo.projectIdType)
                 .set(STATUS, serviceCreateInfo.status)
-                .set(WEIGHT, serviceCreateInfo.weight)
+                .set(LOGO_URL, serviceCreateInfo.logoUrl)
+                .set(WEB_SOCKET, serviceCreateInfo.webSocket)
                 .set(UPDATED_USER, userId)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(ID.eq(serviceId))
                 .and(DELETED.eq(false))
                 .execute()
+            return execute > 0
+        }
+    }
+
+    fun updateUrlByName(dslContext: DSLContext, serviceUrlUpdateInfo: ServiceUrlUpdateInfo): Boolean {
+        with(TService.T_SERVICE) {
+            val execute = dslContext.update(this)
+                    .set(JS_URL, serviceUrlUpdateInfo.jsUrl)
+                    .set(CSS_URL, serviceUrlUpdateInfo.cssUrl)
+                    .where(NAME.eq(serviceUrlUpdateInfo.name))
+                    .and(DELETED.eq(false))
+                    .execute()
             return execute > 0
         }
     }
@@ -186,6 +176,35 @@ class ServiceDao {
                 .where(ID.eq(serviceId))
                 .and(DELETED.eq(false))
                 .fetchOne()
+        }
+    }
+
+    fun updateUrls(
+        dslContext: DSLContext,
+        userId: String,
+        name: String,
+        serviceUpdateUrls: ServiceUpdateUrls
+    ): Boolean {
+        with(TService.T_SERVICE) {
+            val step = dslContext.update(this)
+            if (!serviceUpdateUrls.cssUrl.isNullOrBlank()) {
+                step.set(CSS_URL, serviceUpdateUrls.cssUrl)
+            }
+            if (!serviceUpdateUrls.jsUrl.isNullOrBlank()) {
+                step.set(JS_URL, serviceUpdateUrls.jsUrl)
+            }
+            if (!serviceUpdateUrls.grayCssUrl.isNullOrBlank()) {
+                step.set(GRAY_CSS_URL, serviceUpdateUrls.grayCssUrl)
+            }
+            if (!serviceUpdateUrls.grayJsUrl.isNullOrBlank()) {
+                step.set(GRAY_JS_URL, serviceUpdateUrls.grayJsUrl)
+            }
+            val execute = step.set(UPDATED_USER, userId)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(NAME.eq(name))
+                .and(DELETED.eq(false))
+                .execute()
+            return execute > 0
         }
     }
 }
