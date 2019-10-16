@@ -7,6 +7,8 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.BkAuthServiceCode
+import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
 import com.tencent.devops.common.misc.pojo.agent.BcsVmNode
 import com.tencent.devops.common.misc.pojo.agent.NodeStatusAndOS
 import com.tencent.devops.common.misc.utils.BcsVmStatusUtils
@@ -27,8 +29,10 @@ class BcsClient constructor(private val bkAuthTokenApi: AuthTokenApi) {
         private val APIGW_SERVER = "http://api.apigw-biz.o.oa.com"
     }
 
+    private val serviceCode = BSEnvironmentAuthServiceCode()
+
     fun createVM(clusterId: String, namespace: String, instanceCount: Int, image: String, resCpu: String, resMemory: String): List<BcsVmNode> {
-        val token = bkAuthTokenApi.getAccessToken(BkAuthServiceCode.ENVIRONMENT)
+        val token = bkAuthTokenApi.getAccessToken(serviceCode)
         val url = "$APIGW_SERVER/api/bcss_api/prod/v1/containerware/vmsets?access_token=$token"
 
         val requestData = mapOf("apiVersion" to apiVersion,
@@ -77,7 +81,7 @@ class BcsClient constructor(private val bkAuthTokenApi: AuthTokenApi) {
 
     fun deleteVm(vmList: List<BcsVmNode>) {
         for (bcsVmNode in vmList) {
-            val token = bkAuthTokenApi.getAccessToken(BkAuthServiceCode.ENVIRONMENT)
+            val token = bkAuthTokenApi.getAccessToken(serviceCode)
             val url = "$APIGW_SERVER/api/bcss_api/prod/v1/containerware/clusters/${bcsVmNode.clusterId}/namespaces/${bcsVmNode.namespace}/vmsets/${bcsVmNode.name}?enforce=0&access_token=$token"
 
             logger.info("DELETE url: $url")
@@ -104,7 +108,7 @@ class BcsClient constructor(private val bkAuthTokenApi: AuthTokenApi) {
     }
 
     fun getVmList(cluster: String, namespace: String): List<BcsVmNode> {
-        val token = bkAuthTokenApi.getAccessToken(BkAuthServiceCode.ENVIRONMENT)
+        val token = bkAuthTokenApi.getAccessToken(serviceCode)
         val url = "$APIGW_SERVER/api/bcss_api/prod/v1/containerware/clusters/$cluster/namespaces/$namespace/vmsets?access_token=$token"
 
         logger.info("Get url: $url")
@@ -142,7 +146,7 @@ class BcsClient constructor(private val bkAuthTokenApi: AuthTokenApi) {
     }
 
     fun resetVm(bcsVmNode: BcsVmNode) {
-        val token = bkAuthTokenApi.getAccessToken(BkAuthServiceCode.ENVIRONMENT)
+        val token = bkAuthTokenApi.getAccessToken(serviceCode)
         val url = "$APIGW_SERVER/api/bcss_api/prod/v1/containerware/clusters/${bcsVmNode.clusterId}/namespaces/${bcsVmNode.namespace}/vmsets/${bcsVmNode.name}/reset?access_token=$token"
         logger.info("Put url: $url")
         val request = Request.Builder().url(url).put(RequestBody.create(JSON, "")).build()
@@ -168,7 +172,7 @@ class BcsClient constructor(private val bkAuthTokenApi: AuthTokenApi) {
 
     fun inspectVmList(clusterId: String?, namespace: String?, nodeNames: String): NodeStatusAndOS? {
 
-        val token = bkAuthTokenApi.getAccessToken(BkAuthServiceCode.ENVIRONMENT)
+        val token = bkAuthTokenApi.getAccessToken(serviceCode)
         val url = "$APIGW_SERVER/api/bcss_api/prod/v1/containerware/clusters/$clusterId/namespaces/$namespace/vmsets/$nodeNames?access_token=$token"
         logger.info("Get url: $url")
 

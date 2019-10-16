@@ -20,8 +20,8 @@ object EsbAgentClient {
     private val logger = LoggerFactory.getLogger(EsbAgentClient::class.java)
     private val JSON = MediaType.parse("application/json;charset=utf-8")
 
-    //    private const val appCode = "bkci"
-//    private const val appSecret = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
+    private const val appCode = "bkci"
+    private const val appSecret = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
     private const val DEFAULT_SYTEM_USER = "devops"
 
     fun getAgentStatus(
@@ -136,7 +136,7 @@ object EsbAgentClient {
                 val returnRows = header["returnRows"] as Int
                 val totalRows = header["totalRows"] as Int
 
-                val dataList = data["data"] as List<Map<*, *>>
+                val dataList = data["data"] as List<Map<String, *>>
                 val rawNodes = dataList.filterNot { it["serverLanIP"] == null }.mapNotNull {
                     if (it["serverLanIP"] == null || (it["serverLanIP"] as List<String>).isEmpty()) {
                         null

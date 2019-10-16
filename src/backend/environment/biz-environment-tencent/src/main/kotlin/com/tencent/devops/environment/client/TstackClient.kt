@@ -198,7 +198,7 @@ class TstackClient {
 
     fun createVncToken(tstackVmId: String): String {
         val token = getToken()
-        val url = "$server:$computePort/v2/$TSTACK_PROJECT_ID/servers/$tstackVmId/action"
+        val url = "$server:$computePort/v2/$TSTACK_PROJECT_ID/servers/$tstackVmId/createEnv"
 
         val requestData = mapOf("os-getVNCConsole" to mapOf("type" to "novnc"))
         val requestBody = ObjectMapper().writeValueAsString(requestData)

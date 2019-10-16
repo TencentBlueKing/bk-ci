@@ -144,7 +144,7 @@ class DevCloudService @Autowired constructor(
             }
         }
 
-        logger.info("insert into dev cloud task, containerName: $containerName, action is ${action.name}")
+        logger.info("insert into dev cloud task, containerName: $containerName, createEnv is ${action.name}")
 
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -194,7 +194,7 @@ class DevCloudService @Autowired constructor(
             logger.info("dev cloud vm status is ${node.nodeStatus}, can not build image")
             throw OperationException("虚拟机状态为:${NodeStatus.getStatusName(node.nodeStatus)}, 无法制作镜像！")
         }
-        logger.info("insert into dev cloud task, containerName: $containerName, action is buildImage")
+        logger.info("insert into dev cloud task, containerName: $containerName, createEnv is buildImage")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             devCloudTaskDao.insertTask(

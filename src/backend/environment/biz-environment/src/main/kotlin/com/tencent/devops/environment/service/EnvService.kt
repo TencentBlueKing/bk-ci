@@ -39,7 +39,6 @@ import com.tencent.devops.common.misc.client.BcsClient
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
@@ -49,16 +48,14 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
-import com.tencent.devops.environment.pojo.enums.NodeSource
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.BcsVmNodeStatusUtils
-import com.tencent.devops.environment.utils.BcsVmParamCheckUtils.checkAndGetVmCreateParam
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvNodeRecord
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -73,7 +70,6 @@ class EnvService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val projectConfigDao: ProjectConfigDao,
     private val bcsClient: BcsClient,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService
@@ -95,124 +91,10 @@ class EnvService @Autowired constructor(
 
         checkName(projectId, null, envCreateInfo.name)
 
-        val now = LocalDateTime.now()
-        when (envCreateInfo.source) {
-            NodeSource.EXISTING -> {
-                val nodeLongIds = envCreateInfo.nodeHashIds!!.map { HashUtil.decodeIdToLong(it) }
+        val envCreator = EnvCreatorFactory.load(envCreateInfo.source.name)
+            ?: throw IllegalArgumentException("unsupported nodeSourceType ${envCreateInfo.source}")
 
-                // 检查 node 权限
-                val canUseNodeIds =
-                    environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
-                val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
-                if (unauthorizedNodeIds.isNotEmpty()) {
-                    throw OperationException(
-                        "节点权限不足 [${unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]"
-                    )
-                }
-
-                // 检查 node 是否存在
-                val existNodes = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
-                val existNodeIds = existNodes.map { it.nodeId }.toSet()
-                val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
-                if (notExistNodeIds.isNotEmpty()) {
-                    throw OperationException("节点 [${notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}] 不存在")
-                }
-
-                var envId = 0L
-                dslContext.transaction { configuration ->
-                    val context = DSL.using(configuration)
-                    envId = envDao.create(
-                        context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
-                        envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
-                    )
-                    val envNodeList = nodeLongIds.map { TEnvNodeRecord(envId, it, projectId) }
-                    envNodeDao.batchStoreEnvNode(context, envNodeList)
-
-                    environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
-                }
-                return EnvironmentId(HashUtil.encodeLongId(envId))
-            }
-            NodeSource.CREATE -> {
-                // 创建 BCSVM 节点
-                val vmCreateInfoP = checkAndGetVmCreateParam(
-                    dslContext = dslContext,
-                    projectConfigDao = projectConfigDao,
-                    nodeDao = nodeDao,
-                    projectId = projectId,
-                    userId = userId,
-                    vmParam = envCreateInfo.bcsVmParam!!
-                )
-                val bcsVmList = bcsClient.createVM(
-                    clusterId = envCreateInfo.bcsVmParam!!.clusterId,
-                    namespace = projectId,
-                    instanceCount = envCreateInfo.bcsVmParam!!.instanceCount,
-                    image = vmCreateInfoP.first,
-                    resCpu = vmCreateInfoP.second,
-                    resMemory = vmCreateInfoP.third
-                )
-                val nodeList = bcsVmList.map {
-                    TNodeRecord(
-                        null,
-                        "",
-                        projectId,
-                        it.ip,
-                        it.name,
-                        it.status,
-                        NodeType.BCSVM.name,
-                        it.clusterId,
-                        projectId,
-                        userId,
-                        now,
-                        now.plusDays(envCreateInfo.bcsVmParam!!.validity.toLong()),
-                        it.osName,
-                        null,
-                        null,
-                        false,
-                        "",
-                        "",
-                        null,
-                        now,
-                        userId
-                    )
-                }
-
-                var envId = 0L
-                dslContext.transaction { configuration ->
-                    val context = DSL.using(configuration)
-
-                    nodeDao.batchAddNode(context, nodeList)
-                    val insertedNodeList = nodeDao.listServerNodesByIps(context, projectId, bcsVmList.map { it.ip })
-                    insertedNodeList.forEach {
-                        environmentPermissionService.createNode(
-                            userId = userId,
-                            projectId = projectId,
-                            nodeId = it.nodeId,
-                            nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
-                        )
-                    }
-
-                    envId = envDao.create(
-                        context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
-                        envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
-                    )
-                    envNodeDao.batchStoreEnvNode(
-                        context,
-                        insertedNodeList.map { TEnvNodeRecord(envId, it.nodeId, projectId) })
-
-                    environmentPermissionService.createEnv(
-                        userId = userId,
-                        projectId = projectId,
-                        envId = envId,
-                        envName = envCreateInfo.name
-                    )
-                }
-
-                return EnvironmentId(HashUtil.encodeLongId(envId))
-            }
-            else -> {
-                throw IllegalArgumentException("unsupported nodeSourceType")
-            }
-        }
+        return envCreator.createEnv(projectId = projectId, userId = userId, envCreateInfo = envCreateInfo)
     }
 
     fun updateEnvironment(userId: String, projectId: String, envHashId: String, envUpdateInfo: EnvUpdateInfo) {

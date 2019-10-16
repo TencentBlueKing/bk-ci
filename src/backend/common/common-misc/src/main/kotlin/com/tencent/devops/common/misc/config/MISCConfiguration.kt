@@ -1,7 +1,7 @@
 package com.tencent.devops.common.misc.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.auth.api.BkAuthTokenApi
+import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.misc.AgentGrayUtils
 import com.tencent.devops.common.misc.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.misc.client.BcsClient
@@ -33,7 +33,5 @@ class MISCConfiguration {
     ) = ThirdPartyAgentHeartbeatUtils(redisOperation, objectMapper)
 
     @Bean
-    fun bcsClient(
-        @Autowired bkAuthTokenApi: BkAuthTokenApi
-    ) = BcsClient(bkAuthTokenApi)
+    fun bcsClient(@Autowired bkAuthTokenApi: BSAuthTokenApi) = BcsClient(bkAuthTokenApi)
 }

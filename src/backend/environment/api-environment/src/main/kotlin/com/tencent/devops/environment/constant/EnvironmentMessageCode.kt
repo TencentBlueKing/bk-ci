@@ -55,4 +55,8 @@ object EnvironmentMessageCode {
     const val ERROR_ENV_NAME_NULL = "2105011" // 环境管理：环境名称不能为空
     const val ERROR_ENV_NAME_TOO_LONG = "2105012" // 环境管理：环境名称太长
     const val ERROR_ENV_NODE_HASH_ID_ILLEGAL = "2105013" // 环境管理：环境下的节点ID不合法
+    const val ERROR_NODE_NO_CREATE_PERMISSSION = "2105014" // 环境管理：没有节点创建权限
+    const val ERROR_NODE_NO_EDIT_PERMISSSION = "2105015" // 环境管理：没有节点编辑权限
+    const val ERROR_NODE_NO_VIEW_PERMISSSION = "2105016" // 环境管理：没有节点查看权限
+    const val ERROR_NODE_NO_DEL_PERMISSSION = "2105017" // 环境管理：没有节点删除权限
 }
