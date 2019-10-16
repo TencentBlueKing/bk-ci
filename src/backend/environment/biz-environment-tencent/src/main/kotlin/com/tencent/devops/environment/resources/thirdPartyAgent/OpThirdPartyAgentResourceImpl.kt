@@ -27,25 +27,31 @@
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.misc.AgentGrayUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
-import com.tencent.devops.environment.utils.AgentGrayUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpThirdPartyAgentResourceImpl @Autowired constructor(
+    private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val agentGrayUtils: AgentGrayUtils
 ) : OpThirdPartyAgentResource {
 
-    override fun setWorkerVersion(version: String): Result<Boolean> {
-        upgradeService.setWorkerVersion(version)
+    override fun listEnableProjects(): Result<List<String>> {
+        return Result(thirdPartyAgentService.listEnableThirdPartyAgentProjects())
+    }
+
+    override fun setAgentUpgrade(version: String): Result<Boolean> {
+        upgradeService.setUpgrade(version)
         return Result(true)
     }
 
@@ -54,11 +60,11 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getWorkerVersion(): Result<String> {
+    override fun getAgentVersion(): Result<String> {
         return Result(upgradeService.getAgentVersion()!!)
     }
 
-    override fun getMasterVersion(): Result<String> {
+    override fun getAgentMasterVersion(): Result<String> {
         return Result(upgradeService.getAgentMasterVersion()!!)
     }
 
@@ -113,12 +119,8 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
+    override fun enableProject(projectId: String, enable: Boolean): Result<Boolean> {
+        thirdPartyAgentService.enableThirdPartyAgent(projectId, enable)
         return Result(true)
-    }
-
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
     }
 }

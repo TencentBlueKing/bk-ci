@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -48,6 +49,17 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceNodeResource {
+    @ApiOperation("获取用户有权限使用的服务器列表")
+    @GET
+    @Path("/{projectId}/listUsableServerNodes")
+    fun listUsableServerNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<NodeWithPermission>>
 
     @ApiOperation("根据hashId获取项目节点列表")
     @POST
@@ -63,6 +75,34 @@ interface ServiceNodeResource {
         nodeHashIds: List<String>
     ): Result<List<NodeWithPermission>>
 
+    @ApiOperation("根据hashId获取项目节点列表(不校验权限)")
+    @POST
+    @Path("/{projectId}/listRawByHashIds")
+    fun listRawByHashIds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("节点 hashIds", required = true)
+        nodeHashIds: List<String>
+    ): Result<List<NodeBaseInfo>>
+
+    @ApiOperation("根据环境hashId获取项目节点列表(不校验权限)")
+    @POST
+    @Path("/{projectId}/listRawByEnvHashIds")
+    fun listRawByEnvHashIds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境hashIds", required = true)
+        envHashIds: List<String>
+    ): Result<Map<String, List<NodeBaseInfo>>>
+
     @ApiOperation("根据类型查询node")
     @GET
     @Path("/{projectId}/listNodeByType/{type}")
@@ -76,5 +116,17 @@ interface ServiceNodeResource {
         @ApiParam("操作系统", required = true)
         @PathParam("type")
         type: String
+    ): Result<List<NodeBaseInfo>>
+
+    @ApiOperation("根据机器类型查询node")
+    @GET
+    @Path("/{projectId}/listNodeByNodeType/{nodeType}")
+    fun listNodeByNodeType(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("节点类型", required = true)
+        @PathParam("nodeType")
+        nodeType: NodeType
     ): Result<List<NodeBaseInfo>>
 }

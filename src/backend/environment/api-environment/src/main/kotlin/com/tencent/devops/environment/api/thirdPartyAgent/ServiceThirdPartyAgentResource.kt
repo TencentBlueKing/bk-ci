@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
@@ -102,6 +103,24 @@ interface ServiceThirdPartyAgentResource {
         @PathParam("envName")
         envName: String
     ): Result<List<ThirdPartyAgent>>
+
+    @ApiOperation("Agent是否能升级")
+    @GET
+    @Path("/projects/{projectId}/agents/{agentId}/upgrade")
+    fun upgrade(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String,
+        @ApiParam("Agent secret key", required = true)
+        @QueryParam("secretKey")
+        secretKey: String,
+        @ApiParam("agent.jar的MD5", required = true)
+        @QueryParam("tag")
+        tag: String
+    ): AgentResult<Boolean>
 
     @ApiOperation("Agent是否能升级")
     @GET

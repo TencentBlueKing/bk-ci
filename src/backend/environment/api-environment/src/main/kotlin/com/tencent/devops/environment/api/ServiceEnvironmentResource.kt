@@ -77,6 +77,18 @@ interface ServiceEnvironmentResource {
         envHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
+    @ApiOperation("获取用户有权限使用的环境列表")
+    @GET
+    @Path("/{projectId}/listUsableServerEnvs")
+    fun listUsableServerEnvs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<EnvWithPermission>>
+
     @ApiOperation("根据hashId(多个)获取环境信息(不校验权限)")
     @POST
     @Path("/{projectId}/listRawByEnvHashIds")

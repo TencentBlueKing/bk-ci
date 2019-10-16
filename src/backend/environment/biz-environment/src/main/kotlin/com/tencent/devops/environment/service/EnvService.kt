@@ -35,13 +35,15 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.misc.client.BcsClient
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
-import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -52,9 +54,11 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
+import com.tencent.devops.environment.utils.BcsVmNodeStatusUtils
+import com.tencent.devops.environment.utils.BcsVmParamCheckUtils.checkAndGetVmCreateParam
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvNodeRecord
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -69,6 +73,8 @@ class EnvService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val projectConfigDao: ProjectConfigDao,
+    private val bcsClient: BcsClient,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService
 ) {
@@ -88,15 +94,20 @@ class EnvService @Autowired constructor(
         }
 
         checkName(projectId, null, envCreateInfo.name)
+
+        val now = LocalDateTime.now()
         when (envCreateInfo.source) {
             NodeSource.EXISTING -> {
                 val nodeLongIds = envCreateInfo.nodeHashIds!!.map { HashUtil.decodeIdToLong(it) }
 
                 // 检查 node 权限
-                val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
+                val canUseNodeIds =
+                    environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
                 val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
                 if (unauthorizedNodeIds.isNotEmpty()) {
-                    throw OperationException("节点权限不足 [${unauthorizedNodeIds.map { HashUtil.encodeLongId(it) }.joinToString(",")}]")
+                    throw OperationException(
+                        "节点权限不足 [${unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]"
+                    )
                 }
 
                 // 检查 node 是否存在
@@ -104,7 +115,7 @@ class EnvService @Autowired constructor(
                 val existNodeIds = existNodes.map { it.nodeId }.toSet()
                 val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
                 if (notExistNodeIds.isNotEmpty()) {
-                    throw OperationException("节点 [${notExistNodeIds.map { HashUtil.encodeLongId(it) }.joinToString(",")}] 不存在")
+                    throw OperationException("节点 [${notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}] 不存在")
                 }
 
                 var envId = 0L
@@ -116,7 +127,86 @@ class EnvService @Autowired constructor(
                     )
                     val envNodeList = nodeLongIds.map { TEnvNodeRecord(envId, it, projectId) }
                     envNodeDao.batchStoreEnvNode(context, envNodeList)
+
+                    environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
                 }
+                return EnvironmentId(HashUtil.encodeLongId(envId))
+            }
+            NodeSource.CREATE -> {
+                // 创建 BCSVM 节点
+                val vmCreateInfoP = checkAndGetVmCreateParam(
+                    dslContext = dslContext,
+                    projectConfigDao = projectConfigDao,
+                    nodeDao = nodeDao,
+                    projectId = projectId,
+                    userId = userId,
+                    vmParam = envCreateInfo.bcsVmParam!!
+                )
+                val bcsVmList = bcsClient.createVM(
+                    clusterId = envCreateInfo.bcsVmParam!!.clusterId,
+                    namespace = projectId,
+                    instanceCount = envCreateInfo.bcsVmParam!!.instanceCount,
+                    image = vmCreateInfoP.first,
+                    resCpu = vmCreateInfoP.second,
+                    resMemory = vmCreateInfoP.third
+                )
+                val nodeList = bcsVmList.map {
+                    TNodeRecord(
+                        null,
+                        "",
+                        projectId,
+                        it.ip,
+                        it.name,
+                        it.status,
+                        NodeType.BCSVM.name,
+                        it.clusterId,
+                        projectId,
+                        userId,
+                        now,
+                        now.plusDays(envCreateInfo.bcsVmParam!!.validity.toLong()),
+                        it.osName,
+                        null,
+                        null,
+                        false,
+                        "",
+                        "",
+                        null,
+                        now,
+                        userId
+                    )
+                }
+
+                var envId = 0L
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+
+                    nodeDao.batchAddNode(context, nodeList)
+                    val insertedNodeList = nodeDao.listServerNodesByIps(context, projectId, bcsVmList.map { it.ip })
+                    insertedNodeList.forEach {
+                        environmentPermissionService.createNode(
+                            userId = userId,
+                            projectId = projectId,
+                            nodeId = it.nodeId,
+                            nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
+                        )
+                    }
+
+                    envId = envDao.create(
+                        context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
+                        envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                    )
+                    envNodeDao.batchStoreEnvNode(
+                        context,
+                        insertedNodeList.map { TEnvNodeRecord(envId, it.nodeId, projectId) })
+
+                    environmentPermissionService.createEnv(
+                        userId = userId,
+                        projectId = projectId,
+                        envId = envId,
+                        envName = envCreateInfo.name
+                    )
+                }
+
                 return EnvironmentId(HashUtil.encodeLongId(envId))
             }
             else -> {
@@ -144,13 +234,22 @@ class EnvService @Autowired constructor(
             val context = DSL.using(configuration)
 
             envDao.update(
-                context,
-                HashUtil.decodeIdToLong(envHashId),
-                envUpdateInfo.name,
-                envUpdateInfo.desc,
-                envUpdateInfo.envType.name,
-                ObjectMapper().writeValueAsString(envUpdateInfo.envVars)
+                dslContext = context,
+                envId = HashUtil.decodeIdToLong(envHashId),
+                name = envUpdateInfo.name,
+                desc = envUpdateInfo.desc,
+                envType = envUpdateInfo.envType.name,
+                envVars = ObjectMapper().writeValueAsString(envUpdateInfo.envVars)
             )
+
+            if (existEnv.envName != envUpdateInfo.name) {
+                environmentPermissionService.updateEnv(
+                    userId = userId,
+                    projectId = projectId,
+                    envId = envId,
+                    envName = envUpdateInfo.name
+                )
+            }
         }
     }
 
@@ -166,19 +265,19 @@ class EnvService @Autowired constructor(
             setOf(BkAuthPermission.LIST, BkAuthPermission.EDIT, BkAuthPermission.DELETE)
         )
         val canListEnvIds = if (permissionMap.containsKey(BkAuthPermission.LIST)) {
-            permissionMap[BkAuthPermission.LIST]!!.map { HashUtil.decodeIdToLong(it) }
+            permissionMap[BkAuthPermission.LIST]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
 
         val canEditEnvIds = if (permissionMap.containsKey(BkAuthPermission.EDIT)) {
-            permissionMap[BkAuthPermission.EDIT]!!.map { HashUtil.decodeIdToLong(it) }
+            permissionMap[BkAuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
 
         val canDeleteEnvIds = if (permissionMap.containsKey(BkAuthPermission.DELETE)) {
-            permissionMap[BkAuthPermission.DELETE]!!.map { HashUtil.decodeIdToLong(it) }
+            permissionMap[BkAuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
@@ -192,19 +291,53 @@ class EnvService @Autowired constructor(
             .associateBy({ it.value1() }, { it.value2() })
         return envRecordList.map {
             EnvWithPermission(
-                HashUtil.encodeLongId(it.envId),
-                it.envName,
-                it.envDesc,
-                if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
-                nodeCountMap[it.envId] ?: 0,
-                jacksonObjectMapper().readValue(it.envVars),
-                it.createdUser,
-                it.createdTime.timestamp(),
-                it.updatedUser,
-                it.updatedTime.timestamp(),
-                canEditEnvIds.contains(it.envId),
-                canDeleteEnvIds.contains(it.envId),
-                null
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                desc = it.envDesc,
+                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                nodeCount = nodeCountMap[it.envId] ?: 0,
+                envVars = jacksonObjectMapper().readValue(it.envVars),
+                createdUser = it.createdUser,
+                createdTime = it.createdTime.timestamp(),
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                canEdit = canEditEnvIds.contains(it.envId),
+                canDelete = canDeleteEnvIds.contains(it.envId),
+                canUse = null
+            )
+        }
+    }
+
+    fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission> {
+        val envRecordList = envDao.listServerEnv(dslContext, projectId)
+        if (envRecordList.isEmpty()) {
+            return listOf()
+        }
+
+        val canUseEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, BkAuthPermission.USE)
+
+        val validRecordList = envRecordList.filter { canUseEnvIds.contains(it.envId) }
+        if (validRecordList.isEmpty()) {
+            return listOf()
+        }
+
+        val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, validRecordList.map { it.envId })
+            .associateBy({ it.value1() }, { it.value2() })
+        return validRecordList.map {
+            EnvWithPermission(
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                desc = it.envDesc,
+                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                nodeCount = nodeCountMap[it.envId] ?: 0,
+                envVars = jacksonObjectMapper().readValue(it.envVars),
+                createdUser = it.createdUser,
+                createdTime = it.createdTime.timestamp(),
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                canEdit = null,
+                canDelete = null,
+                canUse = null
             )
         }
     }
@@ -221,9 +354,9 @@ class EnvService @Autowired constructor(
             return emptyList()
         }
 
-        return envRecordList.map {
-            val nodeIds = envNodeDao.list(dslContext, projectId, listOf(it.envId)).map {
-                it.nodeId
+        return validRecordList.map {
+            val nodeIds = envNodeDao.list(dslContext, projectId, listOf(it.envId)).map { node ->
+                node.nodeId
             }.toSet()
 
             val normalNodeCount = if (nodeIds.isEmpty()) {
@@ -239,10 +372,10 @@ class EnvService @Autowired constructor(
             }
 
             EnvWithNodeCount(
-                HashUtil.encodeLongId(it.envId),
-                it.envName,
-                normalNodeCount,
-                abnormalNodeCount
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                normalNodeCount = normalNodeCount,
+                abnormalNodeCount = abnormalNodeCount
             )
         }
     }
@@ -260,8 +393,8 @@ class EnvService @Autowired constructor(
         }
 
         return validRecordList.map {
-            val nodeIds = envNodeDao.list(dslContext, projectId, listOf(it.envId)).map {
-                it.nodeId
+            val nodeIds = envNodeDao.list(dslContext, projectId, listOf(it.envId)).map { node ->
+                node.nodeId
             }.toSet()
 
             val normalNodeCount = if (nodeIds.isEmpty()) {
@@ -274,44 +407,49 @@ class EnvService @Autowired constructor(
                 0
             } else {
                 thirdPartyAgentDao.countAgentByStatusAndOS(
-                    dslContext,
-                    projectId,
-                    nodeIds,
-                    AgentStatus.IMPORT_EXCEPTION,
-                    os
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    nodeIds = nodeIds,
+                    status = AgentStatus.IMPORT_EXCEPTION,
+                    os = os
                 )
             }
 
             EnvWithNodeCount(
-                HashUtil.encodeLongId(it.envId),
-                it.envName,
-                normalNodeCount,
-                abnormalNodeCount
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                normalNodeCount = normalNodeCount,
+                abnormalNodeCount = abnormalNodeCount
             )
         }
     }
 
     fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        val env = envDao.get(dslContext, projectId, envId)
-        val nodeCount = envNodeDao.count(dslContext, projectId, envId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.VIEW)) {
             throw OperationException("No Permission")
         }
+        val env = envDao.get(dslContext, projectId, envId)
+        val nodeCount = envNodeDao.count(dslContext, projectId, envId)
         return EnvWithPermission(
-            HashUtil.encodeLongId(env.envId),
-            env.envName,
-            env.envDesc,
-            if (env.envType == EnvType.TEST.name) EnvType.DEV.name else env.envType, // 兼容性代码
-            nodeCount,
-            jacksonObjectMapper().readValue(env.envVars),
-            env.createdUser,
-            env.createdTime.timestamp(),
-            env.updatedUser,
-            env.updatedTime.timestamp(),
-            true,
-            true,
-            null
+            envHashId = HashUtil.encodeLongId(env.envId),
+            name = env.envName,
+            desc = env.envDesc,
+            envType = if (env.envType == EnvType.TEST.name) EnvType.DEV.name else env.envType, // 兼容性代码
+            nodeCount = nodeCount,
+            envVars = jacksonObjectMapper().readValue(env.envVars),
+            createdUser = env.createdUser,
+            createdTime = env.createdTime.timestamp(),
+            updatedUser = env.updatedUser,
+            updatedTime = env.updatedTime.timestamp(),
+            canEdit = environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.EDIT),
+            canDelete = environmentPermissionService.checkEnvPermission(
+                userId,
+                projectId,
+                envId,
+                BkAuthPermission.DELETE
+            ),
+            canUse = null
         )
     }
 
@@ -320,41 +458,42 @@ class EnvService @Autowired constructor(
             envDao.listServerEnvByIds(dslContext, projectId, envHashIds.map { HashUtil.decodeIdToLong(it) })
         return envRecords.map {
             EnvWithPermission(
-                HashUtil.encodeLongId(it.envId),
-                it.envName,
-                it.envDesc,
-                if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
-                null,
-                jacksonObjectMapper().readValue(it.envVars),
-                it.createdUser,
-                it.createdTime.timestamp(),
-                it.updatedUser,
-                it.updatedTime.timestamp(),
-                null,
-                null,
-                null
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                desc = it.envDesc,
+                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                nodeCount = null,
+                envVars = jacksonObjectMapper().readValue(it.envVars),
+                createdUser = it.createdUser,
+                createdTime = it.createdTime.timestamp(),
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                canEdit = null,
+                canDelete = null,
+                canUse = null
             )
         }
     }
 
     fun listRawEnvByEnvNames(userId: String, projectId: String, envNames: List<String>): List<EnvWithPermission> {
         val envRecords = envDao.listServerEnvByEnvNames(dslContext, projectId, envNames)
+        val canUseEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, BkAuthPermission.USE)
 
         return envRecords.map {
             EnvWithPermission(
-                HashUtil.encodeLongId(it.envId),
-                it.envName,
-                it.envDesc,
-                if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
-                null,
-                jacksonObjectMapper().readValue<List<EnvVar>>(it.envVars),
-                it.createdUser,
-                it.createdTime.timestamp(),
-                it.updatedUser,
-                it.updatedTime.timestamp(),
-                null,
-                null,
-                true
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                desc = it.envDesc,
+                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                nodeCount = null,
+                envVars = jacksonObjectMapper().readValue(it.envVars),
+                createdUser = it.createdUser,
+                createdTime = it.createdTime.timestamp(),
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                canEdit = null,
+                canDelete = null,
+                canUse = canUseEnvIds.contains(it.envId)
             )
         }
     }
@@ -369,7 +508,51 @@ class EnvService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             envDao.deleteEnv(context, envId)
+            environmentPermissionService.deleteEnv(projectId, envId)
         }
+    }
+
+    fun listRawServerNodeByEnvHashIds(
+        userId: String,
+        projectId: String,
+        envHashIds: List<String>
+    ): Map<String, List<NodeBaseInfo>> {
+        val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
+        val envNodes = envNodeDao.list(dslContext, projectId, envIds)
+        val nodeRecords = nodeDao.listServerNodesByIds(dslContext, projectId, envNodes.map { it.nodeId })
+        val nodeBaseInfos = nodeRecords.map {
+            val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
+            NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+            NodeBaseInfo(
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = it.nodeStatus,
+                agentStatus = getAgentStatus(it),
+                nodeType = it.nodeType,
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                gateway = "",
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+            )
+        }
+        val hashIdToNodeBaseInfoMap = nodeBaseInfos.associateBy { it.nodeHashId }
+
+        val resultMap = mutableMapOf<String, MutableList<NodeBaseInfo>>()
+        envHashIds.forEach {
+            resultMap[it] = mutableListOf()
+        }
+        envNodes.forEach {
+            val envHashId = HashUtil.encodeLongId(it.envId)
+            val nodeHashId = HashUtil.encodeLongId(it.nodeId)
+            if (hashIdToNodeBaseInfoMap.containsKey(nodeHashId)) {
+                resultMap[envHashId]!!.add(hashIdToNodeBaseInfoMap[nodeHashId]!!)
+            }
+        }
+        return resultMap
     }
 
     fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
@@ -386,6 +569,9 @@ class EnvService @Autowired constructor(
 
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIds, projectId).associateBy { it.nodeId }
+        logger.info("listAllEnvNodes ${LocalDateTime.now()}")
+        BcsVmNodeStatusUtils.updateBcsVmNodeStatus(dslContext, nodeDao, bcsClient, nodeList)
+        logger.info("listAllEnvNodes ${LocalDateTime.now()}")
         return nodeList.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
@@ -396,19 +582,19 @@ class EnvService @Autowired constructor(
 
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
-                HashUtil.encodeLongId(it.nodeId),
-                nodeStringId,
-                it.nodeName,
-                it.nodeIp,
-                NodeStatus.getStatusName(it.nodeStatus),
-                getAgentStatus(it),
-                NodeType.getTypeName(it.nodeType),
-                it.osName,
-                it.createdUser,
-                it.operator,
-                it.bakOperator,
-                gatewayShowName,
-                NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
+                agentStatus = getAgentStatus(it),
+                nodeType = NodeType.getTypeName(it.nodeType),
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                gateway = gatewayShowName,
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
             )
         }
     }
@@ -416,10 +602,8 @@ class EnvService @Autowired constructor(
     fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.EDIT)) {
-            throw OperationException("No Permission")
+            throw OperationException("No EDIT Permission")
         }
-
-        envDao.get(dslContext, projectId, envId)
 
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
 
@@ -427,20 +611,35 @@ class EnvService @Autowired constructor(
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
-            throw OperationException("节点权限不足：[${unauthorizedNodeIds.map { HashUtil.encodeLongId(it) }.joinToString(",")}]")
+            throw OperationException("节点权限不足：[${unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]")
         }
+
+        val env = envDao.get(dslContext, projectId, envId)
 
         // 检查 node 是否存在
         val existNodes = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
         val existNodeIds = existNodes.map { it.nodeId }.toSet()
         val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
         if (notExistNodeIds.isNotEmpty()) {
-            throw OperationException("节点：[${notExistNodeIds.map { HashUtil.encodeLongId(it) }.joinToString(",")}]不存在")
+            throw OperationException("节点：[${notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]不存在")
         }
 
         // 过滤已在环境中的节点
         val existEnvNodeIds = envNodeDao.list(dslContext, projectId, listOf(envId)).map { it.nodeId }
         val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds)
+
+        // 验证节点类型
+        val existNodesMap = existNodes.associateBy { it.nodeId }
+        val serverNodeTypes = listOf(NodeType.CMDB.name, NodeType.CC.name, NodeType.BCSVM.name)
+
+        toAddNodeIds.forEach {
+            if (env.envType == EnvType.BUILD.name && existNodesMap[it]?.nodeType in serverNodeTypes) {
+                throw OperationException("服务器节点[${HashUtil.encodeLongId(it)}]不能添加到构建环境")
+            }
+            if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType !in serverNodeTypes) {
+                throw OperationException("构建节点[${HashUtil.encodeLongId(it)}]不能添加到非构建环境")
+            }
+        }
 
         val envNodeList = toAddNodeIds.map { TEnvNodeRecord(envId, it, projectId) }
         envNodeDao.batchStoreEnvNode(dslContext, envNodeList)
@@ -453,9 +652,9 @@ class EnvService @Autowired constructor(
         }
 
         envNodeDao.batchDeleteEnvNode(
-            dslContext,
-            projectId,
-            HashUtil.decodeIdToLong(envHashId),
-            nodeHashIds.map { HashUtil.decodeIdToLong(it) })
+            dslContext = dslContext,
+            projectId = projectId,
+            envId = HashUtil.decodeIdToLong(envHashId),
+            nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) })
     }
 }

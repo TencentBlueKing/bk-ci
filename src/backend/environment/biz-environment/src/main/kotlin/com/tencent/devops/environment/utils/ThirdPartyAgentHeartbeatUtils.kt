@@ -27,6 +27,7 @@
 package com.tencent.devops.environment.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatInfo
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
@@ -46,7 +47,7 @@ class ThirdPartyAgentHeartbeatUtils @Autowired constructor(
     fun saveHeartbeat(
         projectId: String,
         agentId: Long,
-        newHeartbeatInfo: HeartbeatInfo
+        newHeartbeatInfo: NewHeartbeatInfo
     ) {
         newHeartbeatInfo.projectId = projectId
         newHeartbeatInfo.agentId = agentId
@@ -74,7 +75,7 @@ class ThirdPartyAgentHeartbeatUtils @Autowired constructor(
             heartbeat.heartbeatTime
         } else {
             saveHeartbeat(record.projectId, record.id,
-                HeartbeatInfo.dummyHeartbeat(record.projectId, record.id)
+                NewHeartbeatInfo.dummyHeartbeat(record.projectId, record.id)
             )
             null
         }

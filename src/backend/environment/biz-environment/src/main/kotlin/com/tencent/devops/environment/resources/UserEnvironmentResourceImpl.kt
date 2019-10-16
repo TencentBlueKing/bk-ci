@@ -29,8 +29,10 @@ package com.tencent.devops.environment.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserEnvironmentResource
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -43,10 +45,16 @@ import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserEnvironmentResourceImpl @Autowired constructor(private val envService: EnvService) : UserEnvironmentResource {
+class UserEnvironmentResourceImpl @Autowired constructor(
+    private val envService: EnvService,
+    private val environmentPermissionService: EnvironmentPermissionService
+) : UserEnvironmentResource {
+    override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
+        return Result(envService.listUsableServerEnvs(userId, projectId))
+    }
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(true)
+        return Result(environmentPermissionService.checkEnvPermission(userId, projectId, BkAuthPermission.CREATE))
     }
 
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
@@ -55,6 +63,20 @@ class UserEnvironmentResourceImpl @Autowired constructor(private val envService:
         }
         if (environment.name.isBlank()) {
             throw ParamBlankException("环境名称太长")
+        }
+
+        if (NodeSource.CREATE == environment.source) {
+            val bcsVmParam = environment.bcsVmParam ?: throw ParamBlankException("Invalid bcsVmParam")
+
+            if (bcsVmParam.clusterId.isBlank()) {
+                throw ParamBlankException("Invalid bcsVmParam.clusterId")
+            }
+            if (bcsVmParam.imageId.isBlank()) {
+                throw ParamBlankException("Invalid bcsVmParam.imageId")
+            }
+            if (bcsVmParam.vmModelId.isBlank()) {
+                throw ParamBlankException("Invalid bcsVmParam.vmModelId")
+            }
         }
 
         if (NodeSource.EXISTING == environment.source) {

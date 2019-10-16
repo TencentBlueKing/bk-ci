@@ -33,6 +33,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class SlaveGatewayDao {
+
     fun list(dslContext: DSLContext): List<TEnvironmentSlaveGatewayRecord> {
         with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
             return dslContext.selectFrom(this).fetch()

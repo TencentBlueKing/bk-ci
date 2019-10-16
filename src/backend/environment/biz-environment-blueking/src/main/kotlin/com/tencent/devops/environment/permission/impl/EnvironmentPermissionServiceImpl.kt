@@ -169,9 +169,9 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createNode(user: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
         authResourceApi.createResource(
-            user = user,
+            user = userId,
             serviceCode = environmentAuthServiceCode,
             resourceType = nodeResourceType,
             projectCode = projectId,
@@ -180,7 +180,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun updateNode(user: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
         authResourceApi.modifyResource(
             serviceCode = environmentAuthServiceCode,
             resourceType = nodeResourceType,

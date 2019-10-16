@@ -41,6 +41,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService
 ) : ServiceEnvironmentResource {
+    override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
+        return Result(envService.listUsableServerEnvs(userId, projectId))
+    }
+
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,
