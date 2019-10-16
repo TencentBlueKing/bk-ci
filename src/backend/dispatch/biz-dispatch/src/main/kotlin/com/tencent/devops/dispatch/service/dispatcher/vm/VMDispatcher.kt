@@ -6,6 +6,7 @@ import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.dao.PipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuildCreate
 import com.tencent.devops.dispatch.pojo.VM
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -29,16 +30,16 @@ import org.springframework.stereotype.Component
 
 @Component
 class VMDispatcher @Autowired constructor(
-    private val client: Client,
-    private val dslContext: DSLContext,
-    private val vmService: VMService,
-    private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelineVMService: PipelineVMService,
-    private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
-    private val redisUtils: RedisUtils,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val vmAfterBuildUtils: ShutdownVMAfterBuildUtils
+        private val client: Client,
+        private val dslContext: DSLContext,
+        private val vmService: VMService,
+        private val pipelineBuildDao: PipelineBuildDao,
+        private val pipelineVMService: PipelineVMService,
+        private val redisOperation: RedisOperation,
+        private val rabbitTemplate: RabbitTemplate,
+        private val redisUtils: RedisUtils,
+        private val pipelineEventDispatcher: PipelineEventDispatcher,
+        private val vmAfterBuildUtils: ShutdownVMAfterBuildUtils
 ) : Dispatcher {
     override fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) =
         pipelineAgentStartupEvent.dispatchType is ESXiDispatchType
