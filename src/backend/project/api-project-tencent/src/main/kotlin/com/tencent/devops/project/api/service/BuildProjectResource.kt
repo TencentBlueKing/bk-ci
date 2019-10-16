@@ -1,4 +1,4 @@
-package com.tencent.devops.project.api
+package com.tencent.devops.project.api.service
 
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result

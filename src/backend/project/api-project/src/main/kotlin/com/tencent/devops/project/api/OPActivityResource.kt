@@ -46,7 +46,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PROJECT"], description = "项目最新动态")
+@Api(tags = ["OP_ACTIVITI"], description = "项目最新动态")
 @Path("/op/activities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
