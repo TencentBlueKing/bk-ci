@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.model.RawFloatingIp
+import com.tencent.devops.environment.pojo.RawFloatingIp
 import com.tencent.devops.environment.model.RawTstackVm
 import okhttp3.MediaType
 import okhttp3.Request
