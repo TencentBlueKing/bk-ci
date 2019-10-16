@@ -2,6 +2,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.pojo.RevisionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
