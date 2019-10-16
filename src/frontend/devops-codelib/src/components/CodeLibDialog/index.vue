@@ -3,7 +3,7 @@
         <h3 slot="header" class="bk-dialog-title">{{title}}</h3>
         <form class="bk-form" v-bkloading="{ isLoading: saving || fetchingCodelibDetail }">
             <div class="bk-form-item is-required" v-if="isGit">
-                <label class="bk-label">源代码方式:</label>
+                <label class="bk-label">{{ $t('codelib.codelibMode') }}:</label>
                 <bk-radio-group v-model="codelib.authType" @change="authTypeChange(codelib)" class="bk-form-content form-radio">
                     <bk-radio value="OAUTH" v-if="isGit">OAUTH</bk-radio>
                     <bk-radio value="SSH">SSH</bk-radio>
@@ -14,7 +14,7 @@
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">源代码地址:</label>
+                        <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
                         <div class="bk-form-content">
                             <bk-select v-model="codelibUrl"
                                 searchable
@@ -22,7 +22,7 @@
                                 v-validate="&quot;required&quot;"
                                 name="name"
                                 class="codelib-credential-selector"
-                                placeholder="请选择代码库地址"
+                                :placeholder="$t('codelib.codelibUrlPlaceholder')"
                             >
                                 <bk-option v-for="(option, index) in oAuth.project"
                                     :key="index"
@@ -39,9 +39,9 @@
 
                     <!-- 别名 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">别名:</label>
+                        <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
                         <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;aliasName&quot;) }">
-                            <input type="text" class="bk-form-input" placeholder="请输入别名" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
+                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
                             <span class="error-tips" v-if="errors.has(&quot;codelibAliasName&quot;)">
                                 {{ errors.first('codelibAliasName') }}
                             </span>
@@ -51,7 +51,7 @@
                 </div>
                 <div class="bk-form-item is-required" v-else>
                     <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;powerValidate&quot;) }" :style="isGithub ? { textAlign: &quot;center&quot;, marginLeft: 0 } : {}">
-                        <button class="bk-button bk-primary" type="button" @click="openValidate">OAUTH认证</button>
+                        <button class="bk-button bk-primary" type="button" @click="openValidate">{{ $t('codelib.oauthCert') }}</button>
                         <input type="text" value="" name="powerValidate" v-validate="{ required: true }" style="width: 0; height: 0; border: none; z-index: -20; opacity: 0;">
                         <span class="error-tips" v-if="errors.has(&quot;powerValidate&quot;)">
                             {{ errors.first('powerValidate') }}
@@ -61,7 +61,7 @@
             </div>
             <div class="bk-form-item" v-else>
                 <div class="bk-form-item is-required" v-if="codelibConfig.label === 'SVN'">
-                    <label class="bk-label">源代码拉取方式:</label>
+                    <label class="bk-label">{{ $t('codelib.codelibPullType') }}:</label>
                     <bk-radio-group v-model="codelib.svnType" @change="svnTypeChange(codelib)" class="bk-form-content form-radio">
                         <bk-radio value="ssh">SSH</bk-radio>
                         <bk-radio value="http">HTTP</bk-radio>
@@ -69,7 +69,7 @@
                 </div>
                 <!-- 源代码地址 start -->
                 <div class="bk-form-item is-required">
-                    <label class="bk-label">源代码地址:</label>
+                    <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
                     <div class="bk-form-content">
                         <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" v-validate="&quot;required&quot;" :class="{ &quot;is-danger&quot;: urlErrMsg || errors.has(&quot;codelibUrl&quot;) }">
                         <span class="error-tips" v-if="urlErrMsg || errors.has(&quot;codelibUrl&quot;)">
@@ -81,9 +81,9 @@
 
                 <!-- 别名 start -->
                 <div class="bk-form-item is-required">
-                    <label class="bk-label">别名:</label>
+                    <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
                     <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;aliasName&quot;) }">
-                        <input type="text" class="bk-form-input" placeholder="请输入别名" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
+                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
                         <span class="error-tips" v-if="errors.has(&quot;codelibAliasName&quot;)">
                             {{ errors.first('codelibAliasName') }}
                         </span>
@@ -93,7 +93,7 @@
 
                 <!-- 访问凭据 start -->
                 <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'Github'">
-                    <label class="bk-label">访问凭据:</label>
+                    <label class="bk-label">{{ $t('codelib.codelibCredential') }}:</label>
                     <div class="bk-form-content code-lib-credential" :class="{ &quot;is-danger&quot;: errors.has(&quot;credentialId&quot;) }">
                         <bk-select v-model="credentialId"
                             :loading="isLoadingTickets"
@@ -102,7 +102,7 @@
                             v-validate="&quot;required&quot;"
                             name="credentialId"
                             class="codelib-credential-selector"
-                            placeholder="请选择相应类型的凭据"
+                            :placeholder="$t('codelib.credentialPlaceholder')"
                             @toggle="refreshTicket"
                         >
                             <bk-option v-for="(option, index) in credentialList"
@@ -113,9 +113,9 @@
                                 <i class="bk-icon icon-edit2 cre-icon" @click.stop="goToEditCre(index)"></i>
                             </bk-option>
                         </bk-select>
-                        <span class="text-link" @click="addCredential">新增</span>
+                        <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
                     </div>
-                    <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">凭据ID不能为空</span>
+                    <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
                 <!-- 访问凭据 end -->
             </div>
@@ -152,17 +152,17 @@
                 hasValidate: false,
                 placeholders: {
                     url: {
-                        SVN: '请输入相应类型的SVN代码库地址',
-                        Git: '请输入SSH方式的Git代码库地址',
-                        TGit: '请输入SSH方式的TGit代码库地址',
-                        Gitlab: '请输入HTTP方式的Gitlab代码库地址',
-                        HTTP: '请输入HTTP方式的Git代码库地址',
-                        HTTPS: '请输入HTTPS方式的TGit代码库地址'
+                        SVN: this.$t('codelib.svnUrlPlaceholder'),
+                        Git: this.$t('codelib.gitUrlPlaceholder'),
+                        TGit: this.$t('codelib.tgitUrlPlaceholder'),
+                        Gitlab: this.$t('codelib.gitlabUrlPlaceholder'),
+                        HTTP: this.$t('codelib.httpUrlPlaceholder'),
+                        HTTPS: this.$t('codelib.httpsUrlPlaceholder')
                     },
                     cred: {
-                        SVN: '请选择相应类型的凭据',
-                        Git: '请选择SSH私钥+私有Token类型的凭据',
-                        Gitlab: '请选择AccessToken类型的凭据'
+                        SVN: this.$t('codelib.svnCredPlaceholder'),
+                        Git: this.$t('codelib.gitCredPlaceholder'),
+                        Gitlab: this.$t('codelib.gitlabCredPlaceholder')
                     }
                 }
             }
@@ -223,7 +223,7 @@
                 )
             },
             title () {
-                return `关联${this.codelibConfig.label || ''}代码库`
+                return `${this.$t('codelib.link')}${this.codelibConfig.label || ''}${this.$t('codelib.codelib')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)
@@ -338,7 +338,7 @@
                 }
             }
         },
-        
+
         methods: {
             ...mapActions('codelib', [
                 'requestTickets',
@@ -379,8 +379,8 @@
                         this.codelib.url = ''
                         this.$bkMessage({
                             message: repositoryHashId
-                                ? '修改代码库成功'
-                                : '添加代码库成功',
+                                ? this.$t('codelib.successfullyEdited')
+                                : this.$t('codelib.successfullyAdded'),
                             theme: 'success'
                         })
                         this.refreshCodelibList()
@@ -390,8 +390,8 @@
                         this.iframeUtil.showAskPermissionDialog({
                             noPermissionList: [
                                 {
-                                    resource: '代码库',
-                                    option: repositoryHashId ? '编辑' : '创建'
+                                    resource: this.$t('codelib.codelib'),
+                                    option: repositoryHashId ? this.$t('codelib.edit') : this.$t('codelib.create')
                                 }
                             ],
                             applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${

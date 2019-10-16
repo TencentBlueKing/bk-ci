@@ -1,12 +1,12 @@
 <template>
-    <div class="codelib-content" v-bkloading="{ isLoading, title: &quot;正在加载代码库列表&quot; }">
+    <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
         <template v-if="hasCodelibs">
             <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib"></link-code-lib>
             <bk-button theme="primary" v-else @click.stop="goCreatePermission">
                 <i class="bk-icon icon-plus"></i>
-                <span>关联代码库</span>
+                <span>{{ $t('codelib.linkCodelib') }}</span>
             </bk-button>
-            <bk-input placeholder="请输入别名，按回车进行搜索"
+            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
                 :right-icon="'bk-icon icon-search'"
@@ -17,14 +17,14 @@
             </bk-input>
             <code-lib-table v-bind="codelibs" :switch-page="switchPage"></code-lib-table>
         </template>
-        <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" title="代码库" desc="代码库服务（Code）是将 SVN 及 GIT 的代码库与用户、凭据等进行关联，统一项目代码库的配置管理，便利于流水线代码库原子的编排。">
+        <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
             <bk-button v-for="typeLabel in codelibTypes" theme="primary" :key="typeLabel" @click="createCodelib(typeLabel)">
-                关联{{typeLabel}}代码库
+                {{ `${$t('codelib.link')}${typeLabel}${$t('codelib.codelib')}` }}
             </bk-button>
         </empty-tips>
-        <empty-tips v-else title="无代码库权限" desc="你在该项目[代码库]下没有[创建]权限，请切换项目或申请相应权限">
-            <bk-button type="primary" @click="switchProject">切换项目</bk-button>
-            <bk-button type="success" @click="goApplyPerm">申请权限</bk-button>
+        <empty-tips v-else :title="$t('codelib.noCodelibPermission')" :desc="$t('codelib.noPermissionDesc')">
+            <bk-button theme="primary" @click="switchProject">{{ $t('codelib.switchProject') }}</bk-button>
+            <bk-button theme="success" @click="goApplyPerm">{{ $t('codelib.applyPermission') }}</bk-button>
         </empty-tips>
         <code-lib-dialog :refresh-codelib-list="refreshCodelibList" @powersValidate="powerValidate"></code-lib-dialog>
     </div>
@@ -170,8 +170,8 @@
                 this.iframeUtil.showAskPermissionDialog({
                     noPermissionList: [
                         {
-                            resource: '代码库',
-                            option: '创建'
+                            resource: this.$t('codelib.codelib'),
+                            option: this.$t('codelib.create')
                         }
                     ],
                     applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
