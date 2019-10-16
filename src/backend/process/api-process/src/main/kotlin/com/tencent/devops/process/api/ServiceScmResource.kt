@@ -61,5 +61,5 @@ interface ServiceScmResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         webhookCommit: WebhookCommit
-    ): Result<Boolean>
+    ): Result<String>
 }

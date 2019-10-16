@@ -186,7 +186,7 @@ class ProjectServiceImpl @Autowired constructor(
                 deptName = "",
                 centerId = 0L,
                 centerName = "",
-                isSecrecy = false,
+                secrecy = false,
                 kind = 0
         )
 
@@ -427,6 +427,10 @@ class ProjectServiceImpl @Autowired constructor(
             jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
+    }
+
+    override fun list(projectCodes: Set<String>): List<ProjectVO> {
+        return super.list(projectCodes)
     }
 
     private fun drawImage(logoStr: String): File {

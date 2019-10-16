@@ -28,7 +28,6 @@ package com.tencent.devops.project.service.resources
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.UserProjectResource
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo

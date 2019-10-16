@@ -28,6 +28,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
@@ -249,6 +250,73 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(ENGLISH_NAME.eq(englishName)).fetchOne()
+        }
+    }
+
+    fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.insertInto(
+                    this,
+                    APPROVAL_STATUS,
+                    APPROVAL_TIME,
+                    APPROVER,
+                    BG_ID,
+                    BG_NAME,
+                    CC_APP_ID,
+                    CENTER_ID,
+                    CENTER_NAME,
+                    CREATED_AT,
+                    CREATOR,
+                    DATA_ID,
+                    DEPLOY_TYPE,
+                    DEPT_ID,
+                    DEPT_NAME,
+                    DESCRIPTION,
+                    ENGLISH_NAME,
+                    EXTRA,
+                    IS_OFFLINED,
+                    IS_SECRECY,
+                    KIND,
+                    LOGO_ADDR,
+                    PROJECT_ID,
+                    PROJECT_NAME,
+                    PROJECT_TYPE,
+                    REMARK,
+                    UPDATED_AT,
+                    USE_BK,
+                    APPROVAL_STATUS
+            )
+                    .values(
+                            paasProject.approval_status,
+                            paasProject.approval_time,
+                            paasProject.approver,
+                            paasProject.bg_id,
+                            paasProject.bg_name,
+                            paasProject.cc_app_id,
+                            paasProject.center_id,
+                            paasProject.center_name,
+                            paasProject.created_at.time,
+                            paasProject.creator,
+                            paasProject.data_id,
+                            paasProject.deploy_type,
+                            paasProject.dept_id,
+                            paasProject.dept_name,
+                            paasProject.description,
+                            paasProject.english_name,
+                            paasProject.extra,
+                            paasProject.is_offlined,
+                            paasProject.is_secrecy,
+                            paasProject.kind,
+                            paasProject.logo_addr,
+                            paasProject.project_id,
+                            paasProject.project_name,
+                            paasProject.project_type,
+                            paasProject.remark,
+                            paasProject.updated_at?.time,
+                            paasProject.use_bk,
+                            ApproveStatus.APPROVED.status
+                    )
+                    .execute()
         }
     }
 

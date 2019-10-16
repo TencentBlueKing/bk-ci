@@ -27,6 +27,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.*
 
 /**
@@ -78,4 +79,7 @@ interface UserProjectServiceService {
      * 同步将服务类别下的服务注册进来
      */
     fun syncService(userId: String, services: List<ServiceListVO>)
+
+    fun updateServiceUrls(userId: String, name: String, serviceUpdateUrls: ServiceUpdateUrls): Result<Boolean>
+
 }
