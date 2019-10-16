@@ -76,8 +76,7 @@ class  JerseySwaggerConfig : JerseyConfig() {
                     version = applicationVersion
                     resourcePackage = packageName
                     scan = true
-                    basePath = "/api"
-                    host = "$swaggerHost/$service"
+                    basePath = "/$service/api"
                 }
             }
         }
