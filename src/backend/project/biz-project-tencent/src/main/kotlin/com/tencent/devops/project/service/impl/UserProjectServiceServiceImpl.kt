@@ -190,7 +190,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                                     it.showNav ?: false,
                                     it.projectIdType ?: "",
                                     favor,
-                                    it.weight,
+                                    it.weight ?: 0,
                                     it.logoUrl,
                                     it.webSocket
                             )

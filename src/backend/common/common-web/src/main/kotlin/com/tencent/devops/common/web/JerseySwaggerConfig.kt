@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import javax.annotation.PostConstruct
 
-class JerseySwaggerConfig : JerseyConfig() {
+class  JerseySwaggerConfig : JerseyConfig() {
 
     @Value("\${spring.application.desc:#{null}}")
     private val applicationDesc: String? = null
@@ -43,6 +43,10 @@ class JerseySwaggerConfig : JerseyConfig() {
 
     @Value("\${spring.application.packageName:#{null}}")
     private val packageName: String? = null
+
+    @Value("\${swagger.host:#{null}}")
+    private val swaggerHost: String? = null
+
     private val logger = LoggerFactory.getLogger(JerseySwaggerConfig::class.java)
     @PostConstruct
     fun init() {
@@ -54,13 +58,24 @@ class JerseySwaggerConfig : JerseyConfig() {
     }
 
     private fun configSwagger() {
-        if (packageName != null && packageName!!.isNotBlank()) {
-            BeanConfig().apply {
-                title = applicationDesc
-                version = applicationVersion
-                resourcePackage = packageName
-                scan = true
-                basePath = "/api"
+        if (packageName != null && packageName.isNotBlank()) {
+            if (swaggerHost.isNullOrBlank()) {
+                BeanConfig().apply {
+                    title = applicationDesc
+                    version = applicationVersion
+                    resourcePackage = packageName
+                    scan = true
+                    basePath = "/api"
+                }
+            } else {
+                BeanConfig().apply {
+                    title = applicationDesc
+                    version = applicationVersion
+                    resourcePackage = packageName
+                    scan = true
+                    basePath = "/api"
+                    host = swaggerHost
+                }
             }
         }
     }
