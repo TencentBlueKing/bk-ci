@@ -24,9 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":common:common-auth:common-auth-blueking")
-    compile project(":quality:biz-quality-blueking")
-}
+package com.tencent.devops.dispatch
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@MicroService
+@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.dispatch")
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
+}
