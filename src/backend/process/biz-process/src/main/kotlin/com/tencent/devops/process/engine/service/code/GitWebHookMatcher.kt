@@ -3,11 +3,11 @@ package com.tencent.devops.process.engine.service.code
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.pojo.scm.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.scm.code.git.GitEvent
-import com.tencent.devops.process.pojo.scm.code.git.GitMergeRequestEvent
-import com.tencent.devops.process.pojo.scm.code.git.GitPushEvent
-import com.tencent.devops.process.pojo.scm.code.git.GitTagPushEvent
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.process.pojo.code.git.GitPushEvent
+import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.repository.pojo.CodeGitRepository

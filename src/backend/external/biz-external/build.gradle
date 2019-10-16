@@ -34,6 +34,7 @@ dependencies {
     compile project(":common:common-auth:common-auth-api")
     compile project(":common:common-db")
     compile project(":common:common-client")
+    compile project(":common:common-scm")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

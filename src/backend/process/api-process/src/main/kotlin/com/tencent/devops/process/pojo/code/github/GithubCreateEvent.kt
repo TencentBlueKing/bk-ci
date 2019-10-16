@@ -30,12 +30,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubCreateEvent(
-        val before: String,
-        val after: String,
         val ref: String,
+        val ref_type: String,
         val repository: GithubRepository,
-        val commits: List<GithubCommit>,
-        val head_commit: GithubCommit,
         override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {

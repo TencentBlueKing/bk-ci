@@ -24,19 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code.svn
+dependencies {
+    compile project(":quality:biz-quality")
+    compile project(":common:common-auth:common-auth-tencent")
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEventFile
+}
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class SvnCommitEvent(
-        val userName: String,
-        val eventType: Int,
-        val log: String,
-        val rep_name: String,
-        val revision: Int,
-        val paths: List<String>,
-        val files: List<SvnCommitEventFile>,
-        val commitTime: Long?
-)
+apply from: "$rootDir/task_deploy_to_maven.gradle"

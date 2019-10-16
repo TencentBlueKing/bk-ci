@@ -24,19 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code.svn
+package com.tencent.devops.quality
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEventFile
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class SvnCommitEvent(
-        val userName: String,
-        val eventType: Int,
-        val log: String,
-        val rep_name: String,
-        val revision: Int,
-        val paths: List<String>,
-        val files: List<SvnCommitEventFile>,
-        val commitTime: Long?
-)
+@MicroService
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
+}
