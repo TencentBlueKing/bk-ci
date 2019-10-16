@@ -29,9 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.pojo.TstackContainerInfo
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
-import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -109,42 +107,6 @@ class RedisUtils @Autowired constructor(
 
     private fun thirdPartyUpgradeKey(projectId: String, agentId: String) =
         "third_party_agent_upgrade_${projectId}_$agentId"
-
-    fun getTstackRedisBuild(ip: String): RedisBuild? {
-        val build = redisOperation.get(ip) ?: return null
-        try {
-            return objectMapper.readValue(build, RedisBuild::class.java)
-        } catch (t: Throwable) {
-            logger.warn("Fail to covert the redis build to object($build)", t)
-        }
-        return null
-    }
-
-    fun setTstackRedisBuild(ip: String, redisBuild: RedisBuild) {
-        redisOperation.set(ip, objectMapper.writeValueAsString(redisBuild))
-    }
-
-    fun deleteTstackRedisBuild(ip: String) {
-        redisOperation.delete(ip)
-    }
-
-    fun getTstackContainerInfo(key: String): TstackContainerInfo? {
-        val containerData = redisOperation.get(key) ?: return null
-        try {
-            return objectMapper.readValue(containerData, TstackContainerInfo::class.java)
-        } catch (t: Throwable) {
-            logger.warn("Fail to covert the tstack container data to object($containerData)", t)
-        }
-        return null
-    }
-
-    fun setTstackContainerInfo(key: String, containerInfo: TstackContainerInfo) {
-        redisOperation.set(key, objectMapper.writeValueAsString(containerInfo))
-    }
-
-    fun deleteTstackContainerInfo(key: String) {
-        redisOperation.delete(key)
-    }
 
     fun setRedisDebugMsg(pipelineId: String, vmSeqId: String, msg: String) {
         redisOperation.set("docker_debug_msg_key_${pipelineId}_$vmSeqId", msg, 3600L)

@@ -2,8 +2,8 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.process.pojo.code.GitlabCommitEvent
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
