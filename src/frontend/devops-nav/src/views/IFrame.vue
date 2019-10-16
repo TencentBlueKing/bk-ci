@@ -163,9 +163,6 @@
                 this.isLoading = true
                 this.init()
             } else if (params.projectId !== oldParams.projectId) {
-                if (this.needLoading) {
-                    this.isLoading = true
-                }
                 if (this.$refs.iframeEle && params.projectId) { // 将当前projectId同步到子窗口
                     this.iframeUtil.syncProjectId(this.$refs.iframeEle.contentWindow, params.projectId)
                 }
