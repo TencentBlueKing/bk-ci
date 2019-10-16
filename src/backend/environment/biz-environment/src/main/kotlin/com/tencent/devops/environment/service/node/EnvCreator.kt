@@ -12,7 +12,7 @@ interface EnvCreator {
     fun id(): String
 
     @PostConstruct
-    fun register() {
+    fun init() {
         EnvCreatorFactory.register(creatorId = id(), envCreator = this)
     }
 
