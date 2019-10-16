@@ -429,6 +429,10 @@ class ProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun list(projectCodes: Set<String>): List<ProjectVO> {
+        return super.list(projectCodes)
+    }
+
     private fun drawImage(logoStr: String): File {
         val logoBackgroundColor = arrayOf("#FF5656", "#FFB400", "#30D878", "#3C96FF")
         val max = logoBackgroundColor.size - 1
