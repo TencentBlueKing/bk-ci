@@ -1,8 +1,5 @@
 package com.tencent.devops.common.auth.api
 
-/**
- * Created by Aaron Sheng on 2018/1/23.
- */
 enum class BkAuthServiceCode(val value: String) {
     BCS("bcs"),
     CODE("code"),
