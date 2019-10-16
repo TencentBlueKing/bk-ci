@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.pojo.code
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.repository.pojo.Repository
@@ -33,16 +34,10 @@ import com.tencent.devops.repository.pojo.Repository
 interface ScmWebhookMatcher {
 
     fun isMatch(
-        pipelineId: String,
-        repository: Repository,
-        branchName: String?,
-        excludeBranchName: String?,
-        includePaths: String?,
-        excludePaths: String?,
-        includeUsers: String?,
-        excludeUsers: String?,
-        relativePath: String?,
-        eventType: CodeEventType?
+            projectId: String,
+            pipelineId: String,
+            repository: Repository,
+            webHookParams: WebHookParams
     ): Boolean
 
     fun getUsername(): String
@@ -96,5 +91,19 @@ interface ScmWebhookMatcher {
         return ref.removePrefix("refs/heads/")
     }
 
-    fun getMergeRequestId(): Long?
+    fun getMergeRequestId(): Long? = null
+
+    data class WebHookParams(
+            val repositoryConfig: RepositoryConfig,
+            var branchName: String? = null,
+            var excludeBranchName: String? = null,
+            var includePaths: String? = null,
+            var excludePaths: String? = null,
+            var eventType: CodeEventType? = null,
+            var block: Boolean = false,
+            var relativePath: String? = null,
+            var excludeUsers: String? = "",
+            var includeUsers: String? = null,
+            var codeType: CodeType = CodeType.GIT
+    )
 }
