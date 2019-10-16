@@ -44,6 +44,9 @@ class  JerseySwaggerConfig : JerseyConfig() {
     @Value("\${spring.application.packageName:#{null}}")
     private val packageName: String? = null
 
+    @Value("\${spring.application.name:#{null}}")
+    private val service: String? = null
+
     @Value("\${swagger.host:#{null}}")
     private val swaggerHost: String? = null
 
@@ -74,7 +77,7 @@ class  JerseySwaggerConfig : JerseyConfig() {
                     resourcePackage = packageName
                     scan = true
                     basePath = "/api"
-                    host = swaggerHost
+                    host = "$swaggerHost/$service"
                 }
             }
         }
