@@ -186,7 +186,7 @@ class ProjectServiceImpl @Autowired constructor(
                 deptName = "",
                 centerId = 0L,
                 centerName = "",
-                isSecrecy = false,
+                secrecy = false,
                 kind = 0
         )
 
