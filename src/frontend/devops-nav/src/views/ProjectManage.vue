@@ -399,17 +399,17 @@
                             enabled: !enabled
                         }
                         await this.toggleProjectEnable(params)
-                        msg = (enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + `${projectName}`
+                        msg = (enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + + this.$t('projectSuccess')
                         theme = 'success'
                         await this.getProjects(true)
                         return true
                     } catch (error) {
-                        msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + `${projectName}`)
+                        msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
                         return true
                     } finally {
                         this.$bkMessage({
                             theme,
-                            message: `${msg}${this.$t('projectSuccess')}`
+                            message: msg
                         })
                     }
                 }

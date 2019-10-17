@@ -97,5 +97,6 @@
     "applyProject": "Join the project",
     "disableProjectConfirm": "Make sure to disable the project",
     "enableProjectConfirm": "Make sure to enable the project",
-    "projectSuccess": "Project Success"
+    "projectSuccess": "project Successful",
+    "projectFail": "project Failed"
 }
