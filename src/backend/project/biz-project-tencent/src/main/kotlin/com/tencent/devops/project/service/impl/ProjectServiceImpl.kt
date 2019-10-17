@@ -7,7 +7,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
+import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -63,12 +63,12 @@ class ProjectServiceImpl @Autowired constructor(
         private val objectMapper: ObjectMapper,
         private val tofService: TOFService,
         private val bkAuthProjectApi: BSAuthProjectApi,
+        private val bkAuthProperties: BkAuthProperties,
         private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
         private val jmxApi: ProjectJmxApi
 ): AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client){
 
-    @Value("\${auth.url}")
-    private lateinit var authUrl: String
+    private var authUrl: String = "${bkAuthProperties.url}+/projects"
 
     @Value("\${paas_cc.url}")
     private lateinit var ccUrl: String
@@ -567,7 +567,7 @@ class ProjectServiceImpl @Autowired constructor(
 
     fun getProjectIdInAuth(projectCode: String, accessToken: String): String? {
         try {
-            val url = "$authUrl/projects/$projectCode?access_token=$accessToken"
+            val url = "$authUrl/$projectCode?access_token=$accessToken"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
                 val responseStr = resp.body()!!.string()
