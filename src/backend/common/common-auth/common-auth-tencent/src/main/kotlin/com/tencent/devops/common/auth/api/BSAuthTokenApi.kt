@@ -140,6 +140,7 @@ class BSAuthTokenApi @Autowired constructor(
         secretMap.forEach { key,value ->
             logger.info("[secretMap] key: $key , value: $value" )
         }
+        logger.info("auth.url: ${bkAuthProperties.url}")
     }
 
     private fun getAppCodeAndSecret(serviceCode: AuthServiceCode): Pair<String, String> {
