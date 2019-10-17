@@ -66,8 +66,8 @@ config = {
     app_secret = "__APP_TOKEN__",
   },
   artifactory = {
-    port = __JFROG_HTTP_PORT__,
-    docker = __DOCKER_PORT__,
+    port = "__JFROG_HTTP_PORT__",
+    docker = "__DOCKER_PORT__",
     host = "__BKCI_GATEWAY_IP0__",
     domain = "__JFROG_FQDN__",
     user = "__JFROG_USERNAME__",
