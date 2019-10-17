@@ -31,7 +31,8 @@ import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.project")
+@ComponentScan("com.tencent.devops.common", "com.tencent.devops.project")
+
 class Application
 
 fun main(args: Array<String>) {
