@@ -73,6 +73,13 @@ config = {
       user = "__JFROG_USERNAME__",
       password = "__JFROG_PASSWORD__"
     },
+    influxdb = {
+      ip = "__INFLUXDB_IP0__",
+      port = "__INFLUXDB_PORT__",
+      db = "__INFLUXDB_DB__",
+      user = "__INFLUXDB_USERNAME__",
+      password = "__INFLUXDB_PASSWORD__"
+    },
     service_ip_whitelist = {
     }
   }
