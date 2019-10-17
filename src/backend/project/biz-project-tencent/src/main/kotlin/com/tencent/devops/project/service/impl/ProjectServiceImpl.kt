@@ -68,7 +68,7 @@ class ProjectServiceImpl @Autowired constructor(
         private val jmxApi: ProjectJmxApi
 ): AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client){
 
-    private var authUrl: String = "${bkAuthProperties.url}+/projects"
+    private var authUrl: String = "${bkAuthProperties.url}/projects"
 
     @Value("\${paas_cc.url}")
     private lateinit var ccUrl: String
