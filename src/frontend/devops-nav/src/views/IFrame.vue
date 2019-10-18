@@ -91,7 +91,7 @@
         }
 
         get needLoading (): boolean {
-            return this.$route.name === 'codecc' || this.$route.name === 'job'
+            return this.$route.name === 'job'
         }
 
         get chromeExplorer () :boolean {

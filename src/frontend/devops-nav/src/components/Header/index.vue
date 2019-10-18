@@ -180,7 +180,7 @@
             const hasProjectId = this.currentPage.show_project_list
             let path = urlJoin('/console', this.currentPage.link_new)
             if (this.$route.name === 'codecc') { // hack todo
-                path = `/console/codecc/${projectId}/coverity/myproject`
+                path = `/console/codecc/${projectId}`
             } else if (hasProjectId) {
                 if (this.currentPage.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
