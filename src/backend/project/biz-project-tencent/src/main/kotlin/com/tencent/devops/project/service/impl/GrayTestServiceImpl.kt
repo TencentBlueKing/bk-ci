@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.project.dao.GrayTestDao
+import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.pojo.service.GrayTestInfo
 import com.tencent.devops.project.pojo.service.GrayTestListInfo
 import com.tencent.devops.project.service.GrayTestService
@@ -14,7 +15,8 @@ import org.springframework.stereotype.Service
 @Service
 class GrayTestServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val grayTestDao: GrayTestDao
+    private val grayTestDao: GrayTestDao,
+    private val serviceDao: ServiceDao
 ) : GrayTestService {
     override fun create(userId: String, grayTestInfo: GrayTestInfo): GrayTestInfo {
         return grayTestDao.create(dslContext, userId, grayTestInfo.server_id, grayTestInfo.status)
@@ -38,12 +40,27 @@ class GrayTestServiceImpl @Autowired constructor(
 
     // 以下两个实现，只有企业版才有，内部版没有。
     override fun listByCondition(userNameList: List<String>, serviceIdList: List<String>, statusList: List<String>, pageSize: Int, pageNum: Int): List<GrayTestListInfo> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val notNullUsers = userNameList.filterNot { it == "" }
+        val notNullIds = serviceIdList.filterNot { it == "" }
+        val notNullStatus = statusList.filterNot { it == "" }
+
+        val grayList =
+                grayTestDao.listByCondition(dslContext, notNullUsers, notNullIds, notNullStatus, pageSize, pageNum)
+        val totalRecord = grayTestDao.getSum(dslContext)
+        val serviceList = serviceDao.getServiceList(dslContext)
+        return grayList.map {
+            val server = serviceList.filter { it2 -> it.server_id == it2.id }[0]
+            GrayTestListInfo(it.id, it.server_id, server.name, it.userName, it.status, totalRecord)
+        }
     }
 
 
     override fun listAllUsers(): Map<String, List<Any>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-
+        val allUsers = grayTestDao.listAllUsers(dslContext)
+        val allService = grayTestDao.listAllService(dslContext)
+        val map = HashMap<String, List<Any>>()
+        map.put("users", allUsers)
+        map.put("services", allService)
+        return map
     }
 }
