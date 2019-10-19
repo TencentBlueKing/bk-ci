@@ -3,7 +3,6 @@ package com.tencent.devops.support.services
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -34,7 +33,6 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
-import com.tencent.devops.project.api.ServiceProjectResource
 import com.tencent.devops.support.dao.WechatWorkMessageDAO
 import org.dom4j.Element
 import org.slf4j.LoggerFactory

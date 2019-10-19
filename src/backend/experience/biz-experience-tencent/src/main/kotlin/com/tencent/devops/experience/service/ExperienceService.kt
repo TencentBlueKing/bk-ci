@@ -8,7 +8,6 @@ import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
@@ -16,7 +15,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.common.auth.api.BkAuthResourceType
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
@@ -41,7 +39,6 @@ import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.experience.util.WechatUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.project.api.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

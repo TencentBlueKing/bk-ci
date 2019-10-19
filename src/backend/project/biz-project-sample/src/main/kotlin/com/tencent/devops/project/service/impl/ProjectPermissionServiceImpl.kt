@@ -110,4 +110,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         )
         return projectCodes.contains(projectCode)
     }
+
+    override fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

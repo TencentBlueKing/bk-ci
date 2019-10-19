@@ -97,6 +97,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         }
     }
 
+    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     companion object{
         val logger = LoggerFactory.getLogger(this:: class.java)
     }
