@@ -17,14 +17,14 @@ server:
 
 auth:
   url: http://authapi-dev.open.oa.com
-#  idProvider: client
-#  grantType: client_credentials
-#  stagingEnvName: staging
-#  testEnvName: test
-#  prodEnvName: prod
-#  stagingUrl: http://authapi-dev.open.oa.com
-#  testUrl: http://authapi-test.open.oa.com
-#  prodUrl: http://authapi.open.oa.com
+  idProvider: client
+  grantType: client_credentials
+  stagingEnvName: staging
+  testEnvName: test
+  prodEnvName: prod
+  stagingUrl: http://authapi-dev.open.oa.com
+  testUrl: http://authapi-test.open.oa.com
+  prodUrl: http://authapi.open.oa.com
 #  bcsSecret: YH777kfUgQgpzisfte1S700S5q2N2FFQhtfFGwhQeO3E7TIs6v
 #  codeSecret: xI7DbH5tuOPkYDeaD6zGmEMhagnExV3loRooP0wDmbcfda4m7S
 #  pipelineSecret: I6ua62oGX8HocKNOpCtjrEiebQv5X5sF4jAYfvwMpYZsR6F4Qm
