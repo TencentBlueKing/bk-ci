@@ -24,31 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.user
+package com.tencent.devops.project.service.resources
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.UserCountResource
+import com.tencent.devops.project.pojo.Result
 
-/**
- * 用户机构信息
- *
- * since: 2018-12-09
- */
-data class UserDeptDetail(
-        //TODO 给别名会报错。不给别名成功
-//    @JsonProperty("bg_name")
-    val bgName: String,
-//    @JsonProperty("bg_id")
-    val bgId: String,
-//    @JsonProperty("dept_name")
-    val deptName: String,
-//    @JsonProperty("bg_id")
-    val deptId: String,
-//    @JsonProperty("center_name")
-    val centerName: String,
-//    @JsonProperty("center_id")
-    val centerId: String,
-//    @JsonProperty("group_id")
-    val groupId: String,
-//    @JsonProperty("group_name")
-    val groupName: String
-)
+@RestResource
+class UserCountResourceImpl : UserCountResource {
+    override fun login(userId: String, xRealIp: String?, xForwardedFor: String?, userAgent: String?): Result<Boolean> {
+        // Do something
+        return Result(true)
+    }
+}

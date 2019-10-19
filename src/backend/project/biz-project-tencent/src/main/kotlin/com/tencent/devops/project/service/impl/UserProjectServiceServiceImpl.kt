@@ -246,8 +246,14 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     }
 
     override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
-        //TODO:  内不版没有此方法
-        return Result(true)
+        if(serviceUrlUpdateInfoList == null) {
+            return Result(data = true)
+        }
+        serviceUrlUpdateInfoList.forEach {
+            serviceDao.updateUrlByName(dslContext, it)
+
+        }
+        return Result(data = true)
     }
 
     companion object {

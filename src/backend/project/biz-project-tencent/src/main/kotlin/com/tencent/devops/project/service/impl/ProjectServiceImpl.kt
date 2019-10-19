@@ -48,6 +48,7 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.util.*
 import javax.imageio.ImageIO
+import kotlin.collections.HashMap
 
 @Service
 class ProjectServiceImpl @Autowired constructor(
@@ -66,7 +67,7 @@ class ProjectServiceImpl @Autowired constructor(
         private val bkAuthProperties: BkAuthProperties,
         private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
         private val jmxApi: ProjectJmxApi
-): AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client){
+) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -433,6 +434,50 @@ class ProjectServiceImpl @Autowired constructor(
         return super.list(projectCodes)
     }
 
+    override fun getProjectByUser(userName: String): List<ProjectVO> {
+        return super.getProjectByUser(userName)
+    }
+
+    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
+        super.validate(validateType, name, projectId)
+    }
+
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String {
+        return super.create(userId, projectCreateInfo)
+    }
+
+    override fun getByEnglishName(englishName: String): ProjectVO? {
+        return super.getByEnglishName(englishName)
+    }
+
+    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
+        return super.update(userId, projectId, projectUpdateInfo)
+    }
+
+    override fun list(userId: String): List<ProjectVO> {
+        return super.list(userId)
+    }
+
+    override fun getAllProject(): List<ProjectVO> {
+        return super.getAllProject()
+    }
+
+    override fun getNameByCode(projectCodes: String): HashMap<String, String> {
+        return super.getNameByCode(projectCodes)
+    }
+
+    override fun grayProjectSet(): Set<String> {
+        return super.grayProjectSet()
+    }
+
+    override fun updateLogo(userId: String, projectId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
+        return super.updateLogo(userId, projectId, inputStream, disposition)
+    }
+
+    override fun updateEnabled(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean> {
+        return super.updateEnabled(userId, accessToken, projectId, enabled)
+    }
+
     private fun drawImage(logoStr: String): File {
         val logoBackgroundColor = arrayOf("#FF5656", "#FFB400", "#30D878", "#3C96FF")
         val max = logoBackgroundColor.size - 1
@@ -585,8 +630,8 @@ class ProjectServiceImpl @Autowired constructor(
         }
     }
 
-    companion object{
-        val logger = LoggerFactory.getLogger(this:: class.java)
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
         const val PROJECT_LIST = "project_list"
         const val PROJECT_CREATE = "project_create"
         const val PROJECT_UPDATE = "project_update"
