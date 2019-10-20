@@ -1,9 +1,0 @@
-spring:
-  profiles: dev-gray
-
-server:
-  port: 21910
-
-auth:
-  appCode: artifactory
-  appSecret: DSudQR9g9a32xKExVbGgMJA1itJGXltQVS08D6tCt7kwrDzMpp
