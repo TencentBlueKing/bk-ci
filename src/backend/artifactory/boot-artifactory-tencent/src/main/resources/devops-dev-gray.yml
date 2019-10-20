@@ -12,6 +12,7 @@ spring:
     port: 30003
 
 
+
 auth:
   idProvider: client
   grantType: client_credentials
@@ -39,3 +40,4 @@ devopsGateway:
   api: http://dev.api.devops.oa.com
   outer: https://dev.bkdevops.qq.com
   outerApi: https://dev-api.bkdevops.qq.com
+
