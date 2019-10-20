@@ -28,6 +28,7 @@ import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.nio.file.FileSystems
 import java.nio.file.Paths
@@ -46,6 +47,12 @@ class ArtifactoryService @Autowired constructor(
     val jFrogPropertiesApi: JFrogPropertiesApi,
     val shortUrlApi: ShortUrlApi
 ) {
+
+    @Value("\${rdeng.test:#{null}}")
+    private val devUrl: String? = null
+
+    fun getDevUrl() = devUrl
+
     fun hasDownloadPermission(
         userId: String,
         projectId: String,

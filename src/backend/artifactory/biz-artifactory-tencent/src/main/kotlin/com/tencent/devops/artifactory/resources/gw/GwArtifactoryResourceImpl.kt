@@ -38,4 +38,8 @@ class GwArtifactoryResourceImpl @Autowired constructor(
         }
         return Result(artifactoryDownloadService.getDownloadUrl(token))
     }
+
+    override fun getDevUrl(): Result<String?> {
+        return Result(artifactoryService.getDevUrl())
+    }
 }

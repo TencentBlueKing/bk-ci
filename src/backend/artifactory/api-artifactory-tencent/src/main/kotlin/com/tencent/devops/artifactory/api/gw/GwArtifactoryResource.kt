@@ -50,4 +50,10 @@ interface GwArtifactoryResource {
         @QueryParam("token")
         token: String
     ): Result<DownloadUrl>
+
+    @ApiOperation("获取体验列表")
+    @Path("/devUrl")
+    @GET
+    fun getDevUrl(
+    ): Result<String?>
 }
