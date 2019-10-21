@@ -1,10 +1,11 @@
-package com.tencent.devops.project.service.impl
+package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
@@ -16,6 +17,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.mq.*
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.*
@@ -23,7 +25,7 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
-import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.job.SynProjectService.Companion.ENGLISH_NAME_PATTERN
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import okhttp3.MediaType
@@ -41,40 +43,39 @@ import org.springframework.stereotype.Service
 import java.awt.AlphaComposite
 import java.awt.BasicStroke
 import java.awt.Color
+import java.awt.Color.gray
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.*
+import java.util.regex.Pattern
 import javax.imageio.ImageIO
 import kotlin.collections.HashMap
 
 @Service
-class ProjectServiceImpl @Autowired constructor(
-        private val projectPermissionService: ProjectPermissionService,
+class ProjectLocalService @Autowired constructor(
         private val dslContext: DSLContext,
         private val projectDao: ProjectDao,
-        private val projectJmxApi: ProjectJmxApi,
-        private val redisOperation: RedisOperation,
-        private val gray: Gray,
-        private val client: Client,
         private val rabbitTemplate: RabbitTemplate,
         private val s3Service: S3Service,
         private val objectMapper: ObjectMapper,
         private val tofService: TOFService,
+        private val redisOperation: RedisOperation,
         private val bkAuthProjectApi: BSAuthProjectApi,
         private val bkAuthProperties: BkAuthProperties,
         private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        private val gray: Gray,
         private val jmxApi: ProjectJmxApi
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client) {
+) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
     @Value("\${paas_cc.url}")
     private lateinit var ccUrl: String
 
-    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo) {
+    fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo) {
         validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
 
@@ -151,7 +152,7 @@ class ProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getProjectEnNamesByOrganization(userId: String, bgId: Long?, deptName: String?, centerName: String?, interfaceName: String?): List<String> {
+    fun getProjectEnNamesByOrganization(userId: String, bgId: Long?, deptName: String?, centerName: String?, interfaceName: String?): List<String> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -169,7 +170,7 @@ class ProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
+    fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
@@ -272,7 +273,7 @@ class ProjectServiceImpl @Autowired constructor(
         return packagingBean(userProjectRecord!!, setOf())
     }
 
-    override fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO> {
+    fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -290,7 +291,7 @@ class ProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
+    fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -313,7 +314,22 @@ class ProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
+    fun getByEnglishName(accessToken: String, englishName: String): ProjectVO {
+        val projectVO = getByEnglishName(englishName)
+        val projectAuthIds = getAuthProjectIds(accessToken)
+        if (!projectAuthIds.contains(projectVO!!.projectId)) {
+            logger.warn("The user don't have the permission to get the project $englishName")
+            throw OperationException("项目不存在")
+        }
+        return projectVO
+    }
+
+    fun getByEnglishName(englishName: String): ProjectVO? {
+        val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        return packagingBean(record, grayProjectSet())
+    }
+
+    fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
         logger.info("getProjectUsers accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode")
         // 检查用户是否有查询项目下用户列表的权限
         val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
@@ -328,23 +344,14 @@ class ProjectServiceImpl @Autowired constructor(
         return Result(projectUserList)
     }
 
-    override fun getProjectUserRoles(accessToken: String, userId: String, projectCode: String, serviceCode: AuthServiceCode): List<UserRole> {
+    fun getProjectUserRoles(accessToken: String, userId: String, projectCode: String, serviceCode: AuthServiceCode): List<UserRole> {
         val groupAndUsersList = bkAuthProjectApi.getProjectGroupAndUserList(serviceCode, projectCode)
         return groupAndUsersList.filter { it.userIdList.contains(userId) }
                 .map { UserRole(it.displayName, it.roleId, it.roleName, it.type) }
     }
 
-    override fun getByEnglishName(accessToken: String, englishName: String): ProjectVO {
-        val projectVO = getByEnglishName(englishName) ?: throw OperationException("项目不存在")
-        val projectAuthIds = getAuthProjectIds(accessToken)
-        if (!projectAuthIds.contains(projectVO.projectId)) {
-            logger.warn("The user don't have the permission to get the project $englishName")
-            throw OperationException("项目不存在")
-        }
-        return projectVO
-    }
 
-    override fun update(userId: String, accessToken: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo) {
+     fun update(userId: String, accessToken: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo) {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -376,7 +383,7 @@ class ProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateLogo(userId: String, accessToken: String, projectId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
+    fun updateLogo(userId: String, accessToken: String, projectId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
         logger.info("Update the logo of project $projectId")
         val project = projectDao.get(dslContext, projectId)
         if (project != null) {
@@ -408,7 +415,7 @@ class ProjectServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun list(accessToken: String, includeDisable: Boolean?): List<ProjectVO> {
+    fun list(accessToken: String, includeDisable: Boolean?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -428,54 +435,6 @@ class ProjectServiceImpl @Autowired constructor(
             jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
-    }
-
-    override fun list(projectCodes: Set<String>): List<ProjectVO> {
-        return super.list(projectCodes)
-    }
-
-    override fun getProjectByUser(userName: String): List<ProjectVO> {
-        return super.getProjectByUser(userName)
-    }
-
-    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
-        super.validate(validateType, name, projectId)
-    }
-
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String {
-        return super.create(userId, projectCreateInfo)
-    }
-
-    override fun getByEnglishName(englishName: String): ProjectVO? {
-        return super.getByEnglishName(englishName)
-    }
-
-    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
-        return super.update(userId, projectId, projectUpdateInfo)
-    }
-
-    override fun list(userId: String): List<ProjectVO> {
-        return super.list(userId)
-    }
-
-    override fun getAllProject(): List<ProjectVO> {
-        return super.getAllProject()
-    }
-
-    override fun getNameByCode(projectCodes: String): HashMap<String, String> {
-        return super.getNameByCode(projectCodes)
-    }
-
-    override fun grayProjectSet(): Set<String> {
-        return super.grayProjectSet()
-    }
-
-    override fun updateLogo(userId: String, projectId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
-        return super.updateLogo(userId, projectId, inputStream, disposition)
-    }
-
-    override fun updateEnabled(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean> {
-        return super.updateEnabled(userId, accessToken, projectId, enabled)
     }
 
     private fun drawImage(logoStr: String): File {
@@ -566,6 +525,59 @@ class ProjectServiceImpl @Autowired constructor(
         }.toList()
     }
 
+    private fun grayProjectSet() =
+            (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+
+    private fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {
+        return ProjectVO(
+                id = tProjectRecord.id,
+                projectId = tProjectRecord.projectId,
+                projectName = tProjectRecord.projectName,
+                englishName = tProjectRecord.englishName ?: "",
+                projectCode = tProjectRecord.englishName ?: "",
+                projectType = tProjectRecord.projectType ?: 0,
+                approvalStatus = tProjectRecord.approvalStatus ?: 0,
+                approvalTime = if (tProjectRecord.approvalTime == null) {
+                    ""
+                } else {
+                    DateTimeUtil.toDateTime(tProjectRecord.approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
+                },
+                approver = tProjectRecord.approver ?: "",
+                bgId = tProjectRecord.bgId?.toLong(),
+                bgName = tProjectRecord.bgName ?: "",
+                ccAppId = tProjectRecord.ccAppId ?: 0,
+                ccAppName = tProjectRecord.ccAppName ?: "",
+                centerId = tProjectRecord.centerId?.toLong() ?: 0,
+                centerName = tProjectRecord.centerName ?: "",
+                createdAt = DateTimeUtil.toDateTime(tProjectRecord.createdAt, "yyyy-MM-dd"),
+                creator = tProjectRecord.creator ?: "",
+                dataId = tProjectRecord.dataId ?: 0,
+                deployType = tProjectRecord.deployType ?: "",
+                deptId = tProjectRecord.deptId?.toLong() ?: 0,
+                deptName = tProjectRecord.deptName ?: "",
+                description = tProjectRecord.description ?: "",
+                extra = tProjectRecord.extra ?: "",
+                isSecrecy = tProjectRecord.isSecrecy,
+                isHelmChartEnabled = tProjectRecord.isHelmChartEnabled,
+                kind = tProjectRecord.kind,
+                logoAddr = tProjectRecord.logoAddr ?: "",
+                remark = tProjectRecord.remark ?: "",
+                updatedAt = if (tProjectRecord.updatedAt == null) {
+                    ""
+                } else {
+                    DateTimeUtil.toDateTime(tProjectRecord.updatedAt, "yyyy-MM-dd")
+                },
+                useBk = tProjectRecord.useBk,
+                enabled = tProjectRecord.enabled ?: true,
+                gray = grayProjectSet.contains(tProjectRecord.englishName),
+                hybridCcAppId = tProjectRecord.hybridCcAppId,
+                enableExternal = tProjectRecord.enableExternal,
+                enableIdc = tProjectRecord.enableIdc,
+                isOfflined = tProjectRecord.isOfflined
+        )
+    }
+
+
     private fun convertFile(inputStream: InputStream): File {
         val logo = Files.createTempFile("default_", ".png").toFile()
 
@@ -606,6 +618,42 @@ class ProjectServiceImpl @Autowired constructor(
             logger.warn("Fail to delete the project $projectId from auth", t)
             if (retry) {
                 deleteProjectFromAuth(projectId, accessToken, false)
+            }
+        }
+    }
+
+    fun validate(
+            validateType: ProjectValidateType,
+            name: String,
+            projectId: String? = null
+    ) {
+        if (name.isBlank()) {
+            throw OperationException("名称不能为空")
+        }
+        when (validateType) {
+            ProjectValidateType.project_name -> {
+                if (name.length > 12) {
+                    throw OperationException("项目名至多12个字符")
+                }
+                if (projectDao.existByProjectName(dslContext, name, projectId)) {
+                    throw OperationException("项目名已经存在")
+                }
+            }
+            ProjectValidateType.english_name -> {
+                // 2 ~ 32 个字符+数字，以小写字母开头
+                if (name.length < 2) {
+                    throw OperationException("英文名长度至少2个字符")
+                }
+                if (name.length > 32) {
+                    throw OperationException("英文名长度最多不能超过32个字符")
+                }
+                if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
+                    logger.warn("Project English Name($name) is not match")
+                    throw OperationException("英文名是字符+数字+中划线组成，并以小写字母开头")
+                }
+                if (projectDao.existByEnglishName(dslContext, name, projectId)) {
+                    throw OperationException("英文名已经存在")
+                }
             }
         }
     }

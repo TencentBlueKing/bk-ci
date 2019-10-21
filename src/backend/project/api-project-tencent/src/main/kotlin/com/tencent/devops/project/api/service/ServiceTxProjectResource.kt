@@ -19,11 +19,11 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT"], description = "蓝盾项目列表接口")
-@Path("/service/projects")
+@Api(tags = ["SERVICE_PROJECT_tx"], description = "蓝盾项目列表接口")
+@Path("/service/projects/tx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectResource {
+interface ServiceTxProjectResource {
 
     @GET
     @Path("/")
@@ -32,23 +32,6 @@ interface ServiceProjectResource {
         @ApiParam("PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String
-    ): Result<List<ProjectVO>>
-
-    @POST
-    @Path("/")
-    @ApiOperation("查询指定项目")
-    fun listByProjectCode(
-        @ApiParam(value = "项目id", required = true)
-        projectCodes: Set<String>
-    ): Result<List<ProjectVO>>
-
-    @GET
-    @Path("/getProjectByUser")
-    @ApiOperation("查询所有项目")
-    fun getProjectByUser(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userName: String
     ): Result<List<ProjectVO>>
 
     @GET
@@ -69,38 +52,6 @@ interface ServiceProjectResource {
         centerName: String
     ): Result<List<ProjectVO>>
 
-    @GET
-    @Path("/{projectCode}/users/{userId}/verify")
-    @ApiOperation(" 校验用户是否项目成员")
-    fun verifyUserProjectPermission(
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<Boolean>
-
-    @GET
-    @Path("/getNameByCode")
-    @ApiOperation("根据项目Code获取对应的名称")
-    fun getNameByCode(
-        @ApiParam("projectCodes，多个以英文逗号分隔", required = true)
-        @QueryParam("projectCodes")
-        projectCodes: String
-    ): Result<HashMap<String, String>>
-
-    @GET
-    @Path("/{projectId}")
-    @ApiOperation("查询所有项目")
-    fun get(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        englishName: String
-    ): Result<ProjectVO?>
 
     @GET
     @Path("/preBuild/userProject/{userId}")
@@ -148,15 +99,6 @@ interface ServiceProjectResource {
             userId: String
     ): Result<Boolean>
 
-    @GET
-//    @Path("/{projectId}")
-    @Path("/projectId/{projectId}")
-    @ApiOperation("查询所有项目")
-    fun getV2(
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            englishName: String
-    ): Result<ProjectVO?>
 
     @GET
 //    @Path("/preBuild/userProject/{userId}")
@@ -171,14 +113,4 @@ interface ServiceProjectResource {
             accessToken: String
     ): Result<ProjectVO?>
 
-    @POST
-    @Path("/newProject")
-    @ApiOperation("创建项目")
-    fun create(
-            @ApiParam("userId", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam(value = "项目信息", required = true)
-            projectCreateInfo: ProjectCreateInfo
-    ): Result<String>
 }

@@ -125,5 +125,7 @@ data class ProjectVO(
     @ApiModelProperty("混合云CC业务ID")
     val hybridCcAppId: Long?,
     @ApiModelProperty("支持构建机访问外网")
-    val enableExternal: Boolean?
+    val enableExternal: Boolean?,
+    @ApiModelProperty("支持IDC构建机")
+    val enableIdc: Boolean? = false
 )

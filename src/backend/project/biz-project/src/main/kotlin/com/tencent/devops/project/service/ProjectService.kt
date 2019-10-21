@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.project.pojo.*
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -45,25 +44,16 @@ interface ProjectService {
     fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String
 
     /**
-     * 创建项目信息
-     */
-    fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo)
-
-    /**
      * 根据项目ID/英文ID获取项目信息对象
      * @param englishName projectCode 英文ID
      * @return ProjectVO 如果没有则为null
      */
     fun getByEnglishName(englishName: String): ProjectVO?
 
-    fun getByEnglishName(accessToken: String, englishName: String): ProjectVO
-
     /**
      * 修改项目信息
      */
     fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean
-
-    fun update(userId: String, accessToken: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo)
 
         /**
      * 更新Logo
@@ -75,20 +65,10 @@ interface ProjectService {
         disposition: FormDataContentDisposition
     ): Result<Boolean>
 
-    fun updateLogo(
-            userId: String,
-            accessToken: String,
-            projectId: String,
-            inputStream: InputStream,
-            disposition: FormDataContentDisposition
-    ): Result<Boolean>
-
     /**
      * 获取所有项目信息
      */
     fun list(userId: String): List<ProjectVO>
-
-    fun list(accessToken: String, includeDisable: Boolean? = null): List<ProjectVO>
 
     fun list(projectCodes: Set<String>): List<ProjectVO>
 
@@ -101,30 +81,7 @@ interface ProjectService {
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
     fun grayProjectSet(): Set<String>
-    fun updateEnabled(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean>
-
-    //TODO: 带bg属性，需考虑只用在内部版
-    fun getProjectEnNamesByOrganization(
-            userId: String,
-            bgId: Long?,
-            deptName: String?,
-            centerName: String?,
-            interfaceName: String? = "Anon interface"
-    ): List<String>
-
-    fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO
-
-    //TODO: 带bg属性，需考虑只用在内部版
-    fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
 
-    fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?>
-
-    fun getProjectUserRoles(
-            accessToken: String,
-            userId: String,
-            projectCode: String,
-            serviceCode: AuthServiceCode
-    ): List<UserRole>
 }
