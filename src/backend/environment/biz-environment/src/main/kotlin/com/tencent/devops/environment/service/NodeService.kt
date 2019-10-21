@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.misc.client.BcsClient
 import com.tencent.devops.common.misc.client.EsbAgentClient
 import com.tencent.devops.common.misc.pojo.agent.BcsVmNode
@@ -344,7 +344,7 @@ class NodeService @Autowired constructor(
     }
 
     fun addBcsVmNodes(userId: String, projectId: String, bcsVmParam: BcsVmParam) {
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, BkAuthPermission.CREATE)) {
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
             throw OperationException("没有创建节点的权限")
         }
 
@@ -401,7 +401,7 @@ class NodeService @Autowired constructor(
     fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
         val canDeleteNodeIds =
-            environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.DELETE)
+            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE)
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
         if (existNodeList.isEmpty()) {
             return
@@ -439,7 +439,7 @@ class NodeService @Autowired constructor(
     }
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
-        return environmentPermissionService.checkNodePermission(userId, projectId, BkAuthPermission.CREATE)
+        return environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)
     }
 
     fun list(userId: String, projectId: String): List<NodeWithPermission> {
@@ -453,21 +453,21 @@ class NodeService @Autowired constructor(
 
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId = userId, projectId = projectId,
-            permissions = setOf(BkAuthPermission.USE, BkAuthPermission.EDIT, BkAuthPermission.DELETE)
+            permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
-        val canUseNodeIds = if (permissionMap.containsKey(BkAuthPermission.USE)) {
-            permissionMap[BkAuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
-        val canEditNodeIds = if (permissionMap.containsKey(BkAuthPermission.EDIT)) {
-            permissionMap[BkAuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
+            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
-        val canDeleteNodeIds = if (permissionMap.containsKey(BkAuthPermission.DELETE)) {
-            permissionMap[BkAuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
+            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
@@ -532,21 +532,21 @@ class NodeService @Autowired constructor(
 
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId, projectId,
-            setOf(BkAuthPermission.USE, BkAuthPermission.EDIT, BkAuthPermission.DELETE)
+            setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
-        val canUseNodeIds = if (permissionMap.containsKey(BkAuthPermission.USE)) {
-            permissionMap[BkAuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
-        val canEditNodeIds = if (permissionMap.containsKey(BkAuthPermission.EDIT)) {
-            permissionMap[BkAuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
+            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
-        val canDeleteNodeIds = if (permissionMap.containsKey(BkAuthPermission.DELETE)) {
-            permissionMap[BkAuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
+            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
@@ -597,7 +597,7 @@ class NodeService @Autowired constructor(
             return emptyList()
         }
 
-        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
+        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
 
         val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
         return validRecordList.map {
@@ -732,7 +732,7 @@ class NodeService @Autowired constructor(
     fun updateDisplayName(userId: String, projectId: String, nodeHashId: String, displayName: String) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         val nodeInDb = nodeDao.get(dslContext, projectId, nodeId) ?: throw NotFoundException("node not found")
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, BkAuthPermission.EDIT)) {
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.EDIT)) {
             throw OperationException("No Permission")
         }
         checkDisplayName(projectId, nodeId, displayName)

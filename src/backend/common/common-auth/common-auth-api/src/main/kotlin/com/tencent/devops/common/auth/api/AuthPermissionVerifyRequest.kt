@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 /**
  * Created by Aaron Sheng on 2018/1/15.
  */
-data class BkAuthPermissionVerifyRequest(
+data class AuthPermissionVerifyRequest(
     @JsonProperty("project_code")
     val projectCode: String,
     @JsonProperty("service_code")

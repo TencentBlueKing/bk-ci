@@ -83,13 +83,13 @@ class BkAuthProjectApi constructor(
     ): Boolean {
 
         val authPermission = when (group) {
-            BkAuthGroup.MANAGER -> BkAuthPermission.MANAGE
-            else -> BkAuthPermission.VIEW
+            BkAuthGroup.MANAGER -> AuthPermission.MANAGE
+            else -> AuthPermission.VIEW
         }
         val userResourcesByPermissions = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = user,
             serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             projectCode = projectCode,
             permissions = setOf(authPermission)
         ) { emptyList() }
@@ -113,9 +113,9 @@ class BkAuthProjectApi constructor(
             userId = userId,
             scopeType = GLOBAL_SCOPE_TYPE,
             systemId = serviceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             scopeId = BK_DEVOPS_SCOPE,
-            permissions = setOf(BkAuthPermission.MANAGE),
+            permissions = setOf(AuthPermission.MANAGE),
             supplier = supplier
         )
         val sets = mutableSetOf<String>()
@@ -132,8 +132,8 @@ class BkAuthProjectApi constructor(
             userId = userId,
             scopeType = GLOBAL_SCOPE_TYPE,
             scopeId = BK_DEVOPS_SCOPE,
-            resourceType = BkAuthResourceType.PROJECT,
-            permissions = setOf(BkAuthPermission.VIEW, BkAuthPermission.MANAGE),
+            resourceType = AuthResourceType.PROJECT,
+            permissions = setOf(AuthPermission.VIEW, AuthPermission.MANAGE),
             systemId = serviceCode,
             supplier = supplier
         )

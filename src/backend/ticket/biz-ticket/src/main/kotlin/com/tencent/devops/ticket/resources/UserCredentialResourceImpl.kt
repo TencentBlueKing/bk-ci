@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
@@ -49,7 +49,7 @@ class UserCredentialResourceImpl @Autowired constructor(
     private val credentialPermissionService: CredentialPermissionService
 ) : UserCredentialResource {
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(credentialPermissionService.validatePermission(userId, projectId, BkAuthPermission.CREATE))
+        return Result(credentialPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
@@ -124,12 +124,12 @@ class UserCredentialResourceImpl @Autowired constructor(
             CredentialType.valueOf(it)
         }
         val bkAuthPermission = when (permission) {
-            Permission.CREATE -> BkAuthPermission.CREATE
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.LIST -> BkAuthPermission.LIST
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.USE -> BkAuthPermission.USE
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
         }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20

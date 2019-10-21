@@ -14,8 +14,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
@@ -81,7 +80,7 @@ class RepositoryService @Autowired constructor(
     private lateinit var devopsGroupName: String
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
-        return validatePermission(userId, projectId, BkAuthPermission.CREATE)
+        return validatePermission(userId, projectId, AuthPermission.CREATE)
     }
 
     fun hasAliasName(projectId: String, repositoryHashId: String?, aliasName: String): Boolean {
@@ -319,7 +318,7 @@ class RepositoryService @Autowired constructor(
     fun userCreate(userId: String, projectId: String, repository: Repository): String {
         // 指定oauth的用户名字只能是登录用户。
         repository.userName = userId
-        validatePermission(userId, projectId, BkAuthPermission.CREATE, "用户($userId)在工程($projectId)下没有代码库创建权限")
+        validatePermission(userId, projectId, AuthPermission.CREATE, "用户($userId)在工程($projectId)下没有代码库创建权限")
         val repositoryId = createRepository(repository, projectId, userId)
         return HashUtil.encodeOtherLongId(repositoryId)
     }
@@ -460,7 +459,7 @@ class RepositoryService @Autowired constructor(
             userId,
             projectId,
             repositoryId,
-            BkAuthPermission.VIEW,
+            AuthPermission.VIEW,
             "用户($userId)在工程($projectId)下没有代码库(${repositoryConfig.getRepositoryId()})查看权限"
         )
         return compose(repository)
@@ -571,7 +570,7 @@ class RepositoryService @Autowired constructor(
             userId,
             projectId,
             repositoryId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户($userId)在工程($projectId)下没有代码库($repositoryHashId)编辑权限"
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
@@ -736,15 +735,15 @@ class RepositoryService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<SQLPage<RepositoryInfoWithPermission>, Boolean> {
-        val hasCreatePermission = validatePermission(userId, projectId, BkAuthPermission.CREATE)
+        val hasCreatePermission = validatePermission(userId, projectId, AuthPermission.CREATE)
         val permissionToListMap = filterRepositories(
             userId,
             projectId,
-            setOf(BkAuthPermission.LIST, BkAuthPermission.EDIT, BkAuthPermission.DELETE)
+            setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE)
         )
-        val hasListPermissionRepoList = permissionToListMap[BkAuthPermission.LIST]!!
-        val hasEditPermissionRepoList = permissionToListMap[BkAuthPermission.EDIT]!!
-        val hasDeletePermissionRepoList = permissionToListMap[BkAuthPermission.DELETE]!!
+        val hasListPermissionRepoList = permissionToListMap[AuthPermission.LIST]!!
+        val hasEditPermissionRepoList = permissionToListMap[AuthPermission.EDIT]!!
+        val hasDeletePermissionRepoList = permissionToListMap[AuthPermission.DELETE]!!
 
         val count =
             repositoryDao.countByProject(
@@ -793,14 +792,14 @@ class RepositoryService @Autowired constructor(
     }
 
     fun hasPermissionList(
-        userId: String,
-        projectId: String,
-        repositoryType: ScmType?,
-        bkAuthPermission: BkAuthPermission,
-        offset: Int,
-        limit: Int
+            userId: String,
+            projectId: String,
+            repositoryType: ScmType?,
+            authPermission: AuthPermission,
+            offset: Int,
+            limit: Int
     ): SQLPage<RepositoryInfo> {
-        val hasPermissionList = filterRepository(userId, projectId, bkAuthPermission)
+        val hasPermissionList = filterRepository(userId, projectId, authPermission)
 
         val count = repositoryDao.countByProject(dslContext, projectId, repositoryType, null, hasPermissionList.toSet())
         val repositoryRecordList =
@@ -831,7 +830,7 @@ class RepositoryService @Autowired constructor(
             userId,
             projectId,
             repositoryId,
-            BkAuthPermission.DELETE,
+            AuthPermission.DELETE,
             "用户($userId)在工程($projectId)下没有代码库($repositoryHashId)删除权限"
         )
 
@@ -844,20 +843,20 @@ class RepositoryService @Autowired constructor(
         repositoryDao.delete(dslContext, repositoryId)
     }
 
-    fun validatePermission(user: String, projectId: String, bkAuthPermission: BkAuthPermission, message: String) {
-        if (!validatePermission(user, projectId, bkAuthPermission)) {
+    fun validatePermission(user: String, projectId: String, authPermission: AuthPermission, message: String) {
+        if (!validatePermission(user, projectId, authPermission)) {
             throw PermissionForbiddenException(message)
         }
     }
 
     fun validatePermission(
-        user: String,
-        projectId: String,
-        repositoryId: Long,
-        bkAuthPermission: BkAuthPermission,
-        message: String
+            user: String,
+            projectId: String,
+            repositoryId: Long,
+            authPermission: AuthPermission,
+            message: String
     ) {
-        if (!validatePermission(user, projectId, repositoryId, bkAuthPermission)) {
+        if (!validatePermission(user, projectId, repositoryId, authPermission)) {
             throw PermissionForbiddenException(message)
         }
     }
@@ -868,7 +867,7 @@ class RepositoryService @Autowired constructor(
             userId,
             projectId,
             repositoryId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户($userId)在工程($projectId)下没有代码库($repositoryHashId)编辑权限"
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
@@ -895,7 +894,7 @@ class RepositoryService @Autowired constructor(
             userId,
             projectId,
             repositoryId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户($userId)在工程($projectId)下没有代码库($repositoryHashId)编辑权限"
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
@@ -910,49 +909,49 @@ class RepositoryService @Autowired constructor(
             .unlock(record.projectId, record.url, ScmType.CODE_SVN, CodeSvnRegion.getRegion(record.url), record.userId)
     }
 
-    private fun filterRepository(user: String, projectId: String, bkAuthPermission: BkAuthPermission): List<Long> {
+    private fun filterRepository(user: String, projectId: String, authPermission: AuthPermission): List<Long> {
         val resourceCodeList = repositoryPermissionService.getUserResourceByPermission(
             user,
             projectId,
-            bkAuthPermission
+            authPermission
         )
         return resourceCodeList.map { it.toLong() }
     }
 
     private fun filterRepositories(
-        user: String,
-        projectId: String,
-        bkAuthPermissions: Set<BkAuthPermission>
-    ): Map<BkAuthPermission, List<Long>> {
+            user: String,
+            projectId: String,
+            authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val permissionResourcesMap = repositoryPermissionService.getUserResourcesByPermissions(
             user,
             projectId,
-            bkAuthPermissions
+            authPermissions
        )
         return permissionResourcesMap.mapValues {
             it.value.map { it.toLong() }
         }
     }
 
-    private fun validatePermission(user: String, projectId: String, bkAuthPermission: BkAuthPermission): Boolean {
+    private fun validatePermission(user: String, projectId: String, authPermission: AuthPermission): Boolean {
         return repositoryPermissionService.validateUserResourcePermission(
             user,
             projectId,
-            bkAuthPermission
+            authPermission
         )
     }
 
     private fun validatePermission(
-        user: String,
-        projectId: String,
-        repositoryId: Long,
-        bkAuthPermission: BkAuthPermission
+            user: String,
+            projectId: String,
+            repositoryId: Long,
+            authPermission: AuthPermission
     ): Boolean {
         return repositoryPermissionService.validateUserResourcePermission(
             user,
             projectId,
             repositoryId.toString(),
-            bkAuthPermission
+            authPermission
         )
     }
 

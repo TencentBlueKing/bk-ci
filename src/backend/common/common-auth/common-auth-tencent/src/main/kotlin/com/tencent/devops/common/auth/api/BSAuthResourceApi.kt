@@ -51,12 +51,12 @@ class BSAuthResourceApi @Autowired constructor(
 ) : AuthResourceApi {
 
     override fun batchCreateResource(
-        principalId: String,
-        scopeType: String,
-        scopeId: String,
-        resourceType: BkAuthResourceType,
-        resourceList: List<ResourceRegisterInfo>,
-        systemId: AuthServiceCode
+            principalId: String,
+            scopeType: String,
+            scopeId: String,
+            resourceType: AuthResourceType,
+            resourceList: List<ResourceRegisterInfo>,
+            systemId: AuthServiceCode
     ): Boolean {
 
         resourceList.forEach { resource ->
@@ -73,11 +73,11 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun deleteResource(
-        scopeType: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String
+            scopeType: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String
     ) {
         deleteResource(
             serviceCode = serviceCode,
@@ -88,12 +88,12 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun modifyResource(
-        scopeType: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            scopeType: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
         modifyResource(
             serviceCode = serviceCode,
@@ -105,13 +105,13 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun createResource(
-        scopeType: String,
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            scopeType: String,
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
         createResource(
             user = user,
@@ -124,12 +124,12 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun createResource(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/resource?access_token=$accessToken"
@@ -171,11 +171,11 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun modifyResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/resource/modify?access_token=$accessToken"
@@ -216,10 +216,10 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun deleteResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String
     ) {
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/resource?access_token=$accessToken"
@@ -257,11 +257,11 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun batchCreateResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        user: String,
-        resourceList: List<ResourceRegisterInfo>
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            user: String,
+            resourceList: List<ResourceRegisterInfo>
     ) {
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/resource/batch_register?access_token=$accessToken"

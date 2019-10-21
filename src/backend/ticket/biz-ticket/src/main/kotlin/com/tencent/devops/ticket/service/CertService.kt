@@ -31,8 +31,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.ServiceBuildResource
 import com.tencent.devops.ticket.dao.CertDao
@@ -93,7 +92,7 @@ class CertService @Autowired constructor(
         certPermissionService.validatePermission(
             userId,
             projectId,
-            BkAuthPermission.CREATE,
+            AuthPermission.CREATE,
             "用户($userId)在工程($projectId)下没有证书创建权限"
         )
 
@@ -102,7 +101,7 @@ class CertService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 resourceCode = certCredentialId,
-                bkAuthPermission = BkAuthPermission.USE,
+                bkAuthPermission = AuthPermission.USE,
                 message = "用户($userId)在工程($projectId)下没有凭据($certCredentialId)的使用权限"
             )
         }
@@ -179,7 +178,7 @@ class CertService @Autowired constructor(
             userId,
             projectId,
             certId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户($userId)在工程($projectId)下没有证书编辑权限"
         )
         if (!certDao.has(dslContext, projectId, certId)) {
@@ -191,7 +190,7 @@ class CertService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 resourceCode = certCredentialId,
-                bkAuthPermission = BkAuthPermission.USE,
+                bkAuthPermission = AuthPermission.USE,
                 message = "用户($userId)在工程($projectId)下没有凭据($certCredentialId)的使用权限"
             )
         }
@@ -259,7 +258,7 @@ class CertService @Autowired constructor(
         certPermissionService.validatePermission(
             userId,
             projectId,
-            BkAuthPermission.CREATE,
+            AuthPermission.CREATE,
             "用户($userId)在工程($projectId)下没有证书创建权限"
         )
 
@@ -345,7 +344,7 @@ class CertService @Autowired constructor(
             userId,
             projectId,
             certId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户($userId)在工程($projectId)下没有证书编辑权限"
         )
         if (!certDao.has(dslContext, projectId, certId)) {
@@ -433,21 +432,21 @@ class CertService @Autowired constructor(
         certPermissionService.validatePermission(
             userId,
             projectId,
-            BkAuthPermission.CREATE,
+            AuthPermission.CREATE,
             "用户($userId)在工程($projectId)下没有证书创建权限"
         )
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            bkAuthPermission = BkAuthPermission.USE,
+            bkAuthPermission = AuthPermission.USE,
             message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的使用权限"
         )
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = aliasCredentialId,
-            bkAuthPermission = BkAuthPermission.USE,
+            bkAuthPermission = AuthPermission.USE,
             message = "用户($userId)在工程($projectId)下没有凭据($aliasCredentialId)的使用权限"
         )
 
@@ -523,7 +522,7 @@ class CertService @Autowired constructor(
             userId,
             projectId,
             certId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户($userId)在工程($projectId)下没有证书编辑权限"
         )
         val certRecord = certDao.getOrNull(dslContext, projectId, certId)
@@ -533,7 +532,7 @@ class CertService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            bkAuthPermission = BkAuthPermission.USE,
+            bkAuthPermission = AuthPermission.USE,
             message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的使用权限"
         )
 
@@ -541,7 +540,7 @@ class CertService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             resourceCode = aliasCredentialId,
-            bkAuthPermission = BkAuthPermission.USE,
+            bkAuthPermission = AuthPermission.USE,
             message = "用户($userId)在工程($projectId)下没有凭据($aliasCredentialId)的使用权限"
         )
 
@@ -616,7 +615,7 @@ class CertService @Autowired constructor(
         certPermissionService.validatePermission(
             userId,
             projectId,
-            BkAuthPermission.CREATE,
+            AuthPermission.CREATE,
             "用户($userId)在工程($projectId)下没有证书创建权限"
         )
         if (certDao.has(dslContext, projectId, certId)) {
@@ -733,7 +732,7 @@ class CertService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             resourceCode = certId,
-            bkAuthPermission = BkAuthPermission.EDIT,
+            bkAuthPermission = AuthPermission.EDIT,
             message = "用户($userId)在工程($projectId)下没有证书编辑权限"
         )
         if (!certDao.has(dslContext, projectId, certId)) {
@@ -848,7 +847,7 @@ class CertService @Autowired constructor(
             userId,
             projectId,
             certId,
-            BkAuthPermission.DELETE,
+            AuthPermission.DELETE,
             "用户($userId)在工程($projectId)下没有证书($certId)的删除权限"
         )
 
@@ -871,11 +870,11 @@ class CertService @Autowired constructor(
         val permissionToListMap = certPermissionService.filterCerts(
             userId = userId,
             projectId = projectId,
-            bkAuthPermissions = setOf(BkAuthPermission.LIST, BkAuthPermission.DELETE, BkAuthPermission.EDIT)
+            bkAuthPermissions = setOf(AuthPermission.LIST, AuthPermission.DELETE, AuthPermission.EDIT)
         )
-        val hasListPermissionCertIdList = permissionToListMap[BkAuthPermission.LIST]!!
-        val hasDeletePermissionCertIdList = permissionToListMap[BkAuthPermission.DELETE]!!
-        val hasEditPermissionCertIdList = permissionToListMap[BkAuthPermission.EDIT]!!
+        val hasListPermissionCertIdList = permissionToListMap[AuthPermission.LIST]!!
+        val hasDeletePermissionCertIdList = permissionToListMap[AuthPermission.DELETE]!!
+        val hasEditPermissionCertIdList = permissionToListMap[AuthPermission.EDIT]!!
 
         logger.info("$permissionToListMap $hasListPermissionCertIdList $hasDeletePermissionCertIdList")
 
@@ -902,14 +901,14 @@ class CertService @Autowired constructor(
     }
 
     fun hasPermissionList(
-        userId: String,
-        projectId: String,
-        certType: String?,
-        bkAuthPermission: BkAuthPermission,
-        offset: Int,
-        limit: Int
+            userId: String,
+            projectId: String,
+            certType: String?,
+            authPermission: AuthPermission,
+            offset: Int,
+            limit: Int
     ): SQLPage<Cert> {
-        val hasPermissionCertIdList = certPermissionService.filterCert(userId, projectId, bkAuthPermission)
+        val hasPermissionCertIdList = certPermissionService.filterCert(userId, projectId, authPermission)
 
         val count = certDao.countByProject(dslContext, projectId, certType, hasPermissionCertIdList.toSet())
         val certRecordList =

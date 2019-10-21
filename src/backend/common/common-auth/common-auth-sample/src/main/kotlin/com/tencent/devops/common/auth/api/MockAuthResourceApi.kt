@@ -31,79 +31,79 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthResourceApi : AuthResourceApi {
     override fun batchCreateResource(
-        principalId: String,
-        scopeType: String,
-        scopeId: String,
-        resourceType: BkAuthResourceType,
-        resourceList: List<ResourceRegisterInfo>,
-        systemId: AuthServiceCode
+            principalId: String,
+            scopeType: String,
+            scopeId: String,
+            resourceType: AuthResourceType,
+            resourceList: List<ResourceRegisterInfo>,
+            systemId: AuthServiceCode
     ): Boolean {
         return true
     }
 
     override fun deleteResource(
-        scopeType: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String
+            scopeType: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String
     ) {
     }
 
     override fun modifyResource(
-        scopeType: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            scopeType: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
     }
 
     override fun createResource(
-        scopeType: String,
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            scopeType: String,
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
     }
 
     override fun createResource(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
     }
 
     override fun modifyResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
     }
 
     override fun deleteResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String
     ) {
     }
 
     override fun batchCreateResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        user: String,
-        resourceList: List<ResourceRegisterInfo>
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            user: String,
+            resourceList: List<ResourceRegisterInfo>
     ) {
     }
 }

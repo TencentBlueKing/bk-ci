@@ -28,7 +28,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -173,7 +173,7 @@ class PipelineSettingService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = BkAuthPermission.EDIT
+                permission = AuthPermission.EDIT
             )
         ) {
             throw PermissionForbiddenException(message)

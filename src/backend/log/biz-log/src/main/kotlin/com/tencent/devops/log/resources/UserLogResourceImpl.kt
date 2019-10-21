@@ -30,15 +30,13 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogServiceDispatcher
-import com.tencent.devops.log.service.PipelineLogService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -148,10 +146,10 @@ class UserLogResourceImpl @Autowired constructor(
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = BkAuthResourceType.PIPELINE_DEFAULT,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
                 projectCode = projectId,
                 resourceCode = pipelineId,
-                permission = BkAuthPermission.VIEW
+                permission = AuthPermission.VIEW
             )
         ) {
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下查看流水线")

@@ -26,42 +26,42 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 
 interface CredentialPermissionService {
 
     companion object {
-        val CredentialResourceType = BkAuthResourceType.TICKET_CREDENTIAL
+        val CredentialResourceType = AuthResourceType.TICKET_CREDENTIAL
     }
 
     /**
      * 是否有权限
      */
-    fun validatePermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission, message: String)
+    fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String)
 
     fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        bkAuthPermission: BkAuthPermission,
-        message: String
+            userId: String,
+            projectId: String,
+            resourceCode: String,
+            authPermission: AuthPermission,
+            message: String
     )
 
-    fun validatePermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): Boolean
+    fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean
     fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        bkAuthPermission: BkAuthPermission
+            userId: String,
+            projectId: String,
+            resourceCode: String,
+            authPermission: AuthPermission
     ): Boolean
 
-    fun filterCredential(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): List<String>
+    fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String>
     fun filterCredentials(
-        userId: String,
-        projectId: String,
-        bkAuthPermissions: Set<BkAuthPermission>
-    ): Map<BkAuthPermission, List<String>>
+            userId: String,
+            projectId: String,
+            authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>>
 
     fun createResource(userId: String, projectId: String, credentialId: String)
     fun deleteResource(projectId: String, credentialId: String)

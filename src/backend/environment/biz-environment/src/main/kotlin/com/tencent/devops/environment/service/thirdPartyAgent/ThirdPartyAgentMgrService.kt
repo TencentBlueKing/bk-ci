@@ -41,8 +41,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
-import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.misc.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.service.utils.ByteUtils
@@ -143,7 +142,7 @@ class ThirdPartyAgentMgrService @Autowired constructor(
             nCpus = agentHostInfo.nCpus,
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
-            canEdit = environmentPermissionService.checkNodePermission(userId, projectId, nodeId, BkAuthPermission.EDIT)
+            canEdit = environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)
         )
     }
 
@@ -173,7 +172,7 @@ class ThirdPartyAgentMgrService @Autowired constructor(
     }
 
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, BkAuthPermission.EDIT)) {
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw OperationException("no permission")
         }
     }
@@ -475,7 +474,7 @@ class ThirdPartyAgentMgrService @Autowired constructor(
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
             userId = userId,
             projectId = projectId,
-            permission = BkAuthPermission.USE
+            permission = AuthPermission.USE
         )
 
         if (canUseNodeIds.isEmpty()) {

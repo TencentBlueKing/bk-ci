@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.UserTstackResource
@@ -27,7 +27,7 @@ class UserTstackResourceImpl @Autowired constructor(
     override fun startDebug(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean> {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, BkAuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, BkAuthPermission.EDIT)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
             logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
         }
@@ -38,7 +38,7 @@ class UserTstackResourceImpl @Autowired constructor(
     override fun getContainerInfo(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<TstackContainerInfo?> {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, BkAuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, BkAuthPermission.EDIT)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
             logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
         }
@@ -49,7 +49,7 @@ class UserTstackResourceImpl @Autowired constructor(
     override fun stopDebug(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean> {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, BkAuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, BkAuthPermission.EDIT)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
             logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
         }
