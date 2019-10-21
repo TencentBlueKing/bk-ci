@@ -13,7 +13,6 @@
         </h3>
 
         <main class="store-main" v-show="!isLoading">
-            <ide v-if="type === 'ide'" :detail="detail" />
             <atom v-if="type === 'atom'" :detail="detail" />
             <template-info v-if="type === 'template'" :detail="detail" />
             <image-info v-if="type === 'image'" :detail="detail" />
@@ -77,7 +76,6 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
-    import ide from '../../components/common/detail-info/ide'
     import atom from '../../components/common/detail-info/atom'
     import imageInfo from '../../components/common/detail-info/image'
     import templateInfo from '../../components/common/detail-info/template'
@@ -90,7 +88,6 @@
             commentRate,
             commentDialog,
             animatedInteger,
-            ide,
             atom,
             templateInfo,
             imageInfo

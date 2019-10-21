@@ -10,7 +10,7 @@
             <i class="right-arrow"></i>
             <div class="title third-level">上架模板</div>
             <a class="develop-guide-link" target="_blank"
-                href="http://iwiki.oa.com/pages/viewpage.action?pageId=15008944">模板指引</a>
+                :href="docsLink">模板指引</a>
         </div>
         <div class="edit-template-content" v-if="showContent">
             <form class="bk-form edit-template-form">
@@ -175,6 +175,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
+                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线模版/summary.html`,
                 sortList: [],
                 labelList: [],
                 categoryList: [],

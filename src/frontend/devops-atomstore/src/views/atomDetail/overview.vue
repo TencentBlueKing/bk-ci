@@ -42,34 +42,6 @@
                                 <div class="info-label">开发语言：</div>
                                 <div class="info-value">{{ codeForm.language }}</div>
                             </div>
-                            <div class="code-form-item">
-                                <div class="info-label">已托管至：</div>
-                                <div class="info-value link-text" @click="toLink()">工蜂</div>
-                            </div>
-                            <div class="code-form-item codelib-form-item">
-                                <div class="info-label">代码库：</div>
-                                <div class="info-value codelib-url">
-                                    <span class="codelib-text">{{ codeForm.codeSrc }}</span>
-                                    <span class="link-text copy-btn" :data-clipboard-text="codeForm.codeSrc" @click="copyUrl">复制</span>
-                                </div>
-                            </div>
-                            <div class="code-form-item codelib-form-item">
-                                <div class="info-label">授权人：</div>
-                                <div class="info-value codelib-url">
-                                    {{codeForm.repositoryAuthorizer}}
-                                    <bk-popover placement="top">
-                                        <i class="bk-icon icon-info-circle"></i>
-                                        <template slot="content">
-                                            <p>在发布插件时，使用授权人的身份拉取插件代码自动构建打包，或设置插件可见范围</p>
-                                        </template>
-                                    </bk-popover>
-                                    <span class="link-text repo-outh"
-                                        @click="modifyRepoMemInfo"
-                                        title="将使用你的身份进行插件代码库相关操作"
-                                        v-if="userInfo.isProjectAdmin && userInfo.userName !== codeForm.repositoryAuthorizer"
-                                    >重置授权</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div class="atom-latest-news">
@@ -87,14 +59,12 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    import Clipboard from 'clipboard'
     import imgBuilding from '@/images/building.png'
 
     export default {
         data () {
             return {
                 showContent: false,
-                factoryUrl: 'https://git.code.oa.com/',
                 image: imgBuilding,
                 statisticList: [
                     { name: 'downloads', label: '安装量', value: 0 },
@@ -162,21 +132,6 @@
                         item.value = res[item.name]
                     })
                 })
-            },
-
-            copyUrl () {
-                this.clipboardInstance = new Clipboard('.copy-btn')
-                this.clipboardInstance.on('success', e => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: '复制成功',
-                        limit: 1
-                    })
-                })
-            },
-
-            toLink () {
-                window.open(this.factoryUrl, '_blank')
             }
         }
     }
@@ -259,17 +214,14 @@
             .card-content {
                 height: 129px;
                 margin-top: 8px;
-                padding: 10px 20px;
+                padding: 20px;
                 border: 1px solid $borderWeightColor;
                 background: #fff;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-around;
-                font-size: 12px;
             }
             .code-form-item {
                 position: relative;
                 display: flex;
+                margin-top: 15px;
                 width: 100%;
                 &:first-child {
                     margin-top: 0;
@@ -290,29 +242,27 @@
             }
             .codelib-url {
                 position: relative;
+                top: 4px;
                 width: calc(100% - 84px);
-                display: flex;
-                align-items: center;
-                .bk-icon {
-                    vertical-align: middle;
-                    margin-left: 4px;
-                }
             }
             .codelib-text {
                 display: inline-block;
                 white-space: nowrap;
-                flex: 1;
+                max-width: 86%;
                 overflow: hidden;
-                color: $fontWeightColor;
                 font-size: 12px;
                 text-overflow: ellipsis;
             }
             .copy-btn {
-                margin-left: 4px;
+                position: relative;
+                top: -2px;
+                left: 4px;
+                font-size: 12px;
             }
-            .repo-outh {
-                margin-left: 14px;
-            }
+        }
+        .jump-url {
+            color: $primaryColor;
+            cursor: pointer;
         }
         .trend-chart {
             margin-top: 24px;

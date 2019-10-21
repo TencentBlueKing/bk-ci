@@ -14,7 +14,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="">{{ curTitle }}（{{ atomForm.atomCode }}）</span>
             </p>
-            <a class="title-work" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=15008942">插件指引</a>
+            <a class="title-work" target="_blank" :href="docsLink">插件指引</a>
         </h3>
 
         <div class="edit-atom-content" v-if="showContent">
@@ -245,6 +245,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
+                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],

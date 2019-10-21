@@ -23,12 +23,6 @@
                     </template>
                     <template-list></template-list>
                 </bk-tab-panel>
-                <bk-tab-panel name="image" render-directive="if">
-                    <template slot="label">
-                        <span class="work-label"><icon class="title-icon" :name="`store-image`" size="16" />镜像</span>
-                    </template>
-                    <image-list></image-list>
-                </bk-tab-panel>
             </bk-tab>
         </div>
     </div>
@@ -38,25 +32,20 @@
     import { getQueryString } from '@/utils/index'
     import atomList from '@/components/common/workList/atom'
     import templateList from '@/components/common/workList/template'
-    import imageList from '@/components/common/workList/image'
 
     export default {
         components: {
             atomList,
-            templateList,
-            imageList
+            templateList
         },
 
         data () {
             return {
                 currentTab: 'atom',
                 docLink: {
-                    atom: { name: '插件指引', link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
-                    template: { name: '模版指引', link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' },
-                    image: { name: '镜像指引', link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=22118721' }
-                },
-                atomDevelopLink: 'http://docs.devops.oa.com/所有服务/流水线插件Store/快速入门.html',
-                templateLink: 'http://docs.devops.oa.com/所有服务/流水线模版/summary.html'
+                    atom: { name: '插件指引', link: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html` },
+                    template: { name: '模版指引', link: `${DOCS_URL_PREFIX}/所有服务/流水线模版/summary.html` }
+                }
             }
         },
 

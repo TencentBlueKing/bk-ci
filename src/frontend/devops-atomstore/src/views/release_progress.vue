@@ -20,7 +20,7 @@
             </div>
             <div class="sub_header_right">
                 <a class="develop-guide-link" target="_blank"
-                    href="http://iwiki.oa.com/pages/viewpage.action?pageId=15008942">插件指引</a>
+                    :href="docsLink">插件指引</a>
             </div>
         </div>
         <div class="release-progress-content" v-show="showContent">
@@ -217,6 +217,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
+                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html`,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
