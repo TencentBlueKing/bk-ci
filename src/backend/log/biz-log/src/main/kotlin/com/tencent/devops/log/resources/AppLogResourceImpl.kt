@@ -39,6 +39,7 @@ import com.tencent.devops.log.model.pojo.EndPageQueryLogs
 import com.tencent.devops.log.model.pojo.PageQueryLogs
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogServiceDispatcher
 import com.tencent.devops.log.service.PipelineLogService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -49,10 +50,9 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class AppLogResourceImpl @Autowired constructor(
-    private val logService: PipelineLogService,
-    private val indexService: IndexService,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+        private val logDispatcher: LogServiceDispatcher,
+        private val authPermissionApi: AuthPermissionApi,
+        private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AppLogResource {
 
     companion object {
@@ -72,13 +72,17 @@ class AppLogResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<PageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-
-        val indexAndType = indexService.parseIndexAndType(buildId)
-        return Result(
-            logService.queryInitLogsPage(
-                buildId, indexAndType.left, indexAndType.right, isAnalysis
-                    ?: false, queryKeywords, tag, executeCount, page ?: -1, pageSize ?: -1
-            )
+        return logDispatcher.getInitLogsPage(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                isAnalysis,
+                queryKeywords,
+                tag,
+                executeCount,
+                page,
+                pageSize
         )
     }
 
@@ -95,14 +99,16 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-            logService.queryMoreLogsBetweenLines(
-                buildId, indexAndType.left, indexAndType.right, num ?: defaultNum, fromStart
-                    ?: true, start, end, tag, executeCount
-            )
+        return logDispatcher.getMoreLogs(
+                projectId,
+                pipelineId,
+                buildId,
+                num ?: defaultNum,
+                fromStart,
+                start,
+                end,
+                tag,
+                executeCount
         )
     }
 
@@ -118,14 +124,15 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-            logService.queryMoreLogsAfterLine(
-                buildId, indexAndType.left, indexAndType.right, start, isAnalysis
-                    ?: false, queryKeywords, tag, executeCount
-            )
+        return logDispatcher.getAfterLogs(
+                projectId,
+                pipelineId,
+                buildId,
+                start,
+                isAnalysis,
+                queryKeywords,
+                tag,
+                executeCount
         )
     }
 
@@ -138,7 +145,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logService.downloadLogs(pipelineId, buildId, tag ?: "", executeCount)
+        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, executeCount)
     }
 
     override fun getEndLogs(
@@ -151,7 +158,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return Result(logService.getEndLogs(pipelineId, buildId, tag ?: "", executeCount, size))
+        return logDispatcher.getEndLogs(userId, projectId, pipelineId, buildId, size, tag, executeCount)
     }
 
     private fun validateAuth(userId: String, projectId: String, pipelineId: String, buildId: String) {

@@ -37,6 +37,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogServiceDispatcher
 import com.tencent.devops.log.service.PipelineLogService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -47,8 +48,7 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class UserLogResourceImpl @Autowired constructor(
-    private val logService: PipelineLogService,
-    private val indexService: IndexService,
+    private val logDispatcher: LogServiceDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : UserLogResource {
@@ -65,14 +65,7 @@ class UserLogResourceImpl @Autowired constructor(
     ): Result<QueryLogs> {
 
         validateAuth(userId, projectId, pipelineId, buildId)
-
-        val indexAndType = indexService.parseIndexAndType(buildId)
-        return Result(
-            logService.queryInitLogs(
-                buildId, indexAndType.left, indexAndType.right,
-                isAnalysis ?: false, queryKeywords, tag, executeCount
-            )
-        )
+        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, executeCount)
     }
 
     override fun getMoreLogs(
@@ -89,21 +82,16 @@ class UserLogResourceImpl @Autowired constructor(
     )
         : Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-            logService.queryMoreLogsBetweenLines(
+        return logDispatcher.getMoreLogs(
+                projectId,
+                pipelineId,
                 buildId,
-                indexAndType.left,
-                indexAndType.right,
-                num ?: 100,
-                fromStart ?: true,
+                num,
+                fromStart,
                 start,
                 end,
                 tag,
                 executeCount
-            )
         )
     }
 
@@ -120,14 +108,15 @@ class UserLogResourceImpl @Autowired constructor(
     )
         : Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-            logService.queryMoreLogsAfterLine(
-                buildId, indexAndType.left, indexAndType.right, start, isAnalysis ?: false,
-                queryKeywords, tag, executeCount
-            )
+        return logDispatcher.getAfterLogs(
+                projectId,
+                pipelineId,
+                buildId,
+                start,
+                isAnalysis,
+                queryKeywords,
+                tag,
+                executeCount
         )
     }
 
@@ -140,7 +129,7 @@ class UserLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logService.downloadLogs(pipelineId, buildId, tag ?: "", executeCount)
+        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag ?: "", executeCount)
     }
 
     private fun validateAuth(userId: String, projectId: String, pipelineId: String, buildId: String) {
