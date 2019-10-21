@@ -12,17 +12,18 @@
             }">
             <div class="member-manage-content" v-if="showContent && memberList.length">
                 <div class="info-header">
-                    <button class="bk-button bk-primary add-button" type="button" @click="addMember">新增成员</button>
+                    <button class="bk-button bk-primary add-button" type="button" @click="addMember" v-if="userInfo.isProjectAdmin">新增成员</button>
                     <div class="member-total">该插件目前有<span>{{ memberCount }}</span>名成员</div>
                 </div>
                 <div class="member-content">
                     <bk-table style="margin-top: 15px;" :data="memberList">
                         <bk-table-column label="成员" prop="userName"></bk-table-column>
+                        <bk-table-column label="调试项目" prop="projectName"></bk-table-column>
                         <bk-table-column label="角色" prop="type" :formatter="typeFormatter"></bk-table-column>
                         <bk-table-column label="描述" prop="type" :formatter="desFormatter"></bk-table-column>
                         <bk-table-column label="操作" width="120" class-name="handler-btn">
                             <template slot-scope="props">
-                                <span class="update-btn" @click="handleDelete(props.row)">删除</span>
+                                <span :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']" @click="handleDelete(props.row)">删除</span>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -42,6 +43,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     import emptyTips from '@/components/img-empty-tips'
     import addMemberDialog from '@/components/add-member-dialog'
 
@@ -63,8 +65,20 @@
                 loading: {
                     isLoading: false,
                     title: ''
-                },
-                emptyTipsConfig: {
+                }
+            }
+        },
+        computed: {
+            ...mapGetters('store', {
+                'userInfo': 'getUserInfo'
+            }),
+
+            atomCode () {
+                return this.$route.params.atomCode
+            },
+
+            emptyTipsConfig () {
+                return {
                     title: '暂时没有成员',
                     desc: '可以新增插件的管理人员或开发人员',
                     btns: [
@@ -72,38 +86,28 @@
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.addMember(),
-                            text: '新增成员'
+                            text: '新增成员',
+                            disable: !this.userInfo.isProjectAdmin
                         }
                     ]
                 }
             }
         },
-        computed: {
-            atomCode () {
-                return this.$route.params.atomCode
-            },
-            userInfo () {
-                return window.userInfo
-            },
-            isManager () {
-                return this.memberList.some(member => member.userName === this.userInfo.username)
-            }
-        },
         async mounted () {
             await this.init()
         },
+
         methods: {
             typeFormatter (row, column, cellValue, index) {
                 return this.memberType[cellValue]
             },
 
             desFormatter (row, column, cellValue, index) {
-                return cellValue === 'ADMIN' ? '插件开发 版本发布 成员管理' : '插件开发 版本发布'
+                return cellValue === 'ADMIN' ? '插件开发 版本发布 审批 成员管理 可见范围 私有配置' : '插件开发 版本发布 私有配置'
             },
 
             async init () {
                 this.loading.isLoading = true
-                this.loading.title = '数据加载中，请稍候'
 
                 try {
                     await this.requestList()
@@ -132,31 +136,33 @@
                         })
                     }
                 } catch (err) {
+                    this.memberCount = 0
+                    this.memberList = []
+
                     const message = err.message ? err.message : err
                     const theme = 'error'
-
                     this.$bkMessage({
                         message,
                         theme
                     })
                 }
             },
+
             addMember () {
                 this.showDialog = true
             },
+
             async confirmHandle (params) {
                 let message, theme
                 try {
-                    const res = await this.$store.dispatch('store/addAtomMember', {
+                    await this.$store.dispatch('store/addAtomMember', {
                         params
                     })
 
-                    if (res) {
-                        message = '新增成功'
-                        theme = 'success'
-                        this.requestList()
-                        this.cancelHandle()
-                    }
+                    message = '新增成功'
+                    theme = 'success'
+                    this.requestList()
+                    this.cancelHandle()
                 } catch (err) {
                     message = message = err.message ? err.message : err
                     theme = 'error'
@@ -167,9 +173,11 @@
                     })
                 }
             },
+
             cancelHandle () {
                 this.showDialog = false
             },
+
             async requestDeleteMember (id) {
                 let message, theme
                 try {
@@ -191,9 +199,11 @@
                     })
                 }
             },
+
             handleDelete (row) {
+                if (!this.userInfo.isProjectAdmin) return
                 const h = this.$createElement
-                const content = h('p', {
+                const subHeader = h('p', {
                     style: {
                         textAlign: 'center'
                     }
@@ -201,7 +211,7 @@
 
                 this.$bkInfo({
                     title: `删除`,
-                    content,
+                    subHeader,
                     confirmFn: async () => {
                         this.requestDeleteMember(row.id)
                     }

@@ -6,7 +6,7 @@
                     <span class="must-input">字段名：</span>
                     <input type="text" v-model="privateObj.fieldName" class="g-input-border" @focus="isNameFocus = true" @blur="(startNameVerify = true,isNameFocus = false)">
                     <i class="bk-icon icon-close-circle-shape clear-icon" v-if="privateObj.fieldName" @click="privateObj.fieldName = ''"></i>
-                    <i class="bk-icon icon-info-circle icon-right" v-bktooltips.top="'以英文字母开头，由英文字母、数字、连接符(-)或下划线(_)组成，长度大于3小于30个字符'"></i>
+                    <i class="bk-icon icon-info-circle icon-right" v-bk-tooltips="{ content: '以英文字母开头，由英文字母、数字、连接符(-)或下划线(_)组成，长度大于3小于30个字符', placements: ['top'] }"></i>
                     <span v-if="isNameError" class="err-message">以英文字母开头，由英文字母、数字、连接符(-)或下划线(_)组成，长度大于3小于30个字符</span>
                 </li>
                 <li :class="{ 'control-active': isValueFocus, 'input-error': isValueError }">

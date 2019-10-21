@@ -1,16 +1,16 @@
 <template>
     <div class="edit-template-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
         <div class="info-header">
-            <div class="title first-level" @click="toAtomStore()">
+            <div class="title first-level" @click="toAtomStore">
                 <logo :name="&quot;store&quot;" size="30" class="nav-icon" />
                 <div class="title first-level">研发商店</div>
             </div>
             <i class="right-arrow"></i>
-            <div class="title secondary" @click="toAtomList()">工作台</div>
+            <div class="title secondary" @click="toAtomList">工作台</div>
             <i class="right-arrow"></i>
             <div class="title third-level">上架模板</div>
             <a class="develop-guide-link" target="_blank"
-                :href="docsLink">模板指引</a>
+                href="http://iwiki.oa.com/pages/viewpage.action?pageId=15008944">模板指引</a>
         </div>
         <div class="edit-template-content" v-if="showContent">
             <form class="bk-form edit-template-form">
@@ -37,7 +37,7 @@
                         </bk-popover>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
+                <div class="bk-form-item is-required" ref="sortError">
                     <label class="bk-label">分类</label>
                     <div class="bk-form-content template-item-content template-category-content">
                         <bk-select v-model="templateForm.classifyCode" style="width: 40%;" searchable>
@@ -53,7 +53,7 @@
                         <div v-if="formErrors.sortError" class="error-tips">分类不能为空</div>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
+                <div class="bk-form-item is-required" ref="categoryError">
                     <label class="bk-label env-label">应用范畴</label>
                     <div class="bk-form-content template-item-content category">
                         <bk-checkbox-group v-model="templateForm.categoryIdList">
@@ -101,7 +101,7 @@
                     </div>
                     <p :class="errors.has('introduction') ? 'error-tips' : 'normal-tips'">{{ errors.first("introduction") }}</p>
                 </div>
-                <div class="bk-form-item remark-form-item is-required">
+                <div class="bk-form-item remark-form-item is-required" ref="descError">
                     <label class="bk-label">详细描述</label>
                     <div class="bk-form-content template-item-content is-tooltips">
                         <mavon-editor class="template-remark-input"
@@ -110,6 +110,7 @@
                             v-model="templateForm.description"
                             :toolbars="toolbarOptions"
                             :external-link="false"
+                            :box-shadow="false"
                             @imgAdd="addImage"
                             @imgDel="delImage"
                             @change="changeData" />
@@ -156,47 +157,24 @@
                     <button class="bk-button bk-primary" type="button" @click="submit()">提交</button>
                     <button class="bk-button bk-default" type="button" @click="toAtomList()">取消</button>
                 </div>
-                <div class="template-logo-box" :class="{ 'is-border': !templateForm.logoUrl }" @click="uploadLogo()">
-                    <section v-if="templateForm.logoUrl">
-                        <img :src="templateForm.logoUrl">
-                    </section>
-                    <section v-else>
-                        <i class="bk-icon icon-plus"></i>
-                        <p>上传LOGO</p>
-                    </section>
-                </div>
+                <select-logo :form="templateForm" type="TEMPLATE" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
             </form>
         </div>
-        <template-logo :show-dialog="showlogoDialog"
-            :to-confirm-logo="toConfirmLogo"
-            :to-close-dialog="toCloseDialog"
-            :file-change="fileChange"
-            :selected-url="selectedUrl"
-            :is-uploading="isUploading">
-        </template-logo>
     </div>
 </template>
 
 <script>
-    import templateLogo from '@/components/atom-logo'
+    import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
-
-    const Vue = window.Vue
-    Vue.use(mavonEditor)
 
     export default {
         components: {
-            templateLogo
+            selectLogo
         },
         data () {
             return {
                 showContent: false,
-                showlogoDialog: false,
-                selectedUrl: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线模版/summary.html`,
                 sortList: [],
                 labelList: [],
                 categoryList: [],
@@ -207,7 +185,8 @@
                 formErrors: {
                     sortError: false,
                     categoryError: false,
-                    descError: false
+                    descError: false,
+                    logoUrlError: false
                 },
                 templateForm: {
                     templateName: '',
@@ -366,101 +345,13 @@
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
             },
-            fileChange (e) {
-                const file = e.target.files[0]
-                if (file) {
-                    if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: '请上传png、jpg格式的图片'
-                        })
-                    } else if (file.size > (2 * 1024 * 1024)) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: '请上传大小不超过2M的图片'
-                        })
-                    } else {
-                        const reader = new FileReader()
-                        reader.readAsDataURL(file)
-                        reader.onload = evts => {
-                            const img = new Image()
-                            img.src = evts.target.result
-                            img.onload = evt => {
-                                if (img.width === 512 && img.height === 512) {
-                                    this.uploadHandle(file)
-                                } else {
-                                    this.$bkMessage({
-                                        theme: 'error',
-                                        message: '请上传尺寸为512*512的图片'
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            async uploadHandle (file) {
-                const formData = new FormData()
-                const config = {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-                let message, theme
-                formData.append('logo', file)
-
-                try {
-                    const res = await this.$store.dispatch('store/uploadLogo', {
-                        formData,
-                        config
-                    })
-
-                    this.selectedUrl = res
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            uploadLogo () {
-                this.showlogoDialog = true
-                this.selectedUrl = this.templateForm.logoUrl
-            },
-            /**
-             * 清空input file的值
-             */
-            resetUploadInput () {
-                this.$nextTick(() => {
-                    const inputElement = document.getElementById('inputfile')
-                    inputElement.value = ''
-                })
-            },
+            
             autoFocus () {
                 this.$nextTick(() => {
                     this.$refs.templateName.focus()
                 })
             },
-            async toConfirmLogo () {
-                if (this.selectedUrl) {
-                    this.templateForm.logoUrl = this.selectedUrl
-                    this.showlogoDialog = false
-                } else if (!this.selectedUrl) {
-                    this.$bkMessage({
-                        message: '请选择要上传的图片',
-                        theme: 'error'
-                    })
-                }
-                this.resetUploadInput()
-            },
-            toCloseDialog () {
-                this.showlogoDialog = false
-                this.selectedFile = undefined
-                this.resetUploadInput()
-            },
+            
             toAtomList () {
                 this.$router.push({
                     name: 'atomList',
@@ -484,22 +375,34 @@
             },
             checkValid () {
                 let errorCount = 0
+                let ref = ''
+                if (!this.templateForm.logoUrl) {
+                    this.formErrors.logoUrlError = true
+                    ref = ref || 'logoUrlError'
+                    errorCount++
+                }
+
                 if (!this.templateForm.classifyCode) {
                     this.formErrors.sortError = true
+                    ref = ref || 'sortError'
                     errorCount++
                 }
 
                 if (!this.templateForm.categoryIdList.length) {
                     this.formErrors.categoryError = true
+                    ref = ref || 'categoryError'
                     errorCount++
                 }
 
                 if (!this.templateForm.description) {
                     this.formErrors.descError = true
+                    ref = ref || 'descError'
                     errorCount++
                 }
 
                 if (errorCount > 0) {
+                    const errorEle = this.$refs[ref]
+                    if (errorEle) errorEle.scrollIntoView()
                     return false
                 }
 
@@ -634,15 +537,15 @@
             }
         }
         .edit-template-content {
-            padding: 20px 0 40px;
-            height: calc(100% - 50px);
+            margin: 20px 0 10px;
+            height: calc(100% - 80px);
             overflow: auto;
             display: flex;
             justify-content: center;
         }
         .edit-template-form {
             position: relative;
-            margin: auto;
+            margin: 0 auto;
             width: 1200px;
             .bk-label {
                 width: 100px;
@@ -673,6 +576,11 @@
                 white-space: normal;
                 word-break: break-all;
                 font-weight: 400;
+            }
+            .introduction-form-item {
+                .error-tips {
+                    margin-left: 100px;
+                }
             }
             .name-form-item,
             .introduction-form-item,
@@ -742,9 +650,10 @@
                 }
             }
             .template-remark-input {
-                position: relative;
-                z-index: 1;
-                height: 178px;
+                height: 263px;
+                &.fullscreen {
+                    height: auto;
+                }
             }
             .version-msg {
                 padding: 12px 0 12px 26px;
@@ -774,6 +683,7 @@
                 width: 100px;
                 height: 100px;
                 background: #fff;
+                border: 1px dashed $lineColor;
                 text-align: center;
                 cursor: pointer;
                 .icon-plus {
@@ -794,8 +704,31 @@
                     object-fit: cover;
                 }
             }
-            .is-border {
-                border: 1px dashed $lineColor;
+            .no-img {
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                &:hover {
+                    &:after {
+                        content: '\66F4\6362logo';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        z-index: 100;
+                        line-height: 25px;
+                        text-align: center;
+                        color: #fff;
+                        background: black;
+                        opacity: 0.7;
+                    }
+                }
+            }
+            .img-Error {
+                border: 1px dashed $dangerColor;
+                .error-msg {
+                    color: $dangerColor;
+                }
             }
             .category {
                 margin-top: 5px;

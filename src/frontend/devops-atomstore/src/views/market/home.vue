@@ -1,7 +1,7 @@
 <template>
     <article class="market-home" v-bkloading="{ isLoading }">
-        <swiper class="home-swiper" :pics="pics"></swiper>
-        <section class="home-main">
+        <swiper class="home-swiper" :pics="pics" v-if="!isLoading"></swiper>
+        <section class="home-main" v-if="!isLoading">
             <hgroup v-for="cardGroup in cardGroups" :key="cardGroup.key" class="main-group">
                 <h3 class="main-title">
                     <span>{{cardGroup.label}}</span>
@@ -29,38 +29,53 @@
         data () {
             return {
                 isLoading: true,
-                pics: [
-                    { class: 'first-pic', color: '' }
-                ],
+                pics: [],
                 cardGroups: []
             }
         },
 
         watch: {
             '$route.query.pipeType' () {
-                this.getHomeCards()
+                this.isLoading = true
+                this.getHomeCards().catch((err) => {
+                    this.$bkMessage({ message: (err.message || err), theme: 'error' })
+                }).finally(() => (this.isLoading = false))
             }
         },
 
         created () {
-            this.getHomeCards()
+            this.initData()
         },
 
         methods: {
-            getHomeCards () {
+            initData () {
                 this.isLoading = true
-                const urls = { atom: 'store/requestAtomHome', template: 'store/requestTemplateHome' }
+                Promise.all([this.getBanner(), this.getHomeCards()]).catch((err) => {
+                    this.$bkMessage({ message: (err.message || err), theme: 'error' })
+                }).finally(() => (this.isLoading = false))
+            },
+
+            getBanner () {
+                return this.$store.dispatch('store/getLogoUrl', { type: 'BANNER' }).then((res) => {
+                    this.pics = res || []
+                })
+            },
+
+            getHomeCards () {
+                const urls = {
+                    atom: 'store/requestAtomHome',
+                    template: 'store/requestTemplateHome',
+                    ide: 'store/requestIDEHome',
+                    image: 'store/requestImageHome'
+                }
                 const type = this.$route.query.pipeType || 'atom'
                 const url = urls[type]
 
-                this.$store.dispatch(url)
-                    .then((res) => {
-                        const data = res || []
-                        data.forEach(item => item.records.splice(8))
-                        this.cardGroups = data
-                    })
-                    .catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' }))
-                    .finally(() => (this.isLoading = false))
+                return this.$store.dispatch(url).then((res) => {
+                    const data = res || []
+                    data.forEach(item => item.records.splice(8))
+                    this.cardGroups = data
+                })
             },
 
             showMore (sortType) {

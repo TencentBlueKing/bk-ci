@@ -14,7 +14,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">上架模板</span>
             </p>
-            <a class="title-work" target="_blank" :href="docsLink">模板指引</a>
+            <a class="title-work" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=15008944">模板指引</a>
         </h3>
 
         <div class="upgrade-template-content" v-show="showContent">
@@ -130,7 +130,6 @@
                 isOverflow: false,
                 isDropdownShow: false,
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线模版/summary.html`,
                 progressStatus: [{
                     'name': '开始',
                     'step': 1,

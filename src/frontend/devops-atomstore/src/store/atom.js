@@ -20,12 +20,53 @@
 import { UPDATE_CURRENT_ATOM } from './constants'
 
 const prefix = 'store/api'
+const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
 const supportPrefix = 'support/api'
 const Vue = window.Vue
 const vue = new Vue()
 
 export const actions = {
+    modifyAtomDetail ({ commit }, { atomCode, data }) {
+        return vue.$ajax.put(`${prefix}/user/pipeline/atom/baseInfo/atoms/${atomCode}`, data)
+    },
+    /**
+     * 审批插件协作
+     */
+    getUserApprovalInfo ({ commit }, atomCode) {
+        return vue.$ajax.get(`${prefix}/user/market/approval/types/ATOM/codes/${atomCode}/user?approveType=ATOM_COLLABORATOR_APPLY`)
+    },
+    /**
+     * 审批插件协作
+     */
+    approval ({ commit }, { atomCode, approveId, approveMsg, approveStatus }) {
+        return vue.$ajax.put(`${prefix}/user/market/approval/types/ATOM/codes/${atomCode}/ids/${approveId}/approve`, { approveMsg, approveStatus })
+    },
+    /**
+     * 获取协作者列表
+     */
+    getApprovalList ({ commit }, { atomCode, limit, current }) {
+        return vue.$ajax.get(`${prefix}/user/market/approval/types/ATOM/codes/${atomCode}/list?page=${current}&pageSize=${limit}`)
+    },
+    /**
+     * 申请成为协作者
+     */
+    applyCooperation ({ commit }, data) {
+        return vue.$ajax.post(`${prefix}/user/market/atom/cooperation/collaborator`, data)
+    },
+
+    /**
+     * 更改插件代码库的用户信息
+     */
+    modifyRepoMemInfo ({ commit }, { atomCode, projectCode }) {
+        return vue.$ajax.put(`${prefix}/user/market/atom/repositorys/${atomCode}?projectCode=${projectCode}`)
+    },
+    /**
+     * 查看插件成员信息
+     */
+    getMemberInfo ({ commit }, atomCode) {
+        return vue.$ajax.get(`${prefix}/user/market/desk/atom/member/view?atomCode=${atomCode}`)
+    },
     /**
      * 删除敏感数据
      */
@@ -123,14 +164,21 @@ export const actions = {
     requestAtomList ({ commit }, { atomName, page, pageSize }) {
         return vue.$ajax.get(`${prefix}/user/market/desk/atom/list?atomName=${atomName}&page=${page}&pageSize=${pageSize}`)
     },
-    
+
+    /**
+     * git OAuth授权
+     */
+    checkIsOAuth ({ commit }, { type, atomCode }) {
+        return vue.$ajax.get(`${repositoryPrefix}/user/git/isOauth?redirectUrlType=${type}&atomCode=${atomCode}`)
+    },
+
     /**
      * 新增流水线插件
      */
     createNewAtom ({ commit }, { params }) {
         return vue.$ajax.post(`${prefix}/user/market/desk/atom`, params)
     },
-    
+
     /**
      * 流水线插件详情
      */
@@ -156,7 +204,7 @@ export const actions = {
      * 上架/升级流水线插件
      */
     editAtom ({ commit }, { projectId, params }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectCode=${projectId}`, params)
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectId=${projectId}`, params)
     },
 
     /**
@@ -169,9 +217,9 @@ export const actions = {
     /**
      * 删除流水线插件
      */
-    // requestDeleteAtom ({ commit }, { atomId }) {
-    //     return vue.$ajax.delete(`${prefix}/user/market/desk/atom/${atomId}`)
-    // },
+    requestDeleteAtom ({ commit }, { atomCode }) {
+        return vue.$ajax.delete(`${prefix}/user/market/desk/atoms/${atomCode}`)
+    },
 
     /**
      * 下架流水线插件
@@ -197,7 +245,7 @@ export const actions = {
     /**
      * 流水线插件已安装的项目
      */
-    requestRelativeProject ({ commit }, { atomCode }) {
+    requestRelativeProject ({ commit }, atomCode) {
         return vue.$ajax.get(`${prefix}/user/market/atom/installedProjects/${atomCode}`)
     },
 
@@ -206,6 +254,13 @@ export const actions = {
      */
     passTest ({ commit }, { atomId }) {
         return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/passTest/${atomId}`)
+    },
+
+    /**
+     * 重新构建
+     */
+    rebuild ({ commit }, { atomId, projectId }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`)
     },
 
     /**
@@ -286,6 +341,13 @@ export const actions = {
     },
 
     /**
+     * 当前用户信息
+     */
+    requestUserInfo ({ commit }) {
+        return vue.$ajax.get(`${projectPrefix}/user/users`)
+    },
+
+    /**
      * 上传文件
      */
     uploadFile ({ commit }, { formData, config }) {
@@ -305,22 +367,43 @@ export const actions = {
     uploadLogo ({ commit }, { formData, config }) {
         return vue.$ajax.post(`${prefix}/user/store/logo/upload`, formData, config)
     },
-    
+
+    /**
+     * 获取项目组人员
+     */
+    requestProjectMember ({ commit }, { projectCode }) {
+        return vue.$ajax.get(`${projectPrefix}/user/users/projects/${projectCode}/list`)
+    },
+
     updateCurrentaAtom ({ commit }, { res }) {
         commit(UPDATE_CURRENT_ATOM, res)
+    },
+
+    updateUserInfo ({ commit }, res) {
+        commit('updateUserInfo', res)
+    },
+
+    // 获取开发语言
+    getDevelopLanguage () {
+        return vue.$ajax.get(`${prefix}/user/market/desk/atom/language`)
     }
 }
 
 export const getters = {
-    getCurrentAtom: state => state.currentAtom
+    getCurrentAtom: state => Object.assign({}, state.currentAtom),
+    getUserInfo: state => state.userInfo
 }
 
 export const state = {
-    currentAtom: {}
+    currentAtom: {},
+    userInfo: {}
 }
 
 export const mutations = {
     [UPDATE_CURRENT_ATOM]: (state, res) => {
         Vue.set(state, 'currentAtom', res)
+    },
+    updateUserInfo: (state, res) => {
+        Vue.set(state, 'userInfo', res)
     }
 }

@@ -26,7 +26,7 @@ const marketDetail = () => import(/* webpackChunkName: 'atomDetails' */ '@/views
 
 const atomList = () => import(/* webpackChunkName: 'atomList' */ '@/views/atom_list.vue') // 工作台
 
-const installAtom = () => import(/* webpackChunkName: 'installAtom' */ '@/views/install_atom.vue') // 安装流水线插件
+const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
@@ -34,14 +34,26 @@ const atomDatail = () => import(/* webpackChunkName: 'atomDatail' */ '@/views/at
 const atomOverview = () => import(/* webpackChunkName: 'atomOverview' */ '@/views/atomDetail/overview.vue') // 流水线插件概览
 const settings = () => import(/* webpackChunkName: 'settings' */ '@/views/atomDetail/settings.vue') // 流水线插件设置
 const atomInformation = () => import(/* webpackChunkName: 'atomInformation' */ '@/views/atomDetail/detail.vue') // 流水线插件详情
+const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/atomDetail/approval.vue') // 流水线插件审批
 const memberManage = () => import(/* webpackChunkName: 'memberManage' */ '@/views/atomDetail/member_manage.vue') // 成员管理
+const visibleRange = () => import(/* webpackChunkName: 'visibleRange' */ '@/views/atomDetail/visible_range.vue') // 可见范围
 const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 可见范围
+const edit = () => import(/* webpackChunkName: 'editAtom' */ '@/views/atomDetail/edit.vue') // 编辑插件详情
 
 const editTemplate = () => import(/* webpackChunkName: 'editTemplate' */ '@/views/edit_template.vue') // 上架模板
 const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '@/views/upgrade_template.vue') // 上架模板进度
 const tplDatail = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/templateDetail/index.vue') // 模板概览
 const tplOverview = () => import(/* webpackChunkName: 'tplOverview' */ '@/views/templateDetail/overview.vue') // 模板概览
 const tplSettings = () => import(/* webpackChunkName: 'tplSettings' */ '@/views/templateDetail/settings.vue') // 模板设置
+const tplVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/templateDetail/visible_range.vue') // 可见范围
+
+const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
+const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
+const imageDatailIndex = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/imageDetail/index.vue') // 镜像详情总览
+const imageDetail = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/imageDetail/detail.vue') // 镜像详情页面
+const imageOverview = () => import(/* webpackChunkName: 'tplOverview' */ '@/views/imageDetail/overView.vue') // 镜像概览
+const imageSettings = () => import(/* webpackChunkName: 'tplSettings' */ '@/views/imageDetail/settings.vue') // 镜像设置
+const imageVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/imageDetail/visibleRange.vue') // 镜像可见范围
 
 const routes = [
     {
@@ -155,7 +167,8 @@ const routes = [
                     title: '发布进度',
                     logo: 'store',
                     header: '研发商店',
-                    to: 'atomHome'
+                    to: 'atomHome',
+                    webSocket: ['^\/console\/store\/releaseProgress\/(shelf|upgrade)\/[^\/]+$']
                 }
             },
             {
@@ -164,6 +177,28 @@ const routes = [
                 component: upgradeTemplate,
                 meta: {
                     title: '上架模板进度',
+                    logo: 'store',
+                    header: '研发商店',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: 'editImage/:imageId',
+                name: 'editImage',
+                component: editImage,
+                meta: {
+                    title: '上架镜像',
+                    logo: 'store',
+                    header: '研发商店',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: 'imageProgress/:imageId',
+                name: 'imageProgress',
+                component: imageProgress,
+                meta: {
+                    title: '上架镜像进度',
                     logo: 'store',
                     header: '研发商店',
                     to: 'atomHome'
@@ -197,6 +232,28 @@ const routes = [
                         }
                     },
                     {
+                        path: 'edit',
+                        name: 'edit',
+                        component: edit,
+                        meta: {
+                            title: '编辑',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'approval',
+                        name: 'approval',
+                        component: approval,
+                        meta: {
+                            title: '审批',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
                         path: 'settings',
                         name: 'settings',
                         component: settings,
@@ -213,6 +270,17 @@ const routes = [
                                 component: memberManage,
                                 meta: {
                                     title: '成员管理',
+                                    logo: 'store',
+                                    header: '研发商店',
+                                    to: 'atomHome'
+                                }
+                            },
+                            {
+                                path: 'visible',
+                                name: 'visible',
+                                component: visibleRange,
+                                meta: {
+                                    title: '可见范围',
                                     logo: 'store',
                                     header: '研发商店',
                                     to: 'atomHome'
@@ -258,27 +326,82 @@ const routes = [
                             logo: 'store',
                             header: '研发商店',
                             to: 'atomHome'
-                        }
+                        },
+                        children: [
+                            {
+                                path: 'visible',
+                                name: 'tplVisible',
+                                component: tplVisibleRange,
+                                meta: {
+                                    title: '可见范围',
+                                    logo: 'store',
+                                    header: '研发商店',
+                                    to: 'atomHome'
+                                }
+                            }
+                        ]
                     }
                 ]
             },
             {
-                path: ':atomCode/install/atom',
-                name: 'installAtom',
-                component: installAtom,
-                meta: {
-                    title: '安装流水线插件',
-                    logo: 'store',
-                    header: '研发商店',
-                    to: 'atomHome'
-                }
+                path: 'image/:imageCode',
+                name: 'imageDatailIndex',
+                component: imageDatailIndex,
+                children: [
+                    {
+                        path: 'overview',
+                        name: 'imageOverview',
+                        component: imageOverview,
+                        meta: {
+                            title: '概览',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'detail',
+                        name: 'imageDetail',
+                        component: imageDetail,
+                        meta: {
+                            title: '详情',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'settings',
+                        name: 'imageSettings',
+                        component: imageSettings,
+                        meta: {
+                            title: '设置',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        },
+                        children: [
+                            {
+                                path: 'visible',
+                                name: 'imageVisibleRange',
+                                component: imageVisibleRange,
+                                meta: {
+                                    title: '可见范围',
+                                    logo: 'store',
+                                    header: '研发商店',
+                                    to: 'atomHome'
+                                }
+                            }
+                        ]
+                    }
+                ]
             },
             {
-                path: ':templateCode/install/template',
-                name: 'installTemplate',
-                component: installAtom,
+                path: 'install',
+                name: 'install',
+                component: install,
                 meta: {
-                    title: '安装模板',
+                    title: '安装页面',
                     logo: 'store',
                     header: '研发商店',
                     to: 'atomHome'

@@ -14,7 +14,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="">{{ curTitle }}（{{ atomForm.atomCode }}）</span>
             </p>
-            <a class="title-work" target="_blank" :href="docsLink">插件指引</a>
+            <a class="title-work" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=15008942">插件指引</a>
         </h3>
 
         <div class="edit-atom-content" v-if="showContent">
@@ -42,7 +42,7 @@
                         </bk-popover>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
+                <div class="bk-form-item is-required" ref="categoryError">
                     <label class="bk-label category-label">范畴</label>
                     <div class="bk-form-content atom-item-content">
                         <bk-radio-group v-model="atomForm.category" class="radio-group">
@@ -51,7 +51,7 @@
                         <div v-if="formErrors.categoryError" class="error-tips">字段有误，请重新选择</div>
                     </div>
                 </div>
-                <div class="bk-form-item  is-required">
+                <div class="bk-form-item  is-required" ref="sortError">
                     <label class="bk-label">分类</label>
                     <div class="bk-form-content atom-item-content atom-classify-content">
                         <bk-select v-model="atomForm.classifyCode" @selected="changeClassify" style="width: 40%;" searchable :clearable="false">
@@ -64,17 +64,21 @@
                         <div v-if="formErrors.sortError" class="error-tips">分类不能为空</div>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
-                    <label class="bk-label env-label">操作系统</label>
+                <div class="bk-form-item is-required" ref="jobError">
+                    <label class="bk-label env-label">适用Job类型</label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-checkbox-group v-model="atomForm.os">
-                            <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
-                                <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
-                            </bk-checkbox>
-                        </bk-checkbox-group>
-                        <div v-if="formErrors.envError" class="error-tips env-error">操作系统不能为空</div>
+                        <bk-radio-group v-model="atomForm.jobType" class="radio-group">
+                            <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="formErrors.jobError = false">{{entry.label}}</bk-radio>
+                        </bk-radio-group>
+                        <div v-if="formErrors.jobError" class="error-tips">字段有误，请重新选择</div>
                     </div>
                 </div>
+                <bk-checkbox-group v-model="atomForm.os" v-if="atomForm.jobType === 'AGENT'" class="bk-form-content" ref="envError">
+                    <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
+                        <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
+                    </bk-checkbox>
+                </bk-checkbox-group>
+                <div v-if="formErrors.envError" class="error-tips env-error">需要选择编译环境</div>
                 <div class="bk-form-item">
                     <label class="bk-label">功能标签</label>
                     <div class="bk-form-content template-item-content">
@@ -91,6 +95,15 @@
                                 :name="option.labelName">
                             </bk-option>
                         </bk-select>
+                    </div>
+                </div>
+                <div class="bk-form-item is-required is-open" ref="openSourceError" v-if="!atomForm.version">
+                    <label class="bk-label">是否开源</label>
+                    <div class="bk-form-content atom-item-content">
+                        <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
+                            <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="formErrors.openSourceError = false">{{entry.label}}</bk-radio>
+                        </bk-radio-group>
+                        <div v-if="formErrors.openSourceError" class="error-tips">字段有误，请重新选择</div>
                     </div>
                 </div>
                 <div class="bk-form-item introduction-form-item is-required">
@@ -154,7 +167,7 @@
                         <p :class="errors.has('publisher') ? 'error-tips' : 'normal-tips'">{{ errors.first("publisher") }}</p>
                     </div>
                 </div>
-                <div class="bk-form-item publish-form-item is-required">
+                <div class="bk-form-item publish-form-item is-required" ref="releaseTypeError" v-if="atomForm.releaseType !== 'CANCEL_RE_RELEASE'">
                     <label class="bk-label publish-type-label">发布类型</label>
                     <div class="bk-form-content atom-item-content is-tooltips radio-flex">
                         <section v-if="atomForm.version" style="min-width: 100%;">
@@ -183,6 +196,7 @@
                     <div class="bk-form-content atom-item-content is-tooltips">
                         <p class="version-num-content" style="min-width: 100%;">{{ curVersion }}
                             <span class="version-prompt">（主版本号.次版本号.修正号）</span>
+                            <span class="version-modify" @click="atomForm.releaseType = 'COMPATIBILITY_FIX'" v-if="atomForm.releaseType === 'CANCEL_RE_RELEASE'">修改</span>
                         </p>
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
@@ -190,20 +204,6 @@
                                 <p>根据发布类型自动生成</p>
                             </template>
                         </bk-popover>
-                    </div>
-                </div>
-                <div class="bk-form-item release-package-form-item is-required" style="margin-top: 10px">
-                    <label class="bk-label">发布包</label>
-                    <div class="bk-form-content atom-item-content">
-                        <bk-file-upload
-                            :post-url="releasePackageUrl"
-                            :os="atomForm.os"
-                            :tip="'只允许上传 zip 格式的文件'"
-                            accept="application/zip"
-                            @uploadSuccess="uploadPackageSuccess"
-                            @uploadFail="uploadPackageErr"
-                        ></bk-file-upload>
-                        <div v-if="formErrors.releasePackageError" class="error-tips">发布包不能为空</div>
                     </div>
                 </div>
                 <div class="bk-form-item versionlog-form-item is-required">
@@ -224,63 +224,46 @@
                     <button class="bk-button bk-primary" type="button" @click="submit()">提交</button>
                     <button class="bk-button bk-default" type="button" @click="toAtomList()">取消</button>
                 </div>
-                <div class="atom-logo-box" :class="{ 'is-border': !atomForm.logoUrl }" @click="uploadLogo">
-                    <section v-if="atomForm.logoUrl">
-                        <img :src="atomForm.logoUrl">
-                    </section>
-                    <section v-else>
-                        <i class="bk-icon icon-plus"></i>
-                        <p>上传LOGO</p>
-                    </section>
-                </div>
+                <select-logo :form="atomForm" type="ATOM" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
             </form>
         </div>
-        <atom-logo :show-dialog="showlogoDialog"
-            :to-confirm-logo="toConfirmLogo"
-            :to-close-dialog="toCloseDialog"
-            :file-change="fileChange"
-            :selected-url="selectedUrl"
-            :is-uploading="isUploading">
-        </atom-logo>
     </div>
 </template>
 
 <script>
-    import atomLogo from '@/components/atom-logo'
+    import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import mavonEditor from 'mavon-editor'
-    import bkFileUpload from '@/components/common/file-upload'
-    import 'mavon-editor/dist/css/index.css'
-
-    const Vue = window.Vue
-    Vue.use(mavonEditor)
 
     export default {
         components: {
-            atomLogo,
-            bkFileUpload
+            selectLogo
         },
         data () {
             return {
                 curVersion: '',
                 atomName: 'landun-atom-codecc',
-                selectedUrl: '',
+                initJobType: '',
                 initReleaseType: '',
-                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html`,
                 descTemplate: '',
-                GW_URL_PREFIX: GW_URL_PREFIX,
                 showContent: false,
-                showlogoDialog: false,
                 isUploading: false,
                 initOs: [],
                 categoryList: [
                     { label: '流水线插件', value: 'TASK' }
                     // { label: '流水线触发器', value: 'TRIGGER' }
                 ],
+                jobTypeList: [
+                    { label: '编译环境', value: 'AGENT' },
+                    { label: '无编译环境', value: 'AGENT_LESS' }
+                ],
                 envList: [
                     { label: 'Linux', value: 'LINUX', icon: 'linux-view' },
                     { label: 'Windows', value: 'WINDOWS', icon: 'windows' },
                     { label: 'macOS', value: 'MACOS', icon: 'macos' }
+                ],
+                isOpenSource: [
+                    { label: '是', value: 'LOGIN_PUBLIC' },
+                    { label: '否', value: 'PRIVATE' }
                 ],
                 publishShelf: [
                     { label: '新上架', value: 'NEW' }
@@ -315,25 +298,25 @@
                     category: 'TASK',
                     classifyCode: '',
                     classifyName: '',
+                    jobType: 'AGENT',
                     os: [],
                     labelIdList: [],
                     summary: '',
-                    description: '- 插件功能\n\n- 适用场景\n\n- 使用限制和受限解决方案[可选]\n\n- 常见的失败原因和解决方案',
+                    description: '#### 插件功能\n\n#### 适用场景\n\n#### 使用限制和受限解决方案[可选]\n\n#### 常见的失败原因和解决方案',
                     publisher: '',
                     version: '1.0.0',
                     releaseType: 'NEW',
                     versionContent: '',
-                    jobType: 'AGENT',
                     visibilityLevel: 'LOGIN_PUBLIC'
                 },
                 formErrors: {
                     categoryError: false,
                     jobError: false,
                     openSourceError: false,
+                    logoUrlError: false,
                     sortError: false,
                     envError: false,
-                    releaseTypeError: false,
-                    releasePackageError: false
+                    releaseTypeError: false
                 }
             }
         },
@@ -346,22 +329,30 @@
             },
             toolbarOptions () {
                 return toolbars
-            },
-            releasePackageUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             }
         },
         watch: {
+            'atomForm.jobType' (val) {
+                if (this.$route.name === 'upgradeAtom' && this.atomForm.releaseType !== 'CANCEL_RE_RELEASE') {
+                    const isEqualType = val === this.initJobType
+                    const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
+                    if (this.initJobType === 'AGENT') {
+                        this.atomForm.releaseType = isEqualType && isEqualOs ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
+                    } else {
+                        this.atomForm.releaseType = isEqualType ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
+                    }
+                }
+            },
             'atomForm.os' (val) {
-                if (this.$route.name === 'upgradeAtom') {
+                if (this.$route.name === 'upgradeAtom' && this.initJobType === 'AGENT' && this.atomForm.releaseType !== 'CANCEL_RE_RELEASE') {
                     const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
                     this.atomForm.releaseType = isEqualOs ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
                 }
             },
             'atomForm.releaseType' (val) {
                 const tpl = ['INCOMPATIBILITY_UPGRADE', 'COMPATIBILITY_UPGRADE', 'COMPATIBILITY_FIX']
-                const temp = this.atomForm.version.split('.')
-                
+                let temp = this.atomForm.version.split('.')
+
                 for (let i = 0; i < temp.length; i++) {
                     if (tpl[i] === val) {
                         temp[i] = (parseInt(temp[i]) + 1).toString()
@@ -372,6 +363,8 @@
                     temp[2] = '0'
                 } else if (val === 'COMPATIBILITY_UPGRADE') {
                     temp[2] = '0'
+                } else if (val === 'CANCEL_RE_RELEASE') {
+                    temp = this.atomForm.version.split('.')
                 }
                 this.curVersion = temp.join('.')
                 this.formErrors.releaseTypeError = false
@@ -429,13 +422,31 @@
                     if (res) {
                         Object.assign(this.atomForm, res, {})
                         this.curVersion = res.version
+                        this.atomForm.jobType = !this.atomForm.jobType ? 'AGENT' : this.atomForm.jobType
+                        this.initJobType = this.atomForm.jobType
                         this.atomForm.labelIdList = this.atomForm.labelList.map(item => {
                             return item.id
                         })
                         this.initOs = JSON.parse(JSON.stringify(this.atomForm.os))
                         
-                        if (this.atomForm.version) {
-                            this.atomForm.releaseType = this.atomForm.releaseType === 'NEW' ? 'INCOMPATIBILITY_UPGRADE' : this.atomForm.releaseType
+                        if (res.version) {
+                            let status = ''
+                            switch (res.atomStatus) {
+                                case 'GROUNDING_SUSPENSION':
+                                    status = 'CANCEL_RE_RELEASE'
+                                    break
+                                default:
+                                    const types = {
+                                        NEW: 'INCOMPATIBILITY_UPGRADE',
+                                        INCOMPATIBILITY_UPGRADE: 'INCOMPATIBILITY_UPGRADE',
+                                        COMPATIBILITY_UPGRADE: 'COMPATIBILITY_UPGRADE',
+                                        COMPATIBILITY_FIX: 'COMPATIBILITY_FIX'
+                                    }
+                                    status = types[res.releaseType] || 'COMPATIBILITY_FIX'
+                                    break
+                            }
+                            this.$set(this.atomForm, 'releaseType', status)
+
                             const temp = this.atomForm.version.split('.')
                             temp[0] = (parseInt(temp[0]) + 1).toString()
                             this.curVersion = temp.join('.')
@@ -482,41 +493,13 @@
             changeOs (data) {
                 this.formErrors.envError = false
             },
-            /**
-             * 清空input file的值
-             */
-            resetUploadInput () {
-                this.$nextTick(() => {
-                    const inputElement = document.getElementById('inputfile')
-                    inputElement.value = ''
-                })
-            },
+
             autoFocus () {
                 this.$nextTick(() => {
                     this.$refs.atomName.focus()
                 })
             },
-            uploadLogo () {
-                this.showlogoDialog = true
-                this.selectedUrl = this.atomForm.logoUrl
-            },
-            async toConfirmLogo () {
-                if (this.selectedUrl) {
-                    this.atomForm.logoUrl = this.selectedUrl
-                    this.showlogoDialog = false
-                } else if (!this.selectedUrl) {
-                    this.$bkMessage({
-                        message: '请选择要上传的图片',
-                        theme: 'error'
-                    })
-                }
-                this.resetUploadInput()
-            },
-            toCloseDialog () {
-                this.showlogoDialog = false
-                this.selectedFile = undefined
-                this.resetUploadInput()
-            },
+
             addImage (pos, file) {
                 this.uploadimg(pos, file)
             },
@@ -554,109 +537,55 @@
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
             },
-            fileChange (e) {
-                const file = e.target.files[0]
-                if (file) {
-                    if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: '请上传png、jpg格式的图片'
-                        })
-                    } else if (file.size > (2 * 1024 * 1024)) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: '请上传大小不超过2M的图片'
-                        })
-                    } else {
-                        const reader = new FileReader()
-                        reader.readAsDataURL(file)
-                        reader.onload = evts => {
-                            const img = new Image()
-                            img.src = evts.target.result
-                            img.onload = evt => {
-                                if (img.width === 512 && img.height === 512) {
-                                    this.uploadHandle(file)
-                                } else {
-                                    this.$bkMessage({
-                                        theme: 'error',
-                                        message: '请上传尺寸为512*512的图片'
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            async uploadHandle (file) {
-                const formData = new FormData()
-                const config = {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-                let message, theme
-                formData.append('logo', file)
-
-                try {
-                    const res = await this.$store.dispatch('store/uploadLogo', {
-                        formData,
-                        config
-                    })
-
-                    this.selectedUrl = res
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            uploadPackageSuccess (data) {
-                if (data.atomEnvRequest) {
-                    this.atomForm.packageShaContent = data.atomEnvRequest.shaContent
-                    this.atomForm.pkgName = data.atomEnvRequest.pkgName
-                    this.formErrors.releasePackageError = false
-                }
-            },
-            uploadPackageErr (message) {
-                if (message) {
-                    this.$bkMessage({
-                        message: message,
-                        theme: 'error'
-                    })
-                }
-            },
             checkValid () {
                 let errorCount = 0
-                if (!this.atomForm.classifyCode) {
-                    this.formErrors.sortError = true
-                    errorCount++
-                }
+                let ref = ''
 
-                if (!this.atomForm.os.length) {
-                    this.formErrors.envError = true
-                    errorCount++
-                }
-
-                if (!this.atomForm.releaseType) {
-                    this.formErrors.releaseTypeError = true
+                if (!this.atomForm.logoUrl) {
+                    this.formErrors.logoUrlError = true
+                    ref = ref || 'logoUrlError'
                     errorCount++
                 }
 
                 if (this.categoryList.find(x => x.value === this.atomForm.category) < 0) {
                     this.formErrors.categoryError = true
+                    ref = ref || 'categoryError'
                     errorCount++
                 }
 
-                if (!this.atomForm.packageShaContent) {
-                    this.formErrors.releasePackageError = true
+                if (!this.atomForm.classifyCode) {
+                    this.formErrors.sortError = true
+                    ref = ref || 'sortError'
+                    errorCount++
+                }
+
+                if (this.jobTypeList.find(x => x.value === this.atomForm.jobType) < 0) {
+                    this.formErrors.jobError = true
+                    ref = ref || 'jobError'
+                    errorCount++
+                }
+
+                if (this.atomForm.jobType === 'AGENT' && !this.atomForm.os.length) {
+                    this.formErrors.envError = true
+                    ref = ref || 'envError'
+                    errorCount++
+                }
+
+                if (this.isOpenSource.find(x => x.value === this.atomForm.visibilityLevel) < 0) {
+                    this.formErrors.openSourceError = true
+                    ref = ref || 'openSourceError'
+                    errorCount++
+                }
+
+                if (!this.atomForm.releaseType) {
+                    this.formErrors.releaseTypeError = true
+                    ref = ref || 'releaseTypeError'
                     errorCount++
                 }
 
                 if (errorCount > 0) {
+                    const errorEle = this.$refs[ref]
+                    if (errorEle) errorEle.scrollIntoView()
                     return false
                 }
 
@@ -670,7 +599,13 @@
                     const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
                     
                     try {
-                        if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.$route.name === 'upgradeAtom' && !isEqualOs) {
+                        if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE'
+                            && this.atomForm.jobType !== this.initJobType && this.$route.name === 'upgradeAtom') {
+                            message = '适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。'
+                            theme = 'error'
+                        } else if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE'
+                            && this.$route.name === 'upgradeAtom'
+                            && this.atomForm.jobType === 'AGENT' && this.initJobType === 'AGENT' && !isEqualOs) {
                             message = '操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。'
                             theme = 'error'
                         } else {
@@ -683,17 +618,17 @@
                                 classifyCode: this.atomForm.classifyCode,
                                 version: this.curVersion,
                                 releaseType: this.atomForm.releaseType,
-                                os: this.atomForm.os,
+                                jobType: this.atomForm.jobType,
+                                os: this.atomForm.jobType === 'AGENT' ? this.atomForm.os : [],
                                 labelIdList: this.atomForm.labelIdList,
                                 publisher: this.atomForm.publisher,
                                 versionContent: this.atomForm.versionContent,
                                 logoUrl: this.atomForm.logoUrl || undefined,
                                 summary: this.atomForm.summary || undefined,
                                 description: this.atomForm.description || undefined,
-                                packageShaContent: this.atomForm.packageShaContent,
-                                pkgName: this.atomForm.pkgName
+                                visibilityLevel: this.atomForm.visibilityLevel
                             }
-                
+
                             const res = await this.$store.dispatch('store/editAtom', {
                                 projectId: this.atomForm.projectCode,
                                 params: params
@@ -819,14 +754,20 @@
             .bk-form-content {
                 margin-left: 0;
                 .bk-form-checkbox {
-                    margin: 6px 21px 6px 0;
+                    margin: 10px 21px 20px 0;
+                    &:first-child {
+                        margin-left: 110px;
+                    }
                 }
             }
             .env-error {
-                margin: -4px 0 0;
+                margin: -10px 0 20px 110px;
             }
             .introduction-form-item {
                 display: block;
+                .error-tips {
+                    margin-left: 110px;
+                }
             }
             .bk-selector .bk-form-checkbox {
                 display: block;
@@ -881,6 +822,11 @@
                     margin-left: 20px;
                     color: $fontWeightColor;
                 }
+                .version-modify {
+                    margin-left: 10px;
+                    cursor: pointer;
+                    color: $primaryColor;
+                }
             }
             .bk-radio-text {
                 color: #333C48;
@@ -897,9 +843,10 @@
                 }
             }
             .atom-remark-input {
-                position: relative;
-                z-index: 1;
-                height: 178px;
+                height: 263px;
+                &.fullscreen {
+                    height: auto;
+                }
             }
             .version-msg {
                 padding: 12px 0 12px 26px;
@@ -927,6 +874,7 @@
                 right: 0;
                 width: 100px;
                 height: 100px;
+                border: 1px dashed $lineColor;
                 background: #fff;
                 text-align: center;
                 cursor: pointer;
@@ -949,8 +897,31 @@
                     object-fit: cover;
                 }
             }
-            .is-border {
-                border: 1px dashed $lineColor;
+            .no-img {
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                &:hover {
+                    &:after {
+                        content: '\66F4\6362logo';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        z-index: 100;
+                        line-height: 25px;
+                        text-align: center;
+                        color: #fff;
+                        background: black;
+                        opacity: 0.7;
+                    }
+                }
+            }
+            .img-Error {
+                border: 1px dashed $dangerColor;
+                .error-msg {
+                    color: $dangerColor;
+                }
             }
         }
         .op-image {

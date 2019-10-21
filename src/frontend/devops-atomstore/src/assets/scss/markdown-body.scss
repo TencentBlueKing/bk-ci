@@ -17,65 +17,76 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@import './markdown/github-markdown.min';
+ @import './markdown/github-markdown.min';
 
-/* 重置Markdown样式 */
-.markdown-body {
-    font-size: 14px !important;
-    table {
-        display: block;
-        width: 100%;
-        overflow: auto;
-        border-spacing: 0;
-        border-collapse: collapse;
-    }
-    table tr {
-        background-color: #fff;
-        border-top: 1px solid #c6cbd1;
-    }
-    table td, table th {
-        padding: 6px 13px;
-        border: 1px solid #dfe2e5;
-    }
-    li+li {
-        margin-top: .25em;
-    }
-    a {
-        color: #0366d6;
-        text-decoration: none;
-    }
-    blockquote {
-        padding: 0 1em;
-        color: #6a737d;
-        border-left: .25em solid #dfe2e5;
-    }
-    pre {
-        padding: 16px;
-        overflow: auto;
-        font-size: 85%;
-        line-height: 1.45;
-        background-color: #f6f8fa;
-        border-radius: 3px;
-    }
-    .hljs-center{
-        text-align: center;
-    }
-    .hljs-right {
-        text-align: right;
-    }
-    ul,
-    ol, 
-    li {
-        list-style-type: disc;
-    }
-    ul ul li, 
-    ol ul li{
-        list-style-type: circle;
-    }
-    ol ol ul li, 
-    ol ul ul li, 
-    ul ol ul li, 
-    ul ul ul li {
-        list-style-type: square;
-    }
-}
+ /* 重置Markdown样式 */
+ .markdown-body {
+     font-size: 14px !important;
+     min-height: 0 !important;
+     &.v-note-wrapper, .v-note-panel {
+         border: none;
+         z-index: 1;
+         .v-show-content {
+             background: #ffffff !important;
+         }
+     }
+     &.v-note-wrapper .v-note-op {
+         z-index: 2;
+     }
+     table {
+         display: block;
+         width: 100%;
+         overflow: auto;
+         border-spacing: 0;
+         border-collapse: collapse;
+     }
+     table tr {
+         background-color: #fff;
+         border-top: 1px solid #c6cbd1;
+     }
+     table td, table th {
+         padding: 6px 13px;
+         border: 1px solid #dfe2e5;
+     }
+     li+li {
+         margin-top: .25em;
+     }
+     a {
+         color: #0366d6;
+         text-decoration: none;
+     }
+     blockquote {
+         padding: 0 1em;
+         color: #6a737d;
+         border-left: .25em solid #dfe2e5;
+     }
+     pre {
+         padding: 16px;
+         overflow: auto;
+         font-size: 85%;
+         line-height: 1.45;
+         background-color: #f6f8fa;
+         border-radius: 3px;
+     }
+     .hljs-center{
+         text-align: center;
+     }
+     .hljs-right {
+         text-align: right;
+     }
+     ul,
+     ol,
+     li {
+         list-style-type: disc;
+     }
+     ul ul li,
+     ol ul li{
+         list-style-type: circle;
+     }
+     ol ol ul li,
+     ol ul ul li,
+     ul ol ul li,
+     ul ul ul li {
+         list-style-type: square;
+     }
+ }

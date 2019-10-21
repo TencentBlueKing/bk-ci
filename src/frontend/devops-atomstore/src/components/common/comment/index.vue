@@ -52,7 +52,14 @@
         },
 
         methods: {
-            ...mapActions('store', ['requestAtomReplyComment', 'requestTemplateReplyComment', 'setCommentReplay', 'clearCommentReply']),
+            ...mapActions('store', [
+                'requestAtomReplyComment',
+                'requestTemplateReplyComment',
+                'requestIDEReplyComment',
+                'requestImageReplyComment',
+                'setCommentReplay',
+                'clearCommentReply'
+            ]),
 
             replyComment (user) {
                 const reg = this.replyToUser ? new RegExp(`^回复@${this.replyToUser}：`) : /^/
@@ -75,7 +82,7 @@
                     return
                 }
 
-                if (replyContent.length > 500) {
+                if (replyContent.length >= 500) {
                     this.$bkMessage({ message: '字数不能超过500字，请修改后再回复', theme: 'warning' })
                     return
                 }
@@ -88,7 +95,9 @@
                 const postData = { replyContent, replyToUser: this.replyToUser }
                 const funObj = {
                     atom: () => this.requestAtomReplyComment({ id, postData }),
-                    template: () => this.requestTemplateReplyComment({ id, postData })
+                    template: () => this.requestTemplateReplyComment({ id, postData }),
+                    ide: () => this.requestIDEReplyComment({ id, postData }),
+                    image: () => this.requestImageReplyComment({ id, postData })
                 }
 
                 funObj[type]().then((res) => {
