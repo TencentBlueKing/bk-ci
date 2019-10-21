@@ -109,10 +109,10 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
             store.dispatch('toggleModuleLoading', true)
             Promise.all([
                 importStyle(css_url, document.head),
-                importScript(js_url, document.body)
+                importScript(js_url, document.body),
+                dynamicLoadModule(serviceAlias)
             ]).then(() => {
                 const module = window.Pages[serviceAlias]
-                dynamicLoadModule(serviceAlias)
                 store.registerModule(serviceAlias, module.store)
                 const dynamicRoutes = [{
                     path: '/console/',
