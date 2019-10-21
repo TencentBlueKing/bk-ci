@@ -20,7 +20,6 @@
 import { UPDATE_CURRENT_ATOM } from './constants'
 
 const prefix = 'store/api'
-const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
 const supportPrefix = 'support/api'
 const Vue = window.Vue
@@ -163,13 +162,6 @@ export const actions = {
      */
     requestAtomList ({ commit }, { atomName, page, pageSize }) {
         return vue.$ajax.get(`${prefix}/user/market/desk/atom/list?atomName=${atomName}&page=${page}&pageSize=${pageSize}`)
-    },
-
-    /**
-     * git OAuth授权
-     */
-    checkIsOAuth ({ commit }, { type, atomCode }) {
-        return vue.$ajax.get(`${repositoryPrefix}/user/git/isOauth?redirectUrlType=${type}&atomCode=${atomCode}`)
     },
 
     /**
@@ -338,13 +330,6 @@ export const actions = {
      */
     requestAtomStatistic ({ commit }, { atomCode }) {
         return vue.$ajax.get(`${prefix}/user/market/atom/statistic/${atomCode}`)
-    },
-
-    /**
-     * 当前用户信息
-     */
-    requestUserInfo ({ commit }) {
-        return vue.$ajax.get(`${projectPrefix}/user/users`)
     },
 
     /**

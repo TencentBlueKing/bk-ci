@@ -106,24 +106,6 @@
                 })
             },
 
-            modifyRepoMemInfo () {
-                const atomCode = this.atomCode
-                const projectCode = this.codeForm.projectCode
-                this.$store.dispatch('store/checkIsOAuth', { type: 'ATOM_REPOSITORY', atomCode }).then((res) => {
-                    if (res.status === 403) {
-                        window.open(res.url, '_self')
-                        return
-                    }
-
-                    return this.$store.dispatch('store/modifyRepoMemInfo', { atomCode, projectCode }).then((res) => {
-                        if (res) {
-                            this.$set(this.codeForm, 'repositoryAuthorizer', this.userInfo.userName)
-                            this.$bkMessage({ message: '重置授权成功', theme: 'success', limit: 1 })
-                        }
-                    })
-                }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' }))
-            },
-
             requestAtomStatistic () {
                 return this.$store.dispatch('store/requestAtomStatistic', {
                     atomCode: this.atomCode

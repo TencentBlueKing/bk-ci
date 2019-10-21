@@ -61,12 +61,6 @@
                                         icon: ''
                                     },
                                     {
-                                        id: 'visible',
-                                        selectId: ['visible'],
-                                        name: '可见范围',
-                                        icon: ''
-                                    },
-                                    {
                                         id: 'private',
                                         selectId: ['private'],
                                         name: '私有配置',

@@ -234,13 +234,6 @@
                 renderList: [],
                 projectList: [],
                 languageList: [],
-                authTypeList: [
-                    { label: '工蜂OAUTH', value: 'OAUTH' }
-                ],
-                isOpenSource: [
-                    { label: '是', value: 'LOGIN_PUBLIC' },
-                    { label: '否', value: 'PRIVATE' }
-                ],
                 promptList: [
                     '1、插件市场不再展示插件',
                     '2、已安装插件的项目不能再添加插件到流水线',
@@ -256,9 +249,7 @@
                     projectCode: '',
                     atomCode: '',
                     name: '',
-                    language: '',
-                    authType: 'OAUTH',
-                    visibilityLevel: 'LOGIN_PUBLIC'
+                    language: ''
                 },
                 isLoading: false,
                 atomErrors: {
@@ -300,9 +291,7 @@
                         projectCode: '',
                         atomCode: '',
                         name: '',
-                        language: '',
-                        authType: 'OAUTH',
-                        visibilityLevel: 'LOGIN_PUBLIC'
+                        language: ''
                     }
                 }
             },

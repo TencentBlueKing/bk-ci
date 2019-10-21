@@ -64,13 +64,7 @@
                                     //     id: 'member',
                                     //     name: '成员管理',
                                     //     icon: ''
-                                    // },
-                                    {
-                                        id: 'tplVisible',
-                                        selectId: ['tplVisible'],
-                                        name: '可见范围',
-                                        icon: ''
-                                    }
+                                    // }
                                 ]
                             }
                         ]

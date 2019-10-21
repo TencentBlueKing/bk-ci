@@ -20,21 +20,14 @@
                     <div class="bk-form-item member-form-item is-required">
                         <label class="bk-label">成员名称：</label>
                         <div class="bk-form-content member-item-content">
-                            <bk-select
-                                searchable
-                                multiple
-                                show-select-all
-                                v-model="memberForm.list"
-                                @selected="selectMember"
-                            >
-                                <bk-option v-for="(option, index) in memberList"
-                                    :key="index"
-                                    :id="option.id"
-                                    :name="option.name">
-                                </bk-option>
-                            </bk-select>
-                            <div class="prompt-tips">*若列表中找不到用户，请先将其添加为插件所属调试项目的成员</div>
-                            <div class="error-tips" v-if="nameError">成员名称不能为空</div>
+                            <input type="text" class="bk-form-input member-name-input" placeholder="请输入成员名称"
+                                name="memberName"
+                                v-model="memberForm.memberName"
+                                v-validate="{
+                                    required: true
+                                }"
+                                :class="{ 'is-danger': errors.has('memberName') }">
+                            <div v-if="errors.has('memberName')" class="error-tips">成员名称不能为空</div>
                         </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
@@ -84,7 +77,7 @@
                     { name: '可见范围', active: true }
                 ],
                 memberForm: {
-                    list: [],
+                    memberName: '',
                     type: 'ADMIN'
                 },
                 loading: {
@@ -124,69 +117,21 @@
             },
             showDialog (val) {
                 if (!val) {
-                    this.nameError = false
-                    // this.$refs.memberSelector.$children[0].localTagList = []
-                    this.memberForm.list = []
+                    this.memberForm.memberName = ''
                     this.memberForm.type = 'ADMIN'
                 }
-            },
-            currentAtom (newVal) {
-                if (newVal) {
-                    this.getMemberList()
-                }
-            }
-        },
-        created () {
-            if (this.currentAtom.projectCode) {
-                this.getMemberList()
             }
         },
         methods: {
-            async getMemberList () {
-                try {
-                    const res = await this.$store.dispatch('store/requestProjectMember', {
-                        projectCode: this.currentAtom.projectCode
-                    })
-                    this.memberList.splice(0, this.memberList.length)
-                    if (res) {
-                        res.map(item => {
-                            this.memberList.push({
-                                id: item,
-                                name: item
-                            })
-                        })
-                    }
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            selectMember (data) {
-                this.memberForm.list = data
-                this.nameError = false
-            },
-            handleChange () {
-                this.nameError = false
-            },
             toConfirm () {
-                if (!this.memberForm.list.length) {
-                    this.nameError = true
-                    this.$bkMessage({
-                        message: '请选择成员',
-                        theme: 'error'
-                    })
-                    this.$emit('cancelHandle')
-                } else {
+                const valid = this.$validator.validate()
+                if (valid) {
                     const params = {
                         storeCode: this.atomCode,
                         type: this.memberForm.type,
-                        member: this.memberForm.list
+                        member: []
                     }
+                    params.member.push(this.memberForm.memberName)
                     this.$emit('confirmHandle', params)
                 }
             },

@@ -36,7 +36,6 @@ const settings = () => import(/* webpackChunkName: 'settings' */ '@/views/atomDe
 const atomInformation = () => import(/* webpackChunkName: 'atomInformation' */ '@/views/atomDetail/detail.vue') // 流水线插件详情
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/atomDetail/approval.vue') // 流水线插件审批
 const memberManage = () => import(/* webpackChunkName: 'memberManage' */ '@/views/atomDetail/member_manage.vue') // 成员管理
-const visibleRange = () => import(/* webpackChunkName: 'visibleRange' */ '@/views/atomDetail/visible_range.vue') // 可见范围
 const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 可见范围
 const edit = () => import(/* webpackChunkName: 'editAtom' */ '@/views/atomDetail/edit.vue') // 编辑插件详情
 
@@ -45,15 +44,6 @@ const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '
 const tplDatail = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/templateDetail/index.vue') // 模板概览
 const tplOverview = () => import(/* webpackChunkName: 'tplOverview' */ '@/views/templateDetail/overview.vue') // 模板概览
 const tplSettings = () => import(/* webpackChunkName: 'tplSettings' */ '@/views/templateDetail/settings.vue') // 模板设置
-const tplVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/templateDetail/visible_range.vue') // 可见范围
-
-// const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
-// const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
-// const imageDatailIndex = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/imageDetail/index.vue') // 镜像详情总览
-// const imageDetail = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/imageDetail/detail.vue') // 镜像详情页面
-// const imageOverview = () => import(/* webpackChunkName: 'tplOverview' */ '@/views/imageDetail/overView.vue') // 镜像概览
-// const imageSettings = () => import(/* webpackChunkName: 'tplSettings' */ '@/views/imageDetail/settings.vue') // 镜像设置
-// const imageVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/imageDetail/visibleRange.vue') // 镜像可见范围
 
 const routes = [
     {
@@ -182,28 +172,6 @@ const routes = [
                     to: 'atomHome'
                 }
             },
-            // {
-            //     path: 'editImage/:imageId',
-            //     name: 'editImage',
-            //     component: editImage,
-            //     meta: {
-            //         title: '上架镜像',
-            //         logo: 'store',
-            //         header: '研发商店',
-            //         to: 'atomHome'
-            //     }
-            // },
-            // {
-            //     path: 'imageProgress/:imageId',
-            //     name: 'imageProgress',
-            //     component: imageProgress,
-            //     meta: {
-            //         title: '上架镜像进度',
-            //         logo: 'store',
-            //         header: '研发商店',
-            //         to: 'atomHome'
-            //     }
-            // },
             {
                 path: 'atom/:atomCode',
                 name: 'atomDetail',
@@ -276,17 +244,6 @@ const routes = [
                                 }
                             },
                             {
-                                path: 'visible',
-                                name: 'visible',
-                                component: visibleRange,
-                                meta: {
-                                    title: '可见范围',
-                                    logo: 'store',
-                                    header: '研发商店',
-                                    to: 'atomHome'
-                                }
-                            },
-                            {
                                 path: 'private',
                                 name: 'private',
                                 component: privateSetting,
@@ -326,76 +283,10 @@ const routes = [
                             logo: 'store',
                             header: '研发商店',
                             to: 'atomHome'
-                        },
-                        children: [
-                            {
-                                path: 'visible',
-                                name: 'tplVisible',
-                                component: tplVisibleRange,
-                                meta: {
-                                    title: '可见范围',
-                                    logo: 'store',
-                                    header: '研发商店',
-                                    to: 'atomHome'
-                                }
-                            }
-                        ]
+                        }
                     }
                 ]
             },
-            // {
-            //     path: 'image/:imageCode',
-            //     name: 'imageDatailIndex',
-            //     component: imageDatailIndex,
-            //     children: [
-            //         {
-            //             path: 'overview',
-            //             name: 'imageOverview',
-            //             component: imageOverview,
-            //             meta: {
-            //                 title: '概览',
-            //                 logo: 'store',
-            //                 header: '研发商店',
-            //                 to: 'atomHome'
-            //             }
-            //         },
-            //         {
-            //             path: 'detail',
-            //             name: 'imageDetail',
-            //             component: imageDetail,
-            //             meta: {
-            //                 title: '详情',
-            //                 logo: 'store',
-            //                 header: '研发商店',
-            //                 to: 'atomHome'
-            //             }
-            //         },
-            //         {
-            //             path: 'settings',
-            //             name: 'imageSettings',
-            //             component: imageSettings,
-            //             meta: {
-            //                 title: '设置',
-            //                 logo: 'store',
-            //                 header: '研发商店',
-            //                 to: 'atomHome'
-            //             },
-            //             children: [
-            //                 {
-            //                     path: 'visible',
-            //                     name: 'imageVisibleRange',
-            //                     component: imageVisibleRange,
-            //                     meta: {
-            //                         title: '可见范围',
-            //                         logo: 'store',
-            //                         header: '研发商店',
-            //                         to: 'atomHome'
-            //                     }
-            //                 }
-            //             ]
-            //         }
-            //     ]
-            // },
             {
                 path: 'install',
                 name: 'install',
