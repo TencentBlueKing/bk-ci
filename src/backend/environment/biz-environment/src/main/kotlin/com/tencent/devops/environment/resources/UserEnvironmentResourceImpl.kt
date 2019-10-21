@@ -29,7 +29,7 @@ package com.tencent.devops.environment.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserEnvironmentResource
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -54,7 +54,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     }
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(environmentPermissionService.checkEnvPermission(userId, projectId, BkAuthPermission.CREATE))
+        return Result(environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE))
     }
 
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {

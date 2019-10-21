@@ -29,8 +29,8 @@ package com.tencent.devops.ticket.service.impl
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.service.CertPermissionService
@@ -48,46 +48,46 @@ class CertPermissionServiceImpl @Autowired constructor(
     private val ticketAuthServiceCode: TicketAuthServiceCode
 ) : CertPermissionService {
 
-    private val resourceType = BkAuthResourceType.TICKET_CERT
+    private val resourceType = AuthResourceType.TICKET_CERT
 
     override fun validatePermission(
-        userId: String,
-        projectId: String,
-        bkAuthPermission: BkAuthPermission,
-        message: String
+            userId: String,
+            projectId: String,
+            authPermission: AuthPermission,
+            message: String
     ) {
-        if (!validatePermission(userId, projectId, bkAuthPermission)) {
+        if (!validatePermission(userId, projectId, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
         }
     }
 
     override fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        bkAuthPermission: BkAuthPermission,
-        message: String
+            userId: String,
+            projectId: String,
+            resourceCode: String,
+            authPermission: AuthPermission,
+            message: String
     ) {
-        if (!validatePermission(userId, projectId, resourceCode, bkAuthPermission)) {
+        if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
         }
     }
 
-    override fun validatePermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): Boolean {
+    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            permission = bkAuthPermission
+            permission = authPermission
         )
     }
 
     override fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        bkAuthPermission: BkAuthPermission
+            userId: String,
+            projectId: String,
+            resourceCode: String,
+            authPermission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -95,32 +95,32 @@ class CertPermissionServiceImpl @Autowired constructor(
             resourceType = resourceType,
             projectCode = projectId,
             resourceCode = resourceCode,
-            permission = bkAuthPermission
+            permission = authPermission
         )
     }
 
-    override fun filterCert(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): List<String> {
+    override fun filterCert(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            permission = bkAuthPermission,
+            permission = authPermission,
             supplier = supplierForPermission(projectId)
         )
     }
 
     override fun filterCerts(
-        userId: String,
-        projectId: String,
-        bkAuthPermissions: Set<BkAuthPermission>
-    ): Map<BkAuthPermission, List<String>> {
+            userId: String,
+            projectId: String,
+            authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            permissions = bkAuthPermissions,
+            permissions = authPermissions,
             supplier = supplierForPermission(projectId)
         )
     }

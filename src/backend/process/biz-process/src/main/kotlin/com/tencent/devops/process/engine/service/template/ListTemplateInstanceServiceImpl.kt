@@ -28,7 +28,7 @@ package com.tencent.devops.process.engine.service.template
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.template.TemplateInstances
@@ -65,7 +65,7 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
         val pipelineSettings = pipelineSettingDao.getSettings(dslContext, pipelineIds).groupBy { it.pipelineId }
         logger.info("Get the pipeline settings - $pipelineSettings")
         val hasPermissionList = pipelinePermissionService.getResourceByPermission(
-            userId = userId, projectId = projectId, permission = BkAuthPermission.EDIT
+            userId = userId, projectId = projectId, permission = AuthPermission.EDIT
         )
         val templatePipelines = associatePipelines.map {
             val pipelineSetting = pipelineSettings[it.pipelineId]

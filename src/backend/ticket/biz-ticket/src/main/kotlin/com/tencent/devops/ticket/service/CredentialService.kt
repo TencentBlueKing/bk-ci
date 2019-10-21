@@ -30,8 +30,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.ServiceBuildResource
 import com.tencent.devops.ticket.dao.CredentialDao
@@ -62,7 +61,7 @@ class CredentialService @Autowired constructor(
         credentialPermissionService.validatePermission(
             userId,
             projectId,
-            BkAuthPermission.CREATE,
+            AuthPermission.CREATE,
             "用户($userId)在工程($projectId)下没有凭据创建权限"
         )
 
@@ -96,7 +95,7 @@ class CredentialService @Autowired constructor(
             userId,
             projectId,
             credentialId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
         )
 
@@ -124,7 +123,7 @@ class CredentialService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            bkAuthPermission = BkAuthPermission.DELETE,
+            bkAuthPermission = AuthPermission.DELETE,
             message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的删除权限"
         )
 
@@ -143,16 +142,16 @@ class CredentialService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             bkAuthPermissions = setOf(
-                BkAuthPermission.LIST,
-                BkAuthPermission.DELETE,
-                BkAuthPermission.VIEW,
-                BkAuthPermission.EDIT
+                AuthPermission.LIST,
+                AuthPermission.DELETE,
+                AuthPermission.VIEW,
+                AuthPermission.EDIT
             )
         )
-        val hasListPermissionCredentialIdList = permissionToListMap[BkAuthPermission.LIST]!!
-        val hasDeletePermissionCredentialIdList = permissionToListMap[BkAuthPermission.DELETE]!!
-        val hasViewPermissionCredentialIdList = permissionToListMap[BkAuthPermission.VIEW]!!
-        val hasEditPermissionCredentialIdList = permissionToListMap[BkAuthPermission.EDIT]!!
+        val hasListPermissionCredentialIdList = permissionToListMap[AuthPermission.LIST]!!
+        val hasDeletePermissionCredentialIdList = permissionToListMap[AuthPermission.DELETE]!!
+        val hasViewPermissionCredentialIdList = permissionToListMap[AuthPermission.VIEW]!!
+        val hasEditPermissionCredentialIdList = permissionToListMap[AuthPermission.EDIT]!!
 
         val count = credentialDao.countByProject(
             dslContext,
@@ -192,14 +191,14 @@ class CredentialService @Autowired constructor(
     }
 
     fun hasPermissionList(
-        userId: String,
-        projectId: String,
-        credentialTypes: List<CredentialType>?,
-        bkAuthPermission: BkAuthPermission,
-        offset: Int,
-        limit: Int
+            userId: String,
+            projectId: String,
+            credentialTypes: List<CredentialType>?,
+            authPermission: AuthPermission,
+            offset: Int,
+            limit: Int
     ): SQLPage<Credential> {
-        val hasPermissionList = credentialPermissionService.filterCredential(userId, projectId, bkAuthPermission)
+        val hasPermissionList = credentialPermissionService.filterCredential(userId, projectId, authPermission)
 
         val count =
             credentialDao.countByProject(dslContext, projectId, credentialTypes?.toSet(), hasPermissionList.toSet())
@@ -255,15 +254,15 @@ class CredentialService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            bkAuthPermission = BkAuthPermission.VIEW,
+            bkAuthPermission = AuthPermission.VIEW,
             message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的查看权限"
         )
 
         val hasViewPermission = true
         val hasDeletePermission =
-            credentialPermissionService.validatePermission(userId, projectId, credentialId, BkAuthPermission.DELETE)
+            credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
         val hasEditPermission =
-            credentialPermissionService.validatePermission(userId, projectId, credentialId, BkAuthPermission.EDIT)
+            credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.EDIT)
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
 
@@ -289,15 +288,15 @@ class CredentialService @Autowired constructor(
             userId,
             projectId,
             credentialId,
-            BkAuthPermission.VIEW,
+            AuthPermission.VIEW,
             "用户($userId)在工程($projectId)下没有凭据($credentialId)的查看权限"
         )
 
         val hasViewPermission = true
         val hasDeletePermission =
-            credentialPermissionService.validatePermission(userId, projectId, credentialId, BkAuthPermission.DELETE)
+            credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
         val hasEditPermission =
-            credentialPermissionService.validatePermission(userId, projectId, credentialId, BkAuthPermission.EDIT)
+            credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.EDIT)
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
         return CredentialWithPermission(

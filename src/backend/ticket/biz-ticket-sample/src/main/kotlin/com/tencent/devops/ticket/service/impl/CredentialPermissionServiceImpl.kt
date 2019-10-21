@@ -29,7 +29,7 @@ package com.tencent.devops.ticket.service.impl
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CredentialPermissionService
@@ -49,43 +49,43 @@ class CredentialPermissionServiceImpl @Autowired constructor(
 ) : CredentialPermissionService {
 
     override fun validatePermission(
-        userId: String,
-        projectId: String,
-        bkAuthPermission: BkAuthPermission,
-        message: String
+            userId: String,
+            projectId: String,
+            authPermission: AuthPermission,
+            message: String
     ) {
-        if (!validatePermission(userId, projectId, bkAuthPermission)) {
+        if (!validatePermission(userId, projectId, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
         }
     }
 
     override fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        bkAuthPermission: BkAuthPermission,
-        message: String
+            userId: String,
+            projectId: String,
+            resourceCode: String,
+            authPermission: AuthPermission,
+            message: String
     ) {
-        if (!validatePermission(userId, projectId, resourceCode, bkAuthPermission)) {
+        if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
         }
     }
 
-    override fun validatePermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): Boolean {
+    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
-            permission = bkAuthPermission
+            permission = authPermission
         )
     }
 
     override fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        bkAuthPermission: BkAuthPermission
+            userId: String,
+            projectId: String,
+            resourceCode: String,
+            authPermission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -93,32 +93,32 @@ class CredentialPermissionServiceImpl @Autowired constructor(
             resourceType = CredentialResourceType,
             projectCode = projectId,
             resourceCode = resourceCode,
-            permission = bkAuthPermission
+            permission = authPermission
         )
     }
 
-    override fun filterCredential(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): List<String> {
+    override fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
-            permission = bkAuthPermission,
+            permission = authPermission,
             supplier = supplierForFakePermission(projectId)
         )
     }
 
     override fun filterCredentials(
-        userId: String,
-        projectId: String,
-        bkAuthPermissions: Set<BkAuthPermission>
-    ): Map<BkAuthPermission, List<String>> {
+            userId: String,
+            projectId: String,
+            authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
-            permissions = bkAuthPermissions,
+            permissions = authPermissions,
             supplier = supplierForFakePermission(projectId)
         )
     }

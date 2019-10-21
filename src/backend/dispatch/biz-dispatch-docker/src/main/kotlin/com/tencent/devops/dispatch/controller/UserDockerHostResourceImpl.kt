@@ -7,8 +7,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -36,8 +36,8 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkParam(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, BkAuthResourceType.PIPELINE_DEFAULT,
-                        debugStartParam.projectId, debugStartParam.pipelineId, BkAuthPermission.EDIT)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT,
+                        debugStartParam.projectId, debugStartParam.pipelineId, AuthPermission.EDIT)) {
             logger.info("用户($userId)无权限在工程(${debugStartParam.projectId})下编辑流水线(${debugStartParam.pipelineId})")
             throw PermissionForbiddenException("用户($userId)无权限在工程(${debugStartParam.projectId})下编辑流水线(${debugStartParam.pipelineId})")
         }
@@ -82,7 +82,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun getDebugStatus(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<ContainerInfo>? {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, BkAuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, BkAuthPermission.EDIT)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
             logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
         }
@@ -93,7 +93,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun stopDebug(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean>? {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, BkAuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, BkAuthPermission.EDIT)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
             logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
         }
@@ -106,7 +106,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("BuildId参数非法")
         }
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, BkAuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, BkAuthPermission.VIEW)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.VIEW)) {
             throw PermissionForbiddenException("用户（$userId) 无权限获取流水线($pipelineId)详情")
         }
 

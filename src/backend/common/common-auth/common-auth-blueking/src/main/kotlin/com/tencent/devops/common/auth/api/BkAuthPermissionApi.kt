@@ -47,22 +47,22 @@ class BkAuthPermissionApi constructor(
 ) : AuthPermissionApi {
 
     override fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission
     ): Boolean {
         return validateUserResourcePermission(user, serviceCode, resourceType, projectCode, "*", permission)
     }
 
     override fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            permission: AuthPermission
     ): Boolean {
         return validateUserResourcePermission(
             bkAuthProperties.principalType!!, user, "project", projectCode, resourceType,
@@ -72,16 +72,16 @@ class BkAuthPermissionApi constructor(
 
     // 批量校验权限,查询用户是否有某个资源某个权限(新版权限中心）
     private fun validateUserResourcePermission(
-        principalType: String, // "user"
-        principalId: String, // 用户id
-        scopeType: String, // "project"
-        scopeId: String, // projectCode
-        resourceType: BkAuthResourceType,
-        resourceId: String,
-        actionId: BkAuthPermission,
-        systemId: AuthServiceCode, // 旧版本的serviceCode
-        appCode: String,
-        appSecret: String
+            principalType: String, // "user"
+            principalId: String, // 用户id
+            scopeType: String, // "project"
+            scopeId: String, // projectCode
+            resourceType: AuthResourceType,
+            resourceId: String,
+            actionId: AuthPermission,
+            systemId: AuthServiceCode, // 旧版本的serviceCode
+            appCode: String,
+            appSecret: String
     ): Boolean {
 //        val epoch = System.currentTimeMillis()
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/resources-perms/batch-verify"
@@ -121,12 +121,12 @@ class BkAuthPermissionApi constructor(
     }
 
     override fun getUserResourceByPermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission,
-        supplier: (() -> List<String>)?
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission,
+            supplier: (() -> List<String>)?
     ): List<String> {
         return getUserResourcesByPermissions(
             user,
@@ -139,13 +139,13 @@ class BkAuthPermissionApi constructor(
     }
 
     override fun getUserResourcesByPermissions(
-        user: String,
-        serviceCode: AuthServiceCode, // 对应新版的systemId
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permissions: Set<BkAuthPermission>,
-        supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>> {
+            user: String,
+            serviceCode: AuthServiceCode, // 对应新版的systemId
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permissions: Set<AuthPermission>,
+            supplier: (() -> List<String>)?
+    ): Map<AuthPermission, List<String>> {
 
         return getUserResourcesByPermissions(
             userId = user, scopeType = PROJECT_SCOPE_TYPE, scopeId = projectCode,
@@ -155,17 +155,17 @@ class BkAuthPermissionApi constructor(
 
     // 批量查询有权限的资源,若返回的map的Entry中Boolean为true，则表明用户对该资源拥有所有权限
     override fun getUserResourcesByPermissions(
-        userId: String,
-        scopeType: String,
-        scopeId: String, // 项目id
-        resourceType: BkAuthResourceType,
-        permissions: Set<BkAuthPermission>,
-        systemId: AuthServiceCode,
-        supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>> {
+            userId: String,
+            scopeType: String,
+            scopeId: String, // 项目id
+            resourceType: AuthResourceType,
+            permissions: Set<AuthPermission>,
+            systemId: AuthServiceCode,
+            supplier: (() -> List<String>)?
+    ): Map<AuthPermission, List<String>> {
 
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/authorized-resources/search"
-        val resultMap = LinkedHashMap<BkAuthPermission, List<String>>()
+        val resultMap = LinkedHashMap<AuthPermission, List<String>>()
 
         val requestBean = BkUserResourcesAuthRequest(
             principalId = userId,
@@ -207,10 +207,10 @@ class BkAuthPermissionApi constructor(
 
     private fun putData(
         reqData: BkUserResourcesAuthResponse.Data,
-        resultMap: LinkedHashMap<BkAuthPermission, List<String>>
+        resultMap: LinkedHashMap<AuthPermission, List<String>>
     ) {
         val resourceIds = reqData.resourceIds
-        val bkAuthPermission = BkAuthPermission.get(reqData.actionId)
+        val bkAuthPermission = AuthPermission.get(reqData.actionId)
 
         if (resourceIds.isEmpty()) {
             resultMap[bkAuthPermission] = emptyList()

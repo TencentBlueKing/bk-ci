@@ -136,6 +136,20 @@ allprojects {
         jcenter()
     }
 
+    def createDir = {
+        path ->
+            File f = new File(path)
+            if (!f.exists())
+                f.mkdirs()
+    }
+
+    /**
+     * 创建kotlin代码库路径 
+     **/
+    task createCodeDirs() {
+        def paths = ["src/main/java", "src/main/kotlin", "src/main/resources", "src/test/java", "src/test/kotlin", "src/test/resources"]
+        paths.forEach(createDir)
+    }
 }
 
 subprojects {

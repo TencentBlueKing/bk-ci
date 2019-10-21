@@ -12,8 +12,8 @@ import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceJfrogResource
@@ -32,17 +32,17 @@ class PipelineService @Autowired constructor(
     private val client: Client,
     private val pipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) {
-    private val resourceType = BkAuthResourceType.PIPELINE_DEFAULT
+    private val resourceType = AuthResourceType.PIPELINE_DEFAULT
 
-    fun hasPermission(userId: String, projectId: String, pipelineId: String, bkAuthPermission: BkAuthPermission): Boolean {
-        return validatePermission(userId, projectId, pipelineId, bkAuthPermission)
+    fun hasPermission(userId: String, projectId: String, pipelineId: String, authPermission: AuthPermission): Boolean {
+        return validatePermission(userId, projectId, pipelineId, authPermission)
     }
 
     fun list(userId: String, projectId: String, path: String): List<FileInfo> {
-        return list(userId, projectId, path, BkAuthPermission.VIEW)
+        return list(userId, projectId, path, AuthPermission.VIEW)
     }
 
-    fun list(userId: String, projectId: String, argPath: String, bkAuthPermission: BkAuthPermission): List<FileInfo> {
+    fun list(userId: String, projectId: String, argPath: String, authPermission: AuthPermission): List<FileInfo> {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -54,16 +54,16 @@ class PipelineService @Autowired constructor(
 
         return when {
             isRootDir(path) -> {
-                getRootPathFileList(userId, projectId, path, jFrogFileInfoList, bkAuthPermission)
+                getRootPathFileList(userId, projectId, path, jFrogFileInfoList, authPermission)
             }
             isPipelineDir(path) -> {
                 val pipelineId = getPipelineId(path)
-                validatePermission(userId, projectId, pipelineId, bkAuthPermission, "用户($userId)在工程($projectId)下没有流水线${bkAuthPermission.alias}权限")
+                validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
                 getPipelinePathList(projectId, path, jFrogFileInfoList)
             }
             else -> {
                 val pipelineId = getPipelineId(path)
-                validatePermission(userId, projectId, pipelineId, bkAuthPermission, "用户($userId)在工程($projectId)下没有流水线${bkAuthPermission.alias}权限")
+                validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
                 getBuildPathList(projectId, path, jFrogFileInfoList)
             }
         }
@@ -125,8 +125,8 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    private fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>, bkAuthPermission: BkAuthPermission): List<FileInfo> {
-        val hasPermissionList = filterPipeline(userId, projectId, bkAuthPermission)
+    private fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>, authPermission: AuthPermission): List<FileInfo> {
+        val hasPermissionList = filterPipeline(userId, projectId, authPermission)
         val pipelineIdToNameMap = getPipelineNames(projectId, hasPermissionList.toSet())
 
         val fileInfoList = mutableListOf<FileInfo>()
@@ -349,17 +349,17 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun validatePermission(user: String, projectId: String, pipelineId: String, bkAuthPermission: BkAuthPermission, message: String) {
-        if (!validatePermission(user, projectId, pipelineId, bkAuthPermission)) {
+    fun validatePermission(user: String, projectId: String, pipelineId: String, authPermission: AuthPermission, message: String) {
+        if (!validatePermission(user, projectId, pipelineId, authPermission)) {
             throw PermissionForbiddenException(message)
         }
     }
 
-    fun validatePermission(user: String, projectId: String, pipelineId: String, bkAuthPermission: BkAuthPermission): Boolean {
-        return bkAuthPermissionApi.validateUserResourcePermission(user, pipelineAuthServiceCode, resourceType, projectId, pipelineId, bkAuthPermission)
+    fun validatePermission(user: String, projectId: String, pipelineId: String, authPermission: AuthPermission): Boolean {
+        return bkAuthPermissionApi.validateUserResourcePermission(user, pipelineAuthServiceCode, resourceType, projectId, pipelineId, authPermission)
     }
 
-    fun filterPipeline(user: String, projectId: String, bkAuthPermission: BkAuthPermission): List<String> {
+    fun filterPipeline(user: String, projectId: String, authPermission: AuthPermission): List<String> {
         val startTimestamp = System.currentTimeMillis()
         try {
             return bkAuthPermissionApi.getUserResourceByPermission(
@@ -367,7 +367,7 @@ class PipelineService @Autowired constructor(
                 pipelineAuthServiceCode,
                 resourceType,
                 projectId,
-                bkAuthPermission,
+                authPermission,
                 null
             )
         } finally {

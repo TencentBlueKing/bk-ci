@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.auth.api
 
-enum class BkAuthPermission(val value: String, val alias: String) {
+enum class AuthPermission(val value: String, val alias: String) {
     CREATE("create", "创建"),              // 流水线，凭据，证书，代码仓库
     DEPLOY("deploy", "部署"),              // 流水线，容器，自定义目录
     EDIT("edit", "编辑"), // 流水线，凭据，证书，代码仓库
@@ -46,7 +46,7 @@ enum class BkAuthPermission(val value: String, val alias: String) {
     MANAGE("manage", "管理"); // 项目管理
 
     companion object {
-        fun get(value: String): BkAuthPermission {
+        fun get(value: String): AuthPermission {
             values().forEach {
                 if (value == it.value) return it
             }

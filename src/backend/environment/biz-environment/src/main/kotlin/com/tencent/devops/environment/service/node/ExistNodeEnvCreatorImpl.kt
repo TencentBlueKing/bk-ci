@@ -3,7 +3,7 @@ package com.tencent.devops.environment.service.node
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -16,7 +16,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.annotation.PostConstruct
 
 @Component
 class ExistNodeEnvCreatorImpl @Autowired constructor(
@@ -41,7 +40,7 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
 
         // 检查 node 权限
         val canUseNodeIds =
-            environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
+            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
             throw OperationException(

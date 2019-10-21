@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.auth.api
 
-enum class BkAuthResourceType(val value: String) {
+enum class AuthResourceType(val value: String) {
     BCS_DEV_IMAGE("dev_image"),     // bcs服务开发镜像
     BCS_PROD_IMAGE("prod_image"),   // bcs服务生产镜像
 
@@ -56,8 +56,8 @@ enum class BkAuthResourceType(val value: String) {
     PROJECT("project"); // 项目管理
 
     companion object {
-        fun get(value: String): BkAuthResourceType {
-            BkAuthResourceType.values().forEach {
+        fun get(value: String): AuthResourceType {
+            AuthResourceType.values().forEach {
                 if (value == it.value) return it
             }
             throw IllegalArgumentException("No enum for constant $value")

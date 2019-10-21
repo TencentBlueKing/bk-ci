@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class BkAuthProperties {
-    @Value("\${auth.nvName:#{null}}")
+    @Value("\${auth.envName:#{null}}")
     val envName: String? = null
     @Value("\${auth.idProvider:#{null}}")
     val idProvider: String? = null
