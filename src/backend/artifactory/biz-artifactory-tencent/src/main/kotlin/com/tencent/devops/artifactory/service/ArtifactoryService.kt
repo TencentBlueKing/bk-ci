@@ -48,11 +48,6 @@ class ArtifactoryService @Autowired constructor(
     val shortUrlApi: ShortUrlApi
 ) {
 
-    @Value("\${rdeng.test:#{null}}")
-    private val devUrl: String? = null
-
-    fun getDevUrl() = devUrl
-
     fun hasDownloadPermission(
         userId: String,
         projectId: String,
