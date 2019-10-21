@@ -139,9 +139,7 @@
                 showToTop: false,
                 storeTypes: [
                     { type: 'atom', des: '流水线插件' },
-                    { type: 'template', des: '流水线模板' },
-                    { type: 'ide', des: 'IDE插件' },
-                    { type: 'image', des: '镜像' }
+                    { type: 'template', des: '流水线模板' }
                 ]
             }
         },

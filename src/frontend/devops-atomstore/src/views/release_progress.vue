@@ -41,19 +41,16 @@
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
                                 <div class="retry-bth">
-                                    <span :class="[{ disable: !permission }, 'rebuild-btn']"
-                                        :title="permissionMsg"
-                                        v-if="(entry.name === '构建失败' && entry.status === 'fail') ||
-                                            (entry.name === '构建' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')"
-                                        @click.stop="rebuild"
-                                    >重新构建<i class="col-line"></i></span>
-                                    <span class="log-btn"
-                                        v-if="buildStatus.includes(entry.name) && entry.status !== 'undo'"
-                                        @click.stop="readLog"
-                                    >日志</span>
+                                    <span class="test-btn"
+                                        v-if="entry.name === '提交' && ['doing','success'].includes(entry.status) && !isOver">
+                                        <span>重新传包</span>
+                                        <input type="file" title="" class="upload-input" @change="selectFile" accept="application/zip">
+                                    </span>
+                                </div>
+                                <div class="retry-bth">
                                     <span class="test-btn"
                                         v-if="entry.name === '测试中' && entry.status === 'doing'">
-                                        <a target="_blank" :href="`/console/pipeline/${storeBuildInfo.projectCode}/list`">测试</a>
+                                        <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}/list`">测试</a>
                                     </span>
                                 </div>
                                 <bk-button class="pass-btn"
@@ -64,9 +61,6 @@
                                     @click.stop="passTest"
                                     :title="permissionMsg"
                                 >继续</bk-button>
-                                <div class="audit-tips" v-if="entry.name === '审核中' && entry.status === 'doing'">
-                                    <i class="bk-icon icon-info-circle"></i>由蓝盾管理员审核
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -97,18 +91,14 @@
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label">适用Job类型：</div>
-                                <div class="info-value" v-if="versionDetail.os">{{ jobTypeMap[versionDetail.jobType] }}
-                                    <span v-if="versionDetail.jobType === 'AGENT'">（
+                                <div class="info-label">操作系统：</div>
+                                <div class="info-value" v-if="versionDetail.os">
+                                    <span v-if="versionDetail.jobType === 'AGENT'">
                                         <i class="bk-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
                                         <i class="bk-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                        <i class="bk-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>）
+                                        <i class="bk-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
                                     </span>
                                 </div>
-                            </div>
-                            <div class="detail-form-item is-open">
-                                <label class="info-label">是否开源：</label>
-                                <div class="info-value">{{ versionDetail.visibilityLevel | levelFilter }}</div>
                             </div>
                         </div>
                         <div class="detail-form-item">
@@ -152,6 +142,10 @@
                             <div class="info-value">{{ versionDetail.version }}</div>
                         </div>
                         <div class="detail-form-item">
+                            <div class="info-label">发布包：</div>
+                            <div class="info-value">{{ versionDetail.pkgName }}</div>
+                        </div>
+                        <div class="detail-form-item">
                             <div class="info-label">发布描述：</div>
                             <div class="info-value">{{ versionDetail.versionContent }}</div>
                         </div>
@@ -170,39 +164,16 @@
                 </div>
             </div>
         </div>
-        <bk-sideslider
-            class="build-side-slider"
-            :is-show.sync="sideSliderConfig.show"
-            :title="sideSliderConfig.title"
-            :quick-close="sideSliderConfig.quickClose"
-            :width="sideSliderConfig.width">
-            <template slot="content">
-                <div style="width: 100%; height: 100%"
-                    v-bkloading="{
-                        isLoading: sideSliderConfig.loading.isLoading,
-                        title: sideSliderConfig.loading.title
-                    }">
-                    <build-log v-if="currentBuildNo"
-                        :project-id="currentProjectId"
-                        :pipeline-id="currentPipelineId"
-                        :build-no="currentBuildNo"
-                        :log-url="`store/api/user/market/atom/logs/${currentProjectId}/${currentPipelineId}`"
-                    />
-                </div>
-            </template>
-        </bk-sideslider>
     </div>
 </template>
 
 <script>
-    import BuildLog from '@/components/Log'
+    import cookie from 'cookie'
     import webSocketMessage from '@/utils/webSocketMessage'
 
-    export default {
-        components: {
-            BuildLog
-        },
+    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
 
+    export default {
         filters: {
             levelFilter (val) {
                 if (val === 'LOGIN_PUBLIC') return '是'
@@ -222,7 +193,6 @@
                 isOverflow: false,
                 isDropdownShow: false,
                 progressStatus: [],
-                buildStatus: ['构建', '构建中', '构建失败'],
                 storeBuildInfo: {},
                 loading: {
                     isLoading: false,
@@ -251,17 +221,6 @@
                 versionDetail: {
                     description: '',
                     visibilityLevel: ''
-                },
-                sideSliderConfig: {
-                    show: false,
-                    title: '查看日志',
-                    quickClose: true,
-                    width: 820,
-                    value: '',
-                    loading: {
-                        isLoading: false,
-                        title: ''
-                    }
                 }
             }
         },
@@ -279,15 +238,9 @@
                 let str = ''
                 if (!this.permission) str = '只有插件管理员或当前流程创建者可以操作'
                 return str
-            }
-        },
-        watch: {
-            'sideSliderConfig.show' (val) {
-                if (!val) {
-                    this.currentProjectId = ''
-                    this.currentBuildNo = ''
-                    this.currentPipelineId = ''
-                }
+            },
+            postUrl () {
+                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
             }
         },
 
@@ -396,47 +349,6 @@
                     })
                 }
             },
-            async rebuild () {
-                if (!this.permission) return
-
-                let message, theme
-
-                try {
-                    await this.$store.dispatch('store/rebuild', {
-                        atomId: this.routerParams.atomId,
-                        projectId: this.versionDetail.projectCode
-                    })
-
-                    message = '操作成功'
-                    theme = 'success'
-                    // this.requestRelease(this.routerParams.atomId)
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-                } finally {
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            readLog () {
-                this.sideSliderConfig.show = true
-                this.currentProjectId = this.storeBuildInfo.projectCode
-                this.currentBuildNo = this.storeBuildInfo.buildId
-                this.currentPipelineId = this.storeBuildInfo.pipelineId
-            },
-            // async loopCheck () {
-            //     const { timer } = this
-
-            //     clearTimeout(timer)
-
-            //     if (!this.isOver) {
-            //         this.timer = setTimeout(async () => {
-            //             await this.requestRelease(this.routerParams.atomId)
-            //         }, 5000)
-            //     }
-            // },
             handlerCancel () {
                 if (!this.permission) return
 
@@ -476,11 +388,85 @@
                         message,
                         theme
                     })
-                    
+
                     setTimeout(() => {
                         this.loading.isLoading = false
                     }, 1000)
                 }
+            },
+            selectFile () {
+                const target = event.target
+                const files = target.files
+
+                if (!files.length) return
+                for (const file of files) {
+                    const fileObj = {
+                        name: file.name,
+                        size: file.size / 1000 / 1000,
+                        type: file.type,
+                        origin: file
+                    }
+                    const pos = fileObj.name.lastIndexOf('.')
+                    const lastname = fileObj.name.substring(pos, fileObj.name.length)
+                    if (lastname.toLowerCase() !== '.zip') {
+                        this.$bkMessage({
+                            message: '只允许上传 zip 格式的文件',
+                            theme: 'error'
+                        })
+                    } else {
+                        this.uploadFile(fileObj)
+                    }
+                }
+            },
+            uploadFile (fileObj) {
+                const formData = new FormData()
+                formData.append('file', fileObj.origin)
+                formData.append('os', `["${this.versionDetail.os.join('","')}"]`)
+
+                const xhr = new XMLHttpRequest()
+                fileObj.xhr = xhr // 保存，用于中断请求
+
+                xhr.withCredentials = true
+                xhr.open('POST', this.postUrl, true)
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === 4) {
+                        let theme, message
+                        if (xhr.status === 200) {
+                            const response = JSON.parse(xhr.responseText)
+
+                            if (response.status === 0) {
+                                theme = 'success'
+                                message = '上传成功'
+
+                                this.requestRelease(this.routerParams.atomId)
+                                this.requestAtomDetail(this.routerParams.atomId)
+                            } else {
+                                theme = 'error'
+                                message = response.message
+                            }
+                        } else {
+                            const errResponse = JSON.parse(xhr.responseText)
+                            theme = 'error'
+                            message = errResponse.message
+                        }
+                        this.$bkMessage({
+                            message,
+                            theme
+                        })
+                    }
+                }
+                if (xhr.upload) {
+                    xhr.upload.onprogress = event => {
+                        if (event.lengthComputable) {
+                            const progress = Math.floor(event.loaded / event.total * 100)
+
+                            this.progress = progress >= 1 ? progress - 1 : 0
+                        }
+                    }
+                }
+                xhr.setRequestHeader('X-CSRFToken', CSRFToken)
+                xhr.send(formData)
+                document.querySelector('.upload-input').value = ''
             },
             atomOs (os) {
                 const target = []
@@ -682,7 +668,7 @@
                 font-size: 12px;
                 font-weight: normal;
                 color: $primaryColor;
-                cursor: pointer;
+                // cursor: pointer;
                 text-align: center;
                 a,
                 a:hover {
@@ -710,7 +696,7 @@
             .pass-btn {
                 position: absolute;
                 top: 17px;
-                left: 83px;
+                left: 140px;
                 padding: 0 10px;
                 font-weight: normal;
             }

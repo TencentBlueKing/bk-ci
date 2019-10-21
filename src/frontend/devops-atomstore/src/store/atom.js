@@ -249,13 +249,6 @@ export const actions = {
     },
 
     /**
-     * 重新构建
-     */
-    rebuild ({ commit }, { atomId, projectId }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`)
-    },
-
-    /**
      * 查看流水线插件可见范围
      */
     requestVisibleList ({ commit }, { atomCode }) {

@@ -7,8 +7,6 @@
         :width="580"
         :close-icon="addMemberConf.closeIcon"
         :quick-close="addMemberConf.quickClose"
-        @confirm="toConfirm"
-        @cancel="toCloseDialog"
     >
         <main class="member-logo-content"
             v-bkloading="{
@@ -49,6 +47,19 @@
                 </form>
             </div>
         </main>
+        <template slot="footer">
+            <div class="bk-dialog-outer">
+                <template>
+                    <bk-button theme="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
+                        @click="toConfirm">
+                        保存
+                    </bk-button>
+                    <bk-button class="bk-dialog-btn bk-dialog-btn-cancel" @click="toCloseDialog">
+                        取消
+                    </bk-button>
+                </template>
+            </div>
+        </template>
     </bk-dialog>
 </template>
 
@@ -73,8 +84,7 @@
                     { name: '版本发布', active: true },
                     { name: '私有配置', active: true },
                     { name: '审批', active: true },
-                    { name: '成员管理', active: true },
-                    { name: '可见范围', active: true }
+                    { name: '成员管理', active: true }
                 ],
                 memberForm: {
                     memberName: '',
@@ -109,10 +119,10 @@
                         item.active = true
                     })
                 } else {
+                    this.permissionList[1].active = false
                     this.permissionList[2].active = false
                     this.permissionList[3].active = false
                     this.permissionList[4].active = false
-                    this.permissionList[5].active = false
                 }
             },
             showDialog (val) {
@@ -123,8 +133,8 @@
             }
         },
         methods: {
-            toConfirm () {
-                const valid = this.$validator.validate()
+            async toConfirm () {
+                const valid = await this.$validator.validate()
                 if (valid) {
                     const params = {
                         storeCode: this.atomCode,
@@ -184,13 +194,16 @@
         }
         .permission-list-content {
             display: flex;
-            justify-content: space-between;
             .permission-name {
-                padding: 4px 9px;
+                margin-left: 16px;
+                padding: 4px 6px;
                 border: 1px solid $borderColor;
                 border-radius: 22px;
                 font-size: 12px;
                 color: $fontLigtherColor;
+                &:first-child{
+                    margin-left: 0;
+                }
             }
             .active-item {
                 border-color: $primaryColor;

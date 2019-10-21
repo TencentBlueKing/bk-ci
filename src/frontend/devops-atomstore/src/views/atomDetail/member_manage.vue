@@ -103,7 +103,7 @@
             },
 
             desFormatter (row, column, cellValue, index) {
-                return cellValue === 'ADMIN' ? '插件开发 版本发布 审批 成员管理 可见范围 私有配置' : '插件开发 版本发布 私有配置'
+                return cellValue === 'ADMIN' ? '插件开发 版本发布 审批 成员管理 私有配置' : '插件开发 版本发布 私有配置'
             },
 
             async init () {

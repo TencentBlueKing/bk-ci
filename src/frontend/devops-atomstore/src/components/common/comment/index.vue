@@ -82,7 +82,7 @@
                     return
                 }
 
-                if (replyContent.length >= 500) {
+                if (replyContent.length > 500) {
                     this.$bkMessage({ message: '字数不能超过500字，请修改后再回复', theme: 'warning' })
                     return
                 }

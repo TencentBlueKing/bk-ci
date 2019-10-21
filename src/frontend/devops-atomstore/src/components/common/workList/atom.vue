@@ -379,11 +379,6 @@
                     errorCount++
                 }
 
-                if (this.isOpenSource.findIndex(x => x.value === this.createAtomForm.visibilityLevel) < 0) {
-                    this.atomErrors.openSourceError = true
-                    errorCount++
-                }
-
                 if (this.createAtomForm.visibilityLevel === 'PRIVATE' && !this.createAtomForm.privateReason) {
                     this.atomErrors.privateReasonError = true
                     errorCount++
@@ -423,6 +418,9 @@
                         })
                         this.createAtomsideConfig.isLoading = false
                         this.requestList()
+                        if (theme === 'success') {
+                            this.cancelCreateAtom()
+                        }
                     }
                 }
             },
@@ -435,7 +433,7 @@
                     const params = {
                         bufferDay: this.buffer
                     }
-                    
+
                     this.offlinesideConfig.isLoading = true
                     try {
                         await this.$store.dispatch('store/offlineAtom', {

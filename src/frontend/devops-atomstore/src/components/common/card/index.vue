@@ -12,7 +12,6 @@
                 <comment-rate :rate="5" :width="15" :height="16" :style="{ width: starWidth }" class="score-real"></comment-rate>
                 <comment-rate :rate="0" :width="15" :height="16"></comment-rate>
             </p>
-            <i class="bk-icon icon-lock-shape" v-if="!atom.flag"></i>
         </section>
     </router-link>
 </template>
