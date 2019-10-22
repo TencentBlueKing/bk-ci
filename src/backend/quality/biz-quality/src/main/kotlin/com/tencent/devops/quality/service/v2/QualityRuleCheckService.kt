@@ -9,6 +9,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.plugin.codecc.api.ServiceCodeccElementResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule

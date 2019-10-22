@@ -208,7 +208,7 @@ class TkeService @Autowired constructor(
                                 "dockerFile" to "",
                                 "moduleId" to pushImageParam.cmdbId,
                                 "isGpu" to 0,
-                                "imageUrl" to "${repoName}/${pushImageParam.userName}/${pushImageParam.targetImageName.removePrefix(
+                                "imageUrl" to "$repoName/${pushImageParam.userName}/${pushImageParam.targetImageName.removePrefix(
                                     "/"
                                 )}",
                                 "codeUrl" to pushImageParam.codeUrl

@@ -19,7 +19,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_CLUSTER"], description = "用户-BCS集群信息")
-@Path("/user/cluster")
+@Path("/user/bcs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserBcsClusterResource {
@@ -30,7 +30,7 @@ interface UserBcsClusterResource {
 
     @ApiOperation("获取Bcs镜像列表")
     @GET
-    @Path("/{projectId}/getImageList")
+    @Path("/projects/{projectId}/getImageList")
     fun getImageList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -42,7 +42,7 @@ interface UserBcsClusterResource {
 
     @ApiOperation("获取VM机型列表")
     @GET
-    @Path("/{projectId}/getVmModelList")
+    @Path("/projects/{projectId}/getVmModelList")
     fun getVmModelList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -54,7 +54,7 @@ interface UserBcsClusterResource {
 
     @ApiOperation("获取VM配额信息")
     @GET
-    @Path("/{projectId}/getProjectInfo")
+    @Path("/projects/{projectId}/getProjectInfo")
     fun getProjectInfo(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

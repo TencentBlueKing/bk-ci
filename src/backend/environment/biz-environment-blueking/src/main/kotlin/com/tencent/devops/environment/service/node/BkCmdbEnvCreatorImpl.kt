@@ -3,7 +3,7 @@ package com.tencent.devops.environment.service.node
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -36,7 +36,7 @@ class BkCmdbEnvCreatorImpl @Autowired constructor(
         val nodeLongIds = envCreateInfo.nodeHashIds!!.map { HashUtil.decodeIdToLong(it) }
         // 检查 node 权限
         val canUseNodeIds =
-            environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
+            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
             val nodeIdStr = unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }

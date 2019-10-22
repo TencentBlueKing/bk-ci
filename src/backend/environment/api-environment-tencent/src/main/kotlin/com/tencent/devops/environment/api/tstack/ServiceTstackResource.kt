@@ -11,7 +11,6 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_TSTACK"], description = "服务-Stack")
@@ -32,10 +31,10 @@ interface ServiceTstackResource {
 
     @ApiOperation("获取构建节点信息")
     @GET
-    @Path("/node/{hashId}")
+    @Path("/projects/{projectId}/node/{hashId}")
     fun get(
         @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Hash ID", required = true)
         @PathParam("hashId")
@@ -44,7 +43,7 @@ interface ServiceTstackResource {
 
     @ApiOperation("获取可用Tstack节点列表")
     @GET
-    @Path("/{projectId}/listAvailableNodes")
+    @Path("/projects/{projectId}/listAvailableNodes")
     fun listAvailableTstackNodes(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

@@ -26,9 +26,7 @@
 
 package com.tencent.devops.environment.api.thirdPartyAgent
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
@@ -46,25 +44,26 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
-@Path("/buildAgent/agent/thirdPartyAgent")
+@Path("/buildAgent/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAgentThirdPartyAgentResource {
 
     @ApiOperation("Agent启动")
     @POST
-    @Path("/startup")
+    @Path("/projects/{projectId}/agents/{agentId}/startup")
     fun agentStartup(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
@@ -75,13 +74,13 @@ interface BuildAgentThirdPartyAgentResource {
 
     @ApiOperation("Agent关闭")
     @POST
-    @Path("/shutdown")
+    @Path("/projects/{projectId}/agents/{agentId}/shutdown")
     fun agentShutdown(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
@@ -93,13 +92,13 @@ interface BuildAgentThirdPartyAgentResource {
 
     @ApiOperation("查询Agent状态")
     @GET
-    @Path("/status")
+    @Path("/projects/{projectId}/agents/{agentId}/status")
     fun getAgentStatus(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
@@ -108,13 +107,13 @@ interface BuildAgentThirdPartyAgentResource {
 
     @ApiOperation("上报Agent心跳")
     @POST
-    @Path("/agents/heartbeat")
+    @Path("/projects/{projectId}/agents/{agentId}/heartbeat")
     fun agentHeartbeat(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
@@ -125,13 +124,13 @@ interface BuildAgentThirdPartyAgentResource {
 
     @ApiOperation("上报Agent心跳")
     @POST
-    @Path("/agents/newHeartbeat")
+    @Path("/projects/{projectId}/agents/{agentId}/newHeartbeat")
     fun newHeartbeat(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
@@ -142,13 +141,13 @@ interface BuildAgentThirdPartyAgentResource {
 
     @ApiOperation("查询Agent的管道")
     @GET
-    @Path("agents/pipelines")
+    @Path("/projects/{projectId}/agents/{agentId}/pipelines")
     fun getPipelines(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
@@ -157,13 +156,13 @@ interface BuildAgentThirdPartyAgentResource {
 
     @ApiOperation("更改Agent的管道状态")
     @PUT
-    @Path("agents/pipelines")
+    @Path("/projects/{projectId}/agents/{agentId}/pipelines")
     fun updatePipelineStatus(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)

@@ -36,15 +36,15 @@ data class BuildFormProperty(
     @ApiModelProperty("元素ID-标识符", required = true)
     val id: String,
     @ApiModelProperty("是否必须", required = true)
-    val required: Boolean,
+    var required: Boolean,
     @ApiModelProperty("元素类型", required = true)
     val type: BuildFormPropertyType,
     @ApiModelProperty("默认值", required = true)
     var defaultValue: Any,
     @ApiModelProperty("下拉框列表", required = false)
-    val options: List<BuildFormValue>?,
+    var options: List<BuildFormValue>?,
     @ApiModelProperty("描述", required = false)
-    val desc: String?,
+    var desc: String?,
 
     // 针对 SVN_TAG 新增字段
     @ApiModelProperty("repoHashId", required = false)

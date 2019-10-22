@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
@@ -56,7 +56,7 @@ class PipelineCodeccService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = BkAuthPermission.VIEW
+                permission = AuthPermission.VIEW
             )
         ) {
             throw PermissionForbiddenException("用户（$userId) 无权限获取流水线($pipelineId)Codecc报告")

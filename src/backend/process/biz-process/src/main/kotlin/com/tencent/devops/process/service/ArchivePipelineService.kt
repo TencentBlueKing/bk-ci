@@ -27,7 +27,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,7 +53,7 @@ class ArchivePipelineService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = BkAuthPermission.VIEW
+            permission = AuthPermission.VIEW
         )
         if (!hasCreatePermission) throw PermissionForbiddenException("user[$userId] does not has permission on project[$projectId]")
     }

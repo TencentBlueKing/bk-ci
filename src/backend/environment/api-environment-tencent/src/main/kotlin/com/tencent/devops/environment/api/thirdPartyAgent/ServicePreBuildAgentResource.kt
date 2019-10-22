@@ -26,7 +26,7 @@ interface ServicePreBuildAgentResource {
 
     @ApiOperation("创建PreBuildAgent")
     @POST
-    @Path("/projects/{projectId}/os/{os}/createAgent")
+    @Path("/projects/{projectId}/os/{os}/createPreBuildAgent")
     fun createPrebuildAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -47,7 +47,7 @@ interface ServicePreBuildAgentResource {
 
     @ApiOperation("拉取Prebuild构建机Agent列表")
     @GET
-    @Path("/projects/{projectId}/prebuild/listPreBuildAgents")
+    @Path("/projects/{projectId}/os/{os}/listPreBuildAgents")
     fun listPreBuildAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -56,7 +56,7 @@ interface ServicePreBuildAgentResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("操作系统", required = false)
-        @QueryParam("os")
+        @PathParam("os")
         os: OS?
     ): Result<List<ThirdPartyAgentStaticInfo>>
 }

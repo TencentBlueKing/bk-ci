@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.api.pojo.*
 import com.tencent.devops.common.auth.code.BkCodeAuthServiceCode
-import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import okhttp3.MediaType
 import okhttp3.Request
@@ -54,40 +53,40 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
 ) : RepositoryPermissionService {
 
     override fun validatePermission(
-        userId: String,
-        projectId: String,
-        bkAuthPermission: BkAuthPermission,
-        repositoryId: Long?,
-        message: String
+            userId: String,
+            projectId: String,
+            authPermission: AuthPermission,
+            repositoryId: Long?,
+            message: String
     ) {
-        if (!hasPermission(userId, projectId, bkAuthPermission, repositoryId)) {
+        if (!hasPermission(userId, projectId, authPermission, repositoryId)) {
             throw PermissionForbiddenException(message)
         }
     }
 
-    override fun filterRepository(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): List<Long> {
+    override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
         val resourceCodeList = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = codeAuthServiceCode,
-            resourceType = BkAuthResourceType.CODE_REPERTORY,
+            resourceType = AuthResourceType.CODE_REPERTORY,
             projectCode = projectId,
-            permission = bkAuthPermission,
+            permission = authPermission,
             supplier = null
         )
         return resourceCodeList.map { it.toLong() }
     }
 
     override fun filterRepositories(
-        userId: String,
-        projectId: String,
-        bkAuthPermissions: Set<BkAuthPermission>
-    ): Map<BkAuthPermission, List<Long>> {
+            userId: String,
+            projectId: String,
+            authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = codeAuthServiceCode,
-            resourceType = BkAuthResourceType.CODE_REPERTORY,
+            resourceType = AuthResourceType.CODE_REPERTORY,
             projectCode = projectId,
-            permissions = bkAuthPermissions,
+            permissions = authPermissions,
             supplier = null
         )
         return permissionResourcesMap.mapValues {
@@ -96,27 +95,27 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     }
 
     override fun hasPermission(
-        userId: String,
-        projectId: String,
-        bkAuthPermission: BkAuthPermission,
-        repositoryId: Long?
+            userId: String,
+            projectId: String,
+            authPermission: AuthPermission,
+            repositoryId: Long?
     ): Boolean {
         if (repositoryId == null)
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = codeAuthServiceCode,
-                resourceType = BkAuthResourceType.CODE_REPERTORY,
+                resourceType = AuthResourceType.CODE_REPERTORY,
                 projectCode = projectId,
-                permission = bkAuthPermission
+                permission = authPermission
             )
         else
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = codeAuthServiceCode,
-                resourceType = BkAuthResourceType.CODE_REPERTORY,
+                resourceType = AuthResourceType.CODE_REPERTORY,
                 projectCode = projectId,
                 resourceCode = repositoryId.toString(),
-                permission = bkAuthPermission
+                permission = authPermission
             )
     }
 
@@ -124,7 +123,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         authResourceApi.createResource(
             user = userId,
             serviceCode = codeAuthServiceCode,
-            resourceType = BkAuthResourceType.CODE_REPERTORY,
+            resourceType = AuthResourceType.CODE_REPERTORY,
             projectCode = projectId,
             resourceCode = repositoryId.toString(),
             resourceName = repositoryName
@@ -134,7 +133,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     override fun editResource(projectId: String, repositoryId: Long, repositoryName: String) {
         authResourceApi.modifyResource(
             serviceCode = codeAuthServiceCode,
-            resourceType = BkAuthResourceType.CODE_REPERTORY,
+            resourceType = AuthResourceType.CODE_REPERTORY,
             projectCode = projectId,
             resourceCode = repositoryId.toString(),
             resourceName = repositoryName
@@ -144,20 +143,20 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     override fun deleteResource(projectId: String, repositoryId: Long) {
         authResourceApi.deleteResource(
             serviceCode = codeAuthServiceCode,
-            resourceType = BkAuthResourceType.CODE_REPERTORY,
+            resourceType = AuthResourceType.CODE_REPERTORY,
             projectCode = projectId,
             resourceCode = repositoryId.toString()
         )
     }
 
-    override fun getUserResourcesByPermissions(user: String, projectCode: String, permissions: Set<BkAuthPermission>): Map<BkAuthPermission, List<String>> {
+    override fun getUserResourcesByPermissions(user: String, projectCode: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
         val epoch = System.currentTimeMillis()
         var success = false
         try {
             val accessToken = bkAuthTokenApi.getAccessToken(codeAuthServiceCode)
             val url = "${bkAuthProperties.url}/permission/project/service/policies/user/query/resources?access_token=$accessToken"
             val policyResourceTypeList = permissions.map {
-                BkAuthPermissionsPolicyCodeAndResourceType(it.value, BkAuthResourceType.CODE_REPERTORY.value)
+                BkAuthPermissionsPolicyCodeAndResourceType(it.value, AuthResourceType.CODE_REPERTORY.value)
             }
             val bkAuthPermissionsResourcesRequest = BkAuthPermissionsResourcesRequest(
                     projectCode,
@@ -193,9 +192,9 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
                     throw RuntimeException("Fail to get user resources by permissions")
                 }
 
-                val permissionsResourcesMap = mutableMapOf<BkAuthPermission, List<String>>()
+                val permissionsResourcesMap = mutableMapOf<AuthPermission, List<String>>()
                 responseObject.data!!.forEach {
-                    val bkAuthPermission = BkAuthPermission.get(it.policyCode)
+                    val bkAuthPermission = AuthPermission.get(it.policyCode)
                     val resourceList = it.resourceCodeList
                     permissionsResourcesMap[bkAuthPermission] = resourceList
                 }
@@ -206,14 +205,14 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getUserResourceByPermission(user: String, projectCode: String, permission: BkAuthPermission): List<String> {
+    override fun getUserResourceByPermission(user: String, projectCode: String, permission: AuthPermission): List<String> {
         val epoch = System.currentTimeMillis()
         var success = false
         try {
             val accessToken = bkAuthTokenApi.getAccessToken(codeAuthServiceCode)
             val url = "${bkAuthProperties.url}/permission/project/service/policy/user/query/resources?" +
                     "access_token=$accessToken&user_id=$user&project_code=$projectCode&service_code=${codeAuthServiceCode.id()}" +
-                    "&resource_type=${BkAuthResourceType.CODE_REPERTORY.value}&policy_code=${permission.value}&is_exact_resource=1"
+                    "&resource_type=${AuthResourceType.CODE_REPERTORY.value}&policy_code=${permission.value}&is_exact_resource=1"
             val request = Request.Builder()
                     .url(url)
                     .get()
@@ -244,22 +243,22 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun validateUserResourcePermission(user: String, projectCode: String, permission: BkAuthPermission): Boolean {
+    override fun validateUserResourcePermission(user: String, projectCode: String, permission: AuthPermission): Boolean {
         return validateUserResourcePermission(user, projectCode, "*" , permission)
     }
 
-    override fun validateUserResourcePermission(user: String, projectCode: String, resourceCode: String, permission: BkAuthPermission): Boolean {
+    override fun validateUserResourcePermission(user: String, projectCode: String, resourceCode: String, permission: AuthPermission): Boolean {
         val epoch = System.currentTimeMillis()
         var success = false
         try {
             val accessToken = bkAuthTokenApi.getAccessToken(codeAuthServiceCode)
             val url = "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
-            val bkAuthPermissionRequest = BkAuthPermissionVerifyRequest(
+            val bkAuthPermissionRequest = AuthPermissionVerifyRequest(
                     projectCode,
                     codeAuthServiceCode.id(),
                     resourceCode,
                     permission.value,
-                    BkAuthResourceType.CODE_REPERTORY.value,
+                    AuthResourceType.CODE_REPERTORY.value,
                     user
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionRequest)
@@ -304,7 +303,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
                 codeAuthServiceCode.id(),
                 resourceCode,
                 resourceName,
-                BkAuthResourceType.CODE_REPERTORY.value
+                AuthResourceType.CODE_REPERTORY.value
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceCreateRequest)
         val mediaType = MediaType.parse("application/json; charset=utf-8")

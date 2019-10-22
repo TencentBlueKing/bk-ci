@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.misc.client.BcsClient
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -85,7 +85,7 @@ class EnvService @Autowired constructor(
     }
 
     fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, BkAuthPermission.CREATE)) {
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE)) {
             throw OperationException("No Permission")
         }
 
@@ -99,7 +99,7 @@ class EnvService @Autowired constructor(
 
     fun updateEnvironment(userId: String, projectId: String, envHashId: String, envUpdateInfo: EnvUpdateInfo) {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.EDIT)) {
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw OperationException("No Permission")
         }
         checkName(projectId, envId, envUpdateInfo.name)
@@ -144,22 +144,22 @@ class EnvService @Autowired constructor(
         val permissionMap = environmentPermissionService.listEnvByPermissions(
             userId,
             projectId,
-            setOf(BkAuthPermission.LIST, BkAuthPermission.EDIT, BkAuthPermission.DELETE)
+            setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE)
         )
-        val canListEnvIds = if (permissionMap.containsKey(BkAuthPermission.LIST)) {
-            permissionMap[BkAuthPermission.LIST]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canListEnvIds = if (permissionMap.containsKey(AuthPermission.LIST)) {
+            permissionMap[AuthPermission.LIST]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
 
-        val canEditEnvIds = if (permissionMap.containsKey(BkAuthPermission.EDIT)) {
-            permissionMap[BkAuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canEditEnvIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
+            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
 
-        val canDeleteEnvIds = if (permissionMap.containsKey(BkAuthPermission.DELETE)) {
-            permissionMap[BkAuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        val canDeleteEnvIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
+            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
@@ -196,7 +196,7 @@ class EnvService @Autowired constructor(
             return listOf()
         }
 
-        val canUseEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, BkAuthPermission.USE)
+        val canUseEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.USE)
 
         val validRecordList = envRecordList.filter { canUseEnvIds.contains(it.envId) }
         if (validRecordList.isEmpty()) {
@@ -230,7 +230,7 @@ class EnvService @Autowired constructor(
             return emptyList()
         }
 
-        val canListEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, BkAuthPermission.LIST)
+        val canListEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.LIST)
         val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }
         if (validRecordList.isEmpty()) {
             return emptyList()
@@ -268,7 +268,7 @@ class EnvService @Autowired constructor(
             return emptyList()
         }
 
-        val canListEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, BkAuthPermission.LIST)
+        val canListEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.LIST)
         val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }
         if (validRecordList.isEmpty()) {
             return emptyList()
@@ -308,7 +308,7 @@ class EnvService @Autowired constructor(
 
     fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.VIEW)) {
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
             throw OperationException("No Permission")
         }
         val env = envDao.get(dslContext, projectId, envId)
@@ -324,12 +324,12 @@ class EnvService @Autowired constructor(
             createdTime = env.createdTime.timestamp(),
             updatedUser = env.updatedUser,
             updatedTime = env.updatedTime.timestamp(),
-            canEdit = environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.EDIT),
+            canEdit = environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT),
             canDelete = environmentPermissionService.checkEnvPermission(
                 userId,
                 projectId,
                 envId,
-                BkAuthPermission.DELETE
+                AuthPermission.DELETE
             ),
             canUse = null
         )
@@ -359,7 +359,7 @@ class EnvService @Autowired constructor(
 
     fun listRawEnvByEnvNames(userId: String, projectId: String, envNames: List<String>): List<EnvWithPermission> {
         val envRecords = envDao.listServerEnvByEnvNames(dslContext, projectId, envNames)
-        val canUseEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, BkAuthPermission.USE)
+        val canUseEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.USE)
 
         return envRecords.map {
             EnvWithPermission(
@@ -383,7 +383,7 @@ class EnvService @Autowired constructor(
     fun deleteEnvironment(userId: String, projectId: String, envHashId: String) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         envDao.getOrNull(dslContext, projectId, envId) ?: return
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.DELETE)) {
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw OperationException("No Permission")
         }
 
@@ -439,7 +439,7 @@ class EnvService @Autowired constructor(
 
     fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
         val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
-        val canUseEnvIdList = environmentPermissionService.listEnvByPermission(userId, projectId, BkAuthPermission.USE)
+        val canUseEnvIdList = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.USE)
         val invalidEnvIds = envIds.filterNot { canUseEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {
             throw OperationException("节点权限不足：节点ID[${invalidEnvIds.joinToString(",")}]")
@@ -483,14 +483,14 @@ class EnvService @Autowired constructor(
 
     fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.EDIT)) {
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw OperationException("No EDIT Permission")
         }
 
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
 
         // 检查 node 权限
-        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, BkAuthPermission.USE)
+        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
             throw OperationException("节点权限不足：[${unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]")
@@ -529,7 +529,7 @@ class EnvService @Autowired constructor(
 
     fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, BkAuthPermission.EDIT)) {
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw OperationException("No Permission")
         }
 

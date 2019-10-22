@@ -31,7 +31,6 @@ import com.tencent.devops.log.model.pojo.LogBatchEvent
 import com.tencent.devops.log.model.pojo.LogEvent
 import com.tencent.devops.log.model.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogServiceDispatcher
-import com.tencent.devops.log.service.PipelineLogService
 import com.tencent.devops.log.utils.LogDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes

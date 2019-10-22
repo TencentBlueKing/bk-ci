@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
@@ -90,14 +90,14 @@ class UserPipelineResourceImpl @Autowired constructor(
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
         val bkAuthPermission = when (permission) {
-            Permission.DEPLOY -> BkAuthPermission.DEPLOY
-            Permission.DOWNLOAD -> BkAuthPermission.DOWNLOAD
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.EXECUTE -> BkAuthPermission.EXECUTE
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.CREATE -> BkAuthPermission.CREATE
-            Permission.LIST -> BkAuthPermission.LIST
+            Permission.DEPLOY -> AuthPermission.DEPLOY
+            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.EXECUTE -> AuthPermission.EXECUTE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.LIST -> AuthPermission.LIST
         }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
@@ -131,14 +131,14 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         val bkAuthPermission = when (permission) {
-            Permission.DEPLOY -> BkAuthPermission.DEPLOY
-            Permission.DOWNLOAD -> BkAuthPermission.DOWNLOAD
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.EXECUTE -> BkAuthPermission.EXECUTE
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.CREATE -> BkAuthPermission.CREATE
-            Permission.LIST -> BkAuthPermission.LIST
+            Permission.DEPLOY -> AuthPermission.DEPLOY
+            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.EXECUTE -> AuthPermission.EXECUTE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.LIST -> AuthPermission.LIST
         }
         return Result(pipelineService.hasPermission(userId, projectId, pipelineId, bkAuthPermission))
     }

@@ -13,8 +13,8 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
@@ -63,9 +63,9 @@ class ExperienceService @Autowired constructor(
     private val bsAuthResourceApi: BSAuthResourceApi,
     private val shortUrlApi: ShortUrlApi,
     private val experienceServiceCode: BSExperienceAuthServiceCode
-    
+
 ) {
-    private val taskResourceType = BkAuthResourceType.EXPERIENCE_TASK
+    private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile(",|;")
 
     fun hasArtifactoryPermission(userId: String, projectId: String, path: String, artifactoryType: ArtifactoryType): Boolean {
@@ -87,7 +87,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun list(userId: String, projectId: String, expired: Boolean?): List<ExperienceSummaryWithPermission> {
-        val experiencePermissionListMap = filterExperience(userId, projectId, setOf(BkAuthPermission.EDIT))
+        val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
         val expireTime = DateUtil.today()
         val searchTime = if (expired == null || expired == false) expireTime else null
         val online = if (expired == null || expired == false) true else null
@@ -115,7 +115,7 @@ class ExperienceService @Autowired constructor(
 
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
             val canExperience = userSet.contains(userId) || userId == it.creator
-            val canEdit = experiencePermissionListMap[BkAuthPermission.EDIT]!!.contains(it.id)
+            val canEdit = experiencePermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
             ExperienceSummaryWithPermission(
                     HashUtil.encodeLongId(it.id),
                     it.name,
@@ -226,7 +226,7 @@ class ExperienceService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        validateTaskPermission(userId, projectId, experienceId, BkAuthPermission.EDIT, "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限")
+        validateTaskPermission(userId, projectId, experienceId, AuthPermission.EDIT, "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限")
         if (experienceDao.getOrNull(dslContext, experienceId) == null) {
             throw NotFoundException("体验($experienceHashId)不存在")
         }
@@ -254,7 +254,7 @@ class ExperienceService @Autowired constructor(
 
     fun updateOnline(userId: String, projectId: String, experienceHashId: String, online: Boolean) {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        validateTaskPermission(userId, projectId, experienceId, BkAuthPermission.EDIT, "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限")
+        validateTaskPermission(userId, projectId, experienceId, AuthPermission.EDIT, "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限")
         if (experienceDao.getOrNull(dslContext, experienceId) == null) {
             throw NotFoundException("体验($experienceHashId)不存在")
         }
@@ -388,8 +388,8 @@ class ExperienceService @Autowired constructor(
         }
     }
 
-    private fun validateTaskPermission(user: String, projectId: String, experienceId: Long, bkAuthPermission: BkAuthPermission, message: String) {
-        if (!bsAuthPermissionApi.validateUserResourcePermission(user, experienceServiceCode, taskResourceType, projectId, HashUtil.encodeLongId(experienceId), bkAuthPermission)) {
+    private fun validateTaskPermission(user: String, projectId: String, experienceId: Long, authPermission: AuthPermission, message: String) {
+        if (!bsAuthPermissionApi.validateUserResourcePermission(user, experienceServiceCode, taskResourceType, projectId, HashUtil.encodeLongId(experienceId), authPermission)) {
             throw PermissionForbiddenException(message)
         }
     }
@@ -398,9 +398,9 @@ class ExperienceService @Autowired constructor(
         bsAuthResourceApi.createResource(user, experienceServiceCode, taskResourceType, projectId, HashUtil.encodeLongId(experienceId), experienceName)
     }
 
-    private fun filterExperience(user: String, projectId: String, bkAuthPermissions: Set<BkAuthPermission>): Map<BkAuthPermission, List<Long>> {
-        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(user, experienceServiceCode, taskResourceType, projectId, bkAuthPermissions, null)
-        val map = mutableMapOf<BkAuthPermission, List<Long>>()
+    private fun filterExperience(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(user, experienceServiceCode, taskResourceType, projectId, authPermissions, null)
+        val map = mutableMapOf<AuthPermission, List<Long>>()
         permissionResourceMap.forEach { key, value ->
             map[key] = value.map { HashUtil.decodeIdToLong(it) }
         }

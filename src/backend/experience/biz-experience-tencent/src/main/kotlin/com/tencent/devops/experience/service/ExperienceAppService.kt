@@ -7,7 +7,6 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthProject
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode

@@ -15,13 +15,13 @@ import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceTxProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -108,7 +108,7 @@ class ArtifactoryDownloadService @Autowired constructor(
                 throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
             }
             val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-            pipelineService.validatePermission(userId, projectId, pipelineId, BkAuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+            pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
         }
 
         val url = jFrogApiService.downloadUrl(realPath)
@@ -134,7 +134,7 @@ class ArtifactoryDownloadService @Autowired constructor(
                 throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
             }
             val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-            pipelineService.validatePermission(userId, projectId, pipelineId, BkAuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+            pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
         }
 
         val url = jFrogApiService.ioaDownloadUrl(realPath)
@@ -158,7 +158,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         }
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID]!!.first()
-        pipelineService.validatePermission(userId, projectId, pipelineId, BkAuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+        pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
 
         val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
         val shortUrl = shortUrlApi.getShortUrl(url, 300)
@@ -175,7 +175,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(userId, projectId, pipelineId, BkAuthPermission.SHARE, "用户($userId)在工程($projectId)下没有流水线${pipelineId}分享权限")
+                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.SHARE, "用户($userId)在工程($projectId)下没有流水线${pipelineId}分享权限")
             }
             ArtifactoryType.CUSTOM_DIR -> {
                 customDirService.validatePermission(userId, projectId)
@@ -186,7 +186,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val downloadUrl = jFrogApiService.internalDownloadUrl(realPath, ttl, downloadUsers)
         val jFrogDetail = jFrogService.file(realPath)
         val fileName = JFrogUtil.getFileName(path)
-        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+        val projectName = client.get(ServiceTxProjectResource::class).get(projectId).data!!.projectName
 
         val days = ttl / (3600 * 24)
         val title = EmailUtil.getShareEmailTitle(userId, fileName, 1)

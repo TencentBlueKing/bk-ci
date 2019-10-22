@@ -39,7 +39,6 @@ class TstackRedisUtils @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
 
-
     fun getTstackContainerInfo(key: String): TstackContainerInfo? {
         val containerData = redisOperation.get(key) ?: return null
         try {

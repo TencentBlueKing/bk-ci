@@ -27,7 +27,7 @@ interface ServiceQualityControlPointResource {
         controlPoint: QualityControlPoint
     ): Result<Int>
 
-    @ApiOperation("获取控制点信息")
+    @ApiOperation("清除控制点信息")
     @Path("/cleanTestProject")
     @PUT
     fun cleanTestProject(

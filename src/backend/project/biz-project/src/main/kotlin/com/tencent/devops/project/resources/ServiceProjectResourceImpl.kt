@@ -28,6 +28,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -66,5 +67,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun get(englishName: String): Result<ProjectVO?> {
         return Result(projectService.getByEnglishName(englishName))
+    }
+
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+        return Result(projectService.create(userId, projectCreateInfo))
     }
 }

@@ -8,8 +8,9 @@ import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildProjectResourceImpl @Autowired constructor(private val projectService: ProjectService) :
-        BuildProjectResource {
+class BuildProjectResourceImpl @Autowired constructor(
+        private val projectService: ProjectService
+) : BuildProjectResource {
     override fun listByProjectCode(projectCode: String): Result<List<ProjectVO>> {
         return Result(projectService.list(setOf(projectCode)))
     }

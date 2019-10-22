@@ -6,7 +6,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.IPath
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMqMessage
-import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
@@ -68,5 +67,4 @@ data class PipelineWebsocketPush(
     override fun buildMessage(messageInfo: IWebsocketPush) {
         return
     }
-
 }

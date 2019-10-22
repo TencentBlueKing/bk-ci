@@ -17,19 +17,19 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         private val objectMapper: ObjectMapper
 ) : RepositoryPermissionService {
 
-    override fun validatePermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission, repositoryId: Long?, message: String) {
+    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?, message: String) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun filterRepository(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): List<Long> {
+    override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun filterRepositories(userId: String, projectId: String, bkAuthPermissions: Set<BkAuthPermission>): Map<BkAuthPermission, List<Long>> {
+    override fun filterRepositories(userId: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun hasPermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission, repositoryId: Long?): Boolean {
+    override fun hasPermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -45,19 +45,19 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun getUserResourcesByPermissions(user: String, projectCode: String, permissions: Set<BkAuthPermission>): Map<BkAuthPermission, List<String>> {
+    override fun getUserResourcesByPermissions(user: String, projectCode: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun getUserResourceByPermission(user: String, projectCode: String, permission: BkAuthPermission): List<String> {
+    override fun getUserResourceByPermission(user: String, projectCode: String, permission: AuthPermission): List<String> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun validateUserResourcePermission(user: String, projectCode: String, permission: BkAuthPermission): Boolean {
+    override fun validateUserResourcePermission(user: String, projectCode: String, permission: AuthPermission): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun validateUserResourcePermission(user: String, projectCode: String, resourceCode: String, permission: BkAuthPermission): Boolean {
+    override fun validateUserResourcePermission(user: String, projectCode: String, resourceCode: String, permission: AuthPermission): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

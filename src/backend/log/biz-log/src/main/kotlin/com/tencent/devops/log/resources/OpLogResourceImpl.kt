@@ -44,12 +44,12 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class OpLogResourceImpl @Autowired constructor(
-        private val indexService: IndexService,
-        private val logService: PipelineLogService,
-        private val v2ProjectService: V2ProjectService,
-        private val esIndexCloseJob: ESIndexCloseJob,
-        private val cleanBuildJob: CleanBuildJob,
-        private val logServiceV2: LogServiceV2
+    private val indexService: IndexService,
+    private val logService: PipelineLogService,
+    private val v2ProjectService: V2ProjectService,
+    private val esIndexCloseJob: ESIndexCloseJob,
+    private val cleanBuildJob: CleanBuildJob,
+    private val logServiceV2: LogServiceV2
 ) : OpLogResource {
 
     override fun preCreateIndices(numDays: Int): Result<Int> {
@@ -62,7 +62,6 @@ class OpLogResourceImpl @Autowired constructor(
     override fun createLogStatus(): Result<Boolean> {
         return Result(logService.createLogStatusIndex())
     }
-
 
     override fun enableV2(projectId: String, enable: Boolean): Result<Boolean> {
         return if (enable) {
@@ -99,11 +98,11 @@ class OpLogResourceImpl @Autowired constructor(
     }
 
     override fun getInitLogs(
-            buildId: String,
-            isAnalysis: Boolean?,
-            queryKeywords: String?,
-            tag: String?,
-            executeCount: Int?
+        buildId: String,
+        isAnalysis: Boolean?,
+        queryKeywords: String?,
+        tag: String?,
+        executeCount: Int?
     ): Result<QueryLogs> {
 
         val indexAndType = indexService.parseIndexAndType(buildId)
@@ -117,13 +116,13 @@ class OpLogResourceImpl @Autowired constructor(
     }
 
     override fun getMoreLogs(
-            buildId: String,
-            num: Int?,
-            fromStart: Boolean?,
-            start: Long,
-            end: Long,
-            tag: String?,
-            executeCount: Int?
+        buildId: String,
+        num: Int?,
+        fromStart: Boolean?,
+        start: Long,
+        end: Long,
+        tag: String?,
+        executeCount: Int?
     ): Result<QueryLogs> {
         val indexAndType = indexService.parseIndexAndType(buildId)
 
@@ -136,12 +135,12 @@ class OpLogResourceImpl @Autowired constructor(
     }
 
     override fun getAfterLogs(
-            buildId: String,
-            start: Long,
-            isAnalysis: Boolean?,
-            queryKeywords: String?,
-            tag: String?,
-            executeCount: Int?
+        buildId: String,
+        start: Long,
+        isAnalysis: Boolean?,
+        queryKeywords: String?,
+        tag: String?,
+        executeCount: Int?
     ): Result<QueryLogs> {
         val indexAndType = indexService.parseIndexAndType(buildId)
 

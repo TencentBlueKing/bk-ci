@@ -1,7 +1,6 @@
 package com.tencent.devops.common.websocket.dispatch.message
 
 import com.tencent.devops.common.websocket.pojo.NotifyPost
-import com.tencent.devops.common.websocket.pojo.WebSocketType
 
 data class PipelineMessage(
     val buildId: String?,

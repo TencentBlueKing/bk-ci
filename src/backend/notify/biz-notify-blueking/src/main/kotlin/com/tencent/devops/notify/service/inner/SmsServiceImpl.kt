@@ -30,15 +30,13 @@ import java.util.stream.Collectors
 
 @Service
 class SmsServiceImpl @Autowired constructor(
-        private val tofService: TOFService,
-        private val smsNotifyDao: SmsNotifyDao,
-        private val rabbitTemplate: RabbitTemplate,
-        private val configuration: TOFConfiguration
+    private val tofService: TOFService,
+    private val smsNotifyDao: SmsNotifyDao,
+    private val rabbitTemplate: RabbitTemplate,
+    private val configuration: TOFConfiguration
 ) : SmsService {
 
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)
-
-
 
     override fun sendMqMsg(message: SmsNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)

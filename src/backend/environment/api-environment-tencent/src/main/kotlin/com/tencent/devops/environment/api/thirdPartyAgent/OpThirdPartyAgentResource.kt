@@ -27,10 +27,10 @@ interface OpThirdPartyAgentResource {
 
     @ApiOperation("启动或者禁止第三方构建机接入")
     @PUT
-    @Path("/projects/enable")
+    @Path("/projects/{projectId}/enable")
     fun enableProject(
         @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("启动或禁止", required = true)
         @QueryParam("enable")
@@ -72,13 +72,13 @@ interface OpThirdPartyAgentResource {
 
     @ApiOperation("执行第三方构建机管道")
     @POST
-    @Path("/agents/{nodeId}/pipelines")
+    @Path("/projects/{projectId}/agents/{nodeId}/pipelines")
     fun scheduleAgentPipeline(
         @ApiParam("user id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        @HeaderParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("node id", required = true)
         @PathParam("nodeId")
@@ -89,10 +89,10 @@ interface OpThirdPartyAgentResource {
 
     @ApiOperation("获取第三方构建机管道结果")
     @GET
-    @Path("/agents/{nodeId}/pipelines")
+    @Path("/projects/{projectId}/agents/{nodeId}/pipelines")
     fun getAgentPipelineResponse(
         @ApiParam("项目ID", required = true)
-        @HeaderParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("node id", required = true)
         @PathParam("nodeId")

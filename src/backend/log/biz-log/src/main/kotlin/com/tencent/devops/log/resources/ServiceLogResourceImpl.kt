@@ -30,9 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogServiceDispatcher
-import com.tencent.devops.log.service.PipelineLogService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -42,7 +40,7 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class ServiceLogResourceImpl @Autowired constructor(
-        private val logDispatcher: LogServiceDispatcher
+    private val logDispatcher: LogServiceDispatcher
 ) : ServiceLogResource {
 
     override fun getInitLogs(

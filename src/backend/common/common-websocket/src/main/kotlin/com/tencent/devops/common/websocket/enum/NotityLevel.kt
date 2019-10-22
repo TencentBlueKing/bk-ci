@@ -2,7 +2,6 @@ package com.tencent.devops.common.websocket.enum
 
 import com.fasterxml.jackson.annotation.JsonValue
 
-
 enum class NotityLevel(
     private val level: Int,
     private val leavelMessage: String

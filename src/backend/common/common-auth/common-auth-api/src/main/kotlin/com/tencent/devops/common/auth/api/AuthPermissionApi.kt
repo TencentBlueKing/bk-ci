@@ -39,11 +39,11 @@ interface AuthPermissionApi {
      * @return Boolean 有权限则true
      */
     fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission
     ): Boolean
 
     /**
@@ -57,12 +57,12 @@ interface AuthPermissionApi {
      * @return Boolean 有权限则true
      */
     fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            permission: AuthPermission
     ): Boolean
 
     /**
@@ -76,12 +76,12 @@ interface AuthPermissionApi {
      * @return 返回资源code列表
      */
     fun getUserResourceByPermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission,
-        supplier: (() -> List<String>)?
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission,
+            supplier: (() -> List<String>)?
     ): List<String>
 
     /**
@@ -95,21 +95,21 @@ interface AuthPermissionApi {
      * @return 返回按权限类型分组的资源code列表
      */
     fun getUserResourcesByPermissions(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permissions: Set<BkAuthPermission>,
-        supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>>
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permissions: Set<AuthPermission>,
+            supplier: (() -> List<String>)?
+    ): Map<AuthPermission, List<String>>
 
     fun getUserResourcesByPermissions(
-        userId: String,
-        scopeType: String,
-        scopeId: String,
-        resourceType: BkAuthResourceType,
-        permissions: Set<BkAuthPermission>,
-        systemId: AuthServiceCode,
-        supplier: (() -> List<String>)? = null
-    ): Map<BkAuthPermission, List<String>>
+            userId: String,
+            scopeType: String,
+            scopeId: String,
+            resourceType: AuthResourceType,
+            permissions: Set<AuthPermission>,
+            systemId: AuthServiceCode,
+            supplier: (() -> List<String>)? = null
+    ): Map<AuthPermission, List<String>>
 }

@@ -29,8 +29,8 @@ package com.tencent.devops.environment.permission.impl
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,11 +46,10 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
     private val environmentAuthServiceCode: EnvironmentAuthServiceCode
 ) : EnvironmentPermissionService {
 
-    private val envResourceType = BkAuthResourceType.ENVIRONMENT_ENVIRONMENT
-    private val nodeResourceType = BkAuthResourceType.ENVIRONMENT_ENV_NODE
+    private val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
+    private val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
 
-
-    override fun listEnvByPermission(userId: String, projectId: String, permission: BkAuthPermission): Set<Long> {
+    override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -61,8 +60,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         ).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
-    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<BkAuthPermission>)
-        : Map<BkAuthPermission, List<String>> {
+    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -73,7 +71,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: BkAuthPermission): Boolean {
+    override fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -84,7 +82,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun checkEnvPermission(userId: String, projectId: String, permission: BkAuthPermission): Boolean {
+    override fun checkEnvPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -125,7 +123,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun listNodeByPermission(userId: String, projectId: String, permission: BkAuthPermission): Set<Long> {
+    override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -136,7 +134,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         ).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
-    override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<BkAuthPermission>): Map<BkAuthPermission, List<String>> {
+    override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -147,7 +145,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: BkAuthPermission): Boolean {
+    override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -158,7 +156,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, permission: BkAuthPermission): Boolean {
+    override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,

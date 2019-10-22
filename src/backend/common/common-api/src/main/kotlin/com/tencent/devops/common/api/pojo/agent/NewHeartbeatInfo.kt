@@ -16,17 +16,17 @@ data class NewHeartbeatInfo(
     companion object {
         fun dummyHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo {
             return NewHeartbeatInfo(
-                "",
-                "",
-                "",
-                "",
-                0,
-                "",
-                "",
-                listOf(),
-                agentId,
-                projectId,
-                System.currentTimeMillis()
+                masterVersion = "",
+                slaveVersion = "",
+                hostName = "",
+                agentIp = "",
+                parallelTaskCount = 0,
+                agentInstallPath = "",
+                startedUser = "",
+                taskList = listOf(),
+                agentId = agentId,
+                projectId = projectId,
+                heartbeatTime = System.currentTimeMillis()
             )
         }
     }

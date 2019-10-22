@@ -6,7 +6,7 @@ import com.tencent.devops.artifactory.service.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.ArtifactoryService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,7 +28,7 @@ class GwArtifactoryResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid path")
         }
         val bkAuthServiceCode = BkAuthServiceCode.get(serviceCode)
-        val bkAuthResourceType = BkAuthResourceType.get(resourceType)
+        val bkAuthResourceType = AuthResourceType.get(resourceType)
         return Result(artifactoryService.hasDownloadPermission(userId, projectId, bkAuthServiceCode, bkAuthResourceType, path))
     }
 

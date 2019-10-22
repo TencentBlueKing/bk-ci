@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -118,11 +118,11 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
         val bkAuthPermission = when (permission) {
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.LIST -> BkAuthPermission.LIST
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.USE -> BkAuthPermission.USE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
         }
         val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
         val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
@@ -212,11 +212,11 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
         val bkAuthPermission = when (permission) {
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.LIST -> BkAuthPermission.LIST
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.USE -> BkAuthPermission.USE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
         }
         val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
         val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)

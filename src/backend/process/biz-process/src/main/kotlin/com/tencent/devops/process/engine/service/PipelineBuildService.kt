@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
@@ -124,14 +123,14 @@ class PipelineBuildService(
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String, message: String) =
-        checkPermission(userId, projectId, pipelineId, BkAuthPermission.EXECUTE, message)
+        checkPermission(userId, projectId, pipelineId, AuthPermission.EXECUTE, message)
 
     private fun checkPermission(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        permission: BkAuthPermission,
-        message: String
+            userId: String,
+            projectId: String,
+            pipelineId: String,
+            permission: AuthPermission,
+            message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(userId, projectId, pipelineId, permission)) {
             throw PermissionForbiddenException(message)
@@ -151,7 +150,7 @@ class PipelineBuildService(
             userId,
             projectId,
             pipelineId,
-            BkAuthPermission.EXECUTE
+            AuthPermission.EXECUTE
         )
     }
 
@@ -241,7 +240,7 @@ class PipelineBuildService(
         buildId: String
     ): List<BuildParameters> {
 
-        checkPermission(userId, projectId, pipelineId, BkAuthPermission.VIEW, "用户（$userId) 无权限获取流水线($pipelineId)信息")
+        checkPermission(userId, projectId, pipelineId, AuthPermission.VIEW, "用户（$userId) 无权限获取流水线($pipelineId)信息")
 
         return try {
             val startupParam = buildStartupParamService.getParam(buildId)
@@ -727,7 +726,7 @@ class PipelineBuildService(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = BkAuthPermission.VIEW,
+                permission = AuthPermission.VIEW,
                 message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
             )
         }
@@ -760,7 +759,7 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         checkPermission: Boolean = true
     ): ModelDetail {
-        checkPermission(userId, projectId, pipelineId, BkAuthPermission.VIEW, "用户（$userId) 无权限获取流水线($pipelineId)详情")
+        checkPermission(userId, projectId, pipelineId, AuthPermission.VIEW, "用户（$userId) 无权限获取流水线($pipelineId)详情")
         val buildId = pipelineRuntimeService.getBuildIdbyBuildNo(projectId, pipelineId, buildNo)
             ?: throw NotFoundException("构建号($buildNo)不存在")
         return getBuildDetail(projectId, pipelineId, buildId, channelCode, checkPermission)
@@ -775,7 +774,7 @@ class PipelineBuildService(
     ): Response {
 
         if (checkPermission) {
-            checkPermission(userId, projectId, pipelineId, BkAuthPermission.VIEW, "用户（$userId) 无权限获取流水线($pipelineId)详情")
+            checkPermission(userId, projectId, pipelineId, AuthPermission.VIEW, "用户（$userId) 无权限获取流水线($pipelineId)详情")
         }
         val buildId = pipelineRuntimeService.getLatestFinishedBuildId(pipelineId)
         val apiDomain = HomeHostUtil.innerServerHost()
@@ -800,7 +799,7 @@ class PipelineBuildService(
                 userId,
                 projectId,
                 pipelineId,
-                BkAuthPermission.VIEW,
+                AuthPermission.VIEW,
                 "用户（$userId) 无权限获取流水线($pipelineId)构建状态"
             )
         }
@@ -825,7 +824,7 @@ class PipelineBuildService(
                 userId,
                 projectId,
                 pipelineId,
-                BkAuthPermission.VIEW,
+                AuthPermission.VIEW,
                 "用户（$userId) 无权限获取流水线($pipelineId)构建变量"
             )
         }
@@ -900,7 +899,7 @@ class PipelineBuildService(
                     userId!!,
                     projectId,
                     pipelineId,
-                    BkAuthPermission.VIEW,
+                    AuthPermission.VIEW,
                     "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
                 )
             }
@@ -971,7 +970,7 @@ class PipelineBuildService(
                 userId!!,
                 projectId,
                 pipelineId,
-                BkAuthPermission.VIEW,
+                AuthPermission.VIEW,
                 "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
             )
 
@@ -1044,7 +1043,7 @@ class PipelineBuildService(
             userId,
             projectId,
             pipelineId,
-            BkAuthPermission.EDIT,
+            AuthPermission.EDIT,
             "用户（$userId) 无权限修改流水线($pipelineId)历史构建"
         )
         pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
@@ -1055,7 +1054,7 @@ class PipelineBuildService(
             userId,
             projectId,
             pipelineId,
-            BkAuthPermission.VIEW,
+            AuthPermission.VIEW,
             "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
         return BuildStatus.getStatusMap()
@@ -1066,7 +1065,7 @@ class PipelineBuildService(
             userId,
             projectId,
             pipelineId,
-            BkAuthPermission.VIEW,
+            AuthPermission.VIEW,
             "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
         return StartType.getStartTypeMap()
@@ -1077,7 +1076,7 @@ class PipelineBuildService(
             userId,
             projectId,
             pipelineId,
-            BkAuthPermission.VIEW,
+            AuthPermission.VIEW,
             "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
         return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId)
@@ -1093,7 +1092,7 @@ class PipelineBuildService(
             userId,
             projectId,
             pipelineId,
-            BkAuthPermission.VIEW,
+            AuthPermission.VIEW,
             "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
         return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias)

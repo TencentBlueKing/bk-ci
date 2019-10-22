@@ -31,10 +31,10 @@ import java.util.stream.Collectors
 
 @Service
 class EmailServiceImpl @Autowired constructor(
-        private val tofService: TOFService,
-        private val emailNotifyDao: EmailNotifyDao,
-        private val rabbitTemplate: RabbitTemplate,
-        private val configuration: TOFConfiguration
+    private val tofService: TOFService,
+    private val emailNotifyDao: EmailNotifyDao,
+    private val rabbitTemplate: RabbitTemplate,
+    private val configuration: TOFConfiguration
 ) : EmailService {
 
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
