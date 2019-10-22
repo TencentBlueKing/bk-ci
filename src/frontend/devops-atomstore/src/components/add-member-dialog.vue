@@ -119,7 +119,6 @@
                         item.active = true
                     })
                 } else {
-                    this.permissionList[1].active = false
                     this.permissionList[2].active = false
                     this.permissionList[3].active = false
                     this.permissionList[4].active = false

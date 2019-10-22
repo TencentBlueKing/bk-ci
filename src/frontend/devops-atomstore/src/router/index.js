@@ -36,7 +36,7 @@ const settings = () => import(/* webpackChunkName: 'settings' */ '@/views/atomDe
 const atomInformation = () => import(/* webpackChunkName: 'atomInformation' */ '@/views/atomDetail/detail.vue') // 流水线插件详情
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/atomDetail/approval.vue') // 流水线插件审批
 const memberManage = () => import(/* webpackChunkName: 'memberManage' */ '@/views/atomDetail/member_manage.vue') // 成员管理
-const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 可见范围
+const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 私有配置
 const edit = () => import(/* webpackChunkName: 'editAtom' */ '@/views/atomDetail/edit.vue') // 编辑插件详情
 
 const editTemplate = () => import(/* webpackChunkName: 'editTemplate' */ '@/views/edit_template.vue') // 上架模板

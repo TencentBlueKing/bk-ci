@@ -19,8 +19,6 @@
 
 import * as atom from './atom'
 import * as template from './template'
-import * as IDE from './IDE'
-import * as Image from './image'
 import { mergeModules } from '@/utils/index'
 import { UPDATE_CURRENT_LIST, UPDATE_MARKET_QUERY } from './constants'
 
@@ -101,4 +99,4 @@ const commonModules = {
     }
 }
 
-export default mergeModules(commonModules, atom, template, IDE, Image)
+export default mergeModules(commonModules, atom, template)

@@ -155,14 +155,16 @@
             async confirmHandle (params) {
                 let message, theme
                 try {
-                    await this.$store.dispatch('store/addAtomMember', {
+                    const res = await this.$store.dispatch('store/addAtomMember', {
                         params
                     })
 
-                    message = '新增成功'
-                    theme = 'success'
-                    this.requestList()
-                    this.cancelHandle()
+                    if (res) {
+                        message = '新增成功'
+                        theme = 'success'
+                        this.requestList()
+                        this.cancelHandle()
+                    }
                 } catch (err) {
                     message = message = err.message ? err.message : err
                     theme = 'error'
