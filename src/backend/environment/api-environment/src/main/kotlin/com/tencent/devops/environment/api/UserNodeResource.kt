@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 interface UserNodeResource {
     @ApiOperation("删除节点")
     @POST
-    @Path("/{projectId}/deleteNodes")
+    @Path("/projects/{projectId}/deleteNodes")
     fun deleteNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -64,7 +64,7 @@ interface UserNodeResource {
 
     @ApiOperation("获取项目节点列表")
     @GET
-    @Path("/{projectId}")
+    @Path("/projects/{projectId}/nodes")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -76,7 +76,7 @@ interface UserNodeResource {
 
     @ApiOperation("修改节点名称")
     @POST
-    @Path("/{projectId}/{nodeHashId}/updateDisplayName")
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/updateDisplayName")
     fun updateDisplayName(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
