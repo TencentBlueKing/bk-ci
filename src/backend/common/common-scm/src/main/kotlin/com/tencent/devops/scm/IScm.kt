@@ -51,7 +51,7 @@ interface IScm {
     fun lock(repoName: String, applicant: String, subPath: String)
     fun unlock(repoName: String, applicant: String, subPath: String)
 
-	fun createBranch(branch: String, ref: String) {}
+    fun createBranch(branch: String, ref: String) {}
     fun deleteBranch(branch: String) {}
 
     fun getCommits(branch: String?, all: Boolean, page: Int, size: Int): List<GitCommit> = emptyList()

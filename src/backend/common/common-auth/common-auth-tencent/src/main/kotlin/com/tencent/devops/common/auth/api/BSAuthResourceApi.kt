@@ -30,15 +30,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.pojo.BkAuthResourceCreateRequest
-import com.tencent.devops.common.auth.api.pojo.BkAuthResourceDeleteRequest
-import com.tencent.devops.common.auth.api.pojo.BkAuthResourceModifyRequest
-import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.api.pojo.*
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -124,13 +121,34 @@ class BSAuthResourceApi @Autowired constructor(
     }
 
     override fun createResource(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+        createGrantResource(
+            user,
+            serviceCode,
+            resourceType,
+            projectCode,
+            resourceCode,
+            resourceName,
+            null
+        )
+    }
+
+    fun createGrantResource(
             user: String,
             serviceCode: AuthServiceCode,
             resourceType: AuthResourceType,
             projectCode: String,
             resourceCode: String,
-            resourceName: String
+            resourceName: String,
+            authGroupList: List<BkAuthGroup>?
     ) {
+        val authorizedGroups = if (authGroupList != null) StringUtils.join(authGroupList, ";").toLowerCase() else null
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/resource?access_token=$accessToken"
         val bkAuthResourceCreateRequest = BkAuthResourceCreateRequest(
@@ -139,7 +157,8 @@ class BSAuthResourceApi @Autowired constructor(
             resourceCode,
             resourceName,
             resourceType.value,
-            user
+            user,
+            authorizedGroups
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceCreateRequest)
         val mediaType = MediaType.parse("application/json; charset=utf-8")

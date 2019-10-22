@@ -59,8 +59,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         return envDao.list(dslContext, projectId).map { it.envId }.toSet()
     }
 
-    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>)
-        : Map<AuthPermission, List<String>> {
+    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
         val envIds = envDao.list(dslContext, projectId).map { HashUtil.encodeLongId(it.envId) }
         return permissions.associate { Pair(it, envIds) }
     }

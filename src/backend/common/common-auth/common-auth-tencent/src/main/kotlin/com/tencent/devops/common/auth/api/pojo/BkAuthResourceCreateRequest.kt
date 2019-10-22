@@ -40,5 +40,7 @@ data class BkAuthResourceCreateRequest(
     @JsonProperty("resource_type")
     val resourceType: String,
     @JsonProperty("creator")
-    val creator: String
+    val creator: String,
+    @JsonProperty("authorized_groups")
+    val authorizedGroups: String?
 )

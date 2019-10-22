@@ -1153,7 +1153,7 @@ class TemplateService @Autowired constructor(
         pipelineParams: List<BuildFormProperty>
     ): List<BuildFormProperty> {
         if (templateParams.isEmpty()) {
-            return pipelineParams
+            return emptyList()
         }
 
         val result = ArrayList<BuildFormProperty>()
@@ -1161,7 +1161,19 @@ class TemplateService @Autowired constructor(
         templateParams.forEach outside@{ template ->
             pipelineParams.forEach { pipeline ->
                 if (pipeline.id == template.id) {
-                    result.add(pipeline)
+                    /**
+                     * 1. 比较类型， 如果类型变了就直接用模板
+                     * 2. 如果类型相同，下拉选项替换成模板的（要保存用户之前的默认值）
+                     */
+                    if (pipeline.type != template.type) {
+                        result.add(template)
+                    } else {
+                        pipeline.options = template.options
+                        pipeline.required = template.required
+                        pipeline.defaultValue = template.defaultValue
+                        pipeline.desc = template.desc
+                        result.add(pipeline)
+                    }
                     return@outside
                 }
             }

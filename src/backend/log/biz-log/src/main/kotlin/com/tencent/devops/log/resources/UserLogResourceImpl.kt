@@ -77,8 +77,7 @@ class UserLogResourceImpl @Autowired constructor(
         end: Long,
         tag: String?,
         executeCount: Int?
-    )
-        : Result<QueryLogs> {
+    ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
         return logDispatcher.getMoreLogs(
                 projectId,
@@ -103,8 +102,7 @@ class UserLogResourceImpl @Autowired constructor(
         queryKeywords: String?,
         tag: String?,
         executeCount: Int?
-    )
-        : Result<QueryLogs> {
+    ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
         return logDispatcher.getAfterLogs(
                 projectId,

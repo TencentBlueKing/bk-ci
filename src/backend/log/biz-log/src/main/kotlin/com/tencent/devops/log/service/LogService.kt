@@ -136,8 +136,8 @@ class LogService @Autowired constructor(
             success = true
         } finally {
             logger.info(
-                "[${event.buildId}] It took ${System.currentTimeMillis()
-                    - currentEpoch}ms to add event log with result $success"
+                "[${event.buildId}] It took ${System.currentTimeMillis() -
+                    currentEpoch}ms to add event log with result $success"
             )
         }
     }
@@ -906,8 +906,12 @@ class LogService @Autowired constructor(
     }
 
     private fun getLogsByPage(
-        index: String, type: String, tag: String?, executeCount: Int?,
-        page: Int, pageSize: Int
+        index: String,
+        type: String,
+        tag: String?,
+        executeCount: Int?,
+        page: Int,
+        pageSize: Int
     ): List<LogLine> {
 
         val boolQuery = QueryBuilders.boolQuery()
@@ -987,8 +991,12 @@ class LogService @Autowired constructor(
     }
 
     private fun getLogs(
-        index: String, type: String, keywords: List<String>,
-        wholeQuery: Boolean, tag: String?, executeCount: Int?
+        index: String,
+        type: String,
+        keywords: List<String>,
+        wholeQuery: Boolean,
+        tag: String?,
+        executeCount: Int?
     ): List<LogLine> {
         logger.info(
             "log params for type($type): index: $index, keywords: $keywords, " +
@@ -1204,8 +1212,11 @@ class LogService @Autowired constructor(
     }
 
     private fun getLogRange(
-        index: String, type: String, tag: String,
-        executeCount: Int?, size: Long
+        index: String,
+        type: String,
+        tag: String,
+        executeCount: Int?,
+        size: Long
     ): Pair<Long, Long> {
         val query = QueryBuilders.boolQuery()
             .should(QueryBuilders.matchQuery("logType", LogType.START.name))
@@ -1242,7 +1253,8 @@ class LogService @Autowired constructor(
     }
 
     private fun indexRequestBuilder(
-        logMessage: LogMessageWithLineNo, index: String?,
+        logMessage: LogMessageWithLineNo,
+        index: String?,
         type: String?
     ): IndexRequestBuilder? {
         val builder: XContentBuilder

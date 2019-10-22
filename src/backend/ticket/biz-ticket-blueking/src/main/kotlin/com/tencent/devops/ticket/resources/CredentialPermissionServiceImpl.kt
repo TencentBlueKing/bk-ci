@@ -24,35 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.service.impl
+package com.tencent.devops.ticket.resources
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
-import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CredentialPermissionService
 import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.CredentialResourceType
-import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
 
-@Service
+@Component
 class CredentialPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode,
-    private val dslContext: DSLContext,
-    private val credentialDao: CredentialDao
+    private val ticketAuthServiceCode: TicketAuthServiceCode
 ) : CredentialPermissionService {
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
     ) {
         if (!validatePermission(userId, projectId, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
@@ -60,11 +56,11 @@ class CredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission,
+        message: String
     ) {
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
@@ -82,10 +78,10 @@ class CredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -103,39 +99,22 @@ class CredentialPermissionServiceImpl @Autowired constructor(
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
-            permission = authPermission,
-            supplier = supplierForFakePermission(projectId)
-        )
+            permission = authPermission
+        ) { emptyList() }
     }
 
     override fun filterCredentials(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
-            permissions = authPermissions,
-            supplier = supplierForFakePermission(projectId)
-        )
-    }
-
-    private fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
-        return {
-            val fakeList = mutableListOf<String>()
-            credentialDao.listByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                offset = 0,
-                limit = 500 // 一个项目不会有太多凭证
-            ).forEach {
-                fakeList.add(it.credentialId)
-            }
-            fakeList
-        }
+            permissions = authPermissions
+        ) { emptyList() }
     }
 
     override fun createResource(userId: String, projectId: String, credentialId: String) {

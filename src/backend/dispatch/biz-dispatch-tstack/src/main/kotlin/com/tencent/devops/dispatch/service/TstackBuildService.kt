@@ -14,7 +14,6 @@ import com.tencent.devops.dispatch.pojo.enums.TstackVmStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.service.vm.TstackClient
 import com.tencent.devops.dispatch.utils.TstackRedisUtils
-import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchTstackBuildRecord
 import com.tencent.devops.model.dispatch.tables.records.TDispatchTstackVmRecord
@@ -29,15 +28,15 @@ import java.util.concurrent.Executors
 
 @Service
 class TstackBuildService @Autowired constructor(
-        private val dslContext: DSLContext,
-        private val tstackConfigDao: TstackConfigDao,
-        private val tstackVolumeDao: TstackVolumeDao,
-        private val tstackBuildDao: TstackBuildDao,
-        private val tstackVmDao: TstackVmDao,
-        private val tstackClient: TstackClient,
-        private val redisUtils: TstackRedisUtils,
-        private val redisOperation: RedisOperation,
-        private val rabbitTemplate: RabbitTemplate
+    private val dslContext: DSLContext,
+    private val tstackConfigDao: TstackConfigDao,
+    private val tstackVolumeDao: TstackVolumeDao,
+    private val tstackBuildDao: TstackBuildDao,
+    private val tstackVmDao: TstackVmDao,
+    private val tstackClient: TstackClient,
+    private val redisUtils: TstackRedisUtils,
+    private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TstackBuildService::class.java)

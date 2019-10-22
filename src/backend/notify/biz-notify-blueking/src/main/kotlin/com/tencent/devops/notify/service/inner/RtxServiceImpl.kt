@@ -30,14 +30,12 @@ import java.util.stream.Collectors
 
 @Service
 class RtxServiceImpl @Autowired constructor(
-        private val tofService: TOFService,
-        private val rtxNotifyDao: RtxNotifyDao,
-        private val rabbitTemplate: RabbitTemplate,
-        private val configuration: TOFConfiguration
+    private val tofService: TOFService,
+    private val rtxNotifyDao: RtxNotifyDao,
+    private val rabbitTemplate: RabbitTemplate,
+    private val configuration: TOFConfiguration
 ) : RtxService {
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
-
-
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)

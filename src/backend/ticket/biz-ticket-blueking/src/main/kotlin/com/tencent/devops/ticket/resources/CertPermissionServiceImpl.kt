@@ -24,31 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.service.impl
+package com.tencent.devops.ticket.resources
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
-import com.tencent.devops.ticket.service.CredentialPermissionService
-import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.CredentialResourceType
+import com.tencent.devops.ticket.service.CertPermissionService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
-@Component
-class CredentialPermissionServiceImpl @Autowired constructor(
+@Service
+class CertPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
     private val ticketAuthServiceCode: TicketAuthServiceCode
-) : CredentialPermissionService {
+) : CertPermissionService {
+
+    private val resourceType = AuthResourceType.TICKET_CERT
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
     ) {
         if (!validatePermission(userId, projectId, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
@@ -56,11 +58,11 @@ class CredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission,
+        message: String
     ) {
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
@@ -71,69 +73,59 @@ class CredentialPermissionServiceImpl @Autowired constructor(
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = CredentialResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             permission = authPermission
         )
     }
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = CredentialResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
             resourceCode = resourceCode,
             permission = authPermission
         )
     }
 
-    override fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
+    override fun filterCert(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = CredentialResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
-            permission = authPermission
-        ) { emptyList() }
+            permission = authPermission,
+            supplier = null
+        )
     }
 
-    override fun filterCredentials(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
+    override fun filterCerts(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = CredentialResourceType,
+            resourceType = resourceType,
             projectCode = projectId,
-            permissions = authPermissions
-        ) { emptyList() }
-    }
-
-    override fun createResource(userId: String, projectId: String, credentialId: String) {
-        authResourceApi.createResource(
-            user = userId,
-            serviceCode = ticketAuthServiceCode,
-            resourceType = CredentialResourceType,
-            projectCode = projectId,
-            resourceCode = credentialId,
-            resourceName = credentialId
+            permissions = authPermissions,
+            supplier = null
         )
     }
 
-    override fun deleteResource(projectId: String, credentialId: String) {
-        authResourceApi.deleteResource(
-            serviceCode = ticketAuthServiceCode,
-            resourceType = CredentialResourceType,
-            projectCode = projectId,
-            resourceCode = credentialId
-        )
+    override fun createResource(userId: String, projectId: String, certId: String) {
+        authResourceApi.createResource(userId, ticketAuthServiceCode, resourceType, projectId, certId, certId)
+    }
+
+    override fun deleteResource(projectId: String, certId: String) {
+        authResourceApi.deleteResource(ticketAuthServiceCode, resourceType, projectId, certId)
     }
 }

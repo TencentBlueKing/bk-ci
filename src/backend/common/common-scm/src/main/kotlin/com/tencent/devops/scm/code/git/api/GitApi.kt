@@ -209,7 +209,7 @@ open class GitApi {
     fun deleteBranch(host: String, token: String, projectName: String, branch: String) {
         logger.info("Start to create branches of host $host with token $token by project $projectName")
         val body = JsonUtil.getObjectMapper().writeValueAsString(
-           emptyMap<String, String>()
+            emptyMap<String, String>()
         )
         val request = delete(host, token, "projects/${urlEncode(projectName)}/repository/branches/$branch", body)
         callMethod(DELETE_BRANCH, request, String::class.java)

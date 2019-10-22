@@ -49,7 +49,6 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
     private val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
     private val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
 
-
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
@@ -61,8 +60,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         ).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
-    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>)
-        : Map<AuthPermission, List<String>> {
+    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = environmentAuthServiceCode,

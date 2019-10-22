@@ -24,37 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.service.impl
+package com.tencent.devops.ticket.resources
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
-import com.tencent.devops.ticket.dao.CertDao
-import com.tencent.devops.ticket.service.CertPermissionService
+import com.tencent.devops.ticket.dao.CredentialDao
+import com.tencent.devops.ticket.service.CredentialPermissionService
+import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.CredentialResourceType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
-class CertPermissionServiceImpl @Autowired constructor(
-    private val certDao: CertDao,
-    private val dslContext: DSLContext,
+class CredentialPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode
-) : CertPermissionService {
-
-    private val resourceType = AuthResourceType.TICKET_CERT
+    private val ticketAuthServiceCode: TicketAuthServiceCode,
+    private val dslContext: DSLContext,
+    private val credentialDao: CredentialDao
+) : CredentialPermissionService {
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
     ) {
         if (!validatePermission(userId, projectId, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
@@ -62,11 +60,11 @@ class CertPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission,
+        message: String
     ) {
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
             throw CustomException(Response.Status.FORBIDDEN, message)
@@ -77,74 +75,86 @@ class CertPermissionServiceImpl @Autowired constructor(
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = CredentialResourceType,
             projectCode = projectId,
             permission = authPermission
         )
     }
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = CredentialResourceType,
             projectCode = projectId,
             resourceCode = resourceCode,
             permission = authPermission
         )
     }
 
-    override fun filterCert(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
+    override fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = CredentialResourceType,
             projectCode = projectId,
             permission = authPermission,
-            supplier = supplierForPermission(projectId)
+            supplier = supplierForFakePermission(projectId)
         )
     }
 
-    override fun filterCerts(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
+    override fun filterCredentials(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         return authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = ticketAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = CredentialResourceType,
             projectCode = projectId,
             permissions = authPermissions,
-            supplier = supplierForPermission(projectId)
+            supplier = supplierForFakePermission(projectId)
         )
     }
 
-    private fun supplierForPermission(projectId: String): () -> MutableList<String> {
+    private fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
         return {
             val fakeList = mutableListOf<String>()
-            certDao.listIdByProject(
+            credentialDao.listByProject(
                 dslContext = dslContext,
                 projectId = projectId,
                 offset = 0,
-                limit = 500
+                limit = 500 // 一个项目不会有太多凭证
             ).forEach {
-                fakeList.add(it.toString())
+                fakeList.add(it.credentialId)
             }
             fakeList
         }
     }
 
-    override fun createResource(userId: String, projectId: String, certId: String) {
-        authResourceApi.createResource(userId, ticketAuthServiceCode, resourceType, projectId, certId, certId)
+    override fun createResource(userId: String, projectId: String, credentialId: String) {
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = ticketAuthServiceCode,
+            resourceType = CredentialResourceType,
+            projectCode = projectId,
+            resourceCode = credentialId,
+            resourceName = credentialId
+        )
     }
 
-    override fun deleteResource(projectId: String, certId: String) {
-        authResourceApi.deleteResource(ticketAuthServiceCode, resourceType, projectId, certId)
+    override fun deleteResource(projectId: String, credentialId: String) {
+        authResourceApi.deleteResource(
+            serviceCode = ticketAuthServiceCode,
+            resourceType = CredentialResourceType,
+            projectCode = projectId,
+            resourceCode = credentialId
+        )
     }
 }

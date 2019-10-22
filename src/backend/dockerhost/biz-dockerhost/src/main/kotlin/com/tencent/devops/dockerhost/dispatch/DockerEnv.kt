@@ -102,7 +102,7 @@ object DockerEnv {
         return gateway!!
     }
 
-    private fun getProperty(prop: String):String {
+    private fun getProperty(prop: String): String {
         var value = System.getenv(prop)
         if (value.isNullOrBlank()) {
             // Get from java properties

@@ -27,7 +27,6 @@
 package com.tencent.devops.common.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Configuration
