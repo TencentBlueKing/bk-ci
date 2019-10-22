@@ -50,6 +50,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
@@ -86,7 +87,8 @@ class PipelineRepositoryService constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val templatePipelineDao: TemplatePipelineDao
 ) {
 
     fun deployPipeline(
@@ -403,7 +405,9 @@ class PipelineRepositoryService constructor(
     }
 
     fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
-        return pipelineInfoDao.convert(pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode))
+        val template = templatePipelineDao.get(dslContext, pipelineId)
+        val templateId = template?.templateId
+        return pipelineInfoDao.convert(pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode), templateId)
     }
 
     fun getPipelineInfo(pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
@@ -583,7 +587,7 @@ class PipelineRepositoryService constructor(
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null)
-                list.add(pipelineInfoDao.convert(it)!!)
+                list.add(pipelineInfoDao.convert(it, null)!!)
         }
         return list
     }

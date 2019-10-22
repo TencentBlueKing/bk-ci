@@ -37,7 +37,7 @@ data class VMBuildContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
-    override val name: String = "构建环境",
+    override var name: String = "构建环境",
     @ApiModelProperty("任务集合", required = true)
     override val elements: List<Element> = listOf(),
     override var status: String? = null,
@@ -66,8 +66,12 @@ data class VMBuildContainer(
     val thirdPartyWorkspace: String?,
     @ApiModelProperty("Docker构建机", required = false)
     val dockerBuildVersion: String?,
+    @ApiModelProperty("TStackHashId", required = false)
+    val tstackAgentId: String?,
     @ApiModelProperty("新的选择构建机环境", required = false)
     val dispatchType: DispatchType?,
+    @ApiModelProperty("是否显示构建资源信息", required = false)
+    var showBuildResource: Boolean? = false,
     @ApiModelProperty("是否可重试", required = false, hidden = true)
     override var canRetry: Boolean? = false,
     @ApiModelProperty("是否访问外网", required = false, hidden = true)

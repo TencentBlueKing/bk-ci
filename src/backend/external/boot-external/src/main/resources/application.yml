@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: external
+    desc: DevOps External Service
+    version: 4.0
+    packageName: com.tencent.devops.external
+
+server:
+  port: 21913

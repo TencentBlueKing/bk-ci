@@ -31,14 +31,15 @@ package com.tencent.devops.common.api.auth
  * Powered By Tencent
  */
 const val AUTH_HEADER_USER_ID: String = "X-DEVOPS-UID"
+const val AUTH_HEADER_DEVOPS_BG_ID = "X-DEVOPS-BG-ID"
 const val AUTH_HEADER_USER_ID_DEFAULT_VALUE: String = "admin"
-// const val AUTH_HEADER_BUILD_ID: String = "X-DEVOPS-BID"
-// const val AUTH_HEADER_VM_SEQ_ID: String = "X-DEVOPS-VM-SID"
-// const val AUTH_HEADER_VM_NAME: String = "X-DEVOPS-VM-NAME"
-// const val AUTH_HEADER_PROJECT_ID: String = "X-DEVOPS-PID"
-// const val AUTH_HEADER_AGENT_SECRET_KEY: String = "X-DEVOPS-AGENT-SECRET-KEY"
-// const val AUTH_HEADER_AGENT_ID: String = "X-DEVOPS-AGENT-ID"
-// const val AUTH_HEADER_PIPELINE_ID: String = "X-PIPELINE-ID"
+ const val AUTH_HEADER_BUILD_ID: String = "X-DEVOPS-BID"
+ const val AUTH_HEADER_VM_SEQ_ID: String = "X-DEVOPS-VM-SID"
+ const val AUTH_HEADER_VM_NAME: String = "X-DEVOPS-VM-NAME"
+ const val AUTH_HEADER_PROJECT_ID: String = "X-DEVOPS-PID"
+ const val AUTH_HEADER_AGENT_SECRET_KEY: String = "X-DEVOPS-AGENT-SECRET-KEY"
+ const val AUTH_HEADER_AGENT_ID: String = "X-DEVOPS-AGENT-ID"
+ const val AUTH_HEADER_PIPELINE_ID: String = "X-PIPELINE-ID"
 
 const val AUTH_HEADER_DEVOPS_BUILD_TYPE: String = "X-DEVOPS-BUILD-TYPE"
 const val AUTH_HEADER_DEVOPS_USER_ID = AUTH_HEADER_USER_ID

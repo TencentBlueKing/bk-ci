@@ -48,6 +48,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 
 @Configuration
@@ -98,8 +99,8 @@ class AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bkAuthProjectApi(bkAuthPermissionApi: BkAuthPermissionApi) =
-        BkAuthProjectApi(bkAuthPermissionApi, projectAuthServiceCode())
+    fun bkAuthProjectApi(bkAuthPermissionApi: BkAuthPermissionApi,objectMapper: ObjectMapper, bkAuthProperties: BkAuthProperties, bkProjectAuthServiceCode: BkProjectAuthServiceCode, bkAuthTokenApi: BkAuthTokenApi) =
+            BkAuthProjectApi(bkAuthPermissionApi, bkAuthProperties, objectMapper, bkProjectAuthServiceCode, bkAuthTokenApi)
 
     @Bean
     fun bcsAuthServiceCode() = BkBcsAuthServiceCode()

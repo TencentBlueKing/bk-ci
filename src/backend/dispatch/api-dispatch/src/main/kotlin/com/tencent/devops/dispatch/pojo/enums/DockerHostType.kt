@@ -24,12 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-//package com.tencent.devops.dispatch.pojo.enum
-//
-///**
-// *  Docker母机类型
-// */
-//enum class DockerHostType {
-//    BUILD, // 构建机
-//    BUILD_LESS, // 无编译环境机
-//}
+package com.tencent.devops.dispatch.pojo.enums
+
+/**
+ *  Docker母机类型
+ */
+enum class DockerHostType {
+    BUILD, // 构建机
+    BUILD_LESS, // 无编译环境机
+}

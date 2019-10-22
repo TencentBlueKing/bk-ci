@@ -1,0 +1,19 @@
+dependencies {
+    compile project(":plugin:codecc-plugin:api-codecc")
+    compile project(":plugin:model-plugin")
+
+    compile project (":common:common-api")
+    compile project (":common:common-web")
+    compile project (":common:common-db")
+    compile project (":common:common-service")
+    compile project (":common:common-client")
+    compile project (":common:common-auth:common-auth-api")
+    compile project (":common:common-pipeline")
+    compile project (":process:plugin-sdk")
+    compile project (":process:api-process")
+    compile project (":process:biz-process-sample")
+
+    testCompile project(":common:common-test")
+}
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

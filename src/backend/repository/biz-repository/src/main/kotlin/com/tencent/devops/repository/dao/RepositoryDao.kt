@@ -88,24 +88,37 @@ class RepositoryDao {
     }
 
     fun countByProject(
-        dslContext: DSLContext,
-        projectId: String,
-        repositoryType: ScmType?,
-        repositoryIds: Set<Long>
+            dslContext: DSLContext,
+            projectId: String,
+            repositoryType: ScmType?,
+            aliasName: String?,
+            repositoryIds: Set<Long>
     ): Long {
-        return with(TRepository.T_REPOSITORY) {
-            val query = dslContext.selectCount()
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(IS_DELETED.eq(false))
-
-            if (repositoryType != null) {
-                query.and(TYPE.eq(repositoryType.name))
+        with(TRepository.T_REPOSITORY) {
+            return when (repositoryType) {
+                null -> {
+                    val step = dslContext.selectCount()
+                            .from(this)
+                            .where(PROJECT_ID.eq(projectId))
+                            .and(IS_DELETED.eq(false))
+                            .and(REPOSITORY_ID.`in`(repositoryIds))
+                    if (!aliasName.isNullOrBlank()) {
+                        step.and(ALIAS_NAME.like("%$aliasName%"))
+                    }
+                    step.fetchOne(0, Long::class.java)
+                }
+                else -> {
+                    val step = dslContext.selectCount()
+                            .from(this)
+                            .where(PROJECT_ID.eq(projectId))
+                            .and(TYPE.eq(repositoryType.name))
+                            .and(IS_DELETED.eq(false))
+                    if (!aliasName.isNullOrBlank()) {
+                        step.and(ALIAS_NAME.like("%$aliasName%"))
+                    }
+                    step.fetchOne(0, Long::class.java)
+                }
             }
-            if (repositoryIds.isNotEmpty()) {
-                query.and(REPOSITORY_ID.`in`(repositoryIds))
-            }
-            query.fetchOne(0, Long::class.java)
         }
     }
 
@@ -198,6 +211,49 @@ class RepositoryDao {
                 .offset(offset)
                 .limit(limit)
                 .fetch()
+        }
+    }
+
+    fun listByProject(
+            dslContext: DSLContext,
+            projectId: String,
+            repositoryType: ScmType?,
+            aliasName: String?,
+            repositoryIds: Set<Long>,
+            offset: Int,
+            limit: Int
+    ): Result<TRepositoryRecord> {
+        with(TRepository.T_REPOSITORY) {
+            return when (repositoryType) {
+                null -> {
+                    val step = dslContext.selectFrom(this)
+                            .where(PROJECT_ID.eq(projectId))
+                            .and(IS_DELETED.eq(false))
+                            .and(REPOSITORY_ID.`in`(repositoryIds))
+
+                    if (!aliasName.isNullOrBlank()) {
+                        step.and(ALIAS_NAME.like("%$aliasName%"))
+                    }
+                    step.orderBy(REPOSITORY_ID.desc())
+                            .offset(offset)
+                            .limit(limit)
+                            .fetch()
+                }
+                else -> {
+                    val step = dslContext.selectFrom(this)
+                            .where(PROJECT_ID.eq(projectId))
+                            .and(TYPE.eq(repositoryType.name))
+                            .and(REPOSITORY_ID.`in`(repositoryIds))
+                            .and(IS_DELETED.eq(false))
+                    if (!aliasName.isNullOrBlank()) {
+                        step.and(ALIAS_NAME.like("%$aliasName%"))
+                    }
+                    step.orderBy(REPOSITORY_ID.desc())
+                            .offset(offset)
+                            .limit(limit)
+                            .fetch()
+                }
+            }
         }
     }
 

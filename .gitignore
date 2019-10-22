@@ -8,6 +8,8 @@ docs/.DS_Store
 gateway/make_link.sh
 
 
+src/backend/.project
+
 frontend/*/.DS_Store
 frontend/*/node_modules/
 frontend/*/webpack_cache/
@@ -18,3 +20,5 @@ frontend/*/yarn-error.log*
 
 frontend/*/package-lock.json
 node_modules/
+
+src/backend/.project

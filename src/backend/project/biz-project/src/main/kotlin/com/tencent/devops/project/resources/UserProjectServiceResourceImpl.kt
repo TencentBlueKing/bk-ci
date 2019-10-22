@@ -27,14 +27,14 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.UserProjectServiceResource
+import com.tencent.devops.project.UserProjectServiceResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.service.UserProjectServiceService
 
 @RestResource
 class UserProjectServiceResourceImpl constructor(private val userProjectServiceService: UserProjectServiceService) :
-    UserProjectServiceResource {
+        UserProjectServiceResource {
 
     override fun updateCollected(userId: String, serviceId: Long, collector: Boolean): Result<Boolean> {
         return userProjectServiceService.updateCollected(userId, serviceId, collector)

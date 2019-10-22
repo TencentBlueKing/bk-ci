@@ -33,14 +33,15 @@ dependencies {
 
 def moduleName = name.split('-')[1]
 def databaseName = moduleName
-def mysqlEnv = System.getProperty("mysqlEnv")
-if (mysqlEnv != null && mysqlEnv != "") {
+def mysqlPrefix = System.getProperty("mysqlPrefix")
+if (mysqlPrefix != null && mysqlPrefix != "") {
 
-    println "jooq build env :" + mysqlEnv
-    databaseName = mysqlEnv + "_" + databaseName
+    println "jooq build env :" + mysqlPrefix
+    databaseName = mysqlPrefix + databaseName
+} else {
+    databaseName = "${DB_PREFIX}${databaseName}"    
 }
 
-databaseName = "${DB_PREFIX}${databaseName}"
 jooq {
     genenrate(sourceSets.main) {
 

@@ -171,11 +171,12 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         }
     }
 
-    fun convert(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord): PipelineBuildTask? {
+    fun convert(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord, templateId: String?): PipelineBuildTask? {
         return with(tPipelineBuildTaskRecord) {
             PipelineBuildTask(
                 projectId,
                 pipelineId,
+                templateId,
                 buildId,
                 stageId,
                 containerId,

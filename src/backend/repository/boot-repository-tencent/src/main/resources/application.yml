@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: repository
+    desc: DevOps Repository Service
+    version: 4.0.0
+    packageName: com.tencent.devops.repository
+  datasource:
+    url: jdbc:mysql://gamedb.dev.devops.db:10000/devops_repository?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: ENC(4thI6E9FBq9rHHDuRXRIyA==)
+    password: ENC(muhwM7Fz7zJZF/OsJSlOoA==)
+
+git:
+  devopsGroupName: bkdevops-plugins-test
+  devopsPrivateToken: g78IwpnylMm_h20UH_Gi
+
+server:
+  port: 21931
+
+repository:
+  tencent:
+    scm:
+      ip: dev.scm.devops.oa.com
+      git:
+        clientId: 4dcf8519da2041499c3e51d01060322d
+        clientSecret: fa1f5c8f612b4da1b2545d5e99ee5f5d
+        redirectUrl: http://dev.devops.oa.com/console/codelib
+        redirectAtomMarketUrl: http://dev.devops.oa.com/console/store/atomList
+        redirectAtomRepositoryUrl: http://dev.devops.oa.com/console/store/atom/{0}/overview
+        callbackUrl: http://dev.api.devops.oa.com/repository/api/external/repo/git/callback
+        url: http://git.code.oa.com
+        javaSampleProjectUrl: http://git.code.oa.com/bkdevops/atom-demo-java.git
+        pythonSampleProjectUrl: http://git.code.oa.com/bkdevops/atom-demo-python.git
+        golangSampleProjectUrl: http://git.code.oa.com/bkdevops/atom-demo-golang.git
+        gitHookUrl: http://dev.gw.open.oa.com/external/scm/codegit/commit
+    external:
+      github:
+        clientId: Iv1.ae58d494667dbdc5
+        clientSecret: 6e5422958472bc208d02640342399f74ebd10ab7
+        callbackUrl: https://dev-api.bkdevops.qq.com/external/api/external/github/oauth/callback
+        redirectUrl: http://dev.devops.oa.com/console/codelib
+        appUrl: https://github.com/apps/tencent-devops-dev
+        signSecret: bkdevops2018
+        webhookUrl: https://dev-api.bkdevops.qq.com/external/api/external/github/oauth/callback
+      tGit:
+        apiUrl: http://git.tencent.com/api/v3
+      gitlab:
+        apiUrl: http://gitlab-paas.open.oa.com/api/v4
+        gitlabHookUrl: http://dev.gw.open.oa.com/external/scm/gitlab/commit

@@ -35,11 +35,11 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 
-/**
- * deng
- * 2019-03-01
- */
 object RepositoryConfigUtils {
 
     fun buildConfig(element: Element): RepositoryConfig {
@@ -49,7 +49,17 @@ object RepositoryConfigUtils {
                 element.repositoryName,
                 element.repositoryType ?: RepositoryType.ID
             )
+            is CodeGitWebHookTriggerElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
             is CodeSvnElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is CodeSVNWebHookTriggerElement -> RepositoryConfig(
                 element.repositoryHashId,
                 element.repositoryName,
                 element.repositoryType ?: RepositoryType.ID
@@ -59,7 +69,17 @@ object RepositoryConfigUtils {
                 element.repositoryName,
                 element.repositoryType ?: RepositoryType.ID
             )
+            is CodeGitlabWebHookTriggerElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
             is GithubElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is CodeGithubWebHookTriggerElement -> RepositoryConfig(
                 element.repositoryHashId,
                 element.repositoryName,
                 element.repositoryType ?: RepositoryType.ID

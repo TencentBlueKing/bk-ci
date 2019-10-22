@@ -30,3 +30,13 @@ const val GIT_COMMIT_CHECK_STATE_PENDING = "pending"
 const val GIT_COMMIT_CHECK_STATE_SUCCESS = "success"
 const val GIT_COMMIT_CHECK_STATE_ERROR = "error"
 const val GIT_COMMIT_CHECK_STATE_FAILURE = "failure"
+
+const val GITHUB_CHECK_RUNS_STATUS_QUEUED = "queued" // default
+const val GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS = "in_progress"
+const val GITHUB_CHECK_RUNS_STATUS_COMPLETED = "completed"
+
+const val GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS = "success"
+const val GITHUB_CHECK_RUNS_CONCLUSION_FAILURE = "failure"
+
+const val CODE_TGIT_URL = "http://git.tencent.com/api/v3"
+

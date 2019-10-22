@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Feign
 import feign.RequestInterceptor
@@ -60,6 +61,7 @@ import kotlin.reflect.KClass
 class Client @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
     private val clientErrorDecoder: ClientErrorDecoder,
+    private val commonConfig: CommonConfig,
     objectMapper: ObjectMapper
 ) {
 
@@ -91,6 +93,19 @@ class Client @Autowired constructor(
     @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
     private val tag: String? = null
 
+    @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
+    private val assemblyServiceName: String? = null
+
+    @Value("\${scm.ip:#{null}}")
+    private val scmIp: String? = null
+
+    private val scmIpList = ArrayList<String>()
+
+    private var hasParseScmIp = false
+
+    @Value("\${service-suffix:#{null}}")
+    private val serviceSuffix: String? = null
+
     fun <T : Any> get(clz: KClass<T>): T {
         return get(clz, "")
     }
@@ -101,6 +116,73 @@ class Client @Autowired constructor(
             beanCaches.get(clz) as T
         } catch (ignored: Throwable) {
             getImpl(clz)
+        }
+    }
+
+    /**
+     * 通过网关访问微服务接口
+     *
+     */
+    fun <T : Any> getGateway(clz: KClass<T>): T {
+        val serviceName = findServiceName(clz)
+        val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
+        return Feign.builder()
+            .client(feignClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .requestInterceptor(requestInterceptor)
+            .target(clz.java, buildGatewayUrl(path = "/$serviceName/api"))
+    }
+
+    // devnet区域的，只能直接通过ip访问
+    fun <T : Any> getScm(clz: KClass<T>): T {
+        val ip = chooseScm()
+        val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
+        return Feign.builder()
+            .client(feignClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .requestInterceptor(requestInterceptor)
+            .target(clz.java, "http://$ip/api")
+    }
+
+    private fun chooseScm(): String {
+        parseScmIp()
+        if (scmIpList.isEmpty()) {
+            throw RuntimeException("The scm ip($scmIp) is not config")
+        }
+
+        val copy = ArrayList(scmIpList)
+        copy.shuffle()
+        return copy[0]
+    }
+
+    private fun parseScmIp() {
+        if (hasParseScmIp) {
+            return
+        }
+        synchronized(scmIpList) {
+            if (hasParseScmIp) {
+                return
+            }
+            if (scmIp.isNullOrEmpty()) {
+                logger.warn("The scm ip is empty")
+            } else {
+                scmIp!!.split(",").forEach {
+                    val ip = it.trim()
+                    if (ip.isEmpty()) {
+                        logger.warn("Contain blank scm ip in configuration")
+                        return@forEach
+                    }
+                    logger.info("Adding the scm ip($ip)")
+                    scmIpList.add(ip)
+                }
+            }
+            hasParseScmIp = true
         }
     }
 
@@ -126,7 +208,11 @@ class Client @Autowired constructor(
     }
 
     private fun findServiceName(clz: KClass<*>): String {
-        return interfaces.getOrPut(clz) {
+        // 单体结构，不分微服务的方式
+        if (!assemblyServiceName.isNullOrBlank()) {
+            return assemblyServiceName!!
+        }
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
                 serviceInterface.value
@@ -135,6 +221,25 @@ class Client @Autowired constructor(
                 val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
                 val matches = regex.find(packageName) ?: throw ClientException("无法根据接口\"$packageName\"分析所属的服务")
                 matches.groupValues[1]
+            }
+        }
+
+        return if (serviceSuffix.isNullOrBlank()) {
+            serviceName
+        } else {
+            "$serviceName$serviceSuffix"
+        }
+    }
+
+    private fun buildGatewayUrl(path: String): String {
+        return if (path.startsWith("http://") || path.startsWith("https://")) {
+            path
+        } else {
+            val gateway = commonConfig.devopsApiGateway!!
+            if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
+                "$gateway/${path.removePrefix("/")}"
+            } else {
+                "http://$gateway/${path.removePrefix("/")}"
             }
         }
     }

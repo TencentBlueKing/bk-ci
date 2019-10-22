@@ -1196,11 +1196,11 @@ class PipelineBuildService(
         return pipelineRuntimeService.getRunningTask(projectId, buildId)
     }
 
-    private fun startPipeline(
+    fun startPipeline(
         userId: String,
         readyToBuildPipelineInfo: PipelineInfo,
         startType: StartType,
-        startParams: MutableMap<String, Any>,
+        startParams: Map<String, Any>,
         channelCode: ChannelCode,
         isMobile: Boolean,
         model: Model,

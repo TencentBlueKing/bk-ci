@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
-import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.project.api.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -338,7 +338,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 StoreTypeEnum.TEMPLATE.type.toByte()
             ) // 默认给关联模板的人赋予管理员权限
 
-            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, true)
+            client.get(ServiceTemplateResource::class).updateStoreFlag(userId, templateCode, true)
         }
         return Result(true)
     }
@@ -467,7 +467,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, false)
+            client.get(ServiceTemplateResource::class).updateStoreFlag(userId, templateCode, false)
             storeMemberDao.deleteAll(context, templateCode, type)
             storeProjectRelDao.deleteAllRel(context, templateCode, type)
             marketTemplateDao.delete(context, templateCode)
@@ -601,7 +601,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             publisher = template.publisher
         )
         val addMarketTemplateResult =
-            client.get(ServicePTemplateResource::class).addMarketTemplate(userId, addMarketTemplateRequest)
+            client.get(ServiceTemplateResource::class).addMarketTemplate(userId, addMarketTemplateRequest)
         logger.info("addMarketTemplateResult is $addMarketTemplateResult")
         if (addMarketTemplateResult.isNotOk()) {
             // 抛出错误提示

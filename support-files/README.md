@@ -12,7 +12,7 @@
 ## 变量占位符
 
 占位符号以双下划线开头，以又下划线结尾。
-比如配置占位符为__DEVOPS_PORT__  变量名为DEVOPS_PORT
+比如配置占位符为__BKCI_PORT__  变量名为BKCI_PORT
 
 ### 如何使用
 
@@ -23,7 +23,7 @@
    - 这个命令将会：
      - 读取bkenv.properties中值，替换掉support-files/templates/下所有文件中的占变量位符号
      - 按support-files/templates/目录下文件名，改名并移动到相对应的部署目录下
-     - 比如 #etc#bkci#common.yml 会移到 /data/bkee/etc/bkci/common.yml
+     - 比如 #etc#bkci#common.yml 会移到 /data/bkee/etc/ci/common.yml
 
 
 

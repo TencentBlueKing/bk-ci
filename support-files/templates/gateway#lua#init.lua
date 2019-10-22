@@ -20,10 +20,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 config = {
     static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
     docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
+    static_dir_codecc = "__INSTALL_PATH__/codecc/frontend",
     http_schema = "__HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
     paas_domain = "__PAAS_FQDN__",   -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
     service_name = "",  -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
     allow_hosts = {
+      __BKCI_ALLOW_HOST__
     },
     allow_headers = "Authorization,Content-Type,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID",
     ns = {
@@ -31,8 +33,20 @@ config = {
         "127.0.0.1"
       },
       port = __BKCI_CONSUL_DNS_PORT__,
+      http_port = __BKCI_CONSUL_PORT__,
       domain = "__BKCI_CONSUL_DOMAIN__",
       tag = "__BKCI_CONSUL_TAG__",
+      nodes_url = "/v1/catalog/nodes"
+    },
+    ns_gray = {
+      ip = {
+        "127.0.0.1"
+      },
+      port = __BKCI_CONSUL_DNS_PORT__,
+      http_port = __BKCI_CONSUL_PORT__,
+      domain = "__BKCI_CONSUL_DOMAIN__",
+      tag = "__BKCI_CONSUL_TAG__",
+      nodes_url = "/v1/catalog/nodes"
     },
     redis = {
       host = "__REDIS_IP0__",
@@ -44,6 +58,7 @@ config = {
     },
     oauth = {  -- 对接蓝鲸权限中心才需要的配置
       ip = "__IAM_IP0__",
+      env = "__IAM_ENV__",
       port = "__IAM_HTTP_PORT__",
       host = "__IAM_HOST__",
       url = "__IAM_TOKEN_URL__",     -- 接口路径
@@ -51,8 +66,6 @@ config = {
       app_secret = "__APP_TOKEN__",
     },
     service_ip_whitelist = {
-        -- 本地ip
-        "127.0.0.1",
     }
   }
   

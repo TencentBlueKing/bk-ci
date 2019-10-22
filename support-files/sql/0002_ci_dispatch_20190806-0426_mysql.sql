@@ -1,0 +1,131 @@
+USE devops_ci_dispatch;
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for T_DISPATCH_MACHINE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_MACHINE` (
+  `MACHINE_ID` int(11) NOT NULL AUTO_INCREMENT,
+  `MACHINE_IP` varchar(128) NOT NULL,
+  `MACHINE_NAME` varchar(128) NOT NULL,
+  `MACHINE_USERNAME` varchar(128) NOT NULL,
+  `MACHINE_PASSWORD` varchar(128) NOT NULL,
+  `MACHINE_CREATED_TIME` datetime NOT NULL,
+  `MACHINE_UPDATED_TIME` datetime NOT NULL,
+  `CURRENT_VM_RUN` int(11) NOT NULL DEFAULT '0',
+  `MAX_VM_RUN` int(11) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`MACHINE_ID`),
+  UNIQUE KEY `MACHINE_IP` (`MACHINE_IP`),
+  UNIQUE KEY `MACHINE_NAME` (`MACHINE_NAME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_DISPATCH_PIPELINE_BUILD
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_BUILD` (
+  `ID` int(20) NOT NULL AUTO_INCREMENT,
+  `PROJECT_ID` varchar(32) NOT NULL,
+  `PIPELINE_ID` varchar(34) NOT NULL,
+  `BUILD_ID` varchar(34) NOT NULL,
+  `VM_SEQ_ID` varchar(34) NOT NULL DEFAULT '',
+  `VM_ID` int(20) NOT NULL,
+  `CREATED_TIME` datetime NOT NULL,
+  `UPDATED_TIME` datetime NOT NULL,
+  `STATUS` int(11) NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_DISPATCH_PIPELINE_DOCKER_BUILD
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_BUILD` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `BUILD_ID` varchar(64) NOT NULL,
+  `VM_SEQ_ID` int(20) NOT NULL,
+  `SECRET_KEY` varchar(64) NOT NULL DEFAULT '',
+  `STATUS` int(11) NOT NULL,
+  `CREATED_TIME` datetime NOT NULL,
+  `UPDATED_TIME` datetime NOT NULL,
+  `ZONE` varchar(128) DEFAULT NULL,
+  `PROJECT_ID` varchar(34) DEFAULT '',
+  `PIPELINE_ID` varchar(34) DEFAULT '',
+  `DISPATCH_MESSAGE` varchar(4096) DEFAULT '',
+  `STARTUP_MESSAGE` text,
+  `ROUTE_KEY` varchar(64) DEFAULT '',
+  `DOCKER_INST_ID` bigint(20) DEFAULT NULL,
+  `VERSION_ID` int(20) DEFAULT NULL,
+  `TEMPLATE_ID` int(20) DEFAULT NULL,
+  `NAMESPACE_ID` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `BUILD_ID` (`BUILD_ID`,`VM_SEQ_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_DISPATCH_PIPELINE_DOCKER_HOST_ZONE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_HOST_ZONE` (
+  `HOST_IP` varchar(128) NOT NULL,
+  `ZONE` varchar(128) NOT NULL,
+  `ENABLE` tinyint(1) DEFAULT '1',
+  `REMARK` varchar(1024) DEFAULT NULL,
+  `CREATED_TIME` datetime NOT NULL,
+  `UPDATED_TIME` datetime NOT NULL,
+  `TYPE` int(11) NOT NULL DEFAULT '0',
+  `ROUTE_KEY` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`HOST_IP`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_DISPATCH_PIPELINE_DOCKER_TASK
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_TASK` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `PROJECT_ID` varchar(64) NOT NULL,
+  `AGENT_ID` varchar(32) NOT NULL,
+  `PIPELINE_ID` varchar(34) NOT NULL DEFAULT '',
+  `BUILD_ID` varchar(34) NOT NULL,
+  `VM_SEQ_ID` int(20) NOT NULL,
+  `STATUS` int(11) NOT NULL,
+  `SECRET_KEY` varchar(128) NOT NULL,
+  `IMAGE_NAME` varchar(1024) NOT NULL,
+  `CHANNEL_CODE` varchar(128) DEFAULT NULL,
+  `HOST_TAG` varchar(128) DEFAULT NULL,
+  `CONTAINER_ID` varchar(128) DEFAULT NULL,
+  `CREATED_TIME` datetime NOT NULL,
+  `UPDATED_TIME` datetime NOT NULL,
+  `ZONE` varchar(128) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `BUILD_ID` (`BUILD_ID`,`VM_SEQ_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_DISPATCH_THIRDPARTY_AGENT_BUILD
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_THIRDPARTY_AGENT_BUILD` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `PROJECT_ID` varchar(64) NOT NULL,
+  `AGENT_ID` varchar(32) NOT NULL,
+  `PIPELINE_ID` varchar(34) NOT NULL DEFAULT '',
+  `BUILD_ID` varchar(34) NOT NULL,
+  `VM_SEQ_ID` varchar(34) NOT NULL,
+  `STATUS` int(11) NOT NULL,
+  `CREATED_TIME` datetime NOT NULL,
+  `UPDATED_TIME` datetime NOT NULL,
+  `WORKSPACE` varchar(4096) DEFAULT NULL,
+  `BUILD_NUM` int(20) DEFAULT '0',
+  `PIPELINE_NAME` varchar(255) DEFAULT '',
+  `TASK_NAME` varchar(255) DEFAULT '',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `BUILD_ID` (`BUILD_ID`,`VM_SEQ_ID`),
+  KEY `idx_agent_id` (`AGENT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+SET FOREIGN_KEY_CHECKS = 1;

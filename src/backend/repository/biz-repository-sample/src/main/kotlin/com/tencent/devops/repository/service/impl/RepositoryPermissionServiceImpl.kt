@@ -157,4 +157,24 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
             resourceCode = repositoryId.toString()
         )
     }
+
+    override fun getUserResourcesByPermissions(user: String, projectCode: String, permissions: Set<BkAuthPermission>): Map<BkAuthPermission, List<String>> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getUserResourceByPermission(user: String, projectCode: String, permission: BkAuthPermission): List<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun validateUserResourcePermission(user: String, projectCode: String, permission: BkAuthPermission): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun validateUserResourcePermission(user: String, projectCode: String, resourceCode: String, permission: BkAuthPermission): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun modifyResource(projectCode: String, resourceCode: String, resourceName: String) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

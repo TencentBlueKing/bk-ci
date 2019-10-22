@@ -95,7 +95,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         page: Int?,
         pageSize: Int?
     ): Result<OptionalTemplateList> {
-        return Result(templateService.listAllTemplate(projectId, userId, templateType, page, pageSize))
+        return Result(templateService.listAllTemplate(projectId, templateType, null, page, pageSize))
     }
 
     override fun getTemplate(

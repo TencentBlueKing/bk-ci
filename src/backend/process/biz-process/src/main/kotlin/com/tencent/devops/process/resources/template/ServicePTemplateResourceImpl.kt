@@ -28,15 +28,17 @@ package com.tencent.devops.process.resources.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.TemplateType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePTemplateResourceImpl @Autowired constructor(
     private val templateService: TemplateService
-) : ServicePTemplateResource {
+) : ServiceTemplateResource {
 
     override fun addMarketTemplate(
         userId: String,
@@ -55,4 +57,9 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     override fun updateStoreFlag(userId: String, templateId: String, storeFlag: Boolean): Result<Boolean> {
         return templateService.updateTemplateStoreFlag(userId, templateId, storeFlag)
     }
+
+    override fun listTemplateById(templateIds: Collection<String>, templateType: TemplateType?): Result<OptionalTemplateList> {
+        return Result(templateService.listAllTemplate(null, templateType, templateIds, null, null))
+    }
+
 }

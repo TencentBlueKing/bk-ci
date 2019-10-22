@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: websocket
+    desc: DevOps Websocket Service
+    version: 4.0.0
+    packageName: com.tencent.devops.websocket
+
+server:
+  port: 80
+
+thread:
+  min: 8

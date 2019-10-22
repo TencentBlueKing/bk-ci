@@ -27,8 +27,10 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import org.jooq.Condition
+import org.jooq.DSLContext
 
 /**
  * 插件数据库操作基类
@@ -46,5 +48,24 @@ abstract class AtomBaseDao {
         conditions.add(a.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(a.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
+    }
+
+    fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                    .where(ATOM_CODE.eq(atomCode))
+                    .and(LATEST_FLAG.eq(true))
+                    .fetchOne()
+        }
+    }
+
+    fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                    .where(ATOM_CODE.eq(atomCode))
+                    .orderBy(CREATE_TIME.desc())
+                    .limit(1)
+                    .fetchOne()
+        }
     }
 }

@@ -33,17 +33,16 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.BuildAgentThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentHeartbeatInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentService
+import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
-    private val thirdPartyAgentService: ThirdPartyAgentService,
+    private val thirdPartyAgentMgrService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService
 ) : BuildAgentThirdPartyAgentResource {
 
@@ -55,7 +54,7 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         startInfo: ThirdPartyAgentStartInfo
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
-        return Result(thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo))
+        return Result(thirdPartyAgentMgrService.agentStartup(projectId, agentId, secretKey, startInfo))
     }
 
     override fun getAgentStatus(
@@ -64,12 +63,12 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         secretKey: String
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
-        return Result(thirdPartyAgentService.getAgentStatus(projectId, agentId, secretKey))
+        return Result(thirdPartyAgentMgrService.getAgentStatus(projectId, agentId, secretKey))
     }
 
     override fun heartbeat(projectId: String, agentId: String, secretKey: String, heartbeatInfo: HeartbeatInfo): Result<HeartbeatResponse> {
         checkParam(projectId, agentId, secretKey)
-        return Result(thirdPartyAgentService.heartbeat(projectId, agentId, secretKey, heartbeatInfo))
+        return Result(thirdPartyAgentMgrService.heartbeat(projectId, agentId, secretKey, heartbeatInfo))
     }
 
     override fun getPipelines(projectId: String, agentId: String, secretKey: String): Result<ThirdPartyAgentPipeline?> {

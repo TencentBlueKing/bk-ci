@@ -1,0 +1,9 @@
+apply plugin: "maven"
+
+dependencies {
+    compile project(":common:common-pipeline")
+    compile project(":process:plugin-sdk")
+    testCompile project(":common:common-test")
+}
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

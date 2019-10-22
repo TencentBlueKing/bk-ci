@@ -23,14 +23,15 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package com.tencent.devops.dispatch.utils.redis
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.pojo.TstackContainerInfo
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
+import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -49,8 +50,8 @@ class RedisUtils @Autowired constructor(
         val build = redisOperation.get(ip) ?: return null
         try {
             return objectMapper.readValue(build, RedisBuild::class.java)
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to covert the redis build to object($build)", ignored)
+        } catch (t: Throwable) {
+            logger.warn("Fail to covert the redis build to object($build)", t)
         }
         return null
     }
@@ -59,10 +60,7 @@ class RedisUtils @Autowired constructor(
         redisOperation.delete(ip)
 
     fun setThirdPartyBuild(secretKey: String, redisBuild: ThirdPartyRedisBuild) {
-        redisOperation.set(
-            thirdPartyBuildKey(secretKey, redisBuild.agentId, redisBuild.buildId, redisBuild.vmSeqId),
-            objectMapper.writeValueAsString(redisBuild)
-        )
+        redisOperation.set(thirdPartyBuildKey(secretKey, redisBuild.agentId, redisBuild.buildId, redisBuild.vmSeqId), objectMapper.writeValueAsString(redisBuild))
     }
 
     fun setDockerBuild(id: Long, secretKey: String, redisBuild: RedisBuild) =
@@ -70,10 +68,8 @@ class RedisUtils @Autowired constructor(
 
     fun setDockerBuildLastHost(pipelineId: String, vmSeqId: String, hostIp: String) =
         redisOperation.set(dockerBuildLastHostKey(pipelineId, vmSeqId), hostIp)
-
     fun getDockerBuildLastHost(pipelineId: String, vmSeqId: String) =
         redisOperation.get(dockerBuildLastHostKey(pipelineId, vmSeqId))
-
     fun deleteDockerBuildLastHost(pipelineId: String, vmSeqId: String) =
         redisOperation.delete(dockerBuildLastHostKey(pipelineId, vmSeqId))
 
@@ -89,7 +85,7 @@ class RedisUtils @Autowired constructor(
     fun isThirdPartyAgentUpgrading(projectId: String, agentId: String): Boolean {
         return try {
             redisOperation.get(thirdPartyUpgradeKey(projectId, agentId)) == "true"
-        } catch (ignored: Throwable) {
+        } catch (t: Throwable) {
             false
         }
     }
@@ -113,6 +109,50 @@ class RedisUtils @Autowired constructor(
 
     private fun thirdPartyUpgradeKey(projectId: String, agentId: String) =
         "third_party_agent_upgrade_${projectId}_$agentId"
+
+    fun getTstackRedisBuild(ip: String): RedisBuild? {
+        val build = redisOperation.get(ip) ?: return null
+        try {
+            return objectMapper.readValue(build, RedisBuild::class.java)
+        } catch (t: Throwable) {
+            logger.warn("Fail to covert the redis build to object($build)", t)
+        }
+        return null
+    }
+
+    fun setTstackRedisBuild(ip: String, redisBuild: RedisBuild) {
+        redisOperation.set(ip, objectMapper.writeValueAsString(redisBuild))
+    }
+
+    fun deleteTstackRedisBuild(ip: String) {
+        redisOperation.delete(ip)
+    }
+
+    fun getTstackContainerInfo(key: String): TstackContainerInfo? {
+        val containerData = redisOperation.get(key) ?: return null
+        try {
+            return objectMapper.readValue(containerData, TstackContainerInfo::class.java)
+        } catch (t: Throwable) {
+            logger.warn("Fail to covert the tstack container data to object($containerData)", t)
+        }
+        return null
+    }
+
+    fun setTstackContainerInfo(key: String, containerInfo: TstackContainerInfo) {
+        redisOperation.set(key, objectMapper.writeValueAsString(containerInfo))
+    }
+
+    fun deleteTstackContainerInfo(key: String) {
+        redisOperation.delete(key)
+    }
+
+    fun setRedisDebugMsg(pipelineId: String, vmSeqId: String, msg: String) {
+        redisOperation.set("docker_debug_msg_key_${pipelineId}_$vmSeqId", msg, 3600L)
+    }
+
+    fun getRedisDebugMsg(pipelineId: String, vmSeqId: String): String? {
+        return redisOperation.get("docker_debug_msg_key_${pipelineId}_$vmSeqId")
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(RedisUtils::class.java)

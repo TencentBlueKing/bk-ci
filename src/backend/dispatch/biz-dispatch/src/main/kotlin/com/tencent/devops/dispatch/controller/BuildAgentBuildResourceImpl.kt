@@ -28,9 +28,11 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.AgentResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -68,6 +70,17 @@ class BuildAgentBuildResourceImpl @Autowired constructor(private val thirdPartyA
     ): AgentResult<Boolean> {
         checkParam(projectId, agentId, secretKey)
         return thirdPartyAgentBuildService.finishUpgrade(projectId, agentId, secretKey, success)
+    }
+
+    override fun workerBuildFinish(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        buildInfo: ThirdPartyBuildWithStatus
+    ): Result<Boolean> {
+        checkParam(projectId, agentId, secretKey)
+        thirdPartyAgentBuildService.workerBuildFinish(projectId, agentId, secretKey, buildInfo)
+        return Result(true)
     }
 
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {

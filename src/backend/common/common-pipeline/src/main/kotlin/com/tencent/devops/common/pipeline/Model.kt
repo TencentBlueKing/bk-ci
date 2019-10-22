@@ -48,7 +48,9 @@ data class Model(
     @ApiModelProperty("创建人", required = false)
     var pipelineCreator: String? = null,
     @ApiModelProperty("源模版ID", required = false)
-    var srcTemplateId: String? = null
+    var srcTemplateId: String? = null,
+    @ApiModelProperty("模板ID", required = false)
+    var templateId: String? = null
 ) {
 
     /**
@@ -83,11 +85,13 @@ data class Model(
                             thirdPartyAgentEnvId = container.thirdPartyAgentEnvId,
                             thirdPartyWorkspace = container.thirdPartyWorkspace,
                             dockerBuildVersion = container.dockerBuildVersion,
+                            tstackAgentId = container.tstackAgentId,
                             canRetry = container.canRetry,
                             enableExternal = container.enableExternal,
                             jobControlOption = container.jobControlOption,
                             mutexGroup = container.mutexGroup,
-                            dispatchType = container.dispatchType
+                            dispatchType = container.dispatchType,
+                            showBuildResource = container.showBuildResource
                         )
                     }
                     is NormalContainer -> {
@@ -116,7 +120,7 @@ data class Model(
             stageList.add(Stage(containerList, stage.id))
         }
 
-        return Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator)
+        return Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator, null, templateId)
     }
 
     fun getContainer(vmSeqId: String): Container? {

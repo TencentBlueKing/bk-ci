@@ -122,6 +122,8 @@ data class ProjectVO(
     val enabled: Boolean?,
     @ApiModelProperty("是否灰度")
     val gray: Boolean,
+    @ApiModelProperty("混合云CC业务ID")
+    val hybridCcAppId: Long?,
     @ApiModelProperty("支持构建机访问外网")
     val enableExternal: Boolean?
 )

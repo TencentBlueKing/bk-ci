@@ -1,0 +1,38 @@
+spring:
+  profiles: prod
+  datasource:
+    url: jdbc:mysql://gamedb.bkdevops.devops.db:10000/devops_artifactory?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: ENC(WKI4je4eCjnfoamIjwPHBA==)
+    password: ENC(ejsBJVnHYmHlbGemw8eNyA==)
+  redis:
+    database: 1
+    host: ins.bkdevops.devops.db
+    password: ENC(RiqIBF6erMdzvkYmiJAE8w==)
+    port: 30000
+  cloud:
+    consul:
+      discovery:
+        tags: prod
+  rabbitmq:
+      virtual-host: bkdevops
+      username: bkdevops
+      password: bkdevops
+      addresses: 100.108.234.3:5672,9.66.36.112:5672
+
+
+server:
+  port: 80
+  undertow:
+    worker-threads: 100
+
+jfrog:
+  url: http://bk.artifactory.oa.com
+  username: devops_pipeline_backend_api
+  password: ENC(LB0q+BrXyYIRkN6/WnztpvYd1lZaRjLJuO3wRjyb8oI=)
+
+artifactory:
+  outerUrl: https://bkdevops.qq.com/artifactory/download
+  thirdPartyUrl: http://gw.open.oa.com
+
+gateway:
+  url: gw.open.oa.com

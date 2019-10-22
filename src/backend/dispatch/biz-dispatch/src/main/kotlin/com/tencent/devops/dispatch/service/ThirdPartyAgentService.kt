@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -40,10 +41,12 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import com.tencent.devops.process.api.ServiceBuildResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -343,6 +346,31 @@ class ThirdPartyAgentService @Autowired constructor(
         thirdPartyAgentBuildDao.updateStatus(
             dslContext, record.id,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+        )
+    }
+
+    fun workerBuildFinish(projectId: String, agentId: String, secretKey: String, buildInfo: ThirdPartyBuildWithStatus) {
+        val agentResult = client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId)
+        if (agentResult.isNotOk()) {
+            logger.warn("Fail to get the third party agent($agentId) because of ${agentResult.message}")
+            throw NotFoundException("Fail to get the agent")
+        }
+        if (agentResult.data == null) {
+            logger.warn("Get the null third party agent($agentId)")
+            throw NotFoundException("Fail to get the agent")
+        }
+
+        if (agentResult.data!!.secretKey != secretKey) {
+            logger.warn("The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} of project($projectId) and agent($agentId)")
+            throw NotFoundException("Fail to get the agent")
+        }
+
+        client.get(ServiceBuildResource::class).workerBuildFinish(
+            projectId,
+            buildInfo.pipelineId ?: "dummyPipelineId",
+            buildInfo.buildId,
+            buildInfo.vmSeqId,
+            SimpleResult(buildInfo.success, buildInfo.message)
         )
     }
 
