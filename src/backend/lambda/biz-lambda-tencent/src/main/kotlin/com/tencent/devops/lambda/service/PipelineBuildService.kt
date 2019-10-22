@@ -157,7 +157,7 @@ class PipelineBuildService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorType = if (t.errorTpye == null) null else ErrorType.values()[t.errorTpye],
+                errorType = if (t.errorType == null) null else ErrorType.values()[t.errorType],
                 errorCode = t.errorCode,
                 errorMsg = t.errorMsg
             )

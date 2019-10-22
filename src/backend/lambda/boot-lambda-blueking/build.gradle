@@ -27,7 +27,9 @@
 dependencies {
     compile project(":common:common-auth:common-auth-sample")
     compile project(":lambda:api-lambda")
+    compile project(":lambda:api-lambda-blueking")
     compile project(":lambda:biz-lambda")
+    compile project(":lambda:biz-lambda-blueking") // tencent是内部版实现
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

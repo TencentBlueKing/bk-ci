@@ -24,10 +24,5 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":common:common-auth:common-auth-sample")
-    compile project(":lambda:api-lambda")
-    compile project(":lambda:biz-lambda")
-}
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_gen_jooq.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"

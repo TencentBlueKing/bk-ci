@@ -35,6 +35,7 @@ dependencies {
     compile project(":project:api-project")
     compile project(":lambda:api-lambda-tencent")
     compile project(":lambda:model-lambda")
+    compile project(":lambda:model-lambda-tencent")
     testCompile project(":common:common-test")
 }
 

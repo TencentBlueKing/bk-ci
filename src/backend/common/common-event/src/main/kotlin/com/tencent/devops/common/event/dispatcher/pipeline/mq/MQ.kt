@@ -69,6 +69,9 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
     const val QUEUE_PIPELINE_BUILD_FINISH = "q.engine.pipeline.build.finish"
 
+    // 构建启动广播exchange
+    const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
+
     // 构建结束后续广播exchange
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
     // 接收上述广播的队列
@@ -76,6 +79,14 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"
     const val QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK = "q.engine.pipeline.build.code.webhook"
     const val QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET = "q.engine.pipeline.build.atom.market"
+    const val QUEUE_PIPELINE_BUILD_FINISH_LAMBDA = "q.engine.pipeline.build.lambda"
+
+    // 插件结束后续广播exchange
+    const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "e.engine.pipeline.build.element.finish"
+    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
+    // 接收上述广播的队列
+    const val QUEUE_PIPELINE_BUILD_ELEMENT_FINISH_LAMBDA = "q.engine.pipeline.build.element.lambda"
+    const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
 
     // 定时变更广播exchange
     const val EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT = "e.engine.pipeline.timer.change"
