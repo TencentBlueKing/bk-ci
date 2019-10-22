@@ -26,12 +26,14 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserEnvironmentResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
@@ -59,29 +61,39 @@ class UserEnvironmentResourceImpl @Autowired constructor(
 
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
         if (environment.name.isBlank()) {
-            throw ParamBlankException("环境名称不能为空")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
         }
         if (environment.name.isBlank()) {
-            throw ParamBlankException("环境名称太长")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_TOO_LONG)
         }
 
         if (NodeSource.CREATE == environment.source) {
-            val bcsVmParam = environment.bcsVmParam ?: throw ParamBlankException("Invalid bcsVmParam")
+            val bcsVmParam = environment.bcsVmParam
+                ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_INVALID_BCSVM_PARAM)
 
             if (bcsVmParam.clusterId.isBlank()) {
-                throw ParamBlankException("Invalid bcsVmParam.clusterId")
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NULL_BCSVM_PARAM,
+                    params = arrayOf("clusterId")
+                )
             }
             if (bcsVmParam.imageId.isBlank()) {
-                throw ParamBlankException("Invalid bcsVmParam.imageId")
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_INVALID_BCSVM_PARAM,
+                    params = arrayOf("imageId")
+                )
             }
             if (bcsVmParam.vmModelId.isBlank()) {
-                throw ParamBlankException("Invalid bcsVmParam.vmModelId")
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_INVALID_BCSVM_PARAM,
+                    params = arrayOf("vmModelId")
+                )
             }
         }
 
-        if (NodeSource.EXISTING == environment.source) {
+        if (NodeSource.EXISTING == environment.source || NodeSource.CMDB == environment.source) {
             if (environment.nodeHashIds == null || environment.nodeHashIds!!.isEmpty()) {
-                throw ParamBlankException("Invalid nodeHashIds")
+                throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
             }
         }
 
@@ -95,11 +107,11 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         environment: EnvUpdateInfo
     ): Result<Boolean> {
         if (envHashId.isBlank()) {
-            throw ParamBlankException("环境ID不能为空")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
 
         if (environment.name.isBlank()) {
-            throw ParamBlankException("环境名称不能为空")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
         }
 
         envService.updateEnvironment(userId, projectId, envHashId, environment)
@@ -120,7 +132,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, envHashId: String): Result<EnvWithPermission> {
         if (envHashId.isBlank()) {
-            throw ParamBlankException("Invalid envHashId")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
 
         return Result(envService.getEnvironment(userId, projectId, envHashId))
@@ -128,7 +140,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
 
     override fun delete(userId: String, projectId: String, envHashId: String): Result<Boolean> {
         if (envHashId.isBlank()) {
-            throw ParamBlankException("Invalid envHashId")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
 
         envService.deleteEnvironment(userId, projectId, envHashId)
@@ -137,7 +149,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
 
     override fun listNodes(userId: String, projectId: String, envHashId: String): Result<List<NodeBaseInfo>> {
         if (envHashId.isBlank()) {
-            throw ParamBlankException("Invalid envHashId")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
 
         return Result(envService.listAllEnvNodes(userId, projectId, listOf(envHashId)))
@@ -150,11 +162,11 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         nodeHashIds: List<String>
     ): Result<Boolean> {
         if (envHashId.isBlank()) {
-            throw ParamBlankException("Invalid envHashId")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
 
         if (nodeHashIds.isEmpty()) {
-            throw ParamBlankException("Invalid nodeHashIds")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
         envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
@@ -168,11 +180,11 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         nodeHashIds: List<String>
     ): Result<Boolean> {
         if (envHashId.isBlank()) {
-            throw ParamBlankException("Invalid envHashId")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
 
         if (nodeHashIds.isEmpty()) {
-            throw ParamBlankException("Invalid nodeHashIds")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
         envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
