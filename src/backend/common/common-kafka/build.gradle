@@ -1,0 +1,4 @@
+dependencies {
+    compile "org.springframework.kafka:spring-kafka"
+    compile project(":common:common-web")
+}

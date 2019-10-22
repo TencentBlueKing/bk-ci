@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import javax.annotation.PostConstruct
 
-class  JerseySwaggerConfig : JerseyConfig() {
+class JerseySwaggerConfig : JerseyConfig() {
 
     @Value("\${spring.application.desc:#{null}}")
     private val applicationDesc: String? = null

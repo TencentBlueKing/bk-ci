@@ -258,8 +258,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    private fun upgrade(projectId: String, agentId: String, agentUpgradeResult: AgentResult<Boolean>)
-        : AgentResult<Boolean> {
+    private fun upgrade(projectId: String, agentId: String, agentUpgradeResult: AgentResult<Boolean>): AgentResult<Boolean> {
         try {
             if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
                 return agentUpgradeResult
@@ -321,7 +320,6 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
-
 
     private fun finishBuild(
         record: TDispatchThirdpartyAgentBuildRecord,

@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
 import com.tencent.devops.common.misc.pojo.agent.BcsVmNode
 import com.tencent.devops.common.misc.pojo.agent.NodeStatusAndOS

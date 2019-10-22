@@ -219,18 +219,26 @@ class CertDao {
         offset: Int,
         limit: Int
     ): Result<TCertRecord> {
-        return with(TCert.T_CERT) {
-            val query = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-            if (certType != null) {
-                query.and(CERT_TYPE.eq(certType))
+        with(TCert.T_CERT) {
+            return when (certType) {
+                null -> {
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(CERT_ID.`in`(certIds))
+                        .orderBy(CERT_CREATE_TIME.desc())
+                        .limit(offset, limit)
+                        .fetch()
+                }
+                else -> {
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(CERT_TYPE.eq(certType))
+                        .and(CERT_ID.`in`(certIds))
+                        .orderBy(CERT_CREATE_TIME.desc())
+                        .limit(offset, limit)
+                        .fetch()
+                }
             }
-            if (certIds.isNotEmpty()) {
-                query.and(CERT_ID.`in`(certIds))
-            }
-            query.orderBy(CERT_CREATE_TIME.desc())
-                .limit(offset, limit)
-                .fetch()
         }
     }
 

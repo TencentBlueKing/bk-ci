@@ -35,8 +35,8 @@ import org.springframework.stereotype.Service
 class NodeBluekingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao
-){
-    fun getNodeIp(projectId: String, nodeId: Long):String {
-        return nodeDao.get(dslContext,projectId,nodeId)!!.getNodeIp()
+) {
+    fun getNodeIp(projectId: String, nodeId: Long): String {
+        return nodeDao.get(dslContext, projectId, nodeId)!!.getNodeIp()
     }
 }

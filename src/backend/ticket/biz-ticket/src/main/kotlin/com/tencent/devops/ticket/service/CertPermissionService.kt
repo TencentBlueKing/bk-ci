@@ -30,28 +30,44 @@ import com.tencent.devops.common.auth.api.AuthPermission
 
 interface CertPermissionService {
 
-    fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String)
     fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
     )
 
-    fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean
     fun validatePermission(
-            userId: String,
-            projectId: String,
-            resourceCode: String,
-            authPermission: AuthPermission
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission,
+        message: String
+    )
+
+    fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
     ): Boolean
 
-    fun filterCert(userId: String, projectId: String, authPermission: AuthPermission): List<String>
+    fun validatePermission(
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission
+    ): Boolean
+
+    fun filterCert(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): List<String>
+
     fun filterCerts(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>>
 
     fun createResource(userId: String, projectId: String, certId: String)

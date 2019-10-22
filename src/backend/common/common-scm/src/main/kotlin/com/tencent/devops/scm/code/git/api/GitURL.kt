@@ -39,4 +39,3 @@ const val GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS = "success"
 const val GITHUB_CHECK_RUNS_CONCLUSION_FAILURE = "failure"
 
 const val CODE_TGIT_URL = "http://git.tencent.com/api/v3"
-

@@ -48,9 +48,9 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class AppLogResourceImpl @Autowired constructor(
-        private val logDispatcher: LogServiceDispatcher,
-        private val authPermissionApi: AuthPermissionApi,
-        private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val logDispatcher: LogServiceDispatcher,
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AppLogResource {
 
     companion object {

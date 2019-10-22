@@ -31,7 +31,14 @@ import com.tencent.devops.log.model.pojo.QueryLogs
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 /**
@@ -62,12 +69,12 @@ interface OpLogResource {
     @PUT
     @Path("/v2/projects/{projectId}")
     fun enableV2(
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("开启或禁止", required = true)
-            @QueryParam("enable")
-            enable: Boolean
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("开启或禁止", required = true)
+        @QueryParam("enable")
+        enable: Boolean
     ): Result<Boolean>
 
     @ApiParam("获取支持V2版本的项目")
@@ -75,14 +82,13 @@ interface OpLogResource {
     @Path("/v2/projects")
     fun getV2Projects(): Result<Set<String>>
 
-
     @ApiParam("设置构建清理过期时长")
     @PUT
     @Path("/v2/build/clean/expire")
     fun setBuildExpire(
-            @ApiParam("时间, 单位(天)", required = true)
-            @QueryParam("expire")
-            expire: Int
+        @ApiParam("时间, 单位(天)", required = true)
+        @QueryParam("expire")
+        expire: Int
     ): Result<Boolean>
 
     @ApiParam("获取构建清理过期时长")
@@ -94,9 +100,9 @@ interface OpLogResource {
     @PUT
     @Path("/v2/es/index/expire")
     fun setESExpire(
-            @ApiParam("时间, 单位(天)", required = true)
-            @QueryParam("expire")
-            expire: Int
+        @ApiParam("时间, 单位(天)", required = true)
+        @QueryParam("expire")
+        expire: Int
     ): Result<Boolean>
 
     @ApiParam("获取ES索引过期时长")
@@ -108,9 +114,9 @@ interface OpLogResource {
     @PUT
     @Path("/v2/es/index/reopen")
     fun reopenIndex(
-            @ApiParam("构建ID", required = true)
-            @QueryParam("buildId")
-            buildId: String
+        @ApiParam("构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
     ): Result<Boolean>
 
     @ApiOperation("根据构建ID获取初始化所有日志")

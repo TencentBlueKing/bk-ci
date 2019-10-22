@@ -39,14 +39,14 @@ import java.time.LocalDateTime
 class PipelineDockerBuildDao {
 
     fun startBuild(
-            dslContext: DSLContext,
-            projectId: String,
-            pipelineId: String,
-            buildId: String,
-            vmSeqId: Int,
-            secretKey: String,
-            status: PipelineTaskStatus,
-            zone: String?
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: Int,
+        secretKey: String,
+        status: PipelineTaskStatus,
+        zone: String?
     ): Long {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             val now = LocalDateTime.now()

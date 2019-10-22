@@ -36,9 +36,9 @@ class GroupService @Autowired constructor(
     private val bsAuthPermissionApi: BSAuthPermissionApi,
     private val bsAuthResourceApi: BSAuthResourceApi,
     private val bsAuthProjectApi: BSAuthProjectApi,
-    private val experienceServiceCode : BSExperienceAuthServiceCode
+    private val experienceServiceCode: BSExperienceAuthServiceCode
 ) {
-    
+
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
     private val regex = Pattern.compile(",|;")
 
@@ -219,7 +219,7 @@ class GroupService @Autowired constructor(
     }
 
     private fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(user, experienceServiceCode, resourceType, projectId, authPermissions,null)
+        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(user, experienceServiceCode, resourceType, projectId, authPermissions, null)
         val map = mutableMapOf<AuthPermission, List<Long>>()
         permissionResourceMap.forEach { key, value ->
             map[key] = value.map { HashUtil.decodeIdToLong(it) }

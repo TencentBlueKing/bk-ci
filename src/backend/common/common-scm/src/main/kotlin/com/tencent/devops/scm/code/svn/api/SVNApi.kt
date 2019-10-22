@@ -86,7 +86,6 @@ object SVNApi {
         }
     }
 
-
     fun lock(repname: String, applicant: String, subpath: String, svnConfig: SVNConfig) {
         val url = composeSvnLockPostUrl(svnConfig)
         val requestData = mapOf("repname" to repname,

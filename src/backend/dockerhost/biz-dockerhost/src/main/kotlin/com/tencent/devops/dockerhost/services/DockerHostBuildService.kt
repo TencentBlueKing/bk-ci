@@ -37,7 +37,6 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.BuildImageResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
-import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
