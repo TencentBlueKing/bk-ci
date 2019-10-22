@@ -9,7 +9,7 @@ import com.tencent.devops.dispatch.service.vm.QueryVMs
 import com.tencent.devops.dispatch.utils.ShutdownVMAfterBuildUtils
 import com.tencent.devops.dispatch.utils.VMLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.process.api.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled

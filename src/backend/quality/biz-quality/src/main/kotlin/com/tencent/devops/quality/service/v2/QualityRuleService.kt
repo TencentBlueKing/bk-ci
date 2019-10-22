@@ -10,8 +10,8 @@ import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
-import com.tencent.devops.process.api.ServicePipelineResource
-import com.tencent.devops.process.api.ServicePipelineTaskResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.PipelineModelTask

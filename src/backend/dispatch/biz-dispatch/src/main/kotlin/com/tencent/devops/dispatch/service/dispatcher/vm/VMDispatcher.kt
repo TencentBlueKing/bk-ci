@@ -18,7 +18,7 @@ import com.tencent.devops.dispatch.utils.ShutdownVMAfterBuildUtils
 import com.tencent.devops.dispatch.utils.VMLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent

@@ -69,4 +69,5 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LOCK = 2101047 // 流水线锁定
     const val ERROR_PIPELINE_QUEUE_FULL = 2101049 // 流水线队列满
     const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = 2101050 // 第三方构建机状态异常
+    const val ERROR_SUBPIPELINE_CYCLE_CALL = 2101102 // 子流水线循环调用
 }

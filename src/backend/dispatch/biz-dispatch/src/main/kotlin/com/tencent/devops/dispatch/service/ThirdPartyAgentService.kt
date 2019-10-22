@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
@@ -46,7 +45,7 @@ import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

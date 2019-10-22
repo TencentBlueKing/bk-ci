@@ -93,5 +93,6 @@ jooq {
                 packageName = "com.tencent.devops.model.${moduleName}"
             }
         }
+        tasks.generateGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
     }
 }

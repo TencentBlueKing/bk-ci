@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -97,7 +98,8 @@ class PipelineService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineSettingService: PipelineSettingService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val pipelineBuildDao: PipelineBuildDao
 ) {
 
     companion object {
@@ -1156,14 +1158,14 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Map<String, String> {
+    fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>, filterDelete: Boolean = true): Map<String, String> {
 
         if (pipelineIds.isEmpty()) return mapOf()
         if (projectId.isBlank()) return mapOf()
 
         val watch = StopWatch()
         watch.start("s_r_list_b_ps")
-        val map = pipelineRepositoryService.listPipelineNameByIds(projectId, pipelineIds)
+        val map = pipelineRepositoryService.listPipelineNameByIds(projectId, pipelineIds, filterDelete)
         watch.stop()
         logger.info("getPipelineNameByIds|[$projectId]|watch=$watch")
         return map
@@ -1383,6 +1385,11 @@ class PipelineService @Autowired constructor(
         )
     }
 
+    fun getPipelineNameVersion(pipelineId: String): Pair<String, Int> {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
+    }
+
     private fun isTemplatePipeline(pipelineId: String): Boolean {
         return templatePipelineDao.listByPipeline(dslContext, pipelineId) != null
     }
@@ -1390,5 +1397,9 @@ class PipelineService @Autowired constructor(
     private fun getTemplatePipelines(pipelineIds: Set<String>): Set<String> {
         val records = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
         return records.map { it.pipelineId }.toSet()
+    }
+
+    fun getArtifacortyCountFormHistory(startTime: Long, endTime: Long): Int {
+        return pipelineBuildDao.countNotEmptyArtifact(dslContext, startTime, endTime)
     }
 }

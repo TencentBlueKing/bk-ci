@@ -6,19 +6,14 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.IPath
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMessage
-import com.tencent.devops.common.websocket.dispatch.message.PipelineMqMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
-import com.tencent.devops.common.websocket.dispatch.push.IWebsocketPush
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.PageUtils
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.process.api.ServicePipelineResource
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.PipelineStatus
-import org.bouncycastle.crypto.tls.ConnectionEnd.client
 import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)

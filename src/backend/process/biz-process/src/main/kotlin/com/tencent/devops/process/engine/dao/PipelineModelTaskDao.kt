@@ -28,11 +28,14 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
+import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
+import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -92,15 +95,19 @@ class PipelineModelTaskDao {
     }
 
     /**
-     * 根据插件标识，获取使用该插件的pipeline个数
+     * 根据原子标识，获取使用该原子的pipeline个数
      */
-    fun getPipelineCountByAtomCode(dslContext: DSLContext, atomCode: String): Int {
-        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.select(PIPELINE_ID.countDistinct())
-                .from(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .fetchOne(0, Int::class.java)
-        }
+    fun getPipelineCountByAtomCode(dslContext: DSLContext, atomCode: String, projectCode: String?): Int {
+        val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
+        val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
+        val condition = getListByAtomCodeCond(a, b, atomCode, projectCode)
+
+        return dslContext.select(a.PIPELINE_ID.countDistinct())
+            .from(a)
+            .join(b)
+            .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
+            .where(condition)
+            .fetchOne(0, Int::class.java)
     }
 
     /**
@@ -125,6 +132,47 @@ class PipelineModelTaskDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .fetch()
         }
+    }
+
+    fun listByAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        projectCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<out Record>? {
+        val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
+        val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
+        val condition = getListByAtomCodeCond(a, b, atomCode, projectCode)
+
+        val baseStep = dslContext.select(
+            a.PIPELINE_ID.`as`("pipelineId"),
+            a.PIPELINE_NAME.`as`("pipelineName"),
+            a.PROJECT_ID.`as`("projectCode")
+        )
+            .from(a)
+            .join(b)
+            .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
+            .where(condition)
+            .groupBy(b.PIPELINE_ID)
+            .orderBy(a.PIPELINE_NAME.desc())
+
+        return if (null != page && null != pageSize) {
+            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        } else {
+            baseStep.fetch()
+        }
+    }
+
+
+    private fun getListByAtomCodeCond(a: TPipelineInfo, b: TPipelineModelTask, atomCode: String, projectCode: String?): MutableList<Condition> {
+        val condition = mutableListOf<Condition>()
+        condition.add(a.DELETE.eq(false))
+        condition.add(b.ATOM_CODE.eq(atomCode))
+        if (projectCode != null) {
+            condition.add(a.PROJECT_ID.eq(projectCode))
+        }
+        return condition
     }
 
     companion object {

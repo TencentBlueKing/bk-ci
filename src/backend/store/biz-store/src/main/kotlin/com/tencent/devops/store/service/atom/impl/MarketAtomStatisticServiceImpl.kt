@@ -28,7 +28,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.ServiceMeasurePipelineResource
+import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum

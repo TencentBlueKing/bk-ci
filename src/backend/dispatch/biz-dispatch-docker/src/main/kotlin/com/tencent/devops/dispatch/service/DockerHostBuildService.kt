@@ -58,7 +58,7 @@ import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent

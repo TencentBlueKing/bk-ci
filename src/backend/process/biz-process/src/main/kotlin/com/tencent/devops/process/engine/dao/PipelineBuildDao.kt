@@ -634,4 +634,15 @@ class PipelineBuildDao {
                 .fetchAny()
         }
     }
+
+    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectCount().from(this)
+                .where(ARTIFACT_INFO.isNotNull)
+                .and(ARTIFACT_INFO.notEqual("[ ]"))
+                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
+                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
+                .fetchOne(0, Int::class.java)
+        }
+    }
 }

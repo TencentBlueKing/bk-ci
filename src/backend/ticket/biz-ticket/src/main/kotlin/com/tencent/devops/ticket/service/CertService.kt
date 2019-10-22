@@ -31,10 +31,9 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.BkAuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CertEnterpriseDao
 import com.tencent.devops.ticket.dao.CertTlsDao
