@@ -36,7 +36,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         userId: String,
         bgName: String?,
         deptName: String?,
-        centerName: String
+        centerName: String?
     ): Result<List<ProjectVO>> {
         return Result(projectLocalService.getProjectByGroup(userId, bgName, deptName, centerName))
     }

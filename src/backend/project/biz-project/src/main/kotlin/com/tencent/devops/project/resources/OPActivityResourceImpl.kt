@@ -67,16 +67,4 @@ class OPActivityResourceImpl @Autowired constructor(private val activityService:
         return Result(activityService.getField(fieldName))
     }
 
-    override fun upDateActivityV2(userId: String, activityId: Long, opActivityUpdate: OPActivityUpdate): Result<Boolean> {
-        return Result(activityService.upDateActivity(activityId, opActivityUpdate))
-    }
-
-    override fun deleteActivityV2(userId: String, activityId: Long): Result<Boolean> {
-        activityService.delete(userId, activityId)
-        return Result(true)
-    }
-
-    override fun getActivityV2(userId: String, activityId: Long): Result<OPActivityVO> {
-        return activityService.get(userId, activityId)
-    }
 }
