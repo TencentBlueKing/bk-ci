@@ -27,6 +27,7 @@
 package com.tencent.devops.environment.utils
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
@@ -49,5 +50,24 @@ object NodeStringIdUtils {
         } else {
             displayName
         }
+    }
+
+    fun getNodeBaseInfo(nodeRecord: TNodeRecord) : NodeBaseInfo {
+        val nodeStringId = getNodeStringId(nodeRecord)
+        return NodeBaseInfo(
+            nodeHashId = HashUtil.encodeLongId(nodeRecord.nodeId),
+            nodeId = nodeStringId,
+            name = nodeRecord.nodeName,
+            ip = nodeRecord.nodeIp,
+            nodeStatus = nodeRecord.nodeStatus,
+            agentStatus = AgentStatusUtils.getAgentStatus(nodeRecord),
+            nodeType = nodeRecord.nodeType,
+            osName = nodeRecord.osName,
+            createdUser = nodeRecord.createdUser,
+            operator = nodeRecord.operator,
+            bakOperator = nodeRecord.bakOperator,
+            gateway = "",
+            displayName = getRefineDisplayName(nodeStringId, nodeRecord.displayName)
+        )
     }
 }

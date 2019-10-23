@@ -19,7 +19,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT_tx"], description = "蓝盾项目列表接口")
+@Api(tags = ["SERVICE_PROJECT_TX"], description = "蓝盾项目列表接口")
 @Path("/service/projects/tx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -49,7 +49,7 @@ interface ServiceTxProjectResource {
         deptName: String?,
         @ApiParam("centerName", required = false)
         @QueryParam("centerName")
-        centerName: String
+        centerName: String?
     ): Result<List<ProjectVO>>
 
 

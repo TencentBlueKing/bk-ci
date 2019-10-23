@@ -1,9 +1,9 @@
 package com.tencent.devops.misc.cron
 
-import com.tencent.devops.common.api.enum.AgentAction
-import com.tencent.devops.common.api.enum.AgentStatus
+import com.tencent.devops.common.api.enums.AgentAction
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.misc.ThirdPartyAgentHeartbeatUtils
+import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.pojo.enums.NodeStatus

@@ -127,7 +127,7 @@ interface OPActivityResource {
 
     @GET
 //    @Path("/{fieldName}/enum")
-    @Path("/fieldName/{fieldName}/enum")
+    @Path("/fields/{fieldName}/enum")
     @ApiOperation("获取字段常量信息")
     fun getFieldV2(
             @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -137,46 +137,5 @@ interface OPActivityResource {
             @PathParam("fieldName")
             fieldName: String
     ): Result<List<String>>
-
-    @PUT
-//    @Path("/{activityId}")
-    @Path("/activityId/{activityId}")
-    @ApiOperation("修改")
-    fun upDateActivityV2(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("最新动态ID")
-            @PathParam("activityId")
-            activityId: Long,
-            @ApiParam("最新动态")
-            opActivityUpdate: OPActivityUpdate
-    ): Result<Boolean>
-
-    @DELETE
-//    @Path("/{activityId}")
-    @Path("/activityId/{activityId}")
-    @ApiOperation("删除")
-    fun deleteActivityV2(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("最新动态ID")
-            @PathParam("activityId")
-            activityId: Long
-    ): Result<Boolean>
-
-    @GET
-//    @Path("/{activityId}")
-    @Path("/activityId/{activityId}")
-    @ApiOperation("根据ID查询")
-    fun getActivityV2(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("最新动态ID")
-            @PathParam("activityId")
-            activityId: Long
-    ): Result<OPActivityVO>
 
 }

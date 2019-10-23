@@ -36,6 +36,14 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeService) : UserNodeResource {
+    override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
+        return Result(sortByUser(nodeService.listUsableServerNodes(userId, projectId), userId))
+    }
+
+    override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
+        return Result(nodeService.hasCreatePermission(userId, projectId))
+    }
+
     override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
         nodeService.deleteNodes(userId, projectId, nodeHashIds)
         return Result(true)
@@ -43,6 +51,11 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
 
     override fun list(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(sortByUser(nodeService.list(userId, projectId), userId))
+    }
+
+    override fun changeCreatedUser(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
+        nodeService.changeCreatedUser(userId, projectId, nodeHashId)
+        return Result(true)
     }
 
     override fun updateDisplayName(
