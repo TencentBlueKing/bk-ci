@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserCredentialResource {
     @ApiOperation("是否拥有创建凭据权限")
-    @Path("/projects/{projectId}/hasCreatePermission")
+    @Path("/project/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
