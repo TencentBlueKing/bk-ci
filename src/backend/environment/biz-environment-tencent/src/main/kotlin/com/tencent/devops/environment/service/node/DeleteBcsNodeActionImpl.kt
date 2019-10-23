@@ -1,7 +1,7 @@
 package com.tencent.devops.environment.service.node
 
-import com.tencent.devops.common.misc.client.BcsClient
-import com.tencent.devops.common.misc.pojo.agent.BcsVmNode
+import com.tencent.devops.common.environment.agent.client.BcsClient
+import com.tencent.devops.common.environment.agent.pojo.agent.BcsVmNode
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.slf4j.Logger

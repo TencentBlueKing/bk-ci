@@ -3,7 +3,7 @@ package com.tencent.devops.environment.service
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.misc.client.BcsClient
+import com.tencent.devops.common.environment.agent.client.BcsClient
 import com.tencent.devops.environment.dao.BcsClusterDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao

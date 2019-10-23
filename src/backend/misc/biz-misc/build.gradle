@@ -1,7 +1,7 @@
 dependencies {
     compile project(":common:common-web")
     compile project(":common:common-db")
-    compile project(":common:common-agent-heartbeat")
+    compile project(":common:common-environment-thirdpartyagent")
     compile project(":common:common-client")
     compile project(":common:common-auth:common-auth-api")
     compile project(":environment:model-environment")

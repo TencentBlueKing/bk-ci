@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.utils
 
-import com.tencent.devops.common.misc.client.BcsClient
+import com.tencent.devops.common.environment.agent.client.BcsClient
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
