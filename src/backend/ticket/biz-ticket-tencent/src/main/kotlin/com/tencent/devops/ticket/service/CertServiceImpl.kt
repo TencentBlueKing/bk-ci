@@ -1,4 +1,4 @@
-package com.tencent.devops.ticket.resources
+package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
@@ -32,7 +32,6 @@ import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
 import com.tencent.devops.ticket.pojo.CertTls
 import com.tencent.devops.ticket.pojo.enums.CertAndroidType
 import com.tencent.devops.ticket.pojo.enums.CertType
-import com.tencent.devops.ticket.service.CertService
 import com.tencent.devops.ticket.util.CertUtil
 import com.tencent.devops.ticket.util.MobileProvisionUtil
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition

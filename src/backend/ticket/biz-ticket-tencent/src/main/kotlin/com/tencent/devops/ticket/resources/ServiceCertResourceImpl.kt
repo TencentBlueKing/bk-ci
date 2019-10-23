@@ -38,6 +38,7 @@ import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
 import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertTls
 import com.tencent.devops.ticket.pojo.enums.CertType
+import com.tencent.devops.ticket.service.CertServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

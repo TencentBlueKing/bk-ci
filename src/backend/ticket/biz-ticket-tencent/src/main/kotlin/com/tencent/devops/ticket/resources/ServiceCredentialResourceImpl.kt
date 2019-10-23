@@ -38,6 +38,7 @@ import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.ticket.pojo.enums.Permission
+import com.tencent.devops.ticket.service.CredentialServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

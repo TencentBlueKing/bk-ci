@@ -1,4 +1,4 @@
-package com.tencent.devops.ticket.resources
+package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
@@ -14,7 +14,7 @@ import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
@@ -23,7 +23,6 @@ import com.tencent.devops.ticket.pojo.CredentialPermissions
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import com.tencent.devops.ticket.service.CredentialService
 import com.tencent.devops.ticket.util.CredentialUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

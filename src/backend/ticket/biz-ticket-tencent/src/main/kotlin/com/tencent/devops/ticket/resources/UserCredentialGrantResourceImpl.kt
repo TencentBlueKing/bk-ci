@@ -6,6 +6,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.UserCredentialGrantResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
+import com.tencent.devops.ticket.service.CredentialServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
