@@ -30,25 +30,25 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.OpNodeResource
 import com.tencent.devops.environment.pojo.NodePage
-import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.service.OpNodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpNodeResourceImpl @Autowired constructor(private val nodeService: NodeService) : OpNodeResource {
+class OpNodeResourceImpl @Autowired constructor(private val opNodeService: OpNodeService) : OpNodeResource {
     override fun addOtherNodes(userId: String, projectId: String, nodeIps: List<String>): Result<Boolean> {
-        nodeService.addOtherNodes(userId, projectId, nodeIps)
+        opNodeService.addOtherNodes(userId, projectId, nodeIps)
         return Result(true)
     }
 
     override fun flushDisplayName(): Result<Int> {
-        return Result(nodeService.flushDisplayName())
+        return Result(opNodeService.flushDisplayName())
     }
 
     override fun list(page: Int, pageSize: Int, name: String?): Result<NodePage> {
-        return Result(NodePage(nodeService.countPage(name), nodeService.listPage(page, pageSize, name)))
+        return Result(NodePage(opNodeService.countPage(name), opNodeService.listPage(page, pageSize, name)))
     }
 
     override fun deleteNodes(projectId: String, nodeHashId: String): Result<Boolean> {
-        return Result(nodeService.deleteNode(projectId, nodeHashId))
+        return Result(opNodeService.deleteNode(projectId, nodeHashId))
     }
 }

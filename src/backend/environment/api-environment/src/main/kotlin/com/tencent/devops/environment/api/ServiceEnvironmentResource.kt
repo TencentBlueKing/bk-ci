@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceEnvironmentResource {
     @ApiOperation("获取环境列表")
     @GET
-    @Path("/{projectId}")
+    @Path("/projects/{projectId}")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -65,7 +65,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("获取环境（多个）的节点列表")
     @POST
-    @Path("/{projectId}/listNodesByEnvIds")
+    @Path("/projects/{projectId}/listNodesByEnvIds")
     fun listNodesByEnvIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -79,7 +79,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("获取用户有权限使用的环境列表")
     @GET
-    @Path("/{projectId}/listUsableServerEnvs")
+    @Path("/projects/{projectId}/listUsableServerEnvs")
     fun listUsableServerEnvs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -91,7 +91,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("根据hashId(多个)获取环境信息(不校验权限)")
     @POST
-    @Path("/{projectId}/listRawByEnvHashIds")
+    @Path("/projects/{projectId}/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -105,7 +105,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("根据环境名称获取环境信息(不校验权限)")
     @POST
-    @Path("/{projectId}/listRawByEnvNames")
+    @Path("/projects/{projectId}/listRawByEnvNames")
     fun listRawByEnvNames(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -119,7 +119,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("根据OS获取第三方构建环境列表")
     @GET
-    @Path("/{projectId}/buildEnvs")
+    @Path("/projects/{projectId}/buildEnvs")
     fun listBuildEnvs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

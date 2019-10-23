@@ -1,6 +1,14 @@
 package com.tencent.devops.notify.consumer
 
-import com.tencent.devops.notify.*
+import com.tencent.devops.notify.EXCHANGE_NOTIFY
+import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
+import com.tencent.devops.notify.ROUTE_EMAIL
+import com.tencent.devops.notify.ROUTE_RTX
+import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
+import com.tencent.devops.notify.ROUTE_SMS
+import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
+import com.tencent.devops.notify.ROUTE_WECHAT
+import com.tencent.devops.notify.QUEUE_NOTIFY_WECHAT
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
@@ -17,7 +25,6 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-
 
 @Service
 class NotifyMessageConsumer @Autowired constructor(

@@ -23,13 +23,13 @@ import org.springframework.stereotype.Component
  */
 @Component
 class TstackVmRebuildJob @Autowired constructor(
-        private val dslContext: DSLContext,
-        private val tstackVmDao: TstackVmDao,
-        private val tstackClient: TstackClient,
-        private val tstackSystemConfig: TstackSystemConfig,
-        private val redisOperation: RedisOperation,
-        private val client: Client,
-        private val profile: Profile
+    private val dslContext: DSLContext,
+    private val tstackVmDao: TstackVmDao,
+    private val tstackClient: TstackClient,
+    private val tstackSystemConfig: TstackSystemConfig,
+    private val redisOperation: RedisOperation,
+    private val client: Client,
+    private val profile: Profile
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TstackVmRebuildJob::class.java)

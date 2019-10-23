@@ -9,18 +9,18 @@ object BatScriptUtil {
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
 
     fun executeEnhance(
-            script: String,
-            runtimeVariables: Map<String, String>,
-            dir: File? = null
+        script: String,
+        runtimeVariables: Map<String, String>,
+        dir: File? = null
     ): String {
         val enhanceScript = CommandLineUtils.solveSpecialChar(script)
         return execute(enhanceScript, dir, runtimeVariables)
     }
 
     private fun execute(
-            script: String,
-            dir: File?,
-            runtimeVariables: Map<String, String>
+        script: String,
+        dir: File?,
+        runtimeVariables: Map<String, String>
     ): String {
         try {
             val tmpDir = System.getProperty("java.io.tmpdir")

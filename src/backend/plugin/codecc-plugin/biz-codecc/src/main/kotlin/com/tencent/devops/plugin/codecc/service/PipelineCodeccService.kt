@@ -13,8 +13,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptEl
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.plugin.codecc.pojo.coverity.CodeccReport
-import com.tencent.devops.process.api.ServicePipelineResource
-import com.tencent.devops.process.api.ServicePipelineTaskResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineModelTask
 import org.slf4j.LoggerFactory

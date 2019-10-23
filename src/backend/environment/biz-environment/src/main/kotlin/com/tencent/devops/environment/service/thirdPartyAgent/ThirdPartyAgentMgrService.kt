@@ -41,9 +41,10 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.misc.ThirdPartyAgentHeartbeatUtils
+import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
@@ -84,14 +85,15 @@ import java.util.Date
 import javax.ws.rs.NotFoundException
 
 @Service
-class ThirdPartyAgentMgrService @Autowired constructor(
+class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val thirdPartyAgentEnableProjectsDao: ThirdPartyAgentEnableProjectsDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val envDao: EnvDao,
-    private val agentDisconnectNotifyService: AgentDisconnectNotifyService,
+    @Autowired(required = false)
+    private val agentDisconnectNotifyService: IAgentDisconnectNotifyService?,
     private val slaveGatewayService: SlaveGatewayService,
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val client: Client,
@@ -1089,7 +1091,7 @@ class ThirdPartyAgentMgrService @Autowired constructor(
                 }
                 AgentStatus.isImportException(status) -> {
                     logger.info("Update the agent($agentId) from exception to ok")
-                    agentDisconnectNotifyService.online(
+                    agentDisconnectNotifyService?.online(
                         projectId = agentRecord.projectId ?: "",
                         ip = agentRecord.ip ?: "",
                         hostname = agentRecord.hostname ?: "",
@@ -1113,12 +1115,12 @@ class ThirdPartyAgentMgrService @Autowired constructor(
                         }
                         if (nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
                             val count = nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
-                            agentDisconnectNotifyService.online(
-                                agentRecord.projectId ?: "",
-                                agentRecord.ip ?: "",
-                                agentRecord.hostname ?: "",
-                                agentRecord.createdUser ?: "",
-                                agentRecord.os ?: ""
+                            agentDisconnectNotifyService?.online(
+                                projectId = agentRecord.projectId ?: "",
+                                ip = agentRecord.ip ?: "",
+                                hostname = agentRecord.hostname ?: "",
+                                createUser = agentRecord.createdUser ?: "",
+                                os = agentRecord.os ?: ""
                             )
                             logger.info("Update the node status - $count of agent $agentId")
                         }

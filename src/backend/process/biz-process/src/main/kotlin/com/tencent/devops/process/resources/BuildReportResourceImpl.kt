@@ -28,7 +28,7 @@ package com.tencent.devops.process.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.BuildReportResource
+import com.tencent.devops.process.api.builds.BuildReportResource
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,5 +59,9 @@ class BuildReportResourceImpl @Autowired constructor(
             reportType = reportType
         )
         return Result(true)
+    }
+
+    override fun getRootUrl(buildId: String, taskId: String): Result<String> {
+        return Result(reportService.getRootUrl(buildId, taskId))
     }
 }

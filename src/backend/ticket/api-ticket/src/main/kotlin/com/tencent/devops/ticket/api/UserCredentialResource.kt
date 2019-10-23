@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserCredentialResource {
     @ApiOperation("是否拥有创建凭据权限")
-    @Path("/projects/{projectId}/hasCreatePermission")
+    @Path("/project/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -115,7 +115,10 @@ interface UserCredentialResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?
     ): Result<Page<CredentialWithPermission>>
 
     @ApiOperation("获取拥有对应权限凭据列表")
@@ -139,8 +142,32 @@ interface UserCredentialResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?
     ): Result<Page<Credential>>
+
+    @ApiOperation("获取拥有对应权限凭据列表-不分页-插件UI调用")
+    @Path("/{projectId}/getHasPermissionList")
+    @GET
+    fun getHasPermissionList(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("凭证类型列表，用逗号分隔", required = false, defaultValue = "")
+        @QueryParam("credentialTypes")
+        credentialTypesString: String?,
+        @ApiParam("对应权限", required = true, defaultValue = "")
+        @QueryParam("permission")
+        permission: Permission,
+        @ApiParam("关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?
+    ): Result<List<Credential>>
 
     @ApiOperation("显示真实凭据")
     @Path("/projects/{projectId}/credentials/{credentialId}/show")

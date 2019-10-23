@@ -20,7 +20,7 @@ class WebSocketDispatcher(
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
                 val routeKey = eventType.routeKey
                 val mqMessage = event.buildMqMessage()
-                if(mqMessage?.sessionList != null && mqMessage.sessionList!!.isNotEmpty()) {
+                if (mqMessage?.sessionList != null && mqMessage.sessionList!!.isNotEmpty()) {
                     event.buildNotifyMessage(mqMessage)
                     logger.info("[WebsocketDispatcher]:mqMessageType:${mqMessage.javaClass},mqMessage:$mqMessage")
                     rabbitTemplate.convertAndSend(eventType.exchange, routeKey, mqMessage) { message ->

@@ -28,8 +28,11 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.process.dao.PipelineTaskDao
+import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.pojo.PipelineModelTask
+import com.tencent.devops.process.pojo.PipelineProjectRel
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,7 +41,8 @@ import org.springframework.stereotype.Service
 class PipelineTaskService @Autowired constructor(
     val dslContext: DSLContext,
     val objectMapper: ObjectMapper,
-    val pipelineTaskDao: PipelineTaskDao
+    val pipelineTaskDao: PipelineTaskDao,
+    val pipelineModelTaskDao: PipelineModelTaskDao
 ) {
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
         return pipelineTaskDao.list(dslContext, projectId, pipelineIds)?.map {
@@ -51,5 +55,35 @@ class PipelineTaskService @Autowired constructor(
                 objectMapper.readValue(it.taskParams)
             )
         }?.groupBy { it.pipelineId } ?: mapOf()
+    }
+
+    /**
+     * 根据插件标识，获取使用插件的流水线详情
+     */
+    fun listPipelinesByAtomCode(
+        atomCode: String,
+        projectCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<PipelineProjectRel> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 100
+
+        val count = pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode).toLong()
+        val pipelines = pipelineModelTaskDao.listByAtomCode(dslContext, atomCode, projectCode, pageNotNull, pageSizeNotNull)
+
+        val records = if (pipelines == null) {
+            listOf<PipelineProjectRel>()
+        } else {
+            pipelines.map {
+                PipelineProjectRel(
+                    pipelineId = it["pipelineId"] as String,
+                    pipelineName = it["pipelineName"] as String,
+                    projectCode = it["projectCode"] as String
+                )
+            }
+        }
+
+        return Page(pageNotNull, pageSizeNotNull, count, records)
     }
 }

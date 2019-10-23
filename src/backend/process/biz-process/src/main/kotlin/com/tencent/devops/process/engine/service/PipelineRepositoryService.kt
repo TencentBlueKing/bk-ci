@@ -500,13 +500,16 @@ class PipelineRepositoryService constructor(
         return pipelineInfoDao.countByProjectIds(dslContext, projectIds, channelCode)
     }
 
-    fun listPipelineNameByIds(projectId: String, pipelineIds: Set<String>): MutableMap<String, String> {
-        val listInfoByPipelineIds = pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, pipelineIds)
-        val map = mutableMapOf<String, String>()
-        listInfoByPipelineIds.forEach {
-            map[it.pipelineId] = it.pipelineName
-        }
-        return map
+    fun listPipelineNameByIds(
+        projectId: String,
+        pipelineIds: Set<String>,
+        filterDelete: Boolean = true
+    ): Map<String, String> {
+        val listInfoByPipelineIds =
+            pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, pipelineIds, filterDelete)
+        return listInfoByPipelineIds.map {
+            it.pipelineId to it.pipelineName
+        }.toMap()
     }
 
     private fun checkSubpipeline(projectId: String, pipelineId: String, existPipelines: HashSet<String>) {

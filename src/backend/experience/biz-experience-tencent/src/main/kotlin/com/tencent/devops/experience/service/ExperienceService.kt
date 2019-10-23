@@ -63,7 +63,7 @@ class ExperienceService @Autowired constructor(
     private val bsAuthResourceApi: BSAuthResourceApi,
     private val shortUrlApi: ShortUrlApi,
     private val experienceServiceCode: BSExperienceAuthServiceCode
-    
+
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile(",|;")

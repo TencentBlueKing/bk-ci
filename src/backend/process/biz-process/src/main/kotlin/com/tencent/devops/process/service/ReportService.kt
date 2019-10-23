@@ -28,7 +28,9 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.artifactory.api.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.dao.ReportDao
+import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
@@ -41,7 +43,8 @@ import java.nio.file.Paths
 class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
-    private val client: Client
+    private val client: Client,
+    private val pipelineService: PipelineService
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
 
@@ -81,5 +84,14 @@ class ReportService @Autowired constructor(
                 Report(it.name, it.indexFile, it.type)
             }
         }
+    }
+
+    fun getRootUrl(buildId: String, taskId: String): String {
+        val (pipelineId, projectId) = pipelineService.getPipelineIdAndProjectIdByBuildId(buildId)
+        return getRootUrl(projectId, pipelineId, buildId, taskId)
+    }
+
+    private fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
+        return "${HomeHostUtil.innerApiHost()}/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
     }
 }

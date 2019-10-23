@@ -26,6 +26,8 @@
 
 dependencies {
     compile project(":environment:biz-environment")
+    compile project(":common:common-bcs")
+    compile project(":common:common-devcloud")
     compile project(":environment:api-environment-tencent")
 }
 

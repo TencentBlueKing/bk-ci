@@ -48,9 +48,22 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserNodeResource {
+
+    @ApiOperation("是否拥有创建节点的权限")
+    @Path("/projects/{projectId}/hasCreatePermission")
+    @GET
+    fun hasCreatePermission(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
     @ApiOperation("删除节点")
     @POST
-    @Path("/{projectId}/deleteNodes")
+    @Path("/projects/{projectId}/deleteNodes")
     fun deleteNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -64,7 +77,7 @@ interface UserNodeResource {
 
     @ApiOperation("获取项目节点列表")
     @GET
-    @Path("/{projectId}")
+    @Path("/projects/{projectId}/nodes")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -74,9 +87,36 @@ interface UserNodeResource {
         projectId: String
     ): Result<List<NodeWithPermission>>
 
+    @ApiOperation("获取用户有权限使用的服务器列表")
+    @GET
+    @Path("/projects/{projectId}/listUsableServerNodes")
+    fun listUsableServerNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<NodeWithPermission>>
+
+    @ApiOperation("修改节点导入人")
+    @POST
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/changeCreatedUser")
+    fun changeCreatedUser(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("节点 HashId", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String
+    ): Result<Boolean>
+
     @ApiOperation("修改节点名称")
     @POST
-    @Path("/{projectId}/{nodeHashId}/updateDisplayName")
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/updateDisplayName")
     fun updateDisplayName(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

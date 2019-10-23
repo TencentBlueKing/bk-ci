@@ -20,7 +20,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.external.constant.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
-import com.tencent.devops.process.api.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher

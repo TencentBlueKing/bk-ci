@@ -7,8 +7,8 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.process.api.UserBuildResource
-import com.tencent.devops.process.api.UserPipelineResource
+import com.tencent.devops.process.api.user.UserBuildResource
+import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.Pipeline

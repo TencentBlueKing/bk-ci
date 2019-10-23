@@ -23,11 +23,11 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserDockerHostResourceImpl @Autowired constructor(
-        private val dockerHostBuildService: DockerHostBuildService,
-        private val dockerHostDebugService: DockerHostDebugService,
-        private val bkAuthPermissionApi: AuthPermissionApi,
-        private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-        private val client: Client
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostDebugService: DockerHostDebugService,
+    private val bkAuthPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val client: Client
 ) : UserDockerHostResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserDockerHostResourceImpl::class.java)

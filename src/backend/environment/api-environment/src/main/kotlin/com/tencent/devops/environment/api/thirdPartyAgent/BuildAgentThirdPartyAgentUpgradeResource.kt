@@ -36,27 +36,28 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Api(tags = ["BUILD_ENVIRONMENT_THIRD_PARTY_AGENT_UPGRADE"], description = "第三方构建机升级资源")
-@Path("/buildAgent/agent/thirdPartyAgent/upgrade")
+@Path("/buildAgent/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAgentThirdPartyAgentUpgradeResource {
 
     @ApiOperation("下载upgrade.jar")
     @GET
-    @Path("/files/download")
+    @Path("/projects/{projectId}/agents/{agentId}/files/upgrade/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadUpgrade(
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        @PathParam("agentId")
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
