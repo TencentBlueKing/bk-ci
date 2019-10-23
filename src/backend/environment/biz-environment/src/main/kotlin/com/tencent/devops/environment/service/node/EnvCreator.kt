@@ -5,7 +5,7 @@ import com.tencent.devops.environment.pojo.EnvironmentId
 import javax.annotation.PostConstruct
 
 /**
- * Node节点创建操作接口
+ * 环境创建操作接口
  */
 interface EnvCreator {
 
