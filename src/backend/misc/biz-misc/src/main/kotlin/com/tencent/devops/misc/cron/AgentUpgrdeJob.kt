@@ -1,7 +1,7 @@
 package com.tencent.devops.misc.cron
 
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.misc.service.UpgradeService
+import com.tencent.devops.misc.service.AgentUpgradeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 @Component
 class AgentUpgrdeJob @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val updateService: UpgradeService
+    private val updateService: AgentUpgradeService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)

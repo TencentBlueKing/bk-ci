@@ -1,6 +1,6 @@
 package com.tencent.devops.misc.dao
 
-import com.tencent.devops.common.api.enum.AgentStatus
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord

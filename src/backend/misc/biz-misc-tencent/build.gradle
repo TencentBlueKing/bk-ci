@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":misc:biz-misc")
+    compile project(":common:common-bcs")
+    compile project(":common:common-devcloud")
+    compile project(":artifactory:api-artifactory-tencent")
+    compile project(":environment:api-environment-tencent")
+}

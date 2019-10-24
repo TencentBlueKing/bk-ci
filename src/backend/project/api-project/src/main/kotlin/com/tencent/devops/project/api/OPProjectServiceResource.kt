@@ -133,6 +133,7 @@ interface OPProjectServiceResource {
         serviceCreateInfo: ServiceCreateInfo
     ): Result<OPPServiceVO>
 
+    //TODO: 10:23改到这
     @PUT
     @Path("/")
     @ApiOperation("批量修改服务")
@@ -277,7 +278,7 @@ interface OPProjectServiceResource {
 
     @POST
 //    @Path("/types/{title}")
-    @Path("/types/title/{title}")
+    @Path("/types/titles/{title}")
     @ApiOperation("创建服务类型")
     fun createServiceTypeV2(
             @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -293,7 +294,7 @@ interface OPProjectServiceResource {
 
     @DELETE
 //    @Path("/types/{serviceTypeId}")
-    @Path("/types/serviceTypeId/{serviceTypeId}")
+    @Path("/types/{typeId}")
     @ApiOperation("删除服务类型")
     fun deleteServiceTypeV2(
             @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -301,35 +302,35 @@ interface OPProjectServiceResource {
             userId: String,
             @ApiParam("服务类型ID", required = true)
             @PathParam("serviceTypeId")
-            serviceTypeId: Long
+            typeId: Long
     ): Result<Boolean>
 
     @PUT
 //    @Path("/types/{serviceTypeId}")
-    @Path("/types/serviceTypeId/{serviceTypeId}")
+    @Path("/types/{typeId}")
     @ApiOperation("修改服务类型")
     fun updateServiceTypeV2(
             @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
             @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
             userId: String,
             @ApiParam("服务类型ID", required = true)
-            @PathParam("serviceTypeId")
-            serviceTypeId: Long,
+            @PathParam("typeId")
+            typeId: Long,
             @ApiParam("修改服务类型所需信息", required = true)
             serviceTypeModify: ServiceTypeModify
     ): Result<Boolean>
 
     @GET
 //    @Path("/types/{serviceTypeId}")
-    @Path("/types/serviceTypeId/{serviceTypeId}")
+    @Path("/types/{typeId}")
     @ApiOperation("根据ID查找服务类型")
     fun getServiceTypeByIdV2(
             @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
             @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
             userId: String,
             @ApiParam("服务ID", required = true)
-            @PathParam("serviceTypeId")
-            serviceTypeId: Long
+            @PathParam("typeId")
+            typeId: Long
     ): Result<ServiceType>
 
     @DELETE

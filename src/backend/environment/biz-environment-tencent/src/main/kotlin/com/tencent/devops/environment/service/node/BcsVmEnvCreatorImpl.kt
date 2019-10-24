@@ -2,7 +2,7 @@ package com.tencent.devops.environment.service.node
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.misc.client.BcsClient
+import com.tencent.devops.common.environment.agent.client.BcsClient
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao

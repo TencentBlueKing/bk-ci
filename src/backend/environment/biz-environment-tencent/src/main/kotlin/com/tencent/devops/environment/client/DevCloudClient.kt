@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.client
 
-import com.tencent.devops.common.misc.client.DevCloudContainerInstanceClient
+import com.tencent.devops.common.environment.agent.client.DevCloudContainerInstanceClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
