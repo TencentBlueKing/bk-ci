@@ -1,9 +1,9 @@
 <template>
     <section class="preview-atom">
-        <div class="preview-header"><p class="page-title">研发商店插件前端task.json在线调试</p></div>
+        <div class="preview-header"><p class="page-title">{{ $t('atomDebug.title') }}</p></div>
         <main class="main-container">
             <div class="init-json">
-                <textarea class="json-input" placeholder="请在此输入正确的task.json内容..." v-model="initJsonStr"></textarea>
+                <textarea class="json-input" :placeholder="$t('atomDebug.inputTips')" v-model="initJsonStr"></textarea>
             </div>
             <div class="transform-json">
                 <json-viewer
@@ -58,28 +58,8 @@
                 }
                 return {}
             }
-            // initElement () {
-            //     return {
-            //         data: {
-            //             input: getAtomDefaultValue(this.initJson.input),
-            //             output: getAtomOutputObj(this.initJson.output)
-            //         }
-            //     }
-            // },
-            // atomInputValue () {
-            //     return getAtomDefaultValue(this.initJson.input)
-            // },
-            // outputValue () {
-            //     return getAtomOutputObj(this.initJson.outputValue)
-            // }
         },
         watch: {
-            // initElement: {
-            //     handler (val) {
-            //         this.dataValue = val
-            //     },
-            //     immediate: true
-            // }
             initJson: {
                 handler (val) {
                     this.atomInputValue = getAtomDefaultValue(this.initJson.input)

@@ -9,8 +9,8 @@
             <div class="filter-content">
                 <div>
                     <div class="form-group">
-                        <label for="pipelineName" class="filter-label">流水线名称</label>
-                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" placeholder="支持模糊匹配"
+                        <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
+                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" :placeholder="$t('filterByNameTips')"
                             v-validate.initial="'max:40'"
                             :class="{
                                 'is-danger': errors.has('pipelineName')
@@ -19,7 +19,7 @@
                         <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
                     </div>
                     <div class="form-group">
-                        <form-field label="创建人">
+                        <form-field :label="$t('creator')">
                             <user-input :handle-change="handleChange"
                                 name="users"
                                 v-model="currentFilter.filterByCreator">
@@ -28,7 +28,7 @@
                     </div>
                     <div class="form-group"
                         v-for="(group, index) in tagGroupList" :key="index">
-                        <label class="filter-label">{{group.name}}</label>
+                        <label class="filter-label">{{group.name}}：</label>
                         <bk-select
                             v-model="currentFilter[group.id]"
                             multiple="true">
@@ -37,9 +37,9 @@
                         </bk-select>
                     </div>
                     <div class="form-group filter-modify">
-                        <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">过滤</bk-button>
+                        <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">{{ $t('newlist.filter') }}</bk-button>
                         <a class="btn"
-                            @click="empty">清空</a>
+                            @click="empty">{{ $t('newlist.reset') }}</a>
                     </div>
                 </div>
             </div>
@@ -73,7 +73,7 @@
         data () {
             return {
                 sliderOpt: {
-                    title: '筛选',
+                    title: this.$t('newlist.filterTitle'),
                     quickClose: true,
                     width: 360
                 },

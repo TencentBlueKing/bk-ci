@@ -61,8 +61,8 @@ const routes = [
                 path: 'list',
                 name: 'pipelinesListEntry',
                 meta: {
-                    title: '流水线',
-                    header: '流水线',
+                    title: 'pipeline',
+                    header: 'pipeline',
                     icon: 'pipeline',
                     to: 'pipelinesList'
                 },
@@ -145,8 +145,8 @@ const routes = [
                         name: 'pipelinesDetail',
                         component: pipelinesDetail,
                         meta: {
-                            title: '流水线执行详情',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             icon: 'pipeline',
                             to: 'pipelinesList'
                         }
@@ -163,8 +163,8 @@ const routes = [
                         name: 'pipelinesHistory',
                         component: pipelinesHistory,
                         meta: {
-                            title: '执行历史',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             icon: 'pipeline',
                             to: 'pipelinesList'
                         }
@@ -175,8 +175,8 @@ const routes = [
                         name: 'pipelinesEdit',
                         meta: {
                             icon: 'pipeline',
-                            title: '编辑',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             to: 'pipelinesList'
                         },
                         component: pipelinesEdit
@@ -187,8 +187,8 @@ const routes = [
                         name: 'pipelinesPreview',
                         meta: {
                             icon: 'pipeline',
-                            title: '执行预览流水线',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             to: 'pipelinesList'
                         },
                         component: pipelinesPreview

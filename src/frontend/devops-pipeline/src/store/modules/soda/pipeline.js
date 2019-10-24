@@ -67,11 +67,11 @@ export const mutations = {
     [TEMPLATE_CATEGORY_MUTATION]: (state, { categoryList }) => {
         const customCategory = {
             categoryCode: 'custom',
-            categoryName: '项目自定义'
+            categoryName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.projectCustom')) || 'projectCustom'
         }
         const storeCategory = {
             categoryCode: 'store',
-            categoryName: '研发商店'
+            categoryName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('store')) || 'store'
         }
         return Object.assign(state, {
             templateCategory: [customCategory, ...categoryList, storeCategory]

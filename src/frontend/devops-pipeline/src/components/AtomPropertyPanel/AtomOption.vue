@@ -1,7 +1,7 @@
 <template>
     <accordion show-checkbox show-content key="otherChoice">
         <header class="var-header" slot="header">
-            <span>流程控制选项</span>
+            <span>{{ $t('editPage.atomOption') }}</span>
             <i class="bk-icon icon-angle-down" style="display:block"></i>
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
@@ -18,13 +18,14 @@
     import { mapActions } from 'vuex'
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
-    import {
-        getAtomOptionDefault,
-        ATOM_OPTION
-    } from '@/store/modules/soda/optionConfig'
+    import optionConfigMixin from '@/store/modules/soda/optionConfigMixin'
+    // import {
+    //     getAtomOptionDefault,
+    //     ATOM_OPTION
+    // } from '@/store/modules/soda/optionConfig'
     export default {
         name: 'atom-config',
-        mixins: [atomMixin, validMixins],
+        mixins: [atomMixin, validMixins, optionConfigMixin],
         computed: {
             atomOption () {
                 return this.element.additionalOptions || {}
@@ -36,7 +37,7 @@
                 return this.element.version
             },
             optionModel () {
-                return ATOM_OPTION || {}
+                return this.ATOM_OPTION || {}
             }
         },
         watch: {
@@ -54,7 +55,7 @@
             ...mapActions('atom', [
                 'setPipelineEditing'
             ]),
-            getAtomOptionDefault,
+            // getAtomOptionDefault,
             handleUpdateElementOption (name, value) {
                 this.setPipelineEditing(true)
                 this.handleUpdateElement('additionalOptions',

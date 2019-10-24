@@ -25,7 +25,7 @@
                 newModel: {},
                 list: [],
                 tmpRevision: '',
-                tips: '当前流水线存在多个代码拉取插件，你需设置此字段以解决冲突问题'
+                tips: this.$t('editPage.repoConflict')
             }
         },
         computed: {
@@ -166,7 +166,7 @@
                     id: paramId,
                     type: 'STRING',
                     defaultValue: 'HEAD',
-                    desc: 'Svn拉取代码插件指定的版本号',
+                    desc: this.$t('editPage.svnVersionTips'),
                     required: true
                 })
             },

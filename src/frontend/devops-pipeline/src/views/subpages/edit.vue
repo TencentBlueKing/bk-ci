@@ -23,7 +23,6 @@
     import { mapActions, mapState } from 'vuex'
     import emptyTips from '@/components/devops/emptyTips'
     import { navConfirm } from '@/utils/util'
-    import { CONFIRM_MSG, CONFIRM_TITLE } from '@/utils/pipelineConst'
     import { PipelineEditTab, BaseSettingTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
@@ -39,15 +38,17 @@
                 isLoading: true,
                 hasNoPermission: false,
                 leaving: false,
+                confirmMsg: this.$t('editPage.confirmMsg'),
+                confirmTitle: this.$t('editPage.confirmTitle'),
                 noPermissionTipsConfig: {
-                    title: '没有权限',
-                    desc: '你没有查看该流水线的权限，请切换项目或申请相应权限',
+                    title: this.$t('noPermission'),
+                    desc: this.$t('history.noPermissionTips'),
                     btns: [
                         {
                             theme: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('changeProject')
                         },
                         {
                             theme: 'success',
@@ -55,7 +56,7 @@
                             handler: () => {
                                 this.goToApplyPerm('role_viewer')
                             },
-                            text: '申请权限'
+                            text: this.$t('applyPermission')
                         }
                     ]
                 }
@@ -71,7 +72,7 @@
             panels () {
                 return [{
                             name: 'pipeline',
-                            label: '流水线',
+                            label: this.$t('pipeline'),
                             component: 'PipelineEditTab',
                             bindData: {
                                 isEditing: this.isEditing,
@@ -81,7 +82,7 @@
                         },
                         {
                             name: 'baseSetting',
-                            label: '基础设置',
+                            label: this.$t('editPage.baseSetting'),
                             component: 'BaseSettingTab',
                             bindData: {
                                 pipelineSetting: this.pipelineSetting,
@@ -157,7 +158,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: CONFIRM_MSG, title: CONFIRM_TITLE })
+                        navConfirm({ content: this.confirmMsg, title: this.confirTitle })
                             .then(() => {
                                 next(true)
                                 this.leaving = false
@@ -178,8 +179,8 @@
                 window.removeEventListener('beforeunload', this.leaveSure)
             },
             leaveSure (e) {
-                e.returnValue = CONFIRM_MSG
-                return CONFIRM_MSG
+                e.returnValue = this.confirmMsg
+                return this.confirmMsg
             },
             requestMatchTemplateRules (templateId) {
                 this.$store.dispatch('soda/requestMatchTemplateRuleList', {

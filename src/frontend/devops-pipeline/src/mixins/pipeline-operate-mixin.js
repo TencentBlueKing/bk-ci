@@ -104,7 +104,7 @@ export default {
                 })
 
                 this.$showTips({
-                    message: isCollect ? '收藏成功' : '取消收藏成功',
+                    message: isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc'),
                     theme: 'success'
                 })
                 this.fetchPipelineList()
@@ -139,7 +139,7 @@ export default {
                 })
             } catch (err) {
                 if (err.code === 403) { // 没有权限终止
-                    this.setPermissionConfig(`流水线：${target.pipelineName}`, '执行', target.pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${target.pipelineName}`, this.$t('exec'), target.pipelineId)
                 } else {
                     this.$showTips({
                         message: err.message || err,
@@ -155,10 +155,10 @@ export default {
          */
         async delete ({ pipelineId, pipelineName }) {
             let message, theme
-            const content = `删除【${pipelineName}】流水线`
+            const content = `${this.$t('newlist.deletePipeline')}: ${pipelineName}`
 
             try {
-                await navConfirm({ title: `确认删除`, content })
+                await navConfirm({ title: this.$t('subpage.confirmDelete'), content })
 
                 await this.removePipeline({
                     projectId: this.projectId,
@@ -169,11 +169,11 @@ export default {
                     name: 'pipelinesList'
                 })
 
-                message = '删除流水线成功'
+                message = this.$t('deleteSuc')
                 theme = 'success'
             } catch (err) {
                 if (err.code === 403) { // 没有权限删除
-                    this.setPermissionConfig(`流水线：${pipelineName}`, '删除', this.projectId, pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${pipelineName}`, this.$t('delete'), this.projectId, pipelineId)
                 } else {
                     message = err.message || err
                     theme = 'error'
@@ -196,7 +196,7 @@ export default {
 
             try {
                 if (!tempPipeline.name) {
-                    throw new Error('流水线名称不能为空')
+                    throw new Error(this.$t('subpage.nameNullTips'))
                 }
                 await copyPipelineAction({
                     projectId,
@@ -208,7 +208,7 @@ export default {
                     }
                 })
 
-                message = '复制成功'
+                message = this.$t('copySuc')
                 theme = 'success'
 
                 this.$nextTick(() => {
@@ -216,7 +216,7 @@ export default {
                 })
             } catch (err) {
                 if (err.code === 403) { // 没有权限复制
-                    this.setPermissionConfig(`流水线：${prePipeline.pipelineName}`, '编辑', projectId, prePipeline.pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${prePipeline.pipelineName}`, this.$t('edit'), projectId, prePipeline.pipelineId)
                 } else {
                     message = err.message || err
                     theme = 'error'
@@ -236,7 +236,7 @@ export default {
             let theme = ''
             try {
                 if (!name) {
-                    throw new Error('流水线名称不能为空')
+                    throw new Error(this.$t('subpage.nameNullTips'))
                 }
                 await this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, {
                     name
@@ -250,11 +250,11 @@ export default {
                         }
                     })
                 })
-                message = '修改流水线名称成功'
+                message = this.$t('updateSuc')
                 theme = 'success'
             } catch (err) {
                 if (err.code === 403) { // 没有权限复制
-                    this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '编辑', projectId, this.curPipeline.pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('edit'), projectId, this.curPipeline.pipelineId)
                 } else {
                     message = err.message || err
                     theme = 'error'
@@ -280,7 +280,7 @@ export default {
                 })
 
                 if (res.id) {
-                    message = '启动构建成功'
+                    message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
                     if (goDetail) {
                         this.$router.push({
@@ -293,12 +293,12 @@ export default {
                         })
                     }
                 } else {
-                    message = '启动构建失败'
+                    message = this.$t('newlist.failToStartBuild')
                     theme = 'error'
                 }
             } catch (err) {
                 if (err.code === 403) { // 没有权限执行
-                    this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行', this.projectId, pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('exec'), this.projectId, pipelineId)
                 } else {
                     message = err.message || err
                     theme = 'error'
@@ -348,7 +348,7 @@ export default {
                 })
 
                 if (res.id) {
-                    message = '重试成功'
+                    message = this.$t('subpage.retrySuc')
                     theme = 'success'
                     if (goDetail) {
                         this.$router.replace({
@@ -362,12 +362,12 @@ export default {
                     }
                     this.$emit('update-table')
                 } else {
-                    message = '重试失败'
+                    message = this.$t('subpage.retryFail')
                     theme = 'error'
                 }
             } catch (err) {
                 if (err.code === 403) { // 没有权限执行
-                    this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行', this.$route.params.projectId, this.$route.params.pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('exec'), this.$route.params.projectId, this.$route.params.pipelineId)
                     return
                 } else {
                     message = err.message || err
@@ -411,20 +411,20 @@ export default {
                 ])
 
                 if (responses.some(res => res.code === 403)) {
-                    this.setPermissionConfig(`流水线：${this.pipeline.name}`, '编辑', this.$route.params.projectId, this.$route.params.pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.pipeline.name}`, this.$t('edit'), this.$route.params.projectId, this.$route.params.pipelineId)
                     return false
                 }
                 this.setPipelineEditing(false)
                 this.setAuthEditing(false)
                 this.$showTips({
-                    message: '流水线保存成功',
+                    message: this.$t('saveSuc'),
                     theme: 'success'
                 })
                 this.fetchPipelineList()
                 return true
             } catch (e) {
                 if (e.code === 403) { // 没有权限编辑
-                    this.setPermissionConfig(`流水线：${this.pipeline.name}`, '编辑', this.$route.params.projectId, this.$route.params.pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.pipeline.name}`, this.$t('edit'), this.$route.params.projectId, this.$route.params.pipelineId)
                 } else {
                     this.$showTips({
                         message: e.message,
@@ -440,7 +440,7 @@ export default {
         async saveAsPipelineTemplate (projectId, pipelineId, templateName, isCopySetting = false) {
             try {
                 if (!templateName) {
-                    throw new Error('模板名称不能为空')
+                    throw new Error(this.$t('newlist.tempNameNullTips'))
                 }
                 await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/saveAsTemplate`, {
                     pipelineId,
@@ -448,12 +448,12 @@ export default {
                     isCopySetting
                 })
                 this.$showTips({
-                    message: '另存为模板成功',
+                    message: this.$t('newlist.saveAsTempSuc'),
                     theme: 'success'
                 })
             } catch (e) {
                 if (e.code === 403) { // 没有权限编辑
-                    this.setPermissionConfig(`流水线：${this.pipeline.name}`, '编辑', this.$route.params.projectId, this.$route.params.pipelineId)
+                    this.setPermissionConfig(`${this.$t('pipeline')}：${this.pipeline.name}`, this.$t('edit'), this.$route.params.projectId, this.$route.params.pipelineId)
                 } else {
                     this.$showTips({
                         message: e.message,
@@ -471,7 +471,7 @@ export default {
                     resource,
                     option
                 }],
-                applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${option === '执行' ? 'role_executor' : 'role_manager'}=pipeline:${pipelineId}`
+                applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${option === this.$t('exec') ? 'role_executor' : 'role_manager'}=pipeline:${pipelineId}`
             })
         },
         updateCurPipelineId (pipelineId) {

@@ -2,7 +2,7 @@
     <bk-select v-bind="dropdownConf"
         :name="name"
         :loading="isLoading"
-        :placeholder="isLoading ? &quot;获取数据中...&quot; : placeholder"
+        :placeholder="isLoading ? $t('editPage.loadingData') : placeholder"
         :value="value"
         :disabled="disabled || isLoading"
         @edit="edit"
@@ -35,8 +35,7 @@
         mixins: [mixins],
         props: {
             placeholder: {
-                type: String,
-                default: '请选择'
+                type: String
             },
             options: {
                 type: Array,
@@ -72,12 +71,11 @@
             mergedOptionsConf () {
                 return Object.assign({}, {
                     hasAddItem: false,
-                    itemText: '关联代码库',
+                    itemText: this.$t('template.relatedCodelib'),
                     itemTargetUrl: `/codelib/{projectId}/`,
                     url: '',
                     paramId: 'id',
                     paramName: 'name',
-                    tools: { 'edit': false, 'del': false },
                     searchable: false,
                     clearable: false,
                     multiple: false
@@ -216,7 +214,7 @@
                         if (typeof value !== 'undefined' && value !== '' && !listMap[value]) {
                             this.list.splice(0, 0, {
                                 id: value,
-                                name: '******（无权限查看）'
+                                name: `******（${this.$t('editPage.noPermToView')}）`
                             })
                         }
                     })

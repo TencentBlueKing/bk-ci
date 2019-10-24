@@ -2,8 +2,8 @@
     <bk-sideslider class="sodaci-property-panel" width="640" :quick-close="true" :is-show.sync="visible">
         <header class="property-panel-header" slot="header">
             <div class="atom-name-edit">
-                <input v-show="nameEditing" v-bk-focus="1" @blur="toggleEditName(false)" @keydown.enter="toggleEditName(false)" class="bk-form-input" name="name" v-validate.initial="&quot;required|max:30&quot;" @@keyup.enter="toggleEditName" @input="handleEditName" placeholder="请输入名称" :value="element.name" />
-                <p v-if="!nameEditing">{{ atomCode ? element.name : '待选择插件' }}</p>
+                <input v-show="nameEditing" v-bk-focus="1" @blur="toggleEditName(false)" @keydown.enter="toggleEditName(false)" class="bk-form-input" name="name" v-validate.initial="&quot;required|max:30&quot;" @@keyup.enter="toggleEditName" @input="handleEditName" :placeholder="$t('nameInputTips')" :value="element.name" />
+                <p v-if="!nameEditing">{{ atomCode ? element.name : this.$t('editPage.pendingAtom') }}</p>
                 <i v-if="atomCode && editable" @click="toggleEditName(true)" class="bk-icon icon-edit" :class="nameEditing ? 'editing' : ''" />
             </div>
             <reference-variable :global-envs="globalEnvs" :stages="stages" :container="container" />
@@ -12,14 +12,14 @@
             <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
                 <div class="atom-type-selector bk-form-row bk-form bk-form-vertical">
                     <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has(&quot;@type&quot;) }">
-                        <label title="插件" class="bk-label atom-form-label">插件</label>
+                        <label :title="$t('atom')" class="bk-label atom-form-label">{{ $t('atom') }}</label>
                         <bk-popover placement="right" theme="light" class="form-field-icon atom-name-field" v-if="atom && (atom.summary || atom.docsLink)">
                             <i class="bk-icon icon-info-circle"></i>
                             <div slot="content" style="font-size: 12px; width: 350px; min-height: 100px;">
                                 <div class="atom-desc-content">
-                                    <p v-if="atom.summary">描述：{{ atom.summary }}</p>
-                                    <p v-else>暂无描述</p>
-                                    <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">了解更多</a>
+                                    <p v-if="atom.summary">{{ $t('desc') }}：{{ atom.summary }}</p>
+                                    <p v-else>{{ $t('editPage.noDesc') }}</p>
+                                    <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('atom') }}</a>
                                 </div>
                             </div>
                         </bk-popover>
@@ -27,20 +27,20 @@
                             <div class="atom-select-entry">
                                 <template v-if="atom">
                                     <span :title="atom.name" class="atom-selected-name">{{ atom.name }}</span>
-                                    <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">重选</bk-button>
+                                    <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
                                 </template>
                                 <template v-else-if="!atomCode">
-                                    <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">请在左侧选择一个插件</bk-button>
+                                    <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.selectAtomTips') }}</bk-button>
                                 </template>
                                 <template v-else>
-                                    <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">重选</bk-button>
+                                    <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
                                 </template>
                             </div>
                         </div>
                     </div>
-                    <form-field v-if="hasVersionList" :desc="`主版本号.latest：表示执行时使用对应\n 主版本号下最新版本的插件`" label="版本">
+                    <form-field v-if="hasVersionList" :desc="$t('editPage.atomVersionDesc')" :label="$t('version')">
                         <bk-select :value="element.version" :clearable="false"
-                            placeholder="请选择插件版本"
+                            :placeholder="$t('editPage.selectAtomVersion')"
                             name="version"
                             @selected="handleUpdateVersion"
                             :disabled="!editable"
@@ -54,7 +54,7 @@
                         <div class="no-atom-tips-icon">
                             <i class="bk-icon icon-info-circle-shape" size="14" />
                         </div>
-                        <p>当前插件没有可用版本。可能是插件已取消发布或者发布流程进行中。</p>
+                        <p>{{ $t('editPage.noAtomVersion') }}</p>
                     </div>
 
                     <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable }">
@@ -100,7 +100,6 @@
     import Unity3dBuild from './Unity3dBuild'
     import NormalAtom from './NormalAtom'
     import VuexInput from '@/components/atomFormField/VuexInput'
-    import Cascader from '@/components/atomFormField/Cascader/index'
     import Selector from '@/components/atomFormField/Selector'
     import FormField from './FormField'
     import BuildArchiveGet from './BuildArchiveGet'
@@ -128,7 +127,6 @@
             ReferenceVariable,
             AtomOption,
             VuexInput,
-            Cascader,
             Selector,
             FormField,
             BuildArchiveGet,

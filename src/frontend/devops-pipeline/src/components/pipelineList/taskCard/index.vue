@@ -8,7 +8,7 @@
             v-if="!hasPermission"
             @click="applyPermission(config)"
         >
-            申请权限
+            {{ $t('newlist.applyPerm') }}
         </bk-button>
         <div class="task-card-header">
             <p
@@ -16,7 +16,7 @@
                 :title="config.name"
                 @click.stop="emitEventHandler('title-click', config.pipelineId)"
             >
-                <span class="template-tag" v-if="config.isInstanceTemplate">模</span>
+                <span class="template-tag" v-if="config.isInstanceTemplate">{{ $t('newlist.temp') }}</span>
                 {{ config.name }}
             </p>
             <!-- 状态切换按钮 start -->
@@ -82,7 +82,9 @@
                 class="task-card-running-multi"
                 @click.stop="emitEventHandler('title-click', config.pipelineId)"
                 v-if="config.runningInfo.buildCount > 1"
-            >正在同时运行多个构建任务</div>
+            >
+                {{ $t('newlist.multipleBulilds') }}
+            </div>
             <div class="task-card-running" @click.stop="cardContentClick" v-else>
                 <div class="running-detail clearfix">
                     <div class="running-detail-text fl">{{ config.runningInfo.time }}</div>
@@ -150,7 +152,7 @@
                         isRunning: false,
                         name: '',
                         runningInfo: {
-                            time: '0秒',
+                            time: '0',
                             percentage: '0%',
                             log: '',
                             buildCount: 0
@@ -219,8 +221,8 @@
             applyPermission (config) {
                 bus.$emit(
                     'set-permission',
-                    `流水线：${config.name}`,
-                    '查看',
+                    `${this.$t('pipeline')}：${config.name}`,
+                    this.$t('newlist.view'),
                     config.pipelineId
                 )
             }

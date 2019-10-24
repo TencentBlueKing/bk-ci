@@ -17,18 +17,18 @@
                 </div>
                 <div class="create-view-form">
                     <div class="bk-form-item is-required">
-                        <label class="bk-label view-item-label">类型：</label>
+                        <label class="bk-label view-item-label">{{ $t('type') }}:</label>
                         <div class="bk-form-content">
                             <bk-radio-group v-model="createViewForm.projected">
-                                <bk-radio :value="false" class="view-radio">个人视图</bk-radio>
-                                <bk-radio :value="true" class="view-radio" :disabled="!isManagerUser">项目视图<span v-bk-tooltips="viewTypeTips" class="top-start"><i class="bk-icon icon-info-circle"></i></span></bk-radio>
+                                <bk-radio :value="false" class="view-radio">{{ $t('view.personalView') }}</bk-radio>
+                                <bk-radio :value="true" class="view-radio" :disabled="!isManagerUser">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start"><i class="bk-icon icon-info-circle"></i></span></bk-radio>
                             </bk-radio-group>
                         </div>
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label view-item-label">标题：</label>
+                        <label class="bk-label view-item-label">{{ $t('name') }}:</label>
                         <div class="bk-form-content view-item-content">
-                            <input type="text" class="bk-form-input view-name-input" placeholder="请输入标题"
+                            <input type="text" class="bk-form-input view-name-input" :placeholder="$t('view.nameInputTips')"
                                 maxlength="15"
                                 name="viewName"
                                 v-model="createViewForm.name"
@@ -39,10 +39,10 @@
                         </div>
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label view-item-label">设置视图条件：</label>
+                        <label class="bk-label view-item-label">{{ $t('view.setConditions') }}：</label>
                         <div class="bk-form-content">
                             <div class="relationship-content">
-                                <label class="view-item-label relationship-label">条件间的关系：</label>
+                                <label class="view-item-label relationship-label">{{ $t('view.conditionRelation') }}：</label>
                                 <bk-radio-group v-model="createViewForm.logic">
                                     <bk-radio v-for="(entry, key) in conditionList" :key="key" :value="entry.value" class="view-radio">{{ entry.label }}</bk-radio>
                                 </bk-radio-group>
@@ -50,8 +50,8 @@
                             <table class="bk-table rule-list-table" v-if="createViewForm.filters.length">
                                 <thead>
                                     <tr>
-                                        <th width="30%">字段</th>
-                                        <th>值</th>
+                                        <th width="30%">{{ $t('view.key') }}</th>
+                                        <th>{{ $t('view.value') }}</th>
                                         <th width="36"></th>
                                     </tr>
                                 </thead>
@@ -69,7 +69,7 @@
                                             <section v-if="row.id === 'filterByName'">
                                                 <input type="text"
                                                     class="bk-form-input input-text"
-                                                    placeholder="支持模糊匹配"
+                                                    :placeholder="$t('view.nameTips')"
                                                     maxlength="40"
                                                     :name="`item-${index}`" id="pipelineName"
                                                     v-validate="{ required: true }"
@@ -84,7 +84,7 @@
                                                     :value="row.userIds"
                                                     :handle-change="staffHandleChange">
                                                 </user-input>
-                                                <div v-if="staffHacCheckYet && !row.userIds.length" class="error-tips">创建人不能为空</div>
+                                                <div v-if="staffHacCheckYet && !row.userIds.length" class="error-tips">{{ $t('view.creatorTips') }}</div>
                                             </section>
                                             <section v-if="row.id !== 'filterByName' && row.id !== 'filterByCreator'">
                                                 <bk-select
@@ -94,26 +94,26 @@
                                                     <bk-option v-for="(option, oindex) in row.labels" :key="oindex" :id="option.id" :name="option.name">
                                                     </bk-option>
                                                 </bk-select>
-                                                <div v-if="groupHacCheckYet && !row.labelIds.length" class="error-tips">标签不能为空</div>
+                                                <div v-if="groupHacCheckYet && !row.labelIds.length" class="error-tips">{{ $t('view.labelTips') }}</div>
                                             </section>
                                         </td>
                                         <td class="delete-handler"><i class="bk-icon icon-minus" @click="reduceFilterItem(index)"></i></td>
                                     </tr>
                                     <tr>
                                         <td colspan="3" class="add-new-item">
-                                            <span @click="addFilterItem()"><i class="bk-icon icon-plus-circle" />添加视图条件</span>
+                                            <span @click="addFilterItem()"><i class="bk-icon icon-plus-circle" />{{ $t('view.addConditions') }}</span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                             <bk-button type="primary" size="small" style="margin-top: 10px;" v-if="!createViewForm.filters.length"
-                                @click="addFilterItem()">添加视图条件</bk-button>
+                                @click="addFilterItem()">{{ $t('view.addConditions') }}</bk-button>
                         </div>
                     </div>
                 </div>
                 <div class="temp-operation-bar">
-                    <bk-button theme="primary" @click="confirmHandler()">保存</bk-button>
-                    <bk-button @click="cancelHandler()">取消</bk-button>
+                    <bk-button theme="primary" @click="confirmHandler()">{{ $t('save') }}</bk-button>
+                    <bk-button @click="cancelHandler()">{{ $t('cancel') }}</bk-button>
                 </div>
             </section>
         </template>
@@ -135,16 +135,16 @@
                 staffHacCheckYet: false,
                 groupHacCheckYet: false,
                 viewFilterTypeList: [
-                    { id: 'filterByName', name: '流水线名称', '@type': 'filterByName' },
-                    { id: 'filterByCreator', name: '创建人', '@type': 'filterByCreator' }
+                    { id: 'filterByName', name: this.$t('pipelineName'), '@type': 'filterByName' },
+                    { id: 'filterByCreator', name: this.$t('creator'), '@type': 'filterByCreator' }
                 ],
                 viewType: [
-                    { label: '个人视图', value: false },
-                    { label: '项目视图', value: true }
+                    { label: this.$t('view.personalView'), value: false },
+                    { label: this.$t('view.projectView'), value: true }
                 ],
                 conditionList: [
-                    { label: '与', value: 'AND' },
-                    { label: '或', value: 'OR' }
+                    { label: this.$t('view.and'), value: 'AND' },
+                    { label: this.$t('view.or'), value: 'OR' }
                 ],
                 viewDialogConfig: {
                     loading: false,
@@ -153,7 +153,7 @@
                     quickClose: false
                 },
                 viewTypeTips: {
-                    content: '项目视图仅能由项目管理员添加、编辑、删除',
+                    content: this.$t('view.typeTips'),
                     placements: ['right']
                 }
             }
@@ -184,16 +184,16 @@
             showViewCreate (newVal) {
                 if (newVal) {
                     if (this.createViewForm.id) {
-                        this.title = '编辑视图'
+                        this.title = this.$t('view.editView')
                         this.requestPipelineViewDetail(this.createViewForm.id)
                     } else {
-                        this.title = '新建视图'
+                        this.title = this.$t('view.addView')
                         const obj = {
                             projected: false,
                             name: '',
                             logic: 'AND',
                             filters: [
-                                { id: 'filterByName', name: '流水线名称', '@type': 'filterByName', pipelineName: '' }
+                                { id: 'filterByName', name: this.$t('pipelineName'), '@type': 'filterByName', pipelineName: '' }
                             ]
                         }
                         this.$store.commit('pipelines/updateViewForm', obj)
@@ -207,18 +207,18 @@
             handleChange (item, itemIndex) {
                 let temp = {}
                 const curItem = this.createViewForm.filters[itemIndex]
-                if (curItem.id === 'filterByName' && curItem.name !== '流水线名称') {
+                if (curItem.id === 'filterByName' && curItem.name !== this.$t('pipelineName')) {
                     temp = {
                         id: curItem.id,
-                        name: '流水线名称',
+                        name: this.$t('pipelineName'),
                         '@type': curItem.id,
                         pipelineName: ''
                     }
                     this.createViewForm.filters.splice(itemIndex, 1, temp)
-                } else if (curItem.id === 'filterByCreator' && curItem.name !== '创建人') {
+                } else if (curItem.id === 'filterByCreator' && curItem.name !== this.$t('creator')) {
                     temp = {
                         id: curItem.id,
-                        name: '创建人',
+                        name: this.$t('creator'),
                         '@type': curItem.id,
                         userIds: []
                     }
@@ -252,10 +252,10 @@
             formatForm () {
                 this.createViewForm.filters.map(value => {
                     if (value['@type'] === 'filterByName') {
-                        value.name = '流水线名称'
+                        value.name = this.$t('pipelineName')
                         value.id = value['@type']
                     } else if (value['@type'] === 'filterByCreator') {
-                        value.name = '创建人'
+                        value.name = this.$t('creator')
                         value.id = value['@type']
                     } else if (value['@type'] === 'filterByLabel') {
                         const originItem = this.viewFilterTypeList.find(item => {
@@ -294,7 +294,7 @@
             addFilterItem () {
                 const newItem = {
                     id: 'filterByName',
-                    name: '流水线名称',
+                    name: this.$t('pipelineName'),
                     '@type': 'filterByName',
                     pipelineName: '',
                     labels: [],
@@ -310,7 +310,7 @@
 
                 if (!this.createViewForm.filters.length) {
                     this.$showTips({
-                        message: '视图条件不能为空',
+                        message: this.$t('view.conditionEmpty'),
                         theme: 'error'
                     })
                     errorCount++
@@ -389,7 +389,7 @@
                                 params
                             })
                         }
-                        message = this.createViewForm.id ? '编辑成功' : '新建成功'
+                        message = this.createViewForm.id ? this.$t('editSuc') : this.$t('addSuc')
                         theme = 'success'
                         this.cancelHandler()
                         this.$emit('updateViewList', 'flag')

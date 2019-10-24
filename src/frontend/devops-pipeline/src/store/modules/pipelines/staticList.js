@@ -39,57 +39,23 @@ const state = {
         'QUEUE': 'queue',
         'QUEUE_TIMEOUT': 'queue_timeout',
         'EXEC_TIMEOUT': 'exec_timeout'
-    },
-    statusMapCN: {
-        'SUCCEED': '成功',
-        'success': '成功',
-        'FAILED': '失败',
-        'HEARTBEAT_TIMEOUT': '超时',
-        'error': '失败',
-        'known_error': '失败',
-        'running': '执行中',
-        'QUEUE': '排队',
-        'QUEUE_TIMEOUT': '排队超时',
-        'EXEC_TIMEOUT': '执行超时'
-    },
-    statusToIconMap: { // 执行状态和icon之间的转换，主要用在stage中
-        'success': 'check-1',
-        'paused': 'pause',
-        'error': 'exclamation'
-    },
-    argsTypes: [
-        {
-            id: 1,
-            name: '字符串',
-            alias: 'string'
-        },
-        {
-            id: 2,
-            name: '布尔值',
-            alias: 'boolean'
-        },
-        {
-            id: 3,
-            name: '下拉框',
-            alias: 'select'
-        }
-    ],
-    timeMap: {
-        'years': '年',
-        'months': '月',
-        'days': '天',
-        'hours': '小时',
-        'minutes': '分钟',
-        'seconds': '秒'
     }
+    // statusMapCN: {
+    //     'SUCCEED': '成功',
+    //     'success': '成功',
+    //     'FAILED': '失败',
+    //     'HEARTBEAT_TIMEOUT': '超时',
+    //     'error': '失败',
+    //     'known_error': '失败',
+    //     'running': '执行中',
+    //     'QUEUE': '排队',
+    //     'QUEUE_TIMEOUT': '排队超时',
+    //     'EXEC_TIMEOUT': '执行超时'
+    // },
 }
 
 const getters = {
-    getStatusMap: state => state.statusMap,
-    getStatusToIconMap: state => state.statusToIconMap,
-    getArgsTypes: state => state.argsTypes,
-    getTimeMap: state => state.timeMap,
-    getStatusMapCN: state => state.statusMapCN
+    getStatusMap: state => state.statusMap
 }
 
 export default {

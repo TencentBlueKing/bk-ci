@@ -3,13 +3,13 @@
         <table class="bk-table template-list-table">
             <thead>
                 <tr>
-                    <th width="10%">图标</th>
-                    <th width="16%">模板名称</th>
-                    <th width="10%">版本</th>
-                    <th width="10%">来源</th>
-                    <th width="30%">关联代码库</th>
-                    <th width="8%">流水线实例</th>
-                    <th width="16%">操作</th>
+                    <th width="10%">{{ $t('icon') }}</th>
+                    <th width="16%">{{ $t('template.name') }}</th>
+                    <th width="10%">{{ $t('version') }}</th>
+                    <th width="10%">{{ $t('template.relatedCodelib') }}</th>
+                    <th width="30%">{{ $t('template.name') }}</th>
+                    <th width="8%">{{ $t('template.pipelineInstance') }}</th>
+                    <th width="16%">{{ $t('operate') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,7 +25,7 @@
                                     <span @click="editTemplate(row)">{{row.name}}</span>
                                 </td>
                                 <td width="10%" class="template-version" :title="row.versionName">{{ row.versionName }}</td>
-                                <td width="10%">{{row.templateType|templateTypeFilter}}</td>
+                                <td width="10%">{{templateTypeFilter(row.templateType)}}</td>
                                 <td width="30%" class="template-code">
                                     <section class="codelib-box" :title="handleFormat(row.associateCodes)">
                                         <div class="codelib-item" v-for="(entry, eIndex) in (row.associateCodes || []).slice(0, 3)" :key="eIndex">{{ entry }}</div>
@@ -36,16 +36,16 @@
                                     <div @click="toInstanceList(row)" :class="[canCreatePP ? 'create-permission' : 'not-create-permission', 'pipeline-instance']">{{ row.associatePipelines.length }}</div>
                                 </td>
                                 <td width="16%" :class="[{ 'not-permission': !isManagerUser }, 'handler-btn']">
-                                    <span @click="toInstanceList(row)" :class="canCreatePP ? 'create-permission' : 'not-create-permission'">实例化</span>
+                                    <span @click="toInstanceList(row)" :class="canCreatePP ? 'create-permission' : 'not-create-permission'">{{ $t('template.instantiate') }}</span>
                                     <span @click.stop="showTools(row)" :class="[{ 'has-show': row.showMore }, 'show-more']" data-name="btns">
-                                        更多
+                                        {{ $t('more') }}
                                         <ul v-show="row.showMore" class="btn-more">
-                                            <li @click="copyTemplate(row)" data-name="copy">复制</li>
+                                            <li @click="copyTemplate(row)" data-name="copy">{{ $t('copy') }}</li>
                                             <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
-                                                <li v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag" data-name="stored" class="has-stored">已关联商店</li>
-                                                <li @click="toRelativeStore(row)" v-else data-name="store">关联商店</li>
+                                                <li v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag" data-name="stored" class="has-stored">{{ $t('template.alreadyToStore') }}</li>
+                                                <li @click="toRelativeStore(row)" v-else data-name="store">{{ $t('template.toStore') }}</li>
                                             </template>
-                                            <li @click="deleteTemplate(row)" data-name="delete">{{['constraint','CONSTRAINT'].includes(row.templateType) ? '卸载' : '删除'}}</li>
+                                            <li @click="deleteTemplate(row)" data-name="delete">{{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}</li>
                                         </ul>
                                     </span>
                                 </td>
@@ -79,9 +79,9 @@
             <template>
                 <section class="copy-pipeline bk-form">
                     <div class="bk-form-item">
-                        <label class="bk-label">模板名称：</label>
+                        <label class="bk-label">{{ $t('template.name') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text" class="bk-form-input" placeholder="请输入模板名称，不能超过30个字符"
+                            <input type="text" class="bk-form-input" :placeholder="$t('template.nameInputTips')"
                                 v-model="copyTemp.templateName"
                                 :class="{ 'is-danger': copyTemp.nameHasError }"
                                 @input="copyTemp.nameHasError = false"
@@ -90,11 +90,11 @@
                                 maxlength="30"
                             >
                         </div>
-                        <p v-if="errors.has('copyTemplateName')" class="error-tips err-name">模板名称不能超过30个字符</p>
+                        <p v-if="errors.has('copyTemplateName')" class="error-tips err-name">{{ $t('template.nameErrTips') }}</p>
                     </div>
 
                     <div class="bk-form-item">
-                        <label class="bk-label tip-bottom">应用设置
+                        <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
                             <span v-bk-tooltips.bottom-end="'选“是”则将流水线设置应用于复制后的模版'" class="bottom-end">
                                 <i class="bk-icon icon-info-circle"></i>
                             </span>
@@ -104,16 +104,6 @@
                                 <bk-radio v-for="(entry, key) in copySettings" :key="key" :value="entry.value" class="form-radio">{{ entry.label }}</bk-radio>
                             </bk-radio-group>
                         </div>
-                        <!--<label class="bk-label tip-bottom">应用设置:</label>-->
-                        <!--<bk-popover class="form-tips">
-                            <span slot="content" style="white-space: normal;">选“是”则将流水线设置应用于复制后的模版</span>
-                        </bk-popover>-->
-                        <!--<div class="bk-form-content">
-                            <label class="bk-form-radio" v-for="(entry, key) in copySettings" :key="key">
-                                <input type="radio" :value="entry.value" class="auth-radio" v-model="copyTemp.isCopySetting">
-                                <span class="bk-radio-text">{{ entry.label }}</span>
-                            </label>
-                        </div>-->
                     </div>
                 </section>
             </template>
@@ -131,19 +121,7 @@
         },
 
         filters: {
-            templateTypeFilter (val) {
-                let res = ''
-                switch (val) {
-                    case 'constraint':
-                    case 'CONSTRAINT':
-                        res = '研发商店'
-                        break
-                    default:
-                        res = '自定义'
-                        break
-                }
-                return res
-            }
+
         },
 
         data () {
@@ -158,7 +136,7 @@
                 listData: [],
                 copyTemp: {
                     isShow: false,
-                    title: '另存为模板',
+                    title: this.$t('template.saveAsTemplate'),
                     closeIcon: false,
                     quickClose: true,
                     padding: '0 20px',
@@ -167,11 +145,11 @@
                     isCopySetting: true
                 },
                 copySettings: [
-                    { label: '是', value: true },
-                    { label: '否', value: false }
+                    { label: this.$t('true'), value: true },
+                    { label: this.$t('false'), value: false }
                 ],
                 tipsSetting: {
-                    content: '选“是”则将流水线设置应用于复制后的模版',
+                    content: this.$t('template.tipsSetting'),
                     placements: ['right']
                 }
             }
@@ -223,13 +201,11 @@
             getListData () {
                 this.$emit('getApiData', (res) => {
                     if (res) {
-                        // const pageNumber = res.count / this.pagingConfig.limit
                         this.isManagerUser = res.hasPermission
                         this.listData = (res.models || []).map(x => {
                             x.showMore = false
                             return x
                         })
-                        // this.pagingConfig.totalPage = Math.ceil(pageNumber || 1)
                         this.pagingConfig.count = res.count
                     }
                 })
@@ -242,6 +218,20 @@
                 })
 
                 return tips
+            },
+
+            templateTypeFilter (val) {
+                let res = ''
+                switch (val) {
+                    case 'constraint':
+                    case 'CONSTRAINT':
+                        res = this.$t('store')
+                        break
+                    default:
+                        res = this.$t('template.customize')
+                        break
+                }
+                return res
             },
 
             toInstanceList (row) {
@@ -270,9 +260,9 @@
 
             deleteTemplate (row) {
                 if (!this.isManagerUser) return
-                const content = `删除${row.name}`
+                const content = `${this.$t('delete')}${row.name}`
 
-                navConfirm({ title: `确认`, content })
+                navConfirm({ title: this.$t('confirm'), content })
                     .then(() => {
                         this.confirmDeleteTemplate(row)
                     }).catch(() => {})
@@ -306,7 +296,7 @@
                 }
                 this.$store.dispatch('pipelines/copyTemplate', postData).then(({ id: templateId }) => {
                     this.copyCancelHandler()
-                    this.$showTips({ message: '复制模板成功', theme: 'success' })
+                    this.$showTips({ message: this.$t('template.copySuc'), theme: 'success' })
                     this.$router.push({
                         name: 'templateEdit',
                         params: { templateId }
@@ -336,7 +326,7 @@
                     })
 
                     this.getListData()
-                    this.$showTips({ message: '删除模板成功', theme: 'success' })
+                    this.$showTips({ message: this.$t('template.deleteSuc'), theme: 'success' })
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,

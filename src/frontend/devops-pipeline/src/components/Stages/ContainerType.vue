@@ -22,9 +22,9 @@
                         const elementElapsed = convertElapsed(container.elementElapsed)
                         const elapsedSum = systemElapsed + elementElapsed
                         const lt1Hour = elapsedSum < 36e5
-                    
+
                         return (
-                            <i v-bk-tooltips={{ content: `用户耗时：${convertMStoString(elementElapsed)} + 系统耗时： ${convertMStoString(systemElapsed)}` }}>{lt1Hour ? coverTimer(elapsedSum) : '>1h'}</i>
+                            <i v-bk-tooltips={{ content: `${this.$t('editPage.userTime')}：${convertMStoString(elementElapsed)} + ${this.$t('editPage.systemTime')}： ${convertMStoString(systemElapsed)}` }}>{lt1Hour ? coverTimer(elapsedSum) : '>1h'}</i>
                         )
                     case container.isError:
                         iconProps = {
@@ -43,7 +43,7 @@
                         }
                         break
                     case isTriggerContainer(container):
-                        return <i>{elements.length}个</i>
+                        return <i>{elements.length}{this.$t('settings.item')}</i>
                 }
                 return <i {...iconProps}></i>
             }

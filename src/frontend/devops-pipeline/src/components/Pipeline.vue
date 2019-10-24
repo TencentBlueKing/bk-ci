@@ -1,5 +1,5 @@
 <template>
-    <div class="create-pipeline-wrapper" v-bkloading="{ isLoading: isSaving, title: '正在保存' }">
+    <div class="create-pipeline-wrapper" v-bkloading="{ isLoading: isSaving, title: $t('editPage.saving') }">
         <header v-if="showHeader" class="create-pipeline-header">
             <div>
                 <slot name="pipeline-name"><span style="cursor: default" :title="pipeline.name">{{ pipeline.name }}</span></slot>
@@ -16,7 +16,7 @@
 
         <bk-dialog v-model="isStageShow"
             width="620"
-            title="请选择Job类型"
+            :title="$t('editPage.selectJob')"
             :show-footer="false"
             :esc-close="true"
             :mask-close="true"
@@ -141,7 +141,7 @@
 
                 return typeof containerIndex !== 'undefined'
                     ? this.container.name + '： ' + (stageIndex + 1) + '-' + (containerIndex + 1)
-                    : '属性栏'
+                    : this.$t('propertyBar')
             },
             containerType () {
                 const { stageIndex, containerIndex } = this.editingElementPos

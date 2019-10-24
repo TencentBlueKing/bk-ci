@@ -11,7 +11,7 @@
         <div class="artifactory-empty" v-else-if="showContent && !trendList.length">
             <div class="no-data-right">
                 <img src="../../images/box.png">
-                <p>该时间区间内无安装包</p>
+                <p>{{ $t('history.noPackages') }}</p>
             </div>
         </div>
     </div>
@@ -87,7 +87,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('loadingTips')
 
                 try {
                     if (!this.startTime || !this.endTime) return

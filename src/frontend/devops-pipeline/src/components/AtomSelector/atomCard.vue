@@ -12,18 +12,18 @@
                     <span class="allow-os-list" @mouseover="showOverallTip = false" @mouseleave="showOverallTip = true">
                         <template v-if="atom.os && atom.os.length > 0">
                             <template v-for="os in atom.os">
-                                <bk-popover :content="`${jobConst[os]}编译环境下可用`" :key="os">
+                                <bk-popover :content="`${jobConst[os]}${$t('editPage.hasEnv')}`" :key="os">
                                     <i :class="`os-tag bk-icon icon-${os.toLowerCase()}`"></i>
                                 </bk-popover>
                             </template>
                         </template>
-                        <bk-popover v-else :content="`无编译环境下可用`">
+                        <bk-popover v-else :content="`${$t('editPage.noEnv')}`">
                             <i :class="`os-tag bk-icon icon-none`"></i>
                         </bk-popover>
                     </span>
                 </p>
-                <p class="desc">{{atom.summary || '暂无描述'}}</p>
-                <p class="atom-from">{{`由${atom.publisher}提供`}}</p>
+                <p class="desc">{{atom.summary || $t('editPage.noDesc')}}</p>
+                <p class="atom-from">{{`${atom.publisher} ${$t('editPage.provided')}`}}</p>
             </div>
             <div class="atom-operate">
                 <bk-button class="select-atom-btn"
@@ -32,7 +32,7 @@
                     @click="handleUpdateAtomType(atom.atomCode)"
                     :disabled="atom.disabled || atom.atomCode === atomCode"
                     v-if="!atom.notShowSelect"
-                >{{atom.atomCode === atomCode ? '已选' : '选择'}}
+                >{{atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select')}}
                 </bk-button>
                 <bk-button class="select-atom-btn"
                     size="small"
@@ -41,9 +41,9 @@
                     :title="atom.tips"
                     :loading="isInstalling"
                     v-else-if="!atom.hasInstalled"
-                >安装
+                >{{ $t('install') }}
                 </bk-button>
-                <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">了解更多</a>
+                <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
             </div>
         </div>
     </section>
@@ -58,13 +58,13 @@
         components: {
             logo
         },
-    
+
         props: {
             atom: {
                 type: Object,
                 default: {}
             },
-    
+
             container: {
                 type: Object,
                 default: () => ({})
@@ -107,9 +107,9 @@
                 let contxt
                 if (os.length) {
                     const osListStr = os.map(val => jobConst[val]).join('、')
-                    contxt = `该插件在${osListStr}编译环境下可用，请切换到对应Job类型后重试`
+                    contxt = `${osListStr}${this.$t('editPage.envUseTips')}`
                 } else {
-                    contxt = '该插件在无编译环境下可用，请切换到对应Job类型后重试'
+                    contxt = this.$t('editPage.noEnvUseTips')
                 }
                 return atom.disabled && showOverallTip ? contxt : null
             }
@@ -161,7 +161,7 @@
                     atomCode
                 }
                 this.installAtom(param).then(() => {
-                    this.$bkMessage({ message: '安装成功', theme: 'success' })
+                    this.$bkMessage({ message: this.$t('editPage.installSuc'), theme: 'success' })
                     this.atom.notShowSelect = !this.atom.isInOs
                     this.atom.hasInstalled = true
                 }).catch((err) => {

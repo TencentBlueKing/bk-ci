@@ -10,18 +10,18 @@
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
                             v-validate.initial="`required|unique:${paramList.map(p => p.key).join(&quot;,&quot;)}|max: 30|${snonVarRule}`"
                             name="key"
-                            :placeholder="isMetadataVar ? '键' : 'Key'"
+                            :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                             :value="param.key" />
                     </form-field>
                     <div class="bk-form-item">
-                        <vuex-input name="value" :disabled="disabled" :placeholder="isMetadataVar ? '值' : 'Value'" :value="param.value" :handle-change="(name, value) => handleParamChange(name, value, index)" />
+                        <vuex-input name="value" :disabled="disabled" :placeholder="isMetadataVar ? $t('view.value') : 'Value'" :value="param.value" :handle-change="(name, value) => handleParamChange(name, value, index)" />
                     </div>
                     <i @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus hover-click" v-if="!disabled && !editValueOnly" />
                 </li>
             </template>
             <a class="text-link hover-click" v-if="!disabled && !editValueOnly" @click.stop.prevent="editParam(paramList.length, true)">
                 <i class="bk-icon icon-plus-circle" />
-                <span>{{ addBtnText }}</span>
+                <span>{{ addBtnText || defaultAddBtnText }}</span>
             </a>
         </ul>
     </div>
@@ -47,7 +47,7 @@
             },
             addBtnText: {
                 type: String,
-                default: '新增变量'
+                default: ''
             },
             value: {
                 type: Object,
@@ -82,7 +82,8 @@
         },
         data () {
             return {
-                paramList: []
+                paramList: [],
+                defaultAddBtnText: this.$t('editPage.addParams')
             }
         },
         computed: {
@@ -103,7 +104,6 @@
         },
         async created () {
             this.paramList = this.value
-            // this.paramList.push({namespace: 111, key: 1, value: 222})
         },
         methods: {
             editParam (index, isAdd) {

@@ -1,7 +1,7 @@
 <template>
     <bk-sideslider class="sodaci-property-panel pipeline-logs" width="820" :is-show.sync="visible" :quick-close="true">
         <div class="options-log" slot="header">
-            <p>{{ title }}</p>
+            <p>{{ showTitle }}</p>
             <div>
                 <a href="javascript:;" class="log-count-menu dropdown-menu-more" v-if="executeCount > 1">
                     <div class="dropdown-trigger" @click.stop="toggleCountMenu">
@@ -23,16 +23,16 @@
                     :data-clipboard-text="copyUrl"
                     @click="copyLink"
                 >
-                    复制链接
+                    {{ $t('history.copyLink') }}
                 </bk-button>
                 <bk-button class="showtime-log"
                     size="small"
                     :theme="showTime ? 'primary' : 'default'"
                     @click.stop="showTime = !showTime"
                 >
-                    显示时间
+                    {{ $t('history.showTime') }}
                 </bk-button>
-                <a class="bk-button bk-button-small export-log" v-if="showExport" download :href="downloadUrl">导出日志</a>
+                <a class="bk-button bk-button-small export-log" v-if="showExport" download :href="downloadUrl">{{ $t('history.exportLog') }}</a>
             </div>
         </div>
         <div slot="content" class="slider-log-content" ref="logContainer" :buildNo="buildNo"></div>
@@ -68,7 +68,7 @@
             },
             title: {
                 type: String,
-                default: '查看日志'
+                default: ''
             }
         },
         data () {
@@ -88,6 +88,9 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            showTitle () {
+                return this.title || this.$t('history.viewLog')
             },
             logUrl () {
                 const { $route: { params } } = this
@@ -162,7 +165,7 @@
                 this.clipboard = new Clipboard('.copy-log-link').on('success', e => {
                     this.$showTips({
                         theme: 'success',
-                        message: '复制成功'
+                        message: this.$t('copySuc')
                     })
                 })
             },

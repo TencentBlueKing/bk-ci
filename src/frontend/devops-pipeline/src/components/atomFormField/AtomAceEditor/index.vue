@@ -1,6 +1,6 @@
 <template>
     <section style="pointer-events: all; position: relative">
-        <div :class="['ace-fullscreen', { 'active': isFullScreen }]" alt="全屏" title="全屏"
+        <div :class="['ace-fullscreen', { 'active': isFullScreen }]" :alt="$t('editPage.isFullScreen')" :title="$t('editPage.isFullScreen')"
             @click="setFullScreen">
             <i class="bk-icon" :class="isFullScreen ? &quot;icon-un-full-screen&quot; : &quot;icon-full-screen&quot;"></i>
         </div>

@@ -10,7 +10,6 @@
         :placeholder="placeholder"
         :search-key="displayKey"
         @change="onChange"
-        @edit="editItem"
         :popover-options="popoverOptions"
     >
         <bk-option
@@ -70,14 +69,6 @@
             settingKey: {
                 type: String,
                 default: 'id'
-            },
-            tools: {
-                type: Boolean,
-                default: false
-            },
-            edit: {
-                type: Function,
-                default: () => () => {}
             }
         },
         computed: {

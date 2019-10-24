@@ -20,7 +20,7 @@
                 <template>
                     <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
                         <i class="bk-icon icon-plus-circle"></i>
-                        <span class="text">新增第三方构建机</span>
+                        <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                     </div>
                 </template>
             </selector>
@@ -118,7 +118,7 @@
                 return this.value ? this.value + label : this.value
             },
             abnormalSlave () {
-                return !!(this.buildResource && this.buildResource.indexOf('（异常）') > 0) || false
+                return !!(this.buildResource && this.buildResource.indexOf(`（${this.$t('editPage.addThirdSlave')}）`) > 0) || false
             },
             isAgentId () {
                 return this.buildResourceType === 'THIRD_PARTY_AGENT_ID'
@@ -130,10 +130,14 @@
                 return this.showAgentType && this.agentType === 'ID'
             },
             agentTypeList () {
-                return [
-                    { label: `按${this.isAgentId ? '节点' : '环境'}选择`, value: 'ID' },
-                    { label: `按${this.isAgentId ? '节点' : '环境'}别名输入`, value: 'NAME' }
+                return this.isAgentId ? [
+                    { label: this.$t('editPage.selectSlave'), value: 'ID' },
+                    { label: this.$t('editPage.inputSlave'), value: 'NAME' }
                 ]
+                    : [
+                        { label: this.$t('editPage.selectEnv'), value: 'ID' },
+                        { label: this.$t('editPage.inputEnv'), value: 'NAME' }
+                    ]
             }
         },
         watch: {
@@ -187,7 +191,7 @@
                     if (this.showAgentById && this.value !== '' && this.nodeList.filter(item => item.id === this.value).length === 0) {
                         this.nodeList.splice(0, 0, {
                             id: this.value,
-                            name: '******（无权限查看）'
+                            name: `******（${this.$t('editPage.noPermToView')}）`
                         })
                     }
                 } catch (err) {

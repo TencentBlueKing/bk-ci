@@ -23,7 +23,7 @@ const trendMixins = {
             dateRange: [],
             shortcuts: [
                 {
-                    text: '今天',
+                    text: this.$t('history.today'),
                     value () {
                         const end = new Date()
                         const start = new Date()
@@ -31,7 +31,7 @@ const trendMixins = {
                     }
                 },
                 {
-                    text: '近7天',
+                    text: this.$t('history.last7days'),
                     value () {
                         const end = new Date()
                         const start = new Date()
@@ -40,7 +40,7 @@ const trendMixins = {
                     }
                 },
                 {
-                    text: '近15天',
+                    text: this.$t('history.last15days'),
                     value () {
                         const end = new Date()
                         const start = new Date()
@@ -49,7 +49,7 @@ const trendMixins = {
                     }
                 },
                 {
-                    text: '近30天',
+                    text: this.$t('history.last30days'),
                     value () {
                         const end = new Date()
                         const start = new Date()

@@ -146,7 +146,7 @@ export function getAtomOutputObj (output = {}) {
         }
         return outputObj
     } catch (e) {
-        console.warn('获取原子输出对象出错', output)
+        console.warn('get output error', output)
         return {}
     }
 }

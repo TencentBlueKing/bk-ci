@@ -52,7 +52,7 @@ class PipelineWebSocket {
                 this.errTime++
                 setTimeout(() => this.connect(projectId, subscribeUrl, { success, error }), 10000)
             } else {
-                error(err.message || 'websocket异常')
+                error(err.message || 'websocket abnormal')
             }
         })
     }

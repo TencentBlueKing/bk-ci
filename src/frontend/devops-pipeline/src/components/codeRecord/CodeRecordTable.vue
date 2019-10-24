@@ -1,7 +1,7 @@
 <template>
     <div class="code-record-table-container" v-if="commitList.length">
         <p class="prompt-tips">
-            提示：本次流水线的版本号变化范围：
+            {{ $t('details.commitIdsRange') }}
             <span v-if="commitList.length > 1">
                 <span>{{ formatCommitId(lastCommit.commit) }}</span>
                 <span>-</span>
@@ -12,17 +12,17 @@
             </span>
         </p>
         <bk-table :data="commitList">
-            <bk-table-column label="备注" prop="comment"></bk-table-column>
+            <bk-table-column :label="$t('history.remark')" prop="comment"></bk-table-column>
             <bk-table-column
                 :width="150"
                 label="Commit"
                 prop="commit"
                 :formater="row => formatCommitId(row.commit)"
             ></bk-table-column>
-            <bk-table-column :width="150" label="提交人" prop="committer"></bk-table-column>
+            <bk-table-column :width="150" :label="$t('details.committer')" prop="committer"></bk-table-column>
             <bk-table-column
                 :width="200"
-                label="提交时间"
+                :label="$t('details.commitTime')"
                 prop="commitTime"
                 :formatter="formatTimeColumn"
             ></bk-table-column>
@@ -32,7 +32,7 @@
         <div class="no-data-right">
             <img src="../../images/box.png">
             <p>
-                <span>{{ label }}</span>暂时没有变更记录
+                <span>{{ label }}</span>{{ $t('details.noCodeRecords') }}
             </p>
         </div>
     </div>

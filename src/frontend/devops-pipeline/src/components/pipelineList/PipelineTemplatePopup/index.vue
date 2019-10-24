@@ -11,7 +11,7 @@
             :position="{ top: '100' }">
             <div v-bkloading="{ isLoading }" class="pipeline-template">
                 <header>
-                    新建流水线
+                    {{ $t('newlist.addPipeline') }}
                     <i class="bk-icon icon-close" @click="toggleTemplatePopup(false)" />
                 </header>
                 <div class="temp-type-tab">
@@ -24,7 +24,7 @@
                     <div v-show="!showPreview" v-if="tempList" class="left-temp-list">
                         <div class="search-row-content" v-if="(tempTypeIndex === tempTypeList.length - 1)">
                             <div class="search-input-row">
-                                <input class="bk-form-input" type="text" placeholder="请输入关键字"
+                                <input class="bk-form-input" type="text" :placeholder="$t('newlist.tempSearchTips')"
                                     name="searchInput"
                                     v-model="searchName"
                                     @keyup.enter="search()">
@@ -40,7 +40,7 @@
                                 </span>
                             </div>
                         </div>
-                        <h2>模板列表（{{ tempList.length }}）</h2>
+                        <h2>{{ $t('newlist.templateList') }}（{{ tempList.length }}）</h2>
                         <ul>
                             <li v-for="(item, index) in tempList"
                                 :class="{
@@ -55,7 +55,7 @@
                                 <span
                                     v-if="(tempTypeIndex !== tempTypeList.length - 1) && item.templateType.toLowerCase() === 'constraint'"
                                     class="temp-tip"
-                                >商店</span>
+                                >{{ $t('newlist.store') }}</span>
                                 <i v-if="activeTempIndex === index && !item.isInstall" class="bk-icon icon-check-circle-shape"></i>
                                 <p class="temp-logo">
                                     <logo size="50" :name="item.icon" v-if="item.icon"></logo>
@@ -65,9 +65,9 @@
                                 <p class="temp-title" :title="item.name">
                                     {{ item.name }}
                                 </p>
-                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">安装</p>
-                                <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">无安装权限</p>
-                                <p class="permission-tips" v-if="!item.isInstall" :title="item.name">已安装</p>
+                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">{{ $t('install') }}</p>
+                                <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
+                                <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
                             </li>
                         </ul>
                     </div>
@@ -78,12 +78,12 @@
                         <div class="temp-info-detail">
                             <template v-if="!isActiveTempEmpty">
                                 <div class="pipeline-input">
-                                    <input type="text" ref="pipelineName" class="bk-form-input" placeholder="请输入流水线名称" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
+                                    <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
                                     <span v-show="errors.has(&quot;newPipelineName&quot;)" class="validate-fail-border-effect"></span>
                                 </div>
                                 <div class="detail-form-item">
-                                    <label class="info-label">类型：</label>
+                                    <label class="info-label">{{ $t('type') }}：</label>
                                     <div class="info-value template-type">
                                         <bk-radio-group v-model="templateType">
                                             <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
@@ -101,19 +101,19 @@
                                             </bk-option>
                                         </bk-select>
                                     </div>
-                                    <a class="view-pipeline" v-if="showPreview" @click="togglePreview(false)">关闭预览</a>
-                                    <a class="view-pipeline" v-if="!showPreview && !activeTemp.isInstall && !isActiveTempEmpty" @click="togglePreview(true)">查看模板详情</a>
-                                    <a class="view-pipeline disabled" v-if="!showPreview && (activeTemp.isInstall || isActiveTempEmpty)">查看模板详情</a>
+                                    <a class="view-pipeline" v-if="showPreview" @click="togglePreview(false)">{{ $t('newlist.closePreview') }}</a>
+                                    <a class="view-pipeline" v-if="!showPreview && !activeTemp.isInstall && !isActiveTempEmpty" @click="togglePreview(true)">{{ $t('newlist.tempDetail') }}</a>
+                                    <a class="view-pipeline disabled" v-if="!showPreview && (activeTemp.isInstall || isActiveTempEmpty)">{{ $t('newlist.tempDetail') }}</a>
                                 </div></template>
 
                             <section v-else class="choose-tips">
                                 <logo size="20" name="finger-left" style="fill:#3c96ff" />
-                                <span>请先在左侧选择模板</span>
+                                <span>{{ $t('newlist.tempDetail') }}</span>
                             </section>
                         </div>
                         <div class="temp-operation-bar">
-                            <bk-button theme="primary" :disabled="isConfirmDisable" size="small" @click="createNewPipeline">新建</bk-button>
-                            <bk-button size="small" @click="toggleTemplatePopup(false)">取消</bk-button>
+                            <bk-button theme="primary" :disabled="isConfirmDisable" size="small" @click="createNewPipeline">{{ $t('add') }}</bk-button>
+                            <bk-button size="small" @click="toggleTemplatePopup(false)">{{ $t('cancel') }}</bk-button>
                         </div>
                     </div>
                 </div>
@@ -174,9 +174,9 @@
             }),
 
             tplTypes () {
-                const types = [{ label: '自由模式', value: 'FREEDOM', tip: '可以自由调整流水线编排，不受模版管控' }]
+                const types = [{ label: this.$t('newlist.freedomMode'), value: 'FREEDOM', tip: this.$t('newlist.freedomModeTips') }]
                 const currentType = this.activeTemp.templateType || ''
-                if (currentType.toLowerCase() !== 'public') types.push({ label: '约束模式', value: 'CONSTRAINT', tip: '不能自由调整流水线编排，可通过模版更新实例' })
+                if (currentType.toLowerCase() !== 'public') types.push({ label: this.$t('newlist.constraintMode'), value: 'CONSTRAINT', tip: this.$t('newlist.constraintModeTips') })
                 else this.templateType = 'FREEDOM'
                 return types
             },
@@ -223,13 +223,6 @@
             },
             tempPipeline () {
                 return this.hasSelectTemp ? this.activeTemp : null
-            },
-            tempInfo () {
-                return {
-                    'author': '作者',
-                    'atomNum': '插件',
-                    'desc': '简介'
-                }
             },
             projectId () {
                 return this.$route.params.projectId
@@ -338,7 +331,7 @@
                 })
             },
             async createNewPipeline () {
-                const { author, atomNum, icon, ...pipeline } = this.activeTemp
+                const { icon, ...pipeline } = this.activeTemp
                 let labels = []
                 this.tagGroupList.forEach((item) => {
                     if (item.labelValue) labels = labels.concat(item.labelValue)
@@ -347,7 +340,7 @@
 
                 const keys = Object.keys(this.activeTemp)
                 if (keys.length <= 0) {
-                    this.$showTips({ message: `流水线（${pipeline.name}）新增失败， 请先选择模板`, theme: 'error' })
+                    this.$showTips({ message: this.$t('newlist.noTemplateTips'), theme: 'error' })
                     return
                 }
 
@@ -370,7 +363,7 @@
                     this.isDisabled = true
                     const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.projectId}`, pipeline)
                     if (id) {
-                        this.$showTips({ message: `${pipeline.name}新增成功`, theme: 'success' })
+                        this.$showTips({ message: this.$t('addSuc'), theme: 'success' })
 
                         this.$router.push({
                             name: 'pipelinesEdit',
@@ -380,7 +373,7 @@
                         })
                     } else {
                         this.$showTips({
-                            message: `${pipeline.name}新增失败`,
+                            message: this.$t('addFail'),
                             theme: 'error'
                         })
                     }
@@ -388,8 +381,8 @@
                     if (e.code === 403) { // 没有权限创建
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: '流水线',
-                                option: '创建'
+                                resource: this.$t('pipeline'),
+                                option: this.$t('create')
                             }],
                             applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&role_creator=pipeline`
                         })

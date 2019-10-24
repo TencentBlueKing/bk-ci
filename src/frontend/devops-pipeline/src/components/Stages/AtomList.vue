@@ -16,21 +16,21 @@
                     <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ &quot;atom-icon&quot;: true, &quot;skip-icon&quot;: useSkipStyle(atom) }" />
                     <logo v-else :class="{ &quot;atom-icon&quot;: true, &quot;skip-icon&quot;: useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
                     <p class="atom-name">
-                        <span :title="atom.name" :class="{ &quot;skip-name&quot;: useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : '待选择插件' }}</span>
+                        <span :title="atom.name" :class="{ &quot;skip-name&quot;: useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
                     <bk-popover placement="top" v-if="atom.status === 'REVIEWING'">
-                        <span @click.stop="checkAtom(atom)" :class="{ 'atom-reviewing-tips': userInfo && isCurrentUser(getReviewUser(atom)), 'atom-review-diasbled-tips': !(userInfo && isCurrentUser(getReviewUser(atom))) }">去审核</span>
+                        <span @click.stop="checkAtom(atom)" :class="{ 'atom-reviewing-tips': userInfo && isCurrentUser(getReviewUser(atom)), 'atom-review-diasbled-tips': !(userInfo && isCurrentUser(getReviewUser(atom))) }">{{ $t('editPage.toCheck') }}</span>
                         <template slot="content">
-                            <p>审核人为{{ getReviewUser(atom).join(';') }}</p>
+                            <p>{{ $t('editPage.checkUser') }}{{ getReviewUser(atom).join(';') }}</p>
                         </template>
                     </bk-popover>
                     <bk-popover placement="top" v-if="atom.status === 'REVIEW_ABORT'">
-                        <span class="atom-review-diasbled-tips">已驳回</span>
+                        <span class="atom-review-diasbled-tips">{{ $t('editPage.aborted') }}</span>
                         <template slot="content">
-                            <p>审核未通过，审核人为{{ execDetail.cancelUserId }}</p>
+                            <p>{{ $t('editPage.abortTips') }}{{ $t('editPage.checkUser') }}{{ execDetail.cancelUserId }}</p>
                         </template>
                     </bk-popover>
-                    <a href="javascript: void(0);" class="atom-single-retry" v-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">重试</a>
+                    <a href="javascript: void(0);" class="atom-single-retry" v-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
                     <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'">
                         <span :class="atom.status === 'SUCCEED' ? 'atom-success-timer' : (atom.status === 'REVIEW_ABORT' ? 'atom-warning-timer' : 'atom-fail-timer')">
                             <span v-if="atom.elapsed && atom.elapsed >= 36e5">&gt;</span>{{ atom.elapsed ? atom.elapsed > 36e5 ? '1h' : localTime(atom.elapsed) : '' }}
@@ -39,7 +39,7 @@
                             <p>{{ atom.elapsed ? localTime(atom.elapsed) : '' }}</p>
                         </template>
                     </bk-popover>
-                    <span class="bk-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" title="复制插件" @click.stop="copyAtom(index)">
+                    <span class="bk-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
                         <Logo name="copy" size="18"></Logo>
                     </span>
                     <i v-if="editable" @click.stop="editAtom(index, false)" class="add-plus-icon close" />
@@ -51,7 +51,7 @@
             </li>
             <span v-if="editable" :class="{ &quot;add-atom-entry&quot;: true, &quot;block-add-entry&quot;: atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
                 <i class="add-plus-icon" />
-                <span v-if="atomList.length === 0">添加插件</span>
+                <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
             </span>
         </draggable>
         <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog"></check-atom-dialog>
@@ -233,7 +233,7 @@
                     console.error(e)
                     this.$showTips({
                         theme: 'error',
-                        message: '复制插件失败'
+                        message: this.$t('editPage.copyAtomFail')
                     })
                 }
             },
@@ -256,7 +256,7 @@
                         taskId: taskId
                     })
                     if (res.id) {
-                        message = '重试成功'
+                        message = this.$t('subpage.retrySuc')
                         theme = 'success'
 
                         this.$router.push({
@@ -267,15 +267,15 @@
                         })
                         this.requestPipelineExecDetail(this.routerParams)
                     } else {
-                        message = '重试失败'
+                        message = this.$t('subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: '流水线',
-                                option: '执行'
+                                resource: this.$t('pipeline'),
+                                option: this.$t('exec')
                             }],
                             applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.routerParams.projectId}&service_code=pipeline&role_executor=pipeline:${this.routerParams.pipelineId}`
                         })

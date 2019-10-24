@@ -5,7 +5,7 @@
 
 <script>
     import VerticalTab from './VerticalTab'
-    
+
     export default {
         name: 'base-setting-tab',
         components: {
@@ -19,7 +19,7 @@
             tabs () {
                 return [{
                     id: 'baseInfo',
-                    name: '基本信息',
+                    name: this.$t('settings.baseInfo'),
                     component: 'BaseInfo',
                     componentProps: {
                         pipelineSetting: this.pipelineSetting,
@@ -34,7 +34,7 @@
                     }
                 }, {
                     id: 'runningLock',
-                    name: '运行锁定',
+                    name: this.$t('settings.runLock'),
                     component: 'RunningLock',
                     componentProps: {
                         pipelineSetting: this.pipelineSetting,
@@ -48,15 +48,6 @@
                         }
                     }
                 }
-                // {
-                //     id: 'cleanPolicy',
-                //     name: '清理策略',
-                //     component: CleanPolicy,
-                //     componentProps: {
-                //         pipelineSetting: this.pipelineSetting,
-                //         updatePipelineSetting: this.updatePipelineSetting
-                //     }
-                // }
                 ]
             }
         }

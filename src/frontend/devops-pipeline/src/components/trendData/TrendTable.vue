@@ -2,7 +2,7 @@
     <div class="trend-data-container" v-if="trendData.length">
         <div class="search-input">
             <bk-input
-                placeholder="根据文件名过滤、按回车搜索"
+                :placeholder="$t('history.fiterPackageTips')"
                 :clearable="true"
                 :right-icon="'bk-icon icon-search'"
                 @enter="filterData"
@@ -19,17 +19,17 @@
         <div class="trend-table-container">
             <bk-table :data="showList" size="small">
                 <bk-table-column label="buildNum" prop="buildNum" width="100"></bk-table-column>
-                <bk-table-column label="文件名" prop="name"></bk-table-column>
-                <bk-table-column label="版本号" prop="appVersion" width="150"></bk-table-column>
+                <bk-table-column :label="$t('fileName')" prop="name"></bk-table-column>
+                <bk-table-column :label="$t('versionNum')" prop="appVersion" width="150"></bk-table-column>
                 <bk-table-column
                     width="150"
-                    label="大小"
+                    :label="$t('size')"
                     prop="size"
                     :formatter="formatSize"
                 ></bk-table-column>
                 <bk-table-column
                     width="200"
-                    label="最后更新时间"
+                    :label="$t('lastUpdateTime')"
                     prop="modifiedTime"
                     :formatter="formatTime"
                 ></bk-table-column>
@@ -40,7 +40,7 @@
         <div class="no-data-right">
             <img src="../../images/box.png">
             <p>
-                <span>该时间区间内没有产出包</span>
+                <span>{{ $t('history.noPackages')}}</span>
             </p>
         </div>
     </div>
@@ -70,7 +70,7 @@
                 searchValue: '',
                 option: {
                     title: {
-                        text: '安装包大小趋势',
+                        text: this.$t('history.chartTitle'),
                         padding: 20,
                         left: 'center',
                         textStyle: {
@@ -99,7 +99,7 @@
                     },
                     yAxis: {
                         type: 'value',
-                        name: '单位：MB',
+                        name: `${this.$t('history.unit')}：MB`,
                         axisLabel: {
                             formatter: '{value}',
                             color: '#737987'
@@ -135,14 +135,14 @@
                             const name = params[0].name
                             const data = `${params[0].data}MB`
                             const res = '<div style="width:auto;border:1px solid #dde4eb; font-size:12px;color:#737987;"><p style="padding:0 14px; line-height: 32px; border-bottom:1px solid #dde4eb;font-weight: bold;">'
-                                + '构建号：' + name
-                                + '</p><p style="padding: 8px 14px; line-height: 20px; font-weight: bold;">包大小:' + data + '</p></div>'
+                                + this.$t('buildNum') + '：' + name
+                                + '</p><p style="padding: 8px 14px; line-height: 20px; font-weight: bold;">' + this.$t('history.packageSize') + ':' + data + '</p></div>'
                             return res
                         }
                     },
                     series: [
                         {
-                            name: '安装包大小',
+                            name: this.$t('history.packageSize'),
                             type: 'line',
                             data: [],
                             lineStyle: {

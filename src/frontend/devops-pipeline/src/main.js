@@ -57,7 +57,7 @@ Vue.use(VeeValidate, {
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
-global.pass3Vue = new Vue({
+global.pipelineVue = new Vue({
     el: '#app',
     router: createRouter(store),
     i18n,

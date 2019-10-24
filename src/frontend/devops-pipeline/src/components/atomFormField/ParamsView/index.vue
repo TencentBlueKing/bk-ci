@@ -11,13 +11,13 @@
                             :value="paramValues[param.id]"
                             :disabled="disabled"
                             type="text"
-                            placeholder="请输入参数"
+                            :placeholder="$t('editPage.paramInputTips')"
                             v-bind="dataInputConfig(param)"
                         />
                     </div>
                 </li>
             </template>
-            <li v-else class="param-item-empty"><span>该子流水线没有任何参数</span></li>
+            <li v-else class="param-item-empty"><span>{{ $t('editPage.paramEmptyTips') }}</span></li>
         </ul>
     </div>
 </template>

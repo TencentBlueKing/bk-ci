@@ -27,7 +27,7 @@
         <!-- <atom-output :element="element" :atom-props-model="atomPropsModel"></atom-output> -->
     </section>
     <section v-else>
-        <div class="empty-tips">task.json格式错误</div>
+        <div class="empty-tips">{{ $t('outputErrTips') }}</div>
     </section>
 </template>
 

@@ -10,17 +10,17 @@
         @cancel="toggleCheck(false)">
         <div v-bkloading="{ isLoading }" class="pipeline-template">
             <bk-form :label-width="100" form-type="vertical">
-                <bk-form-item v-if="data.desc" label="审核描述">
+                <bk-form-item v-if="data.desc" :label="$t('editPage.checkDesc')">
                     <p style="white-space: pre-wrap;">{{data.desc}}</p>
                 </bk-form-item>
-                <bk-form-item label="审核结果">
+                <bk-form-item :label="$t('editPage.checkResult')">
                     <bk-radio-group v-model="data.status">
-                        <bk-radio class="choose-item" :value="'PROCESS'">同意</bk-radio>
-                        <bk-radio class="choose-item" :value="'ABORT'">驳回</bk-radio>
+                        <bk-radio class="choose-item" :value="'PROCESS'">{{ $t('editPage.agree') }}</bk-radio>
+                        <bk-radio class="choose-item" :value="'ABORT'">{{ $t('editPage.abort') }}</bk-radio>
                     </bk-radio-group>
-                    <bk-input type="textarea" v-model="data.suggest" placeholder="请输入审核意见" class="check-suggest"></bk-input>
+                    <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <bk-form-item label="自定义变量" v-if="data.status === 'PROCESS' && data.params && data.params.length">
+                <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
                     <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal>
                 </bk-form-item>
             </bk-form>
@@ -111,10 +111,9 @@
                     const res = await this.handleCheckAtom(data)
                     if (res === true) {
                         this.$showTips({
-                            message: this.data.status === 'ABORT' ? '驳回成功' : '审核成功',
+                            message: this.data.status === 'ABORT' ? this.$t('editPage.abortSuc') : this.$t('editPage.agreeSuc'),
                             theme: 'success'
                         })
-                        // this.requestPipelineExecDetail(this.routerParams)
                     }
                     this.toggleCheck(false)
                 } catch (err) {
