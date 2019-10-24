@@ -54,6 +54,7 @@ class CmdbNodeService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val projectConfigDao: ProjectConfigDao,
     private val redisOperation: RedisOperation,
+    private val esbAgentClient: EsbAgentClient,
     private val environmentPermissionService: EnvironmentPermissionService
 ) {
     companion object {
@@ -64,7 +65,13 @@ class CmdbNodeService @Autowired constructor(
 
     fun getUserCmdbNodes(userId: String, offset: Int, limit: Int): List<CmdbNode> {
         val cmdbNodes =
-            ImportServerNodeUtils.getUserCmdbNode(redisOperation, userId, offset, limit)
+            ImportServerNodeUtils.getUserCmdbNode(
+                esbAgentClient = esbAgentClient,
+                redisOperation = redisOperation,
+                userId = userId,
+                offset = offset,
+                limit = limit
+            )
         return cmdbNodes.map {
             CmdbNode(it.name, it.operator, it.bakOperator, it.ip, it.displayIp, it.agentStatus, it.osName)
         }
@@ -85,7 +92,15 @@ class CmdbNodeService @Autowired constructor(
         val limit = sqlLimit?.limit ?: 1000
 
         val cmdbNodePage =
-            ImportServerNodeUtils.getUserCmdbNodeNew(redisOperation, userId, bakOperator, ips, offset, limit)
+            ImportServerNodeUtils.getUserCmdbNodeNew(
+                esbAgentClient = esbAgentClient,
+                redisOperation = redisOperation,
+                userId = userId,
+                bakOperator = bakOperator,
+                ips = ips,
+                offset = offset,
+                limit = limit
+            )
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
@@ -97,7 +112,7 @@ class CmdbNodeService @Autowired constructor(
     }
 
     fun getUserCcNodes(userId: String): List<CcNode> {
-        val ccNodes = ImportServerNodeUtils.getUserCcNode(redisOperation, userId)
+        val ccNodes = ImportServerNodeUtils.getUserCcNode(esbAgentClient, redisOperation, userId)
         return ccNodes.map {
             CcNode(it.name, it.assetID, it.operator, it.bakOperator, it.ip, it.displayIp, it.agentStatus, it.osName)
         }
@@ -105,7 +120,7 @@ class CmdbNodeService @Autowired constructor(
 
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>) {
         // 验证 CMDB 节点IP和责任人
-        val cmdbNodeList = EsbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes
+        val cmdbNodeList = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes
         val cmdbIpToNodeMap = cmdbNodeList.associateBy { it.ip }
         val invaliedIps = nodeIps.filter {
             if (!cmdbIpToNodeMap.containsKey(it)) true
@@ -124,6 +139,7 @@ class CmdbNodeService @Autowired constructor(
         val existIpList = existNodeList.map { it.nodeIp }.toSet()
         val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet()
         ImportServerNodeUtils.checkImportCount(
+            esbAgentClient = esbAgentClient,
             dslContext = dslContext,
             projectConfigDao = projectConfigDao,
             nodeDao = nodeDao,
@@ -133,7 +149,7 @@ class CmdbNodeService @Autowired constructor(
         )
 
         val now = LocalDateTime.now()
-        val agentStatusMap = EsbAgentClient.getAgentStatus(userId, toAddIpList)
+        val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
         val toAddNodeList = toAddIpList.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             TNodeRecord(
@@ -170,7 +186,7 @@ class CmdbNodeService @Autowired constructor(
     }
 
     fun addCcNodes(userId: String, projectId: String, nodeIps: List<String>) {
-        val ccNodeList = EsbAgentClient.getCcNodeByIps(userId, nodeIps)
+        val ccNodeList = esbAgentClient.getCcNodeByIps(userId, nodeIps)
         val ccIpToNodeMap = ccNodeList.associateBy { it.ip }
         val invalidIps = nodeIps.filter {
             var ccNode = ccIpToNodeMap[it]
@@ -186,6 +202,7 @@ class CmdbNodeService @Autowired constructor(
         val existIpList = existNodeList.map { it.nodeIp }.toSet()
         val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet()
         ImportServerNodeUtils.checkImportCount(
+            esbAgentClient = esbAgentClient,
             dslContext = dslContext,
             projectConfigDao = projectConfigDao,
             nodeDao = nodeDao,
@@ -195,7 +212,7 @@ class CmdbNodeService @Autowired constructor(
         )
 
         val now = LocalDateTime.now()
-        val agentStatusMap = EsbAgentClient.getAgentStatus(userId, toAddIpList)
+        val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
         val toAddNodeList = nodeIps.filterNot { existIpList.contains(it) }.map {
             val ccNode = ccIpToNodeMap[it]!!
             TNodeRecord(

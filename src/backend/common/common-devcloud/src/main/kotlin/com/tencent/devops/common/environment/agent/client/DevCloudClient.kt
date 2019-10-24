@@ -1,15 +1,14 @@
-package com.tencent.devops.misc.client
+package com.tencent.devops.common.environment.agent.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.environment.agent.client.DevCloudContainerInstanceClient
-import com.tencent.devops.common.environment.agent.client.DevCloudContainerInstanceClient.getHeaders
-import com.tencent.devops.environment.pojo.devcloud.Action
-import com.tencent.devops.environment.pojo.devcloud.DevCloudContainer
-import com.tencent.devops.environment.pojo.devcloud.DevCloudImage
+import com.tencent.devops.common.environment.agent.pojo.devcloud.Action
+import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudContainer
+import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudImage
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
@@ -35,16 +34,19 @@ class DevCloudClient {
     @Value("\${devCloud.url}")
     val devCloudUrl: String = ""
 
+    @Value("\${devCloud.smartProxyToken}")
+    val smartProxyToken: String = ""
+
     fun createContainer(staffName: String, devCloudContainer: DevCloudContainer): String {
         val url = "$devCloudUrl/api/v2.1/containers"
         val body = ObjectMapper().writeValueAsString(devCloudContainer)
         logger.info("request body: $body")
         logger.info("request url: $url")
         val request = Request.Builder()
-                .url(url)
-                .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
-                .build()
+            .url(url)
+            .headers(addHeaders(staffName))
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -75,10 +77,10 @@ class DevCloudClient {
         logger.info("request body: $body")
         logger.info("request url: $url")
         val request = Request.Builder()
-                .url(url)
-                .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
-                .build()
+            .url(url)
+            .headers(addHeaders(staffName))
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -98,8 +100,18 @@ class DevCloudClient {
         }
     }
 
+    private fun addHeaders(staffName: String) =
+        Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken))
+
     fun getContainerInstance(staffName: String, id: String) =
-        DevCloudContainerInstanceClient.getContainerInstance(devCloudUrl, devCloudAppId, devCloudToken, staffName, id)
+        DevCloudContainerInstanceClient.getContainerInstance(
+            devCloudUrl,
+            devCloudAppId,
+            devCloudToken,
+            staffName,
+            id,
+            smartProxyToken
+        )
 
     fun createImage(staffName: String, devCloudImage: DevCloudImage): String {
         val url = "$devCloudUrl/api/v2.1/images"
@@ -107,10 +119,10 @@ class DevCloudClient {
         logger.info("request body: $body")
         logger.info("request url: $url")
         val request = Request.Builder()
-                .url(url)
-                .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
-                .build()
+            .url(url)
+            .headers(addHeaders(staffName))
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -134,10 +146,10 @@ class DevCloudClient {
         val url = "$devCloudUrl/api/v2.1/tasks/$taskId"
         logger.info("request url: $url")
         val request = Request.Builder()
-                .url(url)
-                .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
-                .get()
-                .build()
+            .url(url)
+            .headers(addHeaders(staffName))
+            .get()
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -154,7 +166,7 @@ class DevCloudClient {
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
+            .headers(addHeaders(staffName))
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
