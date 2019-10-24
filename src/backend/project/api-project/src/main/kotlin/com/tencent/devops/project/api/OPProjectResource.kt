@@ -140,4 +140,26 @@ interface OPProjectResource {
     @GET
     @Path("/listGrayProject")
     fun listGrayProject(): Result<OpGrayProject>
+
+    @ApiOperation("更新项目信息")
+    @PUT
+    @Path("/{projectId}")
+    fun updateProjectV2(
+            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("PAAS_CC Token", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+            accessToken: String,
+            @ApiParam(value = "项目信息请求实体", required = true)
+            projectInfoRequest: OpProjectUpdateInfoRequest
+    ): Result<Int>
+
+    @ApiOperation("灰度项目设置")
+    @PUT
+    @Path("/grayProjects")
+    fun setGrayProjectV2(
+            @ApiParam(value = "灰度项目设置请求实体", required = true)
+            projectGraySetRequest: OpProjectGraySetRequest
+    ): Result<Boolean>
 }

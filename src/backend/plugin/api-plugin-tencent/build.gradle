@@ -1,0 +1,6 @@
+dependencies {
+    compile project(":plugin:api-plugin")
+    compile project(":environment:api-environment")
+    compile "org.glassfish.jersey.media:jersey-media-multipart"
+    compile group: 'org.json', name: 'json', version: '20180130'
+}
