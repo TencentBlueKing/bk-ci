@@ -14,8 +14,8 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.build.CodeGitElement
-import com.tencent.devops.common.pipeline.pojo.element.build.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.CodeGitElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode

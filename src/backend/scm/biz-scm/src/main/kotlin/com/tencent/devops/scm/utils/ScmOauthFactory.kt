@@ -1,14 +1,11 @@
 package com.tencent.devops.scm.utils
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitScmOauthImpl
 import com.tencent.devops.scm.code.git.CodeGitlabScmImpl
 import com.tencent.devops.scm.code.svn.CodeSvnScmImpl
-import com.tencent.devops.scm.config.GitConfig
-import com.tencent.devops.scm.config.SVNConfig
 
 object ScmOauthFactory {
 
@@ -37,30 +34,24 @@ object ScmOauthFactory {
                 if (privateKey == null) {
                     throw RuntimeException("The svn private key is null")
                 }
-                val svnConfig = SpringContextUtil.getBean(SVNConfig::class.java)
-                CodeSvnScmImpl(
-                    projectName,
-                    branchName,
-                    url,
-                    userName,
-                    privateKey,
-                    passPhrase,
-                    svnConfig
-                )
+                CodeSvnScmImpl(projectName,
+                        branchName,
+                        url,
+                        userName,
+                        privateKey,
+                        passPhrase)
             }
             ScmType.CODE_GIT -> {
                 if (token == null) {
                     throw RuntimeException("The git token is null")
                 }
-                val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
-                CodeGitScmOauthImpl(projectName, branchName, url, privateKey, passPhrase, token, event, gitConfig)
+                CodeGitScmOauthImpl(projectName, branchName, url, privateKey, passPhrase, token, event)
             }
             ScmType.CODE_GITLAB -> {
                 if (token == null) {
                     throw RuntimeException("The gitlab access token is null")
                 }
-                val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
-                CodeGitlabScmImpl(projectName, branchName, url, token, gitConfig)
+                CodeGitlabScmImpl(projectName, branchName, url, token)
             }
             else -> throw RuntimeException("Unknown repo($type)")
         }

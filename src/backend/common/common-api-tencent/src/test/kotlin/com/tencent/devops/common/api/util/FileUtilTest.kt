@@ -24,8 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":scm:biz-scm-blueking")
-}
+package com.tencent.devops.common.api.util
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import org.junit.Test
+import java.io.File
+
+class FileUtilTest {
+    @Test
+    fun getMD5() {
+        val file = File.createTempFile("md5_", ".tmp")
+        file.deleteOnExit()
+        file.writeText("123 aaa")
+        println("create file: ${file.canonicalPath}")
+        assert("bd94e431dfd6319590fe5908dd36d54a" == FileUtil.getMD5(file))
+        assert("bd94e431dfd6319590fe5908dd36d54a" == FileUtil.getMD5(file.readText()))
+        assert("bd94e431dfd6319590fe5908dd36d54a" == FileUtil.getMD5(file.readBytes()))
+    }
+}

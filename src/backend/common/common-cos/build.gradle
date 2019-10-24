@@ -1,0 +1,9 @@
+dependencies {
+    compile("org.apache.commons:commons-lang3:${commonLang3Version}")
+    compile("com.google.guava:guava:${guavaVersion}")
+    compile("com.squareup.okhttp3:okhttp:${okHttpVersion}")
+    compile("org.springframework.boot:spring-boot-starter-amqp")
+    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+    compileOnly("org.springframework.boot:spring-boot-configuration-processor")
+}
