@@ -27,6 +27,7 @@
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -39,7 +40,13 @@ data class ManualReviewUserTaskElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("审核人", required = true)
-    val reviewUsers: MutableList<String> = mutableListOf()
+    var reviewUsers: MutableList<String> = mutableListOf(),
+    @ApiModelProperty("描述", required = false)
+    var desc: String? = "",
+    @ApiModelProperty("审核意见", required = false)
+    var suggest: String? = "",
+    @ApiModelProperty("参数列表", required = false)
+    var params: MutableList<ManualReviewParamPair> = mutableListOf()
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualReviewUserTask"

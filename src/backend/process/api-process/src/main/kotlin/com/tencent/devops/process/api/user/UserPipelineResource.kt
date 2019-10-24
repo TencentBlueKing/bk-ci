@@ -95,18 +95,6 @@ interface UserPipelineResource {
         pipelineName: String
     ): Result<Boolean>
 
-    @ApiOperation("项目是否灰度Docker构建方案")
-    @GET
-    @Path("/projects/{projectId}/enableDocker")
-    fun enableDockerBuild(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<Boolean>
-
     @ApiOperation("拥有权限流水线列表")
     @GET
     @Path("/projects/{projectId}/hasPermissionList")
@@ -362,24 +350,6 @@ interface UserPipelineResource {
         pipelines: Set<String>
     ): Result<Map<String, PipelineStatus>>
 
-    @ApiOperation("订阅流水线消息")
-    @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
-    fun subscription(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("消息订阅类型", required = false)
-        @QueryParam("type")
-        type: SubscriptionType? = SubscriptionType.ALL
-    ): Result<Boolean>
-
     @ApiOperation("收藏流水线消息")
     @PUT
     @Path("/projects/{projectId}/pipelines/{pipelineId}/favor")
@@ -396,36 +366,6 @@ interface UserPipelineResource {
         @ApiParam("是否收藏", required = true)
         @QueryParam("type")
         favor: Boolean
-    ): Result<Boolean>
-
-    @ApiOperation("获取是否订阅流水线")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
-    fun getSubscription(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<PipelineSubscription?>
-
-    @ApiOperation("取消订阅流水线消息")
-    @DELETE
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
-    fun cancelSubscription(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
     ): Result<Boolean>
 
     @ApiOperation("删除流水线编排")

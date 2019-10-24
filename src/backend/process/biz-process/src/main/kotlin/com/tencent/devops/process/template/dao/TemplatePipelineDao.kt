@@ -172,4 +172,15 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                 .execute()
         }
     }
+
+    fun listPipelineTemplate(
+        dslContext: DSLContext,
+        pipelineIds: Collection<String>
+    ): Result<TTemplatePipelineRecord>? {
+        return with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .fetch()
+        }
+    }
 }

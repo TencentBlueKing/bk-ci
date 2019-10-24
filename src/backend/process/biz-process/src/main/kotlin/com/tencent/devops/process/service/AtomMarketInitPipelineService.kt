@@ -9,6 +9,8 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.CodePullStrategy
+import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
@@ -20,8 +22,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveEl
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.utils.enum.CodePullStrategy
-import com.tencent.devops.common.pipeline.utils.enum.GitPullModeType
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp

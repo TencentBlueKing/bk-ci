@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
+import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -1338,6 +1339,10 @@ class TemplateService @Autowired constructor(
     ): com.tencent.devops.common.api.pojo.Result<Boolean> {
         templateDao.updateStoreFlag(dslContext, userId, templateId, storeFlag)
         return com.tencent.devops.common.api.pojo.Result(true)
+    }
+
+    fun listPipelineTemplate(pipelineIds: Collection<String>): Result<TTemplatePipelineRecord>? {
+        return templatePipelineDao.listPipelineTemplate(dslContext, pipelineIds)
     }
 
     companion object {

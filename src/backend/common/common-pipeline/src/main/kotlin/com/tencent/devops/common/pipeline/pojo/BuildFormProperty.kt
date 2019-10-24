@@ -54,5 +54,10 @@ data class BuildFormProperty(
     @ApiModelProperty("代码库类型下拉", required = false)
     val scmType: ScmType?,
     @ApiModelProperty("构建机类型下拉", required = false)
-    val containerType: BuildContainerType?
+    val containerType: BuildContainerType?,
+
+    @ApiModelProperty("自定义仓库通配符", required = false)
+    val glob: String?,
+    @ApiModelProperty("文件元数据", required = false)
+    val properties: Map<String, String>?
 )

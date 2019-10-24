@@ -35,6 +35,9 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -99,7 +102,9 @@ class PipelineService @Autowired constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineSettingService: PipelineSettingService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
 
     companion object {
@@ -1383,6 +1388,32 @@ class PipelineService @Autowired constructor(
             count = pipelines.size + 0L,
             records = list
         )
+    }
+
+    fun listPermissionPipelineCount(
+        userId: String,
+        projectId: String,
+        channelCode: ChannelCode = ChannelCode.BS,
+        checkPermission: Boolean = true
+    ): Int {
+        val watch = StopWatch()
+        watch.start("perm_r_perm")
+        val hasPermissionList = authPermissionApi.getUserResourceByPermission(
+            userId,
+            pipelineAuthServiceCode,
+            AuthResourceType.PIPELINE_DEFAULT,
+            projectId,
+            AuthPermission.LIST,
+            null
+        )
+        watch.stop()
+
+        watch.start("s_r_c_b_id")
+        val count = pipelineRepositoryService.countByPipelineIds(projectId, channelCode, hasPermissionList)
+        watch.stop()
+
+        logger.info("listPermissionPipelineCount|[$projectId]|$userId|$count|watch=$watch")
+        return count
     }
 
     fun getPipelineNameVersion(pipelineId: String): Pair<String, Int> {
