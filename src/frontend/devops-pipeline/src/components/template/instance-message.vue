@@ -15,7 +15,7 @@
                 <i class="bk-icon icon-close" @click="cancel()"></i>
                 <div class="message-title">{{ message }}</div>
                 <div class="fail-pipeline-content">
-                    <span>以下是实例化失败的流水线名称和失败原因：</span>
+                    <span>{{ $t('template.instantiationFailMsg') }}：</span>
                     <ul class="fail-list">
                         <li class="item-row" v-for="(row, index) in failList" :key="index">
                             <div class="pipeline-item">{{ row }}：
@@ -51,10 +51,10 @@
         computed: {
             message () {
                 let msg
-                if (!this.successList.length) {
-                    msg = `你已成功实例化${this.successList.length}条流水线，${this.failList.length}条流水线失败`
-                } else if (this.successList.length) {
-                    msg = `你实例化${this.failList.length}条流水线失败`
+                if (this.successList.length) {
+                    msg = `${this.successList.length}${this.$t('template.instantiationSucTips')}，${this.failList.length}${this.$t('template.instantiationFailTips')}`
+                } else if (!this.successList.length) {
+                    msg = `${this.failList.length}${this.$t('template.instantiationFailTips')}`
                 }
                 return msg
             }
@@ -82,8 +82,8 @@
         }
         .icon-close {
             position: absolute;
-            right: 20px;
-            top: 20px;
+            right: 0px;
+            top: 10px;
             font-size: 12px;
             color: $fontLigtherColor;
             cursor: pointer;

@@ -37,7 +37,6 @@ const state = {
         name: '',
         logic: 'AND',
         filters: [
-            { id: 'filterByName', name: '流水线名称', '@type': 'filterByName', pipelineName: '' }
         ]
     }
 }

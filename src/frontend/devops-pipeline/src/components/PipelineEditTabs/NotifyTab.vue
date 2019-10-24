@@ -19,7 +19,7 @@
             tabs () {
                 return [{
                     id: 'success',
-                    name: '构建成功时',
+                    name: this.$t('settings.whenSuc'),
                     component: 'NotifySetting',
                     componentProps: {
                         subscription: this.successSubscription,
@@ -28,7 +28,7 @@
                     }
                 }, {
                     id: 'fail',
-                    name: '构建失败时',
+                    name: this.$t('settings.whenFail'),
                     component: 'NotifySetting',
                     componentProps: {
                         subscription: this.failSubscription,

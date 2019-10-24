@@ -1,5 +1,5 @@
 <template>
-    <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="soda-stage-list">
+    <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="devops-stage-list">
         <Stage v-for="(stage, index) in computedStage"
             :key="`${stage.id}-${index}`"
             class="list-item"
@@ -87,7 +87,7 @@
 </script>
 
 <style lang="scss">
-    .soda-stage-list {
+    .devops-stage-list {
         display: flex;
         padding-right: 120px;
         width: fit-content;

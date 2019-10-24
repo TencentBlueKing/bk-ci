@@ -1,11 +1,11 @@
 <template>
     <div v-if="pipelineSetting" class="bkdevops-base-info-setting-tab">
         <bk-form>
-            <bk-form-item label="流水线名称" :required="true">
-                <vuex-input placeholder="请输入流水线名称" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="&quot;required|max:40&quot;" max-length="40" :handle-change="handleBaseInfoChange" />
+            <bk-form-item :label="$t('pipelineName')" :required="true">
+                <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="&quot;required|max:40&quot;" max-length="40" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
-            <bk-form-item :required="false" label="分组" v-if="tagGroupList.length">
+            <bk-form-item :required="false" :label="$t('settings.group')" v-if="tagGroupList.length">
                 <div class="tag-group-row">
                     <div class="group-col" v-for="(filter, index) in tagGroupList" :key="index">
                         <label class="group-title">{{filter.name}}</label>
@@ -20,8 +20,8 @@
                     </div>
                 </div>
             </bk-form-item>
-            <bk-form-item label="描述" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
-                <vuex-textarea name="desc" :value="pipelineSetting.desc" placeholder="请输入100个字符以内的描述内容" v-validate.initial="&quot;max:100&quot;" :handle-change="handleBaseInfoChange" />
+            <bk-form-item :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
+                <vuex-textarea name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="&quot;max:100&quot;" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
         </bk-form>
     </div>
@@ -53,7 +53,7 @@
                 return this.$route.params.pipelineId
             },
             labelValues () {
-                const labels = this.pipelineSetting.labels
+                const labels = this.pipelineSetting.labels || []
                 return this.tagGroupList.map((tag) => {
                     const currentLables = tag.labels || []
                     const value = []

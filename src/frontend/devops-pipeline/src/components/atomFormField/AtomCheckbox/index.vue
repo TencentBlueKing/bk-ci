@@ -1,6 +1,6 @@
 <template>
     <bk-checkbox :disabled="disabled" :title="title" :value="value" @change="handleSwitch">
-        {{ text ? text : '是否选中' }}
+        {{ text ? text : $t('editPage.checkOrNot') }}
         <bk-popover v-if="desc" placement="top">
             <i class="bk-icon icon-info-circle"></i>
             <div slot="content" style="white-space: pre-wrap;max-width: 300px">

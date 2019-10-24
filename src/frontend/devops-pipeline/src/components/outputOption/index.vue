@@ -3,7 +3,7 @@
         <div class="output-option-empty" v-if="isEmptyNav">
             <div class="no-data-right">
                 <img src="../../images/box.png">
-                <p>暂时没有产出物报告</p>
+                <p>{{ $t('details.noOutputReport') }}</p>
             </div>
         </div>
         <vertical-tab v-else :tabs="tabs"></vertical-tab>
@@ -42,7 +42,7 @@
                 return [
                     ...(this.hasThirdPartyReport ? [{
                         id: 'thirdReport',
-                        name: '第三方报告',
+                        name: this.$t('details.thirdReport'),
                         component: 'thirdPartyReport',
                         componentProps: {
                             reportList: this.thirdPartyReportList

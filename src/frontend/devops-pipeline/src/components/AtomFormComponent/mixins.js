@@ -83,11 +83,11 @@ export default {
                         if (pos === path.length && Array.isArray(result)) {
                             return result
                         } else {
-                            throw Error('获取列表数据失败')
+                            throw Error(this.$t('editPage.failToGetData'))
                         }
                 }
             } catch (e) {
-                console.error('获取列表数据失败', e)
+                console.error(e)
                 return []
             }
         }

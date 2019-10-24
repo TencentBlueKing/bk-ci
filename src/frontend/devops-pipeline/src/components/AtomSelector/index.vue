@@ -3,8 +3,8 @@
         <transition name="selector-slide">
             <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
                 <header class="atom-selector-header">
-                    <h3>请选择一个插件<i @click="freshAtomList(searchKey)" class="bk-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
-                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" placeholder="输入后回车搜索" right-icon="bk-icon icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
+                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="bk-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
+                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="bk-icon icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
                 </header>
                 <bk-tab v-bkloading="{ isLoading: fetchingAtomList }" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-if="!searchKey">
                     <bk-tab-panel
@@ -46,7 +46,7 @@
                     </bk-tab-panel>
                 </bk-tab>
                 <section v-else class="search-result">
-                    <h3 v-if="!searchResultEmpty" class="search-title">已安装（{{installArr.length}}）</h3>
+                    <h3 v-if="!searchResultEmpty" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
                     <atom-card v-for="atom in installArr"
                         :key="atom.atomCode"
                         :disabled="atom.disabled"
@@ -62,7 +62,7 @@
                         }"
                     ></atom-card>
 
-                    <h3 v-if="!searchResultEmpty" class="search-title gap-border">未安装（{{uninstallArr.length}}）</h3>
+                    <h3 v-if="!searchResultEmpty" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
                     <atom-card v-for="atom in uninstallArr"
                         :key="atom.atomCode"
                         :disabled="atom.disabled"
@@ -97,9 +97,10 @@
 
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
-    import { RD_STORE_CODE } from '@/utils/pipelineConst'
     import atomCard from './atomCard'
     import unrecommend from './unRecommend'
+
+    const RD_STORE_CODE = 'rdStore'
 
     export default {
         name: 'atom-selector',
@@ -121,6 +122,7 @@
         },
         data () {
             return {
+
                 searchKey: '',
                 classifyCode: 'all',
                 activeAtomCode: '',
@@ -298,14 +300,14 @@
                     if (isInOs) {
                         store.notShowSelect = !hasInstalled && !store.publicFlag
 
-                        if (!store.flag) store.tips = '无权限安装该插件'
+                        if (!store.flag) store.tips = this.$t('editPage.noPermToInstall')
                         else store.tips = ''
                     }
 
                     return store
                 })
                 // const sortStoreList = rdStoreList.sort(atom => atom.flag ? 1 : -1).sort(atom => atom.notShowSelect ? 1 : -1).sort(atom => atom.disabled ? 1 : -1)
-                atomTree.rdStore = { children: rdStoreList, classifyCode: RD_STORE_CODE, classifyName: '研发商店', level: 0 }
+                atomTree.rdStore = { children: rdStoreList, classifyCode: RD_STORE_CODE, classifyName: this.$t('store'), level: 0 }
             },
 
             getClassifyCls (classifyCode) {

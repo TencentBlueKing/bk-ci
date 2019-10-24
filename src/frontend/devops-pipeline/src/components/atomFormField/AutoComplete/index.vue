@@ -6,7 +6,7 @@
             autocomplete="off"
             :name="name"
             :value="selectedText"
-            :placeholder="placeholder"
+            :placeholder="placeholder || defaultPlaceHolder"
             @input="input"
             @mousedown="focus"
             @blur="hideAll" />
@@ -44,7 +44,7 @@
             },
             placeholder: {
                 type: String,
-                default: '请输入'
+                default: ''
             },
             list: {
                 type: Array,
@@ -68,7 +68,8 @@
                 showList: false,
                 focusList: '',
                 localValue: '',
-                localList: []
+                localList: [],
+                defaultPlaceHolder: '请输入'
             }
         },
         computed: {
@@ -153,5 +154,6 @@
     .ul-container {
         max-height: 180px;
         overflow: scroll;
+        border: 1px solid #E5EBEE;
     }
 </style>

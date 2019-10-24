@@ -2,7 +2,7 @@
     <div class="bkdevops-pipeline-history pb20">
         <bk-tab :active.sync="currentTab" @tab-change="switchTab" :before-toggle="beforeSwitch" class="bkdevops-pipeline-tab-card" type="unborder-card">
             <div class="bkdevops-pipeline-tab-card-setting" slot="setting" v-if="currentTab === 'trendData'">
-                <bk-date-picker :placeholder="'选择日期范围'" :value="dateRange" :type="'daterange'" @change="changeDateRange" :shortcuts="shortcuts" :options="dateOptions"></bk-date-picker>
+                <bk-date-picker :placeholder="$t('history.chooseDateRange')" :value="dateRange" :type="'daterange'" @change="changeDateRange" :shortcuts="shortcuts" :options="dateOptions"></bk-date-picker>
             </div>
             <div class="bkdevops-pipeline-tab-card-setting" slot="setting" v-else>
                 <i @click.stop="toggleFilterBar" class="bk-icon icon-filter-shape" :class="{ 'active': showFilterBar }"></i>
@@ -64,7 +64,7 @@
             panels () {
                 return [{
                             name: 'history',
-                            label: '执行历史',
+                            label: this.$t('history.execHistory'),
                             component: 'BuildHistoryTab',
                             bindData: {
                                 isColumnsSelectPopupVisible: this.isColumnsSelectPopupVisible,
@@ -74,24 +74,12 @@
                         },
                         {
                             name: 'trendData',
-                            label: '安装包趋势',
+                            label: this.$t('history.trendData'),
                             component: 'TrendData',
                             bindData: {
                                 dateRange: this.dateRange
                             }
                         }
-                // {
-                //     name: 'buildAnalysis',
-                //     label: '数据分析',
-                //     disabled: true,
-                //     bindData: {}
-                // },
-                // {
-                //     name: 'buildDiff',
-                //     label: '构建对比',
-                //     disabled: true,
-                //     bindData: {}
-                // }
                 ]
             },
             currentTab () {

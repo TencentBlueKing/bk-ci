@@ -55,7 +55,7 @@
                     const isSafe = /^https?\:\/\//i.test(value)
                     let res = ''
                     if (isSafe) res = `<a class="text-link" href="${value}" target="_Blank">${key}</a>`
-                    else res = `<a class="text-bad-link text-link" title="链接格式不正确">${key}</a>`
+                    else res = `<a class="text-bad-link text-link" title="$t('editPage.badLink')">${key}</a>`
                     return res
                 })
 
@@ -75,7 +75,7 @@
                         res = JSON.stringify(data)
                         break
                     case 'boolean':
-                        res = data ? '是' : '否'
+                        res = data ? this.$t('true') : this.$t('false')
                         break
                     case 'number':
                         res = Number.isNaN(data) ? '' : String(data)

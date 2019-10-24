@@ -4,31 +4,30 @@
         <build-history-table :loading-more="isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="buildList" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
-            title="设置显示列"
+            :title="$t('history.settingCols')"
             ext-cls="create-view-dialog"
             :value="isColumnsSelectPopupVisible"
             @confirm="updateTableColumns"
             @cancel="resetColumns">
-            <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="['可选列表', '已选列表']" @change="handleColumnsChange"></bk-transfer>
+            <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
         </bk-dialog>
         <template v-if="currentBuildNo">
-            <pipeline-log :title="`查看日志${currentBuildNum ? `（#${currentBuildNum}）` : ''}`" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
+            <pipeline-log :title="`$t('history.viewLog')${currentBuildNum ? `（#${currentBuildNum}）` : ''}`" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
         </template>
     </div>
 </template>
 
 <script>
-    // import pipelineWebsocket from '@/utils/pipelineWebSocket'
     import webSocketMessage from '@/utils/webSocketMessage'
     import PipelineLog from '@/components/Log'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, BUILD_HISTORY_TABLE_COLUMNS_MAP } from '@/utils/pipelineConst'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import { mapGetters, mapActions, mapState } from 'vuex'
     import { throttle, coverStrTimer } from '@/utils/util'
     import { bus } from '@/utils/bus'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     const SCROLL_BOX_CLASS_NAME = 'bkdevops-pipeline-history'
@@ -41,7 +40,7 @@
             PipelineLog
         },
 
-        mixins: [pipelineOperateMixin],
+        mixins: [pipelineConstMixin],
 
         props: {
             isColumnsSelectPopupVisible: Boolean,
@@ -53,7 +52,6 @@
             const lsColumns = localStorage && localStorage.getItem(LS_COLUMNS_KEYS)
             const initShownColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
             return {
-                sourceColumns: Object.values(BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index),
                 shownColumns: initShownColumns,
                 tempColumns: initShownColumns,
                 isLoading: false,
@@ -96,32 +94,35 @@
                         id: 'materialCommitMessage'
                     },
                     {
-                        value: '触发方式',
+                        value: this.$t('history.triggerType'),
                         id: 'trigger',
                         remote: true,
                         multiable: true,
                         children: this.triggerList
                     },
                     {
-                        value: '备注',
+                        value: this.$t('history.remark'),
                         id: 'remark'
                     }
                 ]
             },
+            sourceColumns () {
+                return Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
+            },
             emptyTipsConfig () {
                 const { hasNoPermission, buildList, isLoading, historyPageStatus: { isQuerying } } = this
-                const title = hasNoPermission ? '没有权限' : '构建记录为空'
-                const desc = hasNoPermission ? '你没有查看该流水线的权限，请切换项目或申请相应权限' : '定义了流水线之后，你可以手动触发执行一次构建任务，我们会给每个构建分配一个唯一ID，所有的构建记录都会在这里'
+                const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
+                const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
                 const btns = hasNoPermission ? [{
                     theme: 'primary',
                     size: 'normal',
                     handler: this.changeProject,
-                    text: '切换项目'
+                    text: this.$t('changeProject')
                 }, {
                     theme: 'success',
                     size: 'normal',
                     handler: this.goToApplyPerm,
-                    text: '申请权限'
+                    text: this.$t('applyPermission')
                 }] : [{
                     theme: 'primary',
                     size: 'normal',
@@ -130,7 +131,7 @@
                     handler: () => {
                         !this.executeStatus && bus.$emit('trigger-excute')
                     },
-                    text: '开始构建流水线'
+                    text: this.$t('history.startBuildTips')
                 }]
 
                 return buildList.length === 0 && !isLoading && !isQuerying ? {
@@ -190,7 +191,6 @@
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
             }
-            // this.initWebSocket()
             webSocketMessage.installWsMessage(this.updateBuildHistoryList)
         },
 
@@ -203,7 +203,6 @@
         },
 
         beforeDestroy () {
-            // pipelineWebsocket.disconnect()
             const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
             if (scrollTable) {
                 scrollTable.removeEventListener('scroll', this.throttleScroll)
@@ -229,7 +228,7 @@
                 }
             },
             handleColumnsChange (source, target, tagetValueList) {
-                this.tempColumns = tagetValueList.sort((v1, v2) => BUILD_HISTORY_TABLE_COLUMNS_MAP[v1].index - BUILD_HISTORY_TABLE_COLUMNS_MAP[v2].index)
+                this.tempColumns = tagetValueList.sort((v1, v2) => this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v1].index - this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v2].index)
             },
 
             updateTableColumns () {
@@ -256,14 +255,6 @@
                     scrollLoadMore(target.scrollTop)
                 }
             },
-            // initWebSocket () {
-            //     const subscribe = `/topic/pipelineHistory/${this.pipelineId}`
-
-            //     pipelineWebsocket.connect(this.projectId, subscribe, {
-            //         success: () => this.updateBuildHistoryList(),
-            //         error: (message) => this.$showTips({ message, theme: 'error' })
-            //     })
-            // },
 
             changeProject () {
                 this.$toggleProjectMenu(true)
@@ -382,7 +373,7 @@
                 } catch (e) {
                     console.log(e)
                     this.$showTips({
-                        message: '加载出错',
+                        message: this.$t('history.loadingErr'),
                         theme: 'error'
                     })
                 } finally {

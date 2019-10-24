@@ -69,7 +69,7 @@ const customeRules = {
 
 function ExtendsCustomRules (_extends) {
     if (typeof _extends !== 'function') {
-        console.warn('VeeValidate.Validator.extend必须是一个函数！')
+        console.warn('VeeValidate.Validator.extend must be a function')
         return
     }
     for (const key in customeRules) {

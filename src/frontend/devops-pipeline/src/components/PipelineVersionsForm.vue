@@ -7,7 +7,7 @@
                 </form-field>
             </div>
             <div class="params-flex-col">
-                <form-field :required="true" label="构建号" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
+                <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
                     <vuex-input :disabled="buildNo.buildNoType !== 'CONSISTENT'" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
                 </form-field>
                 <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
@@ -66,23 +66,20 @@
             versionConfig () {
                 return {
                     MajorVersion: {
-                        label: '主版本',
+                        label: this.$t('preview.majorVersion'),
                         type: 'STRING',
-                        desc: '主版本（MajorVersion）',
                         default: '0',
                         placeholder: 'MajorVersion'
                     },
                     MinorVersion: {
-                        label: '特性版本',
+                        label: this.$t('preview.minorVersion'),
                         type: 'STRING',
-                        desc: '特性版本（MinorVersion）',
                         default: '0',
                         placeholder: 'MinorVersion'
                     },
                     FixVersion: {
-                        label: '修正版本',
+                        label: this.$t('preview.fixVersion'),
                         type: 'STRING',
-                        desc: '修正版本（FixVersion）',
                         default: '0',
                         placeholder: 'FixVersion'
                     }

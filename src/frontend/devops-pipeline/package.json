@@ -27,10 +27,10 @@
     "vee-validate": "^2.0.3",
     "vue": "^2.6.10",
     "vue-echarts": "^3.0.9",
+    "vue-json-viewer": "^2.2.5",
     "vue-router": "^2.8.1",
     "vuedraggable": "^2.16.0",
-    "vuex": "^2.4.0",
-    "xterm": "^3.1.0"
+    "vuex": "^2.4.0"
   },
   "devDependencies": {
     "add": "^2.0.6",

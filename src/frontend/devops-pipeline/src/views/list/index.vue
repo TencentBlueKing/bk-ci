@@ -86,7 +86,6 @@
                     title: this.$t('pipeline'),
                     links: [
                         {
-                            title: '入门指南',
                             handler: this.tutorial
                         }
                     ]

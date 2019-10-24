@@ -4,16 +4,16 @@
             class="bkdevops-build-history-table"
             :data="data"
             :row-class-name="handleRowStyle"
+            :empty-text="$t('history.filterNullTips')"
             @row-click="handleRowClick"
             @header-dragend="handleDragend"
-            empty-text="搜索结果为空"
             size="small">
             <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <i v-if="retryable(props.row)" title="重试" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
-                        <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" title="终止构建" @click.stop="stopExecute(props.row.id)"
+                        <i v-if="retryable(props.row)" :title="$t('retry')" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
+                        <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
                             :class="{
                                 'bk-icon': true,
                                 'spin-icon': true,
@@ -41,7 +41,7 @@
                     <template v-if="props.row.hasArtifactories">
                         <div class="artifact-list-cell">
                             <qrcode v-if="props.row.active && props.row.shortUrl" :text="props.row.shortUrl" :size="76">{{props.row.shortUrl}}</qrcode>
-                            <p class="artifact-entry history-text-link" @click.stop="e => showArtifactoriesPopup(e, props.row.index)">{{props.row.artifactList.length }}个文件（{{props.row.sumSize}}）</p>
+                            <p class="artifact-entry history-text-link" @click.stop="e => showArtifactoriesPopup(e, props.row.index)">{{props.row.artifactList.length }}{{ $t('history.fileUnit') }}（{{props.row.sumSize}}）</p>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -62,30 +62,8 @@
                 </template>
                 <template v-else-if="col.prop === 'entry'" v-slot="props">
                     <p class="entry-link" @click.stop="showLog(props.row.id, props.row.buildNum, true)">
-                        完整日志
+                        {{ $t('history.completedLog') }}
                     </p>
-                    <!-- <template v-if="props.row.active">
-                        <p class="entry-link" @click="showLog(props.row.id, props.row.buildNum, true)">
-                            完整日志
-                        </p>
-                        <p class="entry-link" v-for="entry in col.entries" :key="entry.type">
-                            <router-link :to="getArchiveUrl(props.row, entry.type)">{{ entry.label }}</router-link>
-                        </p>
-                    </template>
-                    <p v-else>
-                        <span class='entry-link'><router-link :to="getArchiveUrl(props.row, col.entries[0].type)">{{ col.entries[0].label }}</router-link></span>
-                        <bk-popover theme="light" placement="left">
-                            <span class="entry-link">更多</span>
-                            <div slot="content">
-                                <p class="entry-link" @click="showLog(props.row.id, props.row.buildNum, true)">
-                                    日志
-                                </p>
-                                <p class="entry-link" v-for="entry in col.entries" :key="entry.type">
-                                    <router-link :to="getArchiveUrl(props.row, entry.type)">{{ entry.label }}</router-link>
-                                </p>
-                            </div>
-                        </bk-popover>
-                    </p> -->
                 </template>
                 <template v-else-if="col.prop === 'remark'" v-slot="props">
                     <div class="remark-cell">
@@ -97,8 +75,8 @@
                             <div slot="content">
                                 <bk-input type="textarea" ref="remarkInput" rows="3" class="remark-input" v-model.trim="tempRemark" />
                                 <div class="remark-edit-footer">
-                                    <bk-button size="small" theme="primary" @click="handleRemarkChange(props.row)">确认</bk-button>
-                                    <bk-button size="small" @click="resetRemark">取消</bk-button>
+                                    <bk-button size="small" theme="primary" @click="handleRemarkChange(props.row)">{{ $t('confirm') }}</bk-button>
+                                    <bk-button size="small" @click="resetRemark">{{ $t('cancel') }}</bk-button>
                                 </div>
                             </div>
                         </bk-popover>
@@ -109,13 +87,13 @@
                 </template>
             </bk-table-column>
             <empty-tips v-if="emptyTipsConfig" class="build-list-table-empty-tips" slot="empty" v-bind="emptyTipsConfig"></empty-tips>
-            <div v-if="loadingMore" class="loading-more" slot="append"><i class="bk-icon icon-circle-2-1 spin-icon"></i><span>数据加载中</span></div>
+            <div v-if="loadingMore" class="loading-more" slot="append"><i class="bk-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
         </bk-table>
         <portal to="artifactory-popup">
             <div ref="artifactPopup" class="artifact-list-popup" v-show="actifactories.length" v-bk-clickoutside="hideArtifactoriesPopup">
                 <div class="artifact-list-header">
-                    <h2>构件列表</h2>
-                    <span @click.stop="gotoArtifactoryList" class="history-text-link">详情</span>
+                    <h2>{{ $t('history.artifactList') }}</h2>
+                    <span @click.stop="gotoArtifactoryList" class="history-text-link">{{ $t('detail') }}</span>
                 </div>
                 <span ref="popupTriangle" class="popup-triangle"></span>
                 <ul class="artifact-list-ul" v-if="visibleIndex !== -1">
@@ -127,7 +105,7 @@
                         <i class="bk-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
                         <Logo class="icon-copy" name="copy" size="12" v-if="artifactory.artifactoryType === 'PIPELINE'" @click.stop.native="copyToCustom(artifactory)"></Logo>
                     </li>
-                    <footer v-if="needShowAll" @click.stop="showAllArtifactory" class="history-text-link">显示全部</footer>
+                    <footer v-if="needShowAll" @click.stop="showAllArtifactory" class="history-text-link">{{ $t('history.showAll') }}</footer>
                 </ul>
             </div>
         </portal>
@@ -138,9 +116,10 @@
     import Logo from '@/components/Logo'
     import emptyTips from '@/components/devops/emptyTips'
     import { convertFileSize, convertMStoStringByRule, convertMiniTime } from '@/utils/util'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, BUILD_HISTORY_TABLE_COLUMNS_MAP } from '@/utils/pipelineConst'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import qrcode from '@/components/devops/qrcode'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
 
     export default {
         name: 'build-history-table',
@@ -149,6 +128,7 @@
             qrcode,
             emptyTips
         },
+        mixins: [pipelineConstMixin],
         props: {
             buildList: {
                 type: Array,
@@ -241,13 +221,13 @@
                 return this.columns.map(key => this.column[key])
             },
             column () {
-                Object.keys(BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
+                Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
                     if (item === 'material') {
                         const localStorageVal = localStorage.getItem('materialWidth')
-                        BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal || 500
+                        this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal || 500
                     }
                 })
-                return BUILD_HISTORY_TABLE_COLUMNS_MAP
+                return this.BUILD_HISTORY_TABLE_COLUMNS_MAP
             }
         },
         watch: {
@@ -260,6 +240,7 @@
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
                 const instance = this.getRemarkPopupInstance(row.index)
+                console.log(instance, 11)
                 if (instance) {
                     instance.show()
                     this.$nextTick(() => {
@@ -286,7 +267,7 @@
                         this.$emit('update-table')
                         this.$showTips({
                             theme: 'success',
-                            message: '修改备注成功'
+                            message: this.$t('updateSuc')
                         })
                         this.resetRemark()
                     } else {
@@ -295,7 +276,7 @@
                 } catch (e) {
                     this.$showTips({
                         theme: 'error',
-                        message: '修改备注失败'
+                        message: this.$t('updateFail')
                     })
                 }
             },
@@ -413,7 +394,7 @@
                         params
                     })
                     if (res) {
-                        message = '保存成功'
+                        message = this.$t('saveSuc')
                         theme = 'success'
                     }
                 } catch (err) {
@@ -442,12 +423,12 @@
                     })
 
                     if (res.id) {
-                        message = '重试成功'
+                        message = this.$t('subpage.retrSuc')
                         theme = 'success'
 
                         this.$emit('update-table')
                     } else {
-                        message = '重试失败'
+                        message = this.$t('subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {
@@ -484,12 +465,12 @@
 
                     this.status = 'ready'
                     if (res) {
-                        message = '终止流水线成功'
+                        message = this.$t('subpage.stopSuc')
                         theme = 'success'
 
                         this.$emit('update-table')
                     } else {
-                        message = '终止流水线失败'
+                        message = this.$t('subpage.stopFail')
                         theme = 'error'
                     }
                 } catch (err) {

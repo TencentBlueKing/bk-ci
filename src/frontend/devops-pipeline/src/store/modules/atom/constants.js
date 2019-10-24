@@ -80,13 +80,13 @@ export const SET_PIPELINE_CONTAINER = 'SET_PIPELINE_CONTAINER'
 export const buildNoRules = [
     {
         value: 'CONSISTENT',
-        label: '锁定构建号'
+        label: 'consistent'
     }, {
         value: 'SUCCESS_BUILD_INCREMENT',
-        label: '构建成功 + 1'
+        label: 'success_build_increment'
     }, {
         value: 'EVERY_BUILD_INCREMENT',
-        label: '每次构建 + 1',
+        label: 'every_build_increment',
         default: true
     }
 ]

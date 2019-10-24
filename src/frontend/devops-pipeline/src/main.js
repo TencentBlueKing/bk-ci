@@ -59,7 +59,7 @@ ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.prototype.$setLocale = setLocale
 
-global.pass3Vue = new Vue({
+global.pipelineVue = new Vue({
     el: '#app',
     router: createRouter(store),
     i18n,
