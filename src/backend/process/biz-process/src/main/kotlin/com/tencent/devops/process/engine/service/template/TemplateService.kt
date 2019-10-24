@@ -50,6 +50,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
@@ -78,7 +79,6 @@ import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PTemplateDao
-import com.tencent.devops.process.template.dao.TemplatePipelineDao
 import com.tencent.devops.process.util.DateTimeUtils
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -89,6 +89,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -254,7 +255,7 @@ class TemplateService @Autowired constructor(
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val pipelines = templatePipelineDao.listPipeline(context, templateId)
+            val pipelines = templatePipelineDao.listPipeline(context, setOf(templateId))
             if (pipelines.isNotEmpty) {
                 throw OperationException("已有流水线实例使用当前模版，不能删除")
             }
@@ -455,7 +456,7 @@ class TemplateService @Autowired constructor(
                     val model: Model = objectMapper.readValue(modelStr)
                     val associateCodes = listOf<String>()
                     val associatePipeline =
-                        templatePipelineDao.listPipeline(context, templateId)
+                        templatePipelineDao.listPipeline(context, setOf(templateId))
 
                     val pipelineIds = associatePipeline.map { PipelineId(it.pipelineId) }
 
@@ -687,6 +688,7 @@ class TemplateService @Autowired constructor(
     ): TemplateCompareModelResult {
         logger.info("Compare the template instances - [$projectId|$userId|$templateId|$pipelineId|$version]")
         val templatePipelineRecord = templatePipelineDao.get(dslContext, pipelineId)
+            ?: throw NotFoundException("流水线模板不存在")
         val template: Model =
             objectMapper.readValue(templateDao.getTemplate(dslContext, templatePipelineRecord.version).template)
         val v1Model: Model = instanceCompareModel(

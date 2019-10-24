@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
@@ -70,7 +71,6 @@ import com.tencent.devops.process.service.PipelineSettingService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
-import com.tencent.devops.process.template.dao.TemplatePipelineDao
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -1422,7 +1422,7 @@ class PipelineService @Autowired constructor(
     }
 
     private fun isTemplatePipeline(pipelineId: String): Boolean {
-        return templatePipelineDao.listByPipeline(dslContext, pipelineId) != null
+        return templatePipelineDao.listByPipelines(dslContext, setOf(pipelineId)).isNotEmpty
     }
 
     private fun getTemplatePipelines(pipelineIds: Set<String>): Set<String> {

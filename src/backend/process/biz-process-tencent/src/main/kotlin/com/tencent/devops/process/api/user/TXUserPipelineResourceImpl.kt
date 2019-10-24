@@ -17,7 +17,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineResourceImpl @Autowired constructor(
+class TXUserPipelineResourceImpl @Autowired constructor(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
     private val dockerBuildService: DockerBuildService
 ) : UserPipelineResource {

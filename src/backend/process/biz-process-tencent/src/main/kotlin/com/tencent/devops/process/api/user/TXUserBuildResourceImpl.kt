@@ -11,7 +11,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserBuildResourceImpl @Autowired constructor(
+class TXUserBuildResourceImpl @Autowired constructor(
     private val buildService: PipelineBuildService,
     private val buildQualityService: PipelineBuildQualityService
 ) : UserBuildResource {
