@@ -3,18 +3,18 @@
         <h3 class="market-home-title ">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <router-link :to="{ name: 'atomHome', query: { pipeType: filterData.pipeType } }" class="back-home">研发商店</router-link>
+                <router-link :to="{ name: 'atomHome', query: { pipeType: filterData.pipeType } }" class="back-home">{{ $t('store.store') }}</router-link>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{filterData.pipeType|pipeTypeFilter}}</span>
             </p>
-            <router-link :to="{ name: 'atomList', params: { type: 'atom' } }" class="title-work">工作台</router-link>
+            <router-link :to="{ name: 'atomList', params: { type: 'atom' } }" class="title-work">{{ $t('store.workbench') }}</router-link>
         </h3>
 
         <main class="store-main" @scroll.passive="mainScroll">
             <section class="home-main">
                 <nav class="home-nav">
                     <section :class="[{ 'control-active': isInputFocus }, 'g-input-search']">
-                        <input class="g-input-border" type="text" placeholder="请输入名称" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
+                        <input class="g-input-border" type="text" :placeholder="$t('store.namePlaceholder')" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
                         <i class="bk-icon icon-search" v-if="!inputValue"></i>
                         <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
                     </section>
@@ -32,7 +32,7 @@
                     </section>
 
                     <section class="nav-fliter">
-                        <h3>分类</h3>
+                        <h3>{{ $t('store.classify') }}</h3>
                         <bk-select :value="`${filterData.classifyValue}${filterData.classifyKey || ''}`"
                             class="filter-select"
                             :scroll-height="500"
@@ -52,7 +52,7 @@
                             </bk-option-group>
                         </bk-select>
 
-                        <h3>特性<span @click="clearFliterData('features')" v-show="showFeatureClear">清除</span></h3>
+                        <h3>{{ $t('store.feature') }}<span @click="clearFliterData('features')" v-show="showFeatureClear">{{ $t('store.clear') }}</span></h3>
                         <ul class="market-check-group">
                             <li v-for="(feature, index) in features" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
                                 <span :class="[feature.checked ? 'checked' : '', 'market-checkbox']"></span>
@@ -60,12 +60,12 @@
                             </li>
                         </ul>
 
-                        <h3>评分<span @click="clearFliterData('rates')" v-show="showRateClear">清除</span></h3>
+                        <h3>{{ $t('store.score') }}<span @click="clearFliterData('rates')" v-show="showRateClear">{{ $t('store.clear') }}</span></h3>
                         <ul class="rate-ul">
                             <li v-for="(rate, index) in rates" :key="rate.value" class="rate-li" @click="chooseRate(rate)">
                                 <span :class="[{ checked: rate.checked }, 'rate-radio']"></span>
                                 <comment-rate :rate="rate.value" class="rate-star"></comment-rate>
-                                <span class="rate-above" v-if="index !== 0">及以上</span>
+                                <span class="rate-above" v-if="index !== 0">{{ $t('store.above') }}</span>
                             </li>
                         </ul>
                     </section>
@@ -90,22 +90,17 @@
         components: {
             commentRate
         },
-        
+
         filters: {
             pipeTypeFilter (val) {
                 let res = ''
+                const storeLocale = window.devops.$i18n.t('store')
                 switch (val) {
                     case 'template':
-                        res = '流水线模板'
-                        break
-                    case 'ide':
-                        res = 'IDE插件'
-                        break
-                    case 'image':
-                        res = '镜像'
+                        res = storeLocale.pipelineTemplate
                         break
                     default:
-                        res = '流水线插件'
+                        res = storeLocale.pipelineAtom
                         break
                 }
                 return res
@@ -125,9 +120,9 @@
                 },
                 inputValue: '',
                 isInputFocus: false,
-                categories: [{ name: '所有', children: [{ name: '所有', id: 'all', classifyValue: 'all' }] }],
+                categories: [{ name: this.$t('store.all'), children: [{ name: this.$t('store.all'), id: 'all', classifyValue: 'all' }] }],
                 features: [
-                    { name: '蓝鲸官方', value: 'SELF_DEVELOPED', checked: false }
+                    { name: this.$t('store.bkOfficial'), value: 'SELF_DEVELOPED', checked: false }
                 ],
                 rates: [
                     { value: 5, checked: false },
@@ -138,8 +133,8 @@
                 ],
                 showToTop: false,
                 storeTypes: [
-                    { type: 'atom', des: '流水线插件' },
-                    { type: 'template', des: '流水线模板' }
+                    { type: 'atom', des: this.$t('store.pipelineAtom') },
+                    { type: 'template', des: this.$t('store.pipelineTemplate') }
                 ]
             }
         },
@@ -290,9 +285,7 @@
             getClassifys () {
                 const fun = {
                     atom: () => this.getAtomClassifys(),
-                    template: () => this.getTemplateClassifys(),
-                    ide: () => this.getIDEClassifys(),
-                    image: () => this.getImageClassifys()
+                    template: () => this.getTemplateClassifys()
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const method = fun[type]
@@ -300,7 +293,7 @@
                     const query = this.$route.query || {}
                     this.filterData.classifyValue = query.classifyValue || 'all'
                     this.filterData.classifyKey = query.classifyKey
-                    this.categories = [{ name: '所有', children: [{ name: '所有', id: 'all', classifyValue: 'all' }] }]
+                    this.categories = [{ name: this.$t('store.all'), children: [{ name: this.$t('store.all'), id: 'all', classifyValue: 'all' }] }]
 
                     arr.forEach((item) => {
                         const key = item.key
@@ -322,8 +315,8 @@
             getAtomClassifys () {
                 return Promise.all([this.requestAtomClassifys(), this.requestAtomLables()]).then(([classifys, lables]) => {
                     const res = []
-                    if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classifys })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+                    if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.byClassify'), data: classifys })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.byFunction'), data: lables })
                     return res
                 })
             },
@@ -331,29 +324,9 @@
             getTemplateClassifys () {
                 return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
                     const res = []
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
-                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
-                    return res
-                })
-            },
-
-            getIDEClassifys () {
-                return Promise.all([this.requestIDECategorys(), this.requestIDELabel(), this.requestIDEClassifys()]).then(([categorys, lables, classify]) => {
-                    const res = []
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '适用IDE', data: categorys })
-                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
-                    return res
-                })
-            },
-
-            getImageClassifys () {
-                return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
-                    const res = []
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
-                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.byCategory'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.byClassify'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.byFunction'), data: lables })
                     return res
                 })
             },

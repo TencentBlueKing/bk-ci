@@ -4,13 +4,13 @@
         <hgroup class="detail-info-group">
             <h3>{{detail.name}}</h3>
             <h5 class="detail-info">
-                <span>发布者：</span><span>{{detail.publisher || '-'}}</span>
+                <span>{{ $t('store.form.publisher') }}：</span><span>{{detail.publisher || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>热度：</span><span>{{detail.downloads || 0}}</span>
+                <span>{{ $t('store.form.heat') }}：</span><span>{{detail.downloads || 0}}</span>
             </h5>
             <h5 class="detail-info detail-score" :title="`平均评分为${detail.score || 0}星（总分为5星），${detail.totalNum || 0}位用户评价了此项内容`">
-                <span>评分：</span>
+                <span>{{ $t('store.score') }}：</span>
                 <p class="score-group">
                     <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
                     <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
@@ -18,28 +18,28 @@
                 <span class="rate-num">{{detail.totalNum || 0}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>应用范畴：</span><span>{{detail.categoryList|templateCategory}}</span>
+                <span>{{ $t('store.form.applicantCategory') }}：</span><span>{{detail.categoryList|templateCategory}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>分类：</span><span>{{detail.classifyName || '-'}}</span>
+                <span>{{ $t('store.classify') }}：</span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info detail-label">
-                <span>功能标签：</span>
+                <span>{{ $t('store.form.labels') }}：</span>
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
                 <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
             </h5>
             <h5 class="detail-info detail-maxwidth" :title="detail.summary">
-                <span>简介：</span><span>{{detail.summary || '-'}}</span>
+                <span>{{ $t('store.form.summary') }}：</span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
 
         <bk-popover placement="top" v-if="buttonInfo.disable">
-            <button class="bk-button bk-primary" type="button" disabled>安装</button>
+            <button class="bk-button bk-primary" type="button" disabled>{{ $t('store.install') }}</button>
             <template slot="content">
                 <p>{{buttonInfo.des}}</p>
             </template>
         </bk-popover>
-        <button class="detail-install" @click="goToInstall" v-else>安装</button>
+        <button class="detail-install" @click="goToInstall" v-else>{{ $t('store.install') }}</button>
     </section>
 </template>
 
@@ -80,8 +80,8 @@
             buttonInfo () {
                 const info = {}
                 info.disable = this.detail.defaultFlag || !this.detail.flag
-                if (this.detail.defaultFlag) info.des = `通用流水线模板，所有项目默认可用，无需安装`
-                if (!this.detail.flag) info.des = `你没有该流水线模板的安装权限，请联系流水线模板发布者`
+                if (this.detail.defaultFlag) info.des = this.$t('store.form.defaultInstalledTpl')
+                if (!this.detail.flag) info.des = this.$t('store.form.noPermissionInstallTpl')
                 return info
             }
         },

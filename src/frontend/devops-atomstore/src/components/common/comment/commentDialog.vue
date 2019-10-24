@@ -1,11 +1,11 @@
 <template>
     <article class="add-comment" @click.self="cancle">
         <section class="add-main" v-bkloading="{ isLoading }">
-            <h3 class="add-title">为{{name}}评分</h3>
+            <h3 class="add-title">{{ `${$t('store.comment.for')}${name}${$t('store.score')}` }}</h3>
             <comment-rate class="add-rate" :edit="true" :rate="rate" :height="24" :width="23" @chooseRate="chooseRate"></comment-rate>
-            <textarea class="add-content g-input-border" v-model="comment" placeholder="请输入你的评论内容（字数上限为500字）" ref="commentText"></textarea>
+            <textarea class="add-content g-input-border" v-model="comment" :placeholder="$t('store.comment.commentPlaceholder')" ref="commentText"></textarea>
             <h3 class="g-confirm-buttom">
-                <button @click="cancle">取消</button><button @click="confirm">确定</button>
+                <button @click="cancle">{{ $t('store.cancel') }}</button><button @click="confirm">{{ $t('store.confirm') }}</button>
             </h3>
         </section>
     </article>
@@ -62,7 +62,7 @@
         mounted () {
             this.getComment()
         },
-        
+
         methods: {
             ...mapActions('store', [
                 'requestAddAtomComment',
@@ -105,12 +105,12 @@
 
             confirm () {
                 if (this.rate <= 0) {
-                    this.$bkMessage({ message: '请先评分，再发布评价', theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('store.comment.scoreFirst'), theme: 'warning' })
                     return
                 }
 
                 if (this.comment.length >= 500) {
-                    this.$bkMessage({ message: '字数不能超过500字，请修改后再评价', theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('store.comment.commentLenLimit'), theme: 'warning' })
                     return
                 }
 
@@ -121,7 +121,7 @@
                 const type = this.commentId ? 'modify' : 'add'
 
                 confirmGenerator[type]().then((res) => {
-                    this.$bkMessage({ message: '评论成功', theme: 'success' })
+                    this.$bkMessage({ message: this.$t('store.comment.commentSuccess'), theme: 'success' })
                     this.$emit('freshComment', res)
                     this.$emit('closeDialog')
                 }).catch((err) => {

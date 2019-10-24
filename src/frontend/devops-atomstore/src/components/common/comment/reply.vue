@@ -8,7 +8,7 @@
         <h5 class="comment-static">
             <comment-rate :rate="comment.score" :width="11" :height="12" class="commet-rate" v-if="!isReply"></comment-rate>
             <span>{{comment.updateTime|timeFilter}}</span>
-            <span class="comment-replay" @click="clickReply">回复
+            <span class="comment-replay" @click="clickReply">{{ $t('store.comment.reply') }}
                 <span v-if="+comment.replyCount">({{comment.replyCount}})</span>
             </span>
             <icon class="comment-praise" :style="{ 'fill': comment.praiseFlag ? '#979BA5' : 'none' }" name="praise" size="14" @click.native="priase" v-if="!isReply" />
@@ -28,11 +28,12 @@
 
         filters: {
             timeFilter (val) {
+                const storeLocale = window.devops.$i18n.t('store')
                 const date = new Date(val)
                 const year = date.getFullYear()
                 const month = date.getMonth() + 1
                 const day = date.getDate()
-                return `${year}年${month}月${day}日`
+                return `${year}${storeLocale.commment.year}${month}${storeLocale.commment.month}${day}${storeLocale.commment.day}`
             }
         },
 
@@ -68,7 +69,7 @@
             comment () {
                 const data = this.commentData || {}
                 if (this.isReply) {
-                    const preContent = data.replyToUser ? `回复@${data.replyToUser}：` : ''
+                    const preContent = data.replyToUser ? `${this.$t('store.comment.reply')}@${data.replyToUser}：` : ''
                     data.commentContent = preContent + data.replyContent
                     data.commentId = data.replyId
                     data.commenter = data.replyer

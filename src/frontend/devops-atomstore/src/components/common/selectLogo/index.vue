@@ -2,18 +2,18 @@
     <section>
         <section class="select-logo" ref="selectLogo" :style="`top: ${top}px; right: ${right}px`">
             <section v-if="form.logoUrl" @click="uploadLogo" class="has-upload">
-                <img :src="form.logoUrl" title="选择logo">
+                <img :src="form.logoUrl" :title="$t('store.form.selectLogo')">
             </section>
             <section v-else @click="uploadLogo" :class="[{ 'logo-error': isErr }, 'un-upload']">
                 <i class="bk-icon icon-plus"></i>
-                <p>上传LOGO</p>
+                <p>{{ $t('store.form.uploadLogo') }}</p>
             </section>
-            <p v-if="isErr" class="is-err">Logo必填</p>
+            <p v-if="isErr" class="is-err">{{ $t('store.form.logoRequired') }}</p>
         </section>
         <bk-dialog v-model="showDialog"
             header-position="left"
             width="615"
-            title="修改Logo"
+            :title="$t('store.form.editLogo')"
             class="logo-dialog"
             @cancel="toCloseDialog"
         >
@@ -26,10 +26,10 @@
                 <section class="logo-choose">
                     <h3 class="choose-upload">
                         <input type="file" name="file" class="input-file" id="inputfile" accept="image/png, image/jpeg" @change="fileChange">
-                        <bk-button theme="primary">自定义</bk-button>
-                        <span class="upload-info">只允许上传png、jpg，尺寸为512*512，大小不超过2M</span>
+                        <bk-button theme="primary">{{ $t('store.form.customize') }}</bk-button>
+                        <span class="upload-info">{{ $t('store.form.logolimit') }}</span>
                     </h3>
-                    <h3 class="sys-title">系统自带</h3>
+                    <h3 class="sys-title">{{ $t('store.form.systemBuild') }}</h3>
                     <hgroup class="choose-sys">
                         <h3 v-for="img in imgs" :key="img.id" @click="chooseSysImg(img.logoUrl)" :class="[{ 'select-icon': selectedUrl === img.logoUrl }, 'sys-icon']">
                             <img :src="img.logoUrl" class="icon">
@@ -41,10 +41,10 @@
                 <div class="bk-dialog-outer">
                     <bk-button theme="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
                         @click="toConfirmLogo">
-                        确定
+                        {{ $t('store.confirm') }}
                     </bk-button>
                     <bk-button type="button" class="bk-dialog-btn bk-dialog-btn-cancel" @click="toCloseDialog">
-                        取消
+                        {{ $t('store.cancel') }}
                     </bk-button>
                 </div>
             </template>
@@ -107,12 +107,12 @@
                     if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: '请上传png、jpg格式的图片'
+                            message: this.$t('store.form.logoType')
                         })
                     } else if (file.size > (2 * 1024 * 1024)) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: '请上传大小不超过2M的图片'
+                            message: this.$t('store.form.logoRam')
                         })
                     } else {
                         const reader = new FileReader()
@@ -126,7 +126,7 @@
                                 } else {
                                     this.$bkMessage({
                                         theme: 'error',
-                                        message: '请上传尺寸为512*512的图片'
+                                        message: this.$t('store.form.logoSize')
                                     })
                                 }
                             }
@@ -185,7 +185,7 @@
                     this.isErr = false
                 } else if (!this.selectedUrl) {
                     this.$bkMessage({
-                        message: '请选择要上传的图片',
+                        message: this.$t('store.form.selectLogoTip'),
                         theme: 'error'
                     })
                 }
