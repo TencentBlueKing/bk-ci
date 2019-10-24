@@ -1,4 +1,4 @@
-package com.tencent.devops.environment.pojo.devcloud
+package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 import com.fasterxml.jackson.annotation.JsonValue
 

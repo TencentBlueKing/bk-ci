@@ -15,7 +15,8 @@ import org.springframework.stereotype.Component
 class UpdateCcNodeStatus @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val esbAgentClient: EsbAgentClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UpdateCcNodeStatus::class.java)
@@ -70,7 +71,7 @@ class UpdateCcNodeStatus @Autowired constructor(
     }
 
     private fun updateCmdbNodes(nodes: List<TNodeRecord>) {
-        val rawCmdbNodes = EsbAgentClient.getCmdbNodeByIps("devops", nodes.map { it.nodeIp })
+        val rawCmdbNodes = esbAgentClient.getCmdbNodeByIps("devops", nodes.map { it.nodeIp })
         val ipToNodeMap = rawCmdbNodes.nodes.associateBy { it.ip }
         nodes.forEach {
             if (ipToNodeMap.containsKey(it.nodeIp)) {
@@ -91,7 +92,7 @@ class UpdateCcNodeStatus @Autowired constructor(
             return
         }
 
-        val rawCcNodes = EsbAgentClient.getCcNodeByIps("devops", allCcNodes.map { it.nodeIp })
+        val rawCcNodes = esbAgentClient.getCcNodeByIps("devops", allCcNodes.map { it.nodeIp })
         val ipToNodeMap = rawCcNodes.associateBy { it.ip }
 
         allCcNodes.forEach {

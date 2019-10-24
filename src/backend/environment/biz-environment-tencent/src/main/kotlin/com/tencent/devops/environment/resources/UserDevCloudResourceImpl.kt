@@ -15,7 +15,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.DevCloudImageParam
 import com.tencent.devops.environment.pojo.DevCloudModel
 import com.tencent.devops.environment.pojo.DevCloudVmParam
-import com.tencent.devops.environment.pojo.devcloud.TaskAction
+import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskAction
 import com.tencent.devops.environment.service.DevCloudService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
