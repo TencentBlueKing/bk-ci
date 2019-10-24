@@ -12,47 +12,47 @@
             nav () {
                 return {
                     icon: 'ticket',
-                    title: '凭证管理',
-                    url: `${DOCS_URL_PREFIX}/所有服务/凭证管理/summary.html`,
+                    title: this.$t('ticket.credentialManage'),
+                    url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('ticket.credentialManage')}/summary.html`,
                     menu: [
                         {
                             id: 'credentialList',
-                            name: '我的凭据',
+                            name: this.$t('ticket.myCredential'),
                             icon: 'icon-id'
                         },
                         {
                             id: 'createCredential',
-                            name: '新增凭据',
+                            name: this.$t('ticket.createCredential'),
                             icon: 'icon-id',
                             showChildren: false,
                             group: true,
                             children: [
                                 {
                                     id: 'editCredential',
-                                    name: '编辑凭据',
+                                    name: this.$t('ticket.editCredential'),
                                     icon: 'icon-id'
                                 },
                                 {
                                     id: 'createCredentialWithType',
-                                    name: '新增凭据',
+                                    name: this.$t('ticket.createCredential'),
                                     icon: 'icon-id'
                                 }
                             ]
                         }
                         // {
                         //     id: 'certList',
-                        //     name: '我的证书',
+                        //     name: this.$t('ticket.myCert'),
                         //     icon: 'icon-personal-cert'
                         // },
                         // {
                         //     id: 'createCert',
-                        //     name: '新增证书',
+                        //     name: this.$t('ticket.createCert'),
                         //     icon: 'icon-personal-cert',
                         //     showChildren: false,
                         //     children: [
                         //         {
                         //             id: 'editCert',
-                        //             name: '编辑证书',
+                        //             name: this.$t('ticket.editCert'),
                         //             icon: 'icon-personal-cert'
                         //         }
                         //     ]
@@ -93,6 +93,6 @@
         height: calc(100% - 60px);
         padding: 20px;
         overflow: auto;
-        
+
     }
 </style>

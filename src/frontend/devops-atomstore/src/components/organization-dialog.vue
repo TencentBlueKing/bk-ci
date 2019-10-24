@@ -69,6 +69,9 @@
             },
             templateCode () {
                 return this.$route.params.templateCode
+            },
+            imageCode () {
+                return this.$route.params.imageCode
             }
         },
         watch: {
@@ -137,6 +140,7 @@
                         message: '请选择部门',
                         theme: 'error'
                     })
+                    this.$emit('cancelHandle')
                 } else {
                     let message, theme
                     const deptInfos = []
@@ -147,13 +151,15 @@
                             deptName: item.displayName
                         })
                     })
-                    
+
                     const params = {
                         deptInfos: deptInfos
                     }
 
                     if (this.routeName === 'visible') {
                         params.atomCode = this.atomCode
+                    } else if (this.routeName === 'imageVisibleRange') {
+                        params.imageCode = this.imageCode
                     } else {
                         params.templateCode = this.templateCode
                     }
@@ -163,6 +169,8 @@
                     try {
                         if (this.routeName === 'visible') {
                             await this.$store.dispatch('store/setVisableDept', { params })
+                        } else if (this.routeName === 'imageVisibleRange') {
+                            await this.$store.dispatch('store/setImageVisableDept', { params })
                         } else {
                             await this.$store.dispatch('store/setTplVisableDept', { params })
                         }

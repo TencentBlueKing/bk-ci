@@ -18,10 +18,11 @@
  */
 
 const dictionary = {
-    'cn': {
+    'zh-CN': {
         messages: {
             alpha: field => '字段只能包含字母',
             unique: field => '字段不能重复',
+            required: field => '字段不能为空',
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
             varRule: field => `${field}只能以字母和下划线开头，同时只包含字母，数字以及下划线`,

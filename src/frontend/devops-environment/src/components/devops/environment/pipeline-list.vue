@@ -8,8 +8,8 @@
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
-            :empty-text="'暂无数据'">
-            <bk-table-column label="流水线" prop="pipelineName" min-width="200">
+            :empty-text="$t('environment.noData')">
+            <bk-table-column :label="$t('environment.pipeline')" prop="pipelineName" min-width="200">
                 <template slot-scope="props">
                     <a class="item-pipelinename" :title="props.row.pipelineName"
                         target="_blank"
@@ -17,31 +17,31 @@
                     </a>
                 </template>
             </bk-table-column>
-            <bk-table-column label="构建号" prop="buildNumber">
+            <bk-table-column :label="$t('environment.nodeInfo.buildNo')" prop="buildNumber">
                 <template slot-scope="props">
                     <span>{{ props.row.buildNumber }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="所属Job" prop="taskName" min-width="160">
+            <bk-table-column :label="$t('environment.nodeInfo.ownJob')" prop="taskName" min-width="160">
                 <template slot-scope="props">
                     <span :title="props.row.taskName">{{ props.row.taskName }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="构建任务状态" prop="status">
+            <bk-table-column :label="$t('environment.nodeInfo.buildTaskStatus')" prop="status">
                 <template slot-scope="props">
                     <span :class="{
                         'is-success': props.row.status === 'DONE',
                         'is-fail': props.row.status === 'FAIL'
                     }">{{ statusMap[props.row.status] }}</span>
-                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">（agent任务运行中）</span>
+                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">{{`（${$t('environment.nodeInfo.agentTaskRunning')}）`}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="创建时间" prop="createdTime" min-width="160">
+            <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="createdTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.createdTime) }}
                 </template>
             </bk-table-column>
-            <bk-table-column label="更新时间" prop="updatedTime" min-width="160">
+            <bk-table-column :label="$t('environment.updateTime')" prop="updatedTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.updatedTime) }}
                 </template>
@@ -66,10 +66,10 @@
                     limit: 10
                 },
                 statusMap: {
-                    'QUEUE': '排队中',
-                    'RUNNING': '执行中',
-                    'DONE': '已完成',
-                    'FAIL': '执行失败'
+                    'QUEUE': this.$t('environment.nodeInfo.queuing'),
+                    'RUNNING': this.$t('environment.nodeInfo.running'),
+                    'DONE': this.$t('environment.nodeInfo.succeed'),
+                    'FAIL': this.$t('environment.nodeInfo.fail')
                 }
             }
         },

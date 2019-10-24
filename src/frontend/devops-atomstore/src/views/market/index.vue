@@ -20,13 +20,14 @@
                     </section>
 
                     <section class="nav-pipetype">
-                        <p class="pipe-type" :class="{ 'active-tab': filterData.pipeType === 'atom' }" @click="changePipeType('atom')">
-                            <i class="bk-icon icon-atom"></i>
-                            <span>流水线插件</span>
-                        </p>
-                        <p class="pipe-type" :class="{ 'active-tab': filterData.pipeType === 'template' }" @click="changePipeType('template')">
-                            <i class="bk-icon icon-template"></i>
-                            <span>流水线模板</span>
+                        <p v-for="storeType in storeTypes"
+                            :key="storeType.type"
+                            class="pipe-type"
+                            :class="{ 'active-tab': filterData.pipeType === storeType.type }"
+                            @click="changePipeType(storeType.type)"
+                        >
+                            <icon class="title-icon" :name="`store-${storeType.type}`" size="18" />
+                            <span>{{storeType.des}}</span>
                         </p>
                     </section>
 
@@ -97,6 +98,12 @@
                     case 'template':
                         res = '流水线模板'
                         break
+                    case 'ide':
+                        res = 'IDE插件'
+                        break
+                    case 'image':
+                        res = '镜像'
+                        break
                     default:
                         res = '流水线插件'
                         break
@@ -129,7 +136,11 @@
                     { value: 2, checked: false },
                     { value: 1, checked: false }
                 ],
-                showToTop: false
+                showToTop: false,
+                storeTypes: [
+                    { type: 'atom', des: '流水线插件' },
+                    { type: 'template', des: '流水线模板' }
+                ]
             }
         },
 
@@ -172,7 +183,21 @@
         },
 
         methods: {
-            ...mapActions('store', ['requestAtomClassifys', 'requestAtomLables', 'requestTemplateList', 'requestTplCategorys', 'requestTplLabel', 'setMarketQuery']),
+            ...mapActions('store', [
+                'requestAtomClassifys',
+                'requestAtomLables',
+                'requestTemplateList',
+                'requestTplCategorys',
+                'requestTplLabel',
+                'requestTplClassify',
+                'requestIDEClassifys',
+                'requestIDECategorys',
+                'requestIDELabel',
+                'requestImageClassifys',
+                'requestImageCategorys',
+                'requestImageLabel',
+                'setMarketQuery'
+            ]),
 
             initData () {
                 const { searchStr, classifyKey, classifyValue = 'all', rdType, score, sortType, pipeType = 'atom' } = this.$route.query
@@ -263,7 +288,12 @@
             },
 
             getClassifys () {
-                const fun = { atom: () => this.getAtomClassifys(), template: () => this.getTemplateClassifys() }
+                const fun = {
+                    atom: () => this.getAtomClassifys(),
+                    template: () => this.getTemplateClassifys(),
+                    ide: () => this.getIDEClassifys(),
+                    image: () => this.getImageClassifys()
+                }
                 const type = this.$route.query.pipeType || 'atom'
                 const method = fun[type]
                 method().then((arr) => {
@@ -299,10 +329,30 @@
             },
 
             getTemplateClassifys () {
-                return Promise.all([this.requestTplCategorys(), this.requestTplLabel()]).then(([categorys, lables]) => {
+                return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
                     const res = []
-
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+                    return res
+                })
+            },
+
+            getIDEClassifys () {
+                return Promise.all([this.requestIDECategorys(), this.requestIDELabel(), this.requestIDEClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '适用IDE', data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+                    return res
+                })
+            },
+
+            getImageClassifys () {
+                return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
                     return res
                 })
@@ -341,19 +391,18 @@
     }
 
     .store-main {
-        margin-left: calc(100vw - 100%);
         overflow-y: scroll;
     }
 
     .home-main {
         height: calc(100vh - 114px);
+        min-height: 600px;
         width: 1200px;
         margin: 21px auto 0;
         display: flex;
         flex-direction: row;
         .home-nav {
             width: 240px;
-            height: 886px;
             background: $white;
             border: 1px solid $borderWeightColor;
             .nav-pipetype {
@@ -364,7 +413,7 @@
                     line-height: 18px;
                     display: flex;
                     align-items: center;
-                    i {
+                    .title-icon {
                         margin: 0 15px;
                         font-size: 18px;
                     }

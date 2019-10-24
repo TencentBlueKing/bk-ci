@@ -8,16 +8,16 @@
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
             :pagination="pagination"
-            :empty-text="'暂无数据'"
+            :empty-text="$t('environment.noData')"
         >
-            <bk-table-column label="时间" prop="actionTime" min-width="160">
+            <bk-table-column :label="$t('environment.time')" prop="actionTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.actionTime) }}
                 </template>
             </bk-table-column>
-            <bk-table-column label="所属Job" prop="action" min-width="160">
+            <bk-table-column :label="$t('environment.nodeInfo.ownJob')" prop="action" min-width="160">
                 <template slot-scope="props">
-                    <span :title="props.row.action" :class="props.row.action === 'ONLINE' ? 'online' : 'offline'">{{ props.row.action === 'ONLINE' ? '上线' : '下线' }}</span>
+                    <span :title="props.row.action" :class="props.row.action === 'ONLINE' ? 'online' : 'offline'">{{ props.row.action === 'ONLINE' ? $t('environment.nodeInfo.online') : $t('environment.nodeInfo.offline') }}</span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -102,19 +102,6 @@
     .machine-record-wrapper {
         padding: 20px 0;
         .record-table {
-            // border-top: 1px solid $borderWeightColor;
-            // border-bottom: 1px solid $borderWeightColor;
-            // th, td {
-            //     height: 42px;
-            //     &:first-child {
-            //         padding-left: 30px;
-            //     }
-            // }
-            // th {
-            //     color: #333C48;
-            //     background-color: #FAFAFA;
-            //     font-weight: normal;
-            // }
             .no-data {
                 padding: 20px 0;
                 text-align: center;

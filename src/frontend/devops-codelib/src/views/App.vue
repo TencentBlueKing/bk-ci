@@ -27,7 +27,7 @@
         methods: {
             gotoDoc () {
                 const url = window.DOCS_URL_PREFIX
-                window.open(`${url}/所有服务/代码库/summary.html`, '_blank')
+                window.open(`${url}/${this.$t('allService')}/${this.$t('codelib.codelib')}/summary.html`, '_blank')
             }
         }
     }

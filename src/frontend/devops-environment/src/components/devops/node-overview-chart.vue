@@ -3,7 +3,7 @@
         <div class="node-overview-chart">
             <div class="part top-left">
                 <div class="info">
-                    <div class="left">CPU使用率</div>
+                    <div class="left">{{ $t('environment.nodeInfo.cpuUsageRate') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="cpuDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -14,13 +14,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')">1小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')">24小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')">近7天</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -28,12 +28,12 @@
                 </div>
                 <chart :options="cpuLine" ref="cpuLine1" auto-resize v-show="!isEmptyCpu"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyCpu">
-                    <img :src="calcSrc" alt="暂无数据" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
             </div>
             <div class="part top-right">
                 <div class="info">
-                    <div class="left">内存使用率</div>
+                    <div class="left">{{ $t('environment.nodeInfo.ramUsageRate') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="memoryDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -44,13 +44,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">1小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">24小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">近7天</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -58,14 +58,14 @@
                 </div>
                 <chart :options="memoryLine" ref="memoryLine1" auto-resize v-show="!isEmptyMemory"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyMemory">
-                    <img :src="calcSrc" alt="暂无数据" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
             </div>
         </div>
         <div class="node-overview-chart">
             <div class="part bottom-left">
                 <div class="info">
-                    <div class="left">网络IO</div>
+                    <div class="left">{{ $t('environment.nodeInfo.networkIo') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="networkDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -76,13 +76,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')">1小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')">24小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')">近7天</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -90,12 +90,12 @@
                 </div>
                 <chart :options="networkLine" ref="networkLine1" auto-resize v-show="!isEmptyNetwork"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyNetwork">
-                    <img :src="calcSrc" alt="暂无数据" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
             </div>
             <div class="part">
                 <div class="info">
-                    <div class="left">磁盘IO</div>
+                    <div class="left">{{ $t('environment.nodeInfo.diskIo') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="storageDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -106,13 +106,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')">1小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')">{{ $t('environment.nodeInfo.oneHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')">24小时</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')">{{ $t('environment.nodeInfo.oneDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')">近7天</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')">{{ $t('environment.nodeInfo.oneWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -120,7 +120,7 @@
                 </div>
                 <chart :options="storageLine" ref="storageLine1" auto-resize v-show="!isEmptyDiskio"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyDiskio">
-                    <img :src="calcSrc" alt="暂无数据" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
             </div>
         </div>
@@ -145,10 +145,10 @@
                 isEmptyMemory: false,
                 isEmptyNetwork: false,
                 isEmptyDiskio: false,
-                cpuToggleRangeStr: '1小时',
-                memToggleRangeStr: '1小时',
-                networkToggleRangeStr: '1小时',
-                storageToggleRangeStr: '1小时',
+                cpuToggleRangeStr: this.$t('environment.nodeInfo.oneHour'),
+                memToggleRangeStr: this.$t('environment.nodeInfo.oneHour'),
+                networkToggleRangeStr: this.$t('environment.nodeInfo.oneHour'),
+                storageToggleRangeStr: this.$t('environment.nodeInfo.oneHour'),
                 cpuLine: nodeOverview.cpu,
                 memoryLine: nodeOverview.memory,
                 networkLine: nodeOverview.network,
@@ -167,10 +167,10 @@
         created () {
             bus.$off('refreshCharts')
             bus.$on('refreshCharts', () => {
-                this.fetchData('cpu_summary', this.cpuToggleRangeStr === '1小时' ? '1' : this.cpuToggleRangeStr === '24小时' ? '2' : '3')
-                this.fetchData('mem', this.memToggleRangeStr === '1小时' ? '1' : this.memToggleRangeStr === '24小时' ? '2' : '3')
-                this.fetchData('net', this.networkToggleRangeStr === '1小时' ? '1' : this.networkToggleRangeStr === '24小时' ? '2' : '3')
-                this.fetchData('io', this.storageToggleRangeStr === '1小时' ? '1' : this.storageToggleRangeStr === '24小时' ? '2' : '3')
+                this.fetchData('cpu_summary', this.cpuToggleRangeStr === this.$t('environment.nodeInfo.oneHour') ? '1' : this.cpuToggleRangeStr === this.$t('environment.nodeInfo.oneDay') ? '2' : '3')
+                this.fetchData('mem', this.memToggleRangeStr === this.$t('environment.nodeInfo.oneHour') ? '1' : this.memToggleRangeStr === this.$t('environment.nodeInfo.oneDay') ? '2' : '3')
+                this.fetchData('net', this.networkToggleRangeStr === this.$t('environment.nodeInfo.oneHour') ? '1' : this.networkToggleRangeStr === this.$t('environment.nodeInfo.oneDay') ? '2' : '3')
+                this.fetchData('io', this.storageToggleRangeStr === this.$t('environment.nodeInfo.oneHour') ? '1' : this.storageToggleRangeStr === this.$t('environment.nodeInfo.oneDay') ? '2' : '3')
             })
         },
         mounted () {
@@ -182,11 +182,11 @@
         methods: {
             toggleRange (dropdownRef, toggleRangeStr, idx, range) {
                 if (range === '1') {
-                    this[toggleRangeStr] = '1小时'
+                    this[toggleRangeStr] = this.$t('environment.nodeInfo.oneHour')
                 } else if (range === '2') {
-                    this[toggleRangeStr] = '24小时'
+                    this[toggleRangeStr] = this.$t('environment.nodeInfo.oneDay')
                 } else if (range === '3') {
-                    this[toggleRangeStr] = '近7天'
+                    this[toggleRangeStr] = this.$t('environment.nodeInfo.oneWeek')
                 }
 
                 this.$refs[dropdownRef].hide()
@@ -218,11 +218,11 @@
                 }
 
                 ref && ref.showLoading({
-                    text: '正在加载',
+                    text: this.$t('environment.loading'),
                     color: '#30d878',
                     maskColor: 'rgba(255, 255, 255, 0.8)'
                 })
-                
+
                 if (hookFuncName) {
                     this[hookFuncName](ref, params)
                 }
@@ -244,9 +244,9 @@
                             })
                             emptyData.push(0)
                         })
-                        
+
                         this.cpuLine.series[0].data.splice(0, this.cpuLine.series[0].data.length, ...chartData)
-                        
+
                         ref.hideLoading()
                     } else {
                         this.isEmptyCpu = true
@@ -297,7 +297,7 @@
                 if (!ref) {
                     return
                 }
-                
+
                 try {
                     const res = await this.$store.dispatch('environment/getNodeNetworkMetrics', { params })
                     if (JSON.stringify(res) === '{}') {
@@ -347,7 +347,7 @@
                 }
                 try {
                     const res = await this.$store.dispatch('environment/getNodeDiskioMetrics', { params })
-                    
+
                     if (JSON.stringify(res) === '{}') {
                         this.isEmptyDiskio = true
                     } else {

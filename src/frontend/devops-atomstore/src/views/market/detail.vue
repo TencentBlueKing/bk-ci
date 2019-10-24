@@ -9,24 +9,13 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{detail.name}}</span>
             </p>
-            <router-link :to="{ name: 'atomList' }" class="title-work">工作台</router-link>
+            <router-link :to="{ name: 'atomList' }" class="title-work" v-if="type !== 'ide'">工作台</router-link>
         </h3>
 
-        <main class="store-main">
-            <section class="detail-title">
-                <img class="detail-pic atom-logo" :src="detail.logoUrl" v-if="detail.logoUrl">
-                <icon class="detail-pic atom-icon" v-else :name="getAtomIcon(detail.code)" size="160" style="fill:#C3CDD7" />
-                <detail-info :detail="detail" :type="type"></detail-info>
-
-                <bk-popover placement="top" v-if="buttonInfo.disable">
-                    <button class="bk-button bk-primary" type="button" disabled>安装</button>
-                    <template slot="content">
-                        <p>{{buttonInfo.des}}</p>
-                    </template>
-                </bk-popover>
-                <button class="detail-install" @click="goToInstall" v-else>安装</button>
-            </section>
-
+        <main class="store-main" v-show="!isLoading">
+            <atom v-if="type === 'atom'" :detail="detail" />
+            <template-info v-if="type === 'template'" :detail="detail" />
+            <image-info v-if="type === 'image'" :detail="detail" />
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
                 <bk-tab-panel name="des" label="概述" class="summary-tab">
                     <mavon-editor
@@ -83,11 +72,13 @@
     import mavonEditor from 'mavon-editor'
     import 'mavon-editor/dist/css/index.css'
     import { mapActions, mapGetters } from 'vuex'
-    import detailInfo from '../../components/common/detail-info'
     import commentRate from '../../components/common/comment-rate'
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
+    import atom from '../../components/common/detail-info/atom'
+    import imageInfo from '../../components/common/detail-info/image'
+    import templateInfo from '../../components/common/detail-info/template'
 
     Vue.use(mavonEditor)
 
@@ -96,8 +87,10 @@
             comment,
             commentRate,
             commentDialog,
-            detailInfo,
-            animatedInteger
+            animatedInteger,
+            atom,
+            templateInfo,
+            imageInfo
         },
 
         filters: {
@@ -106,6 +99,12 @@
                 switch (val) {
                     case 'template':
                         res = '流水线模板'
+                        break
+                    case 'ide':
+                        res = 'IDE插件'
+                        break
+                    case 'image':
+                        res = '镜像'
                         break
                     default:
                         res = '流水线插件'
@@ -121,7 +120,7 @@
                 pageSize: 10,
                 pageIndex: 1,
                 detail: {},
-                isLoading: true,
+                isLoading: false,
                 isLoadEnd: false,
                 showComment: false,
                 showInstallConfirm: false,
@@ -129,11 +128,15 @@
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData)
+                        template: (postData) => this.requestTemplateComments(postData),
+                        ide: (postData) => this.requestIDEComments(postData),
+                        image: (postData) => this.requestImageComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode)
+                        template: () => this.requestTemplateScoreDetail(this.detailCode),
+                        ide: () => this.requestIDEScoreDetail(this.detailCode),
+                        image: () => this.requestImageScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -148,15 +151,6 @@
 
             type () {
                 return this.$route.params.type
-            },
-
-            buttonInfo () {
-                const typeString = this.type === 'atom' ? '插件' : '模板'
-                const info = {}
-                info.disable = this.detail.defaultFlag || !this.detail.flag
-                if (this.detail.defaultFlag) info.des = `通用流水线${typeString}，所有项目默认可用，无需安装`
-                if (!this.detail.flag) info.des = `你没有该流水线${typeString}的安装权限，请联系流水线${typeString}发布者`
-                return info
             }
         },
 
@@ -173,7 +167,14 @@
                 'requestAtomComments',
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
-                'requestTemplateScoreDetail'
+                'requestTemplateScoreDetail',
+                'requestIDE',
+                'requestIDEComments',
+                'requestIDEScoreDetail',
+                'requestImage',
+                'requestImageComments',
+                'requestImageScoreDetail',
+                'getUserApprovalInfo'
             ]),
 
             freshComment (comment) {
@@ -202,7 +203,9 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
-                    template: () => this.getTemplateDetail()
+                    template: () => this.getTemplateDetail(),
+                    ide: () => this.getIDEDetail(),
+                    image: () => this.getImageDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -217,11 +220,16 @@
             getAtomDetail () {
                 const atomCode = this.detailCode
 
-                return Promise.all([this.requestAtom({ atomCode }), this.requestAtomStatistic({ atomCode })]).then(([atomDetail, atomStatic]) => {
+                return Promise.all([
+                    this.requestAtom({ atomCode }),
+                    this.requestAtomStatistic({ atomCode }),
+                    this.getUserApprovalInfo(atomCode)
+                ]).then(([atomDetail, atomStatic, userAppInfo]) => {
                     this.detail = atomDetail || {}
                     this.detailId = atomDetail.atomId
                     this.detail.downloads = atomStatic.downloads || 0
                     this.commentInfo = atomDetail.userCommentInfo || {}
+                    this.$set(this.detail, 'approveStatus', (userAppInfo || {}).approveStatus)
                 })
             },
 
@@ -232,6 +240,28 @@
                     this.detailId = templateDetail.templateId
                     this.detail.name = templateDetail.templateName
                     this.commentInfo = templateDetail.userCommentInfo || {}
+                })
+            },
+
+            getIDEDetail () {
+                const atomCode = this.detailCode
+
+                return this.requestIDE({ atomCode }).then((res) => {
+                    this.detail = res || {}
+                    this.detailId = res.atomId
+                    this.detail.name = res.atomName
+                    this.commentInfo = res.userCommentInfo || {}
+                })
+            },
+
+            getImageDetail () {
+                const imageCode = this.detailCode
+
+                return this.requestImage({ imageCode }).then((res) => {
+                    this.detail = res || {}
+                    this.detailId = res.imageId
+                    this.detail.name = res.imageName
+                    this.commentInfo = res.userCommentInfo || {}
                 })
             },
 
@@ -280,17 +310,6 @@
                 })
             },
 
-            goToInstall () {
-                const key = this.type === 'atom' ? 'atomCode' : 'templateCode'
-                const name = this.type === 'atom' ? 'installAtom' : 'installTemplate'
-                const params = { [key]: this.detailCode }
-                this.$router.push({
-                    name,
-                    params,
-                    hash: '#MARKET'
-                })
-            },
-
             backToStore () {
                 Object.assign(this.markerQuey, { pipeType: this.type })
                 this.$router.push({
@@ -313,36 +332,7 @@
 
     .detail-home {
         overflow: hidden;
-        .detail-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 47px auto 30px;
-            width: 1200px;
-            .detail-pic {
-                width: 130px;
-            }
-            .atom-icon {
-                height: 160px;
-                width: 160px;
-            }
-            .detail-install {
-                width: 89px;
-                height: 36px;
-                background: $primaryColor;
-                border-radius: 2px;
-                border: none;
-                font-size: 14px;
-                color: $white;
-                line-height: 36px;
-                &:active {
-                    transform: scale(.97)
-                }
-            }
-            .bk-tooltip button {
-                width: 89px;
-            }
-        }
+        min-height: 100%;
     }
 
     .detail-tabs {

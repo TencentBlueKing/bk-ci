@@ -19,7 +19,7 @@
             :model="newProject"
         >
             <devops-form-item
-                label="项目名称"
+                :label="$t('projectName')"
                 :required="true"
                 :is-error="errors.has('project_name')"
             >
@@ -28,7 +28,7 @@
                     v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.project_id] }"
                     maxlength="12"
                     name="project_name"
-                    placeholder="请输入1-12字符的项目名称"
+                    :placeholder="$t('projectNamePlaceholder')"
                 />
                 <div
                     v-if="errors.has('project_name')"
@@ -36,11 +36,10 @@
                     class="project-dialog-error-tips"
                 >
                     {{ errors.first('project_name') }}
-                    <span v-if="errors.first('project_name') === &quot;项目名称已存在&quot;" />
                 </div>
             </devops-form-item>
             <devops-form-item
-                label="英文缩写"
+                :label="$t('englishName')"
                 :required="true"
                 :rules="[]"
                 property="english_name"
@@ -50,14 +49,14 @@
                 <bk-input
                     v-model="newProject.english_name"
                     v-validate="{ required: true, min: 2, max: 32, projectEnglishNameReg: true, projectEnglishNameUnique: isNew }"
-                    placeholder="请输入2-32字符的小写字母、数字、中划线，以小写字母开头"
+                    :placeholder="$t('projectEnglishNamePlaceholder')"
                     name="english_name"
                     maxlength="32"
                     :disabled="!isNew"
                 />
             </devops-form-item>
             <devops-form-item
-                label="项目描述"
+                :label="$t('projectDesc')"
                 :required="true"
                 property="description"
                 :is-error="errors.has('description')"
@@ -67,7 +66,7 @@
                     v-validate="{ required: true }"
                     type="textarea"
                     maxlength="100"
-                    placeholder="请输入项目描述"
+                    :placeholder="$t('projectDescPlaceholder')"
                     name="description"
                 />
             </devops-form-item>
@@ -82,14 +81,14 @@
                     :loading="isCreating"
                     @click="saveProject"
                 >
-                    确定
+                    {{ $t("okLabel") }}
                 </bk-button>
                 <bk-button
                     class="bk-dialog-btn bk-dialog-btn-cancel"
                     :disabled="isCreating"
                     @click="cancelProject"
                 >
-                    取消
+                    {{ $t("cancelLabel") }}
                 </bk-button>
             </div>
         </template>
@@ -112,7 +111,7 @@
 
         descriptionLength: number = 100
         validate: object = {}
-        title: string = '新建项目'
+        title: any = ''
         isNew: boolean = true
         isCreating: boolean = false
         deptLoading: any = {
@@ -161,7 +160,7 @@
                     this.isNew = true
                 }
                 
-                this.title = this.isEmptyProject(this.newProject) ? '新建项目' : '编辑项目'
+                this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
             }
         }
 
@@ -177,7 +176,7 @@
                 if (typeof res === 'boolean' && res) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: '项目创建成功！'
+                        message: this.$t('addProjectSuccuess')
                     })
                     this.closeDialog()
                     await this.getProjects()
@@ -185,7 +184,7 @@
                 } else {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '接口报错！'
+                        message: this.$t('exception.apiError')
                     })
                 }
                 setTimeout(() => {
@@ -194,7 +193,7 @@
             } catch (err) {
                 this.$bkMessage({
                     theme: 'error',
-                    message: err.message || '接口异常！'
+                    message: err.message || this.$t('exception.apiError')
                 })
                 setTimeout(() => {
                     this.isCreating = false
@@ -208,21 +207,21 @@
                 if (res) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: '项目修改成功！'
+                        message: this.$t('updateProjectSuccuess')
                     })
                     this.closeDialog()
                     await this.getProjects()
                 } else {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '接口报错！'
+                        message: this.$t('exception.apiError')
                     })
                 }
                 setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             } catch (err) {
-                const message = err.message || '接口异常！'
+                const message = err.message || this.$t('exception.apiError')
                 this.$bkMessage({
                     theme: 'error',
                     message
@@ -258,7 +257,7 @@
         }
 
         async created () {
-            this.title = this.isEmptyProject(this.newProject) ? '新建项目' : '编辑项目'
+            this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
         }
     }
 </script>

@@ -2,24 +2,24 @@
     <section>
         <!-- 证书名称 start -->
         <div class="bk-form-item is-required cert-input-item">
-            <label class="bk-label">证书名称：</label>
+            <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
                 <input type="text"
                     class="bk-form-input"
                     name="enterpriseId"
                     v-validate="{ required: isValidEnterprise, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
-                    placeholder="请输入证书名称"
+                    :placeholder="$t('ticket.cert.namePlaceholer')"
                     v-model="formData.certId"
                     :disabled="isEdit"
                     :class="{ 'is-danger': errors.has('enterpriseId') }"
                 >
-                <p :class="errors.has('enterpriseId') ? 'error-tips' : 'normal-tips'">证书名称不能为空，只支持英文大小写、数字、下划线和英文句号</p>
+                <p :class="errors.has('enterpriseId') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.validateName') }}</p>
             </div>
         </div>
 
         <!-- 描述文件 start -->
         <div class="bk-form-item is-required cert-input-item">
-            <label class="bk-label">描述文件：</label>
+            <label class="bk-label">{{ $t('ticket.cert.remarkFile') }}：</label>
             <div class="bk-form-content">
                 <input type="text"
                     class="bk-form-input"
@@ -28,24 +28,24 @@
                     v-validate="{ required: isValidEnterprise }"
                     v-model="formData.mobileProvisionFileName"
                     :class="{ 'is-danger': errors.has('mobileProvisionFileName') }"
-                    placeholder="还未选择文件"
+                    :placeholder="$t('ticket.cert.emptyFile')"
                 />
-                <a href="javascript:void(0);" class="file-input" title="选择文件">
+                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
                     <div class="file-input-wrap">
                         <input type="file" class="file-input-btn" @change="handleFileUpload" accept=".mobileprovision" />
-                        <span>上传</span>
+                        <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.mobileProvisionFileName"><i class="bk-icon icon-check-circle"></i>上传成功</span>
-                <p :class="errors.has('mobileProvisionFileName') ? 'error-tips' : 'normal-tips'">请上传.mobileprovision结尾的描述文件</p>
+                <span v-if="formData.mobileProvisionFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <p :class="errors.has('mobileProvisionFileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.remarkFileRule') }}</p>
             </div>
         </div>
 
         <!-- 描述 start -->
         <div class="bk-form-item cert-textarea-item">
-            <label class="bk-label">证书描述：</label>
+            <label class="bk-label">{{ $t('ticket.cert.certRemark') }}：</label>
             <div class="bk-form-content">
-                <textarea class="bk-form-textarea" placeholder="请输入证书描述" v-model="formData.remark"></textarea>
+                <textarea class="bk-form-textarea" :placeholder="$t('ticket.cert.certRemarkPlaceHolder')" v-model="formData.remark"></textarea>
             </div>
         </div>
     </section>
@@ -53,7 +53,7 @@
 
 <script>
     import validMixin from './validMixin'
-    
+
     export default {
         mixins: [validMixin],
         props: {

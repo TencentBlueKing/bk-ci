@@ -10,7 +10,7 @@
             <div class="qrcode-icon">
                 <i class="bk-icon icon-phone" />
             </div>
-            <div><span>手机版</span></div>
+            <div><span>{{ $t("DevopsMobile") }}</span></div>
         </div>
         <div
             v-if="show"
@@ -23,7 +23,7 @@
                     src="./../../assets/images/devopsapp-qrcode.png"
                 >
                 <p style="text-align: center">
-                    扫一扫下载蓝盾App
+                    {{ $t('scanToDownload') }}
                 </p>
             </div>
         </div>

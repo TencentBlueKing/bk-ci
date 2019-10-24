@@ -2,7 +2,7 @@
     <article class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span>我的凭据</span>
+                <span>{{ $t('ticket.myCredential') }}</span>
             </template>
         </content-header>
 
@@ -15,13 +15,13 @@
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageCountChange">
-                    <bk-table-column label="名称" prop="credentialId"></bk-table-column>
-                    <bk-table-column label="类型" prop="credentialType" :formatter="changeTicketType"></bk-table-column>
-                    <bk-table-column label="描述" prop="credentialRemark"></bk-table-column>
-                    <bk-table-column label="操作" width="200">
+                    <bk-table-column :label="$t('ticket.name')" prop="credentialId"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.type')" prop="credentialType" :formatter="changeTicketType"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.edit" @click="handleEditCredential(props.row.credentialId)">编辑</bk-button>
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.delete" @click="handleDeleteCredentail(props.row.credentialId)">删除</bk-button>
+                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.edit" @click="handleEditCredential(props.row.credentialId)">{{ $t('ticket.edit') }}</bk-button>
+                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.delete" @click="handleDeleteCredentail(props.row.credentialId)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -33,7 +33,7 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapGetters } from 'vuex'
     import EmptyTips from '@/components/devops/emptyTips'
 
     export default {
@@ -56,11 +56,11 @@
                 credentialList: [],
                 renderList: [],
                 tip: {
-                    title: '暂无凭据',
-                    desc: '您可以在新增凭据中新增一个凭据',
+                    title: this.$t('ticket.credential.emptyCredential'),
+                    desc: this.$t('ticket.credential.emptyCredentialTips'),
                     btns: [
                         {
-                            text: '新增凭据',
+                            text: this.$t('ticket.createCredential'),
                             type: 'primary',
                             size: 'normal',
                             handler: this.addCredentialHandler
@@ -69,13 +69,16 @@
                 }
             }
         },
-        
+
         computed: {
-            ...mapState('ticket', [
-                'ticketType'
+            ...mapGetters('ticket', [
+                'getTicketType'
             ]),
             projectId () {
                 return this.$route.params.projectId
+            },
+            ticketType () {
+                return this.getTicketType()
             }
         },
         watch: {
@@ -93,7 +96,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('ticket.loadingTitle')
 
                 try {
                     this.requestList()
@@ -104,7 +107,7 @@
                     })
 
                     console.error(err)
-                    console.error('获取凭据列表错误')
+                    console.error(this.$t('ticket.credential.getCredentialError'))
                 } finally {
                     setTimeout(() => {
                         this.loading.isLoading = false
@@ -133,7 +136,7 @@
                         page: 1,
                         pageSize: 1000
                     })
-                    
+
                     this.credentialList.splice(0, this.credentialList.length, ...res.records)
                     this.updateList()
                     this.pagination.count = res.count
@@ -155,7 +158,7 @@
             },
             async handleDeleteCredentail (id) {
                 this.$bkInfo({
-                    title: '确认删除该凭据?',
+                    title: `${this.$t('ticket.credential.deleteCredentialTips')}?`,
                     confirmFn: async () => {
                         let message, theme
 
@@ -164,7 +167,7 @@
                                 projectId: this.projectId,
                                 id: id
                             })
-                            message = '删除凭据成功'
+                            message = this.$t('ticket.credential.successfullyDeletedCredential')
                             theme = 'success'
                         } catch (err) {
                             message = err.message ? err.message : err

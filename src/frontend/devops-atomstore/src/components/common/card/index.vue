@@ -1,7 +1,6 @@
 <template>
     <router-link :to="{ name: 'details', params: { code: atom.code, type: $route.query.pipeType || 'atom' } }" class="card-home">
-        <img class="card-pic atom-logo" :src="atom.logoUrl" v-if="atom.logoUrl">
-        <icon class="card-pic" v-else :name="getAtomIcon(atom.code)" size="78" style="fill:#C3CDD7" />
+        <img class="card-pic atom-logo" :src="atom.logoUrl || defaultUrl">
         <p class="card-name text-overflow">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
@@ -30,18 +29,18 @@
             hasSummary: Boolean
         },
 
+        data () {
+            return {
+                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314'
+            }
+        },
+
         computed: {
             starWidth () {
                 const integer = Math.floor(this.atom.score)
                 const fixWidth = 18 * integer
                 const rateWidth = 15 * (this.atom.score - integer)
                 return `${fixWidth + rateWidth}px`
-            }
-        },
-
-        methods: {
-            getAtomIcon (atomCode) {
-                return document.getElementById(atomCode) ? atomCode : 'placeholder'
             }
         }
     }

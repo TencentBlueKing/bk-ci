@@ -87,7 +87,7 @@
                 return [
                     {
                         to: '/console/pm',
-                        label: '项目管理'
+                        label: this.$t('projectManage')
                     }
                 ]
         }

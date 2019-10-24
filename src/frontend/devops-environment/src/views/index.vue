@@ -14,7 +14,7 @@
                 return {
                     icon: 'environment',
                     title: this.$t('environment.environmentManage'),
-                    url: `${DOCS_URL_PREFIX}/所有服务/环境管理/summary.html`,
+                    url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/summary.html`,
                     menu: [
                         {
                             id: 'envList',
@@ -24,30 +24,30 @@
                             children: [
                                 {
                                     id: 'createEnv',
-                                    name: '新增环境',
+                                    name: this.$t('environment.createEnvrionment'),
                                     icon: 'icon-env'
                                 },
                                 {
                                     id: 'envDetail',
-                                    name: '环境详情',
+                                    name: this.$t('environment.environmentDetail'),
                                     icon: 'icon-env'
                                 }
                             ]
                         },
                         {
                             id: 'nodeList',
-                            name: '节点',
+                            name: this.$t('environment.node'),
                             icon: 'icon-node',
                             showChildren: false,
                             children: [
                                 {
                                     id: 'createNode',
-                                    name: '新增节点',
+                                    name: this.$t('environment.createNode'),
                                     icon: 'icon-node'
                                 },
                                 {
                                     id: 'nodeDetail',
-                                    name: '节点详情',
+                                    name: this.$t('environment.nodeDetail'),
                                     icon: 'icon-node'
                                 }
                             ]

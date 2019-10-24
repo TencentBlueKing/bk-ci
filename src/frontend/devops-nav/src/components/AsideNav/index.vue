@@ -53,7 +53,7 @@
     
     @Component
     export default class AsideNav extends Vue {
-        @Prop({ default: '标题' })
+        @Prop({ default: '' })
         headerTitle: string
         @Prop({ required: true })
         nav: Object

@@ -39,7 +39,7 @@ import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
 
-const { i18n } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
+const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
 
 Vue.use(focus)
 Vue.use(bkMagic)
@@ -56,6 +56,8 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
+
+Vue.prototype.$setLocale = setLocale
 
 global.pipelineVue = new Vue({
     el: '#app',

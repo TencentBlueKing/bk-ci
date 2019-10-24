@@ -4,12 +4,11 @@
         v-model="showDialog"
         title="新增成员"
         ok-text="保存"
-        :width="width"
+        :width="580"
         :close-icon="addMemberConf.closeIcon"
         :quick-close="addMemberConf.quickClose"
     >
         <main class="member-logo-content"
-           
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
@@ -83,6 +82,8 @@
                 permissionList: [
                     { name: '插件开发', active: true },
                     { name: '版本发布', active: true },
+                    { name: '私有配置', active: true },
+                    { name: '审批', active: true },
                     { name: '成员管理', active: true }
                 ],
                 memberForm: {
@@ -120,11 +121,11 @@
                 } else {
                     this.permissionList[2].active = false
                     this.permissionList[3].active = false
+                    this.permissionList[4].active = false
                 }
             },
             showDialog (val) {
                 if (!val) {
-                    this.$validator.reset()
                     this.memberForm.memberName = ''
                     this.memberForm.type = 'ADMIN'
                 }
@@ -135,7 +136,7 @@
                 const valid = await this.$validator.validate()
                 if (valid) {
                     const params = {
-                        atomCode: this.atomCode,
+                        storeCode: this.atomCode,
                         type: this.memberForm.type,
                         member: []
                     }
@@ -162,15 +163,16 @@
             }
         }
         .add-member-form {
+            flex: 1;
             padding: 25px 0 15px;
-            width: 96%;
             text-align: left;
             .bk-label {
-                width: 100px;
+                padding-right: 18px;
+                width: 95px;
                 font-weight: normal;
             }
             .bk-form-content {
-                margin-left: 100px;
+                margin-left: 95px;
             }
             .prompt-tips {
                 font-size: 12px;

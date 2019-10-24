@@ -23,6 +23,7 @@ export default new Vuex.Store<RootState>({
     actions,
     getters,
     state: {
+        isPermissionDialogShow: false,
         projectList,
         fetchError: null,
         moduleLoading: false,

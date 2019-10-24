@@ -7,27 +7,27 @@
             <template v-if="projectList.length || isDataLoading">
                 <div class="biz-pm-header">
                     <div class="title">
-                        项目管理
+                        {{ $t('projectManage') }}
                     </div>
                     <div class="action">
                         <bk-checkbox
                             v-model="isFilterByOffline"
                             name="isFilterByOffline"
                         >
-                            显示已停用项目
+                            {{ $t('showDisableProject') }}
                         </bk-checkbox>
                         <bk-button
                             theme="primary"
                             icon="icon-plus"
                             @click="togglePMDialog(true)"
                         >
-                            新建项目
+                            {{ $t('addProject') }}
                         </bk-button>
                         <bk-input
                             v-model="inputValue"
                             class="search-input-row"
                             name="searchInput"
-                            placeholder="搜索"
+                            :placeholder="$t('searchTips')"
                             right-icon="bk-icon icon-search"
                             @keyup="filterProjectList(isFilterByOffline)"
                         />
@@ -43,7 +43,7 @@
                     @page-limit-change="limitChange"
                 >
                     <bk-table-column
-                        label="项目名称"
+                        :label="$t('projectName')"
                         prop="logo_addr"
                         width="300"
                     >
@@ -58,7 +58,7 @@
                                         class="avatar-addr"
                                         :src="props.row.logo_addr"
                                     >
-                                    <span class="bg-avatar">编辑</span>
+                                    <span class="bg-avatar">{{ $t('editLabel') }}</span>
                                 </span>
                                 <span
                                     v-else
@@ -67,16 +67,16 @@
                                     @click="modifyLogo(props.row)"
                                 >
                                     {{ props.row.project_name.substr(0, 1) }}
-                                    <span class="bg-avatar">编辑</span>
+                                    <span class="bg-avatar">{{ $t('editLabel') }}</span>
                                 </span>
                                 <div class="info">
                                     <p class="title">
                                         <template v-if="props.row.approval_status !== 2">
                                             <a
-                                                v-bk-tooltips="{ content: '没有操作权限' }"
+                                                v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
                                                 href="javascript:void(0)"
                                                 class="bk-text-button is-disabled"
-                                                title="没有操作权限"
+                                                :title="$t('accessDeny.noOperateAccess')"
                                             >{{ props.row.project_name }}</a>
                                         </template>
                                         <template v-else>
@@ -100,37 +100,37 @@
                         {{ ccAppName ? ccAppName : '--' }}
                     </bk-table-column> -->
                     <bk-table-column
-                        label="项目说明"
+                        :label="$t('projectDesc')"
                         prop="description"
                     />
                     <bk-table-column
-                        label="创建者"
+                        :label="$t('projectCreator')"
                         prop="creator"
                     />
                     <bk-table-column
-                        label="操作"
+                        :label="$t('projectOperation')"
                         width="200"
                     >
                         <template slot-scope="props">
                             <!-- 状态为待审批 -->
                             <template v-if="props.row.approval_status === 1">
                                 <a
-                                    v-bk-tooltips="{ content: '待审批，没有操作权限' }"
+                                    v-bk-tooltips="{ content: $t('waitforReview') }"
                                     href="javascript:void(0)"
                                     class="bk-text-button is-disabled"
-                                    title="没有操作权限"
-                                >编辑</a>
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('editLabel') }}</a>
                                 <a
-                                    v-bk-tooltips="{ content: '待审批，没有操作权限' }"
+                                    v-bk-tooltips="{ content: $t('waitforReview') }"
                                     href="javascript:void(0)"
                                     class="bk-text-button is-disabled"
-                                    title="没有操作权限"
-                                >启用</a>
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('enableLabel') }}</a>
                                 <a
-                                    v-bk-tooltips="{ content: '待审批，没有操作权限' }"
+                                    v-bk-tooltips="{ content: $t('waitforReview') }"
                                     class="bk-text-button is-disabled"
-                                    title="没有操作权限"
-                                >用户管理</a>
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('userManage') }}</a>
                             </template>
                             <!-- 状态为已驳回 -->
                             <template v-else-if="props.row.approval_status === 3">
@@ -138,19 +138,19 @@
                                     href="javascript:void(0)"
                                     :class="['bk-text-button']"
                                     @click.stop.prevent="togglePMDialog(true, props.row)"
-                                >编辑</a>
+                                >{{ $t('editLabel') }}</a>
                                 <a
-                                    v-bk-tooltips="{ content: '已驳回，没有操作权限' }"
+                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
                                     href="javascript:void(0)"
                                     class="bk-text-button is-disabled"
-                                    title="没有操作权限"
-                                >启用</a>
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t("enableLabel") }}</a>
                                 <a
-                                    v-bk-tooltips="{ content: '已驳回，没有操作权限' }"
+                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
                                     href="javascript:void(0)"
                                     class="bk-text-button is-disabled"
-                                    title="没有操作权限"
-                                >用户管理</a>
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('userManage') }}</a>
                             </template>
 
                             <!-- 否则正常显示 -->
@@ -159,18 +159,18 @@
                                     href="javascript:void(0)"
                                     :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
                                     @click.stop.prevent="togglePMDialog(true, props.row)"
-                                >编辑</a>
+                                >{{ $t('editLabel') }}</a>
                                 <a
                                     href="javascript:void(0)"
                                     class="bk-text-button"
                                     @click.stop.prevent="toggleProject(props.row)"
-                                >{{ props.row.enabled ? '停用' : '启用' }}</a>
+                                >{{ props.row.enabled ? $t('disableLabel') : $t('enableLabel') }}</a>
                                 <a
                                     v-if="props.row.enabled"
                                     href="javascript:void(0)"
                                     :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
                                     @click="goProject(props.row)"
-                                >用户管理</a>
+                                >{{ $t('userManage') }}</a>
                             </template>
                         </template>
                     </bk-table-column>
@@ -184,32 +184,35 @@
                             v-if="!isFilterByOffline && disableProjectNum"
                             class="title"
                         >
-                            您有{{ disableProjectNum }}个项目已经停用，请点击右上角“显示已停用项目”或新建项目
+                            {{ $t('disableProjectTips', { disableProjectNum }) }}
                         </p>
                         <p
                             v-else
                             class="title"
                         >
-                            暂时没有数据！
+                            {{ $t("emptyData") }}
                         </p>
                     </div>
                 </template>
             </template>
             <empty-tips
                 v-else
-                title="未找到您参与的项目"
-                desc="您可以创建自己的项目，然后针对自己的项目进行相应用户和权限管理，也可以申请加入已有的项目"
+                :title="$t('notFindProject')"
+                :desc="$t('notFindProjectTips')"
             >
                 <bk-button
                     icon-left="bk-icon icon-plus"
                     theme="primary"
                     @click="togglePMDialog(true)"
                 >
-                    新建项目
+                    {{ $t('newProject') }}
                 </bk-button>
-                <bk-button theme="success">
-                    <a href="/console/perm/apply-join-project">申请加入项目</a>
-                </bk-button>
+                <a
+                    class="empty-btns-item"
+                    href="/console/perm/apply-join-project"
+                >
+                    <bk-button theme="success">{{ $t('applyProject') }}</bk-button>
+                </a>
             </empty-tips>
         </div>
         <logo-dialog
@@ -383,12 +386,12 @@
             const { enabled, project_code: projectCode, project_name: projectName = '' } = project
             this.curProjectData = JSON.parse(JSON.stringify(project))
 
-            const message = (enabled ? '确定要停用项目' : '确定要启用项目') + projectName
+            const message = (enabled ? this.$t('disableProjectConfirm') : this.$t('disableProjectConfirm')) + projectName
 
             this.$bkInfo({
                 title: message,
                 confirmFn: async () => {
-                    let message = ''
+                    let msg = ''
                     let theme = 'error'
                     try {
                         const params = {
@@ -396,17 +399,17 @@
                             enabled: !enabled
                         }
                         await this.toggleProjectEnable(params)
-                        message = (enabled ? '停用' : '启用') + `${projectName}项目成功`
+                        msg = (enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectSuccess')
                         theme = 'success'
                         await this.getProjects(true)
                         return true
                     } catch (error) {
-                        message = error.message || ((enabled ? '停用' : '启用') + `${projectName}项目成功`)
+                        msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
                         return true
                     } finally {
                         this.$bkMessage({
                             theme,
-                            message
+                            message: msg
                         })
                     }
                 }
@@ -446,7 +449,7 @@
                     if (res) {
                         this.$bkMessage({
                             theme: 'success',
-                            message: 'LOGO修改成功！'
+                            message: this.$t('changeLogoSuccessTips')
                         })
 
                         this.showlogoDialog = false
@@ -468,7 +471,7 @@
                 }
             } else if (!this.selectedUrl) {
                 this.$bkMessage({
-                    message: '请选择要上传的图片',
+                    message: this.$t('noLogoTips'),
                     theme: 'error'
                 })
             } else {
@@ -489,12 +492,12 @@
                 if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '请上传png、jpg格式的图片'
+                        message: this.$t('supportExtTips')
                     })
                 } else if (file.size > (2 * 1024 * 1024)) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '请上传大小不超过2M的图片'
+                        message: this.$t('logoSizelimit')
                     })
                 } else {
                     const reader = new FileReader()
@@ -523,7 +526,7 @@
 
                 this.$bkMessage({
                     theme: 'success',
-                    message: '项目修改成功！'
+                    message: this.$t('updateProjectSuccuess')
                 })
                 this.togglePMDialog(false)
                 this.getProjects(true)

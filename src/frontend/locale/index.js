@@ -3,18 +3,32 @@ import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
 const DEFAULT_LOCALE = 'zh-CN'
+const LS_KEY = 'devops_i18n_locale'
 const loadedModule = {}
+
+function getLsLocale () {
+    if (!localStorage) return DEFAULT_LOCALE
+    return localStorage.getItem(LS_KEY) || DEFAULT_LOCALE
+}
+
+function setLsLocale (locale) {
+    if (localStorage) {
+        localStorage.setItem(LS_KEY, locale)
+    }
+}
 
 export default (r) => {
     Vue.use(VueI18n)
     const { messages, localeList } = importAll(r)
-
+    const initLocale = getLsLocale()
     // export localeList
     const i18n = new VueI18n({
-        locale: DEFAULT_LOCALE,
-        fallbackLocale: DEFAULT_LOCALE,
+        locale: initLocale,
+        fallbackLocale: initLocale,
         messages
     })
+
+    setLocale(initLocale)
 
     locale.i18n((key, value) => i18n.t(key, value))
 
@@ -25,8 +39,7 @@ export default (r) => {
         if (loadedModule[localeModuleId]) {
             return
         }
-        console.log(`@locale/${module}/${locale}.js`)
-        return axios.get(`${WEBSITE_URL}/${module}/${locale}.json`, {
+        return axios.get(`${WEBSITE_URL}/${module}/${locale}.json?t=${+new Date()}`, {
             crossdomain: true
         }).then(response => {
             const messages = response.data
@@ -39,17 +52,20 @@ export default (r) => {
         })
     }
 
-    function setLocale (locale) {
+    function setLocale (localeLang) {
         Object.keys(loadedModule).map(mod => {
             const [ , module ] = mod.split('_')
-            if (!loadedModule[getLocalModuleId(module, locale)]) {
-                dynamicLoadModule(module, locale)
+            if (!loadedModule[getLocalModuleId(module, localeLang)]) {
+                dynamicLoadModule(module, localeLang)
             }
         })
-        i18n.locale = locale
-        axios.defaults.headers.common['Accept-Language'] = locale
-        document.querySelector('html').setAttribute('lang', locale)
-        return locale
+        i18n.locale = localeLang
+        setLsLocale(localeLang)
+        locale.use(lang[localeLang.replace('-', '')])
+        axios.defaults.headers.common['Accept-Language'] = localeLang
+        document.querySelector('html').setAttribute('lang', localeLang)
+        
+        return localeLang
     }
     
  

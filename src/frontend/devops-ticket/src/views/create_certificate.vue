@@ -2,7 +2,7 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">新增证书</span>
+                <span class="inner-header-title">{{ $t('ticket.createCert') }}</span>
             </template>
         </content-header>
 
@@ -19,7 +19,7 @@
                 <div class="bk-form" v-if="hasPermission && showContent">
                     <!-- 证书类型 start -->
                     <div class="bk-form-item is-required cert-input-item">
-                        <label class="bk-label">证书类型：</label>
+                        <label class="bk-label">{{ $t('ticket.cert.certType') }}：</label>
                         <div class="bk-form-content">
                             <!-- <bk-radio-group v-model="certType" @change="changeType">
                                 <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit"> -->
@@ -72,8 +72,8 @@
                     </transition>
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">确定</bk-button>
-                        <bk-button @click="cancel">取消</bk-button>
+                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
             </div>
@@ -108,45 +108,45 @@
                 certData: {},
                 certTypeList: [
                     {
-                        label: 'iOS证书',
+                        label: this.$t('ticket.cert.iosCert'),
                         value: 'ios',
                         icon: 'icon-macos'
                     },
                     {
-                        label: 'Android证书',
+                        label: this.$t('ticket.cert.androidCert'),
                         value: 'android',
                         icon: 'icon-android-shape'
                     },
                     {
-                        label: 'SSL/TLS证书',
+                        label: this.$t('ticket.cert.sslOrTlsCert'),
                         value: 'tls',
                         icon: 'icon-personal-cert'
                     },
                     {
-                        label: 'iOS企业签名证书',
+                        label: this.$t('ticket.cert.iosCorporatesignCert'),
                         value: 'enterprise',
                         icon: 'icon-macos'
                     }
                 ],
                 loading: {
                     isLoading: true,
-                    title: '数据加载中，请稍候'
+                    title: this.$t('ticket.loadingTitle')
                 },
                 emptyTipsConfig: {
-                    title: '没有权限',
-                    desc: `你在该项目[凭证管理]下没有[创建]权限，请切换项目访问或申请`,
+                    title: this.$t('ticket.noPermission'),
+                    desc: this.$t('ticket.credential.noCreateCredPermissionTips'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('ticket.switchProject')
                         },
                         {
                             type: 'success',
                             size: 'normal',
                             handler: this.goToApplyPerm,
-                            text: '去申请权限'
+                            text: this.$t('ticket.applyPermission')
                         }
                     ]
                 }
@@ -166,7 +166,7 @@
                 return `/console/ticket/${this.projectId}/createCredential/PASSWORD/true`
             }
         },
-        
+
         watch: {
             projectId: async function () {
                 await this.requestPermission()
@@ -241,10 +241,10 @@
                 try {
                     if (this.isEdit) {
                         await this.$store.dispatch('ticket/editCert', { url, formData, config })
-                        message = '编辑证书成功'
+                        message = this.$t('ticket.cert.successfullyEditedCert')
                     } else {
                         await this.$store.dispatch('ticket/createCert', { url, formData, config })
-                        message = '新增证书成功'
+                        message = this.$t('ticket.cert.successfullyCreatedCert')
                     }
                 } catch (err) {
                     message = err.message ? err.message : err

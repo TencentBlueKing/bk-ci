@@ -6,14 +6,14 @@
         @page-limit-change="handlePageCountChange"
         v-bkloading="{ isLoading }"
     >
-        <bk-table-column type="index" label="序列" align="center" width="60"></bk-table-column>
-        <bk-table-column label="别名" prop="aliasName"></bk-table-column>
-        <bk-table-column label="地址" prop="url"></bk-table-column>
-        <bk-table-column label="类型" prop="type" :formatter="typeFormatter"></bk-table-column>
-        <bk-table-column label="操作" width="150">
+        <bk-table-column type="index" :label="$t('codelib.index')" align="center" width="60"></bk-table-column>
+        <bk-table-column :label="$t('codelib.aliasName')" prop="aliasName"></bk-table-column>
+        <bk-table-column :label="$t('codelib.address')" prop="url"></bk-table-column>
+        <bk-table-column :label="$t('codelib.type')" prop="type" :formatter="typeFormatter"></bk-table-column>
+        <bk-table-column :label="$t('codelib.operation')" width="150">
             <template slot-scope="props">
-                <bk-button theme="primary" text @click="editCodeLib(props.row)">编辑</bk-button>
-                <bk-button theme="primary" text @click="deleteCodeLib(props.row)">删除</bk-button>
+                <bk-button theme="primary" text @click="editCodeLib(props.row)">{{ $t('codelib.edit') }}</bk-button>
+                <bk-button theme="primary" text @click="deleteCodeLib(props.row)">{{ $t('codelib.delete') }}</bk-button>
             </template>
         </bk-table-column>
     </bk-table>
@@ -148,18 +148,18 @@
                             textAlign: 'center'
                         }
                     },
-                    `删除代码库${aliasName}`
+                    `${this.$t('codelib.deleteCodelib')}${aliasName}`
                 )
                 this.$bkInfo({
                     subHeader,
-                    title: `确认`,
+                    title: this.$t('codelib.confirm'),
                     confirmFn: () => {
                         const { projectId, currentPage, pageSize, count, totalPages } = this
                         this.isLoading = true
 
                         this.deleteRepo({ projectId, repositoryHashId }).then(() => {
                             this.$bkMessage({
-                                message: `代码库${aliasName}删除成功`,
+                                message: `${this.$t('codelib.codelib')}${aliasName}${this.$t('codelib.successfullyDeleted')}`,
                                 theme: 'success'
                             })
 

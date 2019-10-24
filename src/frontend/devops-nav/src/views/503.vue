@@ -2,7 +2,7 @@
     <div class="bk-exception bk-exception-center devops-503">
         <img :src="Img503">
         <h2 class="exception-text">
-            <slot>服务维护中，请稍候...</slot>
+            <slot>{{ $t("maintaining") }}...</slot>
         </h2>
     </div>
 </template>

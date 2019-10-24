@@ -29,21 +29,15 @@
         },
         data () {
             return {
-                panels: [
-                    { name: 'mission', label: ' 任务报表', count: 10 },
-                    { name: 'config', label: '加速配置', count: 20 },
-                    { name: 'hisitory', label: '历史版本', count: 30 },
-                    { name: 'deleted', label: '已归档加速任务', count: 40 }
-                ],
                 active: 'mission',
                 type: ['card', 'border-card', 'unborder-card'],
                 currentType: 'card',
                 activeName: 'base',
                 menuList: [
-                    { name: 'base', label: '基本信息' },
-                    { name: 'envVariable', label: '环境变量' },
-                    { name: 'pipeline', label: '构建任务' },
-                    { name: 'activity', label: '机器上下线记录' }
+                    { name: 'base', label: this.$t('environment.basicInfo') },
+                    { name: 'envVariable', label: this.$t('environment.environmentVariable') },
+                    { name: 'pipeline', label: this.$t('environment.nodeInfo.buildTask') },
+                    { name: 'activity', label: this.$t('environment.nodeInfo.machineActivityRecord') }
                 ]
             }
         },

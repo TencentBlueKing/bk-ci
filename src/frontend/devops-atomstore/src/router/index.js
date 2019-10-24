@@ -26,7 +26,7 @@ const marketDetail = () => import(/* webpackChunkName: 'atomDetails' */ '@/views
 
 const atomList = () => import(/* webpackChunkName: 'atomList' */ '@/views/atom_list.vue') // 工作台
 
-const installAtom = () => import(/* webpackChunkName: 'installAtom' */ '@/views/install_atom.vue') // 安装流水线插件
+const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
@@ -34,8 +34,10 @@ const atomDatail = () => import(/* webpackChunkName: 'atomDatail' */ '@/views/at
 const atomOverview = () => import(/* webpackChunkName: 'atomOverview' */ '@/views/atomDetail/overview.vue') // 流水线插件概览
 const settings = () => import(/* webpackChunkName: 'settings' */ '@/views/atomDetail/settings.vue') // 流水线插件设置
 const atomInformation = () => import(/* webpackChunkName: 'atomInformation' */ '@/views/atomDetail/detail.vue') // 流水线插件详情
+const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/atomDetail/approval.vue') // 流水线插件审批
 const memberManage = () => import(/* webpackChunkName: 'memberManage' */ '@/views/atomDetail/member_manage.vue') // 成员管理
-const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 可见范围
+const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 私有配置
+const edit = () => import(/* webpackChunkName: 'editAtom' */ '@/views/atomDetail/edit.vue') // 编辑插件详情
 
 const editTemplate = () => import(/* webpackChunkName: 'editTemplate' */ '@/views/edit_template.vue') // 上架模板
 const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '@/views/upgrade_template.vue') // 上架模板进度
@@ -155,7 +157,8 @@ const routes = [
                     title: '发布进度',
                     logo: 'store',
                     header: '研发商店',
-                    to: 'atomHome'
+                    to: 'atomHome',
+                    webSocket: ['^\/console\/store\/releaseProgress\/(shelf|upgrade)\/[^\/]+$']
                 }
             },
             {
@@ -191,6 +194,28 @@ const routes = [
                         component: atomInformation,
                         meta: {
                             title: '详情',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'edit',
+                        name: 'edit',
+                        component: edit,
+                        meta: {
+                            title: '编辑',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'approval',
+                        name: 'approval',
+                        component: approval,
+                        meta: {
+                            title: '审批',
                             logo: 'store',
                             header: '研发商店',
                             to: 'atomHome'
@@ -263,22 +288,11 @@ const routes = [
                 ]
             },
             {
-                path: ':atomCode/install/atom',
-                name: 'installAtom',
-                component: installAtom,
+                path: 'install',
+                name: 'install',
+                component: install,
                 meta: {
-                    title: '安装流水线插件',
-                    logo: 'store',
-                    header: '研发商店',
-                    to: 'atomHome'
-                }
-            },
-            {
-                path: ':templateCode/install/template',
-                name: 'installTemplate',
-                component: installAtom,
-                meta: {
-                    title: '安装模板',
+                    title: '安装页面',
                     logo: 'store',
                     header: '研发商店',
                     to: 'atomHome'

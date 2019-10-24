@@ -8,7 +8,7 @@
             :class="{ active: show }"
             @click.stop="toggleNavMenu"
         >
-            <span>服务</span>
+            <span>{{ $t('service') }}</span>
             <span
                 v-if="showNewServiveTips"
                 class="unread-icon"
@@ -26,7 +26,7 @@
                     @click.stop="hideNavMenu"
                 >
                     <div class="nav-collect">
-                        <h3>我的收藏</h3>
+                        <h3>{{ $t('collection') }}</h3>
                         <ul
                             v-if="collectServices.length > 0"
                             class="nav-collect-menu"
@@ -57,7 +57,7 @@
                             class="empty-collect"
                         >
                             <img src="../../assets/images/empty.png">
-                            <p>未收藏任何服务</p>
+                            <p>{{ $t('noCollection') }}</p>
                         </div>
                     </div>
                     <div class="nav-menu">
@@ -188,7 +188,7 @@
             try {
                 if (isCollected && this.collectServices.length === 8) {
                     this.$bkMessage({
-                        message: '及时清除不常使用的链接，才能添加新的链接哦：）',
+                        message: this.$t('outofCollectionTips'),
                         theme: 'error'
                     })
                     return

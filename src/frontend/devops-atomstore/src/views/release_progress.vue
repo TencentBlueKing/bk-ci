@@ -27,7 +27,7 @@
             <div class="atom-release-msg">
                 <div class="detail-title release-progress-title">
                     <p class="form-title">发布进度
-                        <span class="cancel-release-btn" v-if="!isOver" @click="handlerCancel()">取消发布</span>
+                        <span :class="[{ disable: !permission }, 'cancel-release-btn']" v-if="!isOver" @click="handlerCancel" :title="permissionMsg">取消发布</span>
                     </p>
                     <hr class="cut-line">
                     <div class="progress-step">
@@ -57,8 +57,9 @@
                                     theme="primary"
                                     size="small"
                                     v-if="entry.name === '测试中' || entry.name === '测试'"
-                                    :disabled="entry.status !== 'doing'"
-                                    @click.stop="passTest()"
+                                    :disabled="entry.status !== 'doing' || !permission"
+                                    @click.stop="passTest"
+                                    :title="permissionMsg"
                                 >继续</bk-button>
                             </div>
                         </div>
@@ -157,8 +158,8 @@
                 <div class="released-tips" v-if="isOver">
                     <h3>恭喜，成功发布到商店!</h3>
                     <div class="handle-btn">
-                        <bk-button class="bk-button bk-primary" size="small" @click="toAtomList()">工作台</bk-button>
-                        <bk-button class="bk-button bk-default" size="small" @click="toAtomStore()">研发商店</bk-button>
+                        <bk-button class="bk-button bk-primary" size="small" @click="toAtomList">工作台</bk-button>
+                        <bk-button class="bk-button bk-default" size="small" @click="toAtomStore">研发商店</bk-button>
                     </div>
                 </div>
             </div>
@@ -168,12 +169,9 @@
 
 <script>
     import cookie from 'cookie'
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
+    import webSocketMessage from '@/utils/webSocketMessage'
 
-    const Vue = window.Vue
     const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
-    Vue.use(mavonEditor)
 
     export default {
         filters: {
@@ -184,17 +182,18 @@
         },
         data () {
             return {
+                permission: true,
                 atomlogoUrl: '',
                 currentProjectId: '',
                 currentBuildNo: '',
                 currentPipelineId: '',
-                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html`,
                 timer: -1,
+                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html`,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
                 progressStatus: [],
-                atomBuildInfo: {},
+                storeBuildInfo: {},
                 loading: {
                     isLoading: false,
                     title: ''
@@ -211,6 +210,7 @@
                     'LINUX': 'Linux',
                     'WINDOWS': 'Windows',
                     'MACOS': 'macOS'
+                    // 'NONE': '无构建环境'
                 },
                 releaseMap: {
                     'NEW': '新上架',
@@ -232,18 +232,26 @@
                 return this.routerParams.releaseType === 'shelf' ? '上架插件' : '升级插件'
             },
             isOver () {
-                return this.progressStatus.length && this.progressStatus[3].status === 'success'
+                return this.progressStatus.length && this.progressStatus[this.progressStatus.length - 1].status === 'success'
+            },
+            permissionMsg () {
+                let str = ''
+                if (!this.permission) str = '只有插件管理员或当前流程创建者可以操作'
+                return str
             },
             postUrl () {
                 return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
             }
         },
+
         async created () {
             await this.requestRelease(this.routerParams.atomId)
             await this.requestAtomDetail(this.routerParams.atomId)
+            webSocketMessage.installWsMessage(this.handleRelease)
         },
         beforeDestroy () {
-            clearTimeout(this.timer)
+            // clearTimeout(this.timer)
+            webSocketMessage.unInstallWsMessage()
         },
         methods: {
             toAtomList () {
@@ -292,19 +300,23 @@
                     this.showContent = true
                 }
             },
+            handleRelease (res) {
+                this.progressStatus = res.processInfos
+                this.permission = res.opPermission
+                if (res.storeBuildInfo) {
+                    this.storeBuildInfo = res.storeBuildInfo
+                }
+            },
             async requestRelease (atomId) {
                 try {
                     const res = await this.$store.dispatch('store/requestRelease', {
                         atomId: atomId
                     })
 
-                    this.progressStatus = res.processInfos
-                    if (res.atomBuildInfo) {
-                        this.atomBuildInfo = res.atomBuildInfo
-                    }
-                    if (!this.isOver) {
-                        this.loopCheck()
-                    }
+                    this.handleRelease(res)
+                    // if (!this.isOver) {
+                    //     this.loopCheck()
+                    // }
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -316,8 +328,9 @@
                 }
             },
             async passTest () {
-                let message, theme
+                if (!this.permission) return
 
+                let message, theme
                 try {
                     await this.$store.dispatch('store/passTest', {
                         atomId: this.routerParams.atomId
@@ -325,7 +338,7 @@
 
                     message = '操作成功'
                     theme = 'success'
-                    this.requestRelease(this.routerParams.atomId)
+                    // this.requestRelease(this.routerParams.atomId)
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -336,18 +349,9 @@
                     })
                 }
             },
-            async loopCheck () {
-                const { timer } = this
-
-                clearTimeout(timer)
-
-                if (!this.isOver) {
-                    this.timer = setTimeout(async () => {
-                        await this.requestRelease(this.routerParams.atomId)
-                    }, 5000)
-                }
-            },
             handlerCancel () {
+                if (!this.permission) return
+
                 const h = this.$createElement
                 const subHeader = h('p', {
                     style: {
@@ -384,7 +388,7 @@
                         message,
                         theme
                     })
-                    
+
                     setTimeout(() => {
                         this.loading.isLoading = false
                     }, 1000)
@@ -402,8 +406,9 @@
                         type: file.type,
                         origin: file
                     }
-
-                    if (fileObj.type !== 'application/x-zip-compressed') {
+                    const pos = fileObj.name.lastIndexOf('.')
+                    const lastname = fileObj.name.substring(pos, fileObj.name.length)
+                    if (lastname.toLowerCase() !== '.zip') {
                         this.$bkMessage({
                             message: '只允许上传 zip 格式的文件',
                             theme: 'error'
@@ -428,11 +433,11 @@
                         let theme, message
                         if (xhr.status === 200) {
                             const response = JSON.parse(xhr.responseText)
-                            
+
                             if (response.status === 0) {
                                 theme = 'success'
                                 message = '上传成功'
-                                
+
                                 this.requestRelease(this.routerParams.atomId)
                                 this.requestAtomDetail(this.routerParams.atomId)
                             } else {
@@ -480,6 +485,13 @@
 <style lang="scss">
     @import '@/assets/scss/conf.scss';
     @import '@/assets/scss/markdown-body.scss';
+
+    .disable {
+        cursor: not-allowed !important;
+        &:not(.pass-btn) {
+            color: $fontWeightColor !important;
+        }
+    }
 
     .release-progress-wrapper {
         height: 100%;
@@ -663,17 +675,6 @@
                     color: $primaryColor;
 
                 }
-            }
-            .upload-input {
-                position: absolute;
-                top: 0;
-                left: 37px;
-                width: 46px;
-                height: 16px;
-                opacity: 0;
-                z-index: 10;
-                font-size: 0;
-                cursor: pointer;
             }
             .audit-tips {
                 width: 110px;

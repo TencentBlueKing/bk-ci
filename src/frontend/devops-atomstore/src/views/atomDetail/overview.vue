@@ -58,7 +58,7 @@
 </template>
 
 <script>
-    import Clipboard from 'clipboard'
+    import { mapGetters } from 'vuex'
     import imgBuilding from '@/images/building.png'
 
     export default {
@@ -75,11 +75,14 @@
                 loading: {
                     isLoading: false,
                     title: ''
-                },
-                codeForm: {}
+                }
             }
         },
         computed: {
+            ...mapGetters('store', {
+                'codeForm': 'getCurrentAtom',
+                'userInfo': 'getUserInfo'
+            }),
             atomId () {
                 return this.$route.params.atomId
             },
@@ -87,66 +90,30 @@
                 return this.$route.params.atomCode
             }
         },
-        async mounted () {
-            await this.requestAtomDetail()
-            await this.requestAtomStatistic()
+        created () {
+            this.initData()
         },
+
         methods: {
-            async requestAtomDetail () {
+            initData () {
                 this.loading.isLoading = true
-                this.loading.title = '数据加载中，请稍候'
 
-                try {
-                    const res = await this.$store.dispatch('store/requestAtom', {
-                        atomCode: this.atomCode
-                    })
-                    this.codeForm = res
-                    this.$store.dispatch('store/updateCurrentaAtom', { res })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    setTimeout(() => {
-                        this.loading.isLoading = false
-                        this.showContent = true
-                    }, 500)
-                }
+                this.requestAtomStatistic().catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.loading.isLoading = false
+                    this.showContent = true
+                })
             },
-            async requestAtomStatistic () {
-                try {
-                    const res = await this.$store.dispatch('store/requestAtomStatistic', {
-                        atomCode: this.atomCode
-                    })
+
+            requestAtomStatistic () {
+                return this.$store.dispatch('store/requestAtomStatistic', {
+                    atomCode: this.atomCode
+                }).then((res) => {
                     this.statisticList.forEach(item => {
                         item.value = res[item.name]
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            copyUrl () {
-                this.clipboardInstance = new Clipboard('.copy-btn')
-                this.clipboardInstance.on('success', e => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: '复制成功',
-                        limit: 1
-                    })
                 })
-            },
-            toLink (url) {
-                window.open(url, '_blank')
             }
         }
     }

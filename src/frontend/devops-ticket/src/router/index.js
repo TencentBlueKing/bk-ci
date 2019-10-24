@@ -43,9 +43,9 @@ const routes = [
                 name: 'credentialList',
                 component: credentialList,
                 meta: {
-                    title: '凭据列表',
+                    title: 'credentialList',
                     logo: 'ticket',
-                    header: '凭证管理',
+                    header: 'credentialManage',
                     to: 'credentialList'
                 }
             },
@@ -54,9 +54,9 @@ const routes = [
                 name: 'createCredential',
                 component: createCredential,
                 meta: {
-                    title: '新增凭据',
+                    title: 'createCredential',
                     logo: 'ticket',
-                    header: '凭证管理',
+                    header: 'credentialManage',
                     to: 'credentialList'
                 }
             },
@@ -65,9 +65,9 @@ const routes = [
                 name: 'createCredentialWithType',
                 component: createCredential,
                 meta: {
-                    title: '新增凭据',
+                    title: 'createCredential',
                     logo: 'ticket',
-                    header: '凭证管理',
+                    header: 'credentialManage',
                     to: 'credentialList'
                 }
             },
@@ -76,9 +76,9 @@ const routes = [
                 name: 'editCredential',
                 component: createCredential,
                 meta: {
-                    title: '编辑凭据',
+                    title: 'editCredential',
                     logo: 'ticket',
-                    header: '凭证管理',
+                    header: 'credentialManage',
                     to: 'credentialList'
                 }
             }
@@ -87,9 +87,9 @@ const routes = [
             //     name: 'certList',
             //     component: certList,
             //     meta: {
-            //         title: '证书列表',
+            //         title: 'certList',
             //         logo: 'ticket',
-            //         header: '凭证管理',
+            //         header: 'credentialManage',
             //         to: 'credentialList'
             //     }
             // },
@@ -98,9 +98,9 @@ const routes = [
             //     name: 'createCert',
             //     component: createCert,
             //     meta: {
-            //         title: '新增证书',
+            //         title: 'createCert',
             //         logo: 'ticket',
-            //         header: '凭证管理',
+            //         header: 'credentialManage',
             //         to: 'credentialList'
             //     }
             // },
@@ -109,9 +109,9 @@ const routes = [
             //     name: 'editCert',
             //     component: createCert,
             //     meta: {
-            //         title: '编辑证书',
+            //         title: 'editCert',
             //         logo: 'ticket',
-            //         header: '凭证管理',
+            //         header: 'credentialManage',
             //         to: 'credentialList'
             //     }
             // }
