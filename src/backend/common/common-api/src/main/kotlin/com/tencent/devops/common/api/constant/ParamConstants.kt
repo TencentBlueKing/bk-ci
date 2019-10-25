@@ -1,8 +1,5 @@
 package com.tencent.devops.common.api.constant
 
-const val APP_CODE = "bkci"
-const val APP_SECRET = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
-
 const val PIPELINE_MATERIAL_URL = "pipeline.material.url"
 const val PIPELINE_MATERIAL_BRANCHNAME = "pipeline.material.branchName"
 const val PIPELINE_MATERIAL_ALIASNAME = "pipeline.material.aliasName"
