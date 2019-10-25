@@ -1,8 +1,10 @@
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -13,17 +15,23 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
+import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.process.dao.PipelineSubscriptionDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.BuildInfo
 import com.tencent.devops.process.pojo.SubscriptionType
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
-import com.tencent.devops.process.service.MeasureService
-import com.tencent.devops.process.service.PipelineSettingService
-import com.tencent.devops.process.service.ProjectOauthTokenService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.util.NotifyUtils
 import com.tencent.devops.process.util.NotifyUtils.parseMessageTemplate
@@ -49,7 +57,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 
-@Service("newPipelineSubscriptionService")
+@Service
 class PipelineSubscriptionService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
@@ -60,7 +68,8 @@ class PipelineSubscriptionService @Autowired constructor(
     private val projectOauthTokenService: ProjectOauthTokenService,
     private val wechatWorkService: WechatWorkService,
     private val measureService: MeasureService,
-    private val bkAuthProjectApi: BkAuthProjectApi,
+    private val bsAuthProjectApi: BSAuthProjectApi,
+    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val shortUrlApi: ShortUrlApi,
     private val client: Client
 ) {
@@ -179,7 +188,7 @@ class PipelineSubscriptionService @Autowired constructor(
             setting.successContent = EnvUtils.parseEnv(setting.successContent, vars, replaceWithEmpty)
             setting.failContent = EnvUtils.parseEnv(setting.failContent, vars, replaceWithEmpty)
 
-            val projectGroup = bkAuthProjectApi.getProjectGroupAndUserList(BkAuthServiceCode.PIPELINE, projectId)
+            val projectGroup = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
             val detailUrl = detailUrl(projectId, pipelineId, buildId)
             val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
             val detailShortOuterUrl = shortUrlApi.getShortUrl(detailOuterUrl, 24 * 3600 * 180)
@@ -243,10 +252,10 @@ class PipelineSubscriptionService @Autowired constructor(
                             richtextContentList.add(
                                 RichtextView(
                                     RichtextViewLink(
-                                    "查看详情",
-                                    detailUrl,
-                                    1
-                            )
+                                        "查看详情",
+                                        detailUrl,
+                                        1
+                                    )
                                 )
                             )
                         }
@@ -587,7 +596,7 @@ class PipelineSubscriptionService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(com.tencent.devops.process.engine.service.PipelineSubscriptionService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineSubscriptionService::class.java)
         const val TYPE_STARTUP = 1
         const val TYPE_SHUTDOWN_SUCCESS = 2
         const val TYPE_SHUTDOWN_FAILURE = 3

@@ -21,7 +21,7 @@ class JfrogService @Autowired constructor(
         if (pipelineId.isBlank()) return mapOf()
         val buildNoByBuildIds = pipelineService.getBuildNoByBuildIds(projectId, pipelineId, buildIds)
         val result = mutableMapOf<String, String>()
-        buildNoByBuildIds.forEach { t, u ->
+        buildNoByBuildIds.forEach { (t, u) ->
             result[t] = u.toString()
         }
         return result

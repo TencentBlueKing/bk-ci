@@ -272,7 +272,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建历史-new")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/historyNew")
+    @Path("/{projectId}/{pipelineId}/history/new")
     fun getHistoryBuildNew(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -336,7 +336,13 @@ interface UserBuildResource {
         totalTimeMax: Long?,
         @ApiParam("备注", required = false)
         @QueryParam("remark")
-        remark: String?
+        remark: String?,
+        @ApiParam("构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int?,
+        @ApiParam("构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int?
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("修改流水线备注")

@@ -130,6 +130,18 @@ class BuildDetailDao {
         }
     }
 
+
+    fun updateModel(
+        dslContext: DSLContext,
+        buildId: String,
+        model: String
+    ) {
+        logger.info("Update build detail model of build $buildId")
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            dslContext.update(this).set(MODEL, model).where(BUILD_ID.eq(buildId)).execute()
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         buildId: String

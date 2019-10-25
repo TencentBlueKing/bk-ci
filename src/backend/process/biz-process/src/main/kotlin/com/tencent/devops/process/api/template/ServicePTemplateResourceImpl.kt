@@ -31,11 +31,16 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.TemplateDetailInfo
+import com.tencent.devops.process.pojo.template.TemplateListModel
+import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.template.service.PipelineTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePTemplateResourceImpl @Autowired constructor(
+    private val pipelineTemplateService: PipelineTemplateService,
     private val templateService: TemplateService
 ) : ServiceTemplateResource {
 
@@ -51,6 +56,36 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         updateMarketTemplateRequest: AddMarketTemplateRequest
     ): Result<Boolean> {
         return templateService.updateMarketTemplateReference(userId, updateMarketTemplateRequest)
+    }
+
+    override fun getTemplateDetailInfo(templateCode: String, publicFlag: Boolean): Result<TemplateDetailInfo?> {
+        return pipelineTemplateService.getTemplateDetailInfo(templateCode, publicFlag)
+    }
+
+    override fun listTemplate(
+        userId: String,
+        projectId: String,
+        templateType: TemplateType?,
+        storeFlag: Boolean?
+    ): Result<TemplateListModel> {
+        return Result(templateService.listTemplate(projectId, userId, templateType, storeFlag, 1, 9999))
+    }
+
+    override fun getTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long?
+    ): Result<TemplateModelDetail> {
+        return Result(templateService.getTemplate(projectId, userId, templateId, version))
+    }
+
+    override fun listAllTemplate(
+        userId: String,
+        projectId: String,
+        templateType: TemplateType?
+    ): Result<OptionalTemplateList> {
+        return Result(templateService.listAllTemplate(projectId, templateType, null, 1, 9999))
     }
 
     override fun updateStoreFlag(userId: String, templateId: String, storeFlag: Boolean): Result<Boolean> {
