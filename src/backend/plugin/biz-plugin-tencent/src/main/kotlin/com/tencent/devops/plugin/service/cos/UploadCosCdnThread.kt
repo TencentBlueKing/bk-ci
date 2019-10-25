@@ -100,7 +100,7 @@ class UploadCosCdnThread : Runnable {
                     val results = parser.parse(body).asJsonObject["results"].asJsonArray
 
                     logger.info("There are ${results.size()} file(s) match $regex")
-                    LogUtils.addLine(rabbitTemplate!!, buildId, "There are ${results.size()} file(s) match $regex", elementId, containerId, executeCount)
+                    LogUtils.addLine(rabbitTemplate!!, buildId, "There are ${results.size()} file(s) match $regex", elementId, executeCount)
                     for (i in 0 until results.size()) {
                         count++
                         val obj = results[i].asJsonObject
@@ -121,11 +121,11 @@ class UploadCosCdnThread : Runnable {
             if (count == 0) {
                 setProcessToRedis(2, 0, null)
                 logger.info("No file distributed")
-                LogUtils.addLine(rabbitTemplate!!, buildId, "No file distributed", elementId, containerId, executeCount)
+                LogUtils.addLine(rabbitTemplate!!, buildId, "No file distributed", elementId, executeCount)
             } else {
                 setProcessToRedis(0, count, downloadUrlList)
                 logger.info("$count file(s) have been distributed")
-                LogUtils.addLine(rabbitTemplate!!, buildId, "$count file(s) have been distributed", elementId, containerId, executeCount)
+                LogUtils.addLine(rabbitTemplate!!, buildId, "$count file(s) have been distributed", elementId, executeCount)
             }
 
 //            if (count == 0) throw RuntimeException("No file distributed")
@@ -133,17 +133,17 @@ class UploadCosCdnThread : Runnable {
             setProcessToRedis(2, 0, null)
             val msg = String.format("Upload file failed because of IOException(%s)", ex.message)
             logger.error(msg, ex)
-            LogUtils.addRedLine(rabbitTemplate!!, buildId, msg, elementId, containerId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate!!, buildId, msg, elementId, executeCount)
         } catch (ex: COSException) {
             setProcessToRedis(2, 0, null)
             val msg = String.format("Upload file failed because of COSException(%s)", ex.message)
             logger.error(msg, ex)
-            LogUtils.addRedLine(rabbitTemplate!!, buildId, msg, elementId, containerId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate!!, buildId, msg, elementId, executeCount)
         } catch (ex: Exception) {
             setProcessToRedis(2, 0, null)
             val msg = String.format("Upload file failed because of Exception(%s)", ex.message)
             logger.error(msg, ex)
-            LogUtils.addRedLine(rabbitTemplate!!, buildId, msg, elementId, containerId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate!!, buildId, msg, elementId, executeCount)
         } finally {
             workspace.deleteRecursively()
         }

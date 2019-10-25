@@ -34,7 +34,7 @@ import com.tencent.devops.process.api.service.ServiceJfrogResource
 import com.tencent.devops.process.api.service.ServiceMetadataResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Property
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody

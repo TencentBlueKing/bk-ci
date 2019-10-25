@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.common.api.config.AppConfig
 import com.tencent.devops.common.api.util.UnicodeUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
@@ -28,8 +27,6 @@ import org.springframework.stereotype.Service
 class TcmService @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
-    private val appConfig = SpringContextUtil.getBean(AppConfig::class.java)
-
 
     @Value("\${app.code}")
     private val appCode = ""
@@ -161,8 +158,8 @@ class TcmService @Autowired constructor(
                 tcmReqParam.templateId,
                 tcmReqParam.name,
                 tcmReqParam.workJson,
-                appConfig.appCode,
-                appConfig.appSecret,
+                appCode,
+                appSecret,
                 userId
         )
 

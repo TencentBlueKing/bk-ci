@@ -7,7 +7,7 @@ import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
-import com.tencent.devops.process.api.BuildHistoryBuildResource
+import com.tencent.devops.process.api.builds.BuildHistoryBuildResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

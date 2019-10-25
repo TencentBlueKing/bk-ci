@@ -87,7 +87,7 @@ class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitT
                     .post(body)
                     .build()
 
-            LogUtils.addLine(rabbitTemplate, buildId, "start to upload security file.", elementId, containerId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "start to upload security file.", elementId, executeCount)
             OkhttpUtils.doHttp(request).use { response ->
                 val data = UnicodeUtil.unicodeToString(response.body()!!.string())
                 logger.info("Get the apk response with message ${response.message()} and code ${response.code()}")
@@ -95,7 +95,7 @@ class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitT
                     throw RuntimeException("upload file $filePath to $mtpUrl fail:\n$data")
                 }
                 LogUtils.addLine(rabbitTemplate, buildId, "upload file $filePath to $mtpUrl success:\n$data",
-                    elementId, containerId, executeCount)
+                    elementId, executeCount)
                 return jsonPraser.parse(data).asJsonObject["id"].asString
             }
         }
@@ -137,14 +137,14 @@ class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitT
                 .build()
 
             LogUtils.addLine(rabbitTemplate, buildId, "start security task in env($envId) for task($taskId).",
-                elementId, containerId, executeCount)
+                elementId, executeCount)
             OkhttpUtils.doHttp(taskRequest).use { response ->
                 val data = UnicodeUtil.unicodeToString(response.body()!!.string())
                 if (!response.isSuccessful || jsonPraser.parse(data).asJsonObject["ret"].asString != "0") {
                     throw RuntimeException("fail to start the task[$taskId]:\n$data")
                 }
                 LogUtils.addLine(rabbitTemplate, buildId, "success to start the task[$taskId]: $$data",
-                    elementId, containerId, executeCount)
+                    elementId, executeCount)
                 return data
             }
         }
