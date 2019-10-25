@@ -40,7 +40,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserPipelineResource {
+interface TXUserPipelineResource {
 
     @ApiOperation("项目是否灰度Docker构建方案")
     @GET

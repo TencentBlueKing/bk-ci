@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class TXUserPipelineResourceImpl @Autowired constructor(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
     private val dockerBuildService: DockerBuildService
-) : UserPipelineResource {
+) : TXUserPipelineResource {
 
     override fun enableDockerBuild(userId: String, projectId: String): Result<Boolean> {
         checkParam(userId, projectId)

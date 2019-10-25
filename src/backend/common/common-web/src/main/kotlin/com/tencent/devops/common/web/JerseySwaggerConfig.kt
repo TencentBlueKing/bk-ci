@@ -53,7 +53,8 @@ class JerseySwaggerConfig : JerseyConfig() {
     private val logger = LoggerFactory.getLogger(JerseySwaggerConfig::class.java)
     @PostConstruct
     fun init() {
-        logger.info("configSwagger-start")
+        logger.info("[$service|$applicationDesc|$applicationVersion|$swaggerAppendName|$packageName]" +
+            " configSwagger-start")
         configSwagger()
         register(SwaggerSerializers::class.java)
         register(ApiListingResource::class.java)

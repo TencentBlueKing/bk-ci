@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class TXUserBuildResourceImpl @Autowired constructor(
     private val buildService: PipelineBuildService,
     private val buildQualityService: PipelineBuildQualityService
-) : UserBuildResource {
+) : TXUserBuildResource {
 
     override fun manualQualityGateReview(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, action: ManualReviewAction): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)

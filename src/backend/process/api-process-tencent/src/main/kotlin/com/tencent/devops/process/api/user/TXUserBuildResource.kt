@@ -35,7 +35,7 @@ import javax.ws.rs.core.Response
 @Path("/user/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserBuildResource {
+interface TXUserBuildResource {
 
     @ApiOperation("获取CodeCC报告")
     @GET
