@@ -3,17 +3,16 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.environment.pojo.DevCloudImageParam
 import com.tencent.devops.environment.pojo.DevCloudModel
+import com.tencent.devops.environment.pojo.DevCloudImageParam
 import com.tencent.devops.environment.pojo.DevCloudVmParam
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -27,7 +26,7 @@ interface UserDevCloudResource {
 
     @ApiOperation("获取DevCloud机型列表")
     @GET
-    @Path("/projects/{projectId}/getModelList")
+    @Path("/{projectId}/getModelList")
     fun getDevCloudModelList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -39,7 +38,7 @@ interface UserDevCloudResource {
 
     @ApiOperation("添加DevCloud虚拟机")
     @POST
-    @Path("/projects/{projectId}/addDevCloudVm")
+    @Path("/{projectId}/addDevCloudVm")
     fun addDevCloudVm(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -53,7 +52,7 @@ interface UserDevCloudResource {
 
     @ApiOperation("开机DevCloud虚拟机")
     @POST
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/startDevCloudVm")
+    @Path("/{projectId}/startDevCloudVm/{nodeHashId}")
     fun startDevCloudVm(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -68,7 +67,7 @@ interface UserDevCloudResource {
 
     @ApiOperation("关机DevCloud虚拟机")
     @POST
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/stopDevCloudVm")
+    @Path("/{projectId}/stopDevCloudVm/{nodeHashId}")
     fun stopDevCloudVm(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -82,8 +81,8 @@ interface UserDevCloudResource {
     ): Result<Boolean>
 
     @ApiOperation("销毁DevCloud虚拟机")
-    @DELETE
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/deleteDevCloudVm")
+    @POST
+    @Path("/{projectId}/deleteDevCloudVm/{nodeHashId}")
     fun deleteDevCloudVm(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -98,7 +97,7 @@ interface UserDevCloudResource {
 
     @ApiOperation("制作镜像")
     @POST
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/createImage")
+    @Path("/{projectId}/createImage/{nodeHashId}")
     fun createImage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -115,7 +114,7 @@ interface UserDevCloudResource {
 
     @ApiOperation("制作镜像结果确认")
     @POST
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/confirm")
+    @Path("/{projectId}/confirm/{nodeHashId}")
     fun createImageResultConfirm(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -130,7 +129,7 @@ interface UserDevCloudResource {
 
     @ApiOperation("查询DevCloud虚拟机状态")
     @GET
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/getDevCloudVm")
+    @Path("/{projectId}/getDevCloudVm/{nodeHashId}")
     fun getDevCloudVm(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

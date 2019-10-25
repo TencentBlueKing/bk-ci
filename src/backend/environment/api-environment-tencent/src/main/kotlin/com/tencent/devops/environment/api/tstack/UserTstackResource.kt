@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType
 interface UserTstackResource {
     @ApiOperation("获取可用Tstack节点列表")
     @GET
-    @Path("/projects/{projectId}/listAvailableNodes")
+    @Path("/{projectId}/listAvailableNodes")
     fun listAvailableTstackNodes(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -28,7 +28,7 @@ interface UserTstackResource {
 
     @ApiOperation("获取 Web Console Token")
     @GET
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/getVncToken")
+    @Path("/{projectId}/nodes/{nodeHashId}/getVncToken")
     fun getVncToken(
         @ApiParam("项目ID", required = true)
 @PathParam("projectId")

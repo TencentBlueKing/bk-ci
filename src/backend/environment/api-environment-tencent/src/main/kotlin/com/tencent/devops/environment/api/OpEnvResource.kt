@@ -7,12 +7,11 @@ import com.tencent.devops.environment.pojo.ProjectConfigParam
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -36,7 +35,7 @@ interface OpEnvResource {
 
     @ApiOperation("项目配置列表（分页）")
     @GET
-    @Path("/projects/{projectId}/projectConfigs")
+    @Path("/projectConfig/list")
     fun list(
         @ApiParam(value = "第几页，从1开始", required = true)
         @QueryParam("page")
@@ -45,7 +44,7 @@ interface OpEnvResource {
         @QueryParam("pageSize")
         pageSize: Int,
         @ApiParam(value = "项目ID", required = false)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String?
     ): Result<ProjectConfigPage>
 }
