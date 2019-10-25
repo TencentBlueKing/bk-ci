@@ -43,8 +43,7 @@ func buildUrl(url string) string {
 }
 
 func NewAgentHeartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/thirdPartyAgent/projects" +
-		config.GAgentConfig.ProjectId + "/agents/" + config.GAgentConfig.AgentId + "/newHeartbeat")
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/heartbeat")
 
 	agentHeartbeatInfo := &AgentHeartbeatInfo{
 		MasterVersion:     config.AgentVersion,
@@ -71,14 +70,12 @@ func FinishUpgrade(success bool) (*httputil.AgentResult, error) {
 }
 
 func DownloadUpgradeFile(serverFile string, saveFile string) (fileMd5 string, err error) {
-	url := buildUrl("/ms/environment/api/buildAgent/thirdPartyAgent/projects" +
-		config.GAgentConfig.ProjectId + "/agents/" + config.GAgentConfig.AgentId + "/upgrade/files/download?file=" + serverFile)
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/upgrade/files/download?file=" + serverFile)
 	return httputil.DownloadUpgradeFile(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
 }
 
 func AgentStartup() (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/thirdPartyAgent/projects" +
-		config.GAgentConfig.ProjectId + "/agents/" + config.GAgentConfig.AgentId + "/startup")
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/startup")
 
 	startInfo := &ThirdPartyAgentStartInfo{
 		HostName:      config.GAgentEnv.HostName,
@@ -92,8 +89,7 @@ func AgentStartup() (*httputil.DevopsResult, error) {
 }
 
 func GetAgentStatus() (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/thirdPartyAgent/projects" +
-		config.GAgentConfig.ProjectId + "/agents/" + config.GAgentConfig.AgentId + "/status")
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/status")
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
@@ -103,13 +99,11 @@ func GetBuild() (*httputil.AgentResult, error) {
 }
 
 func GetAgentPipeline() (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/thirdPartyAgent/projects" +
-		config.GAgentConfig.ProjectId + "/agents/" + config.GAgentConfig.AgentId + "/pipelines")
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/pipelines")
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
 func UpdatePipelineStatus(response *PipelineResponse) (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/thirdPartyAgent/projects" +
-		config.GAgentConfig.ProjectId + "/agents/" + config.GAgentConfig.AgentId + "/pipelines")
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/pipelines")
 	return httputil.NewHttpClient().Put(url).Body(response).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }

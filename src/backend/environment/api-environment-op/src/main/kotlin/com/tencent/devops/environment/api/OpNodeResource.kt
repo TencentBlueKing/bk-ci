@@ -34,7 +34,6 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.GET
@@ -52,7 +51,7 @@ import javax.ws.rs.core.MediaType
 interface OpNodeResource {
     @ApiOperation("导入其他节点")
     @POST
-    @Path("/projects/{projectId}/addOtherNodes")
+    @Path("/{projectId}/addOtherNodes")
     fun addOtherNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -85,8 +84,8 @@ interface OpNodeResource {
     ): Result<NodePage>
 
     @ApiOperation("删除节点")
-    @DELETE
-    @Path("/projects/{projectId}/nodes/{nodeHashId}")
+    @POST
+    @Path("/{projectId}/deleteNodes/{nodeHashId}")
     fun deleteNodes(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
