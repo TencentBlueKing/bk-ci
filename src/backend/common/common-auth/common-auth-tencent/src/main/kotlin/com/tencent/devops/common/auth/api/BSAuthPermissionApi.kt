@@ -79,6 +79,7 @@ class BSAuthPermissionApi @Autowired constructor(
             val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
             val url =
                 "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
+            logger.info("BSAuthPermissionApi url:$url")
             val bkAuthPermissionRequest = BkAuthPermissionVerifyRequest(
                 projectCode,
                 serviceCode.id(),
