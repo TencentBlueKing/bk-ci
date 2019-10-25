@@ -49,7 +49,8 @@ import javax.ws.rs.core.MediaType
 interface UserPipelineInfoResource {
     @ApiOperation("列出所有流水线")
     @GET
-    @Path("/projects/{projectId}/")
+    //@Path("/projects/{projectId}/")
+    @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

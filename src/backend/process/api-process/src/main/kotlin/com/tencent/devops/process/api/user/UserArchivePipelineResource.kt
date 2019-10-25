@@ -47,7 +47,8 @@ interface UserArchivePipelineResource {
 
     @ApiOperation("获取某个项目的所有流水线")
     @GET
-    @Path("/projects/{projectId}/getAllPipelines")
+    //@Path("/projects/{projectId}/getAllPipelines")
+    @Path("/service/template/pipelines")
     @Deprecated("use getDownloadAllPipelines instead")
     fun getAllPipelines(
         @ApiParam(value = "用户id", required = true)
@@ -60,7 +61,8 @@ interface UserArchivePipelineResource {
 
     @ApiOperation("获取某条流水线所有构建号")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/getAllBuildNo")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/getAllBuildNo")
+    @Path("/{projectId}/pipelines/{pipelineId}/getAllBuildNo")
     fun getAllBuildNo(
         @ApiParam(value = "用户id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -75,7 +77,8 @@ interface UserArchivePipelineResource {
 
     @ApiOperation("获取某个项目用户可以下载归档的所有流水线")
     @GET
-    @Path("/projects/{projectId}/getDownloadAllPipelines")
+    //@Path("/projects/{projectId}/getDownloadAllPipelines")
+    @Path("/{projectId}/getDownloadAllPipelines")
     fun getDownloadAllPipelines(
         @ApiParam(value = "用户id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
