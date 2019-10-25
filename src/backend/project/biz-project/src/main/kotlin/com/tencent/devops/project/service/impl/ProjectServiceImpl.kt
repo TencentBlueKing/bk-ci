@@ -1,6 +1,5 @@
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray

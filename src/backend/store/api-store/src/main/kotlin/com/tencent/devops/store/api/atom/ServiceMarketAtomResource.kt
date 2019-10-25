@@ -1,6 +1,5 @@
 package com.tencent.devops.store.api.atom
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomProcessInfo

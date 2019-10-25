@@ -75,7 +75,7 @@ class ProjectLocalService @Autowired constructor(
     @Value("\${paas_cc.url}")
     private lateinit var ccUrl: String
 
-    fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo) {
+    fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): String {
         validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
 
@@ -142,6 +142,7 @@ class ProjectLocalService @Autowired constructor(
                 )
                 )
                 success = true
+                return projectId
             } finally {
                 if (logoFile.exists()) {
                     logoFile.delete()
