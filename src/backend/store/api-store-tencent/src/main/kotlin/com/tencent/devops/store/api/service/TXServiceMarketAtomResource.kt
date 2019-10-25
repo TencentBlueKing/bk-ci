@@ -1,16 +1,17 @@
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.api.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomPipeline
-import com.tencent.devops.store.pojo.atom.AtomProcessInfo
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -21,25 +22,37 @@ import javax.ws.rs.core.MediaType
 @Path("/service/market/atom/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceMarketAtomResource {
+interface TXServiceMarketAtomResource {
 
-    @ApiOperation("获取指定项目下所有流水线原子的名称信息")
+    @ApiOperation("设置原子构建结果状态")
+    @PUT
+    @Path("/atomCodes/{atomCode}/versions/{version}")
+    fun setAtomBuildStatusByAtomCode(
+        @ApiParam("原子代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @ApiParam("用户Id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("原子状态", required = true)
+        @QueryParam("atomStatus")
+        atomStatus: AtomStatusEnum,
+        @ApiParam("状态描述", required = false)
+        @QueryParam("msg")
+        msg: String?
+    ): Result<Boolean>
+
+    @ApiOperation("获取所有流水线原子信息")
     @GET
-    @Path("/project/{projectCode}/atomNames")
-    fun getProjectAtomNames(
+    @Path("/project/{projectCode}/projectElement")
+    fun getProjectElements(
         @ApiParam("项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Map<String/* atomCode */, String/* cnName */>>
-
-    @ApiOperation("根据插件版本ID获取插件版本进度")
-    @GET
-    @Path("/desk/atom/release/process/atomId/{atomId}")
-    fun getProcessInfo(
-            @ApiParam("atomId", required = true)
-            @PathParam("atomId")
-            atomId: String
-    ): Result<AtomProcessInfo>
 
     @ApiOperation("根据插件代码获取插件详细信息")
     @GET
