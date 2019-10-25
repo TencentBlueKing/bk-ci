@@ -1,6 +1,5 @@
 package com.tencent.devops.store.api.atom
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomProcessInfo
 import io.swagger.annotations.Api
