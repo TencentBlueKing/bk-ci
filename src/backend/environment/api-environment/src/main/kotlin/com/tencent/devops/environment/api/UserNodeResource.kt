@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 interface UserNodeResource {
 
     @ApiOperation("是否拥有创建节点的权限")
-    @Path("/projects/{projectId}/hasCreatePermission")
+    @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -63,7 +63,7 @@ interface UserNodeResource {
 
     @ApiOperation("删除节点")
     @POST
-    @Path("/projects/{projectId}/deleteNodes")
+    @Path("/{projectId}/deleteNodes")
     fun deleteNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -77,7 +77,7 @@ interface UserNodeResource {
 
     @ApiOperation("获取项目节点列表")
     @GET
-    @Path("/projects/{projectId}/nodes")
+    @Path("/{projectId}")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -89,7 +89,7 @@ interface UserNodeResource {
 
     @ApiOperation("获取用户有权限使用的服务器列表")
     @GET
-    @Path("/projects/{projectId}/listUsableServerNodes")
+    @Path("/{projectId}/listUsableServerNodes")
     fun listUsableServerNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -101,7 +101,7 @@ interface UserNodeResource {
 
     @ApiOperation("修改节点导入人")
     @POST
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/changeCreatedUser")
+    @Path("/{projectId}/{nodeHashId}/changeCreatedUser")
     fun changeCreatedUser(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -116,7 +116,7 @@ interface UserNodeResource {
 
     @ApiOperation("修改节点名称")
     @POST
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/updateDisplayName")
+    @Path("/{projectId}/{nodeHashId}/updateDisplayName")
     fun updateDisplayName(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

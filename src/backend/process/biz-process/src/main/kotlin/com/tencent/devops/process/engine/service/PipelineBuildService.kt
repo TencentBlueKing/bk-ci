@@ -74,6 +74,7 @@ import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
+import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
@@ -815,6 +816,57 @@ class PipelineBuildService(
             throw NotFoundException("构建不存在")
         }
         return buildHistories[0]
+    }
+
+    fun getBuildStatusWithVars(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean
+    ): BuildHistoryWithVars {
+        if (checkPermission) {
+            checkPermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = BkAuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId)构建状态"
+            )
+        }
+
+        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
+
+        if (buildHistories.isEmpty()) {
+            throw NotFoundException("构建不存在")
+        }
+        val buildHistory = buildHistories[0]
+        val variables = pipelineRuntimeService.getAllVariable(buildId)
+        return BuildHistoryWithVars(
+            id = buildHistory.id,
+            userId = buildHistory.userId,
+            trigger = buildHistory.trigger,
+            buildNum = buildHistory.buildNum,
+            pipelineVersion = buildHistory.pipelineVersion,
+            startTime = buildHistory.startTime,
+            endTime = buildHistory.endTime,
+            status = buildHistory.status,
+            deleteReason = buildHistory.deleteReason,
+            currentTimestamp = buildHistory.currentTimestamp,
+            isMobileStart = buildHistory.isMobileStart,
+            material = buildHistory.material,
+            queueTime = buildHistory.queueTime,
+            artifactList = buildHistory.artifactList,
+            remark = buildHistory.remark,
+            totalTime = buildHistory.totalTime,
+            executeTime = buildHistory.executeTime,
+            buildParameters = buildHistory.buildParameters,
+            webHookType = buildHistory.webHookType,
+            startType = buildHistory.startType,
+            recommendVersion = buildHistory.recommendVersion,
+            variables = variables
+        )
     }
 
     fun getBuildVars(

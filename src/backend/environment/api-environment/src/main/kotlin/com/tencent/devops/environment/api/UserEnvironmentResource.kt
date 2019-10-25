@@ -57,7 +57,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserEnvironmentResource {
     @ApiOperation("是否拥有创建环境的权限")
-    @Path("/projects/{projectId}/hasCreatePermission")
+    @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -70,7 +70,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("创建环境")
     @POST
-    @Path("/projects/{projectId}/envs")
+    @Path("/{projectId}")
     fun create(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -84,7 +84,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("修改环境")
     @POST
-    @Path("/projects/{projectId}/envs/{envHashId}")
+    @Path("/{projectId}/{envHashId}")
     fun update(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -101,7 +101,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("获取环境列表")
     @GET
-    @Path("/projects/{projectId}/envs")
+    @Path("/{projectId}")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -113,7 +113,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("根据类型获取环境列表")
     @GET
-    @Path("/projects/{projectId}/types/{envType}")
+    @Path("/{projectId}/types/{envType}")
     fun listByType(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -128,7 +128,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("根据OS获取第三方构建环境列表")
     @GET
-    @Path("/projects/{projectId}/buildEnvs")
+    @Path("/{projectId}/buildEnvs")
     fun listBuildEnvs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -143,7 +143,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("获取环境信息")
     @GET
-    @Path("/projects/{projectId}/envs/{envHashId}")
+    @Path("/{projectId}/{envHashId}")
     fun get(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -158,7 +158,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("删除环境")
     @DELETE
-    @Path("/projects/{projectId}/envs/{envHashId}")
+    @Path("/{projectId}/{envHashId}")
     fun delete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -173,7 +173,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("获取环境的节点列表")
     @POST
-    @Path("/projects/{projectId}/envs/{envHashId}/listNodes")
+    @Path("/{projectId}/{envHashId}/listNodes")
     fun listNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -188,7 +188,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("添加节点到环境")
     @POST
-    @Path("/projects/{projectId}/envs/{envHashId}/addNodes")
+    @Path("/{projectId}/{envHashId}/addNodes")
     fun addNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -205,7 +205,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("从环境删除节点")
     @POST
-    @Path("/projects/{projectId}/envs/{envHashId}/deleteNodes")
+    @Path("/{projectId}/{envHashId}/deleteNodes")
     fun deleteNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -222,7 +222,7 @@ interface UserEnvironmentResource {
 
     @ApiOperation("获取用户有权限使用的环境列表")
     @GET
-    @Path("/projects/{projectId}/envs/listUsableServerEnvs")
+    @Path("/{projectId}/listUsableServerEnvs")
     fun listUsableServerEnvs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

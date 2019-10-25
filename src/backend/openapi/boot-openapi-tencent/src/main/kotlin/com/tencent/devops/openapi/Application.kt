@@ -24,13 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.openapi
 
-data class PipelineModelTask(
-    val projectId: String,
-    val pipelineId: String,
-    val taskId: String,
-    val taskName: String,
-    val classType: String,
-    val taskParams: Map<String, Any>
-)
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+
+@MicroService
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
+}

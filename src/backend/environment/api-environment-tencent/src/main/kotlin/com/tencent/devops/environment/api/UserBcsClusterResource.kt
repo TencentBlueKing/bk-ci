@@ -28,7 +28,7 @@ interface UserBcsClusterResource {
 
     @ApiOperation("创建并添加BCSVM节点")
     @POST
-    @Path("/projects/{projectId}/addBcsVmNodes")
+    @Path("/{projectId}/addBcsVmNodes")
     fun addBcsVmNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -47,7 +47,7 @@ interface UserBcsClusterResource {
 
     @ApiOperation("获取Bcs镜像列表")
     @GET
-    @Path("/projects/{projectId}/getImageList")
+    @Path("/{projectId}/getImageList")
     fun getImageList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -59,7 +59,7 @@ interface UserBcsClusterResource {
 
     @ApiOperation("获取VM机型列表")
     @GET
-    @Path("/projects/{projectId}/getVmModelList")
+    @Path("/{projectId}/getVmModelList")
     fun getVmModelList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -71,7 +71,7 @@ interface UserBcsClusterResource {
 
     @ApiOperation("获取VM配额信息")
     @GET
-    @Path("/projects/{projectId}/getProjectInfo")
+    @Path("/{projectId}/getProjectInfo")
     fun getProjectInfo(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

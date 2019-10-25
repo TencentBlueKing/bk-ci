@@ -46,7 +46,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_NODE"], description = "用户-节点")
-@Path("/user/cmdb")
+@Path("/user/envnode")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserCmdbNodeResource {
@@ -97,7 +97,7 @@ interface UserCmdbNodeResource {
 
     @ApiOperation("导入CMDB节点")
     @POST
-    @Path("/projects/{projectId}/addCmdbNodes")
+    @Path("/{projectId}/addCmdbNodes")
     fun addCmdbNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -111,7 +111,7 @@ interface UserCmdbNodeResource {
 
     @ApiOperation("导入CC节点")
     @POST
-    @Path("/projects/{projectId}/addCcNodes")
+    @Path("/{projectId}/addCcNodes")
     fun addCcNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
