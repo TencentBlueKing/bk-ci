@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAgentCredentialResource {
     @ApiOperation("构建机获取凭据")
-    @Path("/credentials/{credentialId}/")
+    @Path("/{credentialId}/")
     @GET
     fun get(
         @ApiParam("项目ID", required = true)

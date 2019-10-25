@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildCertResource {
     @ApiOperation("按证书ID获取ios加密的证书内容")
-    @Path("/ios/certs/{certId}/")
+    @Path("/ios/{certId}/")
     @GET
     fun queryIos(
         @ApiParam(value = "构建ID", required = true)
@@ -72,7 +72,7 @@ interface BuildCertResource {
     ): Result<CertIOS>
 
     @ApiOperation("按证书ID获取ios企业加密的证书内容")
-    @Path("/enterprise/certs/{certId}/")
+    @Path("/enterprise/{certId}/")
     @GET
     fun queryEnterprise(
         @ApiParam(value = "构建ID", required = true)
@@ -93,7 +93,7 @@ interface BuildCertResource {
     ): Result<CertEnterprise>
 
     @ApiOperation("按证书ID获取android加密的证书内容")
-    @Path("/android/certs/{certId}/")
+    @Path("/android/{certId}/")
     @GET
     fun queryAndroid(
         @ApiParam(value = "构建ID", required = true)
