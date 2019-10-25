@@ -831,7 +831,7 @@ class PipelineBuildService(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = BkAuthPermission.VIEW,
+                permission = AuthPermission.VIEW,
                 message = "用户（$userId) 无权限获取流水线($pipelineId)构建状态"
             )
         }

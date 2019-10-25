@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.pojo.PipelineModelTask
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.service.PipelineTaskService
 import org.springframework.beans.factory.annotation.Autowired
