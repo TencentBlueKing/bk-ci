@@ -6,10 +6,8 @@ import com.google.common.io.Files
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.plugin.tables.TPluginZhiyunProduct
-import com.tencent.devops.plugin.config.ZhiyunConfig
 import com.tencent.devops.plugin.dao.ZhiyunProductDao
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunProduct
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunUploadParam
