@@ -1,6 +1,7 @@
 package com.tencent.devops.common.environment.agent.client
 
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import okhttp3.Headers
 import okhttp3.Request
 import org.apache.commons.codec.digest.DigestUtils
@@ -17,13 +18,15 @@ object DevCloudContainerInstanceClient {
         devCloudAppId: String,
         devCloudToken: String,
         staffName: String,
-        id: String
+        id: String,
+        smartProxyToken: String
     ): JSONObject {
         val url = "$devCloudUrl/api/v2.1/containers/$id/instances"
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
+//            .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
+            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->

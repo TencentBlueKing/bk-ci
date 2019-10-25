@@ -13,20 +13,27 @@ import com.tencent.devops.environment.dao.ProjectConfigDao
 import org.jooq.DSLContext
 
 object ImportServerNodeUtils {
-    fun getUserCmdbNode(redisOperation: RedisOperation, userId: String, offset: Int, limit: Int): List<RawCmdbNode> {
+    fun getUserCmdbNode(
+        esbAgentClient: EsbAgentClient,
+        redisOperation: RedisOperation,
+        userId: String,
+        offset: Int,
+        limit: Int
+    ): List<RawCmdbNode> {
         val key = "env_node_buffer_cmdb_${userId}_${offset}_$limit"
         val buffer = redisOperation.get(key)
 
         return if (buffer != null) {
             return jacksonObjectMapper().readValue(buffer)
         } else {
-            val cmdbNodes = EsbAgentClient.getUserCmdbNode(userId, offset, limit)
+            val cmdbNodes = esbAgentClient.getUserCmdbNode(userId, offset, limit)
             redisOperation.set(key, jacksonObjectMapper().writeValueAsString(cmdbNodes), 60)
             cmdbNodes
         }
     }
 
     fun getUserCmdbNodeNew(
+        esbAgentClient: EsbAgentClient,
         redisOperation: RedisOperation,
         userId: String,
         bakOperator: Boolean,
@@ -41,28 +48,36 @@ object ImportServerNodeUtils {
             return if (buffer != null) {
                 jacksonObjectMapper().readValue(buffer)
             } else {
-                val cmdbNodePage = EsbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
+                val cmdbNodePage = esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
                 redisOperation.set(key, jacksonObjectMapper().writeValueAsString(cmdbNodePage), 60)
                 cmdbNodePage
             }
         }
 
-        return EsbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
+        return esbAgentClient.getUserCmdbNodeNew(userId, bakOperator, ips, offset, limit)
     }
 
-    fun getUserCcNode(redisOperation: RedisOperation, userId: String): List<RawCcNode> {
+    fun getUserCcNode(esbAgentClient: EsbAgentClient, redisOperation: RedisOperation, userId: String): List<RawCcNode> {
         val key = "env_node_buffer_cc_$userId"
         val buffer = redisOperation.get(key)
         return if (buffer != null) {
             jacksonObjectMapper().readValue(buffer)
         } else {
-            val ccNodes = EsbAgentClient.getUserCCNodes(userId)
+            val ccNodes = esbAgentClient.getUserCCNodes(userId)
             redisOperation.set(key, jacksonObjectMapper().writeValueAsString(ccNodes), 60)
             ccNodes
         }
     }
 
-    fun checkImportCount(dslContext: DSLContext, projectConfigDao: ProjectConfigDao, nodeDao: NodeDao, projectId: String, userId: String, toAddNodeCount: Int) {
+    fun checkImportCount(
+        esbAgentClient: EsbAgentClient,
+        dslContext: DSLContext,
+        projectConfigDao: ProjectConfigDao,
+        nodeDao: NodeDao,
+        projectId: String,
+        userId: String,
+        toAddNodeCount: Int
+    ) {
         val projectConfig = projectConfigDao.get(dslContext, projectId, userId)
         val importQuata = projectConfig.importQuota
         val existImportNodeCount = nodeDao.countImportNode(dslContext, projectId)

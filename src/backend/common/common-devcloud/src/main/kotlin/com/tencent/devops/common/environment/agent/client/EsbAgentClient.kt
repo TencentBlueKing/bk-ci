@@ -13,16 +13,24 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
 
-object EsbAgentClient {
+@Component
+class EsbAgentClient {
 
-    private val logger = LoggerFactory.getLogger(EsbAgentClient::class.java)
-    private val JSON = MediaType.parse("application/json;charset=utf-8")
+    @Value("\${esb.appCode}")
+    private val appCode = "bkci"
 
-    private const val appCode = "bkci"
-    private const val appSecret = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
-    private const val DEFAULT_SYTEM_USER = "devops"
+    @Value("\${esb.appSecret}")
+    private val appSecret = ""
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(EsbAgentClient::class.java)
+        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private const val DEFAULT_SYTEM_USER = "devops"
+    }
 
     fun getAgentStatus(
         userId: String,

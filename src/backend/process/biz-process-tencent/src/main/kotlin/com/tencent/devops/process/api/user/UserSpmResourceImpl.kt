@@ -11,5 +11,6 @@ class UserSpmResourceImpl @Autowired constructor(
     private val spmService: SpmService
 ) : UserSpmResource {
 
-    override fun getFileInfo(projectId: String, globalDownloadUrl: String, downloadUrl: String, cmdbAppId: Int): Result<List<SpmFileInfo>> = spmService.getFileInfo(projectId, globalDownloadUrl, downloadUrl, cmdbAppId)
+    override fun getFileInfo(projectId: String, globalDownloadUrl: String, downloadUrl: String, cmdbAppId: Int): Result<List<SpmFileInfo>> =
+        spmService.getFileInfo(projectId, globalDownloadUrl, downloadUrl, cmdbAppId)
 }

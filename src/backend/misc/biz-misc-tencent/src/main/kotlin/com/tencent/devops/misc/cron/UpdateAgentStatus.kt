@@ -14,7 +14,8 @@ import org.springframework.stereotype.Component
 class UpdateAgentStatus @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val esbAgentClient: EsbAgentClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UpdateAgentStatus::class.java)
@@ -50,7 +51,7 @@ class UpdateAgentStatus @Autowired constructor(
         }
 
         val allIps = allServerNodes.map { it.nodeIp }.toSet()
-        val agentStatusMap = EsbAgentClient.getAgentStatus(DEFAULT_SYTEM_USER, allIps)
+        val agentStatusMap = esbAgentClient.getAgentStatus(DEFAULT_SYTEM_USER, allIps)
 
         allServerNodes.forEach {
             it.agentStatus = agentStatusMap[it.nodeIp] ?: false

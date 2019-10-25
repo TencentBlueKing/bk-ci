@@ -70,7 +70,8 @@ interface UserPipelineResource {
 
     @ApiOperation("用户是否拥有创建流水线权限")
     @GET
-    @Path("/projects/{projectId}/hasCreatePermission")
+    //@Path("/projects/{projectId}/hasCreatePermission")
+    @Path("/{projectId}/hasCreatePermission")
     fun hasCreatePermission(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -82,7 +83,8 @@ interface UserPipelineResource {
 
     @ApiOperation("流水线名是否存在")
     @GET
-    @Path("/projects/{projectId}/pipelineExist")
+    //@Path("/projects/{projectId}/pipelineExist")
+    @Path("/{projectId}/pipelineExist")
     fun pipelineExist(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -95,21 +97,10 @@ interface UserPipelineResource {
         pipelineName: String
     ): Result<Boolean>
 
-    @ApiOperation("项目是否灰度Docker构建方案")
-    @GET
-    @Path("/projects/{projectId}/enableDocker")
-    fun enableDockerBuild(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<Boolean>
-
     @ApiOperation("拥有权限流水线列表")
     @GET
-    @Path("/projects/{projectId}/hasPermissionList")
+    //@Path("/projects/{projectId}/hasPermissionList")
+    @Path("/{projectId}/hasPermissionList")
     fun hasPermissionList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -133,7 +124,8 @@ interface UserPipelineResource {
 
     @ApiOperation("新建流水线编排")
     @POST
-    @Path("/projects/{projectId}/createPipeline")
+    //@Path("/projects/{projectId}/createPipeline")
+    @Path("/{projectId}")
     fun create(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -147,7 +139,8 @@ interface UserPipelineResource {
 
     @ApiOperation("用户是否拥有流水线权限")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/hasPermission")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/hasPermission")
+    @Path("/{projectId}/{pipelineId}/hasPermission")
     fun hasPermission(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -165,7 +158,8 @@ interface UserPipelineResource {
 
     @ApiOperation("复制流水线编排")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/copy")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/copy")
+    @Path("/{projectId}/{pipelineId}/copy")
     fun copy(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -182,7 +176,8 @@ interface UserPipelineResource {
 
     @ApiOperation("编辑流水线编排")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{projectId}/{pipelineId}/")
     fun edit(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -199,7 +194,8 @@ interface UserPipelineResource {
 
     @ApiOperation("编辑流水线编排以及设置")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/saveAll")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/saveAll")
+    @Path("/{projectId}/{pipelineId}/saveAll")
     fun saveAll(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -216,7 +212,8 @@ interface UserPipelineResource {
 
     @ApiOperation("保存流水线设置")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/saveSetting")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/saveSetting")
+    @Path("/{projectId}/{pipelineId}/saveSetting")
     fun saveSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -233,7 +230,8 @@ interface UserPipelineResource {
 
     @ApiOperation("获取流水线编排")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{projectId}/{pipelineId}/")
     fun get(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -248,7 +246,8 @@ interface UserPipelineResource {
 
     @ApiOperation("生成远程执行token")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/remoteToken")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/remoteToken")
+    @Path("/{projectId}/{pipelineId}/remoteToken")
     fun generateRemoteToken(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -263,7 +262,8 @@ interface UserPipelineResource {
 
     @ApiOperation("删除流水线编排")
     @DELETE
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{projectId}/{pipelineId}/")
     fun softDelete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -278,6 +278,7 @@ interface UserPipelineResource {
 
     @ApiOperation("用户获取视图设置和流水线编排列表")
     @GET
+    //@Path("/projects/{projectId}/listViewSettingAndPipelines")
     @Path("/projects/{projectId}/listViewSettingAndPipelines")
     fun listViewSettingAndPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -296,6 +297,7 @@ interface UserPipelineResource {
 
     @ApiOperation("用户获取视图流水线编排列表")
     @GET
+    //@Path("/projects/{projectId}/listViewPipelines")
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -329,7 +331,8 @@ interface UserPipelineResource {
 
     @ApiOperation("有权限流水线编排列表")
     @GET
-    @Path("/projects/{projectId}/authPipelines")
+    //@Path("/projects/{projectId}/authPipelines")
+    @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -350,7 +353,8 @@ interface UserPipelineResource {
 
     @ApiOperation("流水线状态列表")
     @POST
-    @Path("/projects/{projectId}/pipelineStatus")
+    //@Path("/projects/{projectId}/pipelineStatus")
+    @Path("/{projectId}/pipelineStatus")
     fun getPipelineStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -362,27 +366,10 @@ interface UserPipelineResource {
         pipelines: Set<String>
     ): Result<Map<String, PipelineStatus>>
 
-    @ApiOperation("订阅流水线消息")
-    @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
-    fun subscription(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("消息订阅类型", required = false)
-        @QueryParam("type")
-        type: SubscriptionType? = SubscriptionType.ALL
-    ): Result<Boolean>
-
     @ApiOperation("收藏流水线消息")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/favor")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/favor")
+    @Path("/{projectId}/{pipelineId}/favor")
     fun favor(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -398,39 +385,10 @@ interface UserPipelineResource {
         favor: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("获取是否订阅流水线")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
-    fun getSubscription(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<PipelineSubscription?>
-
-    @ApiOperation("取消订阅流水线消息")
-    @DELETE
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
-    fun cancelSubscription(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<Boolean>
-
     @ApiOperation("删除流水线编排")
     @DELETE
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/forceDelete")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/forceDelete")
+    @Path("/{projectId}/{pipelineId}/true")
     fun trueDelete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -445,7 +403,8 @@ interface UserPipelineResource {
 
     @ApiOperation("还原流水线编排")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/restore")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/restore")
+    @Path("/{projectId}/{pipelineId}/restore")
     fun restore(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -460,7 +419,8 @@ interface UserPipelineResource {
 
     @ApiOperation("列出等还原回收的流水线列表")
     @GET
-    @Path("/projects/{projectId}/pipelineRecycleList")
+    //@Path("/projects/{projectId}/pipelineRecycleList")
+    @Path("/{projectId}/pipelineRecycleList")
     fun recycleList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -481,7 +441,8 @@ interface UserPipelineResource {
 
     @ApiOperation("流水线重命名")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/rename")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/rename")
+    @Path("/{projectId}/{pipelineId}/")
     fun rename(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

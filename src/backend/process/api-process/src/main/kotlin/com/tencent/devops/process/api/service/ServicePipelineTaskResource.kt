@@ -28,7 +28,7 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.PipelineModelTask
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -50,7 +50,8 @@ interface ServicePipelineTaskResource {
 
     @ApiOperation("获取流水线所有插件")
     @POST
-    @Path("/projects/{projectId}/list")
+    //@Path("/projects/{projectId}/list")
+    @Path("/{projectId}/list")
     fun list(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

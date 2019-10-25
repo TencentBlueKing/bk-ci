@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":common:common-auth:common-auth-tencent")
+    compile project(":environment:biz-environment-op")
     compile project(":environment:biz-environment-tencent")
 }
 

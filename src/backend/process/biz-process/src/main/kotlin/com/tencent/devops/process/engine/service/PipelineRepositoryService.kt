@@ -614,6 +614,10 @@ class PipelineRepositoryService constructor(
         return existModel
     }
 
+    fun countByPipelineIds(projectId: String, channelCode: ChannelCode, pipelineIds: List<String>): Int {
+        return pipelineInfoDao.countByPipelineIds(dslContext, projectId, channelCode, pipelineIds)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
     }

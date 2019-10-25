@@ -5,6 +5,7 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.api.pojo.BkAuthProject
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -28,7 +29,8 @@ class AppPipelineService @Autowired constructor(
     private val bkCCProjectApi: BSCCProjectApi,
     private val buildService: PipelineBuildService,
     private val pipelineService: PipelineService,
-    private val client: Client
+    private val client: Client,
+    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AppPipelineService::class.java)
@@ -43,7 +45,7 @@ class AppPipelineService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS
     ): Page<AppProject> {
         var beginTime = System.currentTimeMillis()
-        val projectIds = bkAuthProjectApi.getUserProjects(BkAuthServiceCode.PIPELINE, userId)
+        val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
         logger.info("get project ids time: ${System.currentTimeMillis() - beginTime}")
         beginTime = System.currentTimeMillis()
 
@@ -87,8 +89,8 @@ class AppPipelineService @Autowired constructor(
 
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data
         val projectInfo = if (projectInfoList == null || projectInfoList.isEmpty()) null else projectInfoList[0]
-        val projectName = projectInfo?.project_name ?: ""
-        var logoAddr = projectInfo?.logo_addr ?: ""
+        val projectName = projectInfo?.projectName ?: ""
+        var logoAddr = projectInfo?.logoAddr ?: ""
         logoAddr = "https://download.bkdevops.qq.com/images" + logoAddr.removePrefix("http://radosgw.open.oa.com")
 
         result.records.filter { it.hasPermission }.map {

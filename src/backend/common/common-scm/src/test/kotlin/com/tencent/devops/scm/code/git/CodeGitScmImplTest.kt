@@ -26,25 +26,6 @@
 
 package com.tencent.devops.scm.code.git
 
-import org.junit.Ignore
-import org.junit.Test
-
 class CodeGitScmImplTest {
 
-    @Ignore
-    @Test
-    fun testListBranch() {
-        val scm = CodeGitScmImpl(
-            "devops/master_with_submodule",
-            null,
-            "git@git.xx.com:devops/master_with_submodule.git",
-            null,
-            null,
-            "xxx",
-            null,
-            ""
-        )
-        println(scm.getBranches())
-        println(scm.getLatestRevision())
-    }
 }

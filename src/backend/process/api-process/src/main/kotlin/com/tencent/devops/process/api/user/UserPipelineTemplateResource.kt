@@ -39,7 +39,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PIPELINE_TEMPLATE"], description = "用户-流水线-模板资源")
-@Path("/user/templatePipelines")
+//@Path("/user/templatePipelines")
+@Path("/user/template/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineTemplateResource {

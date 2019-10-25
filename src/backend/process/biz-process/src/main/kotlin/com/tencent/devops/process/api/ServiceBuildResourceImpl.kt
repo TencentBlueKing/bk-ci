@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
+import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
@@ -224,16 +225,20 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         channelCode: ChannelCode
-    ): Result<BuildHistory> {
+    ): Result<BuildHistoryWithVars> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            buildService.getBuildStatus(
-                userId, projectId, pipelineId, buildId, channelCode,
-                ChannelCode.isNeedAuth(channelCode)
+            buildService.getBuildStatusWithVars(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }

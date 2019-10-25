@@ -70,6 +70,9 @@ import com.tencent.devops.process.engine.atom.vm.DispatchVMShutdownTaskAtom
 import com.tencent.devops.process.engine.atom.vm.DispatchVMStartupTaskAtom
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -419,34 +422,38 @@ class PipelineRuntimeService @Autowired constructor(
         endTimeEndTime: Long?,
         totalTimeMin: Long?,
         totalTimeMax: Long?,
-        remark: String?
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
-            dslContext,
-            projectId,
-            pipelineId,
-            materialAlias,
-            materialUrl,
-            materialBranch,
-            materialCommitId,
-            materialCommitMessage,
-            status,
-            trigger,
-            queueTimeStartTime,
-            queueTimeEndTime,
-            startTimeStartTime,
-            startTimeEndTime,
-            endTimeStartTime,
-            endTimeEndTime,
-            totalTimeMin,
-            totalTimeMax,
-            remark,
-            offset,
-            if (limit < 0) {
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            offset = offset,
+            limit = if (limit < 0) {
                 1000
-            } else limit
+            } else limit,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -954,7 +961,14 @@ class PipelineRuntimeService @Autowired constructor(
                     buildStatus = BuildStatus.QUEUE
                 )
                 // 写入版本号
-                pipelineBuildVarDao.save(transactionContext, buildId, PIPELINE_BUILD_NUM, buildNum)
+                pipelineBuildVarDao.save(
+                    dslContext = transactionContext,
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildId = buildId,
+                    name = PIPELINE_BUILD_NUM,
+                    value = buildNum
+                )
             }
 
             // 保存参数
@@ -1184,6 +1198,39 @@ class PipelineRuntimeService @Autowired constructor(
     /**
      * 手动完成任务
      */
+    fun manualDealBuildTask(buildId: String, taskId: String, userId: String, manualAction: ManualReviewAction) {
+        dslContext.transaction { configuration ->
+            val transContext = DSL.using(configuration)
+            val taskRecord = pipelineBuildTaskDao.get(transContext, buildId, taskId)
+            if (taskRecord != null) {
+                with(taskRecord) {
+                    if (BuildStatus.isRunning(BuildStatus.values()[status])) {
+                        val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
+                        taskParam[BS_MANUAL_ACTION] = manualAction
+                        taskParam[BS_MANUAL_ACTION_USERID] = userId
+                        val result = pipelineBuildTaskDao.updateTaskParam(
+                            dslContext,
+                            buildId,
+                            taskId,
+                            JsonUtil.toJson(taskParam)
+                        )
+                        if (result != 1) {
+                            logger.info("[{}]|taskId={}| update task param failed", buildId, taskId)
+                        }
+                        pipelineEventDispatcher.dispatch(
+                            PipelineBuildAtomTaskEvent(
+                                javaClass.simpleName,
+                                projectId, pipelineId, starter, buildId, stageId,
+                                containerId, containerType, taskId,
+                                taskParam, ActionType.REFRESH
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun manualDealBuildTask(buildId: String, taskId: String, userId: String, params: ReviewParam) {
         dslContext.transaction { configuration ->
             val transContext = DSL.using(configuration)
@@ -1192,11 +1239,11 @@ class PipelineRuntimeService @Autowired constructor(
                 with(taskRecord) {
                     if (BuildStatus.isRunning(BuildStatus.values()[status])) {
                         val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
-                        taskParam[MANUAL_ACTION] = params.status.toString()
-                        taskParam[MANUAL_ACTION_USERID] = userId
-                        taskParam[MANUAL_ACTION_DESC] = params.desc ?: ""
-                        taskParam[MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params)
-                        taskParam[MANUAL_ACTION_SUGGEST] = params.suggest ?: ""
+                        taskParam[BS_MANUAL_ACTION] = params.status.toString()
+                        taskParam[BS_MANUAL_ACTION_USERID] = userId
+                        taskParam[BS_MANUAL_ACTION_DESC] = params.desc ?: ""
+                        taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params)
+                        taskParam[BS_MANUAL_ACTION_SUGGEST] = params.suggest ?: ""
                         val result = pipelineBuildTaskDao.updateTaskParam(
                             dslContext,
                             buildId,
@@ -1252,8 +1299,21 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun setVariable(buildId: String, varName: String, varValue: Any) {
-        pipelineBuildVarDao.save(dslContext, buildId, varName, varValue)
+    fun setVariable(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        varValue: Any
+    ) {
+        pipelineBuildVarDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            name = varName,
+            value = varValue
+        )
     }
 
     fun batchSetVariable(buildId: String, variables: Map<String, Any>) {
@@ -1606,28 +1666,32 @@ class PipelineRuntimeService @Autowired constructor(
         endTimeEndTime: Long?,
         totalTimeMin: Long?,
         totalTimeMax: Long?,
-        remark: String?
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
     ): Int {
         return pipelineBuildDao.count(
-            dslContext,
-            projectId,
-            pipelineId,
-            materialAlias,
-            materialUrl,
-            materialBranch,
-            materialCommitId,
-            materialCommitMessage,
-            status,
-            trigger,
-            queueTimeStartTime,
-            queueTimeEndTime,
-            startTimeStartTime,
-            startTimeEndTime,
-            endTimeStartTime,
-            endTimeEndTime,
-            totalTimeMin,
-            totalTimeMax,
-            remark
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
         )
     }
 
