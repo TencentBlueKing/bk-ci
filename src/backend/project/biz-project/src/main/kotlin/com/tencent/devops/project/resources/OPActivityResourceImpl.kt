@@ -63,8 +63,8 @@ class OPActivityResourceImpl @Autowired constructor(private val activityService:
         return Result(true)
     }
 
-    override fun getFieldV2(userId: String, fieldName: String): Result<List<String>> {
-        return Result(activityService.getField(fieldName))
-    }
+//    override fun getFieldV2(userId: String, fieldName: String): Result<List<String>> {
+//        return Result(activityService.getField(fieldName))
+//    }
 
 }

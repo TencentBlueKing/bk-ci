@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":monitoring:api-monitoring-tencent")
+    compile project(":notify:api-notify")
+    compile project(":monitoring:model-monitoring-tencent")
+    compile project(":common:common-notify")
+    compile project(":common:common-db")
+}

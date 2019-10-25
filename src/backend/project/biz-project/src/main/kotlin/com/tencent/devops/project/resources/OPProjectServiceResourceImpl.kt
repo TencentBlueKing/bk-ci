@@ -50,9 +50,9 @@ class OPProjectServiceResourceImpl constructor(
         return Result(grayTestService.listAllUsers())
     }
 
-    override fun listUsersV2(userId: String): Result<Map<String, List<Any>>> {
-        return Result(grayTestService.listAllUsers())
-    }
+//    override fun listUsersV2(userId: String): Result<Map<String, List<Any>>> {
+//        return Result(grayTestService.listAllUsers())
+//    }
 
     override fun listByCondition(
         userId: String,
@@ -76,20 +76,20 @@ class OPProjectServiceResourceImpl constructor(
         return Result(grayTestService.listByCondition(userNameList, serviceIdList, statusList, mypageSize, mypageNum))
     }
 
-    override fun listByConditionV2(userId: String, userNames: String?, serviceIds: String?, status: String?, pageSize: Int?, pageNum: Int?): Result<List<GrayTestListInfo>> {
-        var userNameList: List<String> = arrayListOf()
-        var serviceIdList: List<String> = arrayListOf()
-        var statusList: List<String> = arrayListOf()
-        var mypageSize = 0
-        var mypageNum = 0
-        if (userNames != null) userNameList = userNames.split(",")
-        if (serviceIds != null) serviceIdList = serviceIds.split(",")
-        if (status != null) statusList = status.split(",")
-        if (pageSize != null && pageSize > 0) mypageSize = pageSize
-        if (pageNum != null && pageNum > 0) mypageNum = pageNum - 1
-
-        return Result(grayTestService.listByCondition(userNameList, serviceIdList, statusList, mypageSize, mypageNum))
-    }
+//    override fun listByConditionV2(userId: String, userNames: String?, serviceIds: String?, status: String?, pageSize: Int?, pageNum: Int?): Result<List<GrayTestListInfo>> {
+//        var userNameList: List<String> = arrayListOf()
+//        var serviceIdList: List<String> = arrayListOf()
+//        var statusList: List<String> = arrayListOf()
+//        var mypageSize = 0
+//        var mypageNum = 0
+//        if (userNames != null) userNameList = userNames.split(",")
+//        if (serviceIds != null) serviceIdList = serviceIds.split(",")
+//        if (status != null) statusList = status.split(",")
+//        if (pageSize != null && pageSize > 0) mypageSize = pageSize
+//        if (pageNum != null && pageNum > 0) mypageNum = pageNum - 1
+//
+//        return Result(grayTestService.listByCondition(userNameList, serviceIdList, statusList, mypageSize, mypageNum))
+//    }
 
     override fun createServiceType(userId: String, title: String, weight: Int): Result<ServiceType> {
         return Result(serviceTypeService.createServiceType(userId, title, weight))
@@ -99,9 +99,9 @@ class OPProjectServiceResourceImpl constructor(
         return Result(serviceTypeService.list())
     }
 
-    override fun listServiceTypeV2(userId: String): Result<List<ServiceType>> {
-        return Result(serviceTypeService.list())
-    }
+//    override fun listServiceTypeV2(userId: String): Result<List<ServiceType>> {
+//        return Result(serviceTypeService.list())
+//    }
 
     override fun deleteServiceType(userId: String, serviceTypeId: Long): Result<Boolean> {
         return Result(serviceTypeService.deleteServiceType(serviceTypeId))
@@ -142,9 +142,9 @@ class OPProjectServiceResourceImpl constructor(
         return userProjectServiceService.listOPService(userId)
     }
 
-    override fun listOPServiceV2(userId: String): Result<List<OPPServiceVO>> {
-        return userProjectServiceService.listOPService(userId)
-    }
+//    override fun listOPServiceV2(userId: String): Result<List<OPPServiceVO>> {
+//        return userProjectServiceService.listOPService(userId)
+//    }
 
     override fun createService(userId: String, serviceCreateInfo: ServiceCreateInfo): Result<OPPServiceVO> {
         return userProjectServiceService.createService(userId, serviceCreateInfo)
@@ -171,52 +171,52 @@ class OPProjectServiceResourceImpl constructor(
         return Result(true)
     }
 
-    override fun syncServiceV2(userId: String, services: List<ServiceListVO>): Result<Boolean> {
-        userProjectServiceService.syncService(userId, services)
-        return Result(true)
-    }
-
-    override fun createServiceTypeV2(userId: String, title: String, weight: Int): Result<ServiceType> {
-        return Result(serviceTypeService.createServiceType(userId, title, weight))
-    }
-
-    override fun deleteServiceTypeV2(userId: String, serviceTypeId: Long): Result<Boolean> {
-        return Result(serviceTypeService.deleteServiceType(serviceTypeId))
-    }
-
-    override fun updateServiceTypeV2(userId: String, serviceTypeId: Long, serviceTypeModify: ServiceTypeModify): Result<Boolean> {
-        serviceTypeService.updateServiceType(userId, serviceTypeId, serviceTypeModify)
-        return Result(true)
-    }
-
-    override fun getServiceTypeByIdV2(userId: String, serviceTypeId: Long): Result<ServiceType> {
-        return Result(serviceTypeService.get(serviceTypeId))
-    }
-
-    override fun updateUserAuthV2(userId: String, id: Long, grayTestInfo: GrayTestInfo): Result<Boolean> {
-        grayTestService.update(userId, id, grayTestInfo)
-        return Result(true)
-    }
-
-    override fun deleteUserAuthV2(userId: String, grayTestId: Long): Result<Boolean> {
-        grayTestService.delete(grayTestId)
-        return Result(true)
-    }
-
-    override fun listGrayTestByIdV2(userId: String, id: Long): Result<GrayTestInfo> {
-        return Result(grayTestService.get(id))
-    }
-
-    override fun createServiceV2(userId: String, serviceCreateInfo: ServiceCreateInfo): Result<OPPServiceVO> {
-        return userProjectServiceService.createService(userId, serviceCreateInfo)
-    }
-
-    override fun updateServiceUrlByBatchV2(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
-        return userProjectServiceService.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
-    }
-
-    override fun addUserAuthV2(userId: String, grayTestInfo: GrayTestInfo): Result<GrayTestInfo> {
-        return Result(grayTestService.create(userId, grayTestInfo))
-    }
+//    override fun syncServiceV2(userId: String, services: List<ServiceListVO>): Result<Boolean> {
+//        userProjectServiceService.syncService(userId, services)
+//        return Result(true)
+//    }
+//
+//    override fun createServiceTypeV2(userId: String, title: String, weight: Int): Result<ServiceType> {
+//        return Result(serviceTypeService.createServiceType(userId, title, weight))
+//    }
+//
+//    override fun deleteServiceTypeV2(userId: String, serviceTypeId: Long): Result<Boolean> {
+//        return Result(serviceTypeService.deleteServiceType(serviceTypeId))
+//    }
+//
+//    override fun updateServiceTypeV2(userId: String, serviceTypeId: Long, serviceTypeModify: ServiceTypeModify): Result<Boolean> {
+//        serviceTypeService.updateServiceType(userId, serviceTypeId, serviceTypeModify)
+//        return Result(true)
+//    }
+//
+//    override fun getServiceTypeByIdV2(userId: String, serviceTypeId: Long): Result<ServiceType> {
+//        return Result(serviceTypeService.get(serviceTypeId))
+//    }
+//
+//    override fun updateUserAuthV2(userId: String, id: Long, grayTestInfo: GrayTestInfo): Result<Boolean> {
+//        grayTestService.update(userId, id, grayTestInfo)
+//        return Result(true)
+//    }
+//
+//    override fun deleteUserAuthV2(userId: String, grayTestId: Long): Result<Boolean> {
+//        grayTestService.delete(grayTestId)
+//        return Result(true)
+//    }
+//
+//    override fun listGrayTestByIdV2(userId: String, id: Long): Result<GrayTestInfo> {
+//        return Result(grayTestService.get(id))
+//    }
+//
+//    override fun createServiceV2(userId: String, serviceCreateInfo: ServiceCreateInfo): Result<OPPServiceVO> {
+//        return userProjectServiceService.createService(userId, serviceCreateInfo)
+//    }
+//
+//    override fun updateServiceUrlByBatchV2(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
+//        return userProjectServiceService.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
+//    }
+//
+//    override fun addUserAuthV2(userId: String, grayTestInfo: GrayTestInfo): Result<GrayTestInfo> {
+//        return Result(grayTestService.create(userId, grayTestInfo))
+//    }
 
 }

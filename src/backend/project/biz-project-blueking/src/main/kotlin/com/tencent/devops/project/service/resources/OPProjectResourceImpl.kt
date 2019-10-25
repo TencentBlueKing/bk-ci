@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.service.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectResource
@@ -59,11 +59,11 @@ class OPProjectResourceImpl @Autowired constructor(private val projectService: O
         return projectService.getProjectCount(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, grayFlag)
     }
 
-    override fun updateProjectV2(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Result<Int> {
-        return Result(data = projectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
-    }
-
-    override fun setGrayProjectV2(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = projectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
-    }
+//    override fun updateProjectV2(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Result<Int> {
+//        return Result(data = projectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
+//    }
+//
+//    override fun setGrayProjectV2(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
+//        return Result(data = projectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+//    }
 }
