@@ -66,7 +66,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("Notify process that the vm startup for the build")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStatus")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStatus")
+    @Path("/{projectId}/{pipelineId}/{buildId}/vmStatus")
     fun setVMStatus(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -87,7 +88,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("Notify process that the vm startup for the build")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")
+    @Path("/{projectId}/{pipelineId}/{buildId}/vmStarted")
     fun vmStarted(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -108,7 +110,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("根据构建ID获取项目ID以及流水线ID")
     @GET
-    @Path("/builds/{buildId}/basic")
+    //@Path("/builds/{buildId}/basic")
+    @Path("/{buildId}/basic")
     fun serviceBasic(
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
@@ -117,6 +120,7 @@ interface ServiceBuildResource {
 
     @ApiOperation("根据构建ID获取项目ID以及流水线ID")
     @POST
+    //@Path("/batchBasic")
     @Path("/batchBasic")
     fun batchServiceBasic(
         @ApiParam("构建ID", required = true)
@@ -125,7 +129,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取流水线手动启动参数")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
+    @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -143,7 +148,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("手动启动流水线")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/start")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/start")
+    @Path("/{projectId}/{pipelineId}/")
     fun manualStartup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -163,7 +169,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("手动停止流水线")
     @DELETE
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
+    @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -184,7 +191,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("系统异常导致停止流水线")
     @DELETE
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/shutdown")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/shutdown")
+    @Path("/shutdown/{projectId}/{pipelineId}/{buildId}/")
     fun serviceShutdown(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -202,7 +210,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("人工审核")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
+    @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/review")
     fun manualReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -228,7 +237,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取构建详情")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -249,7 +259,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取流水线构建历史")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    @Path("/{projectId}/{pipelineId}/history")
     fun getHistoryBuild(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -273,7 +284,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取构建详情")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/status")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/status")
+    @Path("/{projectId}/{pipelineId}/{buildId}/status")
     fun getBuildStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -294,7 +306,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取构建全部变量")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vars")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vars")
+    @Path("/{projectId}/{pipelineId}/{buildId}/vars")
     fun getBuildVars(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -315,7 +328,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("批量获取构建详情")
     @POST
-    @Path("/projects/{projectId}/batchStatus")
+    //@Path("/projects/{projectId}/batchStatus")
+    @Path("/{projectId}/batchStatus")
     fun getBatchBuildStatus(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -329,7 +343,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("根据流水线id获取最新执行信息")
     @POST
-    @Path("/projects/{projectId}/getPipelineLatestBuild")
+    //@Path("/projects/{projectId}/getPipelineLatestBuild")
+    @Path("/{projectCode}/getPipelineLatestBuild")
     fun getPipelineLatestBuildByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -340,7 +355,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("第三方构建机Agent构建结束")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/workerBuildFinish")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/workerBuildFinish")
+    @Path("/{projectCode}/{pipelineId}/{buildId}/{vmSeqId}/workerBuildFinish")
     fun workerBuildFinish(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -360,7 +376,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取构建详情")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/saveBuildVmInfo")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/saveBuildVmInfo")
+    @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/saveBuildVmInfo")
     fun saveBuildVmInfo(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

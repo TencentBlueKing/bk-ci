@@ -135,7 +135,8 @@ interface BuildBuildResource {
 
     @ApiOperation("获取流水线构建单条历史")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
+    @Path("/{projectId}/{pipelineId}/{buildNum}/history")
     fun getSingleHistoryBuild(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -153,7 +154,8 @@ interface BuildBuildResource {
 
     @ApiOperation("获取构建详情")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

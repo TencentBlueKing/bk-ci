@@ -52,9 +52,10 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildReportResource {
-    
+
     @ApiOperation("创建自定义报告")
-    @Path("/tasks/{taskId}")
+    //@Path("/tasks/{taskId}")
+    @Path("/{taskId}")
     @POST
     fun create(
         @ApiParam(value = "项目英文名，或者叫projectCode", required = true)
@@ -87,7 +88,7 @@ interface BuildReportResource {
     ): Result<Boolean>
 
     @ApiOperation("获取自定义报告根目录Url")
-    @Path("/tasks/{taskId}/rootUrl")
+    @Path("/{taskId}/rootUrl")
     @GET
     fun getRootUrl(
         @ApiParam(value = "构建ID", required = true)
