@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceCertResource {
     @ApiOperation("获取可用安卓证书列表")
-    @Path("/projects/{projectId}/android/hasUsePermissionList")
+    @Path("/{projectId}/android/hasUsePermissionList")
     @GET
     fun hasUsePermissionAndroidList(
         @ApiParam("项目ID", required = true)
@@ -67,7 +67,7 @@ interface ServiceCertResource {
     ): Result<Page<Cert>>
 
     @ApiOperation("获取安卓证书")
-    @Path("/projects/{projectId}/android/certs/{certId}")
+    @Path("/{projectId}/android/{certId}")
     @GET
     fun getAndroid(
         @ApiParam("项目ID", required = true)
@@ -82,7 +82,7 @@ interface ServiceCertResource {
     ): Result<CertAndroidWithCredential>
 
     @ApiOperation("获取IOS企业签名证书")
-    @Path("/projects/{projectId}/enterprise/certs/{certId}")
+    @Path("/{projectId}/enterprise/{certId}")
     @GET
     fun getEnterprise(
         @ApiParam("项目ID", required = true)
@@ -97,7 +97,7 @@ interface ServiceCertResource {
     ): Result<CertEnterprise>
 
     @ApiOperation("获取tls证书")
-    @Path("/projects/{projectId}/tls/certs/{certId}")
+    @Path("/{projectId}/tls/{certId}")
     @GET
     fun getTls(
         @ApiParam("项目ID", required = true)
