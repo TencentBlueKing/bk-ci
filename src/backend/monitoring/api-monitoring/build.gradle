@@ -1,0 +1,4 @@
+dependencies {
+    compile project(":common:common-api")
+    compile project(":common:common-client")
+}
