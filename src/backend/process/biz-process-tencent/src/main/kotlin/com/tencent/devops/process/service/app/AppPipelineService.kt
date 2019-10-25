@@ -16,7 +16,7 @@ import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
 import com.tencent.devops.process.pojo.app.pipeline.AppPipelineHistory
 import com.tencent.devops.process.pojo.app.pipeline.AppProject
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
