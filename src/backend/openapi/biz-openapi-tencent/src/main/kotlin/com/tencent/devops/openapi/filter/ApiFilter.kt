@@ -2,7 +2,6 @@ package com.tencent.devops.openapi.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import io.jsonwebtoken.Jwts
 import net.sf.json.JSONObject
@@ -22,7 +21,7 @@ import javax.ws.rs.ext.Provider
 
 @Provider
 @PreMatching
-@RequestFilter
+//@RequestFilter
 class ApiFilter : ContainerRequestFilter {
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")

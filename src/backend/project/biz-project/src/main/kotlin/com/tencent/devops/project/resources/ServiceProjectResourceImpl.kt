@@ -27,7 +27,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -45,11 +45,19 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getProjectByUser(userName))
     }
 
+    override fun getProjectByUserV2(userName: String): Result<List<ProjectVO>> {
+        return Result(projectService.getProjectByUser(userName))
+    }
+
     override fun verifyUserProjectPermission(projectCode: String, userId: String): Result<Boolean> {
         return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
     }
 
     override fun list(userId: String): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId))
+    }
+
+    override fun listV2(userId: String): Result<List<ProjectVO>> {
         return Result(projectService.list(userId))
     }
 
@@ -61,7 +69,15 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.list(projectCodes))
     }
 
+    override fun listByProjectCodeV2(projectCodes: Set<String>): Result<List<ProjectVO>> {
+        return Result(projectService.list(projectCodes))
+    }
+
     override fun getNameByCode(projectCodes: String): Result<HashMap<String, String>> {
+        return Result(projectService.getNameByCode(projectCodes))
+    }
+
+    override fun getNameByCodeV2(projectCodes: String): Result<HashMap<String, String>> {
         return Result(projectService.getNameByCode(projectCodes))
     }
 
@@ -69,7 +85,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(englishName))
     }
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        return Result(projectService.create(userId, projectCreateInfo))
+    override fun getV2(englishName: String): Result<ProjectVO?> {
+        return Result(projectService.getByEnglishName(englishName))
     }
+
 }

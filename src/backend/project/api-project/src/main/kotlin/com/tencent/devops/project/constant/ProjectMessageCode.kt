@@ -42,4 +42,6 @@ package com.tencent.devops.project.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object ProjectMessageCode
+object ProjectMessageCode{
+    const val USER_CREATE_GIT_CODE_REPOSITORY_FAIL = "2119001" // 创建GIT代码库失败，请稍后再试
+}
