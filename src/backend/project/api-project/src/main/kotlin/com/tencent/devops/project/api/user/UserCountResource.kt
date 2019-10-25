@@ -24,37 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api
+package com.tencent.devops.project.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.project.pojo.ActivityInfo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.ActivityType
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PROJECT_ACTIVITIES"], description = "蓝盾项目列表最近动态信息")
-@Path("/user/activities")
+@Api(tags = ["USER_COUNT"], description = "用户-统计")
+@Path("/user/count")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserProjectActivityResource {
+interface UserCountResource {
 
-    @GET
-    @Path("/types/{type}")
-    fun getActivities(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+    @Path("/login")
+    @POST
+    @ApiOperation("登录统计")
+    fun login(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("最新动态类型")
-        @PathParam("type")
-        type: ActivityType
-    ): Result<List<ActivityInfo>>
+        @ApiParam("X-Real-IP", required = false)
+        @HeaderParam("X-Real-IP")
+        xRealIp: String?,
+        @ApiParam("X-Forwarded-For", required = false)
+        @HeaderParam("X-Forwarded-For")
+        xForwardedFor: String?,
+        @ApiParam("User-Agent", required = true)
+        @HeaderParam("User-Agent")
+        userAgent: String?
+    ): Result<Boolean>
 }

@@ -1,7 +1,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.UserCountResource
+import com.tencent.devops.project.api.user.UserCountResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.CountService
 import org.springframework.beans.factory.annotation.Autowired

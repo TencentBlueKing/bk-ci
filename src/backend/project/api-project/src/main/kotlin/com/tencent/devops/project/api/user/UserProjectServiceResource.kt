@@ -23,21 +23,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.api.op
 
+package com.tencent.devops.project.api.user
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.*
+import com.tencent.devops.project.pojo.service.ServiceListVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -45,20 +43,35 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT_SERVICE"], description = "SERVICE-持续集成项目列表接口")
-@Path("/service/services")
+@Api(tags = ["USER_PROJECT_SERVICE"], description = "项目服务管理接口")
+@Path("/user")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectServiceResource {
+interface UserProjectServiceResource {
+
+    @GET
+    @Path("/services")
+    @ApiOperation("查询所有服务")
+    fun getServiceList(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String?
+    ): Result<List<ServiceListVO>>
 
     @PUT
-    @Path("/")
-    @ApiOperation("批量修改服务")
-    fun updateServiceUrlByBatch(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("修改服务的js和css连接", required = false)
-            serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
+    @Path("/services/{service_id}")
+    @ApiOperation("用户修改关注")
+    fun updateCollected(
+        @ApiParam("bk Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("服务ID")
+        @PathParam("service_id")
+        serviceId: Long,
+        @ApiParam("关注/取消关注")
+        @QueryParam("collector")
+        collector: Boolean
     ): Result<Boolean>
 }

@@ -24,54 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project
+package com.tencent.devops.project.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.ServiceListVO
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PROJECT_SERVICE"], description = "项目服务管理接口")
-@Path("/user")
+@Api(tags = ["SERVICE_USER"], description = "用户信息接口")
+@Path("/service/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserProjectServiceResource {
-
+interface ServiceUserResource {
     @GET
-    @Path("/services")
-    @ApiOperation("查询所有服务")
-    fun getServiceList(
+    @Path("/cachedDetail")
+    @ApiOperation("从缓存中查询用户详细信息")
+    fun getDetailFromCache(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String?
-    ): Result<List<ServiceListVO>>
-
-    @PUT
-    @Path("/services/{service_id}")
-    @ApiOperation("用户修改关注")
-    fun updateCollected(
-        @ApiParam("bk Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("服务ID")
-        @PathParam("service_id")
-        serviceId: Long,
-        @ApiParam("关注/取消关注")
-        @QueryParam("collector")
-        collector: Boolean
-    ): Result<Boolean>
+        userId: String
+    ): Result<UserDeptDetail>
 }

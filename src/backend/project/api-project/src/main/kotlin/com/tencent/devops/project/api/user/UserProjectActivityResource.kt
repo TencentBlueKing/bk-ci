@@ -24,33 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api
+package com.tencent.devops.project.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.project.pojo.ActivityInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.enums.ActivityType
 import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_USER"], description = "用户信息接口")
-@Path("/service/users")
+@Api(tags = ["USER_PROJECT_ACTIVITIES"], description = "蓝盾项目列表最近动态信息")
+@Path("/user/activities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceUserResource {
+interface UserProjectActivityResource {
+
     @GET
-    @Path("/cachedDetail")
-    @ApiOperation("从缓存中查询用户详细信息")
-    fun getDetailFromCache(
+    @Path("/types/{type}")
+    fun getActivities(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
-    ): Result<UserDeptDetail>
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("最新动态类型")
+        @PathParam("type")
+        type: ActivityType
+    ): Result<List<ActivityInfo>>
 }

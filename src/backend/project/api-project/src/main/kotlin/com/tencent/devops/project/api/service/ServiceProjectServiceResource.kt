@@ -23,42 +23,42 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.project.api
+package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.service.*
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_COUNT"], description = "用户-统计")
-@Path("/user/count")
+@Api(tags = ["SERVICE_PROJECT_SERVICE"], description = "SERVICE-持续集成项目列表接口")
+@Path("/service/services")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserCountResource {
+interface ServiceProjectServiceResource {
 
-    @Path("/login")
-    @POST
-    @ApiOperation("登录统计")
-    fun login(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("X-Real-IP", required = false)
-        @HeaderParam("X-Real-IP")
-        xRealIp: String?,
-        @ApiParam("X-Forwarded-For", required = false)
-        @HeaderParam("X-Forwarded-For")
-        xForwardedFor: String?,
-        @ApiParam("User-Agent", required = true)
-        @HeaderParam("User-Agent")
-        userAgent: String?
+    @PUT
+    @Path("/")
+    @ApiOperation("批量修改服务")
+    fun updateServiceUrlByBatch(
+            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam("修改服务的js和css连接", required = false)
+            serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
     ): Result<Boolean>
 }
