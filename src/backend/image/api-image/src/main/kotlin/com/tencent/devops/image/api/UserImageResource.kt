@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.MULTIPART_FORM_DATA)
 interface UserImageResource {
     @ApiOperation("上传镜像")
-    @Path("/{projectId}/upload")
+    @Path("/projects/{projectId}/upload")
     @POST
     fun upload(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -49,7 +49,7 @@ interface UserImageResource {
     ): Result<UploadImageTask>
 
     @ApiOperation("查询镜像上传状态")
-    @Path("/{projectId}/queryUploadTask")
+    @Path("/projects/{projectId}/queryUploadTask")
     @GET
     fun queryUploadTask(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -82,7 +82,7 @@ interface UserImageResource {
     ): Result<ImagePageData>
 
     @ApiOperation("获取项目镜像列表")
-    @Path("/{projectId}/listImages")
+    @Path("/projects/{projectId}/listImages")
     @GET
     fun listProjectImages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -103,7 +103,7 @@ interface UserImageResource {
     ): Result<ImagePageData>
 
     @ApiOperation("获取项目构建镜像列表")
-    @Path("/{projectId}/listBuildImages")
+    @Path("/projects/{projectId}/listBuildImages")
     @GET
     fun listProjectBuildImages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -124,7 +124,7 @@ interface UserImageResource {
     ): Result<ImagePageData>
 
     @ApiOperation("获取项目Docker构建镜像列表")
-    @Path("/{projectId}/listDockerBuildImages")
+    @Path("/projects/{projectId}/listDockerBuildImages")
     @GET
     fun listDockerBuildImages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -136,7 +136,7 @@ interface UserImageResource {
     ): Result<List<DockerTag>>
 
     @ApiOperation("获取项目DevCloud构建镜像列表")
-    @Path("/{projectId}/listDevCloudImages/{public}")
+    @Path("/projects/{projectId}/listDevCloudImages/{public}")
     @GET
     fun listDevCloudImages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -184,7 +184,7 @@ interface UserImageResource {
     ): Result<DockerTag?>
 
     @ApiOperation("镜像仓库支持升级为构建镜像")
-    @Path("/{projectId}/setBuildImage")
+    @Path("/projects/{projectId}/setBuildImage")
     @POST
     fun setBuildImage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

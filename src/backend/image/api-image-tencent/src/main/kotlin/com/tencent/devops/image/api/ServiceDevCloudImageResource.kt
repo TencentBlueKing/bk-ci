@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceDevCloudImageResource {
 
     @ApiOperation("获取项目DevCloud构建镜像列表")
-    @Path("/{projectId}/listDevCloudImages/{public}")
+    @Path("/projects/{projectId}/listDevCloudImages/{public}")
     @GET
     fun listDevCloudImages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

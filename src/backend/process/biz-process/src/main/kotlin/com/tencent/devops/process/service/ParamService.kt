@@ -95,7 +95,9 @@ class ParamService @Autowired constructor(
             property.repoHashId,
             property.relativePath,
             property.scmType,
-            property.containerType
+            property.containerType,
+            property.glob,
+            property.properties
         )
     }
 

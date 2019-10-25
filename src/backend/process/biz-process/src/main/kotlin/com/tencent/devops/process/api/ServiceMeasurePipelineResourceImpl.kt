@@ -40,16 +40,17 @@ class ServiceMeasurePipelineResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService,
     private val pipelineStatisticService: PipelineStatisticService
 ) : ServiceMeasurePipelineResource {
+
     override fun list(projectId: Set<String>, channelCode: ChannelCode): Result<List<Pipeline>> {
         val data = pipelineService.listPipelines(projectId, channelCode)
         return Result(data)
     }
 
-    override fun getPipelineCountByAtomCode(atomCode: String): Result<Int> {
-        return Result(0, "", pipelineStatisticService.getPipelineCountByAtomCode(atomCode))
+    override fun getPipelineCountByAtomCode(atomCode: String, projectCode: String?): Result<Int> {
+        return Result(0, "", pipelineStatisticService.getPipelineCountByAtomCode(atomCode, projectCode))
     }
 
-    override fun batchGetPipelineCountByAtomCode(atomCodes: String): Result<Map<String, Int>> {
-        return Result(0, "", pipelineStatisticService.batchGetPipelineCountByAtomCode(atomCodes))
+    override fun batchGetPipelineCountByAtomCode(atomCodes: String, projectCode: String?): Result<Map<String, Int>> {
+        return Result(0, "", pipelineStatisticService.batchGetPipelineCountByAtomCode(atomCodes, projectCode))
     }
 }

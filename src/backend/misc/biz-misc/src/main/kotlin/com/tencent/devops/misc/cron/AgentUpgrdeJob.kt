@@ -1,5 +1,6 @@
 package com.tencent.devops.misc.cron
 
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.service.AgentUpgradeService
 import org.slf4j.LoggerFactory
@@ -20,18 +21,17 @@ class AgentUpgrdeJob @Autowired constructor(
     @Scheduled(initialDelay = 10000, fixedDelay = 15000)
     fun updateCanUpgradeAgentList() {
         logger.info("updateCanUpgradeAgentList")
-        val lockValue = redisOperation.get(LOCK_KEY)
-        if (lockValue != null) {
-            logger.info("get lock failed, skip")
-            return
-        } else {
-            redisOperation.set(LOCK_KEY, "LOCKED", 60)
-        }
-
+        val lock = RedisLock(redisOperation, LOCK_KEY, 60)
         try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
             updateService.updateCanUpgradeAgentList()
         } catch (t: Throwable) {
             logger.warn("update can upgrade agent list failed", t)
+        } finally {
+            lock.unlock()
         }
     }
 }

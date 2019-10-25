@@ -6,7 +6,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.misc.client.DevCloudClient
+import com.tencent.devops.common.environment.agent.client.DevCloudClient
 import com.tencent.devops.misc.dao.NodeDao
 import com.tencent.devops.misc.dao.ThirdPartyAgentDao
 import org.jooq.DSLContext

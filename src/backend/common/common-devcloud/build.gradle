@@ -1,4 +1,5 @@
 dependencies {
     compile project(":common:common-service")
     compile("org.json:json")
+    compile("org.apache.commons:commons-lang3:$commonLang3Version")
 }

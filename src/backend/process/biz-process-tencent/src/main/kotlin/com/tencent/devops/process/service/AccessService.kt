@@ -11,9 +11,15 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.CodePullStrategy
+import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.coverity.ProjectLanguage
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.SingleArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -206,7 +212,6 @@ class AccessService @Autowired constructor(
             tstackAgentId = null,
             dispatchType = DockerDispatchType("tlinux2.2")
         )
-        containerSeqId++
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
         val stageSecond = Stage(stageSecondContainers, "stage-2")
 

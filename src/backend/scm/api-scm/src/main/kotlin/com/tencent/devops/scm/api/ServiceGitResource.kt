@@ -6,6 +6,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
@@ -77,6 +78,33 @@ interface ServiceGitResource {
         code: String
     ): Result<GitToken>
 
+    @ApiOperation("获取项目的token")
+    @GET
+    @Path("/gitci/getToken")
+    fun getToken(
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long
+    ): Result<GitToken>
+
+    @ApiOperation("获取git文件内容")
+    @GET
+    @Path("/gitci/getGitCIFileContent")
+    fun getGitCIFileContent(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String
+    ): Result<String>
+
     @ApiOperation("获取转发地址")
     @GET
     @Path("/getRedirectUrl")
@@ -111,9 +139,6 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitlabFileContent")
     fun getGitlabFileContent(
-        @ApiParam(value = "仓库Url")
-        @QueryParam("repoUrl")
-        repoUrl: String,
         @ApiParam(value = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
@@ -284,4 +309,22 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<GitMrReviewInfo>
+
+    @ApiOperation("获取mr信息")
+    @GET
+    @Path("/getMergeRequestChangeInfo")
+    fun getMergeRequestChangeInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "合并请求的 id", required = true)
+        @QueryParam("mrId")
+        mrId: Long,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<GitMrChangeInfo>
 }

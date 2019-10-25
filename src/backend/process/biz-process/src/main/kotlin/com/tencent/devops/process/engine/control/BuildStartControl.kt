@@ -156,7 +156,7 @@ class BuildStartControl @Autowired constructor(
 
                 updateModel(model = model, buildId = buildId, taskId = taskId)
                 // 这入启动参数
-                writeStartParam(pipelineId = pipelineId, buildId = buildId, model = model)
+                writeStartParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId, model = model)
 
                 val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
                 val map = mapOf(
@@ -262,12 +262,23 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun writeStartParam(pipelineId: String, buildId: String, model: Model) {
+    private fun writeStartParam(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        model: Model
+    ) {
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
         if (triggerContainer.buildNo != null) {
             val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
-            pipelineRuntimeService.setVariable(buildId, BUILD_NO, buildNo)
+            pipelineRuntimeService.setVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                varName = BUILD_NO,
+                varValue = buildNo
+            )
         }
         // 写
         if (triggerContainer.params.isNotEmpty()) {

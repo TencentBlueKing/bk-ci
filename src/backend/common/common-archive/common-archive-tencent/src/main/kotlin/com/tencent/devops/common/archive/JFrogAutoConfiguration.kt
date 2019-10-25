@@ -23,7 +23,9 @@ class JFrogAutoConfiguration {
 
     @Bean
     @Primary
-    fun jFrogAllConfigProperties() = JFrogAllConfigProperties()
+    fun jFrogAllConfigProperties(): JFrogAllConfigProperties {
+        return JFrogAllConfigProperties()
+    }
 
     @Bean
     @Profile("prod", "nobuild_prod", "nobuild_prod_gray")
@@ -58,17 +60,11 @@ class JFrogAutoConfiguration {
     )
 
     @Bean
-    @Profile("qcloud")
-    fun jFrogConfigPropertiesQcloud(jFrogAllConfigProperties: JFrogAllConfigProperties) = JFrogConfigProperties(
-            jFrogAllConfigProperties.devUrl,
-            jFrogAllConfigProperties.devUsername,
-            jFrogAllConfigProperties.devPassword
-    )
-
-    @Bean
     @Primary
-    fun jFrogStorageApi(jFrogConfigProperties: JFrogConfigProperties, objectMapper: ObjectMapper): JFrogStorageApi =
-            JFrogStorageApi(jFrogConfigProperties, objectMapper)
+    fun jFrogStorageApi(jFrogConfigProperties: JFrogConfigProperties, objectMapper: ObjectMapper): JFrogStorageApi {
+        return JFrogStorageApi(jFrogConfigProperties, objectMapper)
+    }
+
 
     @Bean
     @Primary
