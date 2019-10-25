@@ -8,7 +8,7 @@ import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.process.api.v2.ServiceProjectPipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.project.api.service.ServiceTxProjectResource
-import com.tencent.devops.tx.common.api.util.OrganizationUtil
+import com.tencent.devops.common.tx.util.OrganizationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 

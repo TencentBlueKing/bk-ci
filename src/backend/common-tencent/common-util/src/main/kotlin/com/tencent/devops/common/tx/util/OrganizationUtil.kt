@@ -1,4 +1,4 @@
-package com.tencent.devops.tx.common.api.util
+package com.tencent.devops.common.tx.util
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER

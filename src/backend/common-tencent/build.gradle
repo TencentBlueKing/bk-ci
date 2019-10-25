@@ -24,16 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":common:common-api")
-    compile project(":common:common-web")
-    compile project(":common-tencent:common-util")
-    compile project(":openapi:api-openapi")
-    compile project(":store:api-store")
-    compile project(":store:api-store-tencent")
-    compile project(":process:api-process")
-    compile project(":process:api-process-tencent")
-    compile project(":project:api-project")
-    compile project(":project:api-project-tencent")
+subprojects {
+    apply from: "$rootDir/task_deploy_to_maven.gradle"
 }
 
+apply from: "$rootDir/task_deploy_to_maven.gradle"

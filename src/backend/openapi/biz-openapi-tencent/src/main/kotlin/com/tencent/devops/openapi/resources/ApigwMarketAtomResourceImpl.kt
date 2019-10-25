@@ -5,10 +5,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwMarketAtomResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
-import com.tencent.devops.store.tx.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.tx.pojo.atom.AtomPipeline
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

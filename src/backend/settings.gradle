@@ -55,7 +55,9 @@ include ":common:common-notify"
 include ":common:common-notify:common-notify-blueking"
 include ":common:common-websocket"
 include ":common:common-wechatwork"
-include ":common:common-tencent"
+
+include ":common-tencent"
+include ":common-tencent:common-util"
 
 include ":project"
 include ":project:api-project"
