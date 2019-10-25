@@ -6,7 +6,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwBuildResource
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId

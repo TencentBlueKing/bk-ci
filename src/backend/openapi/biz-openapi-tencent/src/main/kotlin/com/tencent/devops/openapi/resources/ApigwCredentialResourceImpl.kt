@@ -2,14 +2,14 @@ package com.tencent.devops.openapi.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwCredentialResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.enums.Permission
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwCredentialResourceImpl @Autowired constructor(private val client: Client) : ApigwCredentialResource {
@@ -23,13 +23,13 @@ class ApigwCredentialResourceImpl @Autowired constructor(private val client: Cli
     ): Result<Page<Credential>> {
         logger.info("get credential of project($projectId) by user($userId)")
         return client.get(ServiceCredentialResource::class).hasPermissionList(
-            userId,
-            projectId,
-            credentialTypesString,
-            permission,
-            page,
-            pageSize,
-            null
+            userId = userId,
+            projectId = projectId,
+            credentialTypesString = credentialTypesString,
+            permission = permission,
+            page = page,
+            pageSize = pageSize,
+            keyword = null
         )
     }
 

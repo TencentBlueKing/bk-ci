@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.tx.pojo.atom.AtomPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

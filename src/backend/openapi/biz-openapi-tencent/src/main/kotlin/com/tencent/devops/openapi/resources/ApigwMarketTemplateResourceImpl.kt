@@ -1,14 +1,14 @@
 package com.tencent.devops.openapi.resources
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.ApigwMarketTemplateResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.openapi.api.ApigwMarketTemplateResource
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwMarketTemplateResourceImpl @Autowired constructor(private val client: Client) : ApigwMarketTemplateResource {

@@ -19,18 +19,19 @@ class ApigwRepositoryResourceImpl @Autowired constructor(private val client: Cli
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         logger.info("create repostitories in project:userId=$userId,projectId=$projectId,repository:$repository")
         return client.get(ServiceRepositoryResource::class).create(
-            userId,
-            projectId,
-            repository
+            userId = userId,
+            projectId = projectId,
+            repository = repository
         )
     }
 
     override fun hasPermissionList(userId: String, projectId: String, repositoryType: ScmType?): Result<Page<RepositoryInfo>> {
         logger.info("get user's use repostitories in project:userId=$userId,projectId=$projectId,repositoryType:$repositoryType")
-        return client.get(ServiceRepositoryResource::class).hasPermissionList(userId,
-                projectId,
-                repositoryType,
-                Permission.USE)
+        return client.get(ServiceRepositoryResource::class).hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            repositoryType = repositoryType,
+            permission = Permission.USE)
     }
 
     companion object {

@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.configuration
+package com.tencent.devops.openapi.config
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration

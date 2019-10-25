@@ -1,4 +1,4 @@
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.store.tx.pojo.atom
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

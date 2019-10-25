@@ -1,13 +1,13 @@
 package com.tencent.devops.openapi.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwPipelineTemplateResource
-import com.tencent.devops.process.api.ServicePipelineTemplateResource
+import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
 import com.tencent.devops.process.pojo.PipelineTemplate
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwPipelineTemplateResourceImpl @Autowired constructor(private val client: Client) : ApigwPipelineTemplateResource {

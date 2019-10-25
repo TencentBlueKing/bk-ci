@@ -33,10 +33,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
+import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
@@ -273,7 +273,7 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取构建详情")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/status")
+    @Path("/{projectId}/{pipelineId}/{buildId}/status")
     fun getBuildStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -290,7 +290,7 @@ interface ServiceBuildResource {
         @ApiParam("渠道号，默认为DS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode
-    ): Result<BuildHistory>
+    ): Result<BuildHistoryWithVars>
 
     @ApiOperation("获取构建全部变量")
     @GET

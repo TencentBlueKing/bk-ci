@@ -5,7 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.v2.ApigwBuildResourceV2
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

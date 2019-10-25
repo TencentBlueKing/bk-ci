@@ -5,10 +5,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.measure.api.ServiceMeasureResource
-import com.tencent.devops.measure.model.pipeline.response.BuildStatisticsResponse
-import com.tencent.devops.openapi.service.v2.ApigwPipelineServiceV2
+import com.tencent.devops.openapi.api.external.ServiceMeasureResource
 import com.tencent.devops.openapi.api.v2.ApigwPipelineResourceV2
+import com.tencent.devops.openapi.pojo.BuildStatisticsResponse
+import com.tencent.devops.openapi.service.v2.ApigwPipelineServiceV2
 import com.tencent.devops.process.api.v2.ServicePipelineResourceV2
 import com.tencent.devops.process.pojo.Pipeline
 import org.springframework.beans.factory.annotation.Autowired

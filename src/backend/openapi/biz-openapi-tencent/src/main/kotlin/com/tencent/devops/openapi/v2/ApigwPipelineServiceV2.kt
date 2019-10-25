@@ -3,12 +3,12 @@ package com.tencent.devops.openapi.service.v2
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OrganizationUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.process.api.v2.ServiceProjectPipelineResource
 import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceTxProjectResource
+import com.tencent.devops.tx.common.api.util.OrganizationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -41,7 +41,7 @@ class ApigwPipelineServiceV2(private val client: Client) {
             deptName = deptName,
             centerName = centerName
         )
-        val projectsResult = client.get(ServiceProjectResource::class).getProjectByGroup(
+        val projectsResult = client.get(ServiceTxProjectResource::class).getProjectByGroup(
             userId = userId,
             bgName = organization.bgName,
             deptName = organization.deptName,
@@ -56,7 +56,7 @@ class ApigwPipelineServiceV2(private val client: Client) {
             )
         }
         // 2.根据所有项目Id获取对应流水线
-        val projectIds = projectsResult.data!!.map { it.english_name }.toSet()
+        val projectIds = projectsResult.data!!.map { it.englishName }.toSet()
         val pipelinesResult = client.getWithoutRetry(ServiceProjectPipelineResource::class).listPipelinesByProjectIds(
             userId = userId,
             page = if (page == null || page <= 0) 1 else page,
