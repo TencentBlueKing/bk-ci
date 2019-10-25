@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserCredentialResource {
     @ApiOperation("是否拥有创建凭据权限")
-    @Path("/project/{projectId}/hasCreatePermission")
+    @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -68,7 +68,7 @@ interface UserCredentialResource {
     ): Result<Boolean>
 
     @ApiOperation("新增凭据")
-    @Path("/projects/{projectId}/")
+    @Path("/{projectId}/")
     @POST
     fun create(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -82,7 +82,7 @@ interface UserCredentialResource {
     ): Result<Boolean>
 
     @ApiOperation("删除凭据")
-    @Path("/projects/{projectId}/credentials/{credentialId}")
+    @Path("/{projectId}/{credentialId}")
     @DELETE
     fun delete(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -98,7 +98,7 @@ interface UserCredentialResource {
     ): Result<Boolean>
 
     @ApiOperation("获取凭据列表")
-    @Path("/projects/{projectId}/")
+    @Path("/{projectId}/")
     @GET
     fun list(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -122,7 +122,7 @@ interface UserCredentialResource {
     ): Result<Page<CredentialWithPermission>>
 
     @ApiOperation("获取拥有对应权限凭据列表")
-    @Path("/projects/{projectId}/hasPermissionList")
+    @Path("/{projectId}/hasPermissionList")
     @GET
     fun hasPermissionList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -170,7 +170,7 @@ interface UserCredentialResource {
     ): Result<List<Credential>>
 
     @ApiOperation("显示真实凭据")
-    @Path("/projects/{projectId}/credentials/{credentialId}/show")
+    @Path("/{projectId}/{credentialId}/show")
     @GET
     fun show(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -185,7 +185,7 @@ interface UserCredentialResource {
     ): Result<CredentialWithPermission>
 
     @ApiOperation("获取凭据以编辑")
-    @Path("/projects/{projectId}/credentials/{credentialId}/")
+    @Path("/{projectId}/{credentialId}/")
     @GET
     fun get(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -200,7 +200,7 @@ interface UserCredentialResource {
     ): Result<CredentialWithPermission>
 
     @ApiOperation("编辑凭据")
-    @Path("/projects/{projectId}/credentials/{credentialId}/")
+    @Path("/{projectId}/{credentialId}/")
     @PUT
     fun edit(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

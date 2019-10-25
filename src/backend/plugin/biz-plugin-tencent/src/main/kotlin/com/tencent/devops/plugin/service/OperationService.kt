@@ -9,7 +9,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.ServiceOperationResource
+import com.tencent.devops.process.api.service.ServiceOperationResource
 import org.asynchttpclient.Dsl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

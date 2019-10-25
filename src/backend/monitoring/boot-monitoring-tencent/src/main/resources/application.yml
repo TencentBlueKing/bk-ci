@@ -4,6 +4,13 @@ spring:
     desc: DevOps Monitoring Service
     version: 4.0
     packageName: com.tencent.devops.monitoring
+  cloud:
+    consul:
+      discovery:
+        tags: local
+
+alert:
+  users: "irwinsun,rdeng,brandonliu,carlyin,ddlin,fayewang,freyzheng,johuang,lockiechen,necrohuang,royalhuang,terlinhe,zanyzhao,jsonwan"
 
 server:
   port: 8085

@@ -16,7 +16,7 @@ import com.tencent.devops.plugin.codecc.pojo.coverity.CodeccReport
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.PipelineModelTask
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

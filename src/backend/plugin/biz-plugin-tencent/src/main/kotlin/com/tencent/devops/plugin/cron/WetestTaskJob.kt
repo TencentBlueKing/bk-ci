@@ -16,7 +16,7 @@ import com.tencent.devops.plugin.service.WetestTaskService
 import com.tencent.devops.plugin.utils.CommonUtils
 import com.tencent.devops.plugin.utils.NotifyUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

@@ -90,7 +90,7 @@ class ServicePluginCosResourceImpl @Autowired constructor(
         val uploadCosCdnThread =
             UploadCosCdnThread(gatewayUrl!!, rabbitTemplate, cosService, redisOperation, uploadCosCdnParam)
         val uploadThread = Thread(uploadCosCdnThread, uploadTaskKey)
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传CDN...", elementId, containerId, executeCount)
+        LogUtils.addLine(rabbitTemplate, buildId, "开始上传CDN...", elementId, executeCount)
         uploadThread.start()
         cdnPath = cosAppInfo.domain + cdnPath
         val spmFile = SpmFile(uploadTaskKey, cdnPath)

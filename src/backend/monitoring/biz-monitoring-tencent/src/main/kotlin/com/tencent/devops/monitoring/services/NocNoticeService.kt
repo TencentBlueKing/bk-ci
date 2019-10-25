@@ -13,9 +13,11 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 
 @Service
+@RefreshScope
 class NocNoticeService {
     private val logger = LoggerFactory.getLogger(NocNoticeService::class.java)
 

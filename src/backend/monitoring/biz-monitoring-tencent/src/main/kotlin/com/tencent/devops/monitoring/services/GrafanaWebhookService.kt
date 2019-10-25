@@ -15,10 +15,12 @@ import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
 @Service
+@RefreshScope
 class GrafanaWebhookService @Autowired constructor(
     private val nocNoticeService: NocNoticeService,
     private val client: Client

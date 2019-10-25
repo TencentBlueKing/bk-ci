@@ -21,6 +21,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.VSAuthServiceCode
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
@@ -34,7 +35,7 @@ import com.tencent.devops.process.api.service.ServiceJfrogResource
 import com.tencent.devops.process.api.service.ServiceMetadataResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Property
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -59,7 +60,8 @@ class JinGangService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val authProjectApi: AuthProjectApi,
-    private val serviceCode: PipelineAuthServiceCode
+    private val pipelineServiceCode: PipelineAuthServiceCode,
+    private val vsServiceCode: VSAuthServiceCode
 ) {
 
     companion object {
@@ -135,7 +137,7 @@ class JinGangService @Autowired constructor(
         logger.info("scan app: $userId, $projectId, $pipelineId, $buildId, $file")
 
         if (checkPermission) {
-            if (!authPermissionApi.validateUserResourcePermission(userId, serviceCode, AuthResourceType.PIPELINE_DEFAULT,
+            if (!authPermissionApi.validateUserResourcePermission(userId, pipelineServiceCode, AuthResourceType.PIPELINE_DEFAULT,
                             projectId, pipelineId, AuthPermission.EXECUTE))
                 throw PermissionForbiddenException("user($userId) does not has permission for pipeline: $pipelineId")
         }
@@ -209,7 +211,7 @@ class JinGangService @Autowired constructor(
             params.put("taskId", taskId.toString()) // 任务id
             params.put("is_run_kingkong_v2", if (type == 1) "3" else runType) // ios只有静态扫描
             params.put("responseUrl", HomeHostUtil.innerApiHost() + "/plugin/api/external/jingang/app/callback") // 任务id
-            params.put("bg", getBgName(projectInfo.bg_id?.toLong()))
+            params.put("bg", getBgName(projectInfo.bgId))
             val json = objectMapper.writeValueAsString(params)
             logger.info("jin gang request json:>>>> $json")
 
@@ -280,7 +282,7 @@ class JinGangService @Autowired constructor(
     }
 
     private fun getProjectManager(projectId: String): List<JinGangService.StarUser> {
-        val manager = authProjectApi.getProjectUsers(BkAuthServiceCode.VS, projectId, BkAuthGroup.MANAGER)
+        val manager = authProjectApi.getProjectUsers(vsServiceCode, projectId, BkAuthGroup.MANAGER)
         return listOf(JinGangService.StarUser(
                 "项目管理员",
                 "37",
@@ -318,7 +320,7 @@ class JinGangService @Autowired constructor(
                 for (item in recordList) {
                     pipelineIds.add(item.get(PIPELINE_ID))
                 }
-                val pipelineNames = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds, false).data
+                val pipelineNames = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds).data
                         ?: throw RuntimeException("no pipeline name found for $pipelineIds")
                 for (item in recordList) {
                     result.add(
@@ -357,7 +359,7 @@ class JinGangService @Autowired constructor(
 
         // 权限校验
         val projectId = recordTask?.projectId ?: ""
-        if (!bkAuthProjectApi.getUserProjects(serviceCode, userId).contains(projectId)) {
+        if (!bkAuthProjectApi.getUserProjects(pipelineServiceCode, userId, null).contains(projectId)) {
             throw PermissionForbiddenException("user($userId) does not has permission for project: $projectId")
         }
 
