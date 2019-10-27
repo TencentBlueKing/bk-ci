@@ -1,4 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.common.api.config.AppConfig,\
 com.tencent.devops.common.api.config.ZhiyunConfig
 
