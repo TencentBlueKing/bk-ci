@@ -1,2 +1,1 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.scm.config.SVNConfig
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=
