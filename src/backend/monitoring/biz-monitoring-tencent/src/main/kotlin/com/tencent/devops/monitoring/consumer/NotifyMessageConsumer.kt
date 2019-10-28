@@ -41,8 +41,11 @@ class NotifyMessageConsumer @Autowired constructor(
     private var lastUpdate: Long = 0
 
     @RabbitListener(
-            bindings = [(QueueBinding(key = ROUTE_NOTIFY_MESSAGE, value = Queue(value = QUEUE_NOTIFY_MESSAGE, durable = "true"),
-                    exchange = Exchange(value = EXCHANGE_NOTIFY_MESSAGE, durable = "true", delayed = "true", type = "topic")))]
+        bindings = [(QueueBinding(
+            key = ROUTE_NOTIFY_MESSAGE,
+            value = Queue(value = QUEUE_NOTIFY_MESSAGE, durable = "true"),
+            exchange = Exchange(value = EXCHANGE_NOTIFY_MESSAGE, durable = "true", delayed = "true", type = "topic")))
+        ]
     )
     fun onReceiveNotifyMessage(alert: Alert) {
         try {
@@ -166,7 +169,7 @@ class NotifyMessageConsumer @Autowired constructor(
 
     // Refresh every 2 minutes
     private fun need2RefreshCache(): Boolean =
-            System.currentTimeMillis() - lastUpdate >= TimeUnit.MINUTES.toMillis(2)
+        System.currentTimeMillis() - lastUpdate >= TimeUnit.MINUTES.toMillis(2)
 
     private fun getAllNotifyUsers(): Map<String, Map<AlertLevel, NotifyUsers>> {
         logger.info("Start to get all notify users")
