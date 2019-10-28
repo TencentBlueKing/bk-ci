@@ -36,20 +36,10 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
 @Service
-class DownloaderService {
-
-    @Value("\${dispatch.workerFile:#{null}}")
-    private val workerFile: String? = null
+class DockerDownloaderService {
 
     @Value("\${dispatch.dockerFile:#{null}}")
     private val dockerFile: String? = null
-
-    fun downloadWorker(eTag: String?): Response {
-        if (workerFile.isNullOrBlank()) {
-            throw RuntimeException("worker.jar文件路径没有配置")
-        }
-        return download(workerFile!!, eTag)
-    }
 
     fun downloadDocker(eTag: String?): Response {
         if (dockerFile.isNullOrBlank()) {
