@@ -262,6 +262,7 @@ class DockerHostBuildService @Autowired constructor(
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
             val grayProjectSet = redisOperation.getSetMembers(this.gray.getGrayRedisKey())?.filter { !it.isBlank() }
                 ?.toSet() ?: emptySet()
+            logger.info("Get the redis project set: $grayProjectSet")
             redisLock.lock()
             if (gray) {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
