@@ -21,7 +21,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.project.api.service.ServiceTxProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -186,7 +186,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val downloadUrl = jFrogApiService.internalDownloadUrl(realPath, ttl, downloadUsers)
         val jFrogDetail = jFrogService.file(realPath)
         val fileName = JFrogUtil.getFileName(path)
-        val projectName = client.get(ServiceTxProjectResource::class).get(projectId).data!!.projectName
+        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
 
         val days = ttl / (3600 * 24)
         val title = EmailUtil.getShareEmailTitle(userId, fileName, 1)
