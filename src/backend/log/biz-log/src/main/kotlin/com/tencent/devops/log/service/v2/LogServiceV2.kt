@@ -138,7 +138,7 @@ class LogServiceV2 @Autowired constructor(
             }
 
             val keywords =
-                Arrays.asList(*(keywordsStr.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()))
+                listOf(*(keywordsStr.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()))
                     .stream()
                     .filter { k -> k.isNotBlank() }
                     .collect(Collectors.toList())
