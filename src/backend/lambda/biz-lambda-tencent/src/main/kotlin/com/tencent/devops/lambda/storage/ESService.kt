@@ -141,6 +141,7 @@ class ESService @Autowired constructor(
         }
         return beginTime
     }
+
     private fun convertBuildData(source: Map<String, Any>): BuildData {
         return BuildData(
             projectId = source["projectId"].toString(),
@@ -191,11 +192,11 @@ class ESService @Autowired constructor(
         offset: Int,
         limit: Int
     ) = client.prepareSearch(*index.toTypedArray())
-            .setTypes(*index.map { getType(it, DataType.PipelineBuild) }.toSet().toTypedArray())
-            .setQuery(getBuildQuery(projectId, pipelineId, bgName, deptName, centerName, beginTime, endTime))
-            .setFrom(offset)
-            .setSize(limit)
-            .get()
+        .setTypes(*index.map { getType(it, DataType.PipelineBuild) }.toSet().toTypedArray())
+        .setQuery(getBuildQuery(projectId, pipelineId, bgName, deptName, centerName, beginTime, endTime))
+        .setFrom(offset)
+        .setSize(limit)
+        .get()
 
     private fun getBuildElementDataResult(
         index: Set<String>,

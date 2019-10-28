@@ -23,15 +23,15 @@ class ServiceLambdaResourceImpl @Autowired constructor(private val esService: ES
         project: String
     ): Result<BuildResultWithPage> {
         return Result(esService.getBuildResult(
-            projectId,
-            pipelineId,
-            beginTime,
-            endTime,
-            bg.fullName,
-            deptName,
-            centerName,
-            offset,
-            limit,
-            project))
+            projectId = projectId,
+            pipelineId = pipelineId,
+            startTime = beginTime,
+            endTime = endTime,
+            bgName = bg.fullName,
+            deptName = deptName,
+            centerName = centerName,
+            offset = offset,
+            limitOrigin = limit,
+            project = project))
     }
 }
