@@ -2,7 +2,7 @@ package com.tencent.devops.lambda.resource
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.lambda.api.ServiceLambdaResource
+import com.tencent.devops.lambda.api.service.ServiceLambdaResource
 import com.tencent.devops.lambda.pojo.BG
 import com.tencent.devops.lambda.pojo.BuildResultWithPage
 import com.tencent.devops.lambda.storage.ESService
