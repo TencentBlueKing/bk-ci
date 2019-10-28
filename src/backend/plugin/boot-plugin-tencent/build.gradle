@@ -26,8 +26,8 @@
 
 dependencies {
     compile project(":plugin:biz-plugin-tencent")
-    compile project(":plugin:codecc-plugin:biz-codecc")
-    compile project(":common:common-auth:common-auth-sample")
+//    compile project(":plugin:codecc-plugin:biz-codecc")
+    compile project(":common:common-auth:common-auth-tencent")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"
