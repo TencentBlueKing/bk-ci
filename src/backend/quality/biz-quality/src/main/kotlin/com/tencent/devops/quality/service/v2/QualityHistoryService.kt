@@ -3,6 +3,8 @@ package com.tencent.devops.quality.service.v2
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
