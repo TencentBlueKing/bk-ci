@@ -30,8 +30,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.dispatch.dao.MachineDao
+import com.tencent.devops.dispatch.dao.VMDao
 import com.tencent.devops.dispatch.pojo.Machine
 import com.tencent.devops.dispatch.pojo.MachineCreate
+import com.tencent.devops.dispatch.service.vm.VMCache
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -40,8 +42,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class MachineService @Autowired constructor(
-    private val machineDao: MachineDao,
-    private val dslContext: DSLContext
+        private val machineDao: MachineDao,
+        private val vmDao: VMDao,
+        private val vmCache: VMCache,
+        private val dslContext: DSLContext
 ) {
 
     private val logger = LoggerFactory.getLogger(MachineService::class.java)
@@ -64,6 +68,11 @@ class MachineService @Autowired constructor(
 
     fun queryMachineByIp(ip: String): Machine? {
         return machineDao.parseMachine(machineDao.findMachineByIp(dslContext, ip))
+    }
+
+    fun queryMachineByVMName(vmName: String): Machine? {
+        val vmRecord = vmDao.findVMByName(dslContext, vmName) ?: return null
+        return queryMachineById(vmRecord.vmMachineId!!)
     }
 
     fun addMachine(machine: MachineCreate): Result<Boolean> {
@@ -129,6 +138,7 @@ class MachineService @Autowired constructor(
             machine.username,
             machine.password, machine.maxVMRun
         )
+        vmCache.expireByMachineId(machine.id)
         return Result(true)
     }
 
@@ -136,6 +146,8 @@ class MachineService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             machineDao.deleteMachine(transactionContext, id)
+            vmDao.deleteVMsByMachine(transactionContext, id)
         }
+        vmCache.expireByMachineId(id)
     }
 }
