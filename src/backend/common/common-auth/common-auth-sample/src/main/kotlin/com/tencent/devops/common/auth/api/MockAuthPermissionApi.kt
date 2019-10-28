@@ -31,45 +31,45 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 class MockAuthPermissionApi : AuthPermissionApi {
 
     override fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission
     ): Boolean {
         return true
     }
 
     override fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            permission: AuthPermission
     ): Boolean {
         return true
     }
 
     override fun getUserResourceByPermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission,
-        supplier: (() -> List<String>)?
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission,
+            supplier: (() -> List<String>)?
     ): List<String> {
         return supplier?.invoke() ?: emptyList()
     }
 
     override fun getUserResourcesByPermissions(
-        user: String,
-        serviceCode: AuthServiceCode, // 对应新版的systemId
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permissions: Set<BkAuthPermission>,
-        supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>> {
+            user: String,
+            serviceCode: AuthServiceCode, // 对应新版的systemId
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permissions: Set<AuthPermission>,
+            supplier: (() -> List<String>)?
+    ): Map<AuthPermission, List<String>> {
         return getUserResourcesByPermissions(
             userId = user,
             scopeType = "Project",
@@ -82,17 +82,17 @@ class MockAuthPermissionApi : AuthPermissionApi {
     }
 
     override fun getUserResourcesByPermissions(
-        userId: String,
-        scopeType: String,
-        scopeId: String,
-        resourceType: BkAuthResourceType,
-        permissions: Set<BkAuthPermission>,
-        systemId: AuthServiceCode,
-        supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>> {
+            userId: String,
+            scopeType: String,
+            scopeId: String,
+            resourceType: AuthResourceType,
+            permissions: Set<AuthPermission>,
+            systemId: AuthServiceCode,
+            supplier: (() -> List<String>)?
+    ): Map<AuthPermission, List<String>> {
 
         val list = supplier?.invoke() ?: emptyList()
-        val mock = mutableMapOf<BkAuthPermission, List<String>>()
+        val mock = mutableMapOf<AuthPermission, List<String>>()
         permissions.forEach { permission ->
             mock[permission] = list
         }

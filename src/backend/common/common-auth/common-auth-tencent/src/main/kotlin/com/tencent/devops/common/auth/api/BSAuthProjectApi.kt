@@ -59,17 +59,17 @@ class BSAuthProjectApi @Autowired constructor(
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        logger.info("getProjectUser accessToken:$accessToken")
         val url = if (group == null) {
             "${bkAuthProperties.url}/projects/$projectCode/users?access_token=$accessToken"
         } else {
             "${bkAuthProperties.url}/projects/$projectCode/users?access_token=$accessToken&group_code=${group.value}"
         }
-
         val request = Request.Builder().url(url).get().build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("Fail to get project users. $responseContent")
+                logger.error("Fail to get project users, url:$url,  $responseContent")
                 throw RemoteServiceException("Fail to get project users")
             }
 

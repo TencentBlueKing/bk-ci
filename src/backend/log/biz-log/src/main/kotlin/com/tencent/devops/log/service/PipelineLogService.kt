@@ -313,8 +313,7 @@ class PipelineLogService @Autowired constructor(
         }
     }
 
-    override fun getEndLogs(pipelineId: String, buildId: String, tag: String, executeCount: Int?, size: Int)
-        : EndPageQueryLogs {
+    override fun getEndLogs(pipelineId: String, buildId: String, tag: String, executeCount: Int?, size: Int): EndPageQueryLogs {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {

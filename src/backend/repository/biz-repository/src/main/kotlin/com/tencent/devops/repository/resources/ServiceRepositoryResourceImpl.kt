@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -118,54 +118,54 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
         val bkAuthPermission = when (permission) {
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.LIST -> BkAuthPermission.LIST
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.USE -> BkAuthPermission.USE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
         }
         val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
         val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
         return Result(Page(0, 9999, result.count, result.records))
     }
-
-    override fun createV2(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (repository.aliasName.isBlank()) {
-            throw ParamBlankException("Invalid repository aliasName")
-        }
-        if (repository.url.isBlank()) {
-            throw ParamBlankException("Invalid repository url")
-        }
-        return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
-    }
-
-    override fun listV2(projectId: String, repositoryType: ScmType?): Result<List<RepositoryInfoWithPermission>> {
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        return Result(repositoryService.serviceList(projectId, repositoryType))
-    }
-
-    override fun getV2(projectId: String, repositoryId: String, repositoryType: RepositoryType?): Result<Repository> {
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (repositoryId.isBlank()) {
-            throw ParamBlankException("Invalid repositoryHashId")
-        }
-        return Result(
-                repositoryService.serviceGet(
-                        projectId,
-                        buildConfig(URLDecoder.decode(repositoryId, "UTF-8"), repositoryType)
-                )
-        )
-    }
+//
+//    override fun createV2(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
+//        if (userId.isBlank()) {
+//            throw ParamBlankException("Invalid userId")
+//        }
+//        if (projectId.isBlank()) {
+//            throw ParamBlankException("Invalid projectId")
+//        }
+//        if (repository.aliasName.isBlank()) {
+//            throw ParamBlankException("Invalid repository aliasName")
+//        }
+//        if (repository.url.isBlank()) {
+//            throw ParamBlankException("Invalid repository url")
+//        }
+//        return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
+//    }
+//
+//    override fun listV2(projectId: String, repositoryType: ScmType?): Result<List<RepositoryInfoWithPermission>> {
+//        if (projectId.isBlank()) {
+//            throw ParamBlankException("Invalid projectId")
+//        }
+//        return Result(repositoryService.serviceList(projectId, repositoryType))
+//    }
+//
+//    override fun getV2(projectId: String, repositoryId: String, repositoryType: RepositoryType?): Result<Repository> {
+//        if (projectId.isBlank()) {
+//            throw ParamBlankException("Invalid projectId")
+//        }
+//        if (repositoryId.isBlank()) {
+//            throw ParamBlankException("Invalid repositoryHashId")
+//        }
+//        return Result(
+//                repositoryService.serviceGet(
+//                        projectId,
+//                        buildConfig(URLDecoder.decode(repositoryId, "UTF-8"), repositoryType)
+//                )
+//        )
+//    }
 
     override fun createGitCodeRepository(userId: String, projectCode: String, repositoryName: String, sampleProjectPath: String, namespaceId: Int?, visibilityLevel: VisibilityLevelEnum?, tokenType: TokenTypeEnum): Result<RepositoryInfo?> {
         return repositoryService.createGitCodeRepository(userId, projectCode, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
@@ -194,37 +194,37 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     override fun getFileContent(repoId: String, filePath: String, reversion: String?, branch: String?, repositoryType: RepositoryType?): Result<String> {
         return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch))
     }
-
-    override fun getFileContentV2(repoId: String, filePath: String, reversion: String?, branch: String?, repositoryType: RepositoryType?): Result<String> {
-        return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch))
-    }
+//
+//    override fun getFileContentV2(repoId: String, filePath: String, reversion: String?, branch: String?, repositoryType: RepositoryType?): Result<String> {
+//        return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch))
+//    }
 
     override fun delete(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
         repositoryService.userDelete(userId, projectId, repositoryHashId)
         return Result(true)
     }
-
-    override fun hasPermissionListV2(userId: String, projectId: String, repositoryType: ScmType?, permission: Permission): Result<Page<RepositoryInfo>> {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        val bkAuthPermission = when (permission) {
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.LIST -> BkAuthPermission.LIST
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.USE -> BkAuthPermission.USE
-        }
-        val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
-        val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
-        return Result(Page(0, 9999, result.count, result.records))
-    }
-
-    override fun deleteV2(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
-        repositoryService.userDelete(userId, projectId, repositoryHashId)
-        return Result(true)
-    }
+//
+//    override fun hasPermissionListV2(userId: String, projectId: String, repositoryType: ScmType?, permission: Permission): Result<Page<RepositoryInfo>> {
+//        if (userId.isBlank()) {
+//            throw ParamBlankException("Invalid userId")
+//        }
+//        if (projectId.isBlank()) {
+//            throw ParamBlankException("Invalid projectId")
+//        }
+//        val bkAuthPermission = when (permission) {
+//            Permission.DELETE -> AuthPermission.DELETE
+//            Permission.LIST -> AuthPermission.LIST
+//            Permission.VIEW -> AuthPermission.VIEW
+//            Permission.EDIT -> AuthPermission.EDIT
+//            Permission.USE -> AuthPermission.USE
+//        }
+//        val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
+//        val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
+//        return Result(Page(0, 9999, result.count, result.records))
+//    }
+//
+//    override fun deleteV2(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
+//        repositoryService.userDelete(userId, projectId, repositoryHashId)
+//        return Result(true)
+//    }
 }

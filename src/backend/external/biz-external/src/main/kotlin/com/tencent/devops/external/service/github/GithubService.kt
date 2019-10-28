@@ -12,7 +12,7 @@ import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.external.pojo.GithubRepository
 import com.tencent.devops.external.pojo.GithubTag
 import com.tencent.devops.external.pojo.github.GithubRepo
-import com.tencent.devops.process.api.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.scm.exception.GithubApiException
 import okhttp3.MediaType

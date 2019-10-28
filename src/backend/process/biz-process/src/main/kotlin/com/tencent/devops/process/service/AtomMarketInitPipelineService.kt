@@ -86,11 +86,11 @@ class AtomMarketInitPipelineService @Autowired constructor(
         val stageFirstElements = listOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
         params.add(BuildFormProperty("atomCode", true, BuildFormPropertyType.STRING, atomBaseInfo.atomCode, null, null,
-            null, null, null, null))
+            null, null, null, null, null, null))
         params.add(BuildFormProperty("version", true, BuildFormPropertyType.STRING, atomBaseInfo.version, null, null,
-            null, null, null, null))
+            null, null, null, null, null, null))
         params.add(BuildFormProperty("script", true, BuildFormPropertyType.STRING, script, null, null,
-            null, null, null, null))
+            null, null, null, null, null, null))
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
             name = "构建触发",

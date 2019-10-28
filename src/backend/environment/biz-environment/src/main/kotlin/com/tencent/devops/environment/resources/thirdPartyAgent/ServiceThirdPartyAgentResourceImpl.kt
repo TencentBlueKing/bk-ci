@@ -44,23 +44,26 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
-    private val thirdPartyAgentMgrService: ThirdPartyAgentMgrService,
+    private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
-        return thirdPartyAgentMgrService.getAgent(projectId, agentId)
+        return thirdPartyAgentService.getAgent(projectId, agentId)
     }
 
     override fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
-        return thirdPartyAgentMgrService.getAgentByDisplayName(projectId, displayName)
+        return thirdPartyAgentService.getAgentByDisplayName(projectId, displayName)
     }
 
     override fun getAgentsByEnvId(projectId: String, envId: String) =
-        Result(thirdPartyAgentMgrService.getAgentByEnvId(projectId, envId))
+        Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
 
     override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> =
-        Result(thirdPartyAgentMgrService.getAgnetByEnvName(projectId, envName))
+        Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
+
+    override fun upgrade(projectId: String, agentId: String, secretKey: String, tag: String) =
+        thirdPartyAgentService.checkIfCanUpgrade(projectId, agentId, secretKey, tag)
 
     override fun upgradeByVersion(
         projectId: String,
@@ -86,7 +89,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentMgrService.listAgents(userId, projectId, os))
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
     }
 
     private fun checkUserId(userId: String) {

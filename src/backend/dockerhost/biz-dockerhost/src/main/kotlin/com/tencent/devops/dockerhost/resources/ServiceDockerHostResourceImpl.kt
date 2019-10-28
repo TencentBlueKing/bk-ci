@@ -39,8 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceDockerHostResourceImpl @Autowired constructor(
-        private val dockerService: DockerService,
-        private val dockerHostBuildService: DockerHostBuildService
+    private val dockerService: DockerService,
+    private val dockerHostBuildService: DockerHostBuildService
 ) : ServiceDockerHostResource {
     override fun dockerBuild(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, dockerBuildParam: DockerBuildParam): Result<Boolean> {
         logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")

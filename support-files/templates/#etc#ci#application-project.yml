@@ -11,7 +11,7 @@ server:
 
 # 蓝鲸登录平台API地址，对接蓝鲸平台时才需要用到
 bk_login:
-  path: https://__PAAS_FQDN__:__PAAS_HTTP_PORT__/api/c/compapi/v2/bk_login/
+  path: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/bk_login/
   getUser: get_user/
   getAllUser: get_all_users/
   bk_app_code: __APP_CODE__

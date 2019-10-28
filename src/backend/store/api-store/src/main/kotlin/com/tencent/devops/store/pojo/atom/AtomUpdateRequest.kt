@@ -64,7 +64,7 @@ data class AtomUpdateRequest(
     val props: String?,
     @ApiModelProperty("预留字段（设置规则等信息的json串）", required = false)
     val data: String?,
-    @ApiModelProperty("原子logo", required = false)
+    @ApiModelProperty("插件logo", required = false)
     val logoUrl: String?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null

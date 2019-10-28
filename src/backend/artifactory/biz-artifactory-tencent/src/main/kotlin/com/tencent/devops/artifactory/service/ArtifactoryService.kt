@@ -22,8 +22,8 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
@@ -46,16 +46,17 @@ class ArtifactoryService @Autowired constructor(
     val jFrogPropertiesApi: JFrogPropertiesApi,
     val shortUrlApi: ShortUrlApi
 ) {
+
     fun hasDownloadPermission(
         userId: String,
         projectId: String,
         serviceCode: BkAuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         path: String
     ): Boolean {
-        return if (serviceCode == BkAuthServiceCode.PIPELINE && resourceType == BkAuthResourceType.PIPELINE_DEFAULT) {
+        return if (serviceCode == BkAuthServiceCode.PIPELINE && resourceType == AuthResourceType.PIPELINE_DEFAULT) {
             val pipelineId = pipelineService.getPipelineId(path)
-            pipelineService.validatePermission(userId, projectId, pipelineId, BkAuthPermission.EXECUTE)
+            pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.EXECUTE)
         } else {
             false
         }
@@ -227,7 +228,7 @@ class ArtifactoryService @Autowired constructor(
             val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
 
             val relativePathSet = setOf(pipelinePathPrefix, customDirPathPrefix)
-            val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, BkAuthPermission.LIST)
+            val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
 
             val jFrogAQLFileInfoList =
                 jFrogAQLService.listByCreateTimeDesc(repoPathPrefix, relativePathSet, offset, limit)
@@ -257,7 +258,7 @@ class ArtifactoryService @Autowired constructor(
             val jFrogAQLFileInfoList =
                 jFrogAQLService.searchFileAndPropertyByPropertyByAnd(repoPathPrefix, relativePathSet, emptySet(), props)
             val fileInfoList = transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false)
-            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId, BkAuthPermission.DOWNLOAD)
+            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId, AuthPermission.DOWNLOAD)
 
             return fileInfoList.map {
                 val show = when {

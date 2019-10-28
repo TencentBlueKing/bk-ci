@@ -36,7 +36,10 @@ import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Feign
+import feign.Request
 import feign.RequestInterceptor
+import feign.RetryableException
+import feign.Retryer
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
@@ -85,6 +88,14 @@ class Client @Autowired constructor(
         .writeTimeout(readWriteTimeoutSeconds, TimeUnit.SECONDS)
         .build()
 
+    private val longRunClient = OkHttpClient(
+        okhttp3.OkHttpClient.Builder()
+            .connectTimeout(10L, TimeUnit.SECONDS)
+            .readTimeout(30L, TimeUnit.MINUTES)
+            .writeTimeout(30L, TimeUnit.MINUTES)
+            .build()
+    )
+
     private val feignClient = OkHttpClient(okHttpClient)
     private val jaxRsContract = JAXRSContract()
     private val jacksonDecoder = JacksonDecoder(objectMapper)
@@ -117,6 +128,29 @@ class Client @Autowired constructor(
         } catch (ignored: Throwable) {
             getImpl(clz)
         }
+    }
+
+
+    fun <T : Any> getWithoutRetry(clz: KClass<T>): T {
+        val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
+        return Feign.builder()
+            .client(longRunClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .requestInterceptor(requestInterceptor)
+            .options(Request.Options(10 * 1000, 30 * 60 * 1000))
+            .retryer(object : Retryer {
+                override fun clone(): Retryer {
+                    return this
+                }
+
+                override fun continueOrPropagate(e: RetryableException) {
+                    throw e
+                }
+            })
+            .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
     }
 
     /**

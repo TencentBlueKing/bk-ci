@@ -6,7 +6,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectService
+import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.user.api.UserProjectUserResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserProjectUserResourceImpl @Autowired constructor(
     private val tofService: TOFService,
-    private val projectService: ProjectService,
+    private val projectLocalService: ProjectLocalService,
     private val serviceCode: BSPipelineAuthServiceCode
 ) : UserProjectUserResource {
 
@@ -34,10 +34,10 @@ class UserProjectUserResourceImpl @Autowired constructor(
     }
 
     override fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
-        return projectService.getProjectUsers(accessToken, userId, projectCode)
+        return projectLocalService.getProjectUsers(accessToken, userId, projectCode)
     }
 
     override fun getProjectUserRoles(accessToken: String, userId: String, projectCode: String): Result<List<UserRole>> {
-        return Result(projectService.getProjectUserRoles(accessToken, userId, projectCode, serviceCode))
+        return Result(projectLocalService.getProjectUserRoles(accessToken, userId, projectCode, serviceCode))
     }
 }

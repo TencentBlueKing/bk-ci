@@ -4,20 +4,37 @@ spring:
     desc: DevOps Project Service
     version: 4.0
     packageName: com.tencent.devops.project
-  datasource:
-    url: jdbc:mysql://gamedb.dev.devops.db:10000/devops_project?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-    username: ENC(4thI6E9FBq9rHHDuRXRIyA==)
-    password: ENC(muhwM7Fz7zJZF/OsJSlOoA==)
-
-file:
-  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
-  maxUploadFileSize: 52428800
+#  datasource:
+#    url: jdbc:mysql://gamedb.dev.devops.db:10000/devops_project?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+#    username: ENC(4thI6E9FBq9rHHDuRXRIyA==)
+#    password: ENC(muhwM7Fz7zJZF/OsJSlOoA==)
+#file:
+#  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
+#  maxUploadFileSize: 52428800
 
 server:
   port: 21912
 
 auth:
   url: http://authapi-dev.open.oa.com
+  idProvider: client
+  grantType: client_credentials
+  stagingEnvName: staging
+  testEnvName: test
+  prodEnvName: prod
+  stagingUrl: http://authapi-dev.open.oa.com
+  testUrl: http://authapi-test.open.oa.com
+  prodUrl: http://authapi.open.oa.com
+#  bcsSecret: YH777kfUgQgpzisfte1S700S5q2N2FFQhtfFGwhQeO3E7TIs6v
+#  codeSecret: xI7DbH5tuOPkYDeaD6zGmEMhagnExV3loRooP0wDmbcfda4m7S
+#  pipelineSecret: I6ua62oGX8HocKNOpCtjrEiebQv5X5sF4jAYfvwMpYZsR6F4Qm
+#  artifactorySecret: DSudQR9g9a32xKExVbGgMJA1itJGXltQVS08D6tCt7kwrDzMpp
+#  ticketSecret: bBEHPz9YoEK1domD7mxPbiQIzw54j9Q1XRZFhSAztXE4I3G1MC
+#  environmentSecret: t51LIa27rBa4NMGQbydEg4mg6jU26g74WUuRPG4MpkKq9LTWqW
+#  experienceSecret: 9enfUAZtdgmMHAVUSnBvbXRDES4xFzvitMpV3IdrzcMDbu42UT
+#  vsSecret: 47591GshxBNnjiH1Nix4HcAR6xEdgwvYfVuNjN7G9eqrN6BQay
+#  qualitySecret: b3Z15sIjCmEmtRdP9HDuxv4r1mGaEzc9Ks23KHy9QQCTJGUKss
+#  wetestSecret: rtZWjB8sGEW1kIHmTLgeHRjACe1FPw5SKb8V9VjQ89kNM8AAVH
 
 paas_cc:
   url: http://api.apigw-biz.o.oa.com/api/paas-cc/test/project

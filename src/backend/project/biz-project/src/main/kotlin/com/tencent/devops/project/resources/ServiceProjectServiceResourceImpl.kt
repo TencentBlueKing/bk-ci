@@ -27,20 +27,15 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.ServiceProjectServiceResource
+import com.tencent.devops.project.api.service.ServiceProjectServiceResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.UserProjectServiceService
-import org.slf4j.LoggerFactory
 
 @RestResource
 class ServiceProjectServiceResourceImpl constructor(
         private val userProjectServiceService: UserProjectServiceService
 ) : ServiceProjectServiceResource {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceProjectServiceResourceImpl::class.java)
-    }
 
 
     override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {

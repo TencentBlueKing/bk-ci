@@ -27,7 +27,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -45,20 +45,33 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getProjectByUser(userName))
     }
 
-//    // TODO: 内部版、企业版path一致，入参不一致，是否需要把该接口拆到子模块内区
-//    override fun verifyUserProjectPermission(projectCode: String, userId: String): Result<Boolean> {
-//        return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
-//    }
+    override fun getProjectByUserV2(userName: String): Result<List<ProjectVO>> {
+        return Result(projectService.getProjectByUser(userName))
+    }
 
-    override fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
-        return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
+    override fun verifyUserProjectPermission(
+        accessToken: String,
+        projectCode: String, userId: String): Result<Boolean> {
+        return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
     }
 
     override fun list(userId: String): Result<List<ProjectVO>> {
         return Result(projectService.list(userId))
     }
 
+    override fun listV2(userId: String): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId))
+    }
+
+    override fun getAllProject(): Result<List<ProjectVO>> {
+        return Result(projectService.getAllProject())
+    }
+
     override fun listByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
+        return Result(projectService.list(projectCodes))
+    }
+
+    override fun listByProjectCodeV2(projectCodes: Set<String>): Result<List<ProjectVO>> {
         return Result(projectService.list(projectCodes))
     }
 
@@ -66,43 +79,16 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getNameByCode(projectCodes))
     }
 
+    override fun getNameByCodeV2(projectCodes: String): Result<HashMap<String, String>> {
+        return Result(projectService.getNameByCode(projectCodes))
+    }
+
     override fun get(englishName: String): Result<ProjectVO?> {
         return Result(projectService.getByEnglishName(englishName))
-    }
-
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        return Result(projectService.create(userId, projectCreateInfo))
-    }
-
-
-    override fun verifyUserProjectPermissionV2(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
-        return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
     }
 
     override fun getV2(englishName: String): Result<ProjectVO?> {
         return Result(projectService.getByEnglishName(englishName))
     }
 
-    override fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String): Result<List<ProjectVO>> {
-        return Result(projectService.getProjectByGroup(userId, bgName, deptName, centerName))
-    }
-
-    override fun getPreUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
-        return Result(projectService.getOrCreatePreProject(userId, accessToken))
-    }
-
-    override fun getPreUserProjectV2(userId: String, accessToken: String): Result<ProjectVO?> {
-        return Result(projectService.getOrCreatePreProject(userId, accessToken))
-    }
-
-    override fun getProjectEnNamesByOrganization(userId: String, bgId: Long, deptName: String?, centerName: String?): Result<List<String>> {
-        return Result(
-                projectService.getProjectEnNamesByOrganization(
-                        userId = userId,
-                        bgId = bgId,
-                        deptName = deptName,
-                        centerName = centerName,
-                        interfaceName = "/service/projects/enNames/organization"
-                )
-        )    }
 }

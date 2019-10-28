@@ -31,11 +31,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import okhttp3.MediaType
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
 class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
-
 
     // 定时任务使用，现在停用
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
@@ -88,7 +89,6 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
         }
     }
 
-
     // 不再rollback,，现在停用
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Result<Boolean>? {
         val path = "/ms/dispatch/api/dockerhost/rollbackBuild?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
@@ -120,6 +120,48 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
                 throw RuntimeException("DockerHostBuildResourceApi $path fail")
             }
             return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun getHost(hostTag: String): Result<DockerHostInfo>? {
+        val path = "/dispatch/api/dockerhost/host?hostTag=$hostTag"
+        val request = buildGet(path)
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
+                throw RuntimeException("DockerHostBuildResourceApi $path fail")
+            }
+            return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun postLog(buildId: String, red: Boolean, message: String, tag: String? = ""): Result<Boolean>? {
+        val path = "/dispatch/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag"
+        val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
+                throw RuntimeException("DockerHostBuildResourceApi $path fail")
+            }
+            return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun getDockerJarLength(): Long? {
+        val path = "/dispatch/api/build/dockers"
+        val request = buildHeader(path)
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val contentLength = response.header("Content-Length")?.toLong()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. ${response.code()}")
+                throw RuntimeException("DockerHostBuildResourceApi $path fail")
+            }
+            return contentLength
         }
     }
 }

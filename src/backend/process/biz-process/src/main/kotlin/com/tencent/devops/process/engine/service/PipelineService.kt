@@ -34,7 +34,10 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -44,7 +47,9 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
@@ -66,7 +71,6 @@ import com.tencent.devops.process.service.PipelineSettingService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
-import com.tencent.devops.process.template.dao.TemplatePipelineDao
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -97,7 +101,10 @@ class PipelineService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineSettingService: PipelineSettingService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
 
     companion object {
@@ -105,11 +112,11 @@ class PipelineService @Autowired constructor(
     }
 
     private fun checkPermission(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        permission: BkAuthPermission,
-        message: String
+            userId: String,
+            projectId: String,
+            pipelineId: String,
+            permission: AuthPermission,
+            message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
@@ -123,10 +130,10 @@ class PipelineService @Autowired constructor(
     }
 
     private fun checkCreatePermission(
-        userId: String?,
-        projectId: String,
-        permission: BkAuthPermission,
-        message: String
+            userId: String?,
+            projectId: String,
+            permission: AuthPermission,
+            message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId!!,
@@ -139,22 +146,22 @@ class PipelineService @Autowired constructor(
     }
 
     fun hasPermission(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        bkAuthPermission: BkAuthPermission
+            userId: String,
+            projectId: String,
+            pipelineId: String,
+            authPermission: AuthPermission
     ): Boolean = pipelinePermissionService.checkPipelinePermission(
         userId = userId,
         projectId = projectId,
         pipelineId = pipelineId,
-        permission = bkAuthPermission
+        permission = authPermission
     )
 
     fun hasCreatePipelinePermission(userId: String, projectId: String): Boolean =
         pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
-            permission = BkAuthPermission.CREATE
+            permission = AuthPermission.CREATE
         )
 
     private fun checkPipelineName(name: String) {
@@ -193,7 +200,7 @@ class PipelineService @Autowired constructor(
             checkPipelineName(model.name)
 
             if (checkPermission) {
-                checkCreatePermission(userId, projectId, BkAuthPermission.CREATE, "用户($userId)无权限在工程($projectId)下创建流水线")
+                checkCreatePermission(userId, projectId, AuthPermission.CREATE, "用户($userId)无权限在工程($projectId)下创建流水线")
             }
 
             if (isPipelineExist(projectId, fixPipelineId, model.name, channelCode)) {
@@ -353,13 +360,13 @@ class PipelineService @Autowired constructor(
                 userId,
                 projectId,
                 pipelineId,
-                BkAuthPermission.EDIT,
+                AuthPermission.EDIT,
                 "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
             )
             checkCreatePermission(
                 userId,
                 projectId,
-                BkAuthPermission.CREATE,
+                AuthPermission.CREATE,
                 "用户($userId)无权限在工程($projectId)下创建流水线($pipelineId)"
             )
         }
@@ -407,7 +414,7 @@ class PipelineService @Autowired constructor(
                     userId,
                     projectId,
                     pipelineId,
-                    BkAuthPermission.EDIT,
+                    AuthPermission.EDIT,
                     "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
                 )
             }
@@ -496,7 +503,7 @@ class PipelineService @Autowired constructor(
                 userId,
                 projectId,
                 pipelineId,
-                BkAuthPermission.VIEW,
+                AuthPermission.VIEW,
                 "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
             )
         }
@@ -551,7 +558,7 @@ class PipelineService @Autowired constructor(
                     userId,
                     projectId,
                     pipelineId,
-                    BkAuthPermission.DELETE,
+                    AuthPermission.DELETE,
                     "用户($userId)无权限在工程($projectId)下删除流水线($pipelineId)"
                 )
                 watch.stop()
@@ -615,7 +622,7 @@ class PipelineService @Autowired constructor(
             val hasPermissionList = if (checkPermission) {
                 watch.start("perm_r_perm")
                 val hasPermissionList = pipelinePermissionService.getResourceByPermission(
-                    userId = userId, projectId = projectId, permission = BkAuthPermission.LIST
+                    userId = userId, projectId = projectId, permission = AuthPermission.LIST
                 )
                 watch.stop()
                 if (hasPermissionList.isEmpty()) {
@@ -686,19 +693,19 @@ class PipelineService @Autowired constructor(
     }
 
     fun hasPermissionList(
-        userId: String,
-        projectId: String,
-        bkAuthPermission: BkAuthPermission,
-        excludePipelineId: String?,
-        offset: Int,
-        limit: Int
+            userId: String,
+            projectId: String,
+            authPermission: AuthPermission,
+            excludePipelineId: String?,
+            offset: Int,
+            limit: Int
     ): SQLPage<Pipeline> {
 
         val watch = StopWatch()
         try {
             watch.start("perm_r_perm")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(
-                userId = userId, projectId = projectId, permission = bkAuthPermission
+                userId = userId, projectId = projectId, permission = authPermission
             )
             watch.stop()
             watch.start("s_r_summary")
@@ -754,7 +761,7 @@ class PipelineService @Autowired constructor(
         watch.start("perm_r_perm")
         val authPipelines = if (authPipelineIds.isEmpty()) {
             pipelinePermissionService.getResourceByPermission(
-                userId = userId, projectId = projectId, permission = BkAuthPermission.LIST
+                userId = userId, projectId = projectId, permission = AuthPermission.LIST
             )
         } else {
             authPipelineIds
@@ -1097,7 +1104,7 @@ class PipelineService @Autowired constructor(
 
             watch.start("perm_r_perm")
             val pipelinesPermissions = pipelinePermissionService.getResourceByPermission(
-                userId = userId, projectId = projectId, permission = BkAuthPermission.LIST
+                userId = userId, projectId = projectId, permission = AuthPermission.LIST
             )
             watch.stop()
 
@@ -1156,14 +1163,14 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Map<String, String> {
+    fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>, filterDelete: Boolean = true): Map<String, String> {
 
         if (pipelineIds.isEmpty()) return mapOf()
         if (projectId.isBlank()) return mapOf()
 
         val watch = StopWatch()
         watch.start("s_r_list_b_ps")
-        val map = pipelineRepositoryService.listPipelineNameByIds(projectId, pipelineIds)
+        val map = pipelineRepositoryService.listPipelineNameByIds(projectId, pipelineIds, filterDelete)
         watch.stop()
         logger.info("getPipelineNameByIds|[$projectId]|watch=$watch")
         return map
@@ -1282,7 +1289,7 @@ class PipelineService @Autowired constructor(
 
     fun listPermissionPipelineName(projectId: String, userId: String): List<Map<String, String>> {
         val pipelines = pipelinePermissionService.getResourceByPermission(
-            userId = userId, projectId = projectId, permission = BkAuthPermission.EXECUTE
+            userId = userId, projectId = projectId, permission = AuthPermission.EXECUTE
         )
 
         val pipelineIds = pipelines.toSet()
@@ -1383,12 +1390,47 @@ class PipelineService @Autowired constructor(
         )
     }
 
+    fun listPermissionPipelineCount(
+        userId: String,
+        projectId: String,
+        channelCode: ChannelCode = ChannelCode.BS,
+        checkPermission: Boolean = true
+    ): Int {
+        val watch = StopWatch()
+        watch.start("perm_r_perm")
+        val hasPermissionList = authPermissionApi.getUserResourceByPermission(
+            userId,
+            pipelineAuthServiceCode,
+            AuthResourceType.PIPELINE_DEFAULT,
+            projectId,
+            AuthPermission.LIST,
+            null
+        )
+        watch.stop()
+
+        watch.start("s_r_c_b_id")
+        val count = pipelineRepositoryService.countByPipelineIds(projectId, channelCode, hasPermissionList)
+        watch.stop()
+
+        logger.info("listPermissionPipelineCount|[$projectId]|$userId|$count|watch=$watch")
+        return count
+    }
+
+    fun getPipelineNameVersion(pipelineId: String): Pair<String, Int> {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
+    }
+
     private fun isTemplatePipeline(pipelineId: String): Boolean {
-        return templatePipelineDao.listByPipeline(dslContext, pipelineId) != null
+        return templatePipelineDao.listByPipelines(dslContext, setOf(pipelineId)).isNotEmpty
     }
 
     private fun getTemplatePipelines(pipelineIds: Set<String>): Set<String> {
         val records = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
         return records.map { it.pipelineId }.toSet()
+    }
+
+    fun getArtifacortyCountFormHistory(startTime: Long, endTime: Long): Int {
+        return pipelineBuildDao.countNotEmptyArtifact(dslContext, startTime, endTime)
     }
 }

@@ -46,7 +46,7 @@ import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -105,6 +105,10 @@ class ThirdPartyAgentService @Autowired constructor(
                 it.createdTime.timestamp()
             )
         }
+    }
+
+    fun getRunningBuilds(agentId: String): Int {
+        return thirdPartyAgentBuildDao.getRunningAndQueueBuilds(dslContext, agentId).size
     }
 
     fun startBuild(
@@ -186,10 +190,15 @@ class ThirdPartyAgentService @Autowired constructor(
         logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
         return try {
             val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
-                .upgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
-            upgrade(projectId, agentId, agentUpgradeResult)
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to check if agent can upgrade", ignored)
+                    .upgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
+            return if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
+                agentUpgradeResult
+            } else {
+                redisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
+                AgentResult(AgentStatus.IMPORT_OK, true)
+            }
+        } catch (t: Throwable) {
+            logger.warn("Fail to check if agent can upgrade", t)
             AgentResult(AgentStatus.IMPORT_EXCEPTION, false)
         }
     }
@@ -258,42 +267,6 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    private fun upgrade(projectId: String, agentId: String, agentUpgradeResult: AgentResult<Boolean>)
-        : AgentResult<Boolean> {
-        try {
-            if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
-                return agentUpgradeResult
-            }
-
-            if (agentUpgradeResult.agentStatus != AgentStatus.IMPORT_OK) {
-                return agentUpgradeResult
-            }
-
-            logger.info("The agent can upgrade, check if there are running task of the agent")
-            val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
-            try {
-                redisLock.lock()
-                val runningBuildRecord =
-                    thirdPartyAgentBuildDao.getRunningBuilds(dslContext, agentId)
-                if (runningBuildRecord.isNotEmpty()) {
-                    logger.info(
-                        ("The agent is running the build " +
-                            "${runningBuildRecord.joinToString(",") { it.buildId }}, can't upgrade")
-                    )
-                    return AgentResult(AgentStatus.IMPORT_OK, false)
-                }
-                logger.info("The agent($agentId) of project($projectId) can upgrade")
-                redisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
-                return AgentResult(AgentStatus.IMPORT_OK, true)
-            } finally {
-                redisLock.unlock()
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to check if agent can upgrade", ignored)
-            return AgentResult(AgentStatus.IMPORT_EXCEPTION, false)
-        }
-    }
-
     fun listAgentBuilds(agentId: String, page: Int?, pageSize: Int?): Page<AgentBuildInfo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 100
@@ -321,7 +294,6 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
-
 
     private fun finishBuild(
         record: TDispatchThirdpartyAgentBuildRecord,

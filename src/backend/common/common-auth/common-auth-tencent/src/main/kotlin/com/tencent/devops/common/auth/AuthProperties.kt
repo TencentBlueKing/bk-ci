@@ -35,18 +35,10 @@ class AuthProperties {
     val idProvider: String? = null
     @Value("\${auth.grantType:#{null}}")
     val grantType: String? = null
-    @Value("\${auth.stagingEnvName:#{null}}")
-    val stagingEnvName: String? = null
-    @Value("\${auth.testEnvName:#{null}}")
-    val testEnvName: String? = null
-    @Value("\${auth.prodEnvName:#{null}}")
-    val prodEnvName: String? = null
-    @Value("\${auth.stagingUrl:#{null}}")
-    val stagingUrl: String? = null
-    @Value("\${auth.testUrl:#{null}}")
-    val testUrl: String? = null
-    @Value("\${auth.prodUrl:#{null}}")
-    val prodUrl: String? = null
+    @Value("\${auth.envName:#{null}}")
+    val envName: String? = null
+    @Value("\${auth.url:#{null}}")
+    val url: String? = null
 
     @Value("\${auth.bcsSecret:#{null}}")
     val bcsSecret: String? = null

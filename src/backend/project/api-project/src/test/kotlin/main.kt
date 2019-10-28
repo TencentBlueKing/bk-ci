@@ -63,7 +63,8 @@ fun main(array: Array<String>) {
         useBk = true,
         gray = false,
         enabled = true,
-        enableExternal = true
+        enableExternal = true,
+        hybridCcAppId=0
     )
     val message = JsonUtil.toJson(p)
     println(message)

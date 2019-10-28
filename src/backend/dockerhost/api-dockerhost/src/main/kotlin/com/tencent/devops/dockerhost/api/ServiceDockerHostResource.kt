@@ -47,25 +47,24 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceDockerHostResource {
 
-
     @ApiOperation("Docker build")
     @POST
     @Path("/build/{projectId}/{pipelineId}/{vmSeqId}/{buildId}")
     fun dockerBuild(
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam(value = "流水线Id", required = true)
-            @PathParam("pipelineId")
-            pipelineId: String,
-            @ApiParam(value = "vmSeqId", required = true)
-            @PathParam("vmSeqId")
-            vmSeqId: String,
-            @ApiParam(value = "buildId", required = true)
-            @PathParam("buildId")
-            buildId: String,
-            @ApiParam("镜像名称", required = true)
-            dockerBuildParam: DockerBuildParam
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "vmSeqId", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam(value = "buildId", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("镜像名称", required = true)
+        dockerBuildParam: DockerBuildParam
     ): Result<Boolean>
 
     @ApiOperation("Docker build")
@@ -84,17 +83,15 @@ interface ServiceDockerHostResource {
     @POST
     @Path("/startBuild")
     fun startBuild(
-            @ApiParam("dockerHost构建信息", required = true)
-            dockerHostBuildInfo: DockerHostBuildInfo
+        @ApiParam("dockerHost构建信息", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
 
     @ApiOperation("endBuild")
     @POST
     @Path("/endBuild")
     fun endBuild(
-            @ApiParam("dockerHost构建信息", required = true)
-            dockerHostBuildInfo: DockerHostBuildInfo
+        @ApiParam("dockerHost构建信息", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
-
-
 }

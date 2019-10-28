@@ -28,6 +28,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -513,6 +514,68 @@ class ProjectDao {
                 condition.and(ENGLISH_NAME.`in`(englishNameList))
             }
             return condition.and(IS_OFFLINED.eq(false)).fetch()
+        }
+    }
+
+    fun updateProjectFromOp(dslContext: DSLContext, projectInfoRequest: OpProjectUpdateInfoRequest) {
+        with(TProject.T_PROJECT) {
+            val step = dslContext.update(this)
+                    .set(PROJECT_NAME, projectInfoRequest.projectName)
+                    .set(BG_ID, projectInfoRequest.bgId)
+                    .set(BG_NAME, projectInfoRequest.bgName)
+                    .set(DEPT_ID, projectInfoRequest.deptId)
+                    .set(DEPT_NAME, projectInfoRequest.deptName)
+                    .set(CENTER_ID, projectInfoRequest.centerId)
+                    .set(CENTER_NAME, projectInfoRequest.centerName)
+                    .set(PROJECT_TYPE, projectInfoRequest.projectType)
+                    .set(IS_SECRECY, projectInfoRequest.secrecyFlag)
+                    .set(APPROVAL_STATUS, projectInfoRequest.approvalStatus)
+                    .set(APPROVAL_TIME, projectInfoRequest.approvalTime?.let { java.sql.Timestamp(it).toLocalDateTime() })
+                    .set(APPROVER, projectInfoRequest.approver)
+                    .set(USE_BK, projectInfoRequest.useBk)
+                    .set(CC_APP_ID, projectInfoRequest.ccAppId)
+                    .set(CC_APP_NAME, projectInfoRequest.cc_app_name ?: "")
+                    .set(UPDATOR, projectInfoRequest.updator)
+                    .set(UPDATED_AT, LocalDateTime.now())
+                    .set(KIND, projectInfoRequest.kind)
+                    .set(ENABLED, projectInfoRequest.enabled)
+
+            if (projectInfoRequest.hybridCCAppId != null) {
+                step.set(HYBRID_CC_APP_ID, projectInfoRequest.hybridCCAppId)
+            }
+            if (projectInfoRequest.enableExternal != null) {
+                step.set(ENABLE_EXTERNAL, projectInfoRequest.enableExternal)
+            }
+
+            step.where(PROJECT_ID.eq(projectInfoRequest.projectId))
+                    .execute()
+        }
+    }
+
+    fun getProjectCount(
+            dslContext: DSLContext,
+            projectName: String?,
+            englishName: String?,
+            projectType: Int?,
+            isSecrecy: Boolean?,
+            creator: String?,
+            approver: String?,
+            approvalStatus: Int?,
+            grayFlag: Boolean,
+            englishNames: Set<String>?
+    ): Int {
+        with(TProject.T_PROJECT) {
+            val conditions = generateQueryProjectCondition(
+                    projectName,
+                    englishName,
+                    projectType,
+                    isSecrecy,
+                    creator,
+                    approver,
+                    approvalStatus,
+                    grayFlag, englishNames
+            )
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
         }
     }
 }

@@ -68,7 +68,7 @@ class WebhookEventListener constructor(
 
     fun handleGithubCommitEvent(event: GithubWebhookEvent) {
         logger.info("Receive Github from MQ [GIHUB|${event.githubWebhook.event}]")
-        var thisGithubWebhook = event.githubWebhook
+        val thisGithubWebhook = event.githubWebhook
         var result = false
         try {
             pipelineBuildService.externalCodeGithubBuild(

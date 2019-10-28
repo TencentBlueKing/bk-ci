@@ -8,8 +8,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.quality.pojo.Group
 import com.tencent.devops.quality.pojo.GroupCreate
@@ -34,22 +34,21 @@ class GroupService @Autowired constructor(
     private val groupDao: GroupDao,
     private val bkAuthProjectApi: AuthProjectApi,
     private val bkAuthPermissionApi: AuthPermissionApi,
-    private val bkAuthResourceApi: AuthResourceApi
+    private val bkAuthResourceApi: AuthResourceApi,
+    private val serviceCode: QualityAuthServiceCode
 ) {
-    @Autowired
-    private lateinit var serviceCode: QualityAuthServiceCode
 
-    private val resourceType = BkAuthResourceType.QUALITY_GROUP
+    private val resourceType = AuthResourceType.QUALITY_GROUP
     private val regex = Pattern.compile("[,;]")
 
     fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
-        val groupPermissionListMap = filterGroup(userId, projectId, setOf(BkAuthPermission.EDIT, BkAuthPermission.DELETE))
+        val groupPermissionListMap = filterGroup(userId, projectId, setOf(AuthPermission.EDIT, AuthPermission.DELETE))
 
         val count = groupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
         val list = groupDao.list(dslContext, projectId, offset, finalLimit).map {
-            val canEdit = groupPermissionListMap[BkAuthPermission.EDIT]!!.contains(it.id)
-            val canDelete = groupPermissionListMap[BkAuthPermission.DELETE]!!.contains(it.id)
+            val canEdit = groupPermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
+            val canDelete = groupPermissionListMap[AuthPermission.DELETE]!!.contains(it.id)
             GroupSummaryWithPermission(
                     HashUtil.encodeLongId(it.id),
                     it.name,
@@ -143,7 +142,7 @@ class GroupService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(userId, projectId, groupId, BkAuthPermission.EDIT, "用户在项目($projectId)没有用户组($groupHashId)的编辑权限")
+        validatePermission(userId, projectId, groupId, AuthPermission.EDIT, "用户在项目($projectId)没有用户组($groupHashId)的编辑权限")
         if (groupDao.getOrNull(dslContext, groupId) == null) {
             throw NotFoundException("用户组($groupHashId)不存在")
         }
@@ -169,14 +168,14 @@ class GroupService @Autowired constructor(
 
     fun delete(userId: String, projectId: String, groupHashId: String) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(userId, projectId, groupId, BkAuthPermission.DELETE, "用户在项目($projectId)没有用户组($groupHashId)的删除权限")
+        validatePermission(userId, projectId, groupId, AuthPermission.DELETE, "用户在项目($projectId)没有用户组($groupHashId)的删除权限")
 
         deleteResource(projectId, groupId)
         groupDao.delete(dslContext, groupId)
     }
 
-    private fun validatePermission(userId: String, projectId: String, groupId: Long, bkAuthPermission: BkAuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, resourceType, projectId, HashUtil.encodeLongId(groupId), bkAuthPermission)) {
+    private fun validatePermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, resourceType, projectId, HashUtil.encodeLongId(groupId), authPermission)) {
             logger.error(message)
             throw PermissionForbiddenException(message)
         }
@@ -194,9 +193,9 @@ class GroupService @Autowired constructor(
         bkAuthResourceApi.deleteResource(serviceCode, resourceType, projectId, HashUtil.encodeLongId(groupId))
     }
 
-    private fun filterGroup(user: String, projectId: String, bkAuthPermissions: Set<BkAuthPermission>): Map<BkAuthPermission, List<Long>> {
-        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(user, serviceCode, resourceType, projectId, bkAuthPermissions, null)
-        val map = mutableMapOf<BkAuthPermission, List<Long>>()
+    private fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(user, serviceCode, resourceType, projectId, authPermissions, null)
+        val map = mutableMapOf<AuthPermission, List<Long>>()
         permissionResourceMap.forEach { key, value ->
             map[key] = value.map { HashUtil.decodeIdToLong(it) }
         }

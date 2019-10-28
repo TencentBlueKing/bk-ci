@@ -27,12 +27,7 @@
 package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.api.BSCCProjectApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
 import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
@@ -61,6 +56,31 @@ class AuthAutoConfiguration {
     @Bean
     @Primary
     fun bkAuthProperties() = BkAuthProperties()
+
+    @Bean
+    @Primary
+    fun authProperties() = AuthProperties()
+
+//    @Bean
+//    fun bkAuthProperties(@Autowired authProperties: AuthProperties):BkAuthProperties {
+//        return BkAuthProperties(
+//            envName = authProperties.envName,
+//            idProvider = authProperties.idProvider,
+//            grantType = authProperties.grantType,
+//            url = authProperties.url,
+//            bcsSecret = authProperties.bcsSecret,
+//            codeSecret = authProperties.codeSecret,
+//            pipelineSecret = authProperties.pipelineSecret,
+//            artifactorySecret = authProperties.artifactorySecret,
+//            ticketSecret = authProperties.ticketSecret,
+//            environmentSecret = authProperties.environmentSecret,
+//            experienceSecret = authProperties.experienceSecret,
+//            thirdPartyAgentSecret = authProperties.thirdPartyAgentSecret,
+//            vsSecret = authProperties.vsSecret,
+//            qualitySecret = authProperties.qualitySecret,
+//            wetestSecret = authProperties.wetestSecret
+//        )
+//    }
 
     @Bean
     @Primary

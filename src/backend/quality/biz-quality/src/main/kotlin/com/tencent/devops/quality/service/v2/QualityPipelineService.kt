@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
-import com.tencent.devops.process.api.ServicePipelineResource
-import com.tencent.devops.process.api.ServicePipelineTaskResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.quality.api.v2.pojo.RulePipelineRange
 import com.tencent.devops.quality.api.v2.pojo.RuleTemplateRange

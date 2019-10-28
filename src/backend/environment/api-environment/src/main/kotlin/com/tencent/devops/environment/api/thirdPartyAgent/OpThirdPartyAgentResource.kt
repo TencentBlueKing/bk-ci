@@ -51,10 +51,27 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpThirdPartyAgentResource {
 
+    @ApiOperation("启动或者禁止第三方构建机接入")
+    @PUT
+    @Path("/projects/enable")
+    fun enableProject(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("启动或禁止", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
+    @ApiOperation("获取所有启动第三方构建机")
+    @GET
+    @Path("/projects")
+    fun listEnableProjects(): Result<List<String>>
+
     @ApiOperation("设置Agent升级")
     @PUT
     @Path("/agents/upgrade/{version}")
-    fun setWorkerVersion(
+    fun setAgentUpgrade(
         @ApiParam("版本号", required = true)
         @PathParam("version")
         version: String
@@ -72,12 +89,12 @@ interface OpThirdPartyAgentResource {
     @ApiOperation("获取当前Agent版本")
     @GET
     @Path("/agent/upgrade")
-    fun getWorkerVersion(): Result<String?>
+    fun getAgentVersion(): Result<String?>
 
     @ApiOperation("获取当前Master版本")
     @GET
     @Path("/agent/masterVersion")
-    fun getMasterVersion(): Result<String?>
+    fun getAgentMasterVersion(): Result<String?>
 
     @ApiOperation("执行第三方构建机管道")
     @POST
@@ -162,17 +179,4 @@ interface OpThirdPartyAgentResource {
     @POST
     @Path("/agents/cleanAllLockUpgradeAgents")
     fun cleanAllLockUpgradeAgents(): Result<Boolean>
-
-    @ApiOperation("设置agent最大并发升级数量")
-    @POST
-    @Path("/agents/setMaxParallelUpgradeCount")
-    fun setMaxParallelUpgradeCount(
-        @ApiParam("maxParallelUpgradeCount", required = true)
-        maxParallelUpgradeCount: Int
-    ): Result<Boolean>
-
-    @ApiOperation("获取agent最大并发升级数量")
-    @POST
-    @Path("/agents/getMaxParallelUpgradeCount")
-    fun getMaxParallelUpgradeCount(): Result<Int?>
 }

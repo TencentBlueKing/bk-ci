@@ -37,7 +37,7 @@ class PipelineStatisticService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
     /**
-     * 根据插件标识，获取使用该插件的pipeline个数
+     * 根据原子标识，获取使用该原子的pipeline个数
      */
     fun getPipelineCountByAtomCode(atomCode: String, projectCode: String?): Int {
         return pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode)

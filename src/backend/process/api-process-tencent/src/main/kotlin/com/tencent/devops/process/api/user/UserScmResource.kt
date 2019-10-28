@@ -2,6 +2,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.pojo.RevisionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -18,9 +19,11 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserScmResource {
+
     @ApiOperation("获取仓库最新版本")
     @GET
-    @Path("/projects/{projectId}/repositories/{repositoryId}/latestRevision")
+    //@Path("/projects/{projectId}/repositories/{repositoryId}/latestRevision")
+    @Path("/{projectId}/{repositoryId}/latestRevision")
     fun getLatestRevision(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -41,7 +44,8 @@ interface UserScmResource {
 
     @ApiOperation("列出仓库所有分支")
     @GET
-    @Path("/projects/{projectId}/repositories/{repositoryId}/branches")
+    //@Path("/projects/{projectId}/repositories/{repositoryId}/branches")
+    @Path("/{projectId}/{repositoryId}/branches")
     fun listBranches(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -56,7 +60,8 @@ interface UserScmResource {
 
     @ApiOperation("列出仓库所有分支")
     @GET
-    @Path("/projects/{projectId}/repositories/{repositoryId}/tags")
+    //@Path("/projects/{projectId}/repositories/{repositoryId}/tags")
+    @Path("/{projectId}/{repositoryId}/tags")
     fun listTags(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

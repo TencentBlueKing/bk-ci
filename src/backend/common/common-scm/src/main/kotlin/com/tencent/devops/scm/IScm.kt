@@ -26,8 +26,6 @@
 
 package com.tencent.devops.scm
 
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
 
 interface IScm {
@@ -40,20 +38,12 @@ interface IScm {
     fun getTags(): List<String>
     // This is to check if the token & private key legal
     fun checkTokenAndPrivateKey()
-
     fun checkTokenAndUsername()
 
     fun addWebHook(hookUrl: String)
-
     fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean)
     fun addMRComment(mrId: Long, comment: String)
 
-    fun lock(repoName: String, applicant: String, subPath: String)
-    fun unlock(repoName: String, applicant: String, subPath: String)
-
-	fun createBranch(branch: String, ref: String) {}
-    fun deleteBranch(branch: String) {}
-
-    fun getCommits(branch: String?, all: Boolean, page: Int, size: Int): List<GitCommit> = emptyList()
-    fun getCommitDiff(sha: String): List<GitDiff> = emptyList()
+    fun lock(repname: String, applicant: String, subpath: String)
+    fun unlock(repname: String, applicant: String, subpath: String)
 }

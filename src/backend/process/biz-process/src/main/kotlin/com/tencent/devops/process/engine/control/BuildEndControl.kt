@@ -194,7 +194,13 @@ class BuildEndControl @Autowired constructor(
                 pipelineId = buildInfo.pipelineId,
                 userId = buildInfo.startUser,
                 buildId = buildInfo.buildId,
-                status = status.name
+                status = status.name,
+                startTime = buildInfo.startTime,
+                endTime = buildInfo.endTime,
+                triggerType = buildInfo.trigger,
+                errorType = if (buildInfo.errorType == null) null else buildInfo.errorType!!.name,
+                errorCode = buildInfo.errorCode,
+                errorMsg = buildInfo.errorMsg
             )
         )
     }

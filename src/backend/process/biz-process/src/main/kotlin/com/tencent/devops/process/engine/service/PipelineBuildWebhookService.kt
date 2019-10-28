@@ -20,12 +20,11 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.external.constant.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
-import com.tencent.devops.process.api.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
 import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
-import com.tencent.devops.process.pojo.code.GitlabCommitEvent
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.WebHookParams
 import com.tencent.devops.process.pojo.code.WebhookCommit
@@ -38,6 +37,7 @@ import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.util.DateTimeUtils
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID

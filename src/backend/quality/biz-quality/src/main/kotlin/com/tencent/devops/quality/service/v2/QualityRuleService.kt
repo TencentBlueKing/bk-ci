@@ -4,14 +4,14 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
-import com.tencent.devops.process.api.ServicePipelineResource
-import com.tencent.devops.process.api.ServicePipelineTaskResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.PipelineModelTask
@@ -51,23 +51,21 @@ class QualityRuleService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val bkAuthPermissionApi: AuthPermissionApi,
-    private val bkAuthResourceApi: AuthResourceApi
+    private val bkAuthResourceApi: AuthResourceApi,
+    private val serviceCode: QualityAuthServiceCode
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(QualityRuleService::class.java)
-        private val RESOURCE_TYPE = BkAuthResourceType.QUALITY_RULE
+        private val RESOURCE_TYPE = AuthResourceType.QUALITY_RULE
     }
 
-    @Autowired
-    private lateinit var serviceCode: QualityAuthServiceCode
-
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
-        return validatePermission(userId, projectId, BkAuthPermission.CREATE)
+        return validatePermission(userId, projectId, AuthPermission.CREATE)
     }
 
     fun userCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
-        validatePermission(userId, projectId, BkAuthPermission.CREATE, "用户在项目($projectId)下没有创建拦截规则权限")
+        validatePermission(userId, projectId, AuthPermission.CREATE, "用户在项目($projectId)下没有创建拦截规则权限")
         return serviceCreate(userId, projectId, ruleRequest)
     }
 
@@ -98,7 +96,7 @@ class QualityRuleService @Autowired constructor(
     fun userUpdate(userId: String, projectId: String, ruleHashId: String, ruleRequest: RuleUpdateRequest): Boolean {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         logger.info("user($userId) update the rule($ruleId) in project($projectId): $ruleRequest")
-        validatePermission(userId, projectId, ruleId, BkAuthPermission.EDIT, "用户在项目($projectId)下没拦截规则($ruleHashId)的编辑权限")
+        validatePermission(userId, projectId, ruleId, AuthPermission.EDIT, "用户在项目($projectId)下没拦截规则($ruleHashId)的编辑权限")
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             qualityRuleDao.update(context, userId, projectId, ruleId, ruleRequest)
@@ -123,14 +121,14 @@ class QualityRuleService @Autowired constructor(
     fun userUpdateEnable(userId: String, projectId: String, ruleHashId: String, enable: Boolean) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         logger.info("user($userId) update the rule($ruleId) in project($projectId) to $enable")
-        validatePermission(userId, projectId, ruleId, BkAuthPermission.ENABLE, "用户在项目($projectId)下没拦截规则($ruleHashId)的停用/启用权限")
+        validatePermission(userId, projectId, ruleId, AuthPermission.ENABLE, "用户在项目($projectId)下没拦截规则($ruleHashId)的停用/启用权限")
         qualityRuleDao.updateEnable(dslContext, ruleId, enable)
     }
 
     fun userDelete(userId: String, projectId: String, ruleHashId: String) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         logger.info("user($userId) delete the rule($ruleId) in project($projectId)")
-        validatePermission(userId, projectId, ruleId, BkAuthPermission.ENABLE, "用户在项目($projectId)下没拦截规则($ruleHashId)的停用/启用权限")
+        validatePermission(userId, projectId, ruleId, AuthPermission.ENABLE, "用户在项目($projectId)下没拦截规则($ruleHashId)的停用/启用权限")
         qualityRuleDao.delete(dslContext, ruleId)
         deleteResource(projectId, ruleId)
     }
@@ -282,7 +280,7 @@ class QualityRuleService @Autowired constructor(
         val count = qualityRuleDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
         val ruleRecordList = qualityRuleDao.list(dslContext, projectId, offset, finalLimit)
-        val permissionMap = filterRules(userId, projectId, setOf(BkAuthPermission.EDIT, BkAuthPermission.DELETE, BkAuthPermission.ENABLE))
+        val permissionMap = filterRules(userId, projectId, setOf(AuthPermission.EDIT, AuthPermission.DELETE, AuthPermission.ENABLE))
         // 获取控制点信息
         val controlPointMap = mutableMapOf<String, QualityControlPoint>()
         qualityControlPointService.serviceList(projectId).forEach { controlPointMap[it.type] = it }
@@ -358,10 +356,10 @@ class QualityRuleService @Autowired constructor(
         return Pair(count, list)
     }
 
-    private fun getRulePermission(permissionMap: Map<BkAuthPermission, List<Long>>, rule: TQualityRuleRecord): RulePermission {
-        val canEditList = permissionMap[BkAuthPermission.EDIT]!!
-        val canDeleteList = permissionMap[BkAuthPermission.DELETE]!!
-        val canEnableList = permissionMap[BkAuthPermission.ENABLE]!!
+    private fun getRulePermission(permissionMap: Map<AuthPermission, List<Long>>, rule: TQualityRuleRecord): RulePermission {
+        val canEditList = permissionMap[AuthPermission.EDIT]!!
+        val canDeleteList = permissionMap[AuthPermission.DELETE]!!
+        val canEnableList = permissionMap[AuthPermission.ENABLE]!!
 
         val canEdit = canEditList.contains(rule.id)
         val canDelete = canDeleteList.contains(rule.id)
@@ -438,19 +436,19 @@ class QualityRuleService @Autowired constructor(
         return pipelineList.map { it.pipelineId to it }.toMap()
     }
 
-    private fun validatePermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): Boolean {
-        return bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, bkAuthPermission)
+    private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        return bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, authPermission)
     }
 
-    private fun validatePermission(userId: String, projectId: String, bkAuthPermission: BkAuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, "*", bkAuthPermission)) {
+    private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, "*", authPermission)) {
             logger.error(message)
             throw PermissionForbiddenException(message)
         }
     }
 
-    private fun validatePermission(userId: String, projectId: String, ruleId: Long, bkAuthPermission: BkAuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId), bkAuthPermission)) {
+    private fun validatePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId), authPermission)) {
             logger.error(message)
             throw PermissionForbiddenException(message)
         }
@@ -468,9 +466,9 @@ class QualityRuleService @Autowired constructor(
         bkAuthResourceApi.deleteResource(serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId))
     }
 
-    private fun filterRules(userId: String, projectId: String, bkAuthPermissionSet: Set<BkAuthPermission>): Map<BkAuthPermission, List<Long>> {
-        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(userId, serviceCode, RESOURCE_TYPE, projectId, bkAuthPermissionSet, null)
-        val permissionRuleMap = mutableMapOf<BkAuthPermission, List<Long>>()
+    private fun filterRules(userId: String, projectId: String, authPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(userId, serviceCode, RESOURCE_TYPE, projectId, authPermissionSet, null)
+        val permissionRuleMap = mutableMapOf<AuthPermission, List<Long>>()
         permissionResourceMap.forEach { permission, list ->
             permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }
         }

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.dockerhost.init
 
-
 import com.tencent.devops.dockerhost.cron.Runner
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,19 +53,18 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
                 Runnable { runner.startBuild() }, 5000, 60 * 1000
             )
         )
-//        scheduledTaskRegistrar.addFixedRateTask(
-//            IntervalTask(
-//                Runnable { runner.endBuild() }, 20 * 1000, 120 * 1000
-//            )
-//        )
+
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                Runnable { runner.endBuild() }, 20 * 1000, 120 * 1000
+            )
+        )
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { runner.clearExitedContainer() }, 3600 * 1000, 300 * 1000
             )
         )
     }
-
-
 
     @Autowired
     private lateinit var runner: Runner
@@ -75,5 +73,4 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
     fun runner(dockerHostBuildService: DockerHostBuildService): Runner {
         return Runner(dockerHostBuildService)
     }
-
 }

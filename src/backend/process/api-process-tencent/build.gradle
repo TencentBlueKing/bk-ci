@@ -1,5 +1,7 @@
 dependencies {
     compile project(":common:common-api")
+    compile project(":common:common-scm")
     compile project(":common:common-web")
+    compile project(":common:common-scm")
     compile project(":process:api-process")
 }

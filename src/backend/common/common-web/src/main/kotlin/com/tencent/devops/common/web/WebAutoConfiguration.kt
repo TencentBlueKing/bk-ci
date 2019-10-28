@@ -47,7 +47,7 @@ import org.springframework.core.Ordered
  * Powered By Tencent
  */
 @Configuration
-@PropertySource("classpath:/common-web.properties", "classpath:/dev-gray-common.yml")
+@PropertySource("classpath:/common-web.properties")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(JerseyAutoConfiguration::class)

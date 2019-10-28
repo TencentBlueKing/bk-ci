@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.BuildArtifactoryReportResource
+import com.tencent.devops.artifactory.api.builds.BuildArtifactoryReportResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService

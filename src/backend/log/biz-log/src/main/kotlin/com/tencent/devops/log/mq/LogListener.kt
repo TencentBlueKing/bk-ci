@@ -30,7 +30,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.log.model.pojo.LogBatchEvent
 import com.tencent.devops.log.model.pojo.LogEvent
 import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.service.PipelineLogService
+import com.tencent.devops.log.service.LogServiceDispatcher
 import com.tencent.devops.log.utils.LogDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -47,14 +47,14 @@ import org.springframework.stereotype.Component
  */
 @Component
 class LogListener constructor(
-    private val logService: PipelineLogService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val logServiceDispatcher: LogServiceDispatcher
 ) {
 
     fun logEvent(event: LogEvent) {
         var result = false
         try {
-            logService.addLogEvent(event)
+            logServiceDispatcher.logEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
@@ -72,7 +72,7 @@ class LogListener constructor(
     fun logBatchEvent(event: LogBatchEvent) {
         var result = false
         try {
-            logService.addBatchLogEvent(event)
+            logServiceDispatcher.logBatchEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
@@ -99,7 +99,7 @@ class LogListener constructor(
     fun logStatusEvent(event: LogStatusEvent) {
         var result = false
         try {
-            logService.upsertLogStatus(event)
+            logServiceDispatcher.logStatusEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)

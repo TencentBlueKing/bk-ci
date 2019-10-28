@@ -11,9 +11,9 @@ object ShellUtil {
     private val specialValue = listOf("|", "&", "(", ")")
 
     fun executeEnhance(
-            script: String,
-            runtimeVariables: Map<String, String> = mapOf(),
-            dir: File? = null
+        script: String,
+        runtimeVariables: Map<String, String> = mapOf(),
+        dir: File? = null
     ): String {
         val enhanceScript = CommandLineUtils.solveSpecialChar(noHistory(script))
         return execute(enhanceScript, dir, runtimeVariables)
@@ -24,9 +24,9 @@ object ShellUtil {
     }
 
     private fun execute(
-            script: String,
-            dir: File?,
-            runtimeVariables: Map<String, String>
+        script: String,
+        dir: File?,
+        runtimeVariables: Map<String, String>
     ): String {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()

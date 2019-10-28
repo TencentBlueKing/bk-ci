@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 data class WebhookCommit(
     val userId: String,
     val pipelineId: String,
-    val params: MutableMap<String, Any>,
+    val params: Map<String, Any>,
 
     val repositoryConfig: RepositoryConfig,
     val repoName: String,

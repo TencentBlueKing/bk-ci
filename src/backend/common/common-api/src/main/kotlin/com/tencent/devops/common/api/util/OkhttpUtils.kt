@@ -161,11 +161,11 @@ object OkhttpUtils {
         longHttpClient.newCall(request).execute().use { response ->
             if (response.code() == 404) {
                 logger.warn("The file $url is not exist")
-                throw RemoteServiceException("文件不存在")
+                throw RemoteServiceException("File is not exist!")
             }
             if (!response.isSuccessful) {
                 logger.warn("FAIL|Download file from $url| message=${response.message()}| code=${response.code()}")
-                throw RemoteServiceException("获取文件失败")
+                throw RemoteServiceException("Get file fail")
             }
             if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
             val buf = ByteArray(4096)
@@ -188,7 +188,7 @@ object OkhttpUtils {
         }
         if (!response.isSuccessful) {
             logger.warn("fail to download the file because of ${response.message()} and code ${response.code()}")
-            throw RemoteServiceException("获取文件失败")
+            throw RemoteServiceException("Get file fail")
         }
         if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
         val buf = ByteArray(4096)
@@ -207,6 +207,20 @@ object OkhttpUtils {
         logger.info("downloadFile url is:$url")
         val httpResponse = getFileHttpResponse(url)
         FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
+    }
+
+    fun downloadFile(url: String): javax.ws.rs.core.Response {
+        val httpResponse = getFileHttpResponse(url)
+        val fileName: String?
+        try {
+            fileName = URLEncoder.encode(File(url).name, "UTF-8")
+        } catch (e: UnsupportedEncodingException) {
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build()
+        }
+        return javax.ws.rs.core.Response
+            .ok(httpResponse.body()!!.byteStream(), javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("Content-disposition", "attachment;filename=" + fileName!!)
+            .header("Cache-Control", "no-cache").build()
     }
 
     private fun getFileHttpResponse(url: String): Response {

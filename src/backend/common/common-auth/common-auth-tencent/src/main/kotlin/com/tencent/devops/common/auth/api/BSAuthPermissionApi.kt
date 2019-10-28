@@ -56,22 +56,22 @@ class BSAuthPermissionApi @Autowired constructor(
 ) : AuthPermissionApi {
 
     override fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission
     ): Boolean {
         return validateUserResourcePermission(user, serviceCode, resourceType, projectCode, "*", permission)
     }
 
     override fun validateUserResourcePermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        permission: BkAuthPermission
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            permission: AuthPermission
     ): Boolean {
         val epoch = System.currentTimeMillis()
         var success = false
@@ -79,6 +79,7 @@ class BSAuthPermissionApi @Autowired constructor(
             val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
             val url =
                 "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
+            logger.info("BSAuthPermissionApi url:$url")
             val bkAuthPermissionRequest = BkAuthPermissionVerifyRequest(
                 projectCode,
                 serviceCode.id(),
@@ -120,12 +121,12 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     override fun getUserResourceByPermission(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permission: BkAuthPermission,
-        supplier: (() -> List<String>)?
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permission: AuthPermission,
+            supplier: (() -> List<String>)?
     ): List<String> {
         val epoch = System.currentTimeMillis()
         var success = false
@@ -163,13 +164,13 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     override fun getUserResourcesByPermissions(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        permissions: Set<BkAuthPermission>,
-        supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>> {
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            permissions: Set<AuthPermission>,
+            supplier: (() -> List<String>)?
+    ): Map<AuthPermission, List<String>> {
 
         val epoch = System.currentTimeMillis()
         var success = false
@@ -213,9 +214,9 @@ class BSAuthPermissionApi @Autowired constructor(
                     throw RemoteServiceException("Fail to get user resources by permissions")
                 }
 
-                val permissionsResourcesMap = mutableMapOf<BkAuthPermission, List<String>>()
+                val permissionsResourcesMap = mutableMapOf<AuthPermission, List<String>>()
                 responseObject.data!!.forEach {
-                    val bkAuthPermission = BkAuthPermission.get(it.policyCode)
+                    val bkAuthPermission = AuthPermission.get(it.policyCode)
                     val resourceList = it.resourceCodeList
                     permissionsResourcesMap[bkAuthPermission] = resourceList
                 }
@@ -227,14 +228,14 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     override fun getUserResourcesByPermissions(
-        userId: String,
-        scopeType: String,
-        scopeId: String,
-        resourceType: BkAuthResourceType,
-        permissions: Set<BkAuthPermission>,
-        systemId: AuthServiceCode,
-        supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>> {
+            userId: String,
+            scopeType: String,
+            scopeId: String,
+            resourceType: AuthResourceType,
+            permissions: Set<AuthPermission>,
+            systemId: AuthServiceCode,
+            supplier: (() -> List<String>)?
+    ): Map<AuthPermission, List<String>> {
         val epoch = System.currentTimeMillis()
         var success = false
         try {
@@ -274,9 +275,9 @@ class BSAuthPermissionApi @Autowired constructor(
                     throw RemoteServiceException("Fail to get user resources by permissions")
                 }
 
-                val permissionsResourcesMap = mutableMapOf<BkAuthPermission, List<String>>()
+                val permissionsResourcesMap = mutableMapOf<AuthPermission, List<String>>()
                 responseObject.data!!.forEach {
-                    val bkAuthPermission = BkAuthPermission.get(it.policyCode)
+                    val bkAuthPermission = AuthPermission.get(it.policyCode)
                     val resourceList = it.resourceCodeList
                     permissionsResourcesMap[bkAuthPermission] = resourceList
                 }

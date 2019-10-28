@@ -1,0 +1,4 @@
+dependencies {
+    compile project(":monitoring:biz-monitoring-tencent")
+}
+apply from: "$rootDir/task_spring_boot_package.gradle"

@@ -29,9 +29,10 @@ package com.tencent.devops.process.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.pojo.PipelineModelTask
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,12 +49,21 @@ class PipelineTaskService @Autowired constructor(
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
         return pipelineTaskDao.list(dslContext, projectId, pipelineIds)?.map {
             PipelineModelTask(
-                it.projectId,
-                it.pipelineId,
-                it.taskId,
-                it.taskName,
-                it.classType,
-                objectMapper.readValue(it.taskParams)
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                stageId = it.stageId,
+                containerId = it.containerId,
+                taskId = it.taskId,
+                taskSeq = it.taskSeq,
+                taskName = it.taskName,
+                atomCode = it.atomCode,
+                classType = it.classType,
+                taskAtom = it.taskAtom,
+                taskParams = objectMapper.readValue(it.taskParams),
+                additionalOptions = if (it.additionalOptions.isNullOrBlank())
+                    null
+                else objectMapper.readValue(it.additionalOptions, ElementAdditionalOptions::class.java),
+                os = it.os
             )
         }?.groupBy { it.pipelineId } ?: mapOf()
     }

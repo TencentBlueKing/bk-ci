@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.MediaType
@@ -65,7 +66,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResources(userId: String, projectList: List<ResourceRegisterInfo>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
     }
 
     override fun deleteResource(projectCode: String) {
@@ -95,6 +96,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
             }
             return responseContent
         }
+    }
+
+    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     companion object{

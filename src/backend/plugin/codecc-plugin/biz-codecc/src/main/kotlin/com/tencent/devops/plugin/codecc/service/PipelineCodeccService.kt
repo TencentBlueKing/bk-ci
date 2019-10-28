@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
@@ -13,10 +13,10 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptEl
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.plugin.codecc.pojo.coverity.CodeccReport
-import com.tencent.devops.process.api.ServicePipelineResource
-import com.tencent.devops.process.api.ServicePipelineTaskResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.PipelineModelTask
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -56,7 +56,7 @@ class PipelineCodeccService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = BkAuthPermission.VIEW
+                permission = AuthPermission.VIEW
             )
         ) {
             throw PermissionForbiddenException("用户（$userId) 无权限获取流水线($pipelineId)Codecc报告")

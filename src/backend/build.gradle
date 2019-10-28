@@ -63,6 +63,7 @@ buildscript {
         jasyptVersion = "2.0.0"
         jolokiaVersion = "1.6.0"
         awsS3Version = "1.11.461"
+        asyncHttpClientVersion = "2.1.0"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -136,6 +137,20 @@ allprojects {
         jcenter()
     }
 
+    def createDir = {
+        path ->
+            File f = new File(path)
+            if (!f.exists())
+                f.mkdirs()
+    }
+
+    /**
+     * 创建kotlin代码库路径 
+     **/
+    task createCodeDirs() {
+        def paths = ["src/main/java", "src/main/kotlin", "src/main/resources", "src/test/java", "src/test/kotlin", "src/test/resources"]
+        paths.forEach(createDir)
+    }
 }
 
 subprojects {
@@ -224,6 +239,7 @@ subprojects {
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"
                 entry "spring-cloud-starter-consul-core"
+                entry "spring-cloud-starter-config"
             }
             dependencySet(group: "io.swagger", version: "$swaggerVersion") {
                 entry "swagger-annotations"
@@ -275,6 +291,9 @@ subprojects {
             }
             dependencySet(group: 'com.amazonaws', version: "$awsS3Version") {
                 entry "aws-java-sdk-s3"
+            }
+            dependencySet(group: 'org.asynchttpclient', version: "$asyncHttpClientVersion") {
+                entry "async-http-client"
             }
         }
     }

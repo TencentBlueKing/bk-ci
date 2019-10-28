@@ -36,11 +36,10 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -245,10 +244,10 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             flag = authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = BkAuthResourceType.PIPELINE_DEFAULT,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
                 projectCode = dataList[1],
                 resourceCode = dataList[2],
-                permission = BkAuthPermission.DOWNLOAD
+                permission = AuthPermission.DOWNLOAD
             )
         }
         logger.info("validateUserDownloadFilePermission flag is:$flag")

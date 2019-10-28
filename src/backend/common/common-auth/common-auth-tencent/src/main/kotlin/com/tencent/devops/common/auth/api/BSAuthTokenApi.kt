@@ -71,6 +71,7 @@ class BSAuthTokenApi @Autowired constructor(
             val value = redisOperation.get(key)
             if (value != null) return value
 
+            logger.info("[$serviceCode|$appCode|$appSecret] Try to refresh the access token")
             val lockKey = "auth_token_lock_$appCode"
             val redisLock = RedisLock(redisOperation, lockKey, expiredTimeInSeconds)
 
@@ -82,6 +83,7 @@ class BSAuthTokenApi @Autowired constructor(
                 }
 
                 val bkAuthTokenCreate = createAccessToken(appCode, appSecret)
+                logger.info("[$serviceCode|$appCode|$appSecret|${bkAuthTokenCreate.accessToken}] Set the access token")
                 redisOperation.set(key, bkAuthTokenCreate.accessToken, AccessTokenExpiredInSecond)
                 redisLock.unlock()
                 return bkAuthTokenCreate.accessToken
@@ -106,6 +108,7 @@ class BSAuthTokenApi @Autowired constructor(
             .post(requestBody)
             .build()
 
+        logger.info("[$appCode|$appSecret] Start to create the access token with url($url) and body($bkAuthTokenRequest)")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -136,6 +139,11 @@ class BSAuthTokenApi @Autowired constructor(
         secretMap[BSAuthServiceCode.VS.value] = bkAuthProperties.vsSecret
         secretMap[BSAuthServiceCode.QUALITY.value] = bkAuthProperties.qualitySecret
         secretMap[BSAuthServiceCode.WETEST.value] = bkAuthProperties.wetestSecret
+
+        secretMap.forEach { key,value ->
+            logger.info("[secretMap] key: $key , value: $value" )
+        }
+        logger.info("auth.url: ${bkAuthProperties.url}")
     }
 
     private fun getAppCodeAndSecret(serviceCode: AuthServiceCode): Pair<String, String> {

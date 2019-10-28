@@ -95,7 +95,7 @@ class PipelineModelTaskDao {
     }
 
     /**
-     * 根据插件标识，获取使用该插件的pipeline个数
+     * 根据原子标识，获取使用该原子的pipeline个数
      */
     fun getPipelineCountByAtomCode(dslContext: DSLContext, atomCode: String, projectCode: String?): Int {
         val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
@@ -111,7 +111,7 @@ class PipelineModelTaskDao {
     }
 
     /**
-     * 根据插件标识，批量获取使用该插件的pipeline个数
+     * 根据原子标识，批量获取使用该原子的pipeline个数
      */
     fun batchGetPipelineCountByAtomCode(
         dslContext: DSLContext,
@@ -134,6 +134,14 @@ class PipelineModelTaskDao {
             .where(condition)
             .groupBy(b.ATOM_CODE)
             .fetch()
+    }
+
+    fun getModelTasks(dslContext: DSLContext, pipelineId: String): Result<TPipelineModelTaskRecord>? {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetch()
+        }
     }
 
     fun listByAtomCode(
@@ -166,6 +174,7 @@ class PipelineModelTaskDao {
         }
     }
 
+
     private fun getListByAtomCodeCond(a: TPipelineInfo, b: TPipelineModelTask, atomCode: String, projectCode: String?): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.DELETE.eq(false))
@@ -174,14 +183,6 @@ class PipelineModelTaskDao {
             condition.add(a.PROJECT_ID.eq(projectCode))
         }
         return condition
-    }
-
-    fun getModelTasks(dslContext: DSLContext, pipelineId: String): Result<TPipelineModelTaskRecord>? {
-        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .fetch()
-        }
     }
 
     companion object {

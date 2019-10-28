@@ -27,6 +27,7 @@ interface AppPipelineViewResource {
 
     @ApiOperation("app获取视图流水线编排列表")
     @GET
+    //@Path("/projects/{projectId}/listViewPipelines")
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -60,6 +61,7 @@ interface AppPipelineViewResource {
 
     @ApiOperation("获取视图设置")
     @GET
+    //@Path("/projects/{projectId}/settings")
     @Path("/projects/{projectId}/settings")
     fun getViewSettings(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

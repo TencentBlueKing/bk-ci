@@ -27,7 +27,7 @@ config = {
   allow_hosts = {
     __BKCI_ALLOW_HOST__
   },
-  allow_headers = "Authorization,Content-Type,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID",
+  allow_headers = "Authorization,Content-Type,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID",
   ns = {
     ip = {
       "127.0.0.1"
@@ -64,6 +64,21 @@ config = {
     url = "__IAM_TOKEN_URL__",     -- 接口路径
     app_code = "__APP_CODE__",
     app_secret = "__APP_TOKEN__",
+  },
+  artifactory = {
+    port = "__JFROG_HTTP_PORT__",
+    docker = "__DOCKER_PORT__",
+    host = "__BKCI_GATEWAY_IP0__",
+    domain = "__JFROG_FQDN__",
+    user = "__JFROG_USERNAME__",
+    password = "__JFROG_PASSWORD__"
+  },
+  influxdb = {
+    ip = "__INFLUXDB_IP0__",
+    port = "__INFLUXDB_PORT__",
+    db = "__INFLUXDB_DB__",
+    user = "__INFLUXDB_USERNAME__",
+    password = "__INFLUXDB_PASSWORD__"
   },
   service_ip_whitelist = {
   }

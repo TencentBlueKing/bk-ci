@@ -132,6 +132,17 @@ class EnvDao {
         }
     }
 
+    fun listServerEnv(dslContext: DSLContext, projectId: String): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_DELETED.eq(false))
+                .and(ENV_TYPE.`in`(EnvType.DEV.name, EnvType.TEST.name, EnvType.PROD.name))
+                .orderBy(ENV_ID.desc())
+                .fetch()
+        }
+    }
+
     fun listServerEnvByIds(dslContext: DSLContext, projectId: String, envIds: Collection<Long>): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this)
@@ -193,6 +204,15 @@ class EnvDao {
                     .and(ENV_NAME.eq(envName))
                     .fetchOne(0, Long::class.java) > 0
             }
+        }
+    }
+
+    fun listAllProjectId(dslContext: DSLContext): List<String> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectDistinct(PROJECT_ID)
+                .from(this)
+                .fetch()
+                .map { it.value1() }
         }
     }
 }

@@ -32,7 +32,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.service.dispatcher.BuildLessDispatcher
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.process.api.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.reflections.Reflections
 import org.slf4j.LoggerFactory
@@ -43,6 +44,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineBuildLessDispatchService @Autowired constructor(
     private val client: Client,
+    private val logService: LogService,
     private val rabbitTemplate: RabbitTemplate
 ) {
 
@@ -109,6 +111,17 @@ class PipelineBuildLessDispatchService @Autowired constructor(
             }
         }
         throw InvalidParamException("Fail to find the right buildLessDispatcher for the build $dispatchType")
+    }
+
+    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
+        try {
+            logger.info("[${event.buildId}]| Start to finish the pipeline build($event)")
+            getDispatchers().forEach {
+                it.shutdown(event)
+            }
+        } finally {
+            logService.stopLog(event.buildId)
+        }
     }
 
     companion object {

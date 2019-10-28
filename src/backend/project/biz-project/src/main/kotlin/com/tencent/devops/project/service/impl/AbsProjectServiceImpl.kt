@@ -26,15 +26,13 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.artifactory.api.ServiceFileResource
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
@@ -419,24 +417,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         return Result(true)
     }
-
-    override fun updateEnabled(
-        userId: String,
-        accessToken: String,
-        projectId: String,
-        enabled: Boolean
-    ): Result<Boolean> {
-        logger.info("Update the enabled of project $projectId")
-        val project = projectDao.get(dslContext, projectId)
-        if (project != null) {
-            projectDao.updateEnabled(dslContext, userId, projectId, enabled)
-        } else {
-            logger.warn("$project is null or $project is empty")
-            throw OperationException("查询不到有效的项目")
-        }
-        return Result(true)
-    }
-
 
     companion object {
         private const val Width = 128

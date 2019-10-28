@@ -28,13 +28,13 @@ interface BuildOauthResource {
         userId: String
     ): Result<GitToken?>
 
-    @ApiOperation("获取git代码库accessToken信息")
-    @GET
-//    @Path("/git/{userId}")
-    @Path("/git/userId/{userId}")
-    fun gitGetV2(
-            @ApiParam("用户ID", required = true)
-            @PathParam("userId")
-            userId: String
-    ): Result<GitToken?>
+//    @ApiOperation("获取git代码库accessToken信息")
+//    @GET
+////    @Path("/git/{userId}")
+//    @Path("/git/userId/{userId}")
+//    fun gitGetV2(
+//            @ApiParam("用户ID", required = true)
+//            @PathParam("userId")
+//            userId: String
+//    ): Result<GitToken?>
 }

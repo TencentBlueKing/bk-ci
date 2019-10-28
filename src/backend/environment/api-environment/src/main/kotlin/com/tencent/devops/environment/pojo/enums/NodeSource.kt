@@ -28,5 +28,6 @@ package com.tencent.devops.environment.pojo.enums
 
 enum class NodeSource {
     EXISTING,
-    CREATE
+    CREATE,
+    CMDB
 }

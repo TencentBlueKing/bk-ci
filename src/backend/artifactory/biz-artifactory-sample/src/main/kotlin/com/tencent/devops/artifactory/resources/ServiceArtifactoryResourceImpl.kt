@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum

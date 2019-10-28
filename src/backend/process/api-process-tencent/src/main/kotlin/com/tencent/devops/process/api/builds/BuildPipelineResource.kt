@@ -24,7 +24,8 @@ import javax.ws.rs.core.MediaType
 interface BuildPipelineResource {
     @ApiOperation("根据流水线id获取流水线名字")
     @POST
-    @Path("/projects/{projectId}/getPipelineNames")
+    //@Path("/projects/{projectId}/getPipelineNames")
+    @Path("/{projectId}/getPipelineNames")
     fun getPipelineNameByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -35,7 +36,8 @@ interface BuildPipelineResource {
 
     @ApiOperation("获取流水线构建历史")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    @Path("/{projectId}/{pipelineId}/history")
     fun getHistoryBuild(
         @ApiParam(
             value = "当前流水线的buildId获取相关buildId进行鉴权",
@@ -60,7 +62,8 @@ interface BuildPipelineResource {
 
     @ApiOperation("列出所有流水线")
     @GET
-    @Path("/projects/{projectId}/listAllPipelines")
+    //@Path("/projects/{projectId}/listAllPipelines")
+    @Path("/{projectId}/")
     fun list(
         @ApiParam(
             value = "当前流水线的buildId获取相关buildId进行鉴权",

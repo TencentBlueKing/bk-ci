@@ -34,20 +34,21 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * since: 2018-12-09
  */
 data class UserDeptDetail(
-    @JsonProperty("bg_name")
+        //TODO 给别名会报错。不给别名成功
+//    @JsonProperty("bg_name")
     val bgName: String,
-    @JsonProperty("bg_id")
+//    @JsonProperty("bg_id")
     val bgId: String,
-    @JsonProperty("dept_name")
+//    @JsonProperty("dept_name")
     val deptName: String,
-    @JsonProperty("bg_id")
+//    @JsonProperty("bg_id")
     val deptId: String,
-    @JsonProperty("center_name")
+//    @JsonProperty("center_name")
     val centerName: String,
-    @JsonProperty("center_id")
+//    @JsonProperty("center_id")
     val centerId: String,
-    @JsonProperty("group_id")
+//    @JsonProperty("group_id")
     val groupId: String,
-    @JsonProperty("group_name")
+//    @JsonProperty("group_name")
     val groupName: String
 )

@@ -30,6 +30,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 
@@ -102,5 +103,50 @@ object DateTimeUtil {
         return (if (hour == zero) "00" else if (hour >= ten) hour.toString() else "0$hour").toString() + "时" +
             (if (minute == zero) "00" else if (minute >= ten) minute else "0$minute") + "分" +
             (if (second == zero) "00" else if (second >= ten) second.toShort() else "0$second") + "秒"
+    }
+
+    fun formatMilliTime(time: Long): String {
+        return formatMilliTime(time.toString())
+    }
+
+    fun formatMilliTime(timeStr: String): String {
+        val time = timeStr.toLong()
+        val hour = time / (60 * 60 * 1000)
+        val minute = (time - hour * 60 * 60 * 1000) / (60 * 1000)
+        val second = (time - hour * 60 * 60 * 1000 - minute * 60 * 1000) / 1000
+        return (if (hour == 0L) "00" else if (hour >= 10) hour.toString() else "0$hour").toString() + "时" +
+            (if (minute == 0L) "00" else if (minute >= 10) minute else "0$minute") + "分" +
+            (if (second == 0L) "00" else if (second >= 10) second.toShort() else "0$second") + "秒"
+    }
+
+    fun formatMillSecond(mss: Long): String {
+        if (mss == 0L) return "0秒"
+
+        val days = mss / (1000 * 60 * 60 * 24)
+        val hours = mss % (1000 * 60 * 60 * 24) / (1000 * 60 * 60)
+        val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
+        val seconds = mss % (1000 * 60) / 1000
+        val sb = StringBuilder()
+        if (days != 0L) {
+            sb.append(days.toString() + "天")
+        }
+        if (hours != 0L) {
+            sb.append(hours.toString() + "时")
+        }
+        if (minutes != 0L) {
+            sb.append(minutes.toString() + "分")
+        }
+        if (seconds != 0L) {
+            sb.append(seconds.toString() + "秒")
+        }
+        return sb.toString()
+    }
+
+    /**
+     * 将格式化的日期时间字符串转换为LocalDateTime对象
+     */
+    fun stringToLocalDateTime(dateTimeStr: String, formatStr: String = "yyyy-MM-dd HH:mm:ss"): LocalDateTime {
+        val formatter = DateTimeFormatter.ofPattern(formatStr)
+        return LocalDateTime.parse(dateTimeStr, formatter)
     }
 }

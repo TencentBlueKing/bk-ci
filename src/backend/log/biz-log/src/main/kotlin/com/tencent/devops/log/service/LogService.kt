@@ -83,7 +83,7 @@ import javax.ws.rs.core.StreamingOutput
  * 2. 日志再传入队列，然后多线程消费， 保证写入ES高效
  */
 @Service
-open class LogService @Autowired constructor(
+class LogService @Autowired constructor(
     private val client: TransportClient,
     private val indexService: IndexService,
     private val defaultKeywords: List<String>,
@@ -125,7 +125,7 @@ open class LogService @Autowired constructor(
         }
     }
 
-    open fun addLogEvent(event: LogEvent) {
+    fun addLogEvent(event: LogEvent) {
         logger.info("[${event.buildId}] Start to add the logs of build - (${event.logs.size})")
         val currentEpoch = System.currentTimeMillis()
         var success = false
@@ -136,13 +136,13 @@ open class LogService @Autowired constructor(
             success = true
         } finally {
             logger.info(
-                "[${event.buildId}] It took ${System.currentTimeMillis()
-                    - currentEpoch}ms to add event log with result $success"
+                "[${event.buildId}] It took ${System.currentTimeMillis() -
+                    currentEpoch}ms to add event log with result $success"
             )
         }
     }
 
-    open fun addBatchLogEvent(event: LogBatchEvent) {
+    fun addBatchLogEvent(event: LogBatchEvent) {
         logger.info("[${event.buildId}] Start to add the logs of build - (${event.logs.size})")
         val currentEpoch = System.currentTimeMillis()
         var success = false
@@ -168,7 +168,7 @@ open class LogService @Autowired constructor(
         }
     }
 
-    open fun upsertLogStatus(event: LogStatusEvent): Boolean {
+    fun upsertLogStatus(event: LogStatusEvent): Boolean {
         val buildId = event.buildId
         val tag = event.tag
         val finished = event.finished
@@ -203,7 +203,7 @@ open class LogService @Autowired constructor(
         return response.status() == RestStatus.OK || response.status() == RestStatus.CREATED
     }
 
-    open fun queryInitLogsPage(
+    fun queryInitLogsPage(
         buildId: String,
         index: String,
         type: String,
@@ -243,7 +243,7 @@ open class LogService @Autowired constructor(
         return PageQueryLogs(pageResult.buildId, pageResult.finished, pageLog, pageResult.timeUsed, pageResult.status)
     }
 
-    open fun queryInitLogs(
+    fun queryInitLogs(
         buildId: String,
         index: String,
         type: String,
@@ -301,7 +301,7 @@ open class LogService @Autowired constructor(
         return queryLogs
     }
 
-    open fun queryInitLogsPage(
+    fun queryInitLogsPage(
         buildId: String,
         index: String,
         type: String,
@@ -381,7 +381,7 @@ open class LogService @Autowired constructor(
         return initLogs
     }
 
-    open fun queryMoreLogsBetweenLines(
+    fun queryMoreLogsBetweenLines(
         buildId: String,
         index: String,
         type: String,
@@ -438,7 +438,7 @@ open class LogService @Autowired constructor(
         return queryLogs
     }
 
-    open fun queryMoreLogsAfterLine(
+    fun queryMoreLogsAfterLine(
         buildId: String,
         index: String,
         type: String,
@@ -680,7 +680,7 @@ open class LogService @Autowired constructor(
         return QueryLogs(buildId, false)
     }
 
-    open fun preCreateIndices(numDays: Int): Int {
+    fun preCreateIndices(numDays: Int): Int {
         val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
         val typeName = "typeForResetting"
         var numCreated = 0
@@ -708,7 +708,7 @@ open class LogService @Autowired constructor(
         return numCreated
     }
 
-    open fun getTensDigit(num: Int): String {
+    fun getTensDigit(num: Int): String {
         return if (num < 10) {
             "0" + num.toString()
         } else {
@@ -716,7 +716,7 @@ open class LogService @Autowired constructor(
         }
     }
 
-    open fun createLogStatusIndex(): Boolean {
+    fun createLogStatusIndex(): Boolean {
         if (isExistIndex(Constants.INDEX_LOG_STATUS)) {
             return false
         }
@@ -724,7 +724,7 @@ open class LogService @Autowired constructor(
         return createLogStatusIndexAndType()
     }
 
-    open fun downloadLogs(pipelineId: String, buildId: String, tag: String, executeCount: Int?): Response {
+    fun downloadLogs(pipelineId: String, buildId: String, tag: String, executeCount: Int?): Response {
         val index = indexService.queryIndex(buildId)
 
         val query = addExecuteCountQuery(
@@ -775,7 +775,7 @@ open class LogService @Autowired constructor(
             .build()
     }
 
-    open fun getEndLogs(
+    fun getEndLogs(
         pipelineId: String,
         buildId: String,
         tag: String,
@@ -906,8 +906,12 @@ open class LogService @Autowired constructor(
     }
 
     private fun getLogsByPage(
-        index: String, type: String, tag: String?, executeCount: Int?,
-        page: Int, pageSize: Int
+        index: String,
+        type: String,
+        tag: String?,
+        executeCount: Int?,
+        page: Int,
+        pageSize: Int
     ): List<LogLine> {
 
         val boolQuery = QueryBuilders.boolQuery()
@@ -949,7 +953,7 @@ open class LogService @Autowired constructor(
         return result
     }
 
-    open fun getLogSize(index: String, type: String, tag: String? = null, executeCount: Int? = null): Long {
+    fun getLogSize(index: String, type: String, tag: String? = null, executeCount: Int? = null): Long {
         val query = addExecuteCountQuery(addTagQuery(QueryBuilders.matchAllQuery(), tag), executeCount)
         logger.info("[$index|$type|$tag|$executeCount] Get the log size - ($query)")
         val searchResponse = client.prepareSearch(index)
@@ -987,8 +991,12 @@ open class LogService @Autowired constructor(
     }
 
     private fun getLogs(
-        index: String, type: String, keywords: List<String>,
-        wholeQuery: Boolean, tag: String?, executeCount: Int?
+        index: String,
+        type: String,
+        keywords: List<String>,
+        wholeQuery: Boolean,
+        tag: String?,
+        executeCount: Int?
     ): List<LogLine> {
         logger.info(
             "log params for type($type): index: $index, keywords: $keywords, " +
@@ -1204,8 +1212,11 @@ open class LogService @Autowired constructor(
     }
 
     private fun getLogRange(
-        index: String, type: String, tag: String,
-        executeCount: Int?, size: Long
+        index: String,
+        type: String,
+        tag: String,
+        executeCount: Int?,
+        size: Long
     ): Pair<Long, Long> {
         val query = QueryBuilders.boolQuery()
             .should(QueryBuilders.matchQuery("logType", LogType.START.name))
@@ -1242,7 +1253,8 @@ open class LogService @Autowired constructor(
     }
 
     private fun indexRequestBuilder(
-        logMessage: LogMessageWithLineNo, index: String?,
+        logMessage: LogMessageWithLineNo,
+        index: String?,
         type: String?
     ): IndexRequestBuilder? {
         val builder: XContentBuilder

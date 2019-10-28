@@ -96,28 +96,29 @@ class ScmService @Autowired constructor(
         }
     }
 
-    fun deleteBranch(
-        projectName: String,
-        url: String,
-        type: ScmType,
-        branch: String,
-        privateKey: String?,
-        passPhrase: String?,
-        token: String?,
-        region: CodeSvnRegion?,
-        userName: String?
-    ) {
-        logger.info("[$projectName|$url|$type|$userName] Start to list branches")
-        val startEpoch = System.currentTimeMillis()
-        try {
-            ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
-                .deleteBranch(branch)
-        } catch (e: MismatchedInputException) {
-
-        } finally {
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to delete branches")
-        }
-    }
+    //TODO: 此处需解决内部版和企业版的冲突
+//    fun deleteBranch(
+//        projectName: String,
+//        url: String,
+//        type: ScmType,
+//        branch: String,
+//        privateKey: String?,
+//        passPhrase: String?,
+//        token: String?,
+//        region: CodeSvnRegion?,
+//        userName: String?
+//    ) {
+//        logger.info("[$projectName|$url|$type|$userName] Start to list branches")
+//        val startEpoch = System.currentTimeMillis()
+//        try {
+//            ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
+//                .deleteBranch(branch)
+//        } catch (e: MismatchedInputException) {
+//
+//        } finally {
+//            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to delete branches")
+//        }
+//    }
 
     fun listTags(
             projectName: String,
@@ -283,54 +284,55 @@ class ScmService @Autowired constructor(
         ScmFactory.getScm(projectName, url, type, null, "", "", "", svnRegion, userName).unlock(repName, userName, subPath)
     }
 
-    fun createBranch(
-        projectName: String,
-        url: String,
-        type: ScmType,
-        branch: String,
-        ref: String,
-        privateKey: String?,
-        passPhrase: String?,
-        token: String?,
-        region: CodeSvnRegion?,
-        userName: String
-    ) {
-        ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
-            .createBranch(branch, ref)
-    }
+    //TODO: 此处需解决内部版和企业版的冲突
+//    fun createBranch(
+//        projectName: String,
+//        url: String,
+//        type: ScmType,
+//        branch: String,
+//        ref: String,
+//        privateKey: String?,
+//        passPhrase: String?,
+//        token: String?,
+//        region: CodeSvnRegion?,
+//        userName: String
+//    ) {
+//        ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
+//            .createBranch(branch, ref)
+//    }
 
-    fun listCommits(
-        projectName: String,
-        url: String,
-        type: ScmType,
-        branch: String?,
-        privateKey: String?,
-        passPhrase: String?,
-        token: String?,
-        region: CodeSvnRegion?,
-        userName: String,
-        all: Boolean,
-        page: Int,
-        size: Int
-    ): List<GitCommit> {
-        return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
-            .getCommits(branch, all, page, size)
-    }
-
-    fun getCommitDiff(
-        projectName: String,
-        url: String,
-        type: ScmType,
-        sha: String,
-        privateKey: String?,
-        passPhrase: String?,
-        token: String?,
-        region: CodeSvnRegion?,
-        userName: String
-    ): List<GitDiff> {
-        return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
-            .getCommitDiff(sha)
-    }
+//    fun listCommits(
+//        projectName: String,
+//        url: String,
+//        type: ScmType,
+//        branch: String?,
+//        privateKey: String?,
+//        passPhrase: String?,
+//        token: String?,
+//        region: CodeSvnRegion?,
+//        userName: String,
+//        all: Boolean,
+//        page: Int,
+//        size: Int
+//    ): List<GitCommit> {
+//        return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
+//            .getCommits(branch, all, page, size)
+//    }
+//
+//    fun getCommitDiff(
+//        projectName: String,
+//        url: String,
+//        type: ScmType,
+//        sha: String,
+//        privateKey: String?,
+//        passPhrase: String?,
+//        token: String?,
+//        region: CodeSvnRegion?,
+//        userName: String
+//    ): List<GitDiff> {
+//        return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
+//            .getCommitDiff(sha)
+//    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScmService::class.java)

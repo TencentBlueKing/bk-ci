@@ -1,0 +1,4 @@
+dependencies {
+    compile project(":common:common-service")
+    compile("org.json:json")
+}
