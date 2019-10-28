@@ -112,8 +112,11 @@ include ":quality:model-quality"
 
 include ":dockerhost"
 include ":dockerhost:api-dockerhost"
+include ":dockerhost:api-dockerhost-tencent"
 include ":dockerhost:biz-dockerhost"
+include ":dockerhost:biz-dockerhost-tencent"
 include ":dockerhost:boot-dockerhost"
+include ":dockerhost:boot-dockerhost-tencent"
 
 include ":environment"
 include ":environment:api-environment"
@@ -256,9 +259,9 @@ include ":support:model-support-tencent"
 
 include ":notify"
 include ":notify:api-notify"
-include ":notify:biz-notify-blueking"
+include ":notify:biz-notify-tencent"
 include ":notify:model-notify"
-include ":notify:boot-notify-blueking"
+include ":notify:boot-notify-tencent"
 include ":notify"
 
 include ":external"

@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":notify:biz-notify-blueking") // 这是对接蓝鲸的实现
+    compile project(":dockerhost:api-dockerhost")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -44,6 +44,7 @@ import org.json.XML
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
@@ -281,9 +282,9 @@ class JinGangService @Autowired constructor(
         }
     }
 
-    private fun getProjectManager(projectId: String): List<JinGangService.StarUser> {
+    private fun getProjectManager(projectId: String): List<StarUser> {
         val manager = authProjectApi.getProjectUsers(vsServiceCode, projectId, BkAuthGroup.MANAGER)
-        return listOf(JinGangService.StarUser(
+        return listOf(StarUser(
                 "项目管理员",
                 "37",
                 manager.joinToString(";")

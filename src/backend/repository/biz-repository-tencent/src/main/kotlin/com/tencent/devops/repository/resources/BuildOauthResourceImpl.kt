@@ -14,8 +14,8 @@ class BuildOauthResourceImpl @Autowired constructor(
     override fun gitGet(userId: String): Result<GitToken?> {
         return Result(gitService.getAccessToken(userId))
     }
-
-    override fun gitGetV2(userId: String): Result<GitToken?> {
-        return Result(gitService.getAccessToken(userId))
-    }
+//
+//    override fun gitGetV2(userId: String): Result<GitToken?> {
+//        return Result(gitService.getAccessToken(userId))
+//    }
 }
