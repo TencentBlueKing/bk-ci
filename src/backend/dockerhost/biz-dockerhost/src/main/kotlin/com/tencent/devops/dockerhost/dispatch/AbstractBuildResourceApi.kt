@@ -85,6 +85,11 @@ abstract class AbstractBuildResourceApi {
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
+    fun buildHeader(path: String, headers: Map<String, String> = emptyMap()): Request {
+        val url = buildUrl(path)
+        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).head().build()
+    }
+
     fun buildPost(path: String, headers: Map<String, String> = emptyMap()): Request {
         val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
         return buildPost(path, requestBody, headers)

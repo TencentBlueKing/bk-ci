@@ -112,8 +112,11 @@ include ":quality:model-quality"
 
 include ":dockerhost"
 include ":dockerhost:api-dockerhost"
+include ":dockerhost:api-dockerhost-tencent"
 include ":dockerhost:biz-dockerhost"
+include ":dockerhost:biz-dockerhost-tencent"
 include ":dockerhost:boot-dockerhost"
+include ":dockerhost:boot-dockerhost-tencent"
 
 include ":environment"
 include ":environment:api-environment"
