@@ -276,10 +276,15 @@
         
         var CACHE_PREFIX = '_cache_'
         window.setLsCacheItem = function (key, value) {
-            if (key && typeof key === 'string') {
-                var cacheKey = CACHE_PREFIX + key
-                localStorage.setItem(cacheKey, JSON.stringify(value))
+            try {
+                if (key && typeof key === 'string') {
+                    var cacheKey = CACHE_PREFIX + key
+                    localStorage.setItem(cacheKey, JSON.stringify(value))
+                }    
+            } catch (error) {
+                console.warn(error)
             }
+            
         }
 
         window.getLsCacheItem = function (key) {
