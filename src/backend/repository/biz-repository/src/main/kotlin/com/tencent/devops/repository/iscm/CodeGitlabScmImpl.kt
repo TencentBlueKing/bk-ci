@@ -116,39 +116,39 @@ class CodeGitlabScmImpl constructor(
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("gitlab can not unlock")
     }
-
-    override fun createBranch(branch: String, ref: String) {
-        if (branch.isEmpty()) {
-            throw RuntimeException("Git branch为空")
-        }
-        if (ref.isEmpty()) {
-            throw RuntimeException("Git ref为空")
-        }
-        try {
-            gitApi.createBranch(apiUrl, token, projectName, branch, ref)
-        } catch (e: ScmException) {
-            throw RuntimeException("Git Token不正确")
-        }
-    }
-
-    override fun deleteBranch(branch: String) {
-        if (branch.isEmpty()) {
-            throw RuntimeException("Git branch为空")
-        }
-        try {
-            gitApi.deleteBranch(apiUrl, token, projectName, branch)
-        } catch (e: ScmException) {
-            throw RuntimeException("Git Token不正确")
-        }
-    }
-
-    override fun getCommits(branch: String?, all: Boolean, page: Int, size: Int): List<GitCommit> {
-        return gitApi.listCommits(apiUrl, branch, token, projectName, all, page, size)
-    }
-
-    override fun getCommitDiff(sha: String): List<GitDiff> {
-        return gitApi.getCommitDiff(apiUrl, sha, token, projectName)
-    }
+//
+//    override fun createBranch(branch: String, ref: String) {
+//        if (branch.isEmpty()) {
+//            throw RuntimeException("Git branch为空")
+//        }
+//        if (ref.isEmpty()) {
+//            throw RuntimeException("Git ref为空")
+//        }
+//        try {
+//            gitApi.createBranch(apiUrl, token, projectName, branch, ref)
+//        } catch (e: ScmException) {
+//            throw RuntimeException("Git Token不正确")
+//        }
+//    }
+//
+//    override fun deleteBranch(branch: String) {
+//        if (branch.isEmpty()) {
+//            throw RuntimeException("Git branch为空")
+//        }
+//        try {
+//            gitApi.deleteBranch(apiUrl, token, projectName, branch)
+//        } catch (e: ScmException) {
+//            throw RuntimeException("Git Token不正确")
+//        }
+//    }
+//
+//    override fun getCommits(branch: String?, all: Boolean, page: Int, size: Int): List<GitCommit> {
+//        return gitApi.listCommits(apiUrl, branch, token, projectName, all, page, size)
+//    }
+//
+//    override fun getCommitDiff(sha: String): List<GitDiff> {
+//        return gitApi.getCommitDiff(apiUrl, sha, token, projectName)
+//    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitlabScmImpl::class.java)
