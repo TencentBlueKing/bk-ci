@@ -1,4 +1,4 @@
-package com.tencent.devops.lambda.api
+package com.tencent.devops.lambda.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.lambda.pojo.BG

@@ -64,13 +64,29 @@ class GrafanaWebhookService @Autowired constructor(
                 notifyMessage += "）"
             }
             // 发送noc告警
-            val allowSendNocList = listOf(GrafanaNotifyTypeEnum.NOC, GrafanaNotifyTypeEnum.RTX_WECHAT_NOC, GrafanaNotifyTypeEnum.EMAIL_NOC, GrafanaNotifyTypeEnum.ALL)
+            val allowSendNocList = listOf(
+                GrafanaNotifyTypeEnum.NOC,
+                GrafanaNotifyTypeEnum.RTX_WECHAT_NOC,
+                GrafanaNotifyTypeEnum.EMAIL_NOC,
+                GrafanaNotifyTypeEnum.ALL
+            )
             if (allowSendNocList.contains(notifyType)) {
-                val sendNocResult = nocNoticeService.sendNocNotice(notifyReceivers = notifyReceivers, notifyTitle = notifyTitle, notifyMessage = notifyMessage, busiDataList = busiDataList)
+                val sendNocResult = nocNoticeService.sendNocNotice(
+                    notifyReceivers = notifyReceivers,
+                    notifyTitle = notifyTitle,
+                    notifyMessage = notifyMessage,
+                    busiDataList = busiDataList
+                )
                 logger.info("the sendNocResult is:$sendNocResult")
             }
             // 发送微信消息
-            val allowSendWechatList = listOf(GrafanaNotifyTypeEnum.WECHAT, GrafanaNotifyTypeEnum.RTX_WECHAT, GrafanaNotifyTypeEnum.RTX_WECHAT_EMIAL, GrafanaNotifyTypeEnum.RTX_WECHAT_NOC, GrafanaNotifyTypeEnum.ALL)
+            val allowSendWechatList = listOf(
+                GrafanaNotifyTypeEnum.WECHAT,
+                GrafanaNotifyTypeEnum.RTX_WECHAT,
+                GrafanaNotifyTypeEnum.RTX_WECHAT_EMIAL,
+                GrafanaNotifyTypeEnum.RTX_WECHAT_NOC,
+                GrafanaNotifyTypeEnum.ALL
+            )
             if (allowSendWechatList.contains(notifyType)) {
                 val wechatNotifyMessage = WechatNotifyMessage().apply {
                     addAllReceivers(notifyReceivers)
@@ -81,7 +97,13 @@ class GrafanaWebhookService @Autowired constructor(
                 logger.info("the sendWechatResult is:$sendWechatResult")
             }
             // 发送企业微信消息
-            val allowSendRtxList = listOf(GrafanaNotifyTypeEnum.RTX, GrafanaNotifyTypeEnum.RTX_WECHAT, GrafanaNotifyTypeEnum.RTX_WECHAT_EMIAL, GrafanaNotifyTypeEnum.RTX_WECHAT_NOC, GrafanaNotifyTypeEnum.ALL)
+            val allowSendRtxList = listOf(
+                GrafanaNotifyTypeEnum.RTX,
+                GrafanaNotifyTypeEnum.RTX_WECHAT,
+                GrafanaNotifyTypeEnum.RTX_WECHAT_EMIAL,
+                GrafanaNotifyTypeEnum.RTX_WECHAT_NOC,
+                GrafanaNotifyTypeEnum.ALL
+            )
             if (allowSendRtxList.contains(notifyType)) {
                 val rtxNotifyMessage = RtxNotifyMessage().apply {
                     addAllReceivers(notifyReceivers)
@@ -93,7 +115,12 @@ class GrafanaWebhookService @Autowired constructor(
                 logger.info("the sendRtxResult is:$sendRtxResult")
             }
             // 发送监控告警邮件
-            val allowSendEmailList = listOf(GrafanaNotifyTypeEnum.EMAIL, GrafanaNotifyTypeEnum.RTX_WECHAT_EMIAL, GrafanaNotifyTypeEnum.EMAIL_NOC, GrafanaNotifyTypeEnum.ALL)
+            val allowSendEmailList = listOf(
+                GrafanaNotifyTypeEnum.EMAIL,
+                GrafanaNotifyTypeEnum.RTX_WECHAT_EMIAL,
+                GrafanaNotifyTypeEnum.EMAIL_NOC,
+                GrafanaNotifyTypeEnum.ALL
+            )
             if (allowSendEmailList.contains(notifyType)) {
                 val emailNotifyMessage = EmailNotifyMessage().apply {
                     addAllReceivers(notifyReceivers)

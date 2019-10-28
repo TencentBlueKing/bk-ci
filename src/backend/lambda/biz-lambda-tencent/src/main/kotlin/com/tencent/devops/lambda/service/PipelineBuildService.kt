@@ -2,6 +2,7 @@ package com.tencent.devops.lambda.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
@@ -17,9 +18,9 @@ import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
-import com.tencent.devops.process.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.ErrorType
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -106,7 +107,7 @@ class PipelineBuildService @Autowired constructor(
                     val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
                     if (projectInfo == null) {
                         logger.warn("[$projectId] Fail to get the project info")
-                        throw RuntimeException("Fail to get the project info")
+                        throw InvalidParamException("Fail to get the project info,projectId=$projectId", params = arrayOf("projectId=$projectId"))
                     }
                     return ProjectOrganize(
                         projectId = projectId,
