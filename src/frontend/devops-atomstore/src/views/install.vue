@@ -125,8 +125,7 @@
             requestDetail () {
                 const methods = {
                     atom: this.getAtomDetail,
-                    template: this.getTemplateDetail,
-                    image: this.getImageDetail
+                    template: this.getTemplateDetail
                 }
 
                 return methods[this.type]()
@@ -146,18 +145,10 @@
                 })
             },
 
-            getImageDetail () {
-                return this.$store.dispatch('store/requestImageDetailByCode', this.code).then((res) => {
-                    this.name = res.imageName
-                    this.id = res.imageId
-                })
-            },
-
             requestRelativeProject () {
                 const methods = {
                     atom: 'store/requestRelativeProject',
-                    template: 'store/requestRelativeTplProject',
-                    image: 'store/requestRelativeImageProject'
+                    template: 'store/requestRelativeTplProject'
                 }
 
                 this.$store.dispatch(methods[this.type], this.code).then((res) => {
@@ -221,8 +212,7 @@
 
                 const methods = {
                     atom: this.installAtom,
-                    template: this.installTemplate,
-                    image: this.installImage
+                    template: this.installTemplate
                 }
 
                 this.isLoading = true
@@ -264,14 +254,6 @@
                     projectCodeList: this.project
                 }
                 return this.$store.dispatch('store/installTemplate', { params })
-            },
-
-            installImage () {
-                const params = {
-                    imageCode: this.code,
-                    projectCodeList: this.project
-                }
-                return this.$store.dispatch('store/installImage', params)
             }
         }
     }

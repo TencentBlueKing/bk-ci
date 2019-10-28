@@ -98,12 +98,6 @@
                     case 'template':
                         res = '流水线模板'
                         break
-                    case 'ide':
-                        res = 'IDE插件'
-                        break
-                    case 'image':
-                        res = '镜像'
-                        break
                     default:
                         res = '流水线插件'
                         break
@@ -190,12 +184,6 @@
                 'requestTplCategorys',
                 'requestTplLabel',
                 'requestTplClassify',
-                'requestIDEClassifys',
-                'requestIDECategorys',
-                'requestIDELabel',
-                'requestImageClassifys',
-                'requestImageCategorys',
-                'requestImageLabel',
                 'setMarketQuery'
             ]),
 
@@ -290,9 +278,7 @@
             getClassifys () {
                 const fun = {
                     atom: () => this.getAtomClassifys(),
-                    template: () => this.getTemplateClassifys(),
-                    ide: () => this.getIDEClassifys(),
-                    image: () => this.getImageClassifys()
+                    template: () => this.getTemplateClassifys()
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const method = fun[type]
@@ -330,26 +316,6 @@
 
             getTemplateClassifys () {
                 return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
-                    const res = []
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
-                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
-                    return res
-                })
-            },
-
-            getIDEClassifys () {
-                return Promise.all([this.requestIDECategorys(), this.requestIDELabel(), this.requestIDEClassifys()]).then(([categorys, lables, classify]) => {
-                    const res = []
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '适用IDE', data: categorys })
-                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
-                    return res
-                })
-            },
-
-            getImageClassifys () {
-                return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
                     const res = []
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
                     if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })

@@ -53,10 +53,6 @@
                                     <div class="label-card" v-for="(label, index) in atomDetail.labels" :key="index">{{ label }}</div>
                                 </div>
                             </div>
-                            <div class="detail-form-item" v-if="atomDetail.visibilityLevel === 'PRIVATE'">
-                                <label class="info-label">不开源原因：</label>
-                                <div class="info-value">{{ atomDetail.privateReason || '-' }}</div>
-                            </div>
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label">简介：</div>

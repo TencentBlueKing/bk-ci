@@ -4,11 +4,6 @@
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 {{detail.name}}
-                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
-                    <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
-                    <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
-                    <span>工蜂</span>
-                </h5>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== '协作' }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
@@ -132,15 +127,6 @@
                 return `${fixWidth + rateWidth}px`
             },
 
-            isPublic () {
-                return this.detail.visibilityLevel === 'LOGIN_PUBLIC'
-            },
-
-            isPublicTitle () {
-                if (this.isPublic) return '查看源码'
-                else return '未开源'
-            },
-
             approveMsg () {
                 const key = `${typeof this.userInfo.type}-${this.detail.approveStatus}`
                 const mapStatus = {
@@ -232,10 +218,6 @@
                     }
                 })
                 return jobList
-            },
-
-            goToCode () {
-                if (this.isPublic) window.open(this.detail.codeSrc, '_blank')
             },
 
             goToInstall () {

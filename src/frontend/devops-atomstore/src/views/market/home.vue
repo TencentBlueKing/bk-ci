@@ -64,9 +64,7 @@
             getHomeCards () {
                 const urls = {
                     atom: 'store/requestAtomHome',
-                    template: 'store/requestTemplateHome',
-                    ide: 'store/requestIDEHome',
-                    image: 'store/requestImageHome'
+                    template: 'store/requestTemplateHome'
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const url = urls[type]

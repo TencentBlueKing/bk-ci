@@ -60,24 +60,6 @@
                         </bk-select>
                     </div>
                 </div>
-                <template v-if="userInfo.isProjectAdmin">
-                    <div class="bk-form-item is-required is-open" ref="openSourceError">
-                        <label class="bk-label">是否开源</label>
-                        <div class="bk-form-content atom-item-content">
-                            <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
-                                <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{entry.label}}</bk-radio>
-                            </bk-radio-group>
-                            <div v-if="formErrors.openSourceError" class="error-tips">字段有误，请重新选择</div>
-                        </div>
-                    </div>
-                    <div class="bk-form-item is-required is-open" v-if="atomForm.visibilityLevel === 'PRIVATE'">
-                        <label class="bk-label">不开源原因</label>
-                        <div class="bk-form-content atom-item-content">
-                            <bk-input type="textarea" v-model="atomForm.privateReason" @input="formErrors.privateReasonError = false"></bk-input>
-                            <div v-if="formErrors.privateReasonError" class="error-tips">不开源原因不能为空</div>
-                        </div>
-                    </div>
-                </template>
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label">简介</label>
                     <div class="bk-form-content atom-item-content is-tooltips">
@@ -186,11 +168,7 @@
                 atomForm: JSON.parse(JSON.stringify(this.$store.state.store.currentAtom)),
                 hasChange: false,
                 showlogoDialog: false,
-                selectedUrl: '',
-                isOpenSource: [
-                    { label: '是', value: 'LOGIN_PUBLIC' },
-                    { label: '否', value: 'PRIVATE' }
-                ]
+                selectedUrl: ''
             }
         },
 
@@ -243,10 +221,10 @@
                 if (!validate) return
 
                 this.isSaving = true
-                const { name, classifyCode, summary, description, logoUrl, publisher, labelIdList, visibilityLevel, privateReason } = this.atomForm
+                const { name, classifyCode, summary, description, logoUrl, publisher, labelIdList, privateReason } = this.atomForm
                 const putData = {
                     atomCode: this.$route.params.atomCode,
-                    data: { name, classifyCode, summary, description, logoUrl, publisher, labelIdList, visibilityLevel, privateReason }
+                    data: { name, classifyCode, summary, description, logoUrl, publisher, labelIdList, privateReason }
                 }
                 this.$store.dispatch('store/modifyAtomDetail', putData).then(() => {
                     this.$store.dispatch('store/updateCurrentaAtom', { res: this.atomForm })
@@ -260,16 +238,6 @@
 
                 if (!this.atomForm.classifyCode) {
                     this.formErrors.sortError = true
-                    isGood = false
-                }
-
-                if (this.isOpenSource.findIndex((x) => x.value === this.atomForm.visibilityLevel) <= -1) {
-                    this.formErrors.openSourceError = true
-                    isGood = false
-                }
-
-                if (this.atomForm.visibilityLevel === 'PRIVATE' && !this.atomForm.privateReason) {
-                    this.formErrors.privateReasonError = true
                     isGood = false
                 }
 

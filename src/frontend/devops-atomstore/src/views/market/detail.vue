@@ -15,7 +15,6 @@
         <main class="store-main" v-show="!isLoading">
             <atom v-if="type === 'atom'" :detail="detail" />
             <template-info v-if="type === 'template'" :detail="detail" />
-            <image-info v-if="type === 'image'" :detail="detail" />
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
                 <bk-tab-panel name="des" label="概述" class="summary-tab">
                     <mavon-editor
@@ -77,7 +76,6 @@
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
     import atom from '../../components/common/detail-info/atom'
-    import imageInfo from '../../components/common/detail-info/image'
     import templateInfo from '../../components/common/detail-info/template'
 
     Vue.use(mavonEditor)
@@ -89,8 +87,7 @@
             commentDialog,
             animatedInteger,
             atom,
-            templateInfo,
-            imageInfo
+            templateInfo
         },
 
         filters: {
@@ -99,12 +96,6 @@
                 switch (val) {
                     case 'template':
                         res = '流水线模板'
-                        break
-                    case 'ide':
-                        res = 'IDE插件'
-                        break
-                    case 'image':
-                        res = '镜像'
                         break
                     default:
                         res = '流水线插件'
@@ -128,15 +119,11 @@
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData),
-                        ide: (postData) => this.requestIDEComments(postData),
-                        image: (postData) => this.requestImageComments(postData)
+                        template: (postData) => this.requestTemplateComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode),
-                        ide: () => this.requestIDEScoreDetail(this.detailCode),
-                        image: () => this.requestImageScoreDetail(this.detailCode)
+                        template: () => this.requestTemplateScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -168,12 +155,6 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
-                'requestIDE',
-                'requestIDEComments',
-                'requestIDEScoreDetail',
-                'requestImage',
-                'requestImageComments',
-                'requestImageScoreDetail',
                 'getUserApprovalInfo'
             ]),
 
@@ -203,9 +184,7 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
-                    template: () => this.getTemplateDetail(),
-                    ide: () => this.getIDEDetail(),
-                    image: () => this.getImageDetail()
+                    template: () => this.getTemplateDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -240,28 +219,6 @@
                     this.detailId = templateDetail.templateId
                     this.detail.name = templateDetail.templateName
                     this.commentInfo = templateDetail.userCommentInfo || {}
-                })
-            },
-
-            getIDEDetail () {
-                const atomCode = this.detailCode
-
-                return this.requestIDE({ atomCode }).then((res) => {
-                    this.detail = res || {}
-                    this.detailId = res.atomId
-                    this.detail.name = res.atomName
-                    this.commentInfo = res.userCommentInfo || {}
-                })
-            },
-
-            getImageDetail () {
-                const imageCode = this.detailCode
-
-                return this.requestImage({ imageCode }).then((res) => {
-                    this.detail = res || {}
-                    this.detailId = res.imageId
-                    this.detail.name = res.imageName
-                    this.commentInfo = res.userCommentInfo || {}
                 })
             },
 

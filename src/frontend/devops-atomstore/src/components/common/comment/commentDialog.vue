@@ -34,21 +34,15 @@
                 comment: '',
                 modifyCommentGenerator: {
                     atom: (data) => this.requestAtomModifyComment(data),
-                    template: (data) => this.requestTemplateModifyComment(data),
-                    ide: (data) => this.requestIDEModifyComment(data),
-                    image: (data) => this.requestImageModifyComment(data)
+                    template: (data) => this.requestTemplateModifyComment(data)
                 },
                 addCommentGenerator: {
                     atom: (postData) => this.requestAddAtomComment(postData),
-                    template: (postData) => this.requestAddTemplateComment(postData),
-                    ide: (postData) => this.requestAddIDEComment(postData),
-                    image: (postData) => this.requestAddImageComment(postData)
+                    template: (postData) => this.requestAddTemplateComment(postData)
                 },
                 getCommentGenerator: {
                     atom: () => this.requestAtomUserComment(this.commentId),
-                    template: () => this.requestTemplateUserComment(this.commentId),
-                    ide: () => this.requestIDEUserComment(this.commentId),
-                    image: () => this.requestImageUserComment(this.commentId)
+                    template: () => this.requestTemplateUserComment(this.commentId)
                 }
             }
         },
@@ -67,16 +61,10 @@
             ...mapActions('store', [
                 'requestAddAtomComment',
                 'requestAddTemplateComment',
-                'requestAddIDEComment',
                 'requestTemplateModifyComment',
                 'requestTemplateUserComment',
                 'requestAtomModifyComment',
-                'requestAtomUserComment',
-                'requestIDEModifyComment',
-                'requestIDEUserComment',
-                'requestAddImageComment',
-                'requestImageModifyComment',
-                'requestImageUserComment'
+                'requestAtomUserComment'
             ]),
 
             getComment () {
