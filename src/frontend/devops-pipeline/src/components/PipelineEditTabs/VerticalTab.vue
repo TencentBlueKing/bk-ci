@@ -20,7 +20,6 @@
 <script>
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
-    import CleanPolicy from '@/components/pipelineSetting/CleanPolicy'
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
     import thirdPartyReport from '@/components/outputOption/thirdParty_report'
     import IframeReport from '@/components/outputOption/IframeReport'
@@ -31,7 +30,6 @@
         components: {
             BaseInfo,
             RunningLock,
-            CleanPolicy,
             CodeRecordTable,
             thirdPartyReport,
             IframeReport,

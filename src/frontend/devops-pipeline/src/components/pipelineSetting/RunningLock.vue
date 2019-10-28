@@ -3,18 +3,18 @@
         <enum-input class="running-lock-radio" :list="runTypeList" :value="pipelineSetting.runLockType" name="runLockType" :handle-change="handleRunningLockChange"></enum-input>
         <div class="bk-form-item opera-lock" v-if="pipelineSetting.runLockType === 'SINGLE'">
             <div class="opera-lock-item">
-                <label class="opera-lock-label">最大排队数量：</label>
+                <label class="opera-lock-label">{{ $t('settings.largestNum') }}：</label>
                 <div>
-                    <vuex-input input-type="number" name="maxQueueSize" placeholder="请输入" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" :value="pipelineSetting.maxQueueSize" :handle-change="handleRunningLockChange" />
-                    <span>个</span>
+                    <vuex-input input-type="number" name="maxQueueSize" :placeholder="$t('settings.itemPlaceholder')" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" :value="pipelineSetting.maxQueueSize" :handle-change="handleRunningLockChange" />
+                    <span>{{ $t('settings.item') }}</span>
                     <p v-if="errors.has('maxQueueSize')" class="is-danger">{{errors.first("maxQueueSize")}}</p>
                 </div>
             </div>
             <div class="opera-lock-item">
-                <label class="opera-lock-label">最大排队时长：</label>
+                <label class="opera-lock-label">{{ $t('settings.lagestTime') }}：</label>
                 <div>
-                    <vuex-input input-type="number" name="waitQueueTimeMinute" placeholder="请输入" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" :value="pipelineSetting.waitQueueTimeMinute" :handle-change="handleRunningLockChange" />
-                    <span>分钟</span>
+                    <vuex-input input-type="number" name="waitQueueTimeMinute" :placeholder="$t('settings.itemPlaceholder')" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" :value="pipelineSetting.waitQueueTimeMinute" :handle-change="handleRunningLockChange" />
+                    <span>{{ $t('settings.minutes') }}</span>
                     <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
                 </div>
             </div>
@@ -39,16 +39,16 @@
             runTypeList () {
                 return [
                     {
-                        label: '可同时运行多个构建任务',
+                        label: this.$t('settings.runningOption.multiple'),
                         value: 'MULTIPLE'
                     },
                     {
-                        label: '同一时间最多只能运行一个构建任务',
-                        value: 'SINGLE'
+                        label: this.$t('settings.runningOption.lock'),
+                        value: 'LOCK'
                     },
                     {
-                        label: '锁定流水线，任何触发方式都无法运行',
-                        value: 'LOCK'
+                        label: this.$t('settings.runningOption.single'),
+                        value: 'SINGLE'
                     }
                 ]
             }

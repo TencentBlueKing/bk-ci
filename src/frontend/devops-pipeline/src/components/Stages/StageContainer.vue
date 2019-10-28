@@ -13,10 +13,10 @@
                     {{ containerSerialNum }}
                 </status-icon>
                 <p class="container-name">
-                    <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? '准备构建环境中' : container.name }}</span>
+                    <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
                 </p>
                 <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
-                <span title="复制job" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
+                <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
                     <Logo name="copy" size="18"></Logo>
                 </span>
                 <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
@@ -107,7 +107,7 @@
                 switch (true) {
                     case this.isTriggerContainer(this.container):
                         name = 'build_trigger'
-                        content = '点击构建触发可配置推荐版本号、流水线变量'
+                        content = this.$t('editPage.triggerTooltips')
                         break
                 }
                 return !this.isPreview && name ? {
@@ -206,7 +206,7 @@
                     console.error(e)
                     this.$showTips({
                         theme: 'error',
-                        message: '复制Job失败'
+                        message: this.$t('editPage.copyJobFail')
                     })
                 }
             }

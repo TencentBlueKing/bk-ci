@@ -1,5 +1,5 @@
 <template>
-    <selector :popover-min-width="popoverMinWidth" :tools="tools" :name="name" :edit="edit" :placeholder="isLoading ? &quot;获取数据中...&quot; : placeholder" :handle-change="handleChange" :list="list" :toggle-visible="toggleVisible" :is-loading="isLoading" :value="value" :searchable="searchable" :multi-select="multiSelect" :disabled="disabled || isLoading">
+    <selector :popover-min-width="popoverMinWidth" :tools="tools" :name="name" :edit="edit" :placeholder="isLoading ? $t('editPage.loadingData') : placeholder" :handle-change="handleChange" :list="list" :toggle-visible="toggleVisible" :is-loading="isLoading" :value="value" :searchable="searchable" :multi-select="multiSelect" :disabled="disabled || isLoading">
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
                 <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
@@ -54,8 +54,7 @@
                 default: false
             },
             placeholder: {
-                type: String,
-                default: '请选择'
+                type: String
             },
             multiSelect: {
                 type: Boolean,
@@ -124,7 +123,7 @@
                         if (this.value !== '' && this.list.filter(item => item.id === this.value).length === 0) {
                             this.list.splice(0, 0, {
                                 id: this.value,
-                                name: '******（无权限查看）'
+                                name: `******（${this.$t('editPage.noPermToView')}）`
                             })
                         }
                     } else {
@@ -134,7 +133,7 @@
                             if (value !== '' && this.list.filter(item => item.id === value).length === 0) {
                                 this.list.splice(0, 0, {
                                     id: value,
-                                    name: '******（无权限查看）'
+                                    name: `******（${this.$t('editPage.noPermToView')}）`
                                 })
                             }
                         })

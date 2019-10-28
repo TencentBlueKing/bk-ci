@@ -1,6 +1,6 @@
 <template>
     <div class="reference-var">
-        <span>引用变量 <i class="bk-icon icon-angle-down"></i><i class="bk-icon icon-angle-up"></i></span>
+        <span>{{ $t('editPage.useParams') }} <i class="bk-icon icon-angle-down"></i><i class="bk-icon icon-angle-up"></i></span>
         <div v-if="globalEnvs" class="env-layout">
             <bk-table
                 :data="envsData"
@@ -49,16 +49,16 @@
                 return [
                     {
                         prop: 'name',
-                        label: '构建号',
+                        label: this.$t('buildNum'),
                         width: 120
                     },
                     {
                         prop: 'desc',
-                        label: '源材料'
+                        label: this.$t('editPage.material')
                     },
                     {
                         prop: 'clipboard',
-                        label: '触发方式',
+                        label: this.$t('history.triggerType'),
                         width: 60
                     }
                 ]
@@ -100,7 +100,7 @@
                 const buildNo = hasBuildNo(stages) ? [
                     {
                         name: 'BuildNo',
-                        desc: '构建号'
+                        desc: this.$t('buildNum')
                     }
                 ] : []
                 return [
@@ -116,7 +116,7 @@
             this.clipboard = new Clipboard('.env-copy-icon').on('success', e => {
                 this.$showTips({
                     theme: 'success',
-                    message: '变量复制成功'
+                    message: this.$t('copySuc')
                 })
             })
         },

@@ -37,7 +37,7 @@ export const DEFAULT_PARAM = {
         defaultValue: 'value',
         desc: '',
         type: STRING,
-        typeDesc: '字符串',
+        typeDesc: 'string',
         required: true
     },
     [BOOLEAN]: {
@@ -45,7 +45,7 @@ export const DEFAULT_PARAM = {
         defaultValue: true,
         desc: '',
         type: BOOLEAN,
-        typeDesc: '布尔值',
+        typeDesc: 'bool',
         required: true
     },
     [ENUM]: {
@@ -53,7 +53,7 @@ export const DEFAULT_PARAM = {
         defaultValue: '',
         desc: '',
         type: ENUM,
-        typeDesc: '单选框',
+        typeDesc: 'enum',
         options: [],
         required: true
     },
@@ -63,7 +63,7 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: MULTIPLE,
-        typeDesc: '复选框',
+        typeDesc: 'multiple',
         required: true
     },
     [SVN_TAG]: {
@@ -74,7 +74,7 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: SVN_TAG,
-        typeDesc: 'SVN分支或TAG',
+        typeDesc: 'svntag',
         required: true
     },
     [CODE_LIB]: {
@@ -84,7 +84,7 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: CODE_LIB,
-        typeDesc: '代码库',
+        typeDesc: 'codelib',
         required: true
     },
     [CONTAINER_TYPE]: {
@@ -97,7 +97,7 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: CONTAINER_TYPE,
-        typeDesc: '构建资源',
+        typeDesc: 'buildResource',
         required: true
     },
     [ARTIFACTORY]: {
@@ -108,7 +108,7 @@ export const DEFAULT_PARAM = {
         glob: '*',
         properties: {},
         type: ARTIFACTORY,
-        typeDesc: '版本仓库过滤器',
+        typeDesc: 'artifactory',
         required: true
     },
     [SUB_PIPELINE]: {
@@ -117,7 +117,7 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: SUB_PIPELINE,
-        typeDesc: '子流水线',
+        typeDesc: 'subPipeline',
         required: true
     }
 }

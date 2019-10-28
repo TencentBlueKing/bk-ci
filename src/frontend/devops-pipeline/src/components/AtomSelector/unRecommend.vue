@@ -1,11 +1,11 @@
 <template>
     <section v-if="showUnrecommend">
         <h3 :class="[{ 'expand': expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="expandObtained = !expandObtained">
-            不推荐使用（{{unrecommendArr.length}}）
+            {{ $t('editPage.notIntroduce') }}（{{unrecommendArr.length}}）
             <bk-popover placement="top">
                 <i class="bk-icon icon-info-circle "></i>
                 <div slot="content">
-                    因设计缺陷，或实现方式变更，不再建议使用的插件，后续将下架。此类插件一般都已提供替换用的插件，请使用新插件
+                    {{ $t('editPage.notIntroduceReason') }}
                 </div>
             </bk-popover>
         </h3>
@@ -30,7 +30,7 @@
 
 <script>
     import atomCard from './atomCard'
-    
+
     export default {
         components: {
             atomCard

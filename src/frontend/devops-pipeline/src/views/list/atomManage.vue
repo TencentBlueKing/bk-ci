@@ -1,8 +1,8 @@
 <template>
     <article class="atom-manage-home" v-bkloading="{ isLoading }">
         <h3 class="atom-manage-title">
-            已安装插件
-            <span @click="goToStore">发现更多插件</span>
+            {{ $t('atomManage.installedAtom') }}
+            <span @click="goToStore">{{ $t('atomManage.moreAtom') }}</span>
         </h3>
         <bk-tab :active.sync="active" class="atom-manage-main">
             <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
@@ -10,48 +10,48 @@
                     <span>{{panel.label}}</span>
                     <i class="atom-panel-count">{{panel.count}}</i>
                 </template>
-                <bk-table :data="atomList" size="large" empty-text="暂无数据" :show-header="false">
-                    <bk-table-column label="图标" prop="logoUrl" width="80">
+                <bk-table :data="atomList" size="large" :empty-text="$t('noData')" :show-header="false">
+                    <bk-table-column prop="logoUrl" width="80">
                         <template slot-scope="props">
                             <img class="atom-logo" :src="props.row.logoUrl" v-if="props.row.logoUrl">
                             <logo class="atom-logo" v-else name="placeholder" size="38" style="fill:#C3CDD7" />
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="插件" class-name="atom-manage-des">
+                    <bk-table-column class-name="atom-manage-des">
                         <template slot-scope="props">
                             <h5 class="text-overflow" :title="props.row.name">{{ props.row.name }}</h5>
                             <span class="text-overflow" :title="props.row.summary" v-if="props.row.summary">{{ props.row.summary }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="发布者" prop="publisher" width="200"></bk-table-column>
-                    <bk-table-column label="安装信息" width="400">
+                    <bk-table-column prop="publisher" width="200"></bk-table-column>
+                    <bk-table-column width="400">
                         <template slot-scope="props">
                             <span class="text-overflow" :title="getInstallInfo(props.row)">{{ getInstallInfo(props.row) }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="关联流水线数量" class-name="primary-color" width="120">
+                    <bk-table-column class-name="primary-color" width="120">
                         <template slot-scope="props">
-                            <bk-popover :content="`关联${props.row.pipelineCnt}个流水线`" placement="top">
+                            <bk-popover :content="`${$t('atomManage.relatedNumPrefix')}${props.row.pipelineCnt}${$t('atomManage.relatedNumSuffix')}`" placement="top">
                                 <span @click="showDetail(props.row)" class="cursor-pointer">{{ props.row.pipelineCnt }}</span>
                             </bk-popover>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="操作" width="80" class-name="primary-color">
+                    <bk-table-column width="80" class-name="primary-color">
                         <template slot-scope="props">
-                            <bk-button :title="!props.row.hasPermission ? '无权限卸载' : ''" :disabled="!props.row.hasPermission" class="cursor-pointer" theme="primary" text @click="showDeletaDialog(props.row)" v-if="!props.row.default">卸载</bk-button>
+                            <bk-button :title="!props.row.hasPermission ? $t('atomManage.installedAtom') : ''" :disabled="!props.row.hasPermission" class="cursor-pointer" theme="primary" text @click="showDeletaDialog(props.row)" v-if="!props.row.default">{{ $t('atomManage.uninstall') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </bk-tab-panel>
         </bk-tab>
 
-        <bk-dialog v-model="deleteObj.showDialog" :title="`卸载${deleteObj.detail.name}`" :close-icon="false" :width="538" @confirm="deleteAtom" @cancel="clearReason">
-            <span class="choose-reason-title">请选择卸载原因</span>
+        <bk-dialog v-model="deleteObj.showDialog" :title="`${$t('atomManage.uninstall')}${deleteObj.detail.name}：`" :close-icon="false" :width="538" @confirm="deleteAtom" @cancel="clearReason">
+            <span class="choose-reason-title">{{ $t('atomManage.uninstallReason') }}</span>
             <bk-checkbox-group v-model="deleteObj.reasonList">
                 <bk-checkbox :value="reason.id" v-for="reason in deleteReasons" :key="reason.id" class="delete-reasons">{{reason.content}}</bk-checkbox>
             </bk-checkbox-group>
             <template v-if="showOtherReason">
-                <span class="other-reason">其它卸载原因：</span>
+                <span class="other-reason">{{ $t('atomManage.otherReason') }}：</span>
                 <textarea class="reason-text" v-model="deleteObj.otherStr"></textarea>
             </template>
         </bk-dialog>
@@ -60,31 +60,31 @@
             <section slot="content" class="atom-slide">
                 <hgroup class="slide-title">
                     <h5 class="slide-link">
-                        <span>名称：</span>
+                        <span>{{ $t('name') }}：</span>
                         <span class="text-overflow link-width">{{detailObj.detail.name}}</span>
                         <logo class="logo-link" name="loadout" size="14" style="fill:#3C96FF" @click.native="goToStoreDetail(detailObj.detail.atomCode)" />
                     </h5>
-                    <h5><span>发布者：</span>{{detailObj.detail.publisher}}</h5>
-                    <h5><span>安装者：</span>{{detailObj.detail.installer}}</h5>
-                    <h5><span>安装时间：</span>{{detailObj.detail.installTime}}</h5>
-                    <h5 class="slide-summary"><span>简介：</span><span>{{detailObj.detail.summary}}</span></h5>
+                    <h5><span>{{ $t('atomManage.publisher') }}：</span>{{detailObj.detail.publisher}}</h5>
+                    <h5><span>{{ $t('atomManage.installer') }}：</span>{{detailObj.detail.installer}}</h5>
+                    <h5><span>{{ $t('atomManage.installTime') }}：</span>{{detailObj.detail.installTime}}</h5>
+                    <h5 class="slide-summary"><span>{{ $t('atomManage.summary') }}：</span><span>{{detailObj.detail.summary}}</span></h5>
                 </hgroup>
 
-                <h5 class="related-pipeline">关联流水线（{{detailObj.list && detailObj.list.length}}）</h5>
+                <h5 class="related-pipeline">{{ $t('atomManage.relatedPipeline') }}（{{detailObj.list && detailObj.list.length}}）</h5>
                 <bk-table :data="detailObj.list" empty-text="暂无关联流水线">
-                    <bk-table-column label="流水线名称" prop="pipelineName" width="235">
+                    <bk-table-column :label="$t('pipelineName')" prop="pipelineName" width="235">
                         <template slot-scope="props">
                             <h3 class="slide-link">
                                 <span @click="goToPipeline(props.row.pipelineId)" class="link-text text-overflow" :title="props.row.pipelineName">{{ props.row.pipelineName }}</span>
                             </h3>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="最近执行者" width="180">
+                    <bk-table-column :label="$t('lastExecUser')" width="180">
                         <template slot-scope="props">
                             <span>{{ props.row.owner || '-' }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="最近执行时间" width="180">
+                    <bk-table-column :label="$t('lastExecTime')" width="180">
                         <template slot-scope="props">
                             <span>{{ props.row.latestExecTime || '-' }}</span>
                         </template>
@@ -159,7 +159,7 @@
                         const count = (this.installAtomList.filter((atom) => (atom.classifyCode === classify.classifyCode)) || []).length
                         return { name: classify.classifyCode, label: classify.classifyName, count }
                     })
-                    this.panels.unshift({ name: 'all', label: '所有', count: this.installAtomList.length })
+                    this.panels.unshift({ name: 'all', label: this.$t('atomManage.all'), count: this.installAtomList.length })
                 }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
                     this.isLoading = false
                 })
@@ -195,7 +195,7 @@
                     return { reasonId, note }
                 })
                 this.unInstallAtom({ projectCode: this.projectId, atomCode: this.deleteObj.detail.atomCode, reasonList }).then(() => {
-                    this.$bkMessage({ theme: 'success', message: `卸载${this.deleteObj.detail.name}成功` })
+                    this.$bkMessage({ theme: 'success', message: `${this.$t('atomManage.uninstall')}${this.deleteObj.detail.name}${this.$t('success')}` })
                     this.initData()
                 }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
                     this.isLoading = false
@@ -210,8 +210,8 @@
             },
 
             getInstallInfo (row) {
-                let des = '安装于'
-                if (row.default) des = '创建于'
+                let des = this.$t('atomManage.installedAt')
+                if (row.default) des = this.$t('atomManage.createdAt')
                 return `${row.installer} ${des} ${row.installTime}`
             },
 

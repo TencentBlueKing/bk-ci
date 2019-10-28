@@ -3,7 +3,7 @@
         <div class="scroll-container">
             <div class="execute-previe-content">
                 <div class="version-option" v-if="isVisibleVersion">
-                    <p class="item-title">推荐版本号：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
+                    <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
                     <pipeline-versions-form ref="versionForm"
                         v-if="isDropdownShowVersion"
                         :build-no="buildNo"
@@ -13,14 +13,14 @@
                     ></pipeline-versions-form>
                 </div>
                 <div class="global-params" v-if="paramList.length">
-                    <p class="item-title">流水线变量：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
+                    <p class="item-title">{{ $t('template.pipelineVar') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
                     <pipeline-params-form ref="paramsForm" v-if="isDropdownShowParam" :param-values="paramValues" :handle-param-change="handleParamChange" :params="paramList"></pipeline-params-form>
                 </div>
                 <div class="execute-detail-option" v-if="pipeline">
                     <p class="item-title">
-                        <section v-if="curPipelineInfo.canElementSkip">选择可执行的插件：
-                            <span class="item-title-tips">(若你的流水线已经调试成功，可在<span @click.stop="editTrigger" class="text-link item-title-tips-link">手动触发</span>插件中关闭该选项)</span>
-                            <bk-checkbox v-if="curPipelineInfo.canElementSkip" style="margin-left: 15px" v-model="checkTotal" @click.stop>全选/全不选</bk-checkbox>
+                        <section v-if="curPipelineInfo.canElementSkip">{{ $t('preview.atomToExec') }}：
+                            <span class="item-title-tips">({{ $t('preview.skipTipsPrefix') }}<span @click.stop="editTrigger" class="text-link item-title-tips-link">{{ $t('preview.manualTrigger') }}</span>{{ $t('preview.skipTipsSuffix') }})</span>
+                            <bk-checkbox v-if="curPipelineInfo.canElementSkip" style="margin-left: 15px" v-model="checkTotal" @click.stop>{{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}</bk-checkbox>
                         </section>
                     </p>
                     <div class="pipeline-detail">
@@ -109,7 +109,7 @@
                 const containers = this.getContainers(stage)
                 return typeof containerIndex !== 'undefined'
                     ? containers[containerIndex].name + '： ' + (stageIndex + 1) + '-' + (containerIndex + 1)
-                    : '属性栏'
+                    : this.$t('propertyBar')
             }
         },
         watch: {
@@ -215,14 +215,14 @@
                         this.versionParamValues = this.getParamsValue(this.versionParamList)
                         this.requestPipeline(this.$route.params)
                     } else {
-                        throw new Error('当前流水线不包含手动触发插件')
+                        throw new Error(this.$t('newlist.withoutManualAtom'))
                     }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: '流水线',
-                                option: '执行'
+                                resource: this.$t('pipeline'),
+                                option: this.$t('exec')
                             }],
                             applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_executor=pipeline:${this.pipelineId}`
                         })
@@ -230,16 +230,6 @@
                         this.$showTips({
                             message: err.message || err,
                             theme: 'error'
-                        })
-                    }
-
-                    if (err.message === '当前流水线不包含手动触发插件') {
-                        this.$router.push({
-                            name: 'pipelinesEdit',
-                            params: {
-                                projectId: this.projectId,
-                                pipelineId: this.pipelineId
-                            }
                         })
                     }
                 } finally {
@@ -266,18 +256,6 @@
                         return res
                     }, newParams), true)
                 }
-            },
-            /**
-             * 设置权限弹窗的参数
-             */
-            setPermissionConfig (resource, option) {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        resource,
-                        option
-                    }],
-                    applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${option === '执行' ? 'role_executor' : 'role_manager'}=pipeline:${this.pipelineId}`
-                })
             },
             toggleIcon (type) {
                 if (type === 'version') this.isDropdownShowVersion = !this.isDropdownShowVersion

@@ -8,14 +8,14 @@
                         <bk-popover placement="right">
                             <i style="display:block;" class="bk-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
-                                <div> 可以在插件中引用该变量 </div>
+                                <div> {{ $t('editPage.paramsTips') }} </div>
                             </div>
                         </bk-popover>
                     </span>
                 </template>
                 <template slot="content">
                     <div class="no-prop" v-if="!hasGlobalParams">
-                        <bk-button theme="primary" :disabled="disabled" @click="editParam(null, true)">添加变量</bk-button>
+                        <bk-button theme="primary" :disabled="disabled" @click="editParam(null, true)">{{ $t('editPage.addParams') }}</bk-button>
                     </div>
                     <template v-else>
                         <draggable v-model="globalParams" :options="paramsDragOptions">
@@ -28,7 +28,7 @@
                                 </header>
                                 <bk-form slot="content">
                                     <div class="params-flex-col">
-                                        <bk-form-item label="变量类型" class="flex-col-span-1">
+                                        <bk-form-item :label="$t('editPage.paramsType')" class="flex-col-span-1">
                                             <selector
                                                 :popover-min-width="246"
                                                 :data-vv-scope="`param-${param.id}`"
@@ -40,14 +40,14 @@
                                             />
                                         </bk-form-item>
                                         <bk-form-item class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
-                                            <atom-checkbox :disabled="disabled" text="执行时显示" :value="param.required" name="required" :handle-change="(name, value) => handleUpdateParam(name, value, index)" />
+                                            <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="param.required" name="required" :handle-change="(name, value) => handleUpdateParam(name, value, index)" />
                                         </bk-form-item>
                                     </div>
                                     <div class="params-flex-col pt10">
-                                        <bk-form-item class="flex-col-span-1" label="名称" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
-                                            <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(&quot;,&quot;)}`" name="id" placeholder="请输入名称" :value="param.id" />
+                                        <bk-form-item class="flex-col-span-1" :label="$t('name')" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
+                                            <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(&quot;,&quot;)}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
                                         </bk-form-item>
-                                        <bk-form-item class="flex-col-span-1" label="默认值" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
+                                        <bk-form-item class="flex-col-span-1" :label="$t('editPage.defaultValue')" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
                                             <selector
                                                 :popover-min-width="250"
                                                 v-if="isSelectorParam(param.type)"
@@ -56,7 +56,7 @@
                                                 :multi-select="isMultipleParam(param.type)"
                                                 name="defaultValue"
                                                 :data-vv-scope="`param-${param.id}`"
-                                                placeholder="请输入默认值"
+                                                :placeholder="$t('editPage.defaultValueTips')"
                                                 :disabled="disabled"
                                                 :value="getSelectorDefaultVal(param)"
                                             >
@@ -70,56 +70,56 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isArtifactoryParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" placeholder="请输入默认值" :value="param.defaultValue" />
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isArtifactoryParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                         </bk-form-item>
                                     </div>
 
-                                    <bk-form-item v-if="isSelectorParam(param.type)" label="下拉选项" desc="用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
-                                        <vuex-textarea v-validate.initial="&quot;excludeComma&quot;" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" placeholder="多行记录请换行输入" :value="getOptions(param)"></vuex-textarea>
+                                    <bk-form-item v-if="isSelectorParam(param.type)" :label="$t('editPage.selectOptions')" :desc="$t('editPage.optionsDesc')" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
+                                        <vuex-textarea v-validate.initial="&quot;excludeComma&quot;" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.optionTips')" :value="getOptions(param)"></vuex-textarea>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isSvnParam(param.type)" label="请选择svn代码库" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
+                                    <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
                                         <request-selector v-bind="svnPathOption" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="&quot;required&quot;"></request-selector>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isSvnParam(param.type)" label="代码库相对目录" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
-                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="relativePath" :data-vv-scope="`param-${param.id}`" placeholder="请填写代码库相对目录,如为空则会拉取所选代码库的根路径下的子目录" :value="param.relativePath"></vuex-input>
+                                    <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
+                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="relativePath" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.relativePathTips')" :value="param.relativePath"></vuex-input>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isCodelibParam(param.type)" label="请选择代码库类型" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
+                                    <bk-form-item v-if="isCodelibParam(param.type)" :label="$t('editPage.codelibParams')" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
                                         <selector :disabled="disabled" :list="codeTypeList" :handle-change="(name, value) => handleCodeTypeChange(name, value, index)" name="scmType" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.scmType"></selector>
                                     </bk-form-item>
 
                                     <template v-if="isBuildResourceParam(param.type)">
-                                        <bk-form-item label="请选择构建环境" :is-error="errors.has(`param-${param.id}.os`)" :error-msg="errors.first(`param-${param.id}.os`)">
+                                        <bk-form-item :label="$t('editPage.buildEnv')" :is-error="errors.has(`param-${param.id}.os`)" :error-msg="errors.first(`param-${param.id}.os`)">
                                             <selector :popover-min-width="510" :disabled="disabled" :list="baseOSList" :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)" name="os" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.containerType.os"></selector>
                                         </bk-form-item>
 
-                                        <bk-form-item label="请选择构建资源类型" :is-error="errors.has(`param-${param.id}.buildType`)" :error-msg="errors.first(`param-${param.id}.buildType`)">
+                                        <bk-form-item :label="$t('editPage.addMetaData')" :is-error="errors.has(`param-${param.id}.buildType`)" :error-msg="errors.first(`param-${param.id}.buildType`)">
                                             <selector :popover-min-width="510" :disabled="disabled" :list="getBuildTypeList(param.containerType.os)" setting-key="type" :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)" name="buildType" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.containerType.buildType"></selector>
                                         </bk-form-item>
                                     </template>
 
-                                    <bk-form-item v-if="isArtifactoryParam(param.type)" label="过滤规则" :is-error="errors.has(`param-${param.id}.glob`)" :error-msg="errors.first(`param-${param.id}.glob`)">
-                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" placeholder="支持*通配符，若为空则无法匹配到文件路径" :value="param.glob"></vuex-input>
+                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('editPage.filterRule')" :is-error="errors.has(`param-${param.id}.glob`)" :error-msg="errors.first(`param-${param.id}.glob`)">
+                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.filterRuleTips')" :value="param.glob"></vuex-input>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isArtifactoryParam(param.type)" label="元数据" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
-                                        <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="'新增元数据'" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
+                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('history.metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
+                                        <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
                                     </bk-form-item>
 
-                                    <bk-form-item label="描述">
-                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" placeholder="请输入参数描述" :value="param.desc" />
+                                    <bk-form-item :label="$t('desc')">
+                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
                                     </bk-form-item>
                                 </bk-form>
                             </accordion>
                         </draggable>
                         <a class="text-link" v-if="!disabled" @click.stop.prevent="editParam(globalParams.length, true)">
                             <i class="bk-icon icon-plus-circle" />
-                            <span>新增变量</span>
+                            <span>{{ $t('editPage.addParams') }}</span>
                         </a>
                     </template>
                 </template>
@@ -210,14 +210,14 @@
             },
             title: {
                 type: String,
-                default: '全局参数'
+                default: '--'
             }
         },
         data () {
             return {
                 paramIdCount: 0,
                 renderParams: [],
-                showTips: '若value为版本号,则不能包含“”""等符号；\n如果参数类型为复选框，选择多个值时将以a,b的方式传递给流水线'
+                showTips: this.$t('editPage.defaultValueDesc')
             }
         },
 
@@ -246,7 +246,12 @@
                 return this.params.concat(this.additionParams)
             },
             paramsList () {
-                return PARAM_LIST
+                return PARAM_LIST.map(item => {
+                    return {
+                        id: item.id,
+                        name: this.$t(`storeMap.${item.name}`)
+                    }
+                })
             },
             boolList () {
                 return BOOLEAN
@@ -340,7 +345,7 @@
                     },
                     ...this.globalParams.slice(paramIndex + 1)
                 ]
-                
+
                 this.handleChange([
                     ...newGlobalParams,
                     ...this.versions

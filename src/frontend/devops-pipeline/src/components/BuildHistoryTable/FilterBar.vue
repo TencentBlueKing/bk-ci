@@ -14,7 +14,7 @@
         </div>
         <bk-search-select
             class="search-select"
-            placeholder="支持commitid等关键字过滤"
+            :placeholder="$t('history.filterTips')"
             :data="filterData"
             :show-condition="false"
             :strink="false"
@@ -24,7 +24,7 @@
             @input-change="handleSearchInput"
             @change="updateSearchKey"
         ></bk-search-select>
-        <span type="default" class="search-history-btn" @click="resetQueryCondition">重置</span>
+        <span type="default" class="search-history-btn" @click="resetQueryCondition">{{ $t('history.reset') }}</span>
     </div>
 </template>
 
@@ -34,7 +34,7 @@
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { getQueryParamList, debounce } from '../../utils/util'
-    
+
     export default {
         name: 'filter-bar',
         components: {
@@ -57,7 +57,7 @@
             filterConfig () {
                 return [{
                     id: 'status',
-                    label: '状态',
+                    label: this.$t('status'),
                     name: 'status',
                     value: this.query.status,
                     width: 160,
@@ -71,10 +71,10 @@
                         placeholder: 'status',
                         paramName: 'value'
                     }
-                    
+
                 }, {
                     id: 'materialAlias',
-                    label: '代码库',
+                    label: this.$t('history.repo'),
                     name: 'materialAlias',
                     width: 220,
                     value: this.query.materialAlias,
@@ -90,10 +90,10 @@
                         clearable: true,
                         placeholder: 'materialAlias'
                     }
-                    
+
                 }, {
                     id: 'materialBranch',
-                    label: '分支',
+                    label: this.$t('history.branch'),
                     name: 'materialBranch',
                     width: 160,
                     value: this.query.materialBranch,
@@ -108,7 +108,7 @@
                     }
                 }, {
                     id: 'dateTimeRange',
-                    label: '日期',
+                    label: this.$t('history.date'),
                     name: 'dateTimeRange',
                     width: 320,
                     value: this.query.dateTimeRange,
@@ -131,14 +131,14 @@
                         id: 'materialCommitMessage'
                     },
                     {
-                        value: '触发方式',
+                        value: this.$t('history.triggerType'),
                         id: 'trigger',
                         remote: true,
                         multiable: true,
                         children: this.triggerList
                     },
                     {
-                        value: '备注',
+                        value: this.$t('history.remark'),
                         id: 'remark'
                     }
                 ]
@@ -176,7 +176,7 @@
                         query: newQuery
                     }
                 })
-                
+
                 this.startQuery()
             },
             async handleRemoteMethod (...args) {

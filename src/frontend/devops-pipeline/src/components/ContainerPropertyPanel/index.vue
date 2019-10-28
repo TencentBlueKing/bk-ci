@@ -4,14 +4,14 @@
             {{ title }}
         </header>
         <section v-if="container" slot="content" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
-            <form-field :required="true" label="名称" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
+            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
                 <div class="container-resource-name">
-                    <vuex-input :disabled="!editable" input-type="text" placeholder="请输入名称" name="name" v-validate.initial="&quot;required&quot;" :value="container.name" :handle-change="handleContainerChange" />
+                    <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="&quot;required&quot;" :value="container.name" :handle-change="handleContainerChange" />
                     <atom-checkbox
                         v-if="isVmContainer(container)"
                         class="show-build-resource"
                         :value="container.showBuildResource"
-                        text="执行时显示具体资源别名"
+                        :text="$t('editPage.showAliasName')"
                         name="showBuildResource"
                         :handle-change="handleContainerChange"
                     >
@@ -20,7 +20,7 @@
             </form-field>
 
             <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
-                <form-field label="构建资源类型">
+                <form-field :label="$t('editPage.resourceType')">
                     <selector
                         :disabled="!editable"
                         :handle-change="changeBuildResource"
@@ -33,13 +33,13 @@
                         <template>
                             <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
                                 <i class="bk-icon icon-plus-circle"></i>
-                                <span class="text">新增第三方构建机</span>
-                            </div>
+                                <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
+                                </span></div>
                         </template>
                     </selector>
                 </form-field>
 
-                <form-field label="image类型" v-if="buildResourceType === 'DOCKER'">
+                <form-field :label="$t('editPage.imageType')" v-if="buildResourceType === 'DOCKER'">
                     <enum-input
                         name="imageType"
                         :list="imageTypeList"
@@ -49,7 +49,7 @@
                     </enum-input>
                 </form-field>
 
-                <form-field label="指定构建资源" v-if="!isPublicResourceType && containerModalId" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? &quot;若环境下包含多个节点，则优先分配上次使用过的节点；若第一次使用，则随机分配&quot; : &quot;&quot;">
+                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
                     <container-env-node :disabled="!editable"
                         :os="container.baseOS"
                         :container-id="containerModalId"
@@ -66,14 +66,14 @@
                     />
                 </form-field>
 
-                <form-field label="镜像对应凭证" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
+                <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
                     <request-selector v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></request-selector>
                 </form-field>
 
-                <form-field label="指定工作空间" v-if="isThirdParty">
-                    <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" placeholder="不填默认为 [Agent安装目录]/workspace/[流水线ID]/" />
+                <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
+                    <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
                 </form-field>
-                <form-field class="container-app-field" v-if="showDependencies" label="依赖编译环境">
+                <form-field class="container-app-field" v-if="showDependencies" :label="$t('editPage.envDependency')">
                     <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version="" :handle-change="handleContainerAppChange" :apps="apps"></container-app-selector>
                     <container-app-selector :disabled="!editable" v-else class="app-selector-item" v-for="(version, app) in container.buildEnv"
                         :key="app"
@@ -90,7 +90,7 @@
                 <div class="build-path-tips" v-if="hasBuildEnv">
                     <div class="tips-icon"><i class="bk-icon icon-info-circle-shape"></i></div>
                     <div class="tips-content">
-                        <p class="tips-title">在选择了上述依赖环境后，我们将执行如下操作：</p>
+                        <p class="tips-title">{{ $t('editPage.envDependencyTips') }}：</p>
                         <template v-for="(value, keys) in container.buildEnv">
                             <div class="tips-list" v-if="value" :key="keys">
                                 <p class="tips-item">{{ appBinPath(value, keys) }}</p>
@@ -104,8 +104,8 @@
 
             <section v-if="isTriggerContainer(container)">
                 <version-config :disabled="!editable" :params="container.params" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></version-config>
-                <build-params key="params" :disabled="!editable" :params="container.params" :addition-params="container.templateParams" setting-key="params" title="流水线变量" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
-                <build-params v-if="routeName === 'templateEdit'" key="templateParams" :disabled="!editable" :params="container.templateParams" :addition-params="container.params" setting-key="templateParams" title="模板常量" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
+                <build-params key="params" :disabled="!editable" :params="container.params" :addition-params="container.templateParams" setting-key="params" :title="$t('template.pipelineVar')" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
+                <build-params v-if="routeName === 'templateEdit'" key="templateParams" :disabled="!editable" :params="container.templateParams" :addition-params="container.params" setting-key="templateParams" :title="$t('template.templateConst')" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
             </section>
 
             <div>
