@@ -254,6 +254,7 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
+        logger.info("[$hostTag|$grayFlag] Start to build")
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
 
         val redisLock = DockerHostLock(redisOperation)
@@ -279,6 +280,7 @@ class DockerHostBuildService @Autowired constructor(
                 }
 
                 if (task.isEmpty()) {
+                    logger.info("Not task in queue")
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
@@ -304,6 +306,7 @@ class DockerHostBuildService @Autowired constructor(
                 }
 
                 if (task.isEmpty()) {
+                    logger.info("No task in queue")
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
