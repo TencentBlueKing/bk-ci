@@ -51,4 +51,6 @@ object CommonMessageCode {
     const val OAUTH_TOKEN_IS_INVALID = "2100005" // 无效的token，请先oauth认证
     const val PERMISSION_DENIED = "2100006" // 无权限{0}
     const val ERROR_SERVICE_NO_FOUND = "2100007" // "找不到任何有效的{0}服务提供者"
+    const val ERROR_SERVICE_INVOKE_FAILURE = "2100008" // "服务调用失败：{0},uniqueId={1}"
+    const val ERROR_INVALID_CONFIG = "2100009" // "配置不可用：{0},uniqueId={1}"
 }
