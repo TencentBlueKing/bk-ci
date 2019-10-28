@@ -2,6 +2,7 @@ package com.tencent.devops.lambda.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
@@ -106,7 +107,7 @@ class PipelineBuildService @Autowired constructor(
                     val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
                     if (projectInfo == null) {
                         logger.warn("[$projectId] Fail to get the project info")
-                        throw RuntimeException("Fail to get the project info")
+                        throw InvalidParamException("Fail to get the project info,projectId=$projectId", params = arrayOf("projectId=$projectId"))
                     }
                     return ProjectOrganize(
                         projectId = projectId,

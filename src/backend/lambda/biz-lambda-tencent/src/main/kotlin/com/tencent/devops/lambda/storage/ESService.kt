@@ -2,7 +2,7 @@ package com.tencent.devops.lambda.storage
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -69,13 +69,13 @@ class ESService @Autowired constructor(
         project: String
     ): BuildResultWithPage {
         if (offset < 0) {
-            throw OperationException("Offset不能小于0")
+            throw InvalidParamException("Offset cannot be less than 0", params = arrayOf("offset=$offset"))
         }
         if (limitOrigin > 100) {
-            throw OperationException("Limit不能大于100")
+            throw InvalidParamException("Limit cannot be bigger than 100", params = arrayOf("limitOrigin=$limitOrigin"))
         }
         if (project.isBlank()) {
-            throw OperationException("拉取数据的平台的项目不能为空，比如：王者荣耀，腾讯视频等")
+            throw InvalidParamException("project cannot be blank", params = arrayOf("project=$project"))
         }
         val limit = if (limitOrigin <= 0) {
             10
@@ -224,7 +224,7 @@ class ESService @Autowired constructor(
         var startDate = Timestamp(beginTime * 1000).toLocalDateTime()
         val endDate = Timestamp(end * 1000).toLocalDateTime()
         if (startDate.isAfter(endDate)) {
-            throw OperationException("开始时间晚于结束时间")
+            throw InvalidParamException("startDate cannot be after endDate", params = arrayOf("startDate=$startDate,endDate=$endDate"))
         }
         val result = HashSet<String>()
         while (!startDate.isAfter(endDate)) {
