@@ -39,7 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.external.pojo.GithubCheckRuns
 import com.tencent.devops.external.pojo.GithubCheckRunsResponse
-import com.tencent.devops.process.api.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.repository.pojo.AuthorizeResult

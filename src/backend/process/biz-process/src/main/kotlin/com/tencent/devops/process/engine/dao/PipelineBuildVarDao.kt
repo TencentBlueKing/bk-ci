@@ -39,6 +39,8 @@ class PipelineBuildVarDao @Autowired constructor() {
 
     fun save(
         dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
         buildId: String,
         name: String,
         value: Any
@@ -48,19 +50,22 @@ class PipelineBuildVarDao @Autowired constructor() {
             with(T_PIPELINE_BUILD_VAR) {
                 dslContext.insertInto(
                     this,
+                    PROJECT_ID,
+                    PIPELINE_ID,
                     BUILD_ID,
                     KEY,
                     VALUE
                 )
-                    .values(buildId, name, value.toString())
+                    .values(projectId, pipelineId, buildId, name, value.toString())
                     .onDuplicateKeyUpdate()
+                    .set(PROJECT_ID, projectId)
+                    .set(PIPELINE_ID, pipelineId)
                     .set(VALUE, value.toString())
                     .execute()
             }
 
         logger.info("save the buildVariable=$name $value, result=$count")
     }
-
     fun getVarRecords(
         dslContext: DSLContext,
         buildId: String,

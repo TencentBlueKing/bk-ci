@@ -28,15 +28,13 @@ import java.util.stream.Collectors
 
 @Service
 class WechatServiceImpl @Autowired constructor(
-        private val tofService: TOFService,
-        private val wechatNotifyDao: WechatNotifyDao,
-        private val rabbitTemplate: RabbitTemplate,
-        private val configuration: TOFConfiguration
+    private val tofService: TOFService,
+    private val wechatNotifyDao: WechatNotifyDao,
+    private val rabbitTemplate: RabbitTemplate,
+    private val configuration: TOFConfiguration
 ) : WechatService {
 
     private val logger = LoggerFactory.getLogger(WechatServiceImpl::class.java)
-
-
 
     override fun sendMqMsg(message: WechatNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, message)

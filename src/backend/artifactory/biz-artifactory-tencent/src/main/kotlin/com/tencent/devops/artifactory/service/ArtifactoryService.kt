@@ -48,11 +48,11 @@ class ArtifactoryService @Autowired constructor(
 ) {
 
     fun hasDownloadPermission(
-            userId: String,
-            projectId: String,
-            serviceCode: BkAuthServiceCode,
-            resourceType: AuthResourceType,
-            path: String
+        userId: String,
+        projectId: String,
+        serviceCode: BkAuthServiceCode,
+        resourceType: AuthResourceType,
+        path: String
     ): Boolean {
         return if (serviceCode == BkAuthServiceCode.PIPELINE && resourceType == AuthResourceType.PIPELINE_DEFAULT) {
             val pipelineId = pipelineService.getPipelineId(path)

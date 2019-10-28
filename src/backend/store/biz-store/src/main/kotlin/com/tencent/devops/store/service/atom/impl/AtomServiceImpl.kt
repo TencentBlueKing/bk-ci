@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.model.atom.tables.records.TAtomRecord
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.common.ClassifyDao

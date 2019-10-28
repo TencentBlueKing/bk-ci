@@ -59,4 +59,7 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NO_EDIT_PERMISSSION = "2105015" // 环境管理：没有节点编辑权限
     const val ERROR_NODE_NO_VIEW_PERMISSSION = "2105016" // 环境管理：没有节点查看权限
     const val ERROR_NODE_NO_DEL_PERMISSSION = "2105017" // 环境管理：没有节点删除权限
+    const val ERROR_NODE_NULL_BCSVM_PARAM = "2105018" // 环境管理：Invalid b c s V m Param
+    const val ERROR_NODE_INVALID_BCSVM_PARAM = "2105019" // 环境管理：Invalid b c s V m Param {0}
+    const val ERROR_ENV_EXPIRED_DAYS = "2105020" // 环境管理：有效期不能超过[{0}]天
 }

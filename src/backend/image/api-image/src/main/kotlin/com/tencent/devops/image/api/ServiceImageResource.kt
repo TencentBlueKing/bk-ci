@@ -24,7 +24,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceImageResource {
 
     @ApiOperation("获取项目Docker构建镜像列表")
-    @Path("/{projectId}/listDockerBuildImages")
+    @Path("/projects/{projectId}/listDockerBuildImages")
     @GET
     fun listDockerBuildImages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -36,7 +36,7 @@ interface ServiceImageResource {
     ): Result<List<DockerTag>>
 
     @ApiOperation("镜像仓库支持升级为构建镜像")
-    @Path("/{projectId}/setBuildImage")
+    @Path("/projects/{projectId}/setBuildImage")
     @POST
     fun setBuildImage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

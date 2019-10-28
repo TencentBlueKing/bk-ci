@@ -33,7 +33,7 @@ dependencies {
     compile project(":project:api-project")
     compile project(":process:api-process")
     compile project(":artifactory:api-artifactory-store")
-    compile project(":store:model-store")
+    compile project(":store:model-atom")
     testCompile project(":common:common-test")
 }
 

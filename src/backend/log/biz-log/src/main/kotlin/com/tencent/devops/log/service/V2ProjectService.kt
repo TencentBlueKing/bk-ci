@@ -8,7 +8,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.v2.IndexDaoV2
 import com.tencent.devops.log.util.IndexNameUtils.getIndexName
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

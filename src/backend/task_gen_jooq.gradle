@@ -32,6 +32,9 @@ dependencies {
 }
 
 def moduleName = name.split('-')[1]
+//if (moduleName == "store") {
+//    moduleName = "atom"
+//}
 def databaseName = moduleName
 def mysqlPrefix = System.getProperty("mysqlPrefix")
 if (mysqlPrefix != null && mysqlPrefix != "") {
@@ -93,5 +96,6 @@ jooq {
                 packageName = "com.tencent.devops.model.${moduleName}"
             }
         }
+        tasks.generateGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
     }
 }

@@ -12,9 +12,9 @@ import com.tencent.devops.plugin.codecc.pojo.BlueShieldRequest
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
-import com.tencent.devops.process.api.ServiceBuildResource
-import com.tencent.devops.process.api.ServiceMetadataResource
-import com.tencent.devops.process.api.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceMetadataResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Property
 import okhttp3.MediaType
 import okhttp3.Request

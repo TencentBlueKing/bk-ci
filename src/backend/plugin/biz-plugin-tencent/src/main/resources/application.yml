@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: plugin
+    desc: SODA plugin Service
+    version: 4.0.0
+    packageName: com.tencent.devops.plugin
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_plugin?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
+  redis:
+    database: 2
+    host: 10.125.48.80
+    password: itdev@db
+  rabbitmq:
+    virtual-host: soda4
+    username: soda
+    password: soda
+    addresses: 10.125.48.80:5672
+  cloud:
+    consul:
+      discovery:
+        tags: local
+
+queueConcurrency:
+  webhook: 2
+  modelAnalysis: 2
+
+server:
+  port: 8089
+gateway:
+  url: test.gw.open.oa.com
+
+mtp:
+  url: http://mtpt.oa.com
+
+enterprise:
+  url: "10.6.206.181,9.30.7.46,9.30.7.110"
+  env: dev
+
+jinGang:
+  url: http://rdm.kk.oa.com/realphone/landun_audit_new.php
+
+star:
+  url: http://star.ied.com/api/product
+
+plugin:
+  agent:
+    workerFile: /data1/work/pluginAgent.jar
+    workspace: /data/pluginAgent/
+
+codecc:
+  host: 10.123.24.177
+
+app:
+  code: bkci
+  secret: XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<
+
+tcm:
+  apps:
+    url: http://open.oa.com/component/compapi/tcm/get_app_by_user/
+  templates:
+    url: http://open.oa.com/component/compapi/tcm/get_templates/
+  startTask:
+    url: http://open.oa.com/component/compapi/tcm/start_task/
+  templateInfo:
+    url: http://open.oa.com/component/compapi/tcm/get_template_info/
+
+email:
+  url:
+    logo: http://dev.gw.open.oa.com/email/logo.png
+    title: http://dev.gw.open.oa.com/email/title.png

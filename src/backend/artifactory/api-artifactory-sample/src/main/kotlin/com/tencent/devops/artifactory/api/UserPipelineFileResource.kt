@@ -74,7 +74,6 @@ import javax.ws.rs.core.MediaType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 @Api(tags = ["PIPELINE_USER_ARTIFACTORY"], description = "流水线-构件")
 @Path("/user/artifactories")
 @Produces(MediaType.APPLICATION_JSON)

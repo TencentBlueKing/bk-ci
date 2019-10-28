@@ -30,12 +30,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import org.slf4j.LoggerFactory
 
 class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
-
 
     // 定时任务使用，现在停用
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
@@ -87,7 +85,6 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
             return objectMapper.readValue(responseContent)
         }
     }
-
 
     // 不再rollback,，现在停用
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Result<Boolean>? {

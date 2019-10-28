@@ -7,8 +7,8 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.process.api.UserBuildResource
-import com.tencent.devops.process.api.UserPipelineResource
+import com.tencent.devops.process.api.user.TXUserBuildResource
+import com.tencent.devops.process.api.user.TXUserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.Pipeline
@@ -301,7 +301,7 @@ class WechatWorkCallbackService @Autowired constructor(
         // 执行流水线的信息，获取启动参数
         try {
             // 正常获取到执行权限的时候
-            manualStartupInfo = client.get(UserBuildResource::class).manualStartupInfo(
+            manualStartupInfo = client.get(TXUserBuildResource::class).manualStartupInfo(
                     userName,
                     projectCode,
                     pipelineId
@@ -323,7 +323,7 @@ class WechatWorkCallbackService @Autowired constructor(
                 }
 
                 // 启动流水线
-                val manualStartResult = client.get(UserBuildResource::class).manualStartup(
+                val manualStartResult = client.get(TXUserBuildResource::class).manualStartup(
                         userName,
                         projectCode,
                         pipelineId,
@@ -422,7 +422,7 @@ class WechatWorkCallbackService @Autowired constructor(
         }
         val pipelineList = mutableListOf<Pipeline>()
         // 获取流水线列表
-        val userViewResult = client.get(UserPipelineResource::class).listViewPipelines(
+        val userViewResult = client.get(TXUserPipelineResource::class).listViewPipelines(
                 userName,
                 projectCode,
                 null,

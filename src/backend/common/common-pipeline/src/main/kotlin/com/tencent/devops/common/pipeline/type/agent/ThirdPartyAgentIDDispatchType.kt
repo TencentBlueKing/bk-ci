@@ -31,7 +31,8 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class ThirdPartyAgentIDDispatchType(
-    @JsonProperty("value") var displayName: String, var workspace: String?,
+    @JsonProperty("value") var displayName: String,
+    var workspace: String?,
     val agentType: AgentType = AgentType.NAME
 ) : DispatchType(
     displayName

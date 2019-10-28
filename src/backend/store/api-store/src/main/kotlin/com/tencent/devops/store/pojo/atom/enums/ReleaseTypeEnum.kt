@@ -30,25 +30,29 @@ enum class ReleaseTypeEnum(val releaseType: Int) {
     NEW(0), // 新上架
     INCOMPATIBILITY_UPGRADE(1), // 非兼容性升级
     COMPATIBILITY_UPGRADE(2), // 兼容性功能更新
-    COMPATIBILITY_FIX(3); // 兼容性问题修正
+    COMPATIBILITY_FIX(3), // 兼容性问题修正
+    CANCEL_RE_RELEASE(4); // 取消发布后重新发布
+
+    override fun toString() = releaseType.toString()
 
     companion object {
+
+        fun getReleaseTypeObj(releaseType: Int): ReleaseTypeEnum? {
+            values().forEach { enumObj ->
+                if (enumObj.releaseType == releaseType) {
+                    return enumObj
+                }
+            }
+            return null
+        }
+
         fun getReleaseType(releaseType: Int): String {
             return when (releaseType) {
                 0 -> NEW.name
                 1 -> INCOMPATIBILITY_UPGRADE.name
                 2 -> COMPATIBILITY_UPGRADE.name
                 3 -> COMPATIBILITY_FIX.name
-                else -> NEW.name
-            }
-        }
-
-        fun getReleaseTypeDesc(releaseType: Int): String {
-            return when (releaseType) {
-                0 -> "新上架"
-                1 -> "非兼容式升级"
-                2 -> "兼容式功能更新"
-                3 -> "兼容式问题修正"
+                4 -> CANCEL_RE_RELEASE.name
                 else -> NEW.name
             }
         }

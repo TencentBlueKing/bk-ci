@@ -36,7 +36,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         userId: String,
         bgName: String?,
         deptName: String?,
-        centerName: String
+        centerName: String?
     ): Result<List<ProjectVO>> {
         return Result(projectLocalService.getProjectByGroup(userId, bgName, deptName, centerName))
     }
@@ -57,5 +57,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun verifyUserProjectPermissionV2(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
         return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
+    }
+
+    //TODO
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+        return Result(projectLocalService.create(userId, "", projectCreateInfo))
     }
 }

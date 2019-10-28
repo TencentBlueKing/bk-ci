@@ -17,7 +17,7 @@ import com.tencent.devops.dispatch.utils.ShutdownVMAfterBuildUtils
 import com.tencent.devops.dispatch.utils.VMLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -29,16 +29,16 @@ import org.springframework.stereotype.Component
 
 @Component
 class VMDispatcher @Autowired constructor(
-        private val client: Client,
-        private val dslContext: DSLContext,
-        private val vmService: VMService,
-        private val pipelineBuildDao: PipelineBuildDao,
-        private val pipelineVMService: PipelineVMService,
-        private val redisOperation: RedisOperation,
-        private val rabbitTemplate: RabbitTemplate,
-        private val redisUtils: RedisUtils,
-        private val pipelineEventDispatcher: PipelineEventDispatcher,
-        private val vmAfterBuildUtils: ShutdownVMAfterBuildUtils
+    private val client: Client,
+    private val dslContext: DSLContext,
+    private val vmService: VMService,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineVMService: PipelineVMService,
+    private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate,
+    private val redisUtils: RedisUtils,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val vmAfterBuildUtils: ShutdownVMAfterBuildUtils
 ) : Dispatcher {
     override fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) =
         pipelineAgentStartupEvent.dispatchType is ESXiDispatchType

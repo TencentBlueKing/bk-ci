@@ -20,11 +20,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserScmResource {
 
-
-
     @ApiOperation("获取仓库最新版本")
     @GET
-    @Path("/projects/{projectId}/repositories/{repositoryId}/latestRevision")
+    //@Path("/projects/{projectId}/repositories/{repositoryId}/latestRevision")
+    @Path("/{projectId}/{repositoryId}/latestRevision")
     fun getLatestRevision(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -45,7 +44,8 @@ interface UserScmResource {
 
     @ApiOperation("列出仓库所有分支")
     @GET
-    @Path("/projects/{projectId}/repositories/{repositoryId}/branches")
+    //@Path("/projects/{projectId}/repositories/{repositoryId}/branches")
+    @Path("/{projectId}/{repositoryId}/branches")
     fun listBranches(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -60,7 +60,8 @@ interface UserScmResource {
 
     @ApiOperation("列出仓库所有分支")
     @GET
-    @Path("/projects/{projectId}/repositories/{repositoryId}/tags")
+    //@Path("/projects/{projectId}/repositories/{repositoryId}/tags")
+    @Path("/{projectId}/{repositoryId}/tags")
     fun listTags(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

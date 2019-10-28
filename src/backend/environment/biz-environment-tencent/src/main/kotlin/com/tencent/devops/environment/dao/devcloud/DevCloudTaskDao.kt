@@ -1,8 +1,8 @@
 package com.tencent.devops.environment.dao.devcloud
 
-import com.tencent.devops.environment.pojo.devcloud.ContainerType
-import com.tencent.devops.environment.pojo.devcloud.TaskAction
-import com.tencent.devops.environment.pojo.devcloud.TaskStatus
+import com.tencent.devops.common.environment.agent.pojo.devcloud.ContainerType
+import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskAction
+import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
 import com.tencent.devops.model.environment.tables.TDevCloudTask
 import com.tencent.devops.model.environment.tables.records.TDevCloudTaskRecord
 import org.jooq.DSLContext

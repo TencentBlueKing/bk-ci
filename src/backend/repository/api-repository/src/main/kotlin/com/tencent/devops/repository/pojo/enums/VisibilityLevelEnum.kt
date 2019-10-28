@@ -31,6 +31,16 @@ enum class VisibilityLevelEnum(val level: Int) {
     LOGIN_PUBLIC(10); // 登录用户开源
 
     companion object {
+
+        fun geVisibilityLevelObj(level: Int): VisibilityLevelEnum? {
+            values().forEach { enumObj ->
+                if (enumObj.level == level) {
+                    return enumObj
+                }
+            }
+            return null
+        }
+
         fun getVisibilityLevel(level: Int): String {
             return when (level) {
                 0 -> PRIVATE.name

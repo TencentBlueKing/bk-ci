@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.notify.api.OpNotifyResource
+import com.tencent.devops.notify.api.op.OpNotifyResource
 import com.tencent.devops.notify.pojo.*
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.RtxService

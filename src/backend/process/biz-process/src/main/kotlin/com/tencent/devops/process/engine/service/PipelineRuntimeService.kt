@@ -70,6 +70,9 @@ import com.tencent.devops.process.engine.atom.vm.DispatchVMShutdownTaskAtom
 import com.tencent.devops.process.engine.atom.vm.DispatchVMStartupTaskAtom
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -93,7 +96,10 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -129,6 +135,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 
 /**
  * 流水线运行时相关的服务
@@ -199,7 +207,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     /**
      * TODO 这个与下面的getBuildNoByByPair方法重复了，需要后面搞清楚前面接口是否不用了，重构一版
-     * @see #com.tencent.devops.process.api.ServicePipelineResource#getBuildNoByBuildIds
+     * @see #com.tencent.devops.process.api.service.ServicePipelineResource#getBuildNoByBuildIds
      */
     fun listBuildInfoByBuildIds(buildIds: Set<String>): MutableMap<String, Int> {
         val result = mutableMapOf<String, Int>()
@@ -414,34 +422,38 @@ class PipelineRuntimeService @Autowired constructor(
         endTimeEndTime: Long?,
         totalTimeMin: Long?,
         totalTimeMax: Long?,
-        remark: String?
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
-            dslContext,
-            projectId,
-            pipelineId,
-            materialAlias,
-            materialUrl,
-            materialBranch,
-            materialCommitId,
-            materialCommitMessage,
-            status,
-            trigger,
-            queueTimeStartTime,
-            queueTimeEndTime,
-            startTimeStartTime,
-            startTimeEndTime,
-            endTimeStartTime,
-            endTimeEndTime,
-            totalTimeMin,
-            totalTimeMax,
-            remark,
-            offset,
-            if (limit < 0) {
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            offset = offset,
+            limit = if (limit < 0) {
                 1000
-            } else limit
+            } else limit,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -949,7 +961,14 @@ class PipelineRuntimeService @Autowired constructor(
                     buildStatus = BuildStatus.QUEUE
                 )
                 // 写入版本号
-                pipelineBuildVarDao.save(transactionContext, buildId, PIPELINE_BUILD_NUM, buildNum)
+                pipelineBuildVarDao.save(
+                    dslContext = transactionContext,
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildId = buildId,
+                    name = PIPELINE_BUILD_NUM,
+                    value = buildNum
+                )
             }
 
             // 保存参数
@@ -1189,6 +1208,51 @@ class PipelineRuntimeService @Autowired constructor(
                         val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
                         taskParam[BS_MANUAL_ACTION] = manualAction
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
+                        val result = pipelineBuildTaskDao.updateTaskParam(
+                            dslContext,
+                            buildId,
+                            taskId,
+                            JsonUtil.toJson(taskParam)
+                        )
+                        if (result != 1) {
+                            logger.info("[{}]|taskId={}| update task param failed", buildId, taskId)
+                        }
+                        pipelineEventDispatcher.dispatch(
+                            PipelineBuildAtomTaskEvent(
+                                javaClass.simpleName,
+                                projectId, pipelineId, starter, buildId, stageId,
+                                containerId, containerType, taskId,
+                                taskParam, ActionType.REFRESH
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun manualDealBuildTask(buildId: String, taskId: String, userId: String, params: ReviewParam) {
+        dslContext.transaction { configuration ->
+            val transContext = DSL.using(configuration)
+            val taskRecord = pipelineBuildTaskDao.get(transContext, buildId, taskId)
+            if (taskRecord != null) {
+                with(taskRecord) {
+                    if (BuildStatus.isRunning(BuildStatus.values()[status])) {
+                        val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
+                        taskParam[BS_MANUAL_ACTION] = params.status.toString()
+                        taskParam[BS_MANUAL_ACTION_USERID] = userId
+                        taskParam[BS_MANUAL_ACTION_DESC] = params.desc ?: ""
+                        taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params)
+                        taskParam[BS_MANUAL_ACTION_SUGGEST] = params.suggest ?: ""
+                        val result = pipelineBuildTaskDao.updateTaskParam(
+                            dslContext,
+                            buildId,
+                            taskId,
+                            JsonUtil.toJson(taskParam)
+                        )
+                        if (result != 1) {
+                            logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
+                        }
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(
                                 javaClass.simpleName,
@@ -1235,8 +1299,21 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun setVariable(buildId: String, varName: String, varValue: Any) {
-        pipelineBuildVarDao.save(dslContext, buildId, varName, varValue)
+    fun setVariable(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        varValue: Any
+    ) {
+        pipelineBuildVarDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            name = varName,
+            value = varValue
+        )
     }
 
     fun batchSetVariable(buildId: String, variables: Map<String, Any>) {
@@ -1589,28 +1666,32 @@ class PipelineRuntimeService @Autowired constructor(
         endTimeEndTime: Long?,
         totalTimeMin: Long?,
         totalTimeMax: Long?,
-        remark: String?
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
     ): Int {
         return pipelineBuildDao.count(
-            dslContext,
-            projectId,
-            pipelineId,
-            materialAlias,
-            materialUrl,
-            materialBranch,
-            materialCommitId,
-            materialCommitMessage,
-            status,
-            trigger,
-            queueTimeStartTime,
-            queueTimeEndTime,
-            startTimeStartTime,
-            startTimeEndTime,
-            endTimeStartTime,
-            endTimeEndTime,
-            totalTimeMin,
-            totalTimeMax,
-            remark
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
         )
     }
 
@@ -1634,5 +1715,50 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildIdbyBuildNo(projectId: String, pipelineId: String, buildNo: Int): String? {
         return pipelineBuildDao.getBuildByBuildNo(dslContext, projectId, pipelineId, buildNo)?.buildId
+    }
+
+    fun getLatestBuild(
+        projectId: String,
+        pipelineIds: List<String>
+    ): Map<String, PipelineLatestBuild> {
+        val records = getBuildSummaryRecords(projectId, ChannelCode.BS, pipelineIds)
+        val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val ret = mutableMapOf<String, PipelineLatestBuild>()
+        records.forEach {
+            val startTime = it["LATEST_START_TIME"] as? TemporalAccessor
+            val endTime = it["LATEST_END_TIME"] as? TemporalAccessor
+            val status = it["LATEST_STATUS"] as? Int
+            val pipelineId = it["PIPELINE_ID"] as String
+            ret[pipelineId] = PipelineLatestBuild(
+                buildId = it["LATEST_BUILD_ID"] as String? ?: "",
+                startUser = it["LATEST_START_USER"] as String? ?: "",
+                startTime = if (startTime != null) df.format(startTime) else "",
+                endTime = if (endTime != null) df.format(endTime) else "",
+                status = if (status != null) BuildStatus.values()[status].name else null
+            )
+        }
+
+        return ret
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
+        val record = buildDetailDao.get(dslContext, buildId)
+        if (record == null) {
+            logger.warn("build not exists, buildId: $buildId")
+        }
+        val model = JsonUtil.getObjectMapper().readValue(record!!.model, Model::class.java)
+        model.stages.forEach s@{ stage ->
+            stage.containers.forEach c@{ container ->
+                if (container is VMBuildContainer && container.showBuildResource == true && container.id == vmSeqId) {
+                    container.name = vmInfo.name
+                    buildDetailDao.updateModel(
+                        dslContext = dslContext,
+                        buildId = buildId,
+                        model = JsonUtil.toJson(model)
+                    )
+                    return
+                }
+            }
+        }
     }
 }

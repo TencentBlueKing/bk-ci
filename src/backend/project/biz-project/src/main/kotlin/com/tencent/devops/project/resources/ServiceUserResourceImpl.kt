@@ -27,7 +27,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.ServiceUserResource
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.UserCacheService

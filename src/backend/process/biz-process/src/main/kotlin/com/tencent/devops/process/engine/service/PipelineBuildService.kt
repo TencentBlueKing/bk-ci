@@ -34,21 +34,28 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.coverity.CodeccReport
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.utils.CoverityUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -67,8 +74,13 @@ import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
+import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -99,6 +111,7 @@ import javax.ws.rs.core.UriBuilder
  */
 @Service
 class PipelineBuildService(
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -576,7 +589,7 @@ class PipelineBuildService(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        action: ManualReviewAction,
+        params: ReviewParam,
         channelCode: ChannelCode,
         checkPermission: Boolean = true
     ) {
@@ -597,22 +610,64 @@ class PipelineBuildService(
                         // Replace the review user with environment
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(","))
+                            reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }.toList())
                         }
 //                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
-                            logger.warn("User does not have the permission to review, userId:($userId)")
+                            logger.warn("User does not have the permission to review, userId:($userId) - (${el.reviewUsers}|$runtimeVars) - ($reviewUser)")
                             throw PermissionForbiddenException("用户（$userId) 无权限审核流水线($pipelineId)")
                         }
                     }
                 }
             }
         }
-        logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")
-        pipelineRuntimeService.manualDealBuildTask(buildId, elementId, userId, action)
-        if (action == ManualReviewAction.ABORT) {
+        logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|params=$params")
+        pipelineRuntimeService.manualDealBuildTask(buildId, elementId, userId, params)
+        if (params.status == ManualReviewAction.ABORT) {
             buildDetailService.updateBuildCancelUser(buildId, userId)
         }
+    }
+
+    fun goToReview(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String): ReviewParam {
+
+        pipelineRuntimeService.getBuildInfo(buildId)
+            ?: throw NotFoundException("流水线构建不存在")
+
+        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw NotFoundException("流水线模型编排不存在")
+
+        val runtimeVars = pipelineRuntimeService.getAllVariable(buildId)
+        model.stages.forEachIndexed { index, s ->
+            if (index == 0) {
+                return@forEachIndexed
+            }
+            s.containers.forEach { cc ->
+                cc.elements.forEach { el ->
+                    if (el is ManualReviewUserTaskElement && el.id == elementId) {
+                        // Replace the review user with environment
+                        val reviewUser = mutableListOf<String>()
+                        el.reviewUsers.forEach { user ->
+                            reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }.toList())
+                        }
+                        el.params.forEach { param ->
+                            param.value = EnvUtils.parseEnv(param.value ?: "", runtimeVars)
+                        }
+//                        reviewParam.params.addAll()
+                        el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
+//                        reviewParam.desc = el.desc
+//                        elementName = el.name
+                        if (!reviewUser.contains(userId)) {
+                            logger.warn("User does not have the permission to review, userId:($userId) - (${el.reviewUsers}|$runtimeVars) - ($reviewUser)")
+                            throw PermissionForbiddenException("用户（$userId) 无权限审核流水线($pipelineId)")
+                        }
+                        val reviewParam =
+                            ReviewParam(projectId, pipelineId, buildId, reviewUser, null, el.desc, "", el.params)
+                        logger.info("reviewParam : $reviewParam")
+                        return reviewParam
+                    }
+                }
+            }
+        }
+        return ReviewParam()
     }
 
     fun serviceShutdown(projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode) {
@@ -763,6 +818,57 @@ class PipelineBuildService(
         return buildHistories[0]
     }
 
+    fun getBuildStatusWithVars(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean
+    ): BuildHistoryWithVars {
+        if (checkPermission) {
+            checkPermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId)构建状态"
+            )
+        }
+
+        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
+
+        if (buildHistories.isEmpty()) {
+            throw NotFoundException("构建不存在")
+        }
+        val buildHistory = buildHistories[0]
+        val variables = pipelineRuntimeService.getAllVariable(buildId)
+        return BuildHistoryWithVars(
+            id = buildHistory.id,
+            userId = buildHistory.userId,
+            trigger = buildHistory.trigger,
+            buildNum = buildHistory.buildNum,
+            pipelineVersion = buildHistory.pipelineVersion,
+            startTime = buildHistory.startTime,
+            endTime = buildHistory.endTime,
+            status = buildHistory.status,
+            deleteReason = buildHistory.deleteReason,
+            currentTimestamp = buildHistory.currentTimestamp,
+            isMobileStart = buildHistory.isMobileStart,
+            material = buildHistory.material,
+            queueTime = buildHistory.queueTime,
+            artifactList = buildHistory.artifactList,
+            remark = buildHistory.remark,
+            totalTime = buildHistory.totalTime,
+            executeTime = buildHistory.executeTime,
+            buildParameters = buildHistory.buildParameters,
+            webHookType = buildHistory.webHookType,
+            startType = buildHistory.startType,
+            recommendVersion = buildHistory.recommendVersion,
+            variables = variables
+        )
+    }
+
     fun getBuildVars(
         userId: String,
         projectId: String,
@@ -903,7 +1009,9 @@ class PipelineBuildService(
         endTimeEndTime: Long?,
         totalTimeMin: Long?,
         totalTimeMax: Long?,
-        remark: String?
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 1000
@@ -943,8 +1051,10 @@ class PipelineBuildService(
                 endTimeEndTime,
                 totalTimeMin,
                 totalTimeMax,
-                remark
-            )
+                remark,
+                buildNoStart,
+                buildNoEnd)
+
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
                 projectId,
                 pipelineId,
@@ -965,8 +1075,9 @@ class PipelineBuildService(
                 endTimeEndTime,
                 totalTimeMin,
                 totalTimeMax,
-                remark
-            )
+                remark,
+                buildNoStart,
+                buildNoEnd)
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
             val count = newTotalCount + 0L
@@ -1276,5 +1387,112 @@ class PipelineBuildService(
         } finally {
             if (readyToBuildPipelineInfo.channelCode !in NO_LIMIT_CHANNEL) redisLock.unlock()
         }
+    }
+
+    fun getPipelineLatestBuildByIds(projectId: String, pipelineIds: List<String>): Map<String, PipelineLatestBuild> {
+        logger.info("getPipelineLatestBuildByIds: $projectId | $pipelineIds")
+
+        return pipelineRuntimeService.getLatestBuild(projectId, pipelineIds)
+    }
+
+    fun workerBuildFinish(
+        projectCode: String,
+        pipelineId: String, /* pipelineId在agent请求的数据有值前不可用 */
+        buildId: String,
+        vmSeqId: String,
+        simpleResult: SimpleResult
+    ) {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
+        if (BuildStatus.isFinish(buildInfo.status)) {
+            logger.info("[$buildId]|The build is ${buildInfo.status}")
+            return
+        }
+
+        logger.error("worker build($buildId|$vmSeqId|${simpleResult.success}) is finish")
+        val errorMsg = if (simpleResult.success) {
+            "构建任务对应的Agent进程已退出"
+        } else {
+            "构建任务对应的Agent进程已退出: ${simpleResult.message}"
+        }
+        LogUtils.addRedLine(rabbitTemplate, buildId, errorMsg, "", 1)
+
+        var stageId: String? = null
+        var containerType = "vmBuild"
+        val modelDetail = buildDetailService.get(buildId) ?: return
+        run outer@{
+            modelDetail.model.stages.forEach { stage ->
+                stage.containers.forEach { c ->
+                    if (c.id == vmSeqId) {
+                        stageId = stage.id!!
+                        containerType = c.getClassType()
+                        return@outer
+                    }
+                }
+            }
+        }
+
+        if (stageId.isNullOrBlank()) {
+            logger.warn("[$buildId]|worker build finish|can not find stage")
+            return
+        }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildContainerEvent(
+                source = "worker_build_finish",
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId,
+                userId = buildInfo.startUser,
+                buildId = buildId,
+                stageId = stageId!!,
+                containerId = vmSeqId,
+                containerType = containerType,
+                actionType = ActionType.TERMINATE
+            )
+        )
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
+        pipelineRuntimeService.saveBuildVmInfo(projectId, pipelineId, buildId, vmSeqId, vmInfo)
+    }
+
+    fun getCodeccReport(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        checkPermission: Boolean = true
+    ): CodeccReport {
+
+        if (checkPermission) {
+            checkPermission(
+                userId,
+                projectId,
+                pipelineId,
+                AuthPermission.VIEW,
+                "用户（$userId) 无权限获取流水线($pipelineId)Codecc报告"
+            )
+        }
+
+        val model = pipelineRepositoryService.getModel(pipelineId)
+            ?: throw NotFoundException("流水线不存在")
+
+        try {
+            model.stages.forEach { s ->
+                s.containers.forEach { c ->
+                    if (c is VMBuildContainer) {
+                        c.elements.forEach { e ->
+                            if (e is LinuxPaasCodeCCScriptElement) {
+                                if (e.codeCCTaskId != null) {
+                                    return CoverityUtils.getReport(projectId, pipelineId, e.codeCCTaskId!!, userId)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the model($pipelineId)", e)
+            throw RuntimeException("Fail to parse the mode of pipeline")
+        }
+        throw OperationException("此流水线没有包含代码扫描原子")
     }
 }

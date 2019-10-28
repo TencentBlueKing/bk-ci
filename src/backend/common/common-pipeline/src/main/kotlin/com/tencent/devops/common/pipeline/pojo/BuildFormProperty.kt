@@ -36,15 +36,15 @@ data class BuildFormProperty(
     @ApiModelProperty("元素ID-标识符", required = true)
     val id: String,
     @ApiModelProperty("是否必须", required = true)
-    val required: Boolean,
+    var required: Boolean,
     @ApiModelProperty("元素类型", required = true)
     val type: BuildFormPropertyType,
     @ApiModelProperty("默认值", required = true)
     var defaultValue: Any,
     @ApiModelProperty("下拉框列表", required = false)
-    val options: List<BuildFormValue>?,
+    var options: List<BuildFormValue>?,
     @ApiModelProperty("描述", required = false)
-    val desc: String?,
+    var desc: String?,
 
     // 针对 SVN_TAG 新增字段
     @ApiModelProperty("repoHashId", required = false)
@@ -54,5 +54,10 @@ data class BuildFormProperty(
     @ApiModelProperty("代码库类型下拉", required = false)
     val scmType: ScmType?,
     @ApiModelProperty("构建机类型下拉", required = false)
-    val containerType: BuildContainerType?
+    val containerType: BuildContainerType?,
+
+    @ApiModelProperty("自定义仓库通配符", required = false)
+    val glob: String?,
+    @ApiModelProperty("文件元数据", required = false)
+    val properties: Map<String, String>?
 )

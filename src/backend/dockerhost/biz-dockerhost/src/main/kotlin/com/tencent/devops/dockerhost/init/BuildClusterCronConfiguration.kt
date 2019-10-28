@@ -26,7 +26,6 @@
 
 package com.tencent.devops.dockerhost.init
 
-
 import com.tencent.devops.dockerhost.cron.Runner
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,8 +65,6 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
         )
     }
 
-
-
     @Autowired
     private lateinit var runner: Runner
 
@@ -75,5 +72,4 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
     fun runner(dockerHostBuildService: DockerHostBuildService): Runner {
         return Runner(dockerHostBuildService)
     }
-
 }

@@ -298,13 +298,14 @@ class PipelineInfoDao {
     fun listInfoByPipelineIds(
         dslContext: DSLContext,
         projectId: String,
-        pipelineIds: Set<String>
+        pipelineIds: Set<String>,
+        filterDelete: Boolean = true
     ): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.`in`(pipelineIds))
-                .and(DELETE.eq(false))
+            if (filterDelete) query.and(DELETE.eq(false))
             query.fetch()
         }
     }

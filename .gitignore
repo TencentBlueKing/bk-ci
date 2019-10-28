@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.gradle
 bin/
 docs/node_modules
 docs/_book

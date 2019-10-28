@@ -27,7 +27,7 @@ config = {
     allow_hosts = {
       __BKCI_ALLOW_HOST__
     },
-    allow_headers = "Authorization,Content-Type,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID",
+    allow_headers = "Authorization,Content-Type,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID",
     ns = {
       ip = {
         "127.0.0.1"

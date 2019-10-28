@@ -3,7 +3,8 @@ package com.tencent.devops.environment.service
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.environment.client.DevCloudClient
+import com.tencent.devops.common.environment.agent.client.DevCloudClient
+import com.tencent.devops.common.environment.agent.pojo.devcloud.ContainerType
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.StaticData
@@ -11,9 +12,8 @@ import com.tencent.devops.environment.dao.devcloud.DevCloudTaskDao
 import com.tencent.devops.environment.pojo.DevCloudImageParam
 import com.tencent.devops.environment.pojo.DevCloudModel
 import com.tencent.devops.environment.pojo.DevCloudVmParam
-import com.tencent.devops.environment.pojo.devcloud.ContainerType
-import com.tencent.devops.environment.pojo.devcloud.TaskAction
-import com.tencent.devops.environment.pojo.devcloud.TaskStatus
+import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskAction
+import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord

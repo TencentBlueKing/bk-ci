@@ -295,7 +295,6 @@ class ThirdPartyAgentService @Autowired constructor(
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
 
-
     private fun finishBuild(
         record: TDispatchThirdpartyAgentBuildRecord,
         success: Boolean

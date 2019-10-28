@@ -21,7 +21,8 @@ interface ServiceJfrogResource {
 
     @ApiOperation("根据流水线id获取流水线名字")
     @POST
-    @Path("/projects/{projectId}/getPipelineNames")
+    //@Path("/projects/{projectId}/getPipelineNames")
+    @Path("/{projectId}/getPipelineNames")
     fun getPipelineNameByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -32,7 +33,8 @@ interface ServiceJfrogResource {
 
     @ApiOperation("根据构建id获取构建号")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/getBuildNos")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/getBuildNos")
+    @Path("/{projectId}/{pipelineId}/getBuildNos")
     fun getBuildNoByBuildIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -46,7 +48,8 @@ interface ServiceJfrogResource {
 
     @ApiOperation("根据流水线id和构建id对，获取build num")
     @POST
-    @Path("/projects/{projectId}/getBuildNoByBuildIds")
+    //@Path("/projects/{projectId}/getBuildNoByBuildIds")
+    @Path("/{projectId}/getBuildNoByBuildIds")
     fun getBuildNoByBuildIds(
         @ApiParam("项目id", required = true)
         buildIds: Set<String>
@@ -54,7 +57,8 @@ interface ServiceJfrogResource {
 
     @ApiOperation("获取时间段内有构建产物的构建数量")
     @GET
-    @Path("/countArtifactoryByTime")
+    //@Path("/countArtifactoryByTime")
+    @Path("/getArtifactoryByTime/count")
     fun getArtifactoryCountFromHistory(
         @ApiParam("起始时间", required = true)
         @QueryParam("startTime")

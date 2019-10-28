@@ -79,5 +79,7 @@ data class AtomRespItem(
     @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
     val buildLessRunFlag: Boolean?,
     @ApiModelProperty("权重（数值越大代表权重越高）")
-    val weight: Int?
+    val weight: Int?,
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean?
 )

@@ -19,7 +19,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT_tx"], description = "蓝盾项目列表接口")
+@Api(tags = ["SERVICE_PROJECT_TX"], description = "蓝盾项目列表接口")
 @Path("/service/projects/tx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -49,7 +49,7 @@ interface ServiceTxProjectResource {
         deptName: String?,
         @ApiParam("centerName", required = false)
         @QueryParam("centerName")
-        centerName: String
+        centerName: String?
     ): Result<List<ProjectVO>>
 
 
@@ -88,15 +88,15 @@ interface ServiceTxProjectResource {
     @Path("/projectCode/{projectCode}/users/{userId}/verify")
     @ApiOperation(" 校验用户是否项目成员")
     fun verifyUserProjectPermissionV2(
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目代码", required = true)
-            @PathParam("projectCode")
-            projectCode: String,
-            @ApiParam("用户ID", required = true)
-            @PathParam("userId")
-            userId: String
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
     ): Result<Boolean>
 
 
@@ -105,12 +105,22 @@ interface ServiceTxProjectResource {
     @Path("/preBuild/userProject/userId/{userId}")
     @ApiOperation("查询用户项目")
     fun getPreUserProjectV2(
-            @ApiParam("用户ID", required = true)
-            @PathParam("userId")
-            userId: String,
-            @ApiParam("accessToken", required = true)
-            @QueryParam("accessToken")
-            accessToken: String
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String,
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String
     ): Result<ProjectVO?>
 
+    @POST
+    @Path("/newProject")
+    @ApiOperation("创建项目")
+    fun create(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+            userId: String,
+            @ApiParam(value = "项目信息", required = true)
+            projectCreateInfo: ProjectCreateInfo
+    ): Result<String>
 }

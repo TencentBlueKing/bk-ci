@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import javax.annotation.PostConstruct
 
-class  JerseySwaggerConfig : JerseyConfig() {
+class JerseySwaggerConfig : JerseyConfig() {
 
     @Value("\${spring.application.desc:#{null}}")
     private val applicationDesc: String? = null
@@ -53,7 +53,8 @@ class  JerseySwaggerConfig : JerseyConfig() {
     private val logger = LoggerFactory.getLogger(JerseySwaggerConfig::class.java)
     @PostConstruct
     fun init() {
-        logger.info("configSwagger-start")
+        logger.info("[$service|$applicationDesc|$applicationVersion|$swaggerAppendName|$packageName]" +
+            " configSwagger-start")
         configSwagger()
         register(SwaggerSerializers::class.java)
         register(ApiListingResource::class.java)

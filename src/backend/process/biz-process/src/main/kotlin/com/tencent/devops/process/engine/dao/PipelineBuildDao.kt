@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.ErrorType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -327,21 +328,24 @@ class PipelineBuildDao {
             null
         } else {
             BuildInfo(
-                t.projectId,
-                t.pipelineId,
-                t.buildId,
-                t.version,
-                t.buildNum,
-                t.trigger,
-                BuildStatus.values()[t.status],
-                t.startUser,
-                t.startTime?.timestampmilli() ?: 0L,
-                t.endTime?.timestampmilli() ?: 0L,
-                t.taskCount,
-                t.firstTaskId,
-                t.parentBuildId,
-                t.parentTaskId,
-                ChannelCode.valueOf(t.channel)
+                projectId = t.projectId,
+                pipelineId = t.pipelineId,
+                buildId = t.buildId,
+                version = t.version,
+                buildNum = t.buildNum,
+                trigger = t.trigger,
+                status = BuildStatus.values()[t.status],
+                startUser = t.startUser,
+                startTime = t.startTime?.timestampmilli() ?: 0L,
+                endTime = t.endTime?.timestampmilli() ?: 0L,
+                taskCount = t.taskCount,
+                firstTaskId = t.firstTaskId,
+                parentBuildId = t.parentBuildId,
+                parentTaskId = t.parentTaskId,
+                channelCode = ChannelCode.valueOf(t.channel),
+                errorType = if (t.errorType == null) null else ErrorType.values()[t.errorType],
+                errorCode = t.errorCode,
+                errorMsg = t.errorMsg
             )
         }
     }
@@ -374,7 +378,9 @@ class PipelineBuildDao {
         endTimeEndTime: Long?,
         totalTimeMin: Long?,
         totalTimeMax: Long?,
-        remark: String?
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectCount().from(this)
@@ -456,9 +462,16 @@ class PipelineBuildDao {
             if (remark != null && remark.isNotEmpty()) {
                 where.and(REMARK.like("%$remark%"))
             }
+            if (buildNoStart != null && buildNoStart > 0) {
+                where.and(BUILD_NUM.ge(buildNoStart))
+            }
+            if (buildNoEnd != null && buildNoEnd > 0) {
+                where.and(BUILD_NUM.le(buildNoEnd))
+            }
             where.fetchOne(0, Int::class.java)
         }
     }
+
 
     fun listPipelineBuildInfo(
         dslContext: DSLContext,
@@ -481,7 +494,9 @@ class PipelineBuildDao {
         totalTimeMax: Long?,
         remark: String?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this)
@@ -563,6 +578,12 @@ class PipelineBuildDao {
             if (remark != null && remark.isNotEmpty()) {
                 where.and(REMARK.like("%$remark%"))
             }
+            if (buildNoStart != null && buildNoStart > 0) {
+                where.and(BUILD_NUM.ge(buildNoStart))
+            }
+            if (buildNoEnd != null && buildNoEnd > 0) {
+                where.and(BUILD_NUM.le(buildNoEnd))
+            }
             where.orderBy(BUILD_NUM.desc())
                 .limit(offset, limit)
                 .fetch()
@@ -632,6 +653,17 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_NUM.eq(buildNo))
                 .fetchAny()
+        }
+    }
+
+    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectCount().from(this)
+                .where(ARTIFACT_INFO.isNotNull)
+                .and(ARTIFACT_INFO.notEqual("[ ]"))
+                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
+                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
+                .fetchOne(0, Int::class.java)
         }
     }
 }

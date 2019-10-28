@@ -31,11 +31,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.TemplateDetailInfo
+import com.tencent.devops.process.pojo.template.TemplateListModel
+import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
@@ -73,6 +77,18 @@ interface ServiceTemplateResource {
         updateMarketTemplateRequest: AddMarketTemplateRequest
     ): Result<Boolean>
 
+    @ApiOperation("查询模板详情")
+    @GET
+    @Path("/store/templateCodes/{templateCode}")
+    fun getTemplateDetailInfo(
+        @ApiParam("模板代码", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @ApiParam("是否为公共模板", required = true)
+        @QueryParam("publicFlag")
+        publicFlag: Boolean
+    ): Result<TemplateDetailInfo?>
+
     @ApiOperation("更新模版是否已关联市场标识")
     @PUT
     @Path("/{templateId}/store/storeFlag")
@@ -86,6 +102,57 @@ interface ServiceTemplateResource {
         @ApiParam("是否已关联市场标识", required = true)
         storeFlag: Boolean
     ): Result<Boolean>
+
+    @ApiOperation("创建流水线-获取模版列表")
+    @GET
+    @Path("/projects/{projectId}/allTemplates")
+    fun listAllTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模版类型", required = false)
+        @QueryParam("templateType")
+        templateType: TemplateType?
+    ): Result<OptionalTemplateList>
+
+    @ApiOperation("获取列表流水线模板")
+    @GET
+    @Path("/projects/{projectId}/templates/{templateId}")
+    fun getTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam("模板版本", required = false)
+        @QueryParam("version")
+        version: Long?
+    ): Result<TemplateModelDetail>
+
+    @ApiOperation("模版管理-获取模版列表")
+    @GET
+    @Path("/projects/{projectId}/templates")
+    fun listTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模版类型", required = false)
+        @QueryParam("templateType")
+        templateType: TemplateType?,
+        @ApiParam("是否已关联到store", required = false)
+        @QueryParam("storeFlag")
+        storeFlag: Boolean?
+    ): Result<TemplateListModel>
 
     @ApiOperation("根据id获取模版列表")
     @POST
