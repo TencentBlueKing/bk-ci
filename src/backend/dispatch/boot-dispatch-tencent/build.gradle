@@ -25,9 +25,7 @@
  */
 
 dependencies {
-    compile project(":dispatch:biz-dispatch-docker")
-    compile project(":dispatch:biz-dispatch-tstack")
-    compile project(":dispatch:biz-dispatch")
+    compile project(":dispatch:biz-dispatch-tencent")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

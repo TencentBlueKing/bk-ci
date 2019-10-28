@@ -22,7 +22,8 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineResource {
     @ApiOperation("获取有目录权限")
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/hasPermission")
+    //@Path("/projects/{projectId}/pipelines/{pipelineId}/hasPermission")
+    @Path("/{projectId}/{pipelineId}/hasPermission")
     @GET
     fun hasPermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

@@ -53,11 +53,12 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
                 Runnable { runner.startBuild() }, 5000, 60 * 1000
             )
         )
-//        scheduledTaskRegistrar.addFixedRateTask(
-//            IntervalTask(
-//                Runnable { runner.endBuild() }, 20 * 1000, 120 * 1000
-//            )
-//        )
+
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                Runnable { runner.endBuild() }, 20 * 1000, 120 * 1000
+            )
+        )
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { runner.clearExitedContainer() }, 3600 * 1000, 300 * 1000

@@ -25,7 +25,8 @@ import javax.ws.rs.core.MediaType
 interface BuildCustomDirResource {
 
     @ApiOperation("列举当前根目录下的所有文件")
-    @Path("/projects/{projectId}/list")
+    //@Path("/projects/{projectId}/list")
+    @Path("/{projectId}/list")
     @GET
     fun list(
         @ApiParam("项目ID", required = true)
@@ -37,7 +38,8 @@ interface BuildCustomDirResource {
     ): List<FileInfo>
 
     @ApiOperation("新建文件夹")
-    @Path("/projects/{projectId}/dir")
+    //@Path("/projects/{projectId}/dir")
+    @Path("/{projectId}/dir")
     @POST
     fun mkdir(
         @ApiParam("项目ID", required = true)
@@ -49,7 +51,8 @@ interface BuildCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("重命名")
-    @Path("/projects/{projectId}/rename")
+    //@Path("/projects/{projectId}/rename")
+    @Path("/{projectId}/rename")
     @POST
     fun rename(
         @ApiParam("项目ID", required = true)
@@ -60,7 +63,8 @@ interface BuildCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("复制文件")
-    @Path("/projects/{projectId}/copy")
+    //@Path("/projects/{projectId}/copy")
+    @Path("/{projectId}/copy")
     @POST
     fun copy(
         @ApiParam("项目ID", required = true)
@@ -71,7 +75,8 @@ interface BuildCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("移动文件")
-    @Path("/projects/{projectId}/move")
+    //@Path("/projects/{projectId}/move")
+    @Path("/{projectId}/move")
     @POST
     fun move(
         @ApiParam("项目ID", required = true)
@@ -82,7 +87,8 @@ interface BuildCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("删除文件")
-    @Path("/projects/{projectId}/delete")
+    //@Path("/projects/{projectId}/delete")
+    @Path("/{projectId}/")
     @DELETE
     fun delete(
         @ApiParam("项目ID", required = true)

@@ -26,7 +26,7 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.artifactory.api.ServiceFileResource
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum.WEB_SHOW
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
