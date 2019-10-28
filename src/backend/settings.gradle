@@ -259,9 +259,9 @@ include ":support:model-support-tencent"
 
 include ":notify"
 include ":notify:api-notify"
-include ":notify:biz-notify-blueking"
+include ":notify:biz-notify-tencent"
 include ":notify:model-notify"
-include ":notify:boot-notify-blueking"
+include ":notify:boot-notify-tencent"
 include ":notify"
 
 include ":external"
