@@ -7,23 +7,23 @@
                 <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
                     <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
                     <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
-                    <span>{{ $t('store.form.gitCode') }}</span>
+                    <span>工蜂</span>
                 </h5>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
-                    <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('store.form.cooperation') }]" @click="cooperation">
+                    <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== '协作' }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
                         <span>{{approveMsg}}</span>
                     </h5>
                 </template>
             </h3>
             <h5 class="detail-info">
-                <span>{{ $t('store.form.publisher') }}：</span><span>{{detail.publisher || '-'}}</span>
+                <span>发布者：</span><span>{{detail.publisher || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>{{ $t('store.form.version') }}：</span><span>{{detail.version || '-'}}</span>
+                <span>版本：</span><span>{{detail.version || '-'}}</span>
             </h5>
-            <h5 class="detail-info detail-score" :title="`${$t('store.form.averageScore')}${detail.score || 0}${$t('store.form.star')}（${$t('store.form.totalFiveStars')}），${detail.totalNum || 0}${$t('store.form.commentUsers')}`">
-                <span>{{ $t('store.score') }}：</span>
+            <h5 class="detail-info detail-score" :title="`平均评分为${detail.score || 0}星（总分为5星），${detail.totalNum || 0}位用户评价了此项内容`">
+                <span>评分：</span>
                 <p class="score-group">
                     <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
                     <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
@@ -31,50 +31,51 @@
                 <span class="rate-num">{{detail.totalNum || 0}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>{{ $t('store.form.os') }}：</span>
+                <span>Job类型：</span>
                 <span>
+                    {{detail.jobType|atomJobType}}
                     <template v-if="detail.os && detail.os.length">
-                        <i v-for="item in getJobList(detail.os)" :class="[item.icon, 'bk-icon']" :key="item" :title="item.name"></i>
+                        (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'bk-icon']" :key="item" :title="item.name"></i>)
                     </template>
                 </span>
             </h5>
             <h5 class="detail-info">
-                <span>{{ $t('store.classify') }}：</span><span>{{detail.classifyName || '-'}}</span>
+                <span>分类：</span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>{{ $t('store.form.heat') }}：</span><span>{{detail.downloads || 0}}</span>
+                <span>热度：</span><span>{{detail.downloads || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
-                <span>{{ $t('store.form.labels') }}：</span>
+                <span>功能标签：</span>
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
                 <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
             </h5>
             <h5 class="detail-info detail-maxwidth" :title="detail.summary">
-                <span>{{ $t('store.form.summary') }}：</span><span>{{detail.summary || '-'}}</span>
+                <span>简介：</span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
 
         <bk-popover placement="top" v-if="buttonInfo.disable">
-            <button class="bk-button bk-primary" type="button" disabled>{{ $t('store.install') }}</button>
+            <button class="bk-button bk-primary" type="button" disabled>安装</button>
             <template slot="content">
                 <p>{{buttonInfo.des}}</p>
             </template>
         </bk-popover>
-        <button class="detail-install" @click="goToInstall" v-else>{{ $t('store.install') }}</button>
+        <button class="detail-install" @click="goToInstall" v-else>安装</button>
 
-        <bk-dialog v-model="showCooperDialog" :title="$t('store.form.applyCollaborator')" width="600" :on-close="closeDialog" @confirm="confirmDialog" :loading="dialogLoading" :close-icon="false">
+        <bk-dialog v-model="showCooperDialog" title="申请成为协作者" width="600" :on-close="closeDialog" @confirm="confirmDialog" :loading="dialogLoading" :close-icon="false">
             <bk-form label-width="90" ref="validateForm" :model="cooperData" v-if="showCooperDialog">
-                <bk-form-item :label="$t('store.form.applicant')">
+                <bk-form-item label="申请人">
                     <bk-input v-model="user" :disabled="true"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.form.project')" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
+                <bk-form-item label="调试项目" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
                     <big-select class="big-select" v-model="cooperData.testProjectCode" :searchable="true" :options="projectList" setting-key="project_code" display-key="project_name" :loading="isLoading"></big-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.form.applyReeason')" :required="true" :rules="rules" property="applyReason">
-                    <bk-input type="textarea" v-model="cooperData.applyReason" :placeholder="$t('store.form.applyReeasonPlaceholder')"></bk-input>
+                <bk-form-item label="申请原因" :required="true" :rules="rules" property="applyReason">
+                    <bk-input type="textarea" v-model="cooperData.applyReason" placeholder="请输入申请原因"></bk-input>
                 </bk-form-item>
             </bk-form>
-            <form-tips :prompt-list="[$t('store.form.collaboratorDesc')]"></form-tips>
+            <form-tips :prompt-list="['欢迎加入插件开发，成为协作者后，可以丰富插件功能，优化插件', '调试项目用来测试插件，建议使用非正式业务项目，避免影响正式流水线']"></form-tips>
         </bk-dialog>
     </section>
 </template>
@@ -87,6 +88,17 @@
         components: {
             commentRate,
             formTips
+        },
+
+        filters: {
+            atomJobType (val) {
+                switch (val) {
+                    case 'AGENT':
+                        return '编译环境'
+                    case 'AGENT_LESS':
+                        return '无编译环境'
+                }
+            }
         },
 
         props: {
@@ -108,7 +120,7 @@
                 userInfo: {
                     type: ''
                 },
-                rules: [{ required: true, message: this.$t('store.form.requiredItem'), trigger: 'change' }]
+                rules: [{ required: true, message: '必填项', trigger: 'change' }]
             }
         },
 
@@ -125,27 +137,27 @@
             },
 
             isPublicTitle () {
-                if (this.isPublic) return this.$t('store.form.viewSource')
-                else return this.$t('store.form.notOpenSource')
+                if (this.isPublic) return '查看源码'
+                else return '未开源'
             },
 
             approveMsg () {
                 const key = `${typeof this.userInfo.type}-${this.detail.approveStatus}`
                 const mapStatus = {
-                    'undefined-WAIT': this.$t('store.form.auditting'),
-                    'undefined-PASS': this.$t('store.form.cooperation'),
-                    'undefined-undefined': this.$t('store.form.cooperation'),
-                    'undefined-REFUSE': this.$t('store.form.cooperation')
+                    'undefined-WAIT': '审批中',
+                    'undefined-PASS': '协作',
+                    'undefined-undefined': '协作',
+                    'undefined-REFUSE': '协作'
                 }
-                const res = mapStatus[key] || this.$t('store.form.collaborated')
+                const res = mapStatus[key] || '已协作'
                 return res
             },
 
             buttonInfo () {
                 const info = {}
                 info.disable = this.detail.defaultFlag || !this.detail.flag
-                if (this.detail.defaultFlag) info.des = this.$t('store.form.defaultInstalledAtom')
-                if (!this.detail.flag) info.des = this.$t('store.form.noPermissionInstallAtom')
+                if (this.detail.defaultFlag) info.des = `通用流水线插件，所有项目默认可用，无需安装`
+                if (!this.detail.flag) info.des = `你没有该流水线插件的安装权限，请联系流水线插件发布者`
                 return info
             }
         },
@@ -176,7 +188,7 @@
                     this.$store.dispatch('store/applyCooperation', data).then((res) => {
                         if (res) {
                             this.clearFormData()
-                            this.$bkMessage({ message: this.$t('store.form.appplySuccess'), theme: 'success' })
+                            this.$bkMessage({ message: '申请成功', theme: 'success' })
                             this.showCooperDialog = false
                             this.detail.approveStatus = res.approveStatus
                         }
@@ -192,7 +204,7 @@
             },
 
             cooperation () {
-                if (this.approveMsg !== this.$t('store.form.cooperation')) return
+                if (this.approveMsg !== '协作') return
                 this.showCooperDialog = true
                 this.getProjectList()
             },

@@ -1,13 +1,15 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
+        <img class="detail-pic atom-logo" :src="detail.logoUrl">
         <hgroup class="detail-info-group">
-            <h3>{{detail.name}}</h3>
+            <h3 class="title-with-img">
+                {{detail.name}}
+            </h3>
             <h5 class="detail-info">
                 <span>发布者：</span><span>{{detail.publisher || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>热度：</span><span>{{detail.downloads || 0}}</span>
+                <span>版本：</span><span>{{detail.version || '-'}}</span>
             </h5>
             <h5 class="detail-info detail-score" :title="`平均评分为${detail.score || 0}星（总分为5星），${detail.totalNum || 0}位用户评价了此项内容`">
                 <span>评分：</span>
@@ -18,10 +20,13 @@
                 <span class="rate-num">{{detail.totalNum || 0}}</span>
             </h5>
             <h5 class="detail-info">
-                <span>应用范畴：</span><span>{{detail.categoryList|templateCategory}}</span>
+                <span>镜像源：</span><span>{{detail.imageRepoName}}</span>
             </h5>
             <h5 class="detail-info">
                 <span>分类：</span><span>{{detail.classifyName || '-'}}</span>
+            </h5>
+            <h5 class="detail-info">
+                <span>热度：</span><span>{{detail.downloads || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
                 <span>功能标签：</span>
@@ -32,7 +37,6 @@
                 <span>简介：</span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
-
         <bk-popover placement="top" v-if="buttonInfo.disable">
             <button class="bk-button bk-primary" type="button" disabled>安装</button>
             <template slot="content">
@@ -51,21 +55,14 @@
             commentRate
         },
 
-        filters: {
-            templateCategory (list = []) {
-                const nameList = list.map(item => item.categoryName) || []
-                const res = nameList.join('，') || '-'
-                return res
-            }
-        },
-
         props: {
             detail: Object
         },
 
         data () {
             return {
-                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314'
+                user: JSON.parse(localStorage.getItem('_cache_userInfo')).username,
+                isLoading: false
             }
         },
 
@@ -80,37 +77,19 @@
             buttonInfo () {
                 const info = {}
                 info.disable = this.detail.defaultFlag || !this.detail.flag
-                if (this.detail.defaultFlag) info.des = `通用流水线模板，所有项目默认可用，无需安装`
-                if (!this.detail.flag) info.des = `你没有该流水线模板的安装权限，请联系流水线模板发布者`
+                if (this.detail.defaultFlag) info.des = `通用镜像，所有项目默认可用，无需安装`
+                if (!this.detail.flag) info.des = `你没有该镜像的安装权限，请联系镜像发布者`
                 return info
             }
         },
 
         methods: {
-            getJobList (os) {
-                const jobList = []
-                os.forEach((item) => {
-                    switch (item) {
-                        case 'LINUX':
-                            jobList.push({ icon: 'icon-linux-view', name: 'Linux' })
-                            break
-                        case 'WINDOWS':
-                            jobList.push({ icon: 'icon-windows', name: 'Windows' })
-                            break
-                        case 'MACOS':
-                            jobList.push({ icon: 'icon-macos', name: 'macOS' })
-                            break
-                    }
-                })
-                return jobList
-            },
-
             goToInstall () {
                 this.$router.push({
                     name: 'install',
                     query: {
-                        code: this.detail.templateCode,
-                        type: 'template',
+                        code: this.detail.imageCode,
+                        type: 'image',
                         from: 'details'
                     }
                 })

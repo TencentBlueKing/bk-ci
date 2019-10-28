@@ -10,8 +10,8 @@
                         <div class="file-metedata">
                             <p class="file-name">{{file.name}}</p>
                             <span class="file-status" v-if="file.status === 'uploading'">{{progress}}%</span>
-                            <span class="file-status success" v-if="file.status === 'success'">{{ $t('store.form.uploadSucces') }}</span>
-                            <span class="file-status error" v-if="file.status === 'error'">{{ $t('store.form.uploadFail') }}</span>
+                            <span class="file-status success" v-if="file.status === 'success'">上传成功</span>
+                            <span class="file-status error" v-if="file.status === 'error'">上传失败</span>
                         </div>
                         <div :class="['file-progress']">
                             <div :class="['file-progress-bar']" :style="`width: ${progress}%`"></div>
@@ -26,7 +26,7 @@
             <div class="file-input">
                 <button class="trigger-btn">
                     <img src="../../../images/upload.svg" alt="" class="upload-icon">
-                    {{ $t('store.form.dragUpload') }} <span>{{ $t('store.form.clickUpload') }}</span>
+                    拖拽到此处上传或 <span>点击上传</span>
                 </button>
                 <input type="file" @change="selectFile" :multiple="multiple" :accept="accept">
             </div>
@@ -93,7 +93,7 @@
                 queryStatusTimer: null
             }
         },
-
+        
         beforeDestroy () {
             this.resetUploadStatus()
             this.clearUploadQueue()
@@ -116,17 +116,17 @@
                     }
                     const pos = fileObj.name.lastIndexOf('.')
                     const lastname = fileObj.name.substring(pos, fileObj.name.length)
-
+                    
                     this.uploadQueue.push(fileObj)
                     if (this.maxSize && (fileObj.size > this.maxSize)) {
                         fileObj.status = 'error'
-                        fileObj.statusText = `${this.$t('store.form.fileSizeTip')}${this.maxSize}M`
+                        fileObj.statusText = `文件不能超过${this.maxSize}M`
                     } else if (!this.os.length) {
                         fileObj.status = 'error'
-                        fileObj.statusText = this.$t('store.form.selectOsTip')
+                        fileObj.statusText = `请先选择操作系统`
                     } else if (lastname.toLowerCase() !== '.zip') {
                         fileObj.status = 'error'
-                        fileObj.statusText = this.$t('store.form.zipFileLimit')
+                        fileObj.statusText = `只允许上传 zip 格式的文件`
                     } else {
                         this.uploadFile(fileObj)
                     }
@@ -138,7 +138,7 @@
                 formData.append('file', fileObj.origin)
                 formData.append('os', `["${this.os.join('","')}"]`)
                 fileObj.status = 'uploading'
-                fileObj.statusText = this.$t('store.form.uploading')
+                fileObj.statusText = '上传中'
 
                 const xhr = new XMLHttpRequest()
                 fileObj.xhr = xhr // 保存，用于中断请求
@@ -149,12 +149,12 @@
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
                             const response = JSON.parse(xhr.responseText)
-
+                            
                             if (response.status === 0) {
                                 this.isUploadLoading = false
                                 this.progress = 100
                                 fileObj.status = 'success'
-                                fileObj.statusText = this.$t('store.form.uploadSucces')
+                                fileObj.statusText = '上传成功'
                                 this.$emit('uploadSuccess', response.data)
                             } else {
                                 fileObj.status = 'error'
@@ -210,7 +210,7 @@
                 if (this.uploadQueue[index].xhr) {
                     this.uploadQueue[index].xhr.abort()
                 }
-
+                
                 this.uploadQueue.splice(index, 1)
                 this.resetUploadStatus()
             },

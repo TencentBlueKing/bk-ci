@@ -3,9 +3,9 @@
         <h3 class="market-home-title banner-nav">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <span class="back-home" @click="toAtomStore">{{ $t('store.store') }}</span>
+                <span class="back-home" @click="toAtomStore">研发商店</span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">{{ $t('store.workbench') }}</span>
+                <span class="banner-des">工作台</span>
             </p>
             <a class="title-work" target="_blank" :href="docLink[currentTab].link">{{ docLink[currentTab].name }}</a>
         </h3>
@@ -13,13 +13,13 @@
             <bk-tab :active.sync="currentTab" @tab-change="changeTab" type="unborder-card">
                 <bk-tab-panel name="atom" render-directive="if">
                     <template slot="label">
-                        <span class="work-label"><icon class="title-icon" :name="`store-atom`" size="16" />{{ $t('store.pipelineAtom') }}</span>
+                        <span class="work-label"><icon class="title-icon" :name="`store-atom`" size="16" />流水线插件</span>
                     </template>
                     <atom-list></atom-list>
                 </bk-tab-panel>
                 <bk-tab-panel name="template" render-directive="if">
                     <template slot="label">
-                        <span class="work-label"><icon class="title-icon" :name="`store-template`" size="16" />{{ $t('store.pipelineTemplate') }}</span>
+                        <span class="work-label"><icon class="title-icon" :name="`store-template`" size="16" />流水线模板</span>
                     </template>
                     <template-list></template-list>
                 </bk-tab-panel>
@@ -43,8 +43,8 @@
             return {
                 currentTab: 'atom',
                 docLink: {
-                    atom: { name: this.$t('store.atomGuide'), link: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('store.pipelineAtom')}Store/${this.$t('store.quickStart')}.html` },
-                    template: { name: this.$t('store.templateGuide'), link: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('store.pipelineTemplate')}/summary.html` }
+                    atom: { name: '插件指引', link: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html` },
+                    template: { name: '模版指引', link: `${DOCS_URL_PREFIX}/所有服务/流水线模版/summary.html` }
                 }
             }
         },

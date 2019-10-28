@@ -1,8 +1,8 @@
 <template>
     <article v-bkloading="{ isLoading, opacity: 1 }">
         <h3 class="list-type" v-clickoutside="closeOrderList">
-            <span class="list-count">{{ $t('store.total') }} : <strong>{{count}}</strong></span>
-            <span class="list-sort">{{ $t('store.sort') }}：</span>
+            <span class="list-count">总数 : <strong>{{count}}</strong></span>
+            <span class="list-sort">排序：</span>
             <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click.stop="showOrderList = !showOrderList">{{ orderType.name }}</span>
             <ul class="list-menu" v-show="showOrderList">
                 <li v-for="(order, index) in orderList" :key="index" @click.stop="chooseOrderType(order)">{{ order.name }}</li>
@@ -12,7 +12,7 @@
         <hgroup class="list-cards" v-if="!isLoading">
             <card v-for="card in cards" :key="card.atomCode" :atom="card" :has-summary="true" class="list-card"></card>
         </hgroup>
-        <p class="g-empty list-empty" v-if="cards.length <= 0">{{ $t('store.noResultsFound') }}</p>
+        <p class="g-empty list-empty" v-if="cards.length <= 0">没找到相关结果</p>
     </article>
 </template>
 
@@ -38,14 +38,14 @@
                 isLoading: true,
                 cards: [],
                 count: 0,
-                orderType: { id: 'DOWNLOAD_COUNT', name: this.$t('store.byHeat') },
+                orderType: { id: 'DOWNLOAD_COUNT', name: '按热度' },
                 showOrderList: false,
                 orderList: [
-                    { id: 'NAME', name: `${this.$t('store.byName')}A-Z` },
-                    { id: 'CREATE_TIME', name: this.$t('store.byCreateTime') },
-                    { id: 'UPDATE_TIME', name: this.$t('store.byUpdateTime') },
-                    { id: 'PUBLISHER', name: this.$t('store.byCreator') },
-                    { id: 'DOWNLOAD_COUNT', name: this.$t('store.byHeat') }
+                    { id: 'NAME', name: '按名称A-Z' },
+                    { id: 'CREATE_TIME', name: '按创建时间' },
+                    { id: 'UPDATE_TIME', name: '按修改时间' },
+                    { id: 'PUBLISHER', name: '按发布者' },
+                    { id: 'DOWNLOAD_COUNT', name: '按热度' }
                 ]
             }
         },
