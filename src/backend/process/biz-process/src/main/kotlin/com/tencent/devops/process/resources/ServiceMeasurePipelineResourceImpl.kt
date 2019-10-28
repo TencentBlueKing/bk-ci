@@ -45,11 +45,11 @@ class ServiceMeasurePipelineResourceImpl @Autowired constructor(
         return Result(data)
     }
 
-    override fun getPipelineCountByAtomCode(atomCode: String): Result<Int> {
-        return Result(0, "", pipelineStatisticService.getPipelineCountByAtomCode(atomCode))
+    override fun getPipelineCountByAtomCode(atomCode: String, projectCode: String?): Result<Int> {
+        return Result(pipelineStatisticService.getPipelineCountByAtomCode(atomCode, projectCode))
     }
 
-    override fun batchGetPipelineCountByAtomCode(atomCodes: String): Result<Map<String, Int>> {
-        return Result(0, "", pipelineStatisticService.batchGetPipelineCountByAtomCode(atomCodes))
+    override fun batchGetPipelineCountByAtomCode(atomCodes: String, projectCode: String?): Result<Map<String, Int>> {
+        return Result(pipelineStatisticService.batchGetPipelineCountByAtomCode(atomCodes, projectCode))
     }
 }

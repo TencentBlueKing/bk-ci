@@ -26,10 +26,16 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.api.ServiceBuildResource
 import com.tencent.devops.process.api.ServiceMeasurePipelineResource
+import com.tencent.devops.process.api.ServicePipelineTaskResource
+import com.tencent.devops.project.api.ServiceProjectResource
 import com.tencent.devops.store.dao.common.StoreStatisticDao
+import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
@@ -46,30 +52,24 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     private val storeStatisticDao: StoreStatisticDao,
     private val client: Client
 ) : MarketAtomStatisticService {
+
     private val logger = LoggerFactory.getLogger(MarketAtomStatisticServiceImpl::class.java)
 
     /**
-     * 根据插件标识获取统计数据
+     * 根据原子标识获取统计数据
      */
     override fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic> {
-        logger.info("getStatisticByCode userId is :$userId,atomCode is :$atomCode")
         val record = storeStatisticDao.getStatisticByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        val pipelineCnt =
-            client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(atomCode).data ?: 0
+        val pipelineCnt = client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(atomCode, null).data ?: 0
         val atomStatistic = formatAtomStatistic(record, pipelineCnt)
-        logger.info("getStatisticByCode atomStatistic is :$atomStatistic")
         return Result(atomStatistic)
     }
 
-    private fun formatAtomStatistic(
-        record: Record4<BigDecimal, BigDecimal, BigDecimal, String>,
-        pipelineCnt: Int
-    ): AtomStatistic {
+    private fun formatAtomStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>, pipelineCnt: Int): AtomStatistic {
         val downloads = record.value1()?.toInt()
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
-        val averageScore: Double =
-            if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
 
         return AtomStatistic(
             downloads = downloads ?: 0,
@@ -80,19 +80,14 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     }
 
     /**
-     * 根据批量插件标识获取统计数据
+     * 根据批量原子标识获取统计数据
      */
-    override fun getStatisticByCodeList(
-        atomCodeList: List<String>,
-        statFiledList: List<String>
-    ): Result<HashMap<String, AtomStatistic>> {
-        logger.info("getStatisticByCodeList atomCodeList is :$atomCodeList,statFiledList is :$statFiledList")
-        val records =
-            storeStatisticDao.batchGetStatisticByStoreCode(dslContext, atomCodeList, StoreTypeEnum.ATOM.type.toByte())
+    override fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>> {
+        val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, atomCodeList, StoreTypeEnum.ATOM.type.toByte())
         val atomCodes = atomCodeList.joinToString(",")
         val isStatPipeline = statFiledList.contains("PIPELINE")
         val pipelineStat = if (isStatPipeline) {
-            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(atomCodes).data
+            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(atomCodes, null).data
         } else {
             mutableMapOf()
         }
@@ -103,7 +98,83 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
                 atomStatistic[atomCode] = formatAtomStatistic(it, pipelineStat?.get(atomCode) ?: 0)
             }
         }
-        logger.info("the atomStatistic is :atomStatistic")
         return Result(atomStatistic)
+    }
+
+    /**
+     * 根据插件标识获取插件关联的所有流水线列表（包括其他项目下）
+     */
+    override fun getAtomPipelinesByCode(atomCode: String, username: String, page: Int?, pageSize: Int?): Result<Page<AtomPipeline>> {
+        logger.info("getAtomPipelinesByCode: $atomCode | $username | $page | $pageSize")
+
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 100
+
+        val pipelineTaskRet =
+            client.get(ServicePipelineTaskResource::class).listByAtomCode(atomCode, null, pageNotNull, pageSizeNotNull).data
+        if (pipelineTaskRet == null) {
+            return Result(Page(pageNotNull, pageSizeNotNull, 0.toLong(), listOf()))
+        } else {
+            val pipelines = pipelineTaskRet.records
+            val projectCodeList = pipelines.map { it.projectCode }
+            val projects =
+                client.get(ServiceProjectResource::class).listByProjectCode(projectCodeList.toSet()).data?.associateBy { it.projectCode }
+
+            val records = pipelines.map {
+                val projectCode = it.projectCode
+                val project = projects?.get(projectCode)
+                AtomPipeline(
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    projectCode = projectCode,
+                    projectName = project?.projectName ?: "",
+                    bgName = project?.bgName ?: "",
+                    deptName = project?.deptName ?: "",
+                    centerName = project?.centerName ?: ""
+                )
+            }
+            return Result(Page(pageNotNull, pageSizeNotNull, pipelineTaskRet.count, records))
+        }
+    }
+
+    /**
+     * 根据插件标识获取插件关联的流水线信息（当前项目下）
+     */
+    override fun getAtomPipelinesByProject(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AtomPipelineExecInfo>> {
+        logger.info("getAtomPipelinesByProject: $atomCode | $userId | $projectCode| $page | $pageSize")
+
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 100
+
+        val pipelineTaskRet =
+            client.get(ServicePipelineTaskResource::class).listByAtomCode(atomCode, projectCode, pageNotNull, pageSizeNotNull).data
+        logger.info("pipelineTaskRet: $pipelineTaskRet")
+        if (pipelineTaskRet == null) {
+            return Result(Page(pageNotNull, pageSizeNotNull, 0.toLong(), listOf()))
+        } else {
+            val pipelines = pipelineTaskRet.records
+            val pipelineIdList = pipelines.map { it.pipelineId }
+            val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(projectCode, pipelineIdList).data
+            logger.info("pipelineBuildInfo: $pipelineBuildInfo")
+
+            val records = pipelines.map {
+                val pipelineId = it.pipelineId
+                val buildInfo = pipelineBuildInfo?.get(pipelineId)
+                AtomPipelineExecInfo(
+                    pipelineId = pipelineId,
+                    pipelineName = it.pipelineName,
+                    projectCode = projectCode,
+                    owner = buildInfo?.startUser ?: "",
+                    latestExecTime = buildInfo?.startTime ?: ""
+                )
+            }
+            return Result(Page(pageNotNull, pageSizeNotNull, pipelineTaskRet.count, records))
+        }
     }
 }

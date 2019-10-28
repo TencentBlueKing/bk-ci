@@ -33,6 +33,6 @@ import io.swagger.annotations.ApiModelProperty
 data class AtomFeatureRequest(
     @ApiModelProperty("插件插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("插件插件代码库可见范围", required = false)
-    val visibilityLevel: Int?
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean? = null
 )

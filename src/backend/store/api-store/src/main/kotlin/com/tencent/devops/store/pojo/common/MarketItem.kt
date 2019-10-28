@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.common
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("模版市场-首页-模版信息")
+@ApiModel("研发商店组件信息")
 data class MarketItem(
     @ApiModelProperty("ID")
     val id: String,
@@ -43,6 +43,8 @@ data class MarketItem(
     val rdType: String,
     @ApiModelProperty("分类")
     val classifyCode: String?,
+    @ApiModelProperty("所属范畴")
+    val category: String? = null,
     @ApiModelProperty("logo链接")
     val logoUrl: String?,
     @ApiModelProperty("发布者")
@@ -56,11 +58,13 @@ data class MarketItem(
     @ApiModelProperty("简介")
     val summary: String?,
     @ApiModelProperty("是否有权限安装标识")
-    var flag: Boolean?,
+    val flag: Boolean,
     @ApiModelProperty("是否公共标识")
     val publicFlag: Boolean,
     @ApiModelProperty("无编译环境插件是否可以在编译环境下执行标识")
-    val buildLessRunFlag: Boolean?,
+    val buildLessRunFlag: Boolean,
     @ApiModelProperty("帮助文档")
-    val docsLink: String?
+    val docsLink: String?,
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean? = null
 )

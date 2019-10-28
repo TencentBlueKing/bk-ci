@@ -28,7 +28,9 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -43,7 +45,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.format.DateTimeFormatter
 
 /**
  * store项目通用业务逻辑类
@@ -70,7 +71,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<List<InstalledProjRespItem>> {
-        logger.info("accessToken is :$accessToken, userId is :$userId, storeCode is :$storeCode, storeType is :$storeType")
+        logger.info("getInstalledProjects accessToken is :$accessToken, userId is :$userId, storeCode is :$storeCode, storeType is :$storeType")
         // 获取用户有权限的项目列表
         val projectList = client.get(ServiceProjectResource::class).list(userId).data
         logger.info("projectList is :$projectList")
@@ -81,14 +82,13 @@ class StoreProjectServiceImpl @Autowired constructor(
         val records =
             storeProjectRelDao.getInstalledProject(dslContext, storeCode, storeType.type.toByte(), projectCodeMap.keys)
         val result = mutableListOf<InstalledProjRespItem>()
-        val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         records?.forEach {
             result.add(
                 InstalledProjRespItem(
                     projectCode = it.projectCode,
                     projectName = projectCodeMap[it.projectCode]?.projectName,
                     creator = it.creator,
-                    createTime = df.format(it.createTime)
+                    createTime = DateTimeUtil.toDateTime(it.createTime)
                 )
             )
         }
@@ -102,73 +102,99 @@ class StoreProjectServiceImpl @Autowired constructor(
         storeId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        publicFlag: Boolean
+        publicFlag: Boolean,
+        channelCode: ChannelCode
     ): Result<Boolean> {
-        logger.info("accessToken is :$accessToken, userId is :$userId, projectCodeList is :$projectCodeList, storeId is :$storeId, storeCode is :$storeCode, storeType is :$storeType")
-        val installFlag = storeUserService.isCanInstallStoreComponent(publicFlag, userId, storeCode, storeType) // 是否能安装
-        // 判断用户是否有权限安装
-        if (!installFlag) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
-        }
-        // 获取用户有权限的项目列表
-        val projectList = client.get(ServiceProjectResource::class).list(userId).data
-        logger.info("projectList is :$projectList")
-        // 判断用户是否有权限安装到对应的项目
-        val privilegeProjectCodeList = mutableListOf<String>()
-        projectList?.map {
-            privilegeProjectCodeList.add(it.projectCode)
-        }
-        val dataList = mutableListOf<String>()
-        dataList.addAll(projectCodeList)
-        dataList.removeAll(privilegeProjectCodeList)
-        if (dataList.isNotEmpty()) {
-            // 存在用户没有安装权限的项目，抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_PROJECT_IS_NOT_ALLOW_INSTALL,
-                arrayOf(dataList.toString()),
-                false
-            )
+        logger.info("installStoreComponent accessToken is :$accessToken, userId is :$userId, projectCodeList is :$projectCodeList, storeId is :$storeId")
+        logger.info("installStoreComponent storeCode is :$storeCode, storeType is :$storeType, publicFlag is :$publicFlag, channelCode is :$channelCode")
+        val validateInstallResult = validateInstallPermission(publicFlag, userId, storeCode, storeType, accessToken, projectCodeList, channelCode)
+        logger.info("installStoreComponent validateInstallResult is :$validateInstallResult")
+        if (validateInstallResult.isNotOk()) {
+            return validateInstallResult
         }
         var increment = 0
         dslContext.transaction { t ->
             val context = DSL.using(t)
             for (projectCode in projectCodeList) {
                 // 判断是否已安装
-                val relCount =
-                    storeProjectRelDao.countInstalledProject(context, projectCode, storeCode, storeType.type.toByte())
+                val relCount = storeProjectRelDao.countInstalledProject(context, projectCode, storeCode, storeType.type.toByte())
                 logger.info("relCount is :$relCount")
                 if (relCount > 0) {
                     continue
                 }
                 // 未安装则入库
-                storeProjectRelDao.addStoreProjectRel(
-                    context,
-                    userId,
-                    storeCode,
-                    projectCode,
-                    1,
-                    storeType.type.toByte()
-                )
+                storeProjectRelDao.addStoreProjectRel(context, userId, storeCode, projectCode, 1, storeType.type.toByte())
                 increment += 1
             }
             logger.info("increment: $increment")
             // 更新安装量
             if (increment > 0) {
-                storeStatisticDao.updateDownloads(
-                    context,
-                    userId,
-                    storeId,
-                    storeCode,
-                    storeType.type.toByte(),
-                    increment
+                storeStatisticDao.updateDownloads(context, userId, storeId, storeCode, storeType.type.toByte(), increment)
+            }
+        }
+        return Result(true)
+    }
+
+    override fun validateInstallPermission(
+        publicFlag: Boolean,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        accessToken: String,
+        projectCodeList: ArrayList<String>,
+        channelCode: ChannelCode
+    ): Result<Boolean> {
+        val installFlag = storeUserService.isCanInstallStoreComponent(publicFlag, userId, storeCode, storeType) // 是否能安装
+        // 判断用户是否有权限安装
+        if (!installFlag) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
+        }
+        if (ChannelCode.isNeedAuth(channelCode)) {
+            // 获取用户有权限的项目列表
+            val projectList = client.get(ServiceProjectResource::class).list(userId).data
+            logger.info("validateInstallPermission projectList is :$projectList")
+            // 判断用户是否有权限安装到对应的项目
+            val privilegeProjectCodeList = mutableListOf<String>()
+            projectList?.map {
+                privilegeProjectCodeList.add(it.projectCode)
+            }
+            val dataList = mutableListOf<String>()
+            dataList.addAll(projectCodeList)
+            dataList.removeAll(privilegeProjectCodeList)
+            if (dataList.isNotEmpty()) {
+                // 存在用户没有安装权限的项目，抛出错误提示
+                return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_PROJECT_IS_NOT_ALLOW_INSTALL,
+                    arrayOf(dataList.toString()),
+                    false
                 )
             }
         }
         return Result(true)
     }
 
-    override fun uninstall(storeType: StoreTypeEnum, templateCode: String, projectCode: String): Result<Boolean> {
-        storeProjectRelDao.deleteRel(dslContext, templateCode, storeType.type.toByte())
+    override fun uninstall(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        projectCode: String
+    ): Result<Boolean> {
+        storeProjectRelDao.deleteRel(dslContext, storeCode, storeType.type.toByte(), projectCode)
         return Result(true)
+    }
+
+    /**
+     * 判断组件是否被项目安装
+     */
+    override fun isInstalledByProject(
+        projectCode: String,
+        storeCode: String,
+        storeType: Byte
+    ): Boolean {
+        return storeProjectRelDao.isInstalledByProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeCode = storeCode,
+            storeType = storeType
+        )
     }
 }

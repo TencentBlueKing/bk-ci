@@ -27,16 +27,21 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomMemberItem
-import com.tencent.devops.store.pojo.atom.AtomMemberReq
+import com.tencent.devops.store.pojo.common.StoreMemberItem
+import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreMemberService {
 
-    /***
+    /**
      * store组件成员列表
      */
-    fun list(userId: String, atomCode: String, storeType: StoreTypeEnum): Result<List<AtomMemberItem?>>
+    fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>>
+
+    /**
+     * 查看store组件成员信息
+     */
+    fun viewMemberInfo(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?>
 
     /***
      * 批量获取store组件成员列表
@@ -49,10 +54,36 @@ interface StoreMemberService {
     /**
      * 添加store组件成员
      */
-    fun add(userId: String, atomMemberReq: AtomMemberReq, storeType: StoreTypeEnum): Result<Boolean>
+    fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean? = false): Result<Boolean>
 
     /**
      * 删除store组件成员
      */
-    fun delete(userId: String, id: String, atomCode: String, storeType: StoreTypeEnum): Result<Boolean>
+    fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 更改store组件成员的调试项目
+     */
+    fun changeMemberTestProjectCode(
+        accessToken: String,
+        userId: String,
+        projectCode: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 判断store组件是否有超过一个管理员
+     */
+    fun isStoreHasAdmins(storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 判断是否为成员
+     */
+    fun isStoreMember(userId: String, storeCode: String, storeType: Byte): Boolean
+
+    /**
+     * 判断是否为管理员
+     */
+    fun isStoreAdmin(userId: String, storeCode: String, storeType: Byte): Boolean
 }

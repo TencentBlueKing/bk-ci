@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
-import com.tencent.devops.store.pojo.atom.AtomProcessInfo
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -228,7 +228,7 @@ interface UserMarketAtomResource {
         @ApiParam("atomId", required = true)
         @PathParam("atomId")
         atomId: String
-    ): Result<AtomProcessInfo>
+    ): Result<StoreProcessInfo>
 
     @ApiOperation("取消发布")
     @PUT

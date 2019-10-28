@@ -32,9 +32,9 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线-插件信息请求报文体")
+@ApiModel("流水线-原子信息请求报文体")
 data class AtomUpdateRequest(
-    @ApiModelProperty("插件名称", required = true)
+    @ApiModelProperty("原子名称", required = true)
     val name: String,
     @ApiModelProperty("服务范围", required = true)
     val serviceScope: List<String>,
@@ -44,19 +44,19 @@ data class AtomUpdateRequest(
     val os: MutableList<String>,
     @ApiModelProperty("所属分类ID", required = true)
     val classifyId: String,
-    @ApiModelProperty("插件说明文档链接", required = false)
+    @ApiModelProperty("原子说明文档链接", required = false)
     val docsLink: String?,
-    @ApiModelProperty("插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @ApiModelProperty("原子类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val atomType: AtomTypeEnum,
-    @ApiModelProperty("插件简介", required = false)
+    @ApiModelProperty("原子简介", required = false)
     val summary: String?,
-    @ApiModelProperty("插件描述", required = false)
+    @ApiModelProperty("原子描述", required = false)
     val description: String?,
-    @ApiModelProperty("是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
+    @ApiModelProperty("是否为默认原子（默认原子默认所有项目可见）true：默认原子 false：普通原子", required = true)
     val defaultFlag: Boolean,
-    @ApiModelProperty("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
+    @ApiModelProperty("原子所属范畴，TRIGGER：触发器类原子 TASK：任务类原子", required = true)
     val category: AtomCategoryEnum,
-    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
+    @ApiModelProperty("无构建环境原子是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
     val buildLessRunFlag: Boolean? = null,
     @ApiModelProperty("权重（数值越大代表权重越高）")
     val weight: Int?,
@@ -64,6 +64,8 @@ data class AtomUpdateRequest(
     val props: String?,
     @ApiModelProperty("预留字段（设置规则等信息的json串）", required = false)
     val data: String?,
-    @ApiModelProperty("插件logo", required = false)
-    val logoUrl: String?
+    @ApiModelProperty("原子logo", required = false)
+    val logoUrl: String?,
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean? = null
 )

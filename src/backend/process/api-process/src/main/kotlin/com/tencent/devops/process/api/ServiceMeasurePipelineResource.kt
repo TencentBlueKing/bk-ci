@@ -62,17 +62,23 @@ interface ServiceMeasurePipelineResource {
     @GET
     @Path("/atom/{atomCode}/count")
     fun getPipelineCountByAtomCode(
-        @ApiParam("插件标识", required = false)
+        @ApiParam("原子标识", required = true)
         @PathParam("atomCode")
-        atomCode: String
+        atomCode: String,
+        @ApiParam("项目标识", required = false)
+        @QueryParam("projectCode")
+        projectCode: String?
     ): Result<Int>
 
     @ApiOperation("获取使用插件的流水线个数")
     @GET
     @Path("/atom/count")
     fun batchGetPipelineCountByAtomCode(
-        @ApiParam("插件标识", required = false)
+        @ApiParam("原子标识", required = false)
         @QueryParam("atomCodes")
-        atomCodes: String
+        atomCodes: String,
+        @ApiParam("项目标识", required = false)
+        @QueryParam("projectCode")
+        projectCode: String?
     ): Result<Map<String, Int>>
 }

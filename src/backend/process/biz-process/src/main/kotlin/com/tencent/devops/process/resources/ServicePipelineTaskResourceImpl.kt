@@ -26,10 +26,12 @@
 
 package com.tencent.devops.process.resources
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.ServicePipelineTaskResource
 import com.tencent.devops.process.pojo.PipelineModelTask
+import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.service.PipelineTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -37,10 +39,20 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineTaskResourceImpl @Autowired constructor(
     val pipelineTaskService: PipelineTaskService
 ) : ServicePipelineTaskResource {
+
     override fun list(
         projectId: String,
         pipelineIds: Collection<String>
     ): Result<Map<String, List<PipelineModelTask>>> {
         return Result(pipelineTaskService.list(projectId, pipelineIds))
+    }
+
+    override fun listByAtomCode(
+        atomCode: String,
+        projectCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineProjectRel>> {
+        return Result(pipelineTaskService.listPipelinesByAtomCode(atomCode, projectCode, page, pageSize))
     }
 }

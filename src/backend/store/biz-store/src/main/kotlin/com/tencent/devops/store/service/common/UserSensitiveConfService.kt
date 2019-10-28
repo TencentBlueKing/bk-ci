@@ -34,15 +34,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 interface UserSensitiveConfService {
 
     /**
-     * 判断是否有权限操作敏感配置
-     */
-    fun checkRight(
-        userId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): Boolean
-
-    /**
      * 新增敏感配置
      */
     fun create(

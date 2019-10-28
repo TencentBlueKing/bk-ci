@@ -27,15 +27,15 @@
 package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomOfflineReq
-import com.tencent.devops.store.pojo.atom.AtomProcessInfo
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
-import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
-import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.MarketMainItem
 import com.tencent.devops.store.pojo.atom.MyAtomResp
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 
@@ -77,20 +77,6 @@ interface MarketAtomService {
     ): Result<MyAtomResp?>
 
     /**
-     * 添加插件
-     */
-    fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<Boolean>
-
-    /**
-     * 升级插件
-     */
-    fun updateMarketAtom(
-        userId: String,
-        projectCode: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
-    ): Result<String?>
-
-    /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
     fun getAtomById(atomId: String, userId: String): Result<AtomVersion?>
@@ -101,13 +87,29 @@ interface MarketAtomService {
     fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
 
     /**
+     * 根据标识获取最新版本信息（若最新版本为测试中，取最新版本，否则取最新正式版本）
+     */
+    fun getNewestAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
+
+    /**
      * 安装插件到项目
      */
     fun installAtom(
         accessToken: String,
         userId: String,
-        projectCodeList: ArrayList<String>,
-        atomCode: String
+        channelCode: ChannelCode,
+        installAtomReq: InstallAtomReq
+    ): Result<Boolean>
+
+    /**
+     * 设置插件构建状态
+     */
+    fun setAtomBuildStatusByAtomCode(
+        atomCode: String,
+        version: String,
+        userId: String,
+        atomStatus: AtomStatusEnum,
+        msg: String?
     ): Result<Boolean>
 
     /**
@@ -116,22 +118,12 @@ interface MarketAtomService {
     fun getAtomVersionsByCode(userId: String, atomCode: String): Result<AtomVersionListResp>
 
     /**
-     * 获取插件版本发布进度
+     * 获取插件开发支持的语言
      */
-    fun getProcessInfo(atomId: String): Result<AtomProcessInfo>
+    fun listLanguage(): Result<List<AtomDevLanguage?>>
 
     /**
-     * 取消发布
+     * 删除插件
      */
-    fun cancelRelease(userId: String, atomId: String): Result<Boolean>
-
-    /**
-     * 确认通过测试，继续发布
-     */
-    fun passTest(userId: String, atomId: String): Result<Boolean>
-
-    /**
-     * 处理用户提交的下架插件请求
-     */
-    fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean>
+    fun deleteAtom(userId: String, atomCode: String): Result<Boolean>
 }

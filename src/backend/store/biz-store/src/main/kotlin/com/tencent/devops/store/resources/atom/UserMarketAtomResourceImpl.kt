@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
-import com.tencent.devops.store.pojo.atom.AtomProcessInfo
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -129,7 +129,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return storeProjectService.getInstalledProjects(accessToken, userId, atomCode, StoreTypeEnum.ATOM)
     }
 
-    override fun getProcessInfo(atomId: String): Result<AtomProcessInfo> {
+    override fun getProcessInfo(atomId: String): Result<StoreProcessInfo> {
         return marketAtomService.getProcessInfo(atomId)
     }
 
