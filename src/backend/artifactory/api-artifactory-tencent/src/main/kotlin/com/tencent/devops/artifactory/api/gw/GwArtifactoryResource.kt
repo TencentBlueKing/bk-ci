@@ -22,7 +22,8 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface GwArtifactoryResource {
     @ApiOperation("是否有下载权限")
-    @Path("/projects/{projectId}/services/{serviceCode}/resources/{resourceType}/hasDownloadPermission")
+    //@Path("/projects/{projectId}/services/{serviceCode}/resources/{resourceType}/hasDownloadPermission")
+    @Path("/{projectId}/{serviceCode}/{resourceType}/hasDownloadPermission")
     @GET
     fun hasDownloadPermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

@@ -24,37 +24,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api
+package com.tencent.devops.artifactory.api.builds
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ARTIFACTORY_IMAGE"], description = "图片管理")
-@Path("/service/artifactories/image/manage")
+@Api(tags = ["BUILD_ARTIFACTORY_REPORT"], description = "仓库-文件管理")
+@Path("/build/artifactories/report/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceImageManageResource {
+interface BuildArtifactoryReportResource {
 
-    @ApiOperation("压缩图片")
-    @POST
-    @Path("/compress")
-    fun compressImage(
-        @ApiParam("网络图片路径", required = true)
-        @QueryParam("imageUrl")
-        imageUrl: String,
-        @ApiParam("压缩宽度", required = true)
-        @QueryParam("compressWidth")
-        compressWidth: Int,
-        @ApiParam("压缩高度", required = true)
-        @QueryParam("compressHeight")
-        compressHeight: Int
+    @ApiOperation("获取自定义报告根目录Url")
+    @Path("/{taskId}/root")
+    @GET
+    fun getRootUrl(
+        @ApiParam("projectCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectCode: String,
+        @ApiParam("pipelineId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam("buildId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam(value = "taskId", required = true)
+        @PathParam("taskId")
+        taskId: String
     ): Result<String>
 }

@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.artifactory.api.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.dao.ReportDao
