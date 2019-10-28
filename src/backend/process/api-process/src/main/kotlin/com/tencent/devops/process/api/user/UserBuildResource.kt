@@ -224,7 +224,7 @@ interface UserBuildResource {
     @ApiOperation("获取构建详情")
     @GET
     //@Path("/projects/{projectId}/pipelines/{pipelineId}/buildNo/{buildNo}/detail")
-    @Path("/{projectId}/{pipelineId}/{buildId}/detail")
+    @Path("/{projectId}/{pipelineId}/detail/{buildNo}")
     fun getBuildDetailByBuildNo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
