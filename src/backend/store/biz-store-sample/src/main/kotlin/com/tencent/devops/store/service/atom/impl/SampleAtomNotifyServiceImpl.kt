@@ -24,9 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.service.atom.impl
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.service.atom.AtomNotifyService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class SampleAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
+
+    /**
+     * 发送插件发布审核结果通知消息
+     * @param atomId 插件ID
+     * @param auditType 审核类型
+     */
+    override fun sendAtomReleaseAuditNotifyMessage(atomId: String, auditType: AuditTypeEnum) {
+        // 开源版暂不支持消息服务
+    }
+}

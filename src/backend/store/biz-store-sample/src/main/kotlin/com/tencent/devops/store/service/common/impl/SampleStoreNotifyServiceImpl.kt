@@ -27,21 +27,15 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.store.service.common.StoreNotifyService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BkStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
 
-    private val logger = LoggerFactory.getLogger(BkStoreNotifyServiceImpl::class.java)
-
-    @Autowired
-    lateinit var client: Client
+    private val logger = LoggerFactory.getLogger(SampleStoreNotifyServiceImpl::class.java)
 
     override fun sendNotifyMessage(
         templateCode: String,
@@ -54,18 +48,7 @@ class BkStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
     ): Result<Boolean> {
         logger.info("sendNotifyMessage templateCode is:$templateCode,sender is:$sender,receivers is:$receivers")
         logger.info("sendNotifyMessage titleParams is:$titleParams,bodyParams is:$bodyParams,cc is:$cc,bcc is:$bcc")
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = templateCode,
-            sender = sender,
-            receivers = receivers,
-            titleParams = titleParams,
-            bodyParams = bodyParams,
-            cc = cc,
-            bcc = bcc
-        )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("sendNotifyResult is:$sendNotifyResult")
+        // 开源版暂不支持消息服务
         return Result(true)
     }
 }

@@ -36,9 +36,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BkStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
 
-    private val logger = LoggerFactory.getLogger(BkStoreNotifyServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(TxStoreNotifyServiceImpl::class.java)
 
     @Autowired
     lateinit var client: Client

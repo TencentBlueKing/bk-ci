@@ -27,45 +27,46 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.store.service.common.StoreNotifyService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreUserService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+/**
+ * store用户通用业务逻辑类
+ *
+ * since: 2019-03-26
+ */
 @Service
-class BkStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+class SampleStoreUserServiceImpl : StoreUserService {
 
-    private val logger = LoggerFactory.getLogger(BkStoreNotifyServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(SampleStoreUserServiceImpl::class.java)
 
-    @Autowired
-    lateinit var client: Client
+    /**
+     * 获取用户机构ID信息
+     */
+    override fun getUserDeptList(userId: String): List<Int> {
+        return listOf() // 开源版用户暂无机构信息
+    }
 
-    override fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String>,
-        titleParams: Map<String, String>?,
-        bodyParams: Map<String, String>?,
-        cc: MutableSet<String>?,
-        bcc: MutableSet<String>?
-    ): Result<Boolean> {
-        logger.info("sendNotifyMessage templateCode is:$templateCode,sender is:$sender,receivers is:$receivers")
-        logger.info("sendNotifyMessage titleParams is:$titleParams,bodyParams is:$bodyParams,cc is:$cc,bcc is:$bcc")
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = templateCode,
-            sender = sender,
-            receivers = receivers,
-            titleParams = titleParams,
-            bodyParams = bodyParams,
-            cc = cc,
-            bcc = bcc
-        )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("sendNotifyResult is:$sendNotifyResult")
-        return Result(true)
+    /**
+     * 获取用户机构名称
+     */
+    override fun getUserFullDeptName(userId: String): Result<String?> {
+        return Result(data = "") // 开源版用户暂无机构信息
+    }
+
+    /**
+     * 判断用户是否能安装store组件
+     */
+    override fun isCanInstallStoreComponent(
+        defaultFlag: Boolean,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean {
+        logger.info("isCanInstallStoreComponent userId is :$userId,defaultFlag is :$defaultFlag")
+        logger.info("isCanInstallStoreComponent storeCode is :$storeCode,storeType is :$storeType")
+        return true // 开源版默认都有安装权限
     }
 }

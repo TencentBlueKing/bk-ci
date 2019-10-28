@@ -24,9 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.store.service.common.impl.SampleStoreNotifyServiceImpl
+import com.tencent.devops.store.service.common.impl.SampleStoreUserServiceImpl
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class SampleServiceConfig {
+
+    @Bean
+    fun storeUserService() = SampleStoreUserServiceImpl()
+
+    @Bean
+    fun storeNotifyService() = SampleStoreNotifyServiceImpl()
+}

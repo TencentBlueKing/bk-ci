@@ -24,49 +24,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.atom.SampleMarketAtomService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-/**
- * store用户通用业务逻辑类
- *
- * since: 2019-03-26
- */
 @Service
-class BkStoreUserServiceImpl : StoreUserService {
+class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(BkStoreUserServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(SampleMarketAtomServiceImpl::class.java)
 
-    /**
-     * 获取用户机构ID信息
-     */
-    override fun getUserDeptList(userId: String): List<Int> {
-        return listOf() // 企业版用户暂无机构信息
-    }
-
-    /**
-     * 获取用户机构名称
-     */
-    override fun getUserFullDeptName(userId: String): Result<String?> {
-        return Result(data = "") // 企业版用户暂无机构信息
-    }
-
-    /**
-     * 判断用户是否能安装store组件
-     */
-    override fun isCanInstallStoreComponent(
-        defaultFlag: Boolean,
-        userId: String,
-        storeCode: String,
+    override fun generateAtomVisibleData(
+        storeCodeList: List<String?>,
         storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>?> {
+        logger.info("generateAtomVisibleData storeCodeList is:$storeCodeList,storeType is:$storeType")
+        return Result(data = null) // 开源版插件不设置可见范围
+    }
+
+    override fun generateInstallFlag(
+        defaultFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
     ): Boolean {
-        logger.info("isCanInstallStoreComponent userId is :$userId,defaultFlag is :$defaultFlag")
-        logger.info("isCanInstallStoreComponent storeCode is :$storeCode,storeType is :$storeType")
-        return true // 企业版默认都有安装权限
+        logger.info("generateInstallFlag defaultFlag is:$defaultFlag,members is:$members,userId is:$userId")
+        logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
+        return true // 开源版插件默认所有用户都有权限安装
+    }
+
+    override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
+        // 开源版暂不支持按代码库打成可执行包的方式
+        return Result(data = null)
+    }
+
+    override fun deleteAtomRepository(userId: String, projectCode: String?, repositoryHashId: String): Result<Boolean> {
+        // 开源版暂不支持按代码库打成可执行包的方式
+        return Result(true)
     }
 }

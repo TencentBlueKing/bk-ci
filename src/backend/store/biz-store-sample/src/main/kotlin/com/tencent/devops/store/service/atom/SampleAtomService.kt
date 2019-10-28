@@ -24,9 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.service.atom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+interface SampleAtomService

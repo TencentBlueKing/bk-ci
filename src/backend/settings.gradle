@@ -192,6 +192,7 @@ include ":store:biz-store-blueking"
 include ":store:biz-store-tencent"
 include ":store:biz-store-op"
 include ":store:boot-store"
+include ":store:boot-store-blueking"
 include ":store:boot-store-tencent"
 include ":store:model-store"
 

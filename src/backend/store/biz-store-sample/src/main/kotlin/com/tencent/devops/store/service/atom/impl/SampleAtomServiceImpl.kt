@@ -24,48 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.store.service.common.StoreNotifyService
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.service.atom.SampleAtomService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BkStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+class SampleAtomServiceImpl : SampleAtomService, AtomServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(BkStoreNotifyServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(SampleAtomServiceImpl::class.java)
 
-    @Autowired
-    lateinit var client: Client
+    override fun hasManagerPermission(projectCode: String, userId: String): Boolean {
+        return true
+    }
 
-    override fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String>,
-        titleParams: Map<String, String>?,
-        bodyParams: Map<String, String>?,
-        cc: MutableSet<String>?,
-        bcc: MutableSet<String>?
+    override fun updateRepoInfo(
+        visibilityLevel: VisibilityLevelEnum?,
+        dbVisibilityLevel: Int?,
+        userId: String,
+        repositoryHashId: String
     ): Result<Boolean> {
-        logger.info("sendNotifyMessage templateCode is:$templateCode,sender is:$sender,receivers is:$receivers")
-        logger.info("sendNotifyMessage titleParams is:$titleParams,bodyParams is:$bodyParams,cc is:$cc,bcc is:$bcc")
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = templateCode,
-            sender = sender,
-            receivers = receivers,
-            titleParams = titleParams,
-            bodyParams = bodyParams,
-            cc = cc,
-            bcc = bcc
-        )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("sendNotifyResult is:$sendNotifyResult")
+        logger.info("updateRepoInfo visibilityLevel is:$visibilityLevel,dbVisibilityLevel is:$dbVisibilityLevel")
+        logger.info("updateRepoInfo userId is:$userId,repositoryHashId is:$repositoryHashId")
         return Result(true)
     }
 }
