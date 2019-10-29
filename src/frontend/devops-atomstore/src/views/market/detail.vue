@@ -3,21 +3,20 @@
         <h3 class="market-home-title">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <router-link :to="{ name: 'atomHome' }" class="back-home">研发商店</router-link>
+                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('研发商店') }} </router-link>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="back-home" @click="backToStore">{{type|typeFilter}}</span>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{detail.name}}</span>
             </p>
-            <router-link :to="{ name: 'atomList' }" class="title-work" v-if="type !== 'ide'">工作台</router-link>
+            <router-link :to="{ name: 'atomList' }" class="title-work" v-if="type !== 'ide'"> {{ $t('工作台') }} </router-link>
         </h3>
 
         <main class="store-main" v-show="!isLoading">
             <atom v-if="type === 'atom'" :detail="detail" />
             <template-info v-if="type === 'template'" :detail="detail" />
-            <image-info v-if="type === 'image'" :detail="detail" />
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
-                <bk-tab-panel name="des" label="概述" class="summary-tab">
+                <bk-tab-panel name="des" :label="$t('概述')" class="summary-tab">
                     <mavon-editor
                         :editable="false"
                         default-open="preview"
@@ -29,13 +28,13 @@
                         v-if="detail.description"
                     >
                     </mavon-editor>
-                    <p class="g-empty summary-empty" v-if="!detail.description">发布者很懒，什么都没留下！</p>
+                    <p class="g-empty summary-empty" v-if="!detail.description"> {{ $t('发布者很懒，什么都没留下！') }} </p>
                 </bk-tab-panel>
 
-                <bk-tab-panel name="comment" label="评价" class="detail-tab">
-                    <h3 class="comment-title">用户评分</h3>
+                <bk-tab-panel name="comment" :label="$t('评价')" class="detail-tab">
+                    <h3 class="comment-title"> {{ $t('用户评分') }} </h3>
                     <section class="rate-group">
-                        <h3 class="rate-title"><animated-integer :value="detail.avgScore" digits="1"></animated-integer><span>共{{detail.totalNum}}份评分</span></h3>
+                        <h3 class="rate-title"><animated-integer :value="detail.avgScore" digits="1"></animated-integer><span>{{ $t('共') }}{{detail.totalNum}}{{ $t('份评分') }}</span></h3>
                         <hgroup class="rate-card">
                             <h3 class="rate-info" v-for="(scoreItem, index) in detail.scoreItemList" :key="index">
                                 <comment-rate :rate="scoreItem.score" :width="10" :height="11"></comment-rate>
@@ -47,17 +46,17 @@
                             </h3>
                         </hgroup>
                         <button class="add-common" @click="showComment = true">
-                            <template v-if="commentInfo.commentFlag">修改评论</template>
-                            <template>撰写评论</template>
+                            <template v-if="commentInfo.commentFlag"> {{ $t('修改评论') }} </template>
+                            <template> {{ $t('撰写评论') }} </template>
                         </button>
                     </section>
 
-                    <h3 class="comment-title">用户评论</h3>
+                    <h3 class="comment-title"> {{ $t('用户评论') }} </h3>
                     <hgroup v-for="(comment, index) in commentList" :key="index">
                         <comment :comment="comment"></comment>
                     </hgroup>
-                    <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)">阅读更多内容</p>
-                    <p class="g-empty comment-empty" v-if="commentList.length <= 0">空空如洗，快来评论一下吧！</p>
+                    <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('阅读更多内容') }} </p>
+                    <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
             </bk-tab>
             <transition name="atom-fade">
@@ -68,19 +67,13 @@
 </template>
 
 <script>
-    import Vue from 'vue'
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
     import { mapActions, mapGetters } from 'vuex'
     import commentRate from '../../components/common/comment-rate'
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
     import atom from '../../components/common/detail-info/atom'
-    import imageInfo from '../../components/common/detail-info/image'
     import templateInfo from '../../components/common/detail-info/template'
-
-    Vue.use(mavonEditor)
 
     export default {
         components: {
@@ -89,25 +82,19 @@
             commentDialog,
             animatedInteger,
             atom,
-            templateInfo,
-            imageInfo
+            templateInfo
         },
 
         filters: {
             typeFilter (val) {
+                const bkLocale = window.devops.bkLocale || {}
                 let res = ''
                 switch (val) {
                     case 'template':
-                        res = '流水线模板'
-                        break
-                    case 'ide':
-                        res = 'IDE插件'
-                        break
-                    case 'image':
-                        res = '镜像'
+                        res = bkLocale.i18n('流水线模板')
                         break
                     default:
-                        res = '流水线插件'
+                        res = bkLocale.i18n('流水线插件')
                         break
                 }
                 return res
@@ -128,15 +115,11 @@
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData),
-                        ide: (postData) => this.requestIDEComments(postData),
-                        image: (postData) => this.requestImageComments(postData)
+                        template: (postData) => this.requestTemplateComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode),
-                        ide: () => this.requestIDEScoreDetail(this.detailCode),
-                        image: () => this.requestImageScoreDetail(this.detailCode)
+                        template: () => this.requestTemplateScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -168,12 +151,6 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
-                'requestIDE',
-                'requestIDEComments',
-                'requestIDEScoreDetail',
-                'requestImage',
-                'requestImageComments',
-                'requestImageScoreDetail',
                 'getUserApprovalInfo'
             ]),
 
@@ -203,9 +180,7 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
-                    template: () => this.getTemplateDetail(),
-                    ide: () => this.getIDEDetail(),
-                    image: () => this.getImageDetail()
+                    template: () => this.getTemplateDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -240,28 +215,6 @@
                     this.detailId = templateDetail.templateId
                     this.detail.name = templateDetail.templateName
                     this.commentInfo = templateDetail.userCommentInfo || {}
-                })
-            },
-
-            getIDEDetail () {
-                const atomCode = this.detailCode
-
-                return this.requestIDE({ atomCode }).then((res) => {
-                    this.detail = res || {}
-                    this.detailId = res.atomId
-                    this.detail.name = res.atomName
-                    this.commentInfo = res.userCommentInfo || {}
-                })
-            },
-
-            getImageDetail () {
-                const imageCode = this.detailCode
-
-                return this.requestImage({ imageCode }).then((res) => {
-                    this.detail = res || {}
-                    this.detailId = res.imageId
-                    this.detail.name = res.imageName
-                    this.commentInfo = res.userCommentInfo || {}
                 })
             },
 

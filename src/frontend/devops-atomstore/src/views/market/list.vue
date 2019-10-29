@@ -1,8 +1,8 @@
 <template>
     <article v-bkloading="{ isLoading, opacity: 1 }">
         <h3 class="list-type" v-clickoutside="closeOrderList">
-            <span class="list-count">总数 : <strong>{{count}}</strong></span>
-            <span class="list-sort">排序：</span>
+            <span class="list-count"> {{ $t('总数 :') }} <strong>{{count}}</strong></span>
+            <span class="list-sort"> {{ $t('排序：') }} </span>
             <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click.stop="showOrderList = !showOrderList">{{ orderType.name }}</span>
             <ul class="list-menu" v-show="showOrderList">
                 <li v-for="(order, index) in orderList" :key="index" @click.stop="chooseOrderType(order)">{{ order.name }}</li>
@@ -12,7 +12,7 @@
         <hgroup class="list-cards" v-if="!isLoading">
             <card v-for="card in cards" :key="card.atomCode" :atom="card" :has-summary="true" class="list-card"></card>
         </hgroup>
-        <p class="g-empty list-empty" v-if="cards.length <= 0">没找到相关结果</p>
+        <p class="g-empty list-empty" v-if="cards.length <= 0"> {{ $t('没找到相关结果') }} </p>
     </article>
 </template>
 
@@ -38,14 +38,14 @@
                 isLoading: true,
                 cards: [],
                 count: 0,
-                orderType: { id: 'DOWNLOAD_COUNT', name: '按热度' },
+                orderType: { id: 'DOWNLOAD_COUNT', name: this.$t('按热度') },
                 showOrderList: false,
                 orderList: [
-                    { id: 'NAME', name: '按名称A-Z' },
-                    { id: 'CREATE_TIME', name: '按创建时间' },
-                    { id: 'UPDATE_TIME', name: '按修改时间' },
-                    { id: 'PUBLISHER', name: '按发布者' },
-                    { id: 'DOWNLOAD_COUNT', name: '按热度' }
+                    { id: 'NAME', name: this.$t('按名称A-Z') },
+                    { id: 'CREATE_TIME', name: this.$t('按创建时间') },
+                    { id: 'UPDATE_TIME', name: this.$t('按修改时间') },
+                    { id: 'PUBLISHER', name: this.$t('按发布者') },
+                    { id: 'DOWNLOAD_COUNT', name: this.$t('按热度') }
                 ]
             }
         },
@@ -101,9 +101,7 @@
 
                 const apiFun = {
                     atom: () => this.getAtomList(postData, searchStr),
-                    template: () => this.getTemplateList(postData, searchStr),
-                    ide: () => this.getIDEList(postData, searchStr),
-                    image: () => this.getImageList(postData, searchStr)
+                    template: () => this.getTemplateList(postData, searchStr)
                 }
 
                 apiFun[pipeType]().then((res) => {
@@ -125,16 +123,6 @@
             getAtomList (postData, searchStr) {
                 postData.atomName = searchStr
                 return this.$store.dispatch('store/requestMarketAtom', postData)
-            },
-
-            getIDEList (postData, searchStr) {
-                postData.atomName = searchStr
-                return this.$store.dispatch('store/requestMarketIDE', postData)
-            },
-
-            getImageList (postData, searchStr) {
-                postData.imageName = searchStr
-                return this.$store.dispatch('store/requestMarketImage', postData)
             },
 
             chooseOrderType (order) {

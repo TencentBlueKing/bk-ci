@@ -5,7 +5,7 @@
             <hgroup v-for="cardGroup in cardGroups" :key="cardGroup.key" class="main-group">
                 <h3 class="main-title">
                     <span>{{cardGroup.label}}</span>
-                    <span v-if="cardGroup.records.length >= 8" class="title-route" @click="showMore(cardGroup.key)">显示全部</span>
+                    <span v-if="cardGroup.records.length >= 8" class="title-route" @click="showMore(cardGroup.key)"> {{ $t('显示全部') }} </span>
                 </h3>
                 <card v-for="(card, index) in cardGroup.records" :key="index" :atom="card" class="main-card"></card>
                 <empty v-if="cardGroup.records <= 0"></empty>
@@ -64,9 +64,7 @@
             getHomeCards () {
                 const urls = {
                     atom: 'store/requestAtomHome',
-                    template: 'store/requestTemplateHome',
-                    ide: 'store/requestIDEHome',
-                    image: 'store/requestImageHome'
+                    template: 'store/requestTemplateHome'
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const url = urls[type]

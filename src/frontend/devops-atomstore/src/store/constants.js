@@ -19,7 +19,6 @@
 
 export const UPDATE_CURRENT_ATOM = 'UPDATE_CURRENT_ATOM'
 export const UPDATE_CURRENT_TEMPLATE = 'UPDATE_CURRENT_TEMPLATE'
-export const UPDATE_CURRENT_IMAGE = 'UPDATE_CURRENT_IMAGE'
 export const UPDATE_CURRENT_LIST = 'UPDATE_CURRENT_LIST'
 export const UPDATE_MARKET_QUERY = 'UPDATE_MARKET_QUERY'
 
@@ -42,19 +41,5 @@ export const templateStatusList = {
     'AUDIT_REJECT': '审核驳回',
     'RELEASED': '已发布',
     'GROUNDING_SUSPENSION': '上架中止',
-    'UNDERCARRIAGED': '已下架'
-}
-
-export const imageStatusList = {
-    'INIT': '初始化',
-    'COMMITTING': '提交中',
-    'CHECKING': '验证中',
-    'CHECK_FAIL': '验证失败',
-    'TESTING': '测试中',
-    'AUDITING': '审核中',
-    'AUDIT_REJECT': '审核驳回',
-    'RELEASED': '已发布',
-    'GROUNDING_SUSPENSION': '上架中止',
-    'UNDERCARRIAGING': '下架中',
     'UNDERCARRIAGED': '已下架'
 }

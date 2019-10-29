@@ -277,13 +277,6 @@ export const actions = {
     },
 
     /**
-     * 根据机构类型和机构ID查看机构列表
-     */
-    requestOrganizations ({ commit }, { type, id }) {
-        return vue.$ajax.get(`${projectPrefix}/user/organizations/types/${type}/ids/${id}`)
-    },
-
-    /**
      * 设置流水线插件可见范围
      */
     setVisableDept ({ commit }, { params }) {

@@ -1,11 +1,11 @@
 <template>
     <article class="add-comment" @click.self="cancle">
         <section class="add-main" v-bkloading="{ isLoading }">
-            <h3 class="add-title">为{{name}}评分</h3>
+            <h3 class="add-title">为{{name}} {{ $t('评分') }} </h3>
             <comment-rate class="add-rate" :edit="true" :rate="rate" :height="24" :width="23" @chooseRate="chooseRate"></comment-rate>
-            <textarea class="add-content g-input-border" v-model="comment" placeholder="请输入你的评论内容（字数上限为500字）" ref="commentText"></textarea>
+            <textarea class="add-content g-input-border" v-model="comment" :placeholder="$t('请输入你的评论内容（字数上限为500字）')" ref="commentText"></textarea>
             <h3 class="g-confirm-buttom">
-                <button @click="cancle">取消</button><button @click="confirm">确定</button>
+                <button @click="cancle"> {{ $t('取消') }} </button><button @click="confirm"> {{ $t('确定') }} </button>
             </h3>
         </section>
     </article>
@@ -34,21 +34,15 @@
                 comment: '',
                 modifyCommentGenerator: {
                     atom: (data) => this.requestAtomModifyComment(data),
-                    template: (data) => this.requestTemplateModifyComment(data),
-                    ide: (data) => this.requestIDEModifyComment(data),
-                    image: (data) => this.requestImageModifyComment(data)
+                    template: (data) => this.requestTemplateModifyComment(data)
                 },
                 addCommentGenerator: {
                     atom: (postData) => this.requestAddAtomComment(postData),
-                    template: (postData) => this.requestAddTemplateComment(postData),
-                    ide: (postData) => this.requestAddIDEComment(postData),
-                    image: (postData) => this.requestAddImageComment(postData)
+                    template: (postData) => this.requestAddTemplateComment(postData)
                 },
                 getCommentGenerator: {
                     atom: () => this.requestAtomUserComment(this.commentId),
-                    template: () => this.requestTemplateUserComment(this.commentId),
-                    ide: () => this.requestIDEUserComment(this.commentId),
-                    image: () => this.requestImageUserComment(this.commentId)
+                    template: () => this.requestTemplateUserComment(this.commentId)
                 }
             }
         },
@@ -67,16 +61,10 @@
             ...mapActions('store', [
                 'requestAddAtomComment',
                 'requestAddTemplateComment',
-                'requestAddIDEComment',
                 'requestTemplateModifyComment',
                 'requestTemplateUserComment',
                 'requestAtomModifyComment',
-                'requestAtomUserComment',
-                'requestIDEModifyComment',
-                'requestIDEUserComment',
-                'requestAddImageComment',
-                'requestImageModifyComment',
-                'requestImageUserComment'
+                'requestAtomUserComment'
             ]),
 
             getComment () {
@@ -105,12 +93,12 @@
 
             confirm () {
                 if (this.rate <= 0) {
-                    this.$bkMessage({ message: '请先评分，再发布评价', theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('请先评分，再发布评价'), theme: 'warning' })
                     return
                 }
 
                 if (this.comment.length >= 500) {
-                    this.$bkMessage({ message: '字数不能超过500字，请修改后再评价', theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('字数不能超过500字，请修改后再评价'), theme: 'warning' })
                     return
                 }
 
@@ -121,7 +109,7 @@
                 const type = this.commentId ? 'modify' : 'add'
 
                 confirmGenerator[type]().then((res) => {
-                    this.$bkMessage({ message: '评论成功', theme: 'success' })
+                    this.$bkMessage({ message: this.$t('评论成功'), theme: 'success' })
                     this.$emit('freshComment', res)
                     this.$emit('closeDialog')
                 }).catch((err) => {

@@ -1,29 +1,24 @@
 <template>
-    <div class="edit-atom-wrapper"
-        v-bkloading="{
-            isLoading: loading.isLoading,
-            title: loading.title
-        }">
-
+    <div class="edit-atom-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
         <h3 class="market-home-title">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <span class="back-home" @click="toAtomStore()">研发商店</span>
+                <span class="back-home" @click="toAtomStore()"> {{ $t('研发商店') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="back-home" @click="toAtomList()">工作台</span>
+                <span class="back-home" @click="toAtomList()"> {{ $t('工作台') }} </span>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="">{{ curTitle }}（{{ atomForm.atomCode }}）</span>
             </p>
-            <a class="title-work" target="_blank" :href="docsLink">插件指引</a>
+            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('插件指引') }} </a>
         </h3>
 
         <div class="edit-atom-content" v-if="showContent">
             <form class="bk-form edit-atom-form g-form-radio">
                 <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label">名称</label>
+                    <label class="bk-label"> {{ $t('名称') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
                         <div style="width: 40%;">
-                            <input type="text" class="bk-form-input atom-name-input" placeholder="请输入中英文名称"
+                            <input type="text" class="bk-form-input atom-name-input" :placeholder="$t('请输入中英文名称')"
                                 ref="atomName"
                                 name="atomName"
                                 v-model="atomForm.name"
@@ -37,22 +32,22 @@
                         <bk-popover placement="right">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p>插件名称不超过20个字符</p>
+                                <p> {{ $t('插件名称不超过20个字符') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                 </div>
                 <div class="bk-form-item is-required" ref="categoryError">
-                    <label class="bk-label category-label">范畴</label>
+                    <label class="bk-label category-label"> {{ $t('范畴') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-radio-group v-model="atomForm.category" class="radio-group">
                             <bk-radio :value="entry.value" v-for="(entry, key) in categoryList" :key="key" @click.native="formErrors.categoryError = false">{{entry.label}}</bk-radio>
                         </bk-radio-group>
-                        <div v-if="formErrors.categoryError" class="error-tips">字段有误，请重新选择</div>
+                        <div v-if="formErrors.categoryError" class="error-tips"> {{ $t('字段有误，请重新选择') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item  is-required" ref="sortError">
-                    <label class="bk-label">分类</label>
+                    <label class="bk-label"> {{ $t('分类') }} </label>
                     <div class="bk-form-content atom-item-content atom-classify-content">
                         <bk-select v-model="atomForm.classifyCode" @selected="changeClassify" style="width: 40%;" searchable :clearable="false">
                             <bk-option v-for="(option, index) in sortList"
@@ -61,24 +56,24 @@
                                 :name="option.classifyName">
                             </bk-option>
                         </bk-select>
-                        <div v-if="formErrors.sortError" class="error-tips">分类不能为空</div>
+                        <div v-if="formErrors.sortError" class="error-tips"> {{ $t('分类不能为空') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item is-required">
-                    <label class="bk-label env-label">操作系统</label>
+                    <label class="bk-label env-label"> {{ $t('操作系统') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-checkbox-group v-model="atomForm.os">
                             <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
                                 <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
                             </bk-checkbox>
                         </bk-checkbox-group>
-                        <div v-if="formErrors.envError" class="error-tips env-error">操作系统不能为空</div>
+                        <div v-if="formErrors.envError" class="error-tips env-error"> {{ $t('操作系统不能为空') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item">
-                    <label class="bk-label">功能标签</label>
+                    <label class="bk-label"> {{ $t('功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
-                        <bk-select placeholder="请选择功能标签"
+                        <bk-select :placeholder="$t('请选择功能标签')"
                             v-model="atomForm.labelIdList"
                             @selected="changeClassify"
                             show-select-all
@@ -94,9 +89,9 @@
                     </div>
                 </div>
                 <div class="bk-form-item introduction-form-item is-required">
-                    <label class="bk-label">简介</label>
+                    <label class="bk-label"> {{ $t('简介') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <input type="text" class="bk-form-input atom-introduction-input" placeholder="插件一句话简介，不超过70个字符"
+                        <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('插件一句话简介，不超过70个字符')"
                             name="introduction"
                             maxlength="70"
                             v-model="atomForm.summary"
@@ -108,15 +103,15 @@
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p>插件一句话简介，不超过70个字符。</p>
-                                <p>展示在插件市场以及流水线选择插件页面。</p>
+                                <p> {{ $t('插件一句话简介，不超过70个字符。') }} </p>
+                                <p> {{ $t('展示在插件市场以及流水线选择插件页面。') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                     <p :class="errors.has('introduction') ? 'error-tips' : 'normal-tips'">{{ errors.first("introduction") }}</p>
                 </div>
                 <div class="bk-form-item remark-form-item">
-                    <label class="bk-label">详细描述</label>
+                    <label class="bk-label"> {{ $t('详细描述') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
                         <mavon-editor class="atom-remark-input" :placeholder="descTemplate"
                             ref="mdHook"
@@ -130,20 +125,20 @@
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p>插件详细介绍，请说明插件功能、使用场景、使用限制和受限解决方案[可选]、常见的失败原因和解决方案、以及接口人联系方式。</p>
-                                <p>展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。</p>
+                                <p> {{ $t('插件详细介绍，请说明插件功能、使用场景、使用限制和受限解决方案[可选]、常见的失败原因和解决方案、以及接口人联系方式。') }} </p>
+                                <p> {{ $t('展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                 </div>
                 <div class="version-msg">
-                    <p class="form-title">版本信息</p>
+                    <p class="form-title"> {{ $t('版本信息') }} </p>
                     <hr class="cut-line">
                 </div>
                 <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label">发布者</label>
+                    <label class="bk-label"> {{ $t('发布者') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <input type="text" class="bk-form-input atom-name-input" placeholder="请输入"
+                        <input type="text" class="bk-form-input atom-name-input" :placeholder="$t('请输入')"
                             name="publisher"
                             v-model="atomForm.publisher"
                             v-validate="{
@@ -155,7 +150,7 @@
                     </div>
                 </div>
                 <div class="bk-form-item publish-form-item is-required" ref="releaseTypeError" v-if="atomForm.releaseType !== 'CANCEL_RE_RELEASE'">
-                    <label class="bk-label publish-type-label">发布类型</label>
+                    <label class="bk-label publish-type-label"> {{ $t('发布类型') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips radio-flex">
                         <section v-if="atomForm.version" style="min-width: 100%;">
                             <bk-radio-group v-model="atomForm.releaseType" class="radio-group">
@@ -168,47 +163,47 @@
                                     </bk-popover>
                                 </bk-radio>
                             </bk-radio-group>
-                            <div v-if="formErrors.releaseTypeError" class="error-tips">发布类型不能为空</div>
+                            <div v-if="formErrors.releaseTypeError" class="error-tips"> {{ $t('发布类型不能为空') }} </div>
                         </section>
                         <section v-else style="min-width: 100%;">
                             <bk-radio-group v-model="atomForm.releaseType" class="radio-group">
                                 <bk-radio :value="entry.value" v-for="(entry, key) in publishShelf" :key="key" @click.native="formErrors.releaseTypeError = false">{{entry.label}}</bk-radio>
                             </bk-radio-group>
-                            <div v-if="formErrors.releaseTypeError" class="error-tips">发布类型不能为空</div>
+                            <div v-if="formErrors.releaseTypeError" class="error-tips"> {{ $t('发布类型不能为空') }} </div>
                         </section>
                     </div>
                 </div>
                 <div class="bk-form-item version-num-form-item is-required" style="margin-top: 10px">
-                    <label class="bk-label">版本号</label>
+                    <label class="bk-label"> {{ $t('版本号') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
                         <p class="version-num-content" style="min-width: 100%;">{{ curVersion }}
-                            <span class="version-prompt">（主版本号.次版本号.修正号）</span>
-                            <span class="version-modify" @click="atomForm.releaseType = 'COMPATIBILITY_FIX'" v-if="atomForm.releaseType === 'CANCEL_RE_RELEASE'">修改</span>
+                            <span class="version-prompt"> {{ $t('（主版本号.次版本号.修正号）') }} </span>
+                            <span class="version-modify" @click="atomForm.releaseType = 'COMPATIBILITY_FIX'" v-if="atomForm.releaseType === 'CANCEL_RE_RELEASE'"> {{ $t('修改') }} </span>
                         </p>
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p>根据发布类型自动生成</p>
+                                <p> {{ $t('根据发布类型自动生成') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                 </div>
                 <div class="bk-form-item release-package-form-item is-required" style="margin-top: 10px">
-                    <label class="bk-label">发布包</label>
+                    <label class="bk-label"> {{ $t('发布包') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-file-upload
                             :post-url="releasePackageUrl"
                             :os="atomForm.os"
-                            :tip="'只允许上传 zip 格式的文件'"
+                            :tip="$t('只允许上传 zip 格式的文件')"
                             accept="application/zip"
                             @uploadSuccess="uploadPackageSuccess"
                             @uploadFail="uploadPackageErr"
                         ></bk-file-upload>
-                        <div v-if="formErrors.releasePackageError" class="error-tips">发布包不能为空</div>
+                        <div v-if="formErrors.releasePackageError" class="error-tips"> {{ $t('发布包不能为空') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item versionlog-form-item is-required">
-                    <label class="bk-label">版本日志</label>
+                    <label class="bk-label"> {{ $t('版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <textarea type="text" class="bk-form-input atom-versionlog-input" placeholder=""
                             name="versionContent"
@@ -222,8 +217,8 @@
                     </div>
                 </div>
                 <div class="form-footer">
-                    <button class="bk-button bk-primary" type="button" @click="submit()">提交</button>
-                    <button class="bk-button bk-default" type="button" @click="toAtomList()">取消</button>
+                    <button class="bk-button bk-primary" type="button" @click="submit()"> {{ $t('提交') }} </button>
+                    <button class="bk-button bk-default" type="button" @click="toAtomList()"> {{ $t('取消') }} </button>
                 </div>
                 <select-logo :form="atomForm" type="ATOM" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
             </form>
@@ -247,12 +242,12 @@
                 atomName: 'landun-atom-codecc',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线插件Store/快速入门.html`,
+                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
                 showContent: false,
                 isUploading: false,
                 initOs: [],
                 categoryList: [
-                    { label: '流水线插件', value: 'TASK' }
+                    { label: this.$t('流水线插件'), value: 'TASK' }
                     // { label: '流水线触发器', value: 'TRIGGER' }
                 ],
                 envList: [
@@ -261,23 +256,23 @@
                     { label: 'macOS', value: 'MACOS', icon: 'macos' }
                 ],
                 publishShelf: [
-                    { label: '新上架', value: 'NEW' }
+                    { label: this.$t('新上架'), value: 'NEW' }
                 ],
                 publishTypeList: [
                     {
-                        label: '非兼容式升级',
+                        label: this.$t('非兼容式升级'),
                         value: 'INCOMPATIBILITY_UPGRADE',
-                        desc: '当新版本输入输出不兼容旧版本时，使用"非兼容式升级"方式，发布后用户需修改流水线中的插件版本号才能使用新版本。'
+                        desc: this.$t('当新版本输入输出不兼容旧版本时，使用非兼容式升级方式，发布后用户需修改流水线中的插件版本号才能使用新版本。')
                     },
                     {
-                        label: '兼容式功能更新',
+                        label: this.$t('兼容式功能更新'),
                         value: 'COMPATIBILITY_UPGRADE',
-                        desc: '当新版本输入输出兼容旧版本，仅更新功能时，使用"兼容式升级"方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。'
+                        desc: this.$t('当新版本输入输出兼容旧版本，仅更新功能时，使用兼容式升级方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。')
                     },
                     {
-                        label: '兼容式问题修正',
+                        label: this.$t('兼容式问题修正'),
                         value: 'COMPATIBILITY_FIX',
-                        desc: '当新版本为bug fix时，使用"兼容式问题修正"方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。'
+                        desc: this.$t('当新版本为bug fix时，使用兼容式问题修正方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。')
                     }
                 ],
                 sortList: [],
@@ -296,7 +291,7 @@
                     os: [],
                     labelIdList: [],
                     summary: '',
-                    description: '#### 插件功能\n\n#### 适用场景\n\n#### 使用限制和受限解决方案[可选]\n\n#### 常见的失败原因和解决方案',
+                    description: `#### ${this.$t('插件功能')}\n\n#### ${this.$t('适用场景')}\n\n#### ${this.$t('使用限制和受限解决方案[可选]')}\n\n#### ${this.$t('常见的失败原因和解决方案')}`,
                     publisher: '',
                     version: '1.0.0',
                     releaseType: 'NEW',
@@ -318,7 +313,7 @@
                 return this.$route.params.atomId
             },
             curTitle () {
-                return this.$route.name === 'shelfAtom' ? '上架插件' : '升级插件'
+                return this.$route.name === 'shelfAtom' ? this.$t('上架插件') : this.$t('升级插件')
             },
             toolbarOptions () {
                 return toolbars
@@ -593,7 +588,7 @@
 
                     try {
                         if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.$route.name === 'upgradeAtom' && !isEqualOs) {
-                            message = '操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。'
+                            message = this.$t('操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
                             theme = 'error'
                         } else {
                             this.loading.isLoading = true
@@ -621,7 +616,7 @@
                                 params: params
                             })
 
-                            message = '提交成功'
+                            message = this.$t('提交成功')
                             theme = 'success'
 
                             if (res) {
@@ -634,7 +629,7 @@
 
                             this.$bkInfo({
                                 type: 'error',
-                                title: '提交失败',
+                                title: this.$t('提交失败'),
                                 showFooter: false,
                                 subHeader: h('p', {
                                     style: {

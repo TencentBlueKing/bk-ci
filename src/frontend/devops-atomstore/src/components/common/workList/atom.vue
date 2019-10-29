@@ -2,31 +2,30 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <bk-button class="bk-button bk-primary" @click.native="createNewAtom">新增插件</bk-button>
+                <bk-button class="bk-button bk-primary" @click.native="createNewAtom"> {{ $t('新增插件') }} </bk-button>
             </div>
             <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
-                <input class="g-input-border" type="text" placeholder="请输入关键字搜索" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
+                <input class="g-input-border" type="text" :placeholder="$t('请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
                 <i class="bk-icon icon-search" v-if="!searchName"></i>
                 <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
             </section>
         </div>
-        <bk-table style="margin-top: 15px;"
-            empty-text="暂时没有插件"
+        <bk-table style="margin-top: 15px;" :empty-text="$t('暂时没有插件')"
             :data="renderList"
             :pagination="pagination"
             @page-change="pageChanged"
             @page-limit-change="pageCountChanged"
             v-bkloading="{ isLoading }"
         >
-            <bk-table-column label="插件名称">
+            <bk-table-column :label="$t('插件名称')">
                 <template slot-scope="props">
                     <span class="atom-name" :title="props.row.name" @click="routerAtoms(props.row.atomCode)">{{ props.row.name }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="调试项目" prop="projectName"></bk-table-column>
-            <bk-table-column label="开发语言" prop="language"></bk-table-column>
-            <bk-table-column label="版本" prop="version"></bk-table-column>
-            <bk-table-column label="状态">
+            <bk-table-column :label="$t('调试项目')" prop="projectName"></bk-table-column>
+            <bk-table-column :label="$t('开发语言')" prop="language"></bk-table-column>
+            <bk-table-column :label="$t('版本')" prop="version"></bk-table-column>
+            <bk-table-column :label="$t('状态')">
                 <template slot-scope="props">
                     <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary" v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL' || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING' || props.row.atomStatus === 'UNDERCARRIAGING'">
                         <div class="rotate rotate1"></div>
@@ -45,27 +44,27 @@
                     <span>{{ atomStatusList[props.row.atomStatus] }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="修改人" prop="modifier"></bk-table-column>
-            <bk-table-column label="修改时间" prop="updateTime" width="150"></bk-table-column>
-            <bk-table-column label="操作" width="200" class-name="handler-btn">
+            <bk-table-column :label="$t('修改人')" prop="modifier"></bk-table-column>
+            <bk-table-column :label="$t('修改时间')" prop="updateTime" width="150"></bk-table-column>
+            <bk-table-column :label="$t('操作')" width="200" class-name="handler-btn">
                 <template slot-scope="props">
                     <span class="upgrade-btn"
                         v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION' || props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'RELEASED'"
-                        @click="editHandle('upgradeAtom', props.row.atomId)">升级</span>
+                        @click="editHandle('upgradeAtom', props.row.atomId)"> {{ $t('升级') }} </span>
                     <span class="install-btn"
                         v-if="props.row.atomStatus === 'RELEASED'"
-                        @click="installAHandle(props.row.atomCode)">安装</span>
+                        @click="installAHandle(props.row.atomCode)"> {{ $t('安装') }} </span>
                     <span class="shelf-btn"
                         v-if="props.row.atomStatus === 'INIT' || props.row.atomStatus === 'UNDERCARRIAGED'"
-                        @click="editHandle('shelfAtom', props.row.atomId)">上架</span>
+                        @click="editHandle('shelfAtom', props.row.atomId)"> {{ $t('上架') }} </span>
                     <span class="obtained-btn"
                         v-if="props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'RELEASED' || (props.row.atomStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
-                        @click="offline(props.row)">下架</span>
+                        @click="offline(props.row)"> {{ $t('下架') }} </span>
                     <span class="schedule-btn"
                         v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
                             || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING'"
-                        @click="routerProgress(props.row.atomId)">进度</span>
-                    <span class="delete-btn" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.atomStatus) && !props.row.version" @click="deleteAtom(props.row)">删除</span>
+                        @click="routerProgress(props.row.atomId)"> {{ $t('进度') }} </span>
+                    <span class="delete-btn" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.atomStatus) && !props.row.version" @click="deleteAtom(props.row)"> {{ $t('删除') }} </span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -83,9 +82,9 @@
                             isLoading: createAtomsideConfig.isLoading
                         }">
                         <div class="bk-form-item is-required">
-                            <label class="bk-label">名称</label>
+                            <label class="bk-label"> {{ $t('名称') }} </label>
                             <div class="bk-form-content atom-item-content">
-                                <input type="text" class="bk-form-input atom-name-input" placeholder="请输入中英文名称，不超过20个字符"
+                                <input type="text" class="bk-form-input atom-name-input" :placeholder="$t('请输入中英文名称，不超过20个字符')"
                                     name="atomName"
                                     v-model="createAtomForm.name"
                                     v-validate="{
@@ -97,10 +96,10 @@
                             </div>
                         </div>
                         <div class="bk-form-item is-required">
-                            <label class="bk-label">标识</label>
+                            <label class="bk-label"> {{ $t('标识') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%;">
-                                    <input type="text" class="bk-form-input atom-id-input" placeholder="请输入英文名称，不超过30个字符"
+                                    <input type="text" class="bk-form-input atom-id-input" :placeholder="$t('请输入英文名称，不超过30个字符')"
                                         name="atomId"
                                         v-model="createAtomForm.atomCode"
                                         v-validate="{
@@ -110,22 +109,22 @@
                                         }"
                                         :class="{ 'is-danger': errors.has('atomId') }">
                                     <p :class="errors.has('atomId') ? 'error-tips' : 'normal-tips'">
-                                        {{ errors.first("atomId") && errors.first("atomId").indexOf('正则') > 0 ? '只能输入英文' : errors.first("atomId") }}
+                                        {{ errors.first("atomId") && errors.first("atomId").indexOf($t('正则')) > 0 ? $t('只能输入英文') : errors.first("atomId") }}
                                     </p>
                                 </div>
                                 <bk-popover placement="right">
                                     <i class="bk-icon icon-info-circle"></i>
                                     <template slot="content">
-                                        <p>唯一标识，创建后不能修改。将作为插件代码库路径。</p>
+                                        <p> {{ $t('唯一标识，创建后不能修改。将作为插件代码库路径。') }} </p>
                                     </template>
                                 </bk-popover>
                             </div>
                         </div>
                         <div class="bk-form-item is-required">
-                            <label class="bk-label">调试项目</label>
+                            <label class="bk-label"> {{ $t('调试项目') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%">
-                                    <big-select v-model="createAtomForm.projectCode" @selected="selectedProject" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="project_code" display-key="project_name" placeholder="请选择调试项目">
+                                    <big-select v-model="createAtomForm.projectCode" @selected="selectedProject" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="project_code" display-key="project_name" :placeholder="$t('请选择调试项目')">
                                         <div slot="extension" style="cursor: pointer;">
                                             <a :href="itemUrl" target="_blank">
                                                 <i class="bk-icon icon-plus-circle" />
@@ -133,18 +132,18 @@
                                             </a>
                                         </div>
                                     </big-select>
-                                    <div v-if="atomErrors.projectError" class="error-tips">项目不能为空</div>
+                                    <div v-if="atomErrors.projectError" class="error-tips"> {{ $t('项目不能为空') }} </div>
                                 </div>
                                 <bk-popover placement="right" width="400">
                                     <i class="bk-icon icon-info-circle"></i>
                                     <template slot="content">
-                                        <p>插件默认安装的项目，当新版本进入测试阶段后，该项目下使用当前插件且版本为[主版本号.latest]的流水线执行时，默认使用测试版本。开发者可以验证插件新版本。</p>
+                                        <p> {{ $t('插件默认安装的项目，当新版本进入测试阶段后，该项目下使用当前插件且版本为[主版本号.latest]的流水线执行时，默认使用测试版本。开发者可以验证插件新版本。') }} </p>
                                     </template>
                                 </bk-popover>
                             </div>
                         </div>
                         <div class="bk-form-item is-required">
-                            <label class="bk-label">开发语言</label>
+                            <label class="bk-label"> {{ $t('开发语言') }} </label>
                             <div class="bk-form-content atom-item-content">
                                 <bk-select v-model="createAtomForm.language" searchable>
                                     <bk-option v-for="(option, index) in languageList"
@@ -152,16 +151,16 @@
                                         :id="option.language"
                                         :name="option.name"
                                         @click.native="selectedLanguage"
-                                        :placeholder="'请选择开发语言'"
+                                        :placeholder="$t('请选择开发语言')"
                                     >
                                     </bk-option>
                                 </bk-select>
-                                <div v-if="atomErrors.languageError" class="error-tips">开发语言不能为空</div>
+                                <div v-if="atomErrors.languageError" class="error-tips"> {{ $t('开发语言不能为空') }} </div>
                             </div>
                         </div>
                         <div class="form-footer">
-                            <button class="bk-button bk-primary" type="button" @click="submitCreateAtom()">提交</button>
-                            <button class="bk-button bk-default" type="button" @click="cancelCreateAtom()">取消</button>
+                            <button class="bk-button bk-primary" type="button" @click="submitCreateAtom()"> {{ $t('提交') }} </button>
+                            <button class="bk-button bk-default" type="button" @click="cancelCreateAtom()"> {{ $t('取消') }} </button>
                         </div>
                     </form>
                 </template>
@@ -177,19 +176,19 @@
                 <template slot="content">
                     <form class="bk-form offline-atom-form" v-bkloading="{ isLoading: offlinesideConfig.isLoading }">
                         <div class="bk-form-item">
-                            <label class="bk-label">名称</label>
+                            <label class="bk-label"> {{ $t('名称') }} </label>
                             <div class="bk-form-content">
                                 <p class="content-value">{{ curHandlerAtom.name }}</p>
                             </div>
                         </div>
                         <div class="bk-form-item">
-                            <label class="bk-label">标识</label>
+                            <label class="bk-label"> {{ $t('标识') }} </label>
                             <div class="bk-form-content">
                                 <p class="content-value">{{ curHandlerAtom.atomCode }}</p>
                             </div>
                         </div>
                         <div class="bk-form-item is-required">
-                            <label class="bk-label">缓冲期</label>
+                            <label class="bk-label"> {{ $t('缓冲期') }} </label>
                             <div class="bk-form-content">
                                 <bk-select v-model="buffer" searchable>
                                     <bk-option v-for="(option, index) in bufferLength"
@@ -197,16 +196,16 @@
                                         :id="option.value"
                                         :name="option.label"
                                         @click.native="selectedBuffer"
-                                        :placeholder="'请选择缓冲期'"
+                                        :placeholder="$t('请选择缓冲期')"
                                     >
                                     </bk-option>
                                 </bk-select>
-                                <div v-if="atomErrors.bufferError" class="error-tips">缓冲期不能为空</div>
+                                <div v-if="atomErrors.bufferError" class="error-tips"> {{ $t('缓冲期不能为空') }} </div>
                             </div>
                         </div>
                         <form-tips :tips-content="offlineTips" :prompt-list="promptList"></form-tips>
                         <div class="form-footer">
-                            <button class="bk-button bk-primary" type="button" @click="submitofflineAtom()">提交</button>
+                            <button class="bk-button bk-primary" type="button" @click="submitofflineAtom()"> {{ $t('提交') }} </button>
                         </div>
                     </form>
                 </template>
@@ -229,21 +228,21 @@
                 searchName: '',
                 gitOAuthUrl: '',
                 itemUrl: '/console/pm',
-                itemText: '新建项目',
-                offlineTips: '下架后：',
+                itemText: this.$t('新建项目'),
+                offlineTips: this.$t('下架后：'),
                 renderList: [],
                 projectList: [],
                 languageList: [],
                 promptList: [
-                    '1、插件市场不再展示插件',
-                    '2、已安装插件的项目不能再添加插件到流水线',
-                    '3、已使用插件的流水线可以继续使用，但有插件已下架标识'
+                    this.$t('1、插件市场不再展示插件'),
+                    this.$t('2、已安装插件的项目不能再添加插件到流水线'),
+                    this.$t('3、已使用插件的流水线可以继续使用，但有插件已下架标识')
                 ],
                 curHandlerAtom: {},
                 bufferLength: [
-                    { label: '0天', value: '0' },
-                    { label: '7天', value: '7' },
-                    { label: '15天', value: '15' }
+                    { label: this.$t('0天'), value: '0' },
+                    { label: this.$t('7天'), value: '7' },
+                    { label: this.$t('15天'), value: '15' }
                 ],
                 createAtomForm: {
                     projectCode: '',
@@ -264,12 +263,12 @@
                     isLoading: false,
                     quickClose: true,
                     width: 565,
-                    title: '新增插件'
+                    title: this.$t('新增插件')
                 },
                 offlinesideConfig: {
                     show: false,
                     isLoading: false,
-                    title: '下架插件',
+                    title: this.$t('下架插件'),
                     quickClose: true,
                     width: 565
                 },
@@ -404,7 +403,7 @@
                             params: params
                         })
 
-                        message = '新增成功'
+                        message = this.$t('新增成功')
                         theme = 'success'
                         this.cancelCreateAtom()
                         this.routerAtoms(this.createAtomForm.atomCode)
@@ -441,7 +440,7 @@
                             params: params
                         })
 
-                        message = '提交成功'
+                        message = this.$t('提交成功')
                         theme = 'success'
                         this.offlinesideConfig.show = false
                         this.requestList()
@@ -539,7 +538,7 @@
                         atomCode
                     })
 
-                    message = '删除成功'
+                    message = this.$t('删除成功')
                     theme = 'success'
                     this.requestList()
                 } catch (err) {
@@ -559,10 +558,10 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `确定删除插件(${row.name})？`)
+                }, `${this.$t('确定删除插件')}(${row.name})？`)
 
                 this.$bkInfo({
-                    title: `删除`,
+                    title: this.$t('删除'),
                     subHeader,
                     confirmFn: async () => {
                         this.requestDeleteAtom(row.atomCode)

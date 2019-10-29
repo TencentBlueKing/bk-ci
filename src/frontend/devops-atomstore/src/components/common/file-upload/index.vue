@@ -10,8 +10,8 @@
                         <div class="file-metedata">
                             <p class="file-name">{{file.name}}</p>
                             <span class="file-status" v-if="file.status === 'uploading'">{{progress}}%</span>
-                            <span class="file-status success" v-if="file.status === 'success'">上传成功</span>
-                            <span class="file-status error" v-if="file.status === 'error'">上传失败</span>
+                            <span class="file-status success" v-if="file.status === 'success'"> {{ $t('上传成功') }} </span>
+                            <span class="file-status error" v-if="file.status === 'error'"> {{ $t('上传失败') }} </span>
                         </div>
                         <div :class="['file-progress']">
                             <div :class="['file-progress-bar']" :style="`width: ${progress}%`"></div>
@@ -25,8 +25,7 @@
         <template v-else>
             <div class="file-input">
                 <button class="trigger-btn">
-                    <img src="../../../images/upload.svg" alt="" class="upload-icon">
-                    拖拽到此处上传或 <span>点击上传</span>
+                    <img src="../../../images/upload.svg" alt="" class="upload-icon"> {{ $t('拖拽到此处上传或 ') }} <span> {{ $t('点击上传') }} </span>
                 </button>
                 <input type="file" @change="selectFile" :multiple="multiple" :accept="accept">
             </div>
@@ -120,13 +119,13 @@
                     this.uploadQueue.push(fileObj)
                     if (this.maxSize && (fileObj.size > this.maxSize)) {
                         fileObj.status = 'error'
-                        fileObj.statusText = `文件不能超过${this.maxSize}M`
+                        fileObj.statusText = `${this.$t('`文件不能超过')}${this.maxSize}M`
                     } else if (!this.os.length) {
                         fileObj.status = 'error'
-                        fileObj.statusText = `请先选择操作系统`
+                        fileObj.statusText = `${this.$t('请先选择操作系统')}`
                     } else if (lastname.toLowerCase() !== '.zip') {
                         fileObj.status = 'error'
-                        fileObj.statusText = `只允许上传 zip 格式的文件`
+                        fileObj.statusText = `${this.$t('只允许上传 zip 格式的文件')}`
                     } else {
                         this.uploadFile(fileObj)
                     }
@@ -138,7 +137,7 @@
                 formData.append('file', fileObj.origin)
                 formData.append('os', `["${this.os.join('","')}"]`)
                 fileObj.status = 'uploading'
-                fileObj.statusText = '上传中'
+                fileObj.statusText = this.$t('上传中')
 
                 const xhr = new XMLHttpRequest()
                 fileObj.xhr = xhr // 保存，用于中断请求
@@ -154,7 +153,7 @@
                                 this.isUploadLoading = false
                                 this.progress = 100
                                 fileObj.status = 'success'
-                                fileObj.statusText = '上传成功'
+                                fileObj.statusText = this.$t('上传成功')
                                 this.$emit('uploadSuccess', response.data)
                             } else {
                                 fileObj.status = 'error'
