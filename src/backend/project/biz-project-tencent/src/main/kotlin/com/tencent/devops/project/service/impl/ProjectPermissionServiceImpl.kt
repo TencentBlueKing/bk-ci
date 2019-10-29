@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.code.BkProjectAuthServiceCode
+import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service
 class ProjectPermissionServiceImpl @Autowired constructor(
         private val objectMapper: ObjectMapper,
         private val authProjectApi: BSAuthProjectApi,
-        private val bkProjectAuthServiceCode: BkProjectAuthServiceCode
+        private val bsProjectAuthServiceCode: BSProjectServiceCodec
 ) : ProjectPermissionService {
 
     @Value("\${auth.url}")
@@ -83,7 +83,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
-        return authProjectApi.isProjectUser(userId,bkProjectAuthServiceCode, projectCode, null)
+        return authProjectApi.isProjectUser(userId,bsProjectAuthServiceCode, projectCode, null)
     }
 
     companion object{
