@@ -34,7 +34,6 @@ import (
 	"io/ioutil"
 	"os"
 	"pkg/api"
-	"pkg/config"
 	"pkg/util"
 	"pkg/util/command"
 	"pkg/util/systemutil"
@@ -86,7 +85,7 @@ func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
 	scriptContent := buffer.String()
 	logs.Info("scriptContent:", scriptContent)
 
-	scriptFile := fmt.Sprintf("%s/devops_pipeline_%s_%s.sh", config.GetAgentWorkdir(), pipeline.SeqId, pipeline.Type)
+	scriptFile := fmt.Sprintf("%s/devops_pipeline_%s_%s.sh", systemutil.GetWorkDir(), pipeline.SeqId, pipeline.Type)
 	err = ioutil.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
 		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
@@ -94,16 +93,12 @@ func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
 	}
 	defer os.Remove(scriptFile)
 
-	output, err := command.RunCommand(scriptFile, []string{} /*args*/, config.GetAgentWorkdir(), nil)
+	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
 		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()))
 		return errors.New("run pipeline failed: " + err.Error())
 	}
-
-	outputStr := string(output)
-	logs.Info("script output: ", string(output))
-
-	api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, outputStr))
+	api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
 	return nil
 }
 

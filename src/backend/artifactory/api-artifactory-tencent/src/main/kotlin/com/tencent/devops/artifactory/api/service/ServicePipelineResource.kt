@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineResource {
     @ApiOperation("获取有目录权限")
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/hasPermission")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/hasPermission")
     @Path("/{projectId}/{pipelineId}/hasPermission")
     @GET
     fun hasPermission(

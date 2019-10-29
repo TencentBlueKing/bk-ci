@@ -28,6 +28,7 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -35,6 +36,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -42,14 +44,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_STORE"], description = "service-store")
-@Path("/service/store/")
+@Path("/service/store")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStoreResource {
 
     @ApiOperation("卸载")
     @DELETE
-    @Path("/{storeCode}/uninstall")
+    @Path("/codes/{storeCode}/uninstall")
     fun uninstall(
         @ApiParam("标识", required = true)
         @PathParam("storeCode")
@@ -73,4 +75,18 @@ interface ServiceStoreResource {
         @QueryParam("storeCode")
         storeCode: String
     ): Result<List<SensitiveConfResp>?>
+
+    @ApiOperation("store组件内置流水线构建结果处理")
+    @PUT
+    @Path("/pipelineIds/{pipelineId}/buildIds/{buildId}/build/handle")
+    fun handleStoreBuildResult(
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam(value = "store组件内置流水线构建结果请求报文体", required = true)
+        storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean>
 }

@@ -14,14 +14,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_ARTIFACTORY_PIPELINE_TREND"], description = "版本仓库-构建产物")
-//@Path("/user/pipelineTrend")
+// @Path("/user/pipelineTrend")
 @Path("/user/pipeline/artifactory")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineTrendResource {
 
     @ApiOperation("APK,IPA趋势图")
-    //@Path("/pipelines{pipelineId}/trend")
+    // @Path("/pipelines{pipelineId}/trend")
     @Path("/construct/{pipelineId}/trend")
     @GET
     fun constructApkAndIpaTrend(

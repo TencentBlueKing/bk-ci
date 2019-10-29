@@ -30,7 +30,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppArtifactoryResource {
     @ApiOperation("获取目录列表")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}")
     @Path("/{projectId}/{artifactoryType}/list")
     @GET
     fun list(
@@ -49,7 +49,7 @@ interface AppArtifactoryResource {
     ): Result<List<FileInfo>>
 
     @ApiOperation("获取我的文件列表")
-    //@Path("/projects/{projectId}/ownFileList")
+    // @Path("/projects/{projectId}/ownFileList")
     @Path("/{projectId}/ownFileList")
     @GET
     fun getOwnFileList(
@@ -68,7 +68,7 @@ interface AppArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("获取构建文件列表")
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/fileList")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/fileList")
     @Path("/{projectId}/{pipelineId}/{buildId}/fileList")
     @GET
     fun getBuildFileList(
@@ -87,7 +87,7 @@ interface AppArtifactoryResource {
     ): Result<List<AppFileInfo>>
 
     @ApiOperation("根据元数据获取文件")
-    //@Path("/projects/{projectId}/search")
+    // @Path("/projects/{projectId}/search")
     @Path("/{projectId}/search")
     @POST
     fun search(
@@ -108,7 +108,7 @@ interface AppArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件和属性")
-    //@Path("/projects/{projectId}/searchFileAndProperty")
+    // @Path("/projects/{projectId}/searchFileAndProperty")
     @Path("/{projectId}/searchFileAndProperty")
     @POST
     fun searchFileAndProperty(
@@ -123,7 +123,7 @@ interface AppArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("获取文件信息")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
     @Path("/{projectId}/{artifactoryType}/show")
     @GET
     fun show(
@@ -142,7 +142,7 @@ interface AppArtifactoryResource {
     ): Result<FileDetail>
 
     @ApiOperation("获取文件元数据")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
     @Path("/{projectId}/{artifactoryType}/properties")
     @GET
     fun properties(
@@ -161,7 +161,7 @@ interface AppArtifactoryResource {
     ): Result<List<Property>>
 
     @ApiOperation("创建外部间接下载链接(ipa会转出plist链接)")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
     @Path("/{projectId}/{artifactoryType}/externalUrl")
     @POST
     fun externalUrl(
@@ -180,7 +180,7 @@ interface AppArtifactoryResource {
     ): Result<Url>
 
     @ApiOperation("获取构建Ipa文件的Plist下载文件")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/filePlist")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/filePlist")
     @Path("/{projectId}/{artifactoryType}/filePlist")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @GET
@@ -203,7 +203,7 @@ interface AppArtifactoryResource {
     ): String
 
     @ApiOperation("创建外部直接下载链接")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(

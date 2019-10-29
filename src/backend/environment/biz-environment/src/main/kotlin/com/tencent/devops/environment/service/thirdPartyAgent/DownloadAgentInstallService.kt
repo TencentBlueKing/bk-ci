@@ -265,7 +265,7 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getAgentReplaceProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
-        val gw = slaveGatewayService.getGateway(agentRecord.gateway)
+        val gw = slaveGatewayService.fixGateway(agentRecord.gateway)
         return mapOf(
             "agent_url" to "$gw/ms/environment/api/external/thirdPartyAgent/$agentId/agent",
             "projectId" to agentRecord.projectId,

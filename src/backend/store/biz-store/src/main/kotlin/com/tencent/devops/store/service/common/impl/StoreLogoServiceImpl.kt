@@ -30,12 +30,17 @@ import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum.WEB_SHOW
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.common.StoreLogoDao
+import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.service.common.StoreLogoService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -51,6 +56,8 @@ import javax.imageio.ImageIO
  */
 @Service
 class StoreLogoServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val storeLogoDao: StoreLogoDao,
     private val client: Client
 ) : StoreLogoService {
 
@@ -134,5 +141,73 @@ class StoreLogoServiceImpl @Autowired constructor(
         }
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         return CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, file, WEB_SHOW.name)
+    }
+
+    /**
+     * 获取logo列表
+     */
+    override fun list(
+        userId: String,
+        type: String
+    ): Result<List<Logo>?> {
+        logger.info("list logo: userId=$userId, type=$type")
+        val logos = storeLogoDao.getAllLogo(dslContext, type)?.map { storeLogoDao.convert(it) }
+        return Result(logos)
+    }
+
+    /**
+     * 获取logo
+     */
+    override fun get(
+        userId: String,
+        id: String
+    ): Result<Logo?> {
+        logger.info("get logo: userId=$userId, id=$id")
+        val logo = storeLogoDao.getLogo(dslContext, id)
+        return Result(if (logo == null) {
+            null
+        } else {
+            storeLogoDao.convert(logo)
+        })
+    }
+
+    /**
+     * 新增logo
+     */
+    override fun add(
+        userId: String,
+        type: String,
+        storeLogoReq: StoreLogoReq
+    ): Result<Boolean> {
+        logger.info("add logo: userId=$userId, type=$type, storeLogoReq=$storeLogoReq")
+        val id = UUIDUtil.generate()
+        storeLogoDao.add(dslContext, id, userId, storeLogoReq, type)
+
+        return Result(true)
+    }
+
+    /**
+     * 更新logo
+     */
+    override fun update(
+        userId: String,
+        id: String,
+        storeLogoReq: StoreLogoReq
+    ): Result<Boolean> {
+        logger.info("update logo: userId=$userId, id=$id, storeLogoReq=$storeLogoReq")
+        storeLogoDao.update(dslContext, id, userId, storeLogoReq)
+        return Result(true)
+    }
+
+    /**
+     * 删除logo
+     */
+    override fun delete(
+        userId: String,
+        id: String
+    ): Result<Boolean> {
+        logger.info("delete logo: userId=$userId, id=$id")
+        storeLogoDao.delete(dslContext, id)
+        return Result(true)
     }
 }

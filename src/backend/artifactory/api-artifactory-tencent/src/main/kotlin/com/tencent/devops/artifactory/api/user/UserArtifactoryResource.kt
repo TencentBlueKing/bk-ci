@@ -32,7 +32,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserArtifactoryResource {
     @ApiOperation("获取目录列表")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/list")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/list")
     @Path("/{projectId}/{artifactoryType}/list")
     @GET
     fun list(
@@ -51,7 +51,7 @@ interface UserArtifactoryResource {
     ): Result<List<FileInfo>>
 
     @ApiOperation("获取我的文件列表")
-    //@Path("/projects/{projectId}/ownFileList")
+    // @Path("/projects/{projectId}/ownFileList")
     @Path("/{projectId}/ownFileList")
     @GET
     fun getOwnFileList(
@@ -70,7 +70,7 @@ interface UserArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件")
-    //@Path("/projects/{projectId}/search")
+    // @Path("/projects/{projectId}/search")
     @Path("/{projectId}/search")
     @POST
     fun search(
@@ -91,7 +91,7 @@ interface UserArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件和属性")
-    //@Path("/projects/{projectId}/searchFileAndProperty")
+    // @Path("/projects/{projectId}/searchFileAndProperty")
     @Path("/{projectId}/searchFileAndProperty")
     @POST
     fun searchFileAndProperty(
@@ -106,7 +106,7 @@ interface UserArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("获取文件信息")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
     @Path("/{projectId}/{artifactoryType}/show")
     @GET
     fun show(
@@ -125,7 +125,7 @@ interface UserArtifactoryResource {
     ): Result<FileDetail>
 
     @ApiOperation("获取文件元数据")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
     @Path("/{projectId}/{artifactoryType}/properties")
     @GET
     fun properties(
@@ -144,7 +144,7 @@ interface UserArtifactoryResource {
     ): Result<List<Property>>
 
     @ApiOperation("获取文件夹大小")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/folderSize")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/folderSize")
     @Path("/{projectId}/{artifactoryType}/folderSize")
     @GET
     fun folderSize(
@@ -163,7 +163,7 @@ interface UserArtifactoryResource {
     ): Result<FolderSize>
 
     @ApiOperation("创建下载链接")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
@@ -182,7 +182,7 @@ interface UserArtifactoryResource {
     ): Result<Url>
 
     @ApiOperation("创建分享链接")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/shareUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/shareUrl")
     @Path("/{projectId}/{artifactoryType}/shareUrl")
     @POST
     fun shareUrl(
@@ -207,7 +207,7 @@ interface UserArtifactoryResource {
     ): Result<Boolean>
 
     @ApiOperation("创建外部下载链接")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
     @Path("/{projectId}/{artifactoryType}/externalUrl")
     @POST
     fun externalUrl(
@@ -226,7 +226,7 @@ interface UserArtifactoryResource {
     ): Result<Url>
 
     @ApiOperation("创建ioa下载链接")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/ioaUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/ioaUrl")
     @Path("/{projectId}/{artifactoryType}/ioaUrl")
     @POST
     fun ioaUrl(
@@ -245,7 +245,7 @@ interface UserArtifactoryResource {
     ): Result<Url>
 
     @ApiOperation("获取文件所属流水线信息")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/filePipelineInfo")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/filePipelineInfo")
     @Path("/{projectId}/{artifactoryType}/filePipelineInfo")
     @GET
     fun getFilePipelineInfo(
@@ -264,7 +264,7 @@ interface UserArtifactoryResource {
     ): Result<FilePipelineInfo>
 
     @ApiOperation("复制流水线构建归档到自定义仓库")
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/copyToCustom")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/copyToCustom")
     @Path("/{projectId}/{pipelineId}/{buildId}/copyToCustom")
     @POST
     fun copyToCustom(

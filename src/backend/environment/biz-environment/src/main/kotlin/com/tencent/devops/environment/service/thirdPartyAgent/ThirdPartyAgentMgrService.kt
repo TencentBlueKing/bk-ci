@@ -28,7 +28,6 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
@@ -405,7 +404,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             userId = userId,
             os = os
         )
-        val agent = if (unimportAgent.isEmpty()) {
+        // val agent =
+        val agentRecord: TEnvironmentThirdpartyAgentRecord = if (unimportAgent.isEmpty()) {
             val secretKey = generateSecretKey()
             val id = thirdPartyAgentDao.add(
                 dslContext = dslContext,
@@ -415,28 +415,36 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway
             )
-            val hashId = HashUtil.encodeLongId(id)
-            Pair(hashId, secretKey)
+//            val hashId = HashUtil.encodeLongId(id)
+//            Pair(hashId, secretKey)
+            thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
-            val i = unimportAgent[0]
-            logger.info("The agent(${i.id}) exist")
-            val hashId = HashUtil.encodeLongId(i.id)
-            val secretKey = SecurityUtil.decrypt(i.secretKey)
+            val agentRecord = unimportAgent[0]
+            logger.info("The agent(${agentRecord.id}) exist")
+            val hashId = HashUtil.encodeLongId(agentRecord.id)
+            val secretKey = SecurityUtil.decrypt(agentRecord.secretKey)
             if (!gateway.isNullOrBlank()) {
-                thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = i.id, gateway = gateway!!)
+                thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = agentRecord.id, gateway = gateway!!)
             }
-            Pair(hashId, secretKey)
+//            Pair(hashId, secretKey)
+            agentRecord
         }
-        // TODO Support windows scripts
+
+        val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+
         if (os == OS.WINDOWS) {
             return ThirdPartyAgentLink(
-                agentId = agent.first,
-                link = "$gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/agent"
+                agentId = agentHashId,
+                link = agentUrlService.genAgentUrl(agentRecord)
+//                agentId = agent.first
+//                link = "$gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/agent"
             )
         }
         return ThirdPartyAgentLink(
-            link = "curl -H \"$AUTH_HEADER_DEVOPS_PROJECT_ID: $projectId\" $gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/install | bash",
-            agentId = agent.first
+            agentId = agentHashId,
+            link = agentUrlService.genAgentInstallScript(agentRecord)
+//            link = "curl -H \"$AUTH_HEADER_DEVOPS_PROJECT_ID: $projectId\" $gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/install | bash",
+//            agentId = agent.first
         )
     }
 

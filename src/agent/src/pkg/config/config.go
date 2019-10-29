@@ -32,7 +32,6 @@ import (
 	bconfig "github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/logs"
 	"io/ioutil"
-	"os"
 	"pkg/util/command"
 	"pkg/util/systemutil"
 	"strconv"
@@ -67,6 +66,7 @@ type AgentEnv struct {
 	AgentIp          string
 	HostName         string
 	SlaveVersion     string
+	AgentVersion     string
 	AgentInstallPath string
 }
 
@@ -90,15 +90,16 @@ func LoadAgentEnv() {
 	GAgentEnv.AgentIp = systemutil.GetAgentIp()
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
-	GAgentEnv.SlaveVersion = DetectSlaveVersion()
+	GAgentEnv.SlaveVersion = DetectWorkerVersion()
+	GAgentEnv.AgentVersion = DetectAgentVersion()
 }
 
-func DetectSlaveVersion() string {
-	output, err := command.RunCommand(GetJava(), []string{"-cp", "agent.jar", "com.tencent.devops.agent.AgentVersionKt"}, GetAgentWorkdir(), nil)
-
+func DetectAgentVersion() string {
+	workDir := systemutil.GetWorkDir()
+	output, err := command.RunCommand(workDir+"/"+GetClienAgentFile(), []string{"version"}, workDir, nil)
 	if err != nil {
-		logs.Warn("detect slave version failed: ", err.Error())
-		GAgentEnv.SlaveVersion = ""
+		logs.Warn("detect agent version failed: ", err.Error())
+		GAgentEnv.AgentVersion = ""
 		return ""
 	}
 	logs.Info("agent version: ", string(output))
@@ -106,10 +107,24 @@ func DetectSlaveVersion() string {
 	return strings.TrimSpace(string(output))
 }
 
+func DetectWorkerVersion() string {
+	output, err := command.RunCommand(GetJava(),
+		[]string{"-cp", "agent.jar", "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
+
+	if err != nil {
+		logs.Warn("detect worker version failed: ", err.Error())
+		GAgentEnv.SlaveVersion = ""
+		return ""
+	}
+	logs.Info("worker version: ", string(output))
+
+	return strings.TrimSpace(string(output))
+}
+
 func LoadAgentConfig() error {
 	GAgentConfig = new(AgentConfig)
 
-	conf, err := bconfig.NewConfig("ini", GetAgentWorkdir()+"/.agent.properties")
+	conf, err := bconfig.NewConfig("ini", systemutil.GetWorkDir()+"/.agent.properties")
 	if err != nil {
 		logs.Error("load agent config failed, ", err)
 		return errors.New("load agent config failed")
@@ -177,7 +192,7 @@ func LoadAgentConfig() error {
 }
 
 func (a *AgentConfig) SaveConfig() error {
-	filePath := GetAgentWorkdir() + "/.agent.properties"
+	filePath := systemutil.GetWorkDir() + "/.agent.properties"
 
 	systemutil.IsWindows()
 	content := bytes.Buffer{}
@@ -207,20 +222,11 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 	return authHeaderMap
 }
 
-// agent 由系统启动，无法指定启动目录，已可执行文件所在目录为agentWorkDir
-func GetAgentWorkdir() string {
-	if len(GWorkDir) == 0 {
-		executable := strings.Replace(os.Args[0], "\\", "/", -1)
-		index := strings.LastIndex(executable, "/")
-		GWorkDir = executable[0:index]
-	}
-	return GWorkDir
-}
-
 func GetJava() string {
+	workDir := systemutil.GetWorkDir()
 	if systemutil.IsMacos() {
-		return GetAgentWorkdir() + "/jre/Contents/Home/bin/java"
+		return workDir + "/jre/Contents/Home/bin/java"
 	} else {
-		return GetAgentWorkdir() + "/jre/bin/java"
+		return workDir + "/jre/bin/java"
 	}
 }

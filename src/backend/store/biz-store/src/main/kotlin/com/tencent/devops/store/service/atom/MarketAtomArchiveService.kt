@@ -29,11 +29,16 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 
 interface MarketAtomArchiveService {
 
-    fun getTaskJsonStr(projectCode: String, atomCode: String, version: String): String
+    fun getFileStr(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String
+    ): String
 
     fun verifyAtomPackageByUserId(
         userId: String,

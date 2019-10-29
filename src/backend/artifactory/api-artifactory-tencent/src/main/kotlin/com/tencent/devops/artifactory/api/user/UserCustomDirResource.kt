@@ -28,7 +28,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserCustomDirResource {
     @ApiOperation("上传文件")
-    //@Path("/projects/{projectId}/file")
+    // @Path("/projects/{projectId}/file")
     @Path("/{projectId}/file")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -50,7 +50,7 @@ interface UserCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("新建文件夹")
-    //@Path("/projects/{projectId}/dir")
+    // @Path("/projects/{projectId}/dir")
     @Path("/{projectId}/dir")
     @POST
     fun mkdir(
@@ -66,7 +66,7 @@ interface UserCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("重命名")
-    //@Path("/projects/{projectId}/rename")
+    // @Path("/projects/{projectId}/rename")
     @Path("/{projectId}/rename")
     @POST
     fun rename(
@@ -81,7 +81,7 @@ interface UserCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("复制文件")
-    //@Path("/projects/{projectId}/copy")
+    // @Path("/projects/{projectId}/copy")
     @Path("/{projectId}/copy")
     @POST
     fun copy(
@@ -96,7 +96,7 @@ interface UserCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("移动文件")
-    //@Path("/projects/{projectId}/move")
+    // @Path("/projects/{projectId}/move")
     @Path("/{projectId}/move")
     @POST
     fun move(
@@ -111,7 +111,7 @@ interface UserCustomDirResource {
     ): Result<Boolean>
 
     @ApiOperation("删除文件")
-    //@Path("/projects/{projectId}/delete")
+    // @Path("/projects/{projectId}/delete")
     @Path("/{projectId}/")
     @DELETE
     fun delete(

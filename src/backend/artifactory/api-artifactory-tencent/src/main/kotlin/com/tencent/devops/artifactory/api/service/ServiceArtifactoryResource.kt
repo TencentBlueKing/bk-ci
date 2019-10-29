@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceArtifactoryResource {
     @ApiOperation("检测文件是否存在")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/check")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/check")
     @Path("/{projectId}/{artifactoryType}/check")
     @GET
     fun check(
@@ -45,7 +45,7 @@ interface ServiceArtifactoryResource {
     ): Result<Boolean>
 
     @ApiOperation("夸项目拷贝文件")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/acrossProjectCopy")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/acrossProjectCopy")
     @Path("/{projectId}/{artifactoryType}/acrossProjectCopy")
     @POST
     fun acrossProjectCopy(
@@ -67,7 +67,7 @@ interface ServiceArtifactoryResource {
     ): Result<Count>
 
     @ApiOperation("检测文件是否存在")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/properties")
     @Path("/{projectId}/{artifactoryType}/properties")
     @GET
     fun properties(
@@ -83,7 +83,7 @@ interface ServiceArtifactoryResource {
     ): Result<List<Property>>
 
     @ApiOperation("外部下载链接")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/externalUrl")
     @Path("/{projectId}/{artifactoryType}/externalUrl")
     @GET
     fun externalUrl(
@@ -108,7 +108,7 @@ interface ServiceArtifactoryResource {
     ): Result<Url>
 
     @ApiOperation("创建内部链接")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
     @GET
     fun downloadUrl(
@@ -133,7 +133,7 @@ interface ServiceArtifactoryResource {
     ): Result<Url>
 
     @ApiOperation("获取文件信息")
-    //@Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
     @Path("/{projectId}/{artifactoryType}/show")
     @GET
     fun show(
@@ -149,7 +149,7 @@ interface ServiceArtifactoryResource {
     ): Result<FileDetail>
 
     @ApiOperation("根据元数据获取文件(有排序),searchProps条件为and")
-    //@Path("/projects/{projectId}/search")
+    // @Path("/projects/{projectId}/search")
     @Path("/{projectId}/search")
     @POST
     fun search(
@@ -167,7 +167,7 @@ interface ServiceArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件和元数据(无排序)")
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/searchFile")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/searchFile")
     @Path("/{projectId}/{pipelineId}/{buildId}/searchFile")
     @POST
     fun searchFile(
@@ -195,7 +195,7 @@ interface ServiceArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件和元数据(无排序),searchProps条件为and")
-    //@Path("/projects/{projectId}/searchFileAndPropertyByAnd")
+    // @Path("/projects/{projectId}/searchFileAndPropertyByAnd")
     @Path("/{projectId}/searchFileAndPropertyByAnd")
     @POST
     fun searchFileAndPropertyByAnd(
@@ -213,7 +213,7 @@ interface ServiceArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件和元数据(无排序),searchProps条件为or")
-    //@Path("/projects/{projectId}/searchFileAndPropertyByOr")
+    // @Path("/projects/{projectId}/searchFileAndPropertyByOr")
     @Path("/{projectId}/searchFileAndPropertyByOr")
     @POST
     fun searchFileAndPropertyByOr(
@@ -231,7 +231,7 @@ interface ServiceArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据projectId创建临时的Docker仓库用户名密码")
-    //@Path("/projects/{projectId}/createDockerUser")
+    // @Path("/projects/{projectId}/createDockerUser")
     @Path("/{projectId}/createDockerUser")
     @GET
     fun createDockerUser(
@@ -241,7 +241,7 @@ interface ServiceArtifactoryResource {
     ): Result<DockerUser>
 
     @ApiOperation("设置镜像元数据")
-    //@Path("/projects/{projectId}/properties")
+    // @Path("/projects/{projectId}/properties")
     @Path("/{projectId}/properties")
     @POST
     fun setProperties(
@@ -259,7 +259,7 @@ interface ServiceArtifactoryResource {
     ): Result<Boolean>
 
     @ApiOperation("获取匹配到的自定义仓库文件")
-    //@Path("/projects/{projectId}/searchCustomFiles")
+    // @Path("/projects/{projectId}/searchCustomFiles")
     @Path("/{projectId}/searchCustomFiles")
     @POST
     fun searchCustomFiles(

@@ -26,17 +26,27 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("插件市场工作台-新增插件请求报文体")
-data class MarketAtomCreateRequest(
+open class MarketAtomCreateRequest(
     @ApiModelProperty("项目编码", required = true)
-    val projectCode: String,
+    var projectCode: String,
     @ApiModelProperty("插件代码", required = true)
-    val atomCode: String,
+    var atomCode: String,
     @ApiModelProperty("插件名称", required = true)
-    val name: String,
+    var name: String,
     @ApiModelProperty("开发语言", required = true)
-    val language: String
+    var language: String,
+    @ApiModelProperty("插件发布包方式", required = true)
+    var atomPackageSourceType: AtomPackageSourceTypeEnum = AtomPackageSourceTypeEnum.UPLOAD,
+    @ApiModelProperty("认证方式", required = false)
+    val authType: String? = null,
+    @ApiModelProperty(value = "项目可视范围", required = false)
+    val visibilityLevel: VisibilityLevelEnum? = null,
+    @ApiModelProperty(value = "插件代码库不开源原因", required = false)
+    val privateReason: String? = null
 )

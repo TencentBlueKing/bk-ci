@@ -1,14 +1,9 @@
 package com.tencent.devops.repository.service
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.QueryParam
 
 interface RepostioryScmService {
 

@@ -48,6 +48,9 @@ config = {
     tag = "__BKCI_CONSUL_TAG__",
     nodes_url = "/v1/catalog/nodes"
   },
+  job = {
+    domain = "__BKCI_JOB_FQDN__"
+  },
   redis = {
     host = "__REDIS_IP0__",
     port = __REDIS_PORT__,
