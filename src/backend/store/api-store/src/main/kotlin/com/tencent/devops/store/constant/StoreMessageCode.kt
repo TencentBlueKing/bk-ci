@@ -80,4 +80,5 @@ object StoreMessageCode {
     const val USER_COMMENT_IS_INVALID = "2120903" // 你已评论过，无法继续添加评论，但可以对评论进行修改
     const val USER_CLASSIFY_IS_NOT_ALLOW_DELETE = "2120904" // 该分类下还有项目正在使用的组件，不允许直接删除
     const val USER_UPLOAD_PACKAGE_INVALID = "2120905" // 请确认上传的包是否正确
+    const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120906" // 你已有处于待审批或审批通过的申请单，请勿重复申请
 }

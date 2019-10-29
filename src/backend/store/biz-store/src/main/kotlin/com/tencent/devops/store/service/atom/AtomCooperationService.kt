@@ -24,33 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.template
+package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateReq
+import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateResp
 
-@Api(tags = ["SERVICE_MARKET_TEMPLATE"], description = "服务端-模板")
-@Path("/service/market/template")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTemplateResource {
+/**
+ * 插件协作逻辑处理
+ * since: 2019-08-05
+ */
+interface AtomCooperationService {
 
-    @ApiOperation("模版市场搜索模版")
-    @GET
-    @Path("/list/")
-    fun list(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<MarketTemplateResp>
+    fun addAtomCollaborator(userId: String, atomCollaboratorCreateReq: AtomCollaboratorCreateReq): Result<AtomCollaboratorCreateResp>
 }
