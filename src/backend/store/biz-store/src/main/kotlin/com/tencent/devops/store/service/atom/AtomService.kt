@@ -28,7 +28,6 @@ package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
@@ -80,11 +79,6 @@ interface AtomService {
     fun getProjectElements(projectCode: String): Result<Map<String, String>>
 
     /**
-     * 根据id获取插件信息
-     */
-    fun getPipelineAtom(id: String): Result<Atom?>
-
-    /**
      * 根据插件代码和版本号获取插件信息
      */
     fun getPipelineAtom(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?>
@@ -100,11 +94,6 @@ interface AtomService {
      */
     @Suppress("UNCHECKED_CAST")
     fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>>
-
-    /**
-     * 根据插件代码和版本号获取插件信息
-     */
-    fun getPipelineAtom(atomCode: String, version: String): Result<Atom?>
 
     /**
      * 添加插件信息

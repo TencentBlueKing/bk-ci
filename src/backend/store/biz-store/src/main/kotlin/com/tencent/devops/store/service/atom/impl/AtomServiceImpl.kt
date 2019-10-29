@@ -38,8 +38,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -51,7 +49,6 @@ import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
@@ -235,65 +232,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     }
 
     /**
-     * 根据id获取插件信息
-     */
-    override fun getPipelineAtom(id: String): Result<Atom?> {
-        logger.info("the id is :{}", id)
-        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, id)
-        logger.info("the pipelineAtomRecord is :{}", pipelineAtomRecord)
-        return Result(if (pipelineAtomRecord == null) {
-            null
-        } else {
-            generatePipelineAtom(pipelineAtomRecord)
-        })
-    }
-
-    /**
-     * 生成插件对象
-     */
-    private fun generatePipelineAtom(it: TAtomRecord): Atom {
-        val atomClassifyRecord = atomClassifyDao.getClassify(dslContext, it.classifyId)
-        return convert(it, atomClassifyRecord)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun convert(atomRecord: TAtomRecord, atomClassifyRecord: TClassifyRecord?): Atom {
-        return Atom(
-            id = atomRecord.id,
-            name = atomRecord.name,
-            atomCode = atomRecord.atomCode,
-            classType = atomRecord.classType,
-            logoUrl = atomRecord.logoUrl,
-            icon = atomRecord.icon,
-            summary = atomRecord.summary,
-            serviceScope = if (!StringUtils.isEmpty(atomRecord.serviceScope)) JsonUtil.getObjectMapper().readValue(atomRecord.serviceScope, List::class.java) as List<String> else null,
-            jobType = atomRecord.jobType,
-            os = if (!StringUtils.isEmpty(atomRecord.os)) JsonUtil.getObjectMapper().readValue(atomRecord.os, List::class.java) as List<String> else null,
-            classifyId = atomClassifyRecord?.id,
-            classifyCode = atomClassifyRecord?.classifyCode,
-            classifyName = atomClassifyRecord?.classifyName,
-            docsLink = atomRecord.docsLink,
-            category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
-            atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
-            atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
-            description = atomRecord.description,
-            version = atomRecord.version,
-            creator = atomRecord.creator,
-            createTime = DateTimeUtil.toDateTime(atomRecord.createTime),
-            modifier = atomRecord.modifier,
-            updateTime = DateTimeUtil.toDateTime(atomRecord.updateTime),
-            defaultFlag = atomRecord.defaultFlag,
-            latestFlag = atomRecord.latestFlag,
-            htmlTemplateVersion = atomRecord.htmlTemplateVersion,
-            buildLessRunFlag = atomRecord.buildLessRunFlag,
-            weight = atomRecord.weight,
-            props = atomDao.convertString(atomRecord.props),
-            data = atomDao.convertString(atomRecord.data),
-            recommendFlag = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)?.recommendFlag
-        )
-    }
-
-    /**
      * 根据插件代码和版本号获取插件信息
      */
     override fun getPipelineAtom(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?> {
@@ -433,22 +371,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return atomStatusList
-    }
-
-    /**
-     * 根据插件代码和版本号获取插件信息
-     */
-    override fun getPipelineAtom(atomCode: String, version: String): Result<Atom?> {
-        logger.info("the atomCode is: $atomCode,version is:$version")
-        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version.replace("*", ""))
-        logger.info("the pipelineAtomRecord is :$pipelineAtomRecord")
-        return Result(
-            if (pipelineAtomRecord == null) {
-                null
-            } else {
-                generatePipelineAtom(pipelineAtomRecord)
-            }
-        )
     }
 
     /**

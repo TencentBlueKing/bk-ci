@@ -82,6 +82,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomNotifyService
+import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
@@ -128,6 +129,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeReleaseDao: StoreReleaseDao
     @Autowired
     lateinit var atomNotifyService: AtomNotifyService
+    @Autowired
+    lateinit var atomQualityService: AtomQualityService
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
@@ -870,7 +873,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         if (isNormalUpgrade) {
             // 更新质量红线信息
-            updateQualityInApprove(atomRecord.atomCode, atomStatus)
+            atomQualityService.updateQualityInApprove(atomRecord.atomCode, atomStatus)
             val creator = atomRecord.creator
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -944,20 +947,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
 
         return Pair(true, "")
-    }
-
-    private fun updateQualityInApprove(atomCode: String, atomStatus: Byte) {
-        logger.info("update quality atomStatus: $atomStatus")
-        if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
-            // 审核通过就刷新基础数据和指标
-            val metadataMap =
-                client.get(ServiceQualityMetadataMarketResource::class).refreshMetadata(atomCode).data ?: mapOf()
-            client.get(ServiceQualityIndicatorMarketResource::class).refreshIndicator(atomCode, metadataMap)
-            client.get(ServiceQualityControlPointResource::class).cleanTestProject(atomCode)
-        }
-        // 删除测试数据
-        client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-        client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
     }
 
     /**

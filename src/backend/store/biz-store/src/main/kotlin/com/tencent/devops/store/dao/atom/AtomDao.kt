@@ -660,7 +660,6 @@ class AtomDao : AtomBaseDao() {
             .groupBy(ta.ATOM_CODE)
             .orderBy(tspr.TYPE.asc(), tspr.CREATE_TIME.desc())
         if (page != null && pageSize != null) sql.limit((page - 1) * pageSize, pageSize)
-        logger.info("get install atom sql: ${sql.sql}")
         return sql.fetch()
     }
 
