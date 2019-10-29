@@ -5,6 +5,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -86,4 +88,11 @@ interface RepostioryScmService {
             userName: String
     ): Boolean
 
+    @ApiOperation("把项目迁移到指定项目组下")
+    fun moveProjectToGroup(
+            token: String,
+            groupCode: String,
+            repositoryName: String,
+            tokenType: TokenTypeEnum
+    ): Result<GitProjectInfo?>
 }

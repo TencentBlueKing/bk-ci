@@ -1,10 +1,13 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.api.ServiceScmResource
@@ -68,5 +71,10 @@ class RepostioryScmServiceImpl @Autowired constructor(
                 region,
                 userName
                 ).data ?: false
+    }
+
+    override fun moveProjectToGroup(token: String, groupCode: String, repositoryName: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
+        return client.getScm(ServiceGitResource::class)
+                .moveProjectToGroup(token, groupCode, repositoryName, tokenType)
     }
 }

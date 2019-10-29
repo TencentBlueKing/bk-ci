@@ -274,8 +274,7 @@ class RepositoryService @Autowired constructor(
         val token = getGitTokenResult.data!!
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
-            moveProjectToGroupResult = client.getScm(ServiceGitResource::class)
-                .moveProjectToGroup(token, groupCode ?: devopsGroupName, repo.projectName, finalTokenType)
+            moveProjectToGroupResult = repostioryScmService.moveProjectToGroup(token, groupCode ?: devopsGroupName, repo.projectName, finalTokenType)
             logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
             if (moveProjectToGroupResult.isOk()) {
                 val gitProjectInfo = moveProjectToGroupResult.data!!
