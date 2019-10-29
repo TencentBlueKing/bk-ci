@@ -29,7 +29,6 @@ package api
 import (
 	"pkg/config"
 	"testing"
-	"time"
 )
 
 func loadConfig() {

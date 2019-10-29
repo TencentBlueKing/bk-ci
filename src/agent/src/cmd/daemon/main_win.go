@@ -42,6 +42,14 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(4)
+
+	workDir := systemutil.GetExecutableDir()
+	err := os.Chdir(workDir)
+	if err != nil {
+		logs.Info("change work dir failed, err: ", err.Error())
+		systemutil.ExitProcess(1)
+	}
+
 	initLog()
 	defer func() {
 		if err := recover(); err != nil {
@@ -49,12 +57,6 @@ func main() {
 			systemutil.ExitProcess(1)
 		}
 	}()
-
-	workDir := systemutil.GetExecutableDir()
-	err := os.Chdir(workDir)
-	if err != nil {
-		logs.Info("change work dir failed, err: ", err.Error())
-	}
 
 	logs.Info("devops daemon start")
 	logs.Info("pid: ", os.Getpid())
@@ -86,15 +88,13 @@ var GAgentProcess *os.Process = nil
 
 func initLog() {
 	logConfig := make(map[string]string)
-	logConfig["filename"] = systemutil.GetExecutableDir() + "/logs/devopsDaemon.log"
+	logConfig["filename"] = systemutil.GetWorkDir() + "/logs/devopsDaemon.log"
 	jsonConfig, _ := json.Marshal(logConfig)
 	logs.SetLogger(logs.AdapterFile, string(jsonConfig))
 }
 
 func watch() {
-	workDir := systemutil.GetExecutableDir()
-
-	var agentPath = workDir + "/devopsAgent.exe"
+	var agentPath = systemutil.GetWorkDir() + "/devopsAgent.exe"
 	for {
 		cmd := exec.Command(agentPath)
 		cmd.Dir = workDir
