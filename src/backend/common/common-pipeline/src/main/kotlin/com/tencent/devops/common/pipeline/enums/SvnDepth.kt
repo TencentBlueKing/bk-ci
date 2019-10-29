@@ -27,8 +27,8 @@
 package com.tencent.devops.common.pipeline.enums
 
 enum class SvnDepth {
-    Empty,
-    Files,
-    Immediates,
-    Infinity
+    empty,
+    files,
+    immediates,
+    infinity
 }
