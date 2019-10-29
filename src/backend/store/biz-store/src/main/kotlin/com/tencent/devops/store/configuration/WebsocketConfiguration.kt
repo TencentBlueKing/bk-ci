@@ -17,7 +17,7 @@ class WebsocketConfiguration {
 
     @Bean
     fun getWebSocketDispatcher(
-            rabbitTemplate: RabbitTemplate
+        rabbitTemplate: RabbitTemplate
     ): WebSocketDispatcher {
         return WebSocketDispatcher(rabbitTemplate)
     }

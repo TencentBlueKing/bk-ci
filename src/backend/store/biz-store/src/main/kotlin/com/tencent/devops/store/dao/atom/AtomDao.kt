@@ -33,9 +33,7 @@ import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -54,7 +52,6 @@ import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Repository
 class AtomDao : AtomBaseDao() {
@@ -629,15 +626,15 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         projectCode: String,
         classifyCode: String?,
-        page: Int,
-        pageSize: Int
+        page: Int?,
+        pageSize: Int?
     ): Result<out Record>? {
 
         val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
         val tc = TClassify.T_CLASSIFY.`as`("tc")
         val t = dslContext.select(ta.ATOM_CODE.`as`("atomCode"), ta.CREATE_TIME.max().`as`("createTime")).from(ta).groupBy(ta.ATOM_CODE) // 查找每组atomCode最新的记录
 
-        return dslContext.select(
+        val sql = dslContext.select(
             ta.ID.`as`("atomId"),
             ta.ATOM_CODE.`as`("atomCode"),
             ta.NAME.`as`("atomName"),
@@ -662,8 +659,8 @@ class AtomDao : AtomBaseDao() {
             .where(conditions)
             .groupBy(ta.ATOM_CODE)
             .orderBy(tspr.TYPE.asc(), tspr.CREATE_TIME.desc())
-            .limit((page - 1) * pageSize, pageSize)
-            .fetch()
+        if (page != null && pageSize != null) sql.limit((page - 1) * pageSize, pageSize)
+        return sql.fetch()
     }
 
     private fun getInstalledConditions(
@@ -734,6 +731,14 @@ class AtomDao : AtomBaseDao() {
             baseStep.set(MODIFIER, userId)
                 .where(ID.`in`(atomIdList))
                 .execute()
+        }
+    }
+
+    fun getSelfDevelopAtoms(dslContext: DSLContext): Result<TAtomRecord>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_TYPE.eq(AtomTypeEnum.SELF_DEVELOPED.type.toByte()))
+                .fetch()
         }
     }
 }

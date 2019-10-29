@@ -77,7 +77,6 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     }
 
     override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String) {
-
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

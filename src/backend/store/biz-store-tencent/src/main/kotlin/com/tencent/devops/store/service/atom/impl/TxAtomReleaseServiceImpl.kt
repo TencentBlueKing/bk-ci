@@ -76,7 +76,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
     private val logger = LoggerFactory.getLogger(TxAtomReleaseServiceImpl::class.java)
 
-
     override fun handleAtomPackage(
         atomPackageSourceType: AtomPackageSourceTypeEnum,
         marketAtomCreateRequest: MarketAtomCreateRequest,
@@ -316,7 +315,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     storePipelineBuildRelDao.add(context, atomId, atomMarketInitPipelineResp.pipelineId, buildId)
                 }
                 // 通过websocket推送状态变更消息
-                //websocketService.sendWebsocketMessage(userId, atomId)
+                // websocketService.sendWebsocketMessage(userId, atomId)
             }
         } else {
             // 触发执行流水线
@@ -348,7 +347,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 ) // 构建失败
             }
             // 通过websocket推送状态变更消息
-            //websocketService.sendWebsocketMessage(userId, atomId)
+            // websocketService.sendWebsocketMessage(userId, atomId)
         }
         return true
     }

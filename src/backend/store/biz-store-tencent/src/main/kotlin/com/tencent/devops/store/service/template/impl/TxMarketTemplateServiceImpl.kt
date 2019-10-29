@@ -38,18 +38,18 @@ import org.springframework.stereotype.Service
 
 @Service
 class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServiceImpl() {
-    
+
     private val logger = LoggerFactory.getLogger(TxMarketTemplateServiceImpl::class.java)
 
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketTemplateMain>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun list(userId: String, name: String?, classifyCode: String?, category: String?, labelCode: String?, score: Int?, rdType: TemplateRdTypeEnum?, sortType: MarketTemplateSortTypeEnum?, page: Int?, pageSize: Int?): MarketTemplateResp {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun handleProcessInfo(status: Int): List<ReleaseProcessItem> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 }

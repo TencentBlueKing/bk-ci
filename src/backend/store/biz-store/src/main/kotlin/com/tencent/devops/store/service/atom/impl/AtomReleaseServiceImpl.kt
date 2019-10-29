@@ -82,6 +82,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomNotifyService
+import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
@@ -129,6 +130,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var atomNotifyService: AtomNotifyService
     @Autowired
+    lateinit var atomQualityService: AtomQualityService
+    @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
     lateinit var marketAtomArchiveService: MarketAtomArchiveService
@@ -175,7 +178,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 false
             )
         }
-        if(marketAtomCreateRequest.atomPackageSourceType == AtomPackageSourceTypeEnum.REPO){
+        if (marketAtomCreateRequest.atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
             marketAtomCreateRequest.authType ?: return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_NULL,
                 arrayOf("authType"),
@@ -274,7 +277,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         marketAtomCreateRequest: MarketAtomCreateRequest,
         userId: String,
         atomCode: String
-    ): Result<Map<String,String>?>
+    ): Result<Map<String, String>?>
 
     @Suppress("UNCHECKED_CAST")
     override fun updateMarketAtom(
@@ -467,7 +470,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String
     )
 
-
     private fun updateMarketAtom(
         context: DSLContext,
         userId: String,
@@ -490,7 +492,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
         // 通过websocket推送状态变更消息
-        //websocketService.sendWebsocketMessage(userId, atomId)
+        // websocketService.sendWebsocketMessage(userId, atomId)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -746,10 +748,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             marketAtomUpdateRequest.versionContent
         )
         // 通过websocket推送状态变更消息
-        //websocketService.sendWebsocketMessage(userId, atomId)
+        // websocketService.sendWebsocketMessage(userId, atomId)
     }
-
-
 
     @Suppress("UNCHECKED_CAST")
     protected fun parseTaskJson(
@@ -766,7 +766,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return if (getAtomConfResult.errorCode != "0") {
             getAtomConfResult
         } else {
-            if (atomPackageSourceType == AtomPackageSourceTypeEnum.UPLOAD){
+            if (atomPackageSourceType == AtomPackageSourceTypeEnum.UPLOAD) {
                 // 上传插件包发布方式需要校验task.json里面的执行包路径
                 val executionInfoMap = taskDataMap["execution"] as Map<String, Any>
                 val packagePath = executionInfoMap["packagePath"] as? String
@@ -783,7 +783,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             getAtomConfResult
         }
     }
-
 
     /**
      * 获取插件版本发布进度
@@ -839,7 +838,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
         )
         // 通过websocket推送状态变更消息
-        //websocketService.sendWebsocketMessage(userId, atomId)
+        // websocketService.sendWebsocketMessage(userId, atomId)
         // 删除质量红线相关数据
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
@@ -874,7 +873,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         if (isNormalUpgrade) {
             // 更新质量红线信息
-            updateQualityInApprove(atomRecord.atomCode, atomStatus)
+            atomQualityService.updateQualityInApprove(atomRecord.atomCode, atomStatus)
             val creator = atomRecord.creator
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -899,14 +898,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     UpdateAtomInfo(atomStatus = atomStatus, latestFlag = true, pubTime = pubTime)
                 )
                 // 通过websocket推送状态变更消息
-                //websocketService.sendWebsocketMessage(userId, atomId)
+                // websocketService.sendWebsocketMessage(userId, atomId)
             }
             // 发送版本发布邮件
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_SUCCESS)
         } else {
             marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
             // 通过websocket推送状态变更消息
-            //websocketService.sendWebsocketMessage(userId, atomId)
+            // websocketService.sendWebsocketMessage(userId, atomId)
         }
         return Result(true)
     }
@@ -950,20 +949,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return Pair(true, "")
     }
 
-    private fun updateQualityInApprove(atomCode: String, atomStatus: Byte) {
-        logger.info("update quality atomStatus: $atomStatus")
-        if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
-            // 审核通过就刷新基础数据和指标
-            val metadataMap =
-                client.get(ServiceQualityMetadataMarketResource::class).refreshMetadata(atomCode).data ?: mapOf()
-            client.get(ServiceQualityIndicatorMarketResource::class).refreshIndicator(atomCode, metadataMap)
-            client.get(ServiceQualityControlPointResource::class).cleanTestProject(atomCode)
-        }
-        // 删除测试数据
-        client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-        client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-    }
-
     /**
      * 处理用户提交的下架插件请求
      */
@@ -980,7 +965,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(), userId, atomOfflineReq.reason
         )
         // 通过websocket推送状态变更消息
-        //websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
+        // websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
         // 通知使用方插件即将下架 -- todo
 
         return Result(true)
