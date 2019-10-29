@@ -34,7 +34,7 @@ class GitOauthService @Autowired constructor(
         private val repositoryScmService: RepostioryScmService
 ) {
 
-    @Value("\${oauth.key:#{null}}")
+    @Value("\${aes.git:#{null}}")
     private val aesKey: String? = "func_v%o/Tx{puc}9xVge_pepe"
 
     companion object {

@@ -50,23 +50,25 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     private lateinit var authUrl: String
 
     override fun createResources(userId: String, projectList: List<ResourceRegisterInfo>) {
-
+        //内部版用不到
     }
 
     override fun deleteResource(projectCode: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        //内部版用不到
     }
 
     override fun modifyResource(projectCode: String, projectName: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        //内部版用不到
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        //内部版用不到
+        return emptyList()
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        //内部版用不到
+        return emptyMap()
     }
 
     private fun request(request: Request, errorMessage: String): String {

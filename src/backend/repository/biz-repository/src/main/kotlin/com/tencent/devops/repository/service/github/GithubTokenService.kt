@@ -31,6 +31,7 @@ import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -38,6 +39,7 @@ class GithubTokenService @Autowired constructor(
     private val dslContext: DSLContext,
     private val githubTokenDao: GithubTokenDao
 ) {
+    @Value("\${aes.github:#{null}}")
     private val aesKey = "Bk39Go0rNtOdsI1Y"
 
     fun createAccessToken(userId: String, accessToken: String, tokenType: String, scope: String) {
