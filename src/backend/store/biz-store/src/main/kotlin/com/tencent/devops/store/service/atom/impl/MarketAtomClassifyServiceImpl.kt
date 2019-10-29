@@ -45,7 +45,7 @@ import java.time.LocalDateTime
  * since: 2019-01-15
  */
 @Service("ATOM_CLASSIFY_SERVICE")
-class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassifyService, AbstractClassifyService()  {
+class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassifyService, AbstractClassifyService() {
 
     private val logger = LoggerFactory.getLogger(MarketAtomClassifyServiceImpl::class.java)
 

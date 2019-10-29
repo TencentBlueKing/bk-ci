@@ -79,7 +79,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAccessor
 import java.util.concurrent.TimeUnit
 
 /**
@@ -293,7 +292,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             recommendFlag = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)?.recommendFlag
         )
     }
-
 
     /**
      * 根据插件代码和版本号获取插件信息
@@ -616,7 +614,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 summary = it["summary"] as? String,
                 publisher = it["publisher"] as? String,
                 installer = installer,
-                installTime = df.format(it["installTime"] as TemporalAccessor),
+                installTime = DateTimeUtil.toDateTime(it["installTime"] as LocalDateTime),
                 installType = StoreProjectTypeEnum.getProjectType((it["installType"] as Byte).toInt()),
                 pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
                 hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
@@ -624,6 +622,69 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
 
         return Page(pageNotNull, pageSizeNotNull, count.toLong(), result)
+    }
+
+    /**
+     * 获取已安装的插件列表
+     */
+    override fun listInstalledAtomByProject(
+        projectCode: String
+    ): List<InstalledAtom> {
+
+        // 获取已安装插件
+        val records = atomDao.getInstalledAtoms(dslContext, projectCode, null, null, null)
+        val atomCodeList = mutableListOf<String>()
+        records?.forEach {
+            atomCodeList.add(it["atomCode"] as String)
+        }
+        val installAtoms = records?.map {
+            val atomCode = it["atomCode"] as String
+            val installer = it["installer"] as String
+            // 判断项目是否是初始化项目或者调试项目
+            InstalledAtom(
+                atomId = it["atomId"] as String,
+                atomCode = atomCode,
+                name = it["atomName"] as String,
+                logoUrl = it["logoUrl"] as? String,
+                classifyCode = it["classifyCode"] as? String,
+                classifyName = it["classifyName"] as? String,
+                category = AtomCategoryEnum.getAtomCategory((it["category"] as Byte).toInt()),
+                summary = it["summary"] as? String,
+                publisher = it["publisher"] as? String,
+                installer = installer,
+                installTime = DateTimeUtil.toDateTime(it["installTime"] as LocalDateTime),
+                installType = StoreProjectTypeEnum.getProjectType((it["installType"] as Byte).toInt()),
+                pipelineCnt = 0,
+                hasPermission = true
+            )
+        } ?: listOf()
+
+        // 获取自研插件
+        val selfAtoms = atomDao.getSelfDevelopAtoms(dslContext)?.map {
+            InstalledAtom(
+                atomId = it.id,
+                atomCode = it.atomCode,
+                name = it.name,
+                logoUrl = it.logoUrl,
+                classifyCode = "",
+                classifyName = "",
+                category = AtomCategoryEnum.getAtomCategory((it.categroy).toInt()),
+                summary = it.summary,
+                publisher = it.publisher,
+                installer = "",
+                installTime = "",
+                installType = "",
+                pipelineCnt = 0,
+                hasPermission = true
+            )
+        } ?: listOf()
+
+        // 返回结果
+        val result = mutableListOf<InstalledAtom>()
+        result.addAll(installAtoms)
+        result.addAll(selfAtoms)
+
+        return result
     }
 
     /**

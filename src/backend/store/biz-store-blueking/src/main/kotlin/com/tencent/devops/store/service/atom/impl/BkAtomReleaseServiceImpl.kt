@@ -53,7 +53,6 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
 
     private val logger = LoggerFactory.getLogger(BkAtomReleaseServiceImpl::class.java)
 
-
     override fun handleAtomPackage(
         atomPackageSourceType: AtomPackageSourceTypeEnum,
         marketAtomCreateRequest: MarketAtomCreateRequest,
@@ -78,7 +77,6 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String) {
-
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

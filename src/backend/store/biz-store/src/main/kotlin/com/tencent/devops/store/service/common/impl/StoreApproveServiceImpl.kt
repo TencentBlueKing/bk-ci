@@ -213,8 +213,8 @@ class StoreApproveServiceImpl : StoreApproveService {
             return approveStoreInfoResult
         }
         // 结单
-        //val moaCompleteResult = client.get(ServiceMessageApproveResource::class).moaComplete(taskId)
-        //logger.info("moaCompleteResult is :$moaCompleteResult")
+        // val moaCompleteResult = client.get(ServiceMessageApproveResource::class).moaComplete(taskId)
+        // logger.info("moaCompleteResult is :$moaCompleteResult")
         return Result(true)
     }
 

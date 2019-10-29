@@ -128,8 +128,8 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?> {
         logger.info("userId is :$userId,commentId is :commentId, storeCommentReplyRequest is :$storeCommentReplyRequest")
-        val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId) ?:
-        return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(commentId))
+        val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
+        ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(commentId))
         logger.info("the storeCommentRecord is:$storeCommentRecord")
         val userDeptNameResult = storeUserService.getUserFullDeptName(userId)
         logger.info("the userDeptNameResult is:$userDeptNameResult")

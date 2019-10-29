@@ -68,7 +68,6 @@ import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
-import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
@@ -425,7 +424,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun getAtomVersion(atomId: String, userId: String):  Result<AtomVersion?> {
+    private fun getAtomVersion(atomId: String, userId: String): Result<AtomVersion?> {
         val record = marketAtomDao.getAtomById(dslContext, atomId)
         return if (null == record) {
             Result(data = null)
@@ -441,7 +440,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 )
             val repositoryHashId = record["repositoryHashId"] as? String
             val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
-            if (repositoryInfoResult.isNotOk()){
+            if (repositoryInfoResult.isNotOk()) {
                 Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
             }
             val repositoryInfo = repositoryInfoResult.data
@@ -585,7 +584,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             if (AtomStatusEnum.BUILDING.status.toByte() == atomRecord.atomStatus) {
                 marketAtomDao.setAtomStatusById(dslContext, atomRecord.id, atomStatus.status.toByte(), userId, msg)
                 // 通过websocket推送状态变更消息
-                //websocketService.sendWebsocketMessage(userId, atomRecord.id)
+                // websocketService.sendWebsocketMessage(userId, atomRecord.id)
             }
         }
         return Result(true)

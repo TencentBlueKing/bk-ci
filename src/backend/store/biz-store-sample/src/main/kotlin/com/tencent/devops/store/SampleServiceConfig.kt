@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store
 
+import com.tencent.devops.store.service.atom.impl.SampleAtomCooperationServiceImpl
 import com.tencent.devops.store.service.atom.impl.SampleAtomMemberServiceImpl
 import com.tencent.devops.store.service.atom.impl.SampleAtomNotifyServiceImpl
 import com.tencent.devops.store.service.atom.impl.SampleAtomReleaseServiceImpl
@@ -60,6 +61,9 @@ class SampleServiceConfig {
 
     @Bean
     fun atomNotifyService() = SampleAtomNotifyServiceImpl()
+
+    @Bean
+    fun atomCooperationService() = SampleAtomCooperationServiceImpl()
 
     @Bean
     fun marketTemplateService() = SampleMarketTemplateServiceImpl()

@@ -148,6 +148,13 @@ interface AtomService {
     ): Page<InstalledAtom>
 
     /**
+     * 获取已安装的插件列表
+     */
+    fun listInstalledAtomByProject(
+        projectCode: String
+    ): List<InstalledAtom>
+
+    /**
      * 卸载插件
      */
     fun uninstallAtom(

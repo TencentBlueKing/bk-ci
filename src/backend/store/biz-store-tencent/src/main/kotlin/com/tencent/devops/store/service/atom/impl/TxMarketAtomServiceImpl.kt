@@ -50,7 +50,7 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
         storeType: StoreTypeEnum
     ): Result<HashMap<String, MutableList<Int>>?> {
         logger.info("generateAtomVisibleData storeCodeList is:$storeCodeList,storeType is:$storeType")
-        return Result(storeVisibleDeptService.batchGetVisibleDept(storeCodeList,storeType).data)
+        return Result(storeVisibleDeptService.batchGetVisibleDept(storeCodeList, storeType).data)
     }
 
     override fun generateInstallFlag(
@@ -69,7 +69,7 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
         }
     }
 
-     override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
+    override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
         logger.info("getRepositoryInfo projectCode is :$projectCode,repositoryHashId is :$repositoryHashId")
         var repositoryInfo: Repository? = null
         // 历史插件没有代码库，不需要获取代码库信息
@@ -87,7 +87,7 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
         return Result(repositoryInfo)
     }
 
-     override fun deleteAtomRepository(userId: String, projectCode: String?, repositoryHashId: String): Result<Boolean> {
+    override fun deleteAtomRepository(userId: String, projectCode: String?, repositoryHashId: String): Result<Boolean> {
         // 删除代码库信息
         val delGitRepositoryResult =
             client.get(ServiceRepositoryResource::class).delete(userId, projectCode!!, repositoryHashId)

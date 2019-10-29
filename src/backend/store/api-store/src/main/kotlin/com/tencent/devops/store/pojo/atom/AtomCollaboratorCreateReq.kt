@@ -24,33 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.template
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["SERVICE_MARKET_TEMPLATE"], description = "服务端-模板")
-@Path("/service/market/template")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTemplateResource {
-
-    @ApiOperation("模版市场搜索模版")
-    @GET
-    @Path("/list/")
-    fun list(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<MarketTemplateResp>
-}
+@ApiModel("插件市场-申请成为插件协作者请求报文体")
+data class AtomCollaboratorCreateReq(
+    @ApiModelProperty("调试项目编码", required = true)
+    val testProjectCode: String,
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("申请原因", required = true)
+    val applyReason: String
+)
