@@ -252,9 +252,7 @@ class DockerHostBuildService(
 
             return container.id
         } catch (er: Throwable) {
-            logger.error(er.toString())
-            logger.error(er.cause.toString())
-            logger.error(er.message)
+            logger.warn("Fail to start the environment", er)
             log(dockerBuildInfo.buildId, true, "启动构建环境失败，错误信息:${er.message}")
             throw ContainerException("Create container failed")
         }
