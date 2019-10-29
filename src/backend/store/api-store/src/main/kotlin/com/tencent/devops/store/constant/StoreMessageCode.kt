@@ -59,6 +59,12 @@ object StoreMessageCode {
     const val USER_ATOM_CONF_INVALID = "2120014" // 插件配置文件{0}格式不正确，请检查
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 你不在{0}插件的可见范围之内，如需调整插件的可见范围请联系插件的发布者
     const val USER_COMPONENT_ADMIN_COUNT_ERROR = "2120016" // 管理员个数不能少于1个
+    const val USER_ATOM_QUALITY_CONF_INVALID = "16200018" // 插件quality.json配置文件{0}格式不正确，请检查
+    const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "16210019" // 拉取插件quality.json配置文件失败,请确认文件是否正确上传至代码库
+    const val USER_ATOM_USED = "16210020" // 插件{0}已被项目{1}下的流水线使用，不可以卸载
+    const val USER_ATOM_UNINSTALL_REASON_USED = "16210021" // 插件卸载原因{0}已被使用，不能删除。可以禁用原因。
+    const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "16210022" // 插件{0}已发布到商店，请先下架再删除
+    const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "16210023" // 插件{0}已安装到其他项目下使用，请勿移除
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // {0}模板的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 模板发布流程中状态变更顺序不正确

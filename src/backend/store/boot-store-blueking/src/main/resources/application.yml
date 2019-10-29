@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: store
+    desc: DevOps Store Service
+    version: 4.0
+    packageName: com.tencent.devops.store
+
+server:
+  port: 21918
+
+logo:
+  allowUploadLogoTypes: jpg,png,svg
+  allowUploadLogoWidth: 200
+  allowUploadLogoHeight: 200
+  maxUploadLogoSize: 2097152
+
+aes:
+  aesKey: "J%k^yO{?vt}3tXpG"
+  aesMock: "******"

@@ -39,7 +39,7 @@ interface CategoryService {
 
     /**
      * 获取所有范畴信息
-     * @param type 0:插件 1：模板
+     * @param type
      */
     fun getAllCategory(type: Byte): Result<List<Category>?>
 

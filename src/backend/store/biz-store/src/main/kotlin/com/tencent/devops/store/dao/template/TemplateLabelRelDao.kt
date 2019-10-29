@@ -63,11 +63,10 @@ class TemplateLabelRelDao {
         }
     }
 
-    fun batchAdd(dslContext: DSLContext, userId: String, templateId: String, labelIdList: List<String>?) {
+    fun batchAdd(dslContext: DSLContext, userId: String, templateId: String, labelIdList: List<String>) {
         with(TTemplateLabelRel.T_TEMPLATE_LABEL_REL) {
-            val addStep = labelIdList?.map {
-                dslContext.insertInto(
-                    this,
+            val addStep = labelIdList.map {
+                dslContext.insertInto(this,
                     ID,
                     TEMPLATE_ID,
                     LABEL_ID,

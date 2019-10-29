@@ -35,7 +35,7 @@ import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.TTemplateCategoryRel
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.enums.TemplateStatusEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -132,10 +132,7 @@ class TemplateDao {
         if (null != sortType) {
             if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name) {
                 val tas = TStoreStatistics.T_STORE_STATISTICS.`as`("tas")
-                val t = dslContext.select(
-                    tas.STORE_CODE,
-                    tas.DOWNLOADS.sum().`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)
-                ).from(tas).groupBy(tas.STORE_CODE).asTable("t")
+                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.sum().`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).groupBy(tas.STORE_CODE).asTable("t")
                 baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -220,21 +217,18 @@ class TemplateDao {
      */
     fun countReleaseTemplateNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this)
-                .where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId)))
-                .fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)
         }
     }
 
     /**
      * 统计还在使用处于下架中或者已下架状态的模板的项目的个数
      */
-    fun countShelvesTemplateNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
+    fun countUndercarriageTemplateNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         val a = TTemplate.T_TEMPLATE.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
-        val templateStatusList = listOf(TemplateStatusEnum.RELEASED.status.toByte())
-        return dslContext.selectCount().from(a).join(b).on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
-            .where(a.TEMPLATE_STATUS.`in`(templateStatusList).and(a.CLASSIFY_ID.eq(classifyId)))
+        val templateStatusList = listOf(TemplateStatusEnum.UNDERCARRIAGED.status.toByte())
+        return dslContext.selectCount().from(a).join(b).on(a.TEMPLATE_CODE.eq(b.STORE_CODE)).where(a.TEMPLATE_STATUS.`in`(templateStatusList).and(a.CLASSIFY_ID.eq(classifyId)))
             .fetchOne(0, Int::class.java)
     }
 }
