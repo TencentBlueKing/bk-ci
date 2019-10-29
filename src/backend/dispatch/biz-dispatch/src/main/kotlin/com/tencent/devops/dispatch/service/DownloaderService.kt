@@ -15,21 +15,11 @@ class DownloaderService {
     @Value("\${dispatch.workerFile:#{null}}")
     private val workerFile: String? = null
 
-    @Value("\${dispatch.dockerFile:#{null}}")
-    private val dockerFile: String? = null
-
     fun downloadWorker(eTag: String?): Response {
         if (workerFile.isNullOrBlank()) {
             throw RuntimeException("worker.jar文件路径没有配置")
         }
         return download(workerFile!!, eTag)
-    }
-
-    fun downloadDocker(eTag: String?): Response {
-        if (dockerFile.isNullOrBlank()) {
-            throw RuntimeException("docker.jar文件路径没有配置")
-        }
-        return download(dockerFile!!, eTag)
     }
 
     private fun download(file: String, eTag: String?): Response {

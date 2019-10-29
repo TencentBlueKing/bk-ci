@@ -3,8 +3,8 @@ package com.tencent.devops.monitoring.services
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.monitoring.pojo.NocNoticeBusData
 import com.tencent.devops.monitoring.pojo.NocNoticeRequest
 import com.tencent.devops.monitoring.pojo.NocNoticeUserInfo
@@ -13,9 +13,11 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 
 @Service
+@RefreshScope
 class NocNoticeService {
     private val logger = LoggerFactory.getLogger(NocNoticeService::class.java)
 
@@ -31,7 +33,12 @@ class NocNoticeService {
     /**
      * 发送noc语音告警
      */
-    fun sendNocNotice(notifyReceivers: Set<String>, notifyTitle: String, notifyMessage: String, busiDataList: List<NocNoticeBusData>): Result<Boolean> {
+    fun sendNocNotice(
+        notifyReceivers: Set<String>,
+        notifyTitle: String,
+        notifyMessage: String,
+        busiDataList: List<NocNoticeBusData>
+    ): Result<Boolean> {
         logger.info("the notifyReceivers is:$notifyReceivers,notifyTitle is:$notifyTitle,notifyMessage is:$notifyMessage,busiDataList is:$busiDataList")
         val userInfoList = mutableListOf<NocNoticeUserInfo>()
         notifyReceivers.forEach {

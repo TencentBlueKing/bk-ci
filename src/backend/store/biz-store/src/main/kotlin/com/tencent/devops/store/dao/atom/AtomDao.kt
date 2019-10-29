@@ -27,11 +27,11 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.model.store.tables.TAtom
-import com.tencent.devops.model.store.tables.TClassify
-import com.tencent.devops.model.store.tables.TStoreProjectRel
-import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.model.store.tables.records.TClassifyRecord
+import com.tencent.devops.model.atom.tables.TAtom
+import com.tencent.devops.model.atom.tables.TClassify
+import com.tencent.devops.model.atom.tables.TStoreProjectRel
+import com.tencent.devops.model.atom.tables.records.TAtomRecord
+import com.tencent.devops.model.atom.tables.records.TClassifyRecord
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -698,7 +698,8 @@ class AtomDao : AtomBaseDao() {
             buildLessRunFlag = atomRecord.buildLessRunFlag,
             weight = atomRecord.weight,
             props = convertString(atomRecord.props),
-            data = convertString(atomRecord.data)
+            data = convertString(atomRecord.data),
+            recommendFlag = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)?.recommendFlag
         )
     }
 
@@ -737,4 +738,71 @@ class AtomDao : AtomBaseDao() {
                 .execute()
         }
     }
+
+    /**
+     * 获取已安装的插件
+     */
+    fun getInstalledAtoms(
+        dslContext: DSLContext,
+        projectCode: String,
+        classifyCode: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<out Record>? {
+
+        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
+        val tc = TClassify.T_CLASSIFY.`as`("tc")
+        val t = dslContext.select(ta.ATOM_CODE.`as`("atomCode"), ta.CREATE_TIME.max().`as`("createTime")).from(ta).groupBy(ta.ATOM_CODE) // 查找每组atomCode最新的记录
+
+        return dslContext.select(
+            ta.ID.`as`("atomId"),
+            ta.ATOM_CODE.`as`("atomCode"),
+            ta.NAME.`as`("atomName"),
+            ta.LOGO_URL.`as`("logoUrl"),
+            ta.CATEGROY.`as`("category"),
+            ta.SUMMARY.`as`("summary"),
+            ta.PUBLISHER.`as`("publisher"),
+            tc.ID.`as`("classifyId"),
+            tc.CLASSIFY_CODE.`as`("classifyCode"),
+            tc.CLASSIFY_NAME.`as`("classifyName"),
+            tspr.CREATOR.`as`("installer"),
+            tspr.CREATE_TIME.`as`("installTime"),
+            tspr.TYPE.`as`("installType")
+        )
+            .from(ta)
+            .join(t)
+            .on(ta.ATOM_CODE.eq(t.field("atomCode", String::class.java)).and(ta.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
+            .join(tc)
+            .on(ta.CLASSIFY_ID.eq(tc.ID))
+            .join(tspr)
+            .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+            .where(conditions)
+            .groupBy(ta.ATOM_CODE)
+            .orderBy(tspr.TYPE.asc(), tspr.CREATE_TIME.desc())
+            .limit((page - 1) * pageSize, pageSize)
+            .fetch()
+    }
+
+
+    private fun getInstalledConditions(
+        projectCode: String,
+        classifyCode: String?,
+        dslContext: DSLContext
+    ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
+        val ta = TAtom.T_ATOM.`as`("ta")
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tspr.PROJECT_CODE.eq(projectCode))
+        conditions.add(tspr.STORE_TYPE.eq(0))
+        if (!classifyCode.isNullOrEmpty()) {
+            val a = TClassify.T_CLASSIFY.`as`("a")
+            val classifyId = dslContext.select(a.ID)
+                .from(a)
+                .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(0)))
+                .fetchOne(0, String::class.java)
+            conditions.add(ta.CLASSIFY_ID.eq(classifyId))
+        }
+        return Triple(ta, tspr, conditions)
+    }
+
 }

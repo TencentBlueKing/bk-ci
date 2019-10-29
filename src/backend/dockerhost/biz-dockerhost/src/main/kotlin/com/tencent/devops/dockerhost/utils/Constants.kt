@@ -53,4 +53,9 @@ const val ENV_DOCKER_HOST_IP = "docker_host_ip"
 const val ENV_DOCKER_HOST_PORT = "docker_host_port"
 const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"
 
+const val ENV_BK_CI_DOCKER_HOST_IP = "BK_CI_DOCKER_HOST_IP" // docker母机IP
+const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // docker母机工作空间地址
+
 const val ENTRY_POINT_CMD = "/data/init.sh"
+
+const val MAX_CONTAINER_NUM = 100

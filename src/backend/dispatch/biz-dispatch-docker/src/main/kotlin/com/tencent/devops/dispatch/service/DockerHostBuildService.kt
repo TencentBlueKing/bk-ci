@@ -254,6 +254,7 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
+        logger.info("[$hostTag|$grayFlag] Start to build")
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
 
         val redisLock = DockerHostLock(redisOperation)
@@ -261,6 +262,7 @@ class DockerHostBuildService @Autowired constructor(
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
             val grayProjectSet = redisOperation.getSetMembers(this.gray.getGrayRedisKey())?.filter { !it.isBlank() }
                 ?.toSet() ?: emptySet()
+            logger.info("Get the redis project set: $grayProjectSet")
             redisLock.lock()
             if (gray) {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
@@ -279,6 +281,7 @@ class DockerHostBuildService @Autowired constructor(
                 }
 
                 if (task.isEmpty()) {
+                    logger.info("Not task in queue")
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
@@ -304,6 +307,7 @@ class DockerHostBuildService @Autowired constructor(
                 }
 
                 if (task.isEmpty()) {
+                    logger.info("No task in queue")
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]

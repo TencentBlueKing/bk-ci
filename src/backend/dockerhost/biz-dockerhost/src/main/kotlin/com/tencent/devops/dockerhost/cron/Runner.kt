@@ -31,6 +31,7 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.math.log
 
 // @Component
 class Runner @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
@@ -39,6 +40,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
 
 //    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 5 * 1000)
     fun startBuild() {
+    logger.info("Start to start build")
         try {
             val containerNum = dockerHostBuildService.getContainerNum()
             if (containerNum >= maxRunningContainerNum) {
@@ -71,6 +73,8 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                         dockerHostBuildService.rollbackBuild(dockerStartBuildInfo.buildId, dockerStartBuildInfo.vmSeqId, false)
                     }
                 }
+            } else {
+                logger.info("Get empy docker start build info")
             }
         } catch (t: Throwable) {
             logger.error("StartBuild encounter unknown exception", t)

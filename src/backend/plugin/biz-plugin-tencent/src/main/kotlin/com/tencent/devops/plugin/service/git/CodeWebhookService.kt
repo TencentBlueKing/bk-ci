@@ -1,7 +1,7 @@
 package com.tencent.devops.plugin.service.git
 
-import com.tencent.devops.common.api.enum.RepositoryConfig
-import com.tencent.devops.common.api.enum.RepositoryType
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -20,7 +20,7 @@ import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmService
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE

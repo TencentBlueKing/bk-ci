@@ -283,104 +283,104 @@ interface ServiceRepositoryResource {
             repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("关联代码库")
-    @POST
-//    @Path("/{projectId}/")
-    @Path("/projectId/{projectId}/")
-    fun createV2(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam(value = "代码库模型", required = true)
-            repository: Repository
-    ): Result<RepositoryId>
+//    @ApiOperation("关联代码库")
+//    @POST
+////    @Path("/{projectId}/")
+//    @Path("/projectId/{projectId}/")
+//    fun createV2(
+//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+//            @HeaderParam(AUTH_HEADER_USER_ID)
+//            userId: String,
+//            @ApiParam("项目ID", required = true)
+//            @PathParam("projectId")
+//            projectId: String,
+//            @ApiParam(value = "代码库模型", required = true)
+//            repository: Repository
+//    ): Result<RepositoryId>
+//
+//    @ApiOperation("代码库列表")
+//    @GET
+////    @Path("/{projectId}/")
+//    @Path("/projectId/{projectId}/")
+//    fun listV2(
+//            @ApiParam("项目ID", required = true)
+//            @PathParam("projectId")
+//            projectId: String,
+//            @ApiParam("仓库类型", required = false)
+//            @QueryParam("repositoryType")
+//            repositoryType: ScmType?
+//    ): Result<List<RepositoryInfoWithPermission>>
+//
+//    @ApiOperation("获取代码库详情")
+//    @GET
+////    @Path("/{projectId}/{repositoryId}/")
+//    @Path("/projectId/{projectId}/repositoryId/{repositoryId}/")
+//    fun getV2(
+//            @ApiParam("项目ID", required = true)
+//            @PathParam("projectId")
+//            projectId: String,
+//            @ApiParam("代码库哈希ID货代代码库名称", required = true)
+//            @PathParam("repositoryId")
+//            repositoryId: String,
+//            @ApiParam("代码库请求类型", required = true)
+//            @QueryParam("repositoryType")
+//            repositoryType: RepositoryType?
+//    ): Result<Repository>
+//
+//    @ApiOperation("获取代码仓库单个文件内容")
+//    @GET
+////    @Path("/{repoId}/getFileContent")
+//    @Path("/repoId/{repoId}/getFileContent")
+//    fun getFileContentV2(
+//            @ApiParam(value = "仓库id")
+//            @PathParam("repoId")
+//            repoId: String,
+//            @ApiParam(value = "文件路径")
+//            @QueryParam("filePath")
+//            filePath: String,
+//            @ApiParam(value = "版本号（svn）")
+//            @QueryParam("reversion")
+//            reversion: String?,
+//            @ApiParam(value = "分支（git）")
+//            @QueryParam("branch")
+//            branch: String?,
+//            @ApiParam("代码库请求类型", required = true)
+//            @QueryParam("repositoryType")
+//            repositoryType: RepositoryType?
+//    ): Result<String>
+//
+//    @ApiOperation("代码库列表")
+//    @GET
+////    @Path("/{projectId}/hasPermissionList")
+//    @Path("/projectId/{projectId}/hasPermissionList")
+//    fun hasPermissionListV2(
+//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+//            @HeaderParam(AUTH_HEADER_USER_ID)
+//            userId: String,
+//            @ApiParam("项目ID", required = true)
+//            @PathParam("projectId")
+//            projectId: String,
+//            @ApiParam("仓库类型", required = false)
+//            @QueryParam("repositoryType")
+//            repositoryType: ScmType?,
+//            @ApiParam("对应权限", required = true, defaultValue = "")
+//            @QueryParam("permission")
+//            permission: Permission
+//    ): Result<Page<RepositoryInfo>>
 
-    @ApiOperation("代码库列表")
-    @GET
-//    @Path("/{projectId}/")
-    @Path("/projectId/{projectId}/")
-    fun listV2(
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("仓库类型", required = false)
-            @QueryParam("repositoryType")
-            repositoryType: ScmType?
-    ): Result<List<RepositoryInfoWithPermission>>
-
-    @ApiOperation("获取代码库详情")
-    @GET
-//    @Path("/{projectId}/{repositoryId}/")
-    @Path("/projectId/{projectId}/repositoryId/{repositoryId}/")
-    fun getV2(
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("代码库哈希ID货代代码库名称", required = true)
-            @PathParam("repositoryId")
-            repositoryId: String,
-            @ApiParam("代码库请求类型", required = true)
-            @QueryParam("repositoryType")
-            repositoryType: RepositoryType?
-    ): Result<Repository>
-
-    @ApiOperation("获取代码仓库单个文件内容")
-    @GET
-//    @Path("/{repoId}/getFileContent")
-    @Path("/repoId/{repoId}/getFileContent")
-    fun getFileContentV2(
-            @ApiParam(value = "仓库id")
-            @PathParam("repoId")
-            repoId: String,
-            @ApiParam(value = "文件路径")
-            @QueryParam("filePath")
-            filePath: String,
-            @ApiParam(value = "版本号（svn）")
-            @QueryParam("reversion")
-            reversion: String?,
-            @ApiParam(value = "分支（git）")
-            @QueryParam("branch")
-            branch: String?,
-            @ApiParam("代码库请求类型", required = true)
-            @QueryParam("repositoryType")
-            repositoryType: RepositoryType?
-    ): Result<String>
-
-    @ApiOperation("代码库列表")
-    @GET
-//    @Path("/{projectId}/hasPermissionList")
-    @Path("/projectId/{projectId}/hasPermissionList")
-    fun hasPermissionListV2(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("仓库类型", required = false)
-            @QueryParam("repositoryType")
-            repositoryType: ScmType?,
-            @ApiParam("对应权限", required = true, defaultValue = "")
-            @QueryParam("permission")
-            permission: Permission
-    ): Result<Page<RepositoryInfo>>
-
-    @ApiOperation("删除代码库")
-    @DELETE
-//    @Path("/{projectId}/{repositoryHashId}")
-    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}")
-    fun deleteV2(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("代码库哈希ID", required = true)
-            @PathParam("repositoryHashId")
-            repositoryHashId: String
-    ): Result<Boolean>
+//    @ApiOperation("删除代码库")
+//    @DELETE
+////    @Path("/{projectId}/{repositoryHashId}")
+//    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}")
+//    fun deleteV2(
+//            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+//            @HeaderParam(AUTH_HEADER_USER_ID)
+//            userId: String,
+//            @ApiParam("项目ID", required = true)
+//            @PathParam("projectId")
+//            projectId: String,
+//            @ApiParam("代码库哈希ID", required = true)
+//            @PathParam("repositoryHashId")
+//            repositoryHashId: String
+//    ): Result<Boolean>
 }

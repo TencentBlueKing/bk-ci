@@ -73,7 +73,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("获取ios证书和描述文件")
-    @Path("/projects/{projectId}/ios")
+    @Path("/projects/{projectId}/types/ios")
     @GET
     fun getIos(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -88,7 +88,7 @@ interface UserCertResource {
     ): Result<CertIOSInfo>
 
     @ApiOperation("上传ios证书和描述文件")
-    @Path("/projects/{projectId}/ios")
+    @Path("/projects/{projectId}/types/ios")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadIos(
@@ -120,7 +120,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("修改ios证书和描述文件")
-    @Path("/projects/{projectId}/ios")
+    @Path("/projects/{projectId}/types/ios")
     @PUT
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateIos(
@@ -152,7 +152,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("获取android证书")
-    @Path("/projects/{projectId}/android")
+    @Path("/projects/{projectId}/types/android")
     @GET
     fun getAndroid(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -167,7 +167,7 @@ interface UserCertResource {
     ): Result<CertAndroidInfo>
 
     @ApiOperation("上传安卓jks证书")
-    @Path("/projects/{projectId}/android")
+    @Path("/projects/{projectId}/types/android")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadAndroid(
@@ -200,7 +200,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("修改安卓jks证书")
-    @Path("/projects/{projectId}/android")
+    @Path("/projects/{projectId}/types/android")
     @PUT
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateAndroid(
@@ -233,7 +233,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("获取tls证书")
-    @Path("/projects/{projectId}/tls")
+    @Path("/projects/{projectId}/types/tls")
     @GET
     fun getTls(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -248,8 +248,8 @@ interface UserCertResource {
     ): Result<CertTlsInfo>
 
     @ApiOperation("上传tls证书")
-    @Path("/projects/{projectId}/tls")
-    @GET
+    @Path("/projects/{projectId}/types/tls")
+    @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadTls(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -287,7 +287,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("修改tls证书")
-    @Path("/projects/{projectId}/tls")
+    @Path("/projects/{projectId}/types/tls")
     @PUT
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateTls(
@@ -389,7 +389,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("获取ios企业描述文件")
-    @Path("/projects/{projectId}/enterprise")
+    @Path("/projects/{projectId}/types/enterprise")
     @GET
     fun getEnterprise(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -404,7 +404,7 @@ interface UserCertResource {
     ): Result<CertEnterpriseInfo>
 
     @ApiOperation("上传ios企业描述文件")
-    @Path("/projects/{projectId}/enterprise")
+    @Path("/projects/{projectId}/types/enterprise")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadEnterprise(
@@ -428,7 +428,7 @@ interface UserCertResource {
     ): Result<Boolean>
 
     @ApiOperation("修改ios企业描述文件")
-    @Path("/projects/{projectId}/enterprise")
+    @Path("/projects/{projectId}/types/enterprise")
     @PUT
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateEnterprise(

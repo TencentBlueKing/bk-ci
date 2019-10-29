@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import io.jsonwebtoken.Jwts
 import net.sf.json.JSONObject
@@ -21,7 +22,7 @@ import javax.ws.rs.ext.Provider
 
 @Provider
 @PreMatching
-//@RequestFilter
+@RequestFilter
 class ApiFilter : ContainerRequestFilter {
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")
@@ -29,8 +30,8 @@ class ApiFilter : ContainerRequestFilter {
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
             requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Request bkapi jwt is empty.")
-                    .build())
+                .entity("Request bkapi jwt is empty.")
+                .build())
             return false
         }
 
@@ -72,8 +73,8 @@ class ApiFilter : ContainerRequestFilter {
                     }
                 } else if (apiType == "apigw-user") {
                     requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                            .entity("Request don't has user's access_token.")
-                            .build())
+                        .entity("Request don't has user's access_token.")
+                        .build())
                     return false
                 }
             }
@@ -87,7 +88,7 @@ class ApiFilter : ContainerRequestFilter {
         if (!valid) {
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
-                    .entity("蓝盾Devops OpenAPI认证失败：用户或应用验证失败。")
+                    .entity("Devops OpenAPI Auth fail：user or app auth fail.")
                     .build()
             )
             return

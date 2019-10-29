@@ -31,3 +31,8 @@ const val REJECT = "REJECT"
 const val LATEST = "latest"
 const val HOTTEST = "hottest"
 const val UN_RELEASE = "unRelease"
+
+const val STORE_ATOM_STATUS = "STORE_ATOM_STATUS" // 插件状态
+const val STORE_MEMBER_ADD_NOTIFY_TEMPLATE = "STORE_MEMBER_ADD" // store组件成员被添加的消息通知模板
+const val STORE_MEMBER_DELETE_NOTIFY_TEMPLATE = "STORE_MEMBER_DELETE" // store组件成员被删除的消息通知模板
+const val ATOM_COLLABORATOR_APPLY_REFUSE_TEMPLATE = "ATOM_COLLABORATOR_APPLY_REFUSE" // 插件协作开发申请被拒的消息通知模板

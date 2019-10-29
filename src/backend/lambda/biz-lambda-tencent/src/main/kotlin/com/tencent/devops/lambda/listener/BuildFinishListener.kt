@@ -13,7 +13,7 @@ class BuildFinishListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
-    override fun run(event: PipelineBuildFinishBroadCastEvent){
+    override fun run(event: PipelineBuildFinishBroadCastEvent) {
         logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build finish event - ($event)")
         pipelineBuildService.onBuildFinish(event)
     }

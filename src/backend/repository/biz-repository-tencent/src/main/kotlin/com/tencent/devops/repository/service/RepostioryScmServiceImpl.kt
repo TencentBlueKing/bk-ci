@@ -45,7 +45,6 @@ class RepostioryScmServiceImpl @Autowired constructor(
 
     override fun getGitlabFileContent(repoUrl: String, repoName: String, filePath: String, ref: String, accessToken: String): String {
         return client.getScm(ServiceGitResource::class).getGitlabFileContent(
-                repoUrl = repoUrl,
                 repoName = repoName,
                 filePath = filePath,
                 ref = ref,

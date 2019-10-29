@@ -21,7 +21,12 @@ class ESServiceTest {
     private val dslContext: DSLContext = mock()
     private val buildIndexDao: BuildIndexDao = mock()
     private val indexService = IndexService(dslContext, buildIndexDao, redisOperation)
-    private val esService: ESService = ESService(client, redisOperation, indexService, objectMapper)
+    private val esService: ESService = ESService(
+        client = client,
+        redisOperation = redisOperation,
+        indexService = indexService,
+        objectMapper = objectMapper
+    )
     @Test
     fun testDate() {
         val begin = LocalDateTime.now().minusDays(10).timestamp()

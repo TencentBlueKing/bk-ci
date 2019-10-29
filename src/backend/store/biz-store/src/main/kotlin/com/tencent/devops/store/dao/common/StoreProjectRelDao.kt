@@ -27,8 +27,10 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.store.tables.TStoreProjectRel
-import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
+import com.tencent.devops.model.atom.tables.TStoreProjectRel
+import com.tencent.devops.model.atom.tables.records.TStoreProjectRelRecord
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -149,6 +151,26 @@ class StoreProjectRelDao {
     fun deleteAllRel(dslContext: DSLContext, storeCode: String, storeType: Byte) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             dslContext.deleteFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).execute()
+        }
+    }
+
+    /**
+     * 判断项目是否为原生初始化项目有或者申请插件协作者指定的调试项目
+     */
+    fun isInitTestProjectCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        projectCode: String
+    ): Boolean {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(PROJECT_CODE.eq(projectCode))
+                .and(TYPE.`in`(listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())))
+                .fetchOne(0, Long::class.java) != 0L
         }
     }
 }

@@ -4,12 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.common.api.constant.APP_CODE
-import com.tencent.devops.common.api.constant.APP_SECRET
 import com.tencent.devops.common.api.util.UnicodeUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.pojo.ParametersInfo
 import com.tencent.devops.plugin.pojo.tcm.TcmApp
 import com.tencent.devops.plugin.pojo.tcm.TcmException
@@ -159,8 +158,8 @@ class TcmService @Autowired constructor(
                 tcmReqParam.templateId,
                 tcmReqParam.name,
                 tcmReqParam.workJson,
-                APP_CODE,
-                APP_SECRET,
+                appCode,
+                appSecret,
                 userId
         )
 
