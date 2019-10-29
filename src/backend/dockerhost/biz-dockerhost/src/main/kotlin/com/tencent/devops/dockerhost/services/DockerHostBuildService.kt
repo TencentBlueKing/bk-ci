@@ -41,6 +41,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.config.DockerHostConfig
+import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
@@ -211,7 +212,7 @@ class DockerHostBuildService(
             val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
             val volumeHosts = Volume(etcHosts)
 
-            val gateway = System.getProperty("devops.gateway", defaultGateway)
+            val gateway = DockerEnv.getGatway()
             logger.info("[${dockerBuildInfo.buildId}]|gateway is: $gateway")
 
             val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${dockerBuildInfo.pipelineId}/${dockerBuildInfo.vmSeqId}/", volumeMavenRepo),

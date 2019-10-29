@@ -26,13 +26,17 @@
 
 package com.tencent.devops.store.resources.atom
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomResource
+import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.VersionInfo
+import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.service.atom.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -55,20 +59,37 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
-        return atomService.getPipelineAtoms(
-            accessToken = accessToken,
-            userId = userId,
-            serviceScope = serviceScope,
-            os = os,
-            projectCode = projectCode,
-            category = category,
-            classifyId = classifyId,
-            page = page,
-            pageSize = pageSize
-        )
+        return atomService.getPipelineAtoms(accessToken, userId, serviceScope, os, projectCode, category, classifyId, page, pageSize)
     }
 
     override fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>> {
         return atomService.getPipelineAtomVersions(projectCode, atomCode)
+    }
+
+    override fun getInstalledAtoms(
+        userId: String,
+        projectCode: String,
+        classifyCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<InstalledAtom>> {
+        return Result(atomService.getInstalledAtoms(userId, projectCode, classifyCode, page, pageSize))
+    }
+
+    override fun updateAtomBaseInfo(
+        userId: String,
+        atomCode: String,
+        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
+    ): Result<Boolean> {
+        return atomService.updateAtomBaseInfo(userId, atomCode, atomBaseInfoUpdateRequest)
+    }
+
+    override fun uninstallAtom(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        unInstallReq: UnInstallReq
+    ): Result<Boolean> {
+        return atomService.uninstallAtom(userId, projectCode, atomCode, unInstallReq)
     }
 }

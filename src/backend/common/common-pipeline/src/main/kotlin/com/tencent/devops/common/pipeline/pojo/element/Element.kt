@@ -36,9 +36,26 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.AndroidCertInstallElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.BuglyElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.RqdElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.BuildArchiveGetElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.BuildPushDockerImageElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.CustomizeArchiveGetElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.GitCommentCheckElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.IosCertInstallElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.IosEnterpriseSignElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.IosSJTYSignElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.KtlintStyleElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ReportArchiveElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.SensitiveScanElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.SingleArchiveElement
+import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.service.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.service.*
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -63,10 +80,69 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = ManualTriggerElement::class, name = ManualTriggerElement.classType),
     JsonSubTypes.Type(value = RemoteTriggerElement::class, name = RemoteTriggerElement.classType),
     JsonSubTypes.Type(value = TimerTriggerElement::class, name = TimerTriggerElement.classType),
-    JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType),
     JsonSubTypes.Type(value = MarketBuildAtomElement::class, name = MarketBuildAtomElement.classType),
-    JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType)
+    JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType),
+    JsonSubTypes.Type(value = LinuxCodeCCScriptElement::class, name = LinuxCodeCCScriptElement.classType),
+    JsonSubTypes.Type(value = LinuxPaasCodeCCScriptElement::class, name = LinuxPaasCodeCCScriptElement.classType),
+    JsonSubTypes.Type(value = SensitiveScanElement::class, name = SensitiveScanElement.classType),
+    JsonSubTypes.Type(value = SingleArchiveElement::class, name = SingleArchiveElement.classType),
+    JsonSubTypes.Type(value = BuildPushDockerImageElement::class, name = BuildPushDockerImageElement.classType),
+    JsonSubTypes.Type(value = BuildArchiveGetElement::class, name = BuildArchiveGetElement.classType),
+    JsonSubTypes.Type(value = CustomizeArchiveGetElement::class, name = CustomizeArchiveGetElement.classType),
+    JsonSubTypes.Type(value = BuglyElement::class, name = BuglyElement.classType),
+    JsonSubTypes.Type(value = RqdElement::class, name = RqdElement.classType),
+    JsonSubTypes.Type(value = ReportArchiveElement::class, name = ReportArchiveElement.classType),
+    JsonSubTypes.Type(value = WindowsScriptElement::class, name = WindowsScriptElement.classType),
+    JsonSubTypes.Type(value = IosCertInstallElement::class, name = IosCertInstallElement.classType),
+    JsonSubTypes.Type(value = AndroidCertInstallElement::class, name = AndroidCertInstallElement.classType),
+    JsonSubTypes.Type(value = IosEnterpriseSignElement::class, name = IosEnterpriseSignElement.classType),
+    JsonSubTypes.Type(value = IosSJTYSignElement::class, name = IosSJTYSignElement.classType),
+    JsonSubTypes.Type(value = KtlintStyleElement::class, name = KtlintStyleElement.classType),
+    JsonSubTypes.Type(value = GitCommentCheckElement::class, name = GitCommentCheckElement.classType),
+    JsonSubTypes.Type(value = AtomBuildArchiveElement::class, name = AtomBuildArchiveElement.classType),
+    JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType),
+    JsonSubTypes.Type(value = SendRTXNotifyElement::class, name = SendRTXNotifyElement.classType),
+    JsonSubTypes.Type(value = SendEmailNotifyElement::class, name = SendEmailNotifyElement.classType),
+    JsonSubTypes.Type(value = SendSmsNotifyElement::class, name = SendSmsNotifyElement.classType),
+    JsonSubTypes.Type(value = SendWechatNotifyElement::class, name = SendWechatNotifyElement.classType),
+    JsonSubTypes.Type(value = ExperienceElement::class, name = ExperienceElement.classType),
+    JsonSubTypes.Type(value = GcloudElement::class, name = GcloudElement.classType),
+    JsonSubTypes.Type(value = JobExecuteTaskExtElement::class, name = JobExecuteTaskExtElement.classType),
+    JsonSubTypes.Type(value = ComDistributionElement::class, name = ComDistributionElement.classType),
+    JsonSubTypes.Type(value = JobDevOpsFastPushFileElement::class, name = JobDevOpsFastPushFileElement.classType),
+    JsonSubTypes.Type(value = JobDevOpsFastExecuteScriptElement::class, name = JobDevOpsFastExecuteScriptElement.classType),
+    JsonSubTypes.Type(value = JobDevOpsExecuteTaskExtElement::class, name = JobDevOpsExecuteTaskExtElement.classType),
+    JsonSubTypes.Type(value = CosCdnDistributionElementDev::class, name = CosCdnDistributionElementDev.classType),
+    JsonSubTypes.Type(value = CosCdnDistributionElement::class, name = CosCdnDistributionElement.classType),
+    JsonSubTypes.Type(value = SecurityElement::class, name = SecurityElement.classType),
+    JsonSubTypes.Type(value = TclsAddVersionElement::class, name = TclsAddVersionElement.classType),
+    JsonSubTypes.Type(value = GseKitProcRunCmdElementDev::class, name = GseKitProcRunCmdElementDev.classType),
+    JsonSubTypes.Type(value = GseKitProcRunCmdElementProd::class, name = GseKitProcRunCmdElementProd.classType),
+    JsonSubTypes.Type(value = CloudStoneElement::class, name = CloudStoneElement.classType),
+    JsonSubTypes.Type(value = JinGangAppElement::class, name = JinGangAppElement.classType),
+    JsonSubTypes.Type(value = BcsContainerOpElement::class, name = BcsContainerOpElement.classType),
+    JsonSubTypes.Type(value = BcsContainerOpByNameElement::class, name = BcsContainerOpByNameElement.classType),
+    JsonSubTypes.Type(value = GcloudAppElement::class, name = GcloudAppElement.classType),
+    JsonSubTypes.Type(value = AcrossProjectDistributionElement::class, name = AcrossProjectDistributionElement.classType),
+    JsonSubTypes.Type(value = ReportArchiveServiceElement::class, name = ReportArchiveServiceElement.classType),
+    JsonSubTypes.Type(value = TcmElement::class, name = TcmElement.classType),
+    JsonSubTypes.Type(value = ZhiyunPushFileElement::class, name = ZhiyunPushFileElement.classType),
+    JsonSubTypes.Type(value = ZhiyunUpdateAsyncEXElement::class, name = ZhiyunUpdateAsyncEXElement.classType),
+    JsonSubTypes.Type(value = ZhiyunInstanceMaintenanceElement::class, name = ZhiyunInstanceMaintenanceElement.classType),
+    JsonSubTypes.Type(value = MigCDNPushFileElement::class, name = MigCDNPushFileElement.classType),
+    JsonSubTypes.Type(value = LunaPushFileElement::class, name = LunaPushFileElement.classType),
+    JsonSubTypes.Type(value = GcloudUpdateVersionElement::class, name = GcloudUpdateVersionElement.classType),
+    JsonSubTypes.Type(value = OpenStatePushFileElement::class, name = OpenStatePushFileElement.classType),
+    JsonSubTypes.Type(value = GcloudPufferElement::class, name = GcloudPufferElement.classType),
+    JsonSubTypes.Type(value = GcloudDeleteVersionElement::class, name = GcloudDeleteVersionElement.classType),
+    JsonSubTypes.Type(value = GcloudPufferDeleteVersionElement::class, name = GcloudPufferDeleteVersionElement.classType),
+    JsonSubTypes.Type(value = GcloudPufferUpdateVersionElement::class, name = GcloudPufferUpdateVersionElement.classType),
+    JsonSubTypes.Type(value = WetestElement::class, name = WetestElement.classType),
+    JsonSubTypes.Type(value = PushImageToThirdRepoElement::class, name = PushImageToThirdRepoElement.classType),
+    JsonSubTypes.Type(value = JobCloudsFastExecuteScriptElement::class, name = JobCloudsFastExecuteScriptElement.classType),
+    JsonSubTypes.Type(value = JobCloudsFastPushElement::class, name = JobCloudsFastPushElement.classType)
 )
+
 abstract class Element(
     open val name: String,
     open var id: String? = null,

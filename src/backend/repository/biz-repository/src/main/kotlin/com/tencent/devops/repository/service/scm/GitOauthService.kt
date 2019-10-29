@@ -18,6 +18,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -33,7 +34,8 @@ class GitOauthService @Autowired constructor(
         private val repositoryScmService: RepostioryScmService
 ) {
 
-    private val aesKey = "func_v%o/Tx{puc}9xVge_pepe"
+    @Value("\${oauth.key:#{null}}")
+    private val aesKey: String? = "func_v%o/Tx{puc}9xVge_pepe"
 
     companion object {
         val logger = LoggerFactory.getLogger(GitOauthService::class.java)
@@ -121,8 +123,8 @@ class GitOauthService @Autowired constructor(
         return gitTokenDao.getAccessToken(dslContext, userId)?.map {
             with(TRepositoryGtiToken.T_REPOSITORY_GTI_TOKEN) {
                 GitToken(
-                        AESUtil.decrypt(aesKey, it.get(ACCESS_TOKEN)),
-                        AESUtil.decrypt(aesKey, it.get(REFRESH_TOKEN)),
+                        AESUtil.decrypt(aesKey!!, it.get(ACCESS_TOKEN)),
+                        AESUtil.decrypt(aesKey!!, it.get(REFRESH_TOKEN)),
                         it.get(TOKEN_TYPE),
                         it.get(EXPIRES_IN)
                 )
@@ -134,14 +136,14 @@ class GitOauthService @Autowired constructor(
         val token = repositoryScmService.refreshToken(userId, gitToken)
 //        val token = client.get(ServiceGitResource::class).refreshToken(userId, gitToken).data!!
         saveAccessToken(userId, token)
-        token.accessToken = AESUtil.decrypt(aesKey, token.accessToken)
-        token.refreshToken = AESUtil.decrypt(aesKey, token.refreshToken)
+        token.accessToken = AESUtil.decrypt(aesKey!!, token.accessToken)
+        token.refreshToken = AESUtil.decrypt(aesKey!!, token.refreshToken)
         return token
     }
 
     fun saveAccessToken(userId: String, tGitToken: GitToken): Int {
-        tGitToken.accessToken = AESUtil.encrypt(aesKey, tGitToken.accessToken)
-        tGitToken.refreshToken = AESUtil.encrypt(aesKey, tGitToken.refreshToken)
+        tGitToken.accessToken = AESUtil.encrypt(aesKey!!, tGitToken.accessToken)
+        tGitToken.refreshToken = AESUtil.encrypt(aesKey!!, tGitToken.refreshToken)
         return gitTokenDao.saveAccessToken(dslContext, userId, tGitToken)
     }
 

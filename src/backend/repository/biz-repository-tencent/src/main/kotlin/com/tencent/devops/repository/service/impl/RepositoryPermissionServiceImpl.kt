@@ -2,7 +2,6 @@ package com.tencent.devops.repository.service.impl
 
 import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service
 @Service
 class RepositoryPermissionServiceImpl @Autowired constructor(
         private val authResourceApi: AuthResourceApi,
-        private val repoAuthServiceCode:BSRepoAuthServiceCode,
         private val authPermissionApi: AuthPermissionApi,
         private val codeAuthServiceCode: BSCodeAuthServiceCode
 ) : RepositoryPermissionService {
@@ -78,7 +76,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     override fun getUserResourceByPermission(user: String, projectCode: String, permission: AuthPermission): List<String> {
         val resourceCodeList = authPermissionApi.getUserResourceByPermission(
                 user,
-                repoAuthServiceCode,
+                codeAuthServiceCode,
                 AuthResourceType.CODE_REPERTORY,
                 projectCode,
                 permission,
@@ -90,7 +88,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     override fun validateUserResourcePermission(user: String, projectCode: String, permission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
                 user,
-                repoAuthServiceCode,
+                codeAuthServiceCode,
                 AuthResourceType.CODE_REPERTORY,
                 projectCode,
                 permission
@@ -100,7 +98,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     override fun validateUserResourcePermission(user: String, projectCode: String, resourceCode: String, permission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
                 user,
-                repoAuthServiceCode,
+                codeAuthServiceCode,
                 AuthResourceType.CODE_REPERTORY,
                 projectCode,
                 resourceCode,
@@ -110,7 +108,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
 
     override fun modifyResource(projectCode: String, resourceCode: String, resourceName: String) {
         authResourceApi.modifyResource(
-                repoAuthServiceCode,
+                codeAuthServiceCode,
                 AuthResourceType.CODE_REPERTORY,
                 projectCode,
                 resourceCode,

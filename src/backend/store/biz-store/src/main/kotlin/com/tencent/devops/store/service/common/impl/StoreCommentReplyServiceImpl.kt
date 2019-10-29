@@ -26,14 +26,24 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
+import com.tencent.devops.store.configuration.StoreDetailUrlConfig
+import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
+import com.tencent.devops.store.pojo.common.STORE_COMMENT_REPLY_NOTIFY_TEMPLATE
 import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
 import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommentReplyService
+import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreNotifyService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,32 +57,44 @@ import org.springframework.stereotype.Service
  * since: 2019-03-26
  */
 @Service
-class StoreCommentReplyServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val storeCommentReplyDao: StoreCommentReplyDao,
-    private val storeUserService: StoreUserService
-) : StoreCommentReplyService {
+class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyService {
 
     private val logger = LoggerFactory.getLogger(StoreCommentReplyServiceImpl::class.java)
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var storeCommentDao: StoreCommentDao
+    @Autowired
+    lateinit var storeCommentReplyDao: StoreCommentReplyDao
+    @Autowired
+    lateinit var storeUserService: StoreUserService
+    @Autowired
+    lateinit var storeCommonService: StoreCommonService
+    @Autowired
+    lateinit var storeNotifyService: StoreNotifyService
+    @Autowired
+    lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
+    @Autowired
+    lateinit var client: Client
 
     @Value("\${store.profileUrlPrefix}")
     private lateinit var profileUrlPrefix: String
 
+    @Value("\${store.commentNotifyAdmin}")
+    private lateinit var commentNotifyAdmin: String
+
     /**
-     * 获取评论回复信息列表
+     * 获取评论信息列表
      */
     override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
         logger.info("commentId is :$commentId")
-        val storeCommentReplyInfoList =
-            storeCommentReplyDao.getStoreCommentReplysByCommentId(dslContext, commentId)?.map {
-                generateStoreCommentReplyInfo(it)
-            }
+        val storeCommentReplyInfoList = storeCommentReplyDao.getStoreCommentReplysByCommentId(dslContext, commentId)?.map {
+            generateStoreCommentReplyInfo(it)
+        }
         return Result(storeCommentReplyInfoList)
     }
 
-    /**
-     * 获取评论回复信息
-     */
     override fun getStoreCommentReply(replyId: String): Result<StoreCommentReplyInfo?> {
         logger.info("replyId is :$replyId")
         val storeCommentReplyRecord = storeCommentReplyDao.getStoreCommentReplyById(dslContext, replyId)
@@ -106,6 +128,9 @@ class StoreCommentReplyServiceImpl @Autowired constructor(
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?> {
         logger.info("userId is :$userId,commentId is :commentId, storeCommentReplyRequest is :$storeCommentReplyRequest")
+        val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
+        ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(commentId))
+        logger.info("the storeCommentRecord is:$storeCommentRecord")
         val userDeptNameResult = storeUserService.getUserFullDeptName(userId)
         logger.info("the userDeptNameResult is:$userDeptNameResult")
         if (userDeptNameResult.isNotOk()) {
@@ -113,14 +138,32 @@ class StoreCommentReplyServiceImpl @Autowired constructor(
         }
         val profileUrl = "$profileUrlPrefix$userId/profile.jpg"
         val replyId = UUIDUtil.generate()
-        storeCommentReplyDao.addStoreCommentReply(
-            dslContext,
-            replyId,
-            userId,
-            userDeptNameResult.data.toString(),
-            commentId,
-            profileUrl,
-            storeCommentReplyRequest
+        storeCommentReplyDao.addStoreCommentReply(dslContext, replyId, userId, userDeptNameResult.data.toString(), commentId, profileUrl, storeCommentReplyRequest)
+
+        // RTX 通知被回复人和蓝盾管理员
+        val receivers = if (storeCommentReplyRequest.replyToUser == "") {
+            storeCommentRecord.creator.plus(";").plus(commentNotifyAdmin).split(";").toSet()
+        } else {
+            storeCommentReplyRequest.replyToUser.plus(";").plus(commentNotifyAdmin).split(";").toSet()
+        }
+        logger.info("the receivers is:$receivers")
+        val storeType = StoreTypeEnum.getStoreTypeObj(storeCommentRecord.storeType.toInt())
+        val storeCode = storeCommentRecord.storeCode
+        val url = storeCommonService.getStoreDetailUrl(storeType!!, storeCode)
+        val storeName = storeCommonService.getStoreNameById(storeCommentRecord.storeId, storeType)
+        val bodyParams = mapOf(
+            "userId" to userId,
+            "storeName" to storeName,
+            "replyToUser" to if (storeCommentReplyRequest.replyToUser == "") { storeCommentRecord.creator } else { storeCommentReplyRequest.replyToUser },
+            "replyContent" to storeCommentReplyRequest.replyContent,
+            "replyComment" to storeCommentRecord.commentContent,
+            "url" to url
+        )
+        storeNotifyService.sendNotifyMessage(
+            templateCode = STORE_COMMENT_REPLY_NOTIFY_TEMPLATE,
+            sender = DEVOPS,
+            receivers = receivers.toMutableSet(),
+            bodyParams = bodyParams
         )
         return getStoreCommentReply(replyId)
     }

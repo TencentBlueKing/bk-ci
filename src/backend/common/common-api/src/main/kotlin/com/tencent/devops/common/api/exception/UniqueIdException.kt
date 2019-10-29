@@ -15,4 +15,4 @@ open class UniqueIdException(
     params: Array<String>? = null,
     val uniqueId: String? = UUIDUtil.generate()
 ) :
-    ErrorCodeException(errorCode, "uniqueId=${uniqueId}:errorCode=$errorCode:$message", params)
+    ErrorCodeException(errorCode, "uniqueId=$uniqueId:errorCode=$errorCode:$message", params)

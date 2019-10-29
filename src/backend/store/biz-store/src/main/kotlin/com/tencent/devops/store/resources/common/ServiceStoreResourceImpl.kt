@@ -30,7 +30,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreBuildService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,7 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
-    private val sensitiveConfService: UserSensitiveConfService
+    private val sensitiveConfService: UserSensitiveConfService,
+    private val storeBuildService: StoreBuildService
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -47,5 +50,13 @@ class ServiceStoreResourceImpl @Autowired constructor(
 
     override fun getSensitiveConf(storeType: StoreTypeEnum, storeCode: String): Result<List<SensitiveConfResp>?> {
         return sensitiveConfService.list("", storeType, storeCode, true)
+    }
+
+    override fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
+        storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean> {
+        return storeBuildService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
     }
 }

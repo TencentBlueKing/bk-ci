@@ -1,12 +1,16 @@
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Project
+import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 
@@ -66,4 +70,29 @@ interface RepostioryScmService {
             accessToken: String
     ): String
 
+    @ApiOperation("lock svn")
+    fun unlock(
+            projectName: String,
+            url: String,
+            type: ScmType,
+            region: CodeSvnRegion?,
+            userName: String
+    ): Boolean
+
+    @ApiOperation("lock svn")
+    fun lock(
+            projectName: String,
+            url: String,
+            type: ScmType,
+            region: CodeSvnRegion?,
+            userName: String
+    ): Boolean
+
+    @ApiOperation("把项目迁移到指定项目组下")
+    fun moveProjectToGroup(
+            token: String,
+            groupCode: String,
+            repositoryName: String,
+            tokenType: TokenTypeEnum
+    ): Result<GitProjectInfo?>
 }

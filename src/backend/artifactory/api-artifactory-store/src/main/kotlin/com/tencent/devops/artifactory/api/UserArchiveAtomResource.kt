@@ -29,7 +29,7 @@ package com.tencent.devops.artifactory.api
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

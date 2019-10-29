@@ -26,5 +26,4 @@
 
 package com.tencent.devops.store
 
-class Demo {
-}
+class Demo

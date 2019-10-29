@@ -65,6 +65,7 @@ class RepositoryService @Autowired constructor(
         private val repositoryCodeGitDao: RepositoryCodeGitDao,
         private val repositoryCodeGitLabDao: RepositoryCodeGitLabDao,
         private val repositoryGithubDao: RepositoryGithubDao,
+        private val repostioryScmService: RepostioryScmService,
         private val commitDao: CommitDao,
         private val gitOauthService: GitOauthService,
         private val dslContext: DSLContext,
@@ -273,8 +274,7 @@ class RepositoryService @Autowired constructor(
         val token = getGitTokenResult.data!!
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
-            moveProjectToGroupResult = client.getScm(ServiceGitResource::class)
-                .moveProjectToGroup(token, groupCode ?: devopsGroupName, repo.projectName, finalTokenType)
+            moveProjectToGroupResult = repostioryScmService.moveProjectToGroup(token, groupCode ?: devopsGroupName, repo.projectName, finalTokenType)
             logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
             if (moveProjectToGroupResult.isOk()) {
                 val gitProjectInfo = moveProjectToGroupResult.data!!
@@ -878,14 +878,11 @@ class RepositoryService @Autowired constructor(
             throw PermissionForbiddenException("代码库($repositoryHashId)不支持锁定")
         }
 
-        val scmClient = client.getScm(ServiceScmResource::class)
-        scmClient.lock(
-            record.projectId,
-            record.url,
-            ScmType.CODE_SVN,
-            CodeSvnRegion.getRegion(record.url),
-            record.userId
-        )
+        repostioryScmService.lock(record.projectId,
+                record.url,
+                ScmType.CODE_SVN,
+                CodeSvnRegion.getRegion(record.url),
+                record.userId)
     }
 
     fun userUnLock(userId: String, projectId: String, repositoryHashId: String) {
@@ -904,9 +901,7 @@ class RepositoryService @Autowired constructor(
         if (record.type != ScmType.CODE_SVN.name) {
             throw PermissionForbiddenException("代码库($repositoryHashId)不支持锁定")
         }
-
-        client.getScm(ServiceScmResource::class)
-            .unlock(record.projectId, record.url, ScmType.CODE_SVN, CodeSvnRegion.getRegion(record.url), record.userId)
+        repostioryScmService.unlock(record.projectId, record.url, ScmType.CODE_SVN, CodeSvnRegion.getRegion(record.url), record.userId)
     }
 
     private fun filterRepository(user: String, projectId: String, authPermission: AuthPermission): List<Long> {

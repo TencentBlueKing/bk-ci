@@ -130,7 +130,6 @@ class Client @Autowired constructor(
         }
     }
 
-
     fun <T : Any> getWithoutRetry(clz: KClass<T>): T {
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()

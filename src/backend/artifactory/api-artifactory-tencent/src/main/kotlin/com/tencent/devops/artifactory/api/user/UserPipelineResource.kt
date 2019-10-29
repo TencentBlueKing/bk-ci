@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineResource {
     @ApiOperation("获取有权限目录列表")
-    //@Path("/projects/{projectId}/hasPermissionList")
+    // @Path("/projects/{projectId}/hasPermissionList")
     @Path("/{projectId}/hasPermissionList")
     @GET
     fun hasPermissionList(

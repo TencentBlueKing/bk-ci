@@ -31,7 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import org.springframework.beans.factory.annotation.Autowired
 

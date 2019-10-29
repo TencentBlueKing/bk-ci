@@ -47,6 +47,8 @@ data class AtomVersion(
     val category: String?,
     @ApiModelProperty("插件说明文档链接")
     val docsLink: String?,
+    @ApiModelProperty("前端渲染模板版本（1.0代表历史存量插件渲染模板版本）")
+    val htmlTemplateVersion: String,
     @ApiModelProperty("插件类型")
     val atomType: String?,
     @ApiModelProperty("适用Job类型")
@@ -59,10 +61,7 @@ data class AtomVersion(
     val description: String?,
     @ApiModelProperty("版本号")
     val version: String?,
-    @ApiModelProperty(
-        "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
-        required = true
-    )
+    @ApiModelProperty("插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架", required = true)
     val atomStatus: String,
     @ApiModelProperty("发布类型")
     val releaseType: String?,
@@ -86,12 +85,18 @@ data class AtomVersion(
     val defaultFlag: Boolean?,
     @ApiModelProperty("是否可安装标识")
     val flag: Boolean?,
-    @ApiModelProperty("插件的原生项目")
+    @ApiModelProperty("插件代码库授权者")
+    val repositoryAuthorizer: String?,
+    @ApiModelProperty("插件的调试项目")
     val projectCode: String?,
-    @ApiModelProperty("标签列表")
+    @ApiModelProperty("标签列表", required = false)
     val labelList: List<Label>?,
     @ApiModelProperty("插件包名")
     val pkgName: String?,
     @ApiModelProperty("用户评论信息")
-    val userCommentInfo: StoreUserCommentInfo
+    val userCommentInfo: StoreUserCommentInfo,
+    @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
+    val visibilityLevel: String?,
+    @ApiModelProperty("插件代码库不开源原因")
+    val privateReason: String?
 )

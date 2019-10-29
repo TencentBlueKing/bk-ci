@@ -20,7 +20,7 @@ import javax.ws.rs.core.Response
 class BcsClient constructor(
     private val bkAuthTokenApi: AuthTokenApi,
     private val serviceCode: EnvironmentAuthServiceCode
-    ) {
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(BcsClient::class.java)
