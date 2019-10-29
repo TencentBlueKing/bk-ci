@@ -64,6 +64,13 @@ if service_name == "" then
   return
 end
 
+-- 当服务器为job的时候指向job的域名
+if service_name == "job" then
+  ngx.var.target = config.job.domain
+  return 
+end
+
+
 -- 获取灰度设置
 local devops_gray = grayUtil:get_gray()
 
