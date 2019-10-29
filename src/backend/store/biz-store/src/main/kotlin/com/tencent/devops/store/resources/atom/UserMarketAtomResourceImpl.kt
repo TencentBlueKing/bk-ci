@@ -27,8 +27,10 @@
 package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
@@ -68,31 +70,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<MarketAtomResp> {
-        return Result(
-            marketAtomService.list(
-                userId.trim(),
-                atomName?.trim(),
-                classifyCode?.trim(),
-                labelCode?.trim(),
-                score,
-                rdType,
-                sortType,
-                page,
-                pageSize
-            )
-        )
-    }
-
-    override fun updateMarketAtom(
-        userId: String,
-        projectCode: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
-    ): Result<String?> {
-        return marketAtomService.updateMarketAtom(userId, projectCode, marketAtomUpdateRequest)
-    }
-
-    override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<Boolean> {
-        return marketAtomService.addMarketAtom(userId, marketAtomCreateRequest)
+        return Result(marketAtomService.list(userId.trim(), atomName?.trim(), classifyCode?.trim(), labelCode?.trim(), score, rdType, sortType, page, pageSize))
     }
 
     override fun listMyAtoms(
@@ -109,7 +87,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getAtomById(atomId, userId)
     }
 
-    override fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
+    override fun getAtomByCode(userId: String, bk_ticket: String, atomCode: String): Result<AtomVersion?> {
         return marketAtomService.getAtomByCode(userId, atomCode)
     }
 
@@ -118,30 +96,18 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     }
 
     override fun installAtom(accessToken: String, userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
-        return marketAtomService.installAtom(accessToken, userId, installAtomReq.projectCode, installAtomReq.atomCode)
+        return marketAtomService.installAtom(accessToken, userId, ChannelCode.BS, installAtomReq)
     }
 
-    override fun getInstalledProjects(
-        accessToken: String,
-        userId: String,
-        atomCode: String
-    ): Result<List<InstalledProjRespItem?>> {
+    override fun getInstalledProjects(accessToken: String, userId: String, atomCode: String): Result<List<InstalledProjRespItem?>> {
         return storeProjectService.getInstalledProjects(accessToken, userId, atomCode, StoreTypeEnum.ATOM)
     }
 
-    override fun getProcessInfo(atomId: String): Result<StoreProcessInfo> {
-        return marketAtomService.getProcessInfo(atomId)
+    override fun listLanguage(): Result<List<AtomDevLanguage?>> {
+        return marketAtomService.listLanguage()
     }
 
-    override fun cancelRelease(userId: String, atomId: String): Result<Boolean> {
-        return marketAtomService.cancelRelease(userId, atomId)
-    }
-
-    override fun passTest(userId: String, atomId: String): Result<Boolean> {
-        return marketAtomService.passTest(userId, atomId)
-    }
-
-    override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
-        return marketAtomService.offlineAtom(userId, atomCode, atomOfflineReq)
+    override fun deleteAtom(userId: String, atomCode: String): Result<Boolean> {
+        return marketAtomService.deleteAtom(userId, atomCode)
     }
 }

@@ -28,35 +28,40 @@ package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.UserMarketAtomMemberResource
-import com.tencent.devops.store.pojo.common.StoreMemberItem
-import com.tencent.devops.store.pojo.common.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.impl.AtomMemberServiceImpl
+import com.tencent.devops.store.api.atom.UserAtomReleaseResource
+import com.tencent.devops.store.pojo.atom.AtomOfflineReq
+import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
+import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.service.atom.AtomReleaseService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserMarketAtomMemberResourceImpl @Autowired constructor(
-    private val atomMemberService: AtomMemberServiceImpl
-) : UserMarketAtomMemberResource {
+class UserAtomReleaseResourceImpl @Autowired constructor(
+    private val atomReleaseService: AtomReleaseService
+) : UserAtomReleaseResource {
 
-    override fun list(userId: String, atomCode: String): Result<List<StoreMemberItem?>> {
-        return atomMemberService.list(userId, atomCode, StoreTypeEnum.ATOM)
+    override fun updateMarketAtom(userId: String, projectId: String, marketAtomUpdateRequest: MarketAtomUpdateRequest): Result<String?> {
+        return atomReleaseService.updateMarketAtom(userId, projectId, marketAtomUpdateRequest)
     }
 
-    override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
-        return atomMemberService.add(userId, storeMemberReq, StoreTypeEnum.ATOM)
+    override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<Boolean> {
+        return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest)
     }
 
-    override fun delete(userId: String, id: String, atomCode: String): Result<Boolean> {
-        return atomMemberService.delete(userId, id, atomCode, StoreTypeEnum.ATOM)
+    override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
+        return atomReleaseService.getProcessInfo(userId, atomId)
     }
 
-    override fun view(userId: String, atomCode: String): Result<StoreMemberItem?> {
-        return atomMemberService.viewMemberInfo(userId, atomCode, StoreTypeEnum.ATOM)
+    override fun cancelRelease(userId: String, atomId: String): Result<Boolean> {
+        return atomReleaseService.cancelRelease(userId, atomId)
     }
 
-    override fun changeMemberTestProjectCode(accessToken: String, userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        return atomMemberService.changeMemberTestProjectCode(accessToken, userId, projectCode, atomCode, StoreTypeEnum.ATOM)
+    override fun passTest(userId: String, atomId: String): Result<Boolean> {
+        return atomReleaseService.passTest(userId, atomId)
+    }
+
+    override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
+        return atomReleaseService.offlineAtom(userId, atomCode, atomOfflineReq)
     }
 }

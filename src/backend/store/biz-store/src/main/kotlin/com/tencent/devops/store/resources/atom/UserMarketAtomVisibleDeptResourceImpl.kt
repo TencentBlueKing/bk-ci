@@ -24,22 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.atom.UserMarketAtomVisibleDeptResource
+import com.tencent.devops.store.pojo.atom.AtomVisibleDeptReq
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("插件市场-归档插件包请求报文体")
-data class ArchiveAtomRequest(
-    @ApiModelProperty("项目编码", required = true)
-    val projectCode: String,
-    @ApiModelProperty("插件代码", required = true)
-    val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
-    val version: String,
-    @ApiModelProperty("发布类型", required = false)
-    val releaseType: ReleaseTypeEnum?,
-    @ApiModelProperty("支持的操作系统", required = false)
-    val os: String?
-)
+@RestResource
+class UserMarketAtomVisibleDeptResourceImpl @Autowired constructor(private val storeVisibleDeptService: StoreVisibleDeptService) :
+    UserMarketAtomVisibleDeptResource {
+
+    override fun deleteVisibleDept(userId: String, atomCode: String, deptIds: String): Result<Boolean> {
+        return storeVisibleDeptService.deleteVisibleDept(userId, atomCode, deptIds, StoreTypeEnum.ATOM)
+    }
+
+    override fun addVisibleDept(userId: String, atomVisibleDeptRequest: AtomVisibleDeptReq): Result<Boolean> {
+        return storeVisibleDeptService.addVisibleDept(userId, atomVisibleDeptRequest.atomCode, atomVisibleDeptRequest.deptInfos, StoreTypeEnum.ATOM)
+    }
+
+    override fun getVisibleDept(atomCode: String): Result<StoreVisibleDeptResp?> {
+        return storeVisibleDeptService.getVisibleDept(atomCode, StoreTypeEnum.ATOM, null)
+    }
+}

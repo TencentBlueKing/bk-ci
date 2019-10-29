@@ -37,10 +37,12 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -67,6 +69,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.MarketTemplateStatisticService
 import com.tencent.devops.store.service.template.TemplateCategoryService
@@ -111,6 +114,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var storeProjectService: StoreProjectService
     @Autowired
     lateinit var storeCommentService: StoreCommentService
+    @Autowired
+    lateinit var storeVisibleDeptService: StoreVisibleDeptService
     @Autowired
     lateinit var classifyService: ClassifyService
     @Autowired
@@ -165,7 +170,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             templates.forEach {
                 val code = it["TEMPLATE_CODE"] as String
                 val statistic = templateStatisticData?.get(code)
-
                 val classifyId = it["CLASSIFY_ID"] as String
                 results.add(
                     MarketItem(
@@ -183,7 +187,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         score = statistic?.score
                             ?: 0.toDouble(),
                         summary = it["SUMMARY"] as? String,
-                        flag = null,
+                        flag = true,
                         publicFlag = it["PUBLIC_FLAG"] as Boolean,
                         buildLessRunFlag = null,
                         docsLink = null
@@ -379,6 +383,9 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             }
 
+            val isNormalUpgrade = getNormalUpgradeFlag(templateRecord.templateCode, templateRecord.templateStatus.toInt())
+            logger.info("updateMarketTemplate isNormalUpgrade is:$isNormalUpgrade")
+            val templateStatus = if (isNormalUpgrade) TemplateStatusEnum.RELEASED.status.toByte() else TemplateStatusEnum.AUDITING.status.toByte()
             var templateId = UUIDUtil.generate()
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -394,13 +401,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                             marketTemplateUpdateRequest
                         )
                         // 插入标签
-                        templateLabelRelDao.deleteByTemplateId(context, templateId)
-                        templateLabelRelDao.batchAdd(
-                            context,
-                            userId,
-                            templateId,
-                            marketTemplateUpdateRequest.labelIdList
-                        )
+                        val labelIdList = marketTemplateUpdateRequest.labelIdList
+                        if (null != labelIdList) {
+                            templateLabelRelDao.deleteByTemplateId(context, templateId)
+                            if (labelIdList.isNotEmpty())
+                                templateLabelRelDao.batchAdd(context, userId, templateId, labelIdList)
+                        }
                         // 插入范畴
                         templateCategoryRelDao.deleteByTemplateId(context, templateId)
                         templateCategoryRelDao.batchAdd(
@@ -411,11 +417,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         )
                     } else {
                         // 升级模板
-                        upgradeMarketTemplate(templateRecord, context, userId, templateId, marketTemplateUpdateRequest)
+                        upgradeMarketTemplate(templateRecord, context, userId, templateId, templateStatus, marketTemplateUpdateRequest)
                     }
                 } else {
                     // 升级模板
-                    upgradeMarketTemplate(templateRecord, context, userId, templateId, marketTemplateUpdateRequest)
+                    upgradeMarketTemplate(templateRecord, context, userId, templateId, templateStatus, marketTemplateUpdateRequest)
                 }
             }
             return Result(templateId)
@@ -425,6 +431,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 arrayOf(templateCode)
             )
         }
+    }
+
+    private fun getNormalUpgradeFlag(templateCode: String, status: Int): Boolean {
+        val releaseTotalNum = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
+        val currentNum = if (status == TemplateStatusEnum.RELEASED.status) 1 else 0
+        return releaseTotalNum > currentNum
     }
 
     /**
@@ -479,6 +491,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         context: DSLContext,
         userId: String,
         templateId: String,
+        templateStatus: Byte,
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ) {
         val dbVersion = templateRecord.version
@@ -487,16 +500,21 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         marketTemplateDao.cleanLatestFlag(dslContext, templateRecord.templateCode)
 
         marketTemplateDao.upgradeMarketTemplate(
-            context,
-            userId,
-            templateId,
-            version,
-            templateRecord,
-            marketTemplateUpdateRequest
+            dslContext = context,
+            userId = userId,
+            templateId = templateId,
+            templateStatus = templateStatus,
+            version = version,
+            templateRecord = templateRecord,
+            marketTemplateUpdateRequest = marketTemplateUpdateRequest
         )
         // 插入标签
-        templateLabelRelDao.deleteByTemplateId(context, templateId)
-        templateLabelRelDao.batchAdd(context, userId, templateId, marketTemplateUpdateRequest.labelIdList)
+        val labelIdList = marketTemplateUpdateRequest.labelIdList
+        if (null != labelIdList) {
+            templateLabelRelDao.deleteByTemplateId(context, templateId)
+            if (labelIdList.isNotEmpty())
+                templateLabelRelDao.batchAdd(context, userId, templateId, labelIdList)
+        }
         // 插入范畴
         templateCategoryRelDao.deleteByTemplateId(context, templateId)
         templateCategoryRelDao.batchAdd(context, userId, templateId, marketTemplateUpdateRequest.categoryIdList)
@@ -608,7 +626,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
         return storeProjectService.installStoreComponent(
             accessToken, userId, projectCodeList, template.id,
-            template.templateCode, StoreTypeEnum.TEMPLATE, template.publicFlag
+            template.templateCode, StoreTypeEnum.TEMPLATE, template.publicFlag,
+            ChannelCode.BS
         )
     }
 

@@ -26,8 +26,14 @@
 
 package com.tencent.devops.store
 
+import com.tencent.devops.store.service.atom.impl.SampleAtomMemberServiceImpl
+import com.tencent.devops.store.service.atom.impl.SampleAtomNotifyServiceImpl
+import com.tencent.devops.store.service.atom.impl.SampleAtomReleaseServiceImpl
+import com.tencent.devops.store.service.atom.impl.SampleAtomServiceImpl
+import com.tencent.devops.store.service.atom.impl.SampleMarketAtomServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreUserServiceImpl
+import com.tencent.devops.store.service.template.impl.SampleMarketTemplateServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -39,4 +45,22 @@ class SampleServiceConfig {
 
     @Bean
     fun storeNotifyService() = SampleStoreNotifyServiceImpl()
+
+    @Bean
+    fun atomService() = SampleAtomServiceImpl()
+
+    @Bean
+    fun marketAtomService() = SampleMarketAtomServiceImpl()
+
+    @Bean
+    fun atomMemberService() = SampleAtomMemberServiceImpl()
+
+    @Bean
+    fun atomReleaseService() = SampleAtomReleaseServiceImpl()
+
+    @Bean
+    fun atomNotifyService() = SampleAtomNotifyServiceImpl()
+
+    @Bean
+    fun marketTemplateService() = SampleMarketTemplateServiceImpl()
 }

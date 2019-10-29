@@ -24,22 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.service.common
 
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-@ApiModel("插件市场-归档插件包请求报文体")
-data class ArchiveAtomRequest(
-    @ApiModelProperty("项目编码", required = true)
-    val projectCode: String,
-    @ApiModelProperty("插件代码", required = true)
-    val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
-    val version: String,
-    @ApiModelProperty("发布类型", required = false)
-    val releaseType: ReleaseTypeEnum?,
-    @ApiModelProperty("支持的操作系统", required = false)
-    val os: String?
-)
+/**
+ * store组件可见范围逻辑类
+ * since: 2019-01-08
+ */
+interface StoreVisibleDeptService {
+
+    /**
+     * 查看store组件可见范围
+     */
+    fun getVisibleDept(storeCode: String, storeType: StoreTypeEnum, deptStatus: DeptStatusEnum?): Result<StoreVisibleDeptResp?>
+
+    /**
+     * 批量获取已经审核通过的可见范围
+     */
+    fun batchGetVisibleDept(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<Int>>>
+
+    /**
+     * 设置store组件可见范围
+     */
+    fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
+    /**
+     * 删除store组件可见范围
+     */
+    fun deleteVisibleDept(userId: String, storeCode: String, deptIds: String, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 审核可见范围
+     */
+    fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq, storeType: StoreTypeEnum): Result<Boolean>
+}

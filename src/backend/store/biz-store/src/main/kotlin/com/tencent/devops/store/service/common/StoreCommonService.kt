@@ -74,4 +74,9 @@ interface StoreCommonService {
         modifier: String,
         processInfo: List<ReleaseProcessItem>
     ): StoreProcessInfo
+
+    /**
+     * 获取store组件详情页地址
+     */
+    fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String
 }

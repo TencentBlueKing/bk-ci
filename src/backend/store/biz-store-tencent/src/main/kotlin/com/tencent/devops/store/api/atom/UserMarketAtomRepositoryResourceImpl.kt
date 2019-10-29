@@ -24,22 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.api.atom
 
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.service.atom.AtomRepositoryService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("插件市场-归档插件包请求报文体")
-data class ArchiveAtomRequest(
-    @ApiModelProperty("项目编码", required = true)
-    val projectCode: String,
-    @ApiModelProperty("插件代码", required = true)
-    val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
-    val version: String,
-    @ApiModelProperty("发布类型", required = false)
-    val releaseType: ReleaseTypeEnum?,
-    @ApiModelProperty("支持的操作系统", required = false)
-    val os: String?
-)
+@RestResource
+class UserMarketAtomRepositoryResourceImpl @Autowired constructor(
+    private val atomRepositoryService: AtomRepositoryService
+) : UserMarketAtomRepositoryResource {
+
+    override fun changeAtomRepositoryUserInfo(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
+        return atomRepositoryService.updateAtomRepositoryUserInfo(userId, projectCode, atomCode)
+    }
+}

@@ -29,10 +29,10 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.ServiceBuildResource
-import com.tencent.devops.process.api.ServiceMeasurePipelineResource
-import com.tencent.devops.process.api.ServicePipelineTaskResource
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo

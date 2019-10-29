@@ -35,9 +35,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.impl.StoreMemberServiceImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service("atomMemberService")
 abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
 
     @Autowired

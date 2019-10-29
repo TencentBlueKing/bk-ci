@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -71,7 +71,6 @@ import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
-import com.tencent.devops.store.websocket.StoreWebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -109,13 +108,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var storeUserService: StoreUserService
     @Autowired
-    lateinit var storeMemberService: StoreMemberService
+    lateinit var atomMemberService: AtomMemberServiceImpl
     @Autowired
     lateinit var storeCommentService: StoreCommentService
     @Autowired
     lateinit var classifyService: ClassifyService
-    @Autowired
-    lateinit var websocketService: StoreWebsocketService
+/*    @Autowired
+    lateinit var //websocketService: StoreWebsocketService*/
     @Autowired
     lateinit var client: Client
 
@@ -172,7 +171,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val atomStatisticData = marketAtomStatisticService.getStatisticByCodeList(atomCodeList, statField).data
             logger.info("[list]get atomStatisticData:$atomStatisticData")
             // 获取用户
-            val memberData = storeMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
+            val memberData = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
 
             // 获取分类
             val classifyList = classifyService.getAllClassify(StoreTypeEnum.ATOM.type.toByte()).data
@@ -586,7 +585,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             if (AtomStatusEnum.BUILDING.status.toByte() == atomRecord.atomStatus) {
                 marketAtomDao.setAtomStatusById(dslContext, atomRecord.id, atomStatus.status.toByte(), userId, msg)
                 // 通过websocket推送状态变更消息
-                websocketService.sendWebsocketMessage(userId, atomRecord.id)
+                //websocketService.sendWebsocketMessage(userId, atomRecord.id)
             }
         }
         return Result(true)

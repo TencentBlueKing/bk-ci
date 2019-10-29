@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.configuration.StoreDetailUrlConfig
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
@@ -57,7 +58,8 @@ class StoreCommonServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeMemberDao: StoreMemberDao,
     private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
-    private val storeProjectRelDao: StoreProjectRelDao
+    private val storeProjectRelDao: StoreProjectRelDao,
+    private val storeDetailUrlConfig: StoreDetailUrlConfig
 ) : StoreCommonService {
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
@@ -162,5 +164,20 @@ class StoreCommonServiceImpl @Autowired constructor(
             )
         }
         return storeProcessInfo
+    }
+
+    /**
+     * 获取store组件详情页地址
+     */
+    override fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String {
+        logger.info("getStoreDetailUrl storeType is :$storeType, storeCode is :$storeCode")
+        val url = when (storeType) {
+            StoreTypeEnum.ATOM -> "${storeDetailUrlConfig.atomDetailBaseUrl}$storeCode"
+            StoreTypeEnum.TEMPLATE -> "${storeDetailUrlConfig.templateDetailBaseUrl}$storeCode"
+            StoreTypeEnum.IDE_ATOM -> "${storeDetailUrlConfig.ideAtomDetailBaseUrl}$storeCode"
+            else -> ""
+        }
+        logger.info("getStoreDetailUrl url is :$url")
+        return url
     }
 }

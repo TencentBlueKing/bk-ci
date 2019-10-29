@@ -48,15 +48,20 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class BkAtomNotifyServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val atomDao: AtomDao,
-    private val atomVersionLogDao: MarketAtomVersionLogDao,
-    private val storeMemberDao: StoreMemberDao,
-    private val client: Client
-) : AtomNotifyService {
+class BkAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
 
     private val logger = LoggerFactory.getLogger(BkAtomNotifyServiceImpl::class.java)
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var atomDao: AtomDao
+    @Autowired
+    lateinit var atomVersionLogDao: MarketAtomVersionLogDao
+    @Autowired
+    lateinit var storeMemberDao: StoreMemberDao
+    @Autowired
+    lateinit var client: Client
 
     @Value("\${store.atomDetailBaseUrl}")
     private lateinit var atomDetailBaseUrl: String

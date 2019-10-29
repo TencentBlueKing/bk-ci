@@ -62,7 +62,7 @@ data class MarketItem(
     @ApiModelProperty("是否公共标识")
     val publicFlag: Boolean,
     @ApiModelProperty("无编译环境插件是否可以在编译环境下执行标识")
-    val buildLessRunFlag: Boolean,
+    val buildLessRunFlag: Boolean?,
     @ApiModelProperty("帮助文档")
     val docsLink: String?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)

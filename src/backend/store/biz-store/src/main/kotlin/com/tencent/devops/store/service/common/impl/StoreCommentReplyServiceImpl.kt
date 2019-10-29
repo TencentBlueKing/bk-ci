@@ -32,12 +32,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
+import com.tencent.devops.store.configuration.StoreDetailUrlConfig
 import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
-import com.tencent.devops.store.pojo.common.STORE_MEMBER_ADD_NOTIFY_TEMPLATE
+import com.tencent.devops.store.pojo.common.STORE_COMMENT_REPLY_NOTIFY_TEMPLATE
 import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
 import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -73,6 +73,8 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var storeNotifyService: StoreNotifyService
+    @Autowired
+    lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
     @Autowired
     lateinit var client: Client
 
@@ -146,7 +148,8 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         }
         logger.info("the receivers is:$receivers")
         val storeType = StoreTypeEnum.getStoreTypeObj(storeCommentRecord.storeType.toInt())
-        val url = "${HomeHostUtil.innerServerHost()}/console/store/atomStore/detail/${storeType!!.name.toLowerCase()}/${storeCommentRecord.storeCode}"
+        val storeCode = storeCommentRecord.storeCode
+        val url = storeCommonService.getStoreDetailUrl(storeType!!, storeCode)
         val storeName = storeCommonService.getStoreNameById(storeCommentRecord.storeId, storeType)
         val bodyParams = mapOf(
             "userId" to userId,
@@ -157,7 +160,7 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
             "url" to url
         )
         storeNotifyService.sendNotifyMessage(
-            templateCode = STORE_MEMBER_ADD_NOTIFY_TEMPLATE + "_$storeType",
+            templateCode = STORE_COMMENT_REPLY_NOTIFY_TEMPLATE,
             sender = DEVOPS,
             receivers = receivers.toMutableSet(),
             bodyParams = bodyParams

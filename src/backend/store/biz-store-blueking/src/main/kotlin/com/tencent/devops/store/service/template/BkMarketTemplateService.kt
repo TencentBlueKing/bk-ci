@@ -24,22 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.service.template
 
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("插件市场-归档插件包请求报文体")
-data class ArchiveAtomRequest(
-    @ApiModelProperty("项目编码", required = true)
-    val projectCode: String,
-    @ApiModelProperty("插件代码", required = true)
-    val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
-    val version: String,
-    @ApiModelProperty("发布类型", required = false)
-    val releaseType: ReleaseTypeEnum?,
-    @ApiModelProperty("支持的操作系统", required = false)
-    val os: String?
-)
+interface BkMarketTemplateService
