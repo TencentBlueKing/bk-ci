@@ -5,6 +5,10 @@ import axios from 'axios'
 const DEFAULT_LOCALE = 'zh-CN'
 const LS_KEY = 'devops_i18n_locale'
 const loadedModule = {}
+const localeLabelMap = {
+    'zh-CN': '中文',
+    'en-US': 'English'
+}
 
 function getLsLocale () {
     if (!localStorage) return DEFAULT_LOCALE
@@ -95,7 +99,10 @@ function importAll (r) {
                 ...mod
             }
             
-            localeList.push(localeKey)
+            localeList.push({
+                key: localeKey,
+                label: localeKey.split('-').pop()
+            })
         }
         return acc
     }, {});

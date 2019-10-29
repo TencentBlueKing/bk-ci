@@ -221,7 +221,8 @@
                                 showProjectList: children[j].show_project_list,
                                 showNav: children[j].show_nav,
                                 projectIdType: children[j].project_id_type,
-                                header: serviceTitle,
+                                header: typeof mod === 'string' ? mod.toLowerCase() : serviceTitle,
+                                title: serviceTitle,
                                 logo: mod,
                                 webSocket: (children[j].webSocket || '').split(',')
                             }

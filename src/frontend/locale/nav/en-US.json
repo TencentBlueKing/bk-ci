@@ -98,5 +98,8 @@
     "disableProjectConfirm": "Make sure to disable the project",
     "enableProjectConfirm": "Make sure to enable the project",
     "projectSuccess": "project Successful",
-    "projectFail": "project Failed"
+    "projectFail": "project Failed",
+    "pipeline": {
+        "pipeline": "Pipeline"
+    }
 }

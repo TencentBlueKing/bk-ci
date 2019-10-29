@@ -11,7 +11,7 @@
                 :name="$i18n.locale"
                 size="20"
             />
-            <span>{{ $i18n.locale }}</span>
+            <span>{{ localeLabel }}</span>
             <i class="bk-icon icon-down-shape" />
         </div>
 
@@ -21,14 +21,14 @@
         >
             <li
                 v-for="item in $localeList"
-                :key="item"
-                @click="switchLocale(item)"
+                :key="item.key"
+                @click="switchLocale(item.key)"
             >
                 <icon
-                    :name="item"
+                    :name="item.key"
                     size="20"
                 />
-                {{ item }}
+                {{ item.label }}
             </li>
         </ul>
     </div>
@@ -58,6 +58,12 @@
             // @ts-ignore
             this.$setLocale(locale)
             this.$nextTick(this.hideList)
+        }
+
+        get localeLabel (): string {
+            // @ts-ignore
+            const curLocale = this.$localeList.find(locale => locale.key === this.$i18n.locale)
+            return curLocale ? curLocale.label : this.$i18n.locale
         }
     }
 </script>

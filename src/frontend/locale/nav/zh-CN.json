@@ -98,5 +98,8 @@
     "disableProjectConfirm": "确定要停用项目",
     "enableProjectConfirm": "确定要启用项目",
     "projectSuccess": "项目成功",
-    "projectFail": "项目失败"
+    "projectFail": "项目失败",
+    "pipeline": {
+        "pipeline": "流水线"
+    }
 }
