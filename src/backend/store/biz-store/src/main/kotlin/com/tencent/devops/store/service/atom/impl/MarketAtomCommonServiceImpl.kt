@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -35,7 +36,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -59,7 +60,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         version: String
     ): Result<Boolean> {
         val dbVersion = atomRecord.version
-        if ("1.0.0" == dbVersion && releaseType == ReleaseTypeEnum.NEW) {
+        if (INIT_VERSION == dbVersion && releaseType == ReleaseTypeEnum.NEW) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(version))
         }
         val dbOsList = if (!StringUtils.isEmpty(atomRecord.os)) JsonUtil.getObjectMapper().readValue(
@@ -97,9 +98,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     @Suppress("UNCHECKED_CAST")
     override fun parseBaseTaskJson(
         taskJsonStr: String,
-        projectCode: String,
         atomCode: String,
-        version: String,
         userId: String
     ): GetAtomConfigResult {
         val taskDataMap = JsonUtil.toMap(taskJsonStr)
@@ -146,7 +145,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         releaseType: ReleaseTypeEnum
     ): String {
         logger.info("dbVersion is: $dbVersion,releaseType is: $releaseType")
-        var requireVersion = "1.0.0"
+        var requireVersion = INIT_VERSION
         val dbVersionParts = dbVersion.split(".")
         when (releaseType) {
             ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {

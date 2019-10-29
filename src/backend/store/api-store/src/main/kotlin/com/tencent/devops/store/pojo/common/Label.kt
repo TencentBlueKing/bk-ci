@@ -37,7 +37,7 @@ data class Label(
     val labelCode: String,
     @ApiModelProperty("标签名称", required = true)
     val labelName: String,
-    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板", required = true)
+    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val labelType: String,
     @ApiModelProperty("创建日期")
     val createTime: Long = 0,

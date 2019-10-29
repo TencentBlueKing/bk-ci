@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineTaskResourceImpl @Autowired constructor(
     val pipelineTaskService: PipelineTaskService
 ) : ServicePipelineTaskResource {
+
     override fun list(
         projectId: String,
         pipelineIds: Collection<String>

@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 data class ReleaseProcessItem(
     @ApiModelProperty("步骤名称", required = true)
     var name: String,
+    @ApiModelProperty("步骤代码", required = true)
+    var code: String,
     @ApiModelProperty("步骤号", required = true)
     val step: Int,
     @ApiModelProperty("状态", required = true)

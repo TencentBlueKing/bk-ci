@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class WebsocketConfiguration {
 
-    @Bean
+/*    @Bean
     fun getWebsocketPushDispatcher(
         rabbitTemplate: RabbitTemplate
     ): WebsocketPushDispatcher {
         return WebsocketPushDispatcher(rabbitTemplate)
-    }
+    }*/
 
     @Bean
     fun getWebSocketDispatcher(

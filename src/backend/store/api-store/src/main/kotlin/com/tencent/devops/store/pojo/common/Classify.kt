@@ -37,7 +37,7 @@ data class Classify(
     val classifyCode: String,
     @ApiModelProperty("分类名称", required = true)
     val classifyName: String,
-    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板", required = true)
+    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val classifyType: String,
     @ApiModelProperty("权重（数值越大代表权重越高）", required = false)
     val weight: Int?,

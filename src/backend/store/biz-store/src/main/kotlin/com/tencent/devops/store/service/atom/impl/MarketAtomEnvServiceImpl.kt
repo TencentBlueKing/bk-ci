@@ -69,13 +69,14 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         if (atomResult.isNotOk()) {
             return Result(atomResult.status, atomResult.message ?: "")
         }
-        val initProjectCode =
-            storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("the initProjectCode is :$initProjectCode")
         var atomStatusList: List<Byte>? = null
         if (version.contains("*")) {
-            atomStatusList = if (projectCode == initProjectCode) {
-                // 原生项目有权查处于测试中、审核中、已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
+            val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+            logger.info("the isInitTestProjectCode flag is :$flag")
+            atomStatusList = if (flag) {
+                // 原生项目或者调试项目有权查处于测试中、审核中、已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
                 listOf(
                     AtomStatusEnum.TESTING.status.toByte(),
                     AtomStatusEnum.AUDITING.status.toByte(),
@@ -85,11 +86,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 )
             } else {
                 // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
-                listOf(
-                    AtomStatusEnum.RELEASED.status.toByte(),
+                listOf(AtomStatusEnum.RELEASED.status.toByte(),
                     AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGED.status.toByte()
-                )
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte())
             }
         }
         val atomEnvInfoRecord = marketAtomEnvInfoDao.getProjectMarketAtomEnvInfo(
@@ -151,11 +150,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomRecord.id, atomEnvRequest)
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf("$atomCode+$version"),
-                false
-            )
+            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("$atomCode+$version"), false)
         }
     }
 }

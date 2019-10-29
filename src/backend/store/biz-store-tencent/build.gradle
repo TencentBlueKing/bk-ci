@@ -25,10 +25,10 @@
  */
 
 dependencies {
+    compile project(":common:common-auth:common-auth-tencent")
+    compile project(":notify:api-notify")
     compile project(":store:biz-store")
     compile project(":store:api-store-tencent")
-    compile project(":store:model-atom-tencent")
-    compile project(":common:common-auth:common-auth-tencent")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
