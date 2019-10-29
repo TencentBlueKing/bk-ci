@@ -21,7 +21,7 @@ const artifactoryRecycle = () => import(/* webpackChunkName: 'artifactoryRecycle
 
 const meta = {
     title: '版本仓库',
-    header: '版本仓库',
+    header: 'artifactory',
     logo: 'artifactory',
     to: 'artifactory'
 }

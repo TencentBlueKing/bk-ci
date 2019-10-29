@@ -122,7 +122,7 @@
             return this.$route.params.projectId
         }
         get title (): any {
-            return this.$route.meta.header ? this.$t(`${this.serviceLogo}.${this.$route.meta.header}`) : ''
+            return this.$route.meta.header ? this.$t(`subService.${this.$route.meta.header}`) : ''
         }
         get serviceLogo (): string {
             return this.$route.meta.logo

@@ -99,7 +99,16 @@
     "enableProjectConfirm": "Make sure to enable the project",
     "projectSuccess": "project Successful",
     "projectFail": "project Failed",
-    "pipeline": {
-        "pipeline": "Pipeline"
+    "subService": {
+        "pipeline": "Pipeline",
+        "codelib": "Codelib",
+        "artifactory": "Artifactory",
+        "store": "Store",
+        "environment": "Environment",
+        "experience": "Experience",
+        "quality": "Quality",
+        "vs": "Vs",
+        "turbo": "Turbo",
+        "ticket": "Ticket"
     }
 }

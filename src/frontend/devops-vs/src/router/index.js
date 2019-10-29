@@ -15,7 +15,7 @@ const routes = [
                 meta: {
                     title: '扫描记录',
                     logo: 'vs',
-                    header: '漏洞扫描-终端（金刚）',
+                    header: 'vs',
                     to: 'vsList'
                 }
             },
@@ -28,7 +28,7 @@ const routes = [
                         return `查看报告`
                     },
                     logo: 'vs',
-                    header: '漏洞扫描-终端（金刚）',
+                    header: 'vs',
                     to: 'vsList'
                 }
             },
@@ -39,7 +39,7 @@ const routes = [
                 meta: {
                     title: '新增扫描',
                     logo: 'vs',
-                    header: '漏洞扫描-终端（金刚）',
+                    header: 'vs',
                     to: 'vsList'
                 }
             }

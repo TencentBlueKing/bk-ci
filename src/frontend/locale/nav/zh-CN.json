@@ -99,7 +99,16 @@
     "enableProjectConfirm": "确定要启用项目",
     "projectSuccess": "项目成功",
     "projectFail": "项目失败",
-    "pipeline": {
-        "pipeline": "流水线"
+    "subService": {
+        "pipeline": "流水线",
+        "codelib": "代码库",
+        "artifactory": "版本仓库",
+        "store": "研发商店",
+        "environment": "环境管理",
+        "experience": "版本体验",
+        "quality": "质量红线",
+        "vs": "漏洞扫描-终端（金刚）",
+        "turbo": "编译加速",
+        "ticket": "凭据管理"
     }
 }
