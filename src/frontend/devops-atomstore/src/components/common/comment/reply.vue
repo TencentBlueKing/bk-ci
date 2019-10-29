@@ -8,8 +8,7 @@
         <h5 class="comment-static">
             <comment-rate :rate="comment.score" :width="11" :height="12" class="commet-rate" v-if="!isReply"></comment-rate>
             <span>{{comment.updateTime|timeFilter}}</span>
-            <span class="comment-replay" @click="clickReply">回复
-                <span v-if="+comment.replyCount">({{comment.replyCount}})</span>
+            <span class="comment-replay" @click="clickReply"> {{ $t('回复') }} <span v-if="+comment.replyCount">({{comment.replyCount}})</span>
             </span>
             <icon class="comment-praise" :style="{ 'fill': comment.praiseFlag ? '#979BA5' : 'none' }" name="praise" size="14" @click.native="priase" v-if="!isReply" />
             <span v-if="!isReply">{{comment.praiseCount}}</span>
@@ -64,7 +63,7 @@
             comment () {
                 const data = this.commentData || {}
                 if (this.isReply) {
-                    const preContent = data.replyToUser ? `回复@${data.replyToUser}：` : ''
+                    const preContent = data.replyToUser ? `${this.$t('回复@')}${data.replyToUser}：` : ''
                     data.commentContent = preContent + data.replyContent
                     data.commentId = data.replyId
                     data.commenter = data.replyer

@@ -6,7 +6,7 @@
             <span class="text-overflow">{{ atom.publisher }}</span>
             <span>{{ atom.downloads }} <i class="bk-icon icon-heat-2"></i></span>
         </h5>
-        <p v-if="hasSummary" class="card-summary">{{atom.summary || '暂无描述'}}</p>
+        <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('暂无描述')}}</p>
         <section class="card-rate">
             <p class="score-group">
                 <comment-rate :rate="5" :width="15" :height="16" :style="{ width: starWidth }" class="score-real"></comment-rate>

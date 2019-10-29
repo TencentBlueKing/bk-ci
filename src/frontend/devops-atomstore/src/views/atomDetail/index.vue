@@ -28,28 +28,28 @@
                             {
                                 id: 'overview',
                                 selectId: ['overview'],
-                                name: '概览',
+                                name: this.$t('概览'),
                                 icon: 'icon-overview',
                                 showChildren: false
                             },
                             {
                                 id: 'detail',
                                 selectId: ['detail', 'edit'],
-                                name: '详情',
+                                name: this.$t('详情'),
                                 icon: 'icon-txt',
                                 showChildren: false
                             },
                             {
                                 id: 'approval',
                                 selectId: ['approval'],
-                                name: '审批',
+                                name: this.$t('审批'),
                                 icon: 'icon-panel-permission',
                                 showChildren: false
                             },
                             {
                                 id: 'settings',
                                 selectId: ['settings'],
-                                name: '设置',
+                                name: this.$t('设置'),
                                 icon: 'icon-cog',
                                 isOpen: false,
                                 showChildren: true,
@@ -57,13 +57,13 @@
                                     {
                                         id: 'member',
                                         selectId: ['member'],
-                                        name: '成员管理',
+                                        name: this.$t('成员管理'),
                                         icon: ''
                                     },
                                     {
                                         id: 'private',
                                         selectId: ['private'],
-                                        name: '私有配置',
+                                        name: this.$t('私有配置'),
                                         icon: ''
                                     }
                                 ]

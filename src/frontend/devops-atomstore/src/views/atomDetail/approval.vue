@@ -1,66 +1,66 @@
 <template>
     <article class="atom-information-wrapper">
         <div class="inner-header">
-            <div class="title">插件审批</div>
+            <div class="title"> {{ $t('插件审批') }} </div>
         </div>
         <section class="version-content" v-bkloading="{ isLoading }">
             <template v-if="!isLoading">
                 <div class="version-info-header">
-                    <span class="info-title">协作申请列表</span>
+                    <span class="info-title"> {{ $t('协作申请列表') }} </span>
                 </div>
-                <bk-table class="approval-table" :data="approveList" empty-text="暂无申请者" :pagination="pagination" @page-change="pageChanged" @page-limit-change="pageCountChanged">
-                    <bk-table-column label="申请人" prop="applicant"></bk-table-column>
-                    <bk-table-column label="审批状态" prop="approveStatus" :formatter="statusFormatter"></bk-table-column>
-                    <bk-table-column label="申请原因">
+                <bk-table class="approval-table" :data="approveList" :empty-text="$t('暂无申请者')" :pagination="pagination" @page-change="pageChanged" @page-limit-change="pageCountChanged">
+                    <bk-table-column :label="$t('申请人')" prop="applicant"></bk-table-column>
+                    <bk-table-column :label="$t('审批状态')" prop="approveStatus" :formatter="statusFormatter"></bk-table-column>
+                    <bk-table-column :label="$t('申请原因')">
                         <template slot-scope="props">
                             <span class="table-text" :title="props.row.content">{{props.row.content}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="审批结果说明">
+                    <bk-table-column :label="$t('审批结果说明')">
                         <template slot-scope="props">
                             <span class="table-text" :title="props.row.approveMsg">{{props.row.approveMsg}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="创建日期" prop="createTime" :formatter="timeFormatter"></bk-table-column>
-                    <bk-table-column label="更新日期" prop="updateTime" :formatter="timeFormatter"></bk-table-column>
-                    <bk-table-column label="操作" width="120" class-name="handler-btn">
+                    <bk-table-column :label="$t('创建日期')" prop="createTime" :formatter="timeFormatter"></bk-table-column>
+                    <bk-table-column :label="$t('更新日期')" prop="updateTime" :formatter="timeFormatter"></bk-table-column>
+                    <bk-table-column :label="$t('操作')" width="120" class-name="handler-btn">
                         <template slot-scope="props">
-                            <span class="update-btn" @click="approve(props.row)" v-if="props.row.approveStatus === 'WAIT'">审批</span>
+                            <span class="update-btn" @click="approve(props.row)" v-if="props.row.approveStatus === 'WAIT'"> {{ $t('审批') }} </span>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </template>
         </section>
 
-        <bk-sideslider :is-show.sync="approveRes.show" @hidden="clearFormData" :quick-close="true" title="审批" width="565">
+        <bk-sideslider :is-show.sync="approveRes.show" @hidden="clearFormData" :quick-close="true" :title="$t('审批')" width="565">
             <section slot="content" class="approve-form">
                 <bk-form label-width="90" ref="validateForm" :model="approveRes">
-                    <bk-form-item label="插件名称">
+                    <bk-form-item :label="$t('插件名称')">
                         {{currentAtom.name}}
                     </bk-form-item>
-                    <bk-form-item label="申请人">
+                    <bk-form-item :label="$t('申请人')">
                         {{approveRes.applicant}}
                     </bk-form-item>
-                    <bk-form-item label="申请原因">
+                    <bk-form-item :label="$t('申请原因')">
                         {{approveRes.content}}
                     </bk-form-item>
-                    <bk-form-item label="创建日期">
+                    <bk-form-item :label="$t('创建日期')">
                         {{timeFormatter({}, {}, approveRes.createTime)}}
                     </bk-form-item>
-                    <bk-form-item label="审批结果" :required="true">
+                    <bk-form-item :label="$t('审批结果')" :required="true">
                         <bk-radio-group v-model="approveRes.approveStatus">
-                            <bk-radio value="PASS">通过</bk-radio>
-                            <bk-radio value="REFUSE">拒绝</bk-radio>
+                            <bk-radio value="PASS"> {{ $t('通过') }} </bk-radio>
+                            <bk-radio value="REFUSE"> {{ $t('拒绝') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
-                    <bk-form-item label="审批原因" :required="true" :rules="[{ required: true, message: '必填项', trigger: 'change' }]" property="approveMsg">
-                        <bk-input type="textarea" v-model="approveRes.approveMsg" placeholder="请输入审批原因"></bk-input>
+                    <bk-form-item :label="$t('审批原因')" :required="true" :rules="[{ required: true, message: $t('必填项') , trigger: 'change' }]" property="approveMsg">
+                        <bk-input type="textarea" v-model="approveRes.approveMsg" :placeholder="$t('请输入审批原因')"></bk-input>
                     </bk-form-item>
                 </bk-form>
-                <form-tips :prompt-list="['同意协作后，协作者将成为插件开发人员，可以：', '1、修改插件代码', '2、修改插件私有配置', '3、提交版本升级插件', '4、在协作者自己的调试项目下使用测试版本']"></form-tips>
+                <form-tips :prompt-list="[$t('同意协作后，协作者将成为插件开发人员，可以：'), $t('1、修改插件代码'), $t('2、修改插件私有配置'), $t('3、提交版本升级插件'), $t('4、在协作者自己的调试项目下使用测试版本')]"></form-tips>
                 <div class="approve-button">
-                    <bk-button @click="clearFormData">取消</bk-button>
-                    <bk-button theme="primary" @click="confirmApprove">确认</bk-button>
+                    <bk-button @click="clearFormData"> {{ $t('取消') }} </bk-button>
+                    <bk-button theme="primary" @click="confirmApprove"> {{ $t('确认') }} </bk-button>
                 </div>
             </section>
         </bk-sideslider>
@@ -118,7 +118,7 @@
                             const currentData = this.approveList.find(item => item.approveId === this.approveRes.approveId) || {}
                             currentData.approveStatus = approveStatus
                             this.clearFormData()
-                            this.$bkMessage({ message: '审批成功', theme: 'success' })
+                            this.$bkMessage({ message: this.$t('审批成功'), theme: 'success' })
                             this.requestApproveList()
                         }
                     }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' }))
@@ -163,13 +163,13 @@
             },
 
             statusFormatter (obj, con, val) {
-                let str = '待审批'
+                let str = this.$t('待审批')
                 switch (val) {
                     case 'PASS':
-                        str = '通过'
+                        str = this.$t('通过')
                         break
                     case 'REFUSE':
-                        str = '拒绝'
+                        str = this.$t('拒绝')
                         break
                 }
                 return str
