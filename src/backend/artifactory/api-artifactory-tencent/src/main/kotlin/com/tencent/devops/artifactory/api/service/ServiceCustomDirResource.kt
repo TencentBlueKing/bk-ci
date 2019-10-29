@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceCustomDirResource {
     @ApiOperation("获取安全加固下载链接")
-    //@Path("/projects/{projectId}/files/{fileName: .*}")
+    // @Path("/projects/{projectId}/files/{fileName: .*}")
     @Path("/{projectId}/{fileName: .*}")
     @GET
     fun getGsDownloadUrl(

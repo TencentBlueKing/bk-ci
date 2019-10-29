@@ -20,7 +20,7 @@ import javax.ws.rs.core.Response
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserReportResource {
     @ApiOperation("获取有权限目录列表")
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/paths/{path: .*}")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/paths/{path: .*}")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/{path: .*}")
     @GET
     fun get(
