@@ -1,7 +1,7 @@
 <template>
     <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
         <template v-if="hasCodelibs">
-            <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib"></link-code-lib>
+            <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib" :is-blue-king="isBlueKing"></link-code-lib>
             <bk-button theme="primary" v-else @click.stop="goCreatePermission">
                 <i class="bk-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
@@ -18,7 +18,7 @@
             <code-lib-table v-bind="codelibs" :switch-page="switchPage"></code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
-            <bk-button v-for="typeLabel in codelibTypes" theme="primary" :key="typeLabel" @click="createCodelib(typeLabel)">
+            <bk-button v-for="typeLabel in codelibTypes" theme="primary" :key="typeLabel" @click="createCodelib(typeLabel)" v-if="typeLabel !== 'Gitlab' || isBlueKing">
                 {{ `${$t('codelib.link')}${typeLabel}${$t('codelib.codelib')}` }}
             </bk-button>
         </empty-tips>
@@ -40,7 +40,7 @@
         getCodelibConfig,
         isGit,
         isGithub,
-        isGitLab
+        isTGit
     } from '../config/'
     export default {
         name: 'codelib-list',
@@ -73,6 +73,16 @@
             hasCodelibs () {
                 const { codelibs } = this
                 return codelibs && codelibs.records && codelibs.records.length > 0
+            },
+            isBlueKing () {
+                const projectId = this.$route.params.projectId
+                const filterArr = this.projectList.find(item => {
+                    return (
+                        item.center_name === '蓝鲸产品中心'
+                        && item.project_code === projectId
+                    )
+                })
+                return filterArr
             }
         },
 
@@ -145,8 +155,9 @@
                     Object.assign(CodelibDialog, { authType: 'OAUTH' })
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                 }
-                if (isGitLab(typeName)) {
-                    Object.assign(CodelibDialog, { authType: 'HTTP' })
+                if (isTGit(typeName)) {
+                    Object.assign(CodelibDialog, { authType: 'HTTPS' })
+                    if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                 }
                 this.toggleCodelibDialog(CodelibDialog)
             },
