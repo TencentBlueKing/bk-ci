@@ -29,7 +29,7 @@ data class CodeSvnElement(
     @ApiModelProperty("指定版本号", required = false)
     var specifyRevision: Boolean? = false,
     @ApiModelProperty("拉取仓库深度", required = false)
-    val svnDepth: SvnDepth? = SvnDepth.Infinity,
+    val svnDepth: SvnDepth? = SvnDepth.infinity,
     @ApiModelProperty("SVN相对路径", required = false)
     val svnPath: String? = null,
     @ApiModelProperty("SVN的版本", required = false)
