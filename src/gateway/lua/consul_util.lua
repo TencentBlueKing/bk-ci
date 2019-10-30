@@ -31,7 +31,7 @@ function _M:getAllWhitelistIp()
   end
 
   -- 获取灰度设置
-  local devops_gray = grayUtil:get_gray()
+  local devops_gray = ngx.var.gray
 
   -- ngx.log(ngx.ERR, "devops_gray:", devops_gray )
   local ns_config = nil
