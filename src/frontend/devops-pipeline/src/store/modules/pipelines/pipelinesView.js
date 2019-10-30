@@ -95,37 +95,37 @@ const actions = {
      * 获取视图设置信息
     */
     requestViewSettingInfo ({ commit, state, dispatch }, { projectId }) {
-        return ajax.get(`${prefix}/pipelineViews/${projectId}/settings`).then(response => {
+        return ajax.get(`${prefix}/pipelineViews/projects/${projectId}/settings`).then(response => {
             return response.data
         })
     },
     updateCurrentViewList ({ state }, { projectId, ids }) {
-        return ajax.post(`${prefix}/pipelineViews/${projectId}/settings`, ids).then(response => {
+        return ajax.post(`${prefix}/pipelineViews/projects/${projectId}/settings`, ids).then(response => {
             return response.data
         })
     },
     requestPipelineViewList ({ commit }, { projectId }) {
-        return ajax.get(`${prefix}/pipelineViews/${projectId}`).then(response => {
+        return ajax.get(`${prefix}/pipelineViews/projects/${projectId}`).then(response => {
             return response.data
         })
     },
     createPipelineView ({ commit }, { projectId, params }) {
-        return ajax.post(`${prefix}/pipelineViews/${projectId}`, params).then(response => {
+        return ajax.post(`${prefix}/pipelineViews/projects/${projectId}`, params).then(response => {
             return response.data
         })
     },
     requestPipelineViewDetail ({ commit }, { projectId, viewId }) {
-        return ajax.get(`${prefix}/pipelineViews/${projectId}/${viewId}`).then(response => {
+        return ajax.get(`${prefix}/pipelineViews/projects/${projectId}/views/${viewId}`).then(response => {
             return response.data
         })
     },
     editPipelineView ({ commit }, { projectId, viewId, params }) {
-        return ajax.put(`${prefix}/pipelineViews/${projectId}/${viewId}`, params).then(response => {
+        return ajax.put(`${prefix}/pipelineViews/projects/${projectId}/views/${viewId}`, params).then(response => {
             return response.data
         })
     },
     deletePipelineView ({ commit }, { projectId, viewId }) {
-        return ajax.delete(`${prefix}/pipelineViews/${projectId}/${viewId}`).then(response => {
+        return ajax.delete(`${prefix}/pipelineViews/projects/${projectId}/views/${viewId}`).then(response => {
             return response.data
         })
     },
