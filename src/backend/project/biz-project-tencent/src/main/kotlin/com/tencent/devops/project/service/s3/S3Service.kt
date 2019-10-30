@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.project.constant.ProjectMessageCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -44,7 +45,7 @@ class S3Service @Autowired constructor(private val profile: Profile) {
             return client.getUrl(bucketName, key).toString() + "?v=${System.currentTimeMillis() / 1000}"
         } catch (e: Exception) {
             logger.warn("Fail to save the logo of project $projectCode", e)
-            throw OperationException("保存项目Logo失败")
+            throw OperationException(ProjectMessageCode.SAVE_LOGO_FAIL)
         }
     }
 

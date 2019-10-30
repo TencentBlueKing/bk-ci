@@ -58,6 +58,7 @@ class ProjectLabelService @Autowired constructor(
         logger.info("the request labelName is :{}", labelName)
         val nameCount = projectLabelDao.countByName(dslContext, labelName)
         if (nameCount > 0) {
+            //TODO:国际化
             throw CustomException(Response.Status.BAD_REQUEST, "($labelName)已经存在，请换一个再试") // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
         }
         projectLabelDao.add(dslContext, labelName)

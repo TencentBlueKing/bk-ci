@@ -63,6 +63,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                     )
             )
         } else {
+            //TODO: 国际化
             return Result(405, "无限ID,获取服务信息失败")
         }
     }
@@ -130,6 +131,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         if (tServiceRecord != null) {
             return Result(generateOppServiceVO(tServiceRecord))
         }
+        //TODO:国际化
         return Result(500, "服务添加失败")
     }
 
@@ -139,6 +141,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     override fun updateCollected(userId: String, service_id: Long, collector: Boolean): Result<Boolean> {
         if (collector) {
             if (favoriteDao.create(dslContext, userId, service_id) > 0) {
+                //TODO:国际化
                 return Result(0, "服务收藏成功", "", true)
             }
         } else {

@@ -43,5 +43,25 @@ package com.tencent.devops.project.constant
  *
  */
 object ProjectMessageCode{
-    const val USER_CREATE_GIT_CODE_REPOSITORY_FAIL = "2119001" // 创建GIT代码库失败，请稍后再试
+    const val PROJECT_NOT_EXIST = "2119001" // 项目不存在
+    const val PROJECT_NAME_EXIST = "2119002" // 项目名或英文名重复
+    const val NAME_EMPTY = "2119003" // 名称不能为空
+    const val NAME_TOO_LONG = "2119004" // 项目名至多4-12个字符
+    const val EN_NAME_INTERVAL_ERROR = "2119005" // 英文名长度在3-32个字符
+    const val EN_NAME_COMBINATION_ERROR = "2119006" // 英文名是字符+数字组成，并以小写字母开头
+    const val EN_NAME_EXIST = "2119007" // 英文名已经存在
+    const val PEM_CREATE_FAIL = "2119008" // 权限中心创建项目失败
+    const val UPDATE_LOGO_FAIL = "2119009" // 更新项目logo失败
+    const val QUERY_PROJECT_FAIL = "2119010" // 查询不到有效的项目
+    const val SAVE_LOGO_FAIL = "2119011" // 保存项目logo失败
+    const val QUERY_DEPARTMENT_FAIL = "2119012" // 获取部门信息失败
+    const val QUERY_CC_NAME_FAIL = "2119013" // 获取CC APP Name失败
+    const val QUERY_SUB_DEPARTMENT_FAIL = "2119014" // 获取子部门信息失败
+    const val QUERY_USER_INFO_FAIL = "2119015" // 获取用户信息失败
+    const val QUERY_ORG_FAIL = "2119016" // 获取公司组织架构信息失败
+    const val QUERY_PAR_DEPARTMENT_FAIL = "2119017" // 获取父部门信息失败
+    const val LABLE_EXIST = "2119018" // lable已经存在，请换一个再试
+    const val PEM_CREATE_ID_INVALID = "2119019" // 权限中心创建的项目ID无效
+    const val PEM_CHECK_FAIL = "2119020" // 没有该项目的操作权限
+    const val PEM_QUERY_ERROR = "2119021" // 从权限中心获取用户的项目信息失败
 }
