@@ -3,6 +3,7 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServcieGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -15,6 +16,7 @@ import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
 import org.springframework.beans.factory.annotation.Autowired
 
+@RestResource
 class ServiceGitRepositoryResourceImpl @Autowired constructor(
 		private val repoFileService: RepoFileService,
 		private val repositoryService: RepositoryService,
