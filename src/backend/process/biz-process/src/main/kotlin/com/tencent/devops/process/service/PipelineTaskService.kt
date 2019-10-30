@@ -45,6 +45,7 @@ class PipelineTaskService @Autowired constructor(
     val pipelineTaskDao: PipelineTaskDao,
     val pipelineModelTaskDao: PipelineModelTaskDao
 ) {
+
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
         return pipelineTaskDao.list(dslContext, projectId, pipelineIds)?.map {
             PipelineModelTask(

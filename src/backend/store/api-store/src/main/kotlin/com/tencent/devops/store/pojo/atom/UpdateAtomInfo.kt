@@ -28,13 +28,16 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("插件市场-更新插件对象")
 data class UpdateAtomInfo(
     @ApiModelProperty("插件状态", required = false)
-    val atomStatus: Byte?,
+    val atomStatus: Byte? = null,
     @ApiModelProperty("插件状态信息", required = false)
     val atomStatusMsg: String? = null,
     @ApiModelProperty("是否为最新版本", required = false)
-    val latestFlag: Boolean?
+    val latestFlag: Boolean? = null,
+    @ApiModelProperty("发布时间", required = false)
+    val pubTime: LocalDateTime? = null
 )

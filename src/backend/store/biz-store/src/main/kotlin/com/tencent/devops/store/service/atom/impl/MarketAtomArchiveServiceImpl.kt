@@ -38,7 +38,8 @@ import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
@@ -67,9 +68,15 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomArchiveServiceImpl::class.java)
 
-    override fun getTaskJsonStr(projectCode: String, atomCode: String, version: String): String {
-        logger.info("getTaskJsonStr projectCode is:$projectCode,atomCode is :$atomCode,version is :$version")
-        val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/task.json", "UTF-8")
+    override fun getFileStr(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String
+    ): String {
+        logger.info("getFileStr projectCode is:$projectCode,atomCode is :$atomCode")
+        logger.info("getFileStr version is :$version,fileName is :$fileName")
+        val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/$fileName", "UTF-8")
         val taskJsonStr = client.get(ServiceArchiveAtomResource::class).getAtomFileContent(filePath).data
         logger.info("the taskJsonStr is :$taskJsonStr")
         return taskJsonStr!!
@@ -117,9 +124,9 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         atomCode: String,
         version: String
     ): Result<GetAtomConfigResult?> {
-        val taskJsonStr = getTaskJsonStr(projectCode, atomCode, version)
+        val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
         val getAtomConfResult =
-            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, projectCode, atomCode, version, userId)
+            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, atomCode, userId)
         logger.info("parseTaskJson result is :$taskJsonStr")
         return if (getAtomConfResult.errorCode != "0") {
             MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)

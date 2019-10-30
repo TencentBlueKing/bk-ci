@@ -28,12 +28,20 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAtomBuildInfo
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.records.TAtomBuildInfoRecord
 import org.jooq.DSLContext
 import org.jooq.Record2
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
 class MarketAtomBuildInfoDao {
+
+    fun list(dslContext: DSLContext): Result<TAtomBuildInfoRecord>? {
+        with(TAtomBuildInfo.T_ATOM_BUILD_INFO) {
+            return dslContext.selectFrom(this).where(ENABLE.eq(true)).orderBy(CREATE_TIME.asc()).fetch()
+        }
+    }
 
     fun getAtomBuildInfo(dslContext: DSLContext, atomId: String): Record2<String, String> {
         val a = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("a")
@@ -46,5 +54,13 @@ class MarketAtomBuildInfoDao {
             .on(a.LANGUAGE.eq(b.LANGUAGE))
             .where(a.ATOM_ID.eq(atomId))
             .fetchOne()
+    }
+
+    fun getAtomBuildInfoByLanguage(dslContext: DSLContext, language: String): TAtomBuildInfoRecord {
+        return with(TAtomBuildInfo.T_ATOM_BUILD_INFO) {
+            dslContext.selectFrom(this)
+                .where(LANGUAGE.eq(language))
+                .fetchOne()
+        }
     }
 }

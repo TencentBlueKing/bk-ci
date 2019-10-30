@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
@@ -57,11 +58,38 @@ interface StoreProjectService {
         storeId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        publicFlag: Boolean
+        publicFlag: Boolean,
+        channelCode: ChannelCode
+    ): Result<Boolean>
+
+    /**
+     * 校验安装权限
+     */
+    fun validateInstallPermission(
+        publicFlag: Boolean,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        accessToken: String,
+        projectCodeList: ArrayList<String>,
+        channelCode: ChannelCode = ChannelCode.BS
     ): Result<Boolean>
 
     /**
      * 卸载商店组件
      */
-    fun uninstall(storeType: StoreTypeEnum, templateCode: String, projectCode: String): Result<Boolean>
+    fun uninstall(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        projectCode: String
+    ): Result<Boolean>
+
+    /**
+     * 判断组件是否被项目安装
+     */
+    fun isInstalledByProject(
+        projectCode: String,
+        storeCode: String,
+        storeType: Byte
+    ): Boolean
 }

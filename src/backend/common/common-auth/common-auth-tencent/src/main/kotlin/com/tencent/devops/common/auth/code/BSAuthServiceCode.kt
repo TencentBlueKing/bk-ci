@@ -35,6 +35,7 @@ enum class BSAuthServiceCode(val value: String) {
     PIPELINE("pipeline"),
     ARTIFACTORY("artifactory"),
     TICKET("ticket"),
+    PROJECT("project"),
     ENVIRONMENT("environment"),
     EXPERIENCE("experience"),
     VS("vs"),

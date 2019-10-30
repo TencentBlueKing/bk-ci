@@ -33,8 +33,6 @@ interface ProjectPermissionService {
     /**
      * 校验用户是否有这个项目的权限
      */
-    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean
-
     fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean
 
     fun createResources(userId: String, projectList: List<ResourceRegisterInfo>)

@@ -30,7 +30,9 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -38,6 +40,7 @@ class GithubTokenService @Autowired constructor(
     private val dslContext: DSLContext,
     private val githubTokenDao: GithubTokenDao
 ) {
+    @Value("\${aes.github:#{null}}")
     private val aesKey = "Bk39Go0rNtOdsI1Y"
 
     fun createAccessToken(userId: String, accessToken: String, tokenType: String, scope: String) {
@@ -55,10 +58,15 @@ class GithubTokenService @Autowired constructor(
 
     fun getAccessToken(userId: String): GithubToken? {
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId) ?: return null
+        logger.info("github aesKey:$aesKey")
         return GithubToken(
             AESUtil.decrypt(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

@@ -26,10 +26,11 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomMemberItem
-import com.tencent.devops.store.pojo.atom.AtomMemberReq
+import com.tencent.devops.store.pojo.common.StoreMemberItem
+import com.tencent.devops.store.pojo.common.StoreMemberReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -38,6 +39,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -59,7 +61,7 @@ interface UserMarketAtomMemberResource {
         @ApiParam("atomCode", required = true)
         @QueryParam("atomCode")
         atomCode: String
-    ): Result<List<AtomMemberItem?>>
+    ): Result<List<StoreMemberItem?>>
 
     @ApiOperation("添加插件成员")
     @POST
@@ -69,7 +71,7 @@ interface UserMarketAtomMemberResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("添加成员请求报文")
-        atomMemberReq: AtomMemberReq
+        storeMemberReq: StoreMemberReq
     ): Result<Boolean>
 
     @ApiOperation("删除插件成员")
@@ -83,6 +85,36 @@ interface UserMarketAtomMemberResource {
         @QueryParam("id")
         id: String,
         @ApiParam("atomCode", required = true)
+        @QueryParam("atomCode")
+        atomCode: String
+    ): Result<Boolean>
+
+    @ApiOperation("查看插件成员信息")
+    @GET
+    @Path("/view")
+    fun view(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("插件代码", required = true)
+        @QueryParam("atomCode")
+        atomCode: String
+    ): Result<StoreMemberItem?>
+
+    @ApiOperation("修改插件成员的调试项目")
+    @PUT
+    @Path("/test/project/change")
+    fun changeMemberTestProjectCode(
+        @ApiParam("token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目代码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
         @QueryParam("atomCode")
         atomCode: String
     ): Result<Boolean>

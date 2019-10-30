@@ -1,10 +1,16 @@
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.Project
+import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.api.ServiceSvnResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,5 +56,25 @@ class RepostioryScmServiceImpl @Autowired constructor(
                 ref = ref,
                 accessToken = accessToken
         ).data ?: ""
+    }
+
+    override fun unlock(projectName: String, url: String, type: ScmType, region: CodeSvnRegion?, userName: String): Boolean {
+        return client.getScm(ServiceScmResource::class)
+                .unlock(projectName, url, type, region, userName).data ?: false
+    }
+
+    override fun lock(projectName: String, url: String, type: ScmType, region: CodeSvnRegion?, userName: String): Boolean {
+        return client.getScm(ServiceScmResource::class).lock(
+                projectName,
+                url,
+                type,
+                region,
+                userName
+                ).data ?: false
+    }
+
+    override fun moveProjectToGroup(token: String, groupCode: String, repositoryName: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
+        return client.getScm(ServiceGitResource::class)
+                .moveProjectToGroup(token, groupCode, repositoryName, tokenType)
     }
 }

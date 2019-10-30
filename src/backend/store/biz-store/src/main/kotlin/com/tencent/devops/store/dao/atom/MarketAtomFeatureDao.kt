@@ -27,32 +27,32 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.atom.tables.TAtomFeature
-import com.tencent.devops.model.atom.tables.records.TAtomFeatureRecord
+import com.tencent.devops.model.store.tables.TAtomFeature
+import com.tencent.devops.model.store.tables.records.TAtomFeatureRecord
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class MarketAtomFeatureDao {
 
     /**
-     * 添加插件插件特性
+     * 添加插件特性
      */
     fun addAtomFeature(dslContext: DSLContext, userId: String, atomFeatureRequest: AtomFeatureRequest) {
         with(TAtomFeature.T_ATOM_FEATURE) {
-            dslContext.insertInto(
-                this,
+            dslContext.insertInto(this,
                 ID,
                 ATOM_CODE,
-                VISIBILITY_LEVEL,
+                RECOMMEND_FLAG,
                 CREATOR,
                 MODIFIER
             )
                 .values(
                     UUIDUtil.generate(),
                     atomFeatureRequest.atomCode,
-                    atomFeatureRequest.visibilityLevel,
+                    atomFeatureRequest.recommendFlag,
                     userId,
                     userId
                 ).execute()
@@ -60,7 +60,7 @@ class MarketAtomFeatureDao {
     }
 
     /**
-     * 获取插件插件特性
+     * 获取插件特性
      */
     fun getAtomFeature(dslContext: DSLContext, atomCode: String): TAtomFeatureRecord? {
         with(TAtomFeature.T_ATOM_FEATURE) {
@@ -71,7 +71,7 @@ class MarketAtomFeatureDao {
     }
 
     /**
-     * 更新插件插件特性
+     * 更新插件特性
      */
     fun updateAtomFeature(dslContext: DSLContext, userId: String, atomFeatureRequest: AtomFeatureRequest) {
         with(TAtomFeature.T_ATOM_FEATURE) {
@@ -80,11 +80,12 @@ class MarketAtomFeatureDao {
                 addAtomFeature(dslContext, userId, atomFeatureRequest)
             } else {
                 val baseStep = dslContext.update(this)
-                val visibilityLevel = atomFeatureRequest.visibilityLevel
-                if (null != visibilityLevel) {
-                    baseStep.set(VISIBILITY_LEVEL, visibilityLevel)
+                val recommendFlag = atomFeatureRequest.recommendFlag
+                if (null != recommendFlag) {
+                    baseStep.set(RECOMMEND_FLAG, recommendFlag)
                 }
                 baseStep.set(MODIFIER, userId)
+                    .set(UPDATE_TIME, LocalDateTime.now())
                     .where(ATOM_CODE.eq(atomFeatureRequest.atomCode))
                     .execute()
             }

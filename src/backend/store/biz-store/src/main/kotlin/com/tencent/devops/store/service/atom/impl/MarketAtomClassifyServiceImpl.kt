@@ -28,9 +28,11 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
 import com.tencent.devops.store.service.atom.MarketAtomClassifyService
+import com.tencent.devops.store.service.common.AbstractClassifyService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,12 +44,19 @@ import java.time.LocalDateTime
  *
  * since: 2019-01-15
  */
-@Service
-class MarketAtomClassifyServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val marketAtomClassifyDao: MarketAtomClassifyDao
-) : MarketAtomClassifyService {
+@Service("ATOM_CLASSIFY_SERVICE")
+class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassifyService, AbstractClassifyService() {
+
     private val logger = LoggerFactory.getLogger(MarketAtomClassifyServiceImpl::class.java)
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var atomDao: AtomDao
+
+    @Autowired
+    lateinit var marketAtomClassifyDao: MarketAtomClassifyDao
 
     /**
      * 获取所有插件分类信息
@@ -75,5 +84,20 @@ class MarketAtomClassifyServiceImpl @Autowired constructor(
         }
         logger.info("the marketAtomClassifyList is:$marketAtomClassifyList")
         return Result(marketAtomClassifyList)
+    }
+
+    override fun getDeleteClassifyFlag(classifyId: String): Boolean {
+        // 允许删除分类是条件：1、该分类下的原子插件都不处于上架状态 2、该分类下的原子插件如果处于下架中或者已下架状态但已经没人在用
+        var flag = false
+        val releaseAtomNum = atomDao.countReleaseAtomNumByClassifyId(dslContext, classifyId)
+        logger.info("the releaseAtomNum is :$releaseAtomNum")
+        if (releaseAtomNum == 0) {
+            val undercarriageAtomNum = atomDao.countUndercarriageAtomNumByClassifyId(dslContext, classifyId)
+            logger.info("the undercarriageAtomNum is :$undercarriageAtomNum")
+            if (undercarriageAtomNum == 0) {
+                flag = true
+            }
+        }
+        return flag
     }
 }
