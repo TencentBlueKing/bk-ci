@@ -19,6 +19,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.CommitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
@@ -333,10 +334,12 @@ class RepositoryService @Autowired constructor(
     ): Long {
         if (!repository.isLegal()) {
             logger.warn("The repository($repository) is illegal")
+            //TODO:国际化
             throw OperationException("代码仓库路径不正确，仓库路径应该以(${repository.getStartPrefix()})开头")
         }
 
         if (hasAliasName(projectId, null, repository.aliasName)) {
+            //TODO:国际化
             throw OperationException("代码库别名（${repository.aliasName}）已存在")
         }
 
@@ -578,10 +581,12 @@ class RepositoryService @Autowired constructor(
 
         if (!repository.isLegal()) {
             logger.warn("The repository($repository) is illegal")
+            //TODO:国际化
             throw OperationException("代码仓库路径不正确，仓库路径应该以(${repository.getStartPrefix()})开头")
         }
 
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
+            //TODO:国际化
             throw OperationException("代码库别名（${repository.aliasName}）已存在")
         }
 
@@ -600,7 +605,7 @@ class RepositoryService @Autowired constructor(
             when (record.type) {
                 ScmType.CODE_GIT.name -> {
                     if (repository !is CodeGitRepository) {
-                        throw OperationException("无效的GIT仓库")
+                        throw OperationException(RepositoryMessageCode.GIT_INVALID)
                     }
                     repositoryDao.edit(
                         transactionContext,
@@ -619,7 +624,7 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.CODE_TGIT.name -> {
                     if (repository !is CodeTGitRepository) {
-                        throw OperationException("无效的TGIT仓库")
+                        throw OperationException(RepositoryMessageCode.TGIT_INVALID)
                     }
                     repositoryDao.edit(
                         transactionContext,
@@ -638,7 +643,7 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.CODE_SVN.name -> {
                     if (repository !is CodeSvnRepository) {
-                        throw OperationException("无效的SVN仓库")
+                        throw OperationException(RepositoryMessageCode.SVN_INVALID)
                     }
                     repositoryDao.edit(
                         transactionContext,
@@ -658,7 +663,7 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.CODE_GITLAB.name -> {
                     if (repository !is CodeGitlabRepository) {
-                        throw OperationException("无效的GITLAB仓库")
+                        throw OperationException(RepositoryMessageCode.GITLAB_INVALID)
                     }
                     repositoryDao.edit(
                         transactionContext,
@@ -676,7 +681,7 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.GITHUB.name -> {
                     if (repository !is GithubRepository) {
-                        throw OperationException("无效的GITHUB仓库")
+                        throw OperationException(RepositoryMessageCode.GITHUB_INVALID)
                     }
                     repositoryDao.edit(
                         transactionContext,
@@ -873,6 +878,7 @@ class RepositoryService @Autowired constructor(
             throw NotFoundException("Repository is not part of the project")
         }
         if (record.type != ScmType.CODE_SVN.name) {
+            //TODO:国际化
             throw PermissionForbiddenException("代码库($repositoryHashId)不支持锁定")
         }
 
@@ -897,6 +903,7 @@ class RepositoryService @Autowired constructor(
             throw NotFoundException("Repository is not part of the project")
         }
         if (record.type != ScmType.CODE_SVN.name) {
+            //TODO:国际化
             throw PermissionForbiddenException("代码库($repositoryHashId)不支持锁定")
         }
         repostioryScmService.unlock(record.projectId, record.url, ScmType.CODE_SVN, CodeSvnRegion.getRegion(record.url), record.userId)
@@ -979,7 +986,7 @@ class RepositoryService @Autowired constructor(
             .get(projectId, repo.credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isNotOk() || result.data == null) {
             logger.warn("It fail to get the credential(${repo.credentialId}) of project($projectId) because of ${result.message}")
-            throw ClientException("获取凭证异常")
+            throw ClientException(RepositoryMessageCode.GET_TICKET_FAIL)
         }
 
         val credential = result.data!!
@@ -1010,11 +1017,11 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.SSH -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException("用户私钥为空")
+                            throw OperationException(RepositoryMessageCode.USER_SECRET_EMPTY)
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
-                            throw OperationException("用户私钥为空")
+                            throw OperationException(RepositoryMessageCode.USER_SECRET_EMPTY)
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
@@ -1034,18 +1041,18 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.HTTP -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException("用户名为空")
+                            throw OperationException(RepositoryMessageCode.USER_NAME_EMPTY)
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
-                            throw OperationException("用户名为空")
+                            throw OperationException(RepositoryMessageCode.USER_NAME_EMPTY)
                         }
                         if (list.size < 3) {
-                            throw OperationException("用户密码为空")
+                            throw OperationException(RepositoryMessageCode.PWD_EMPTY)
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
-                            throw OperationException("用户密码为空")
+                            throw OperationException(RepositoryMessageCode.PWD_EMPTY)
                         }
                         repostioryScmService.checkUsernameAndPassword(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_GIT,
@@ -1053,6 +1060,7 @@ class RepositoryService @Autowired constructor(
                         )
                     }
                     else -> {
+                        //TODO:国际化
                         throw RuntimeException("代码库类型(${repo.authType})无需认证")
                     }
                 }
@@ -1062,11 +1070,11 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.SSH -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException("用户私钥为空")
+                            throw OperationException(RepositoryMessageCode.USER_SECRET_EMPTY)
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
-                            throw OperationException("用户私钥为空")
+                            throw OperationException(RepositoryMessageCode.USER_SECRET_EMPTY)
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
@@ -1086,18 +1094,18 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.HTTP -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException("用户名为空")
+                            throw OperationException(RepositoryMessageCode.USER_NAME_EMPTY)
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
-                            throw OperationException("用户名为空")
+                            throw OperationException(RepositoryMessageCode.USER_NAME_EMPTY)
                         }
                         if (list.size < 3) {
-                            throw OperationException("用户密码为空")
+                            throw OperationException(RepositoryMessageCode.PWD_EMPTY)
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
-                            throw OperationException("用户密码为空")
+                            throw OperationException(RepositoryMessageCode.PWD_EMPTY)
                         }
                         repostioryScmService.checkUsernameAndPassword(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_GIT,
@@ -1107,18 +1115,18 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.HTTPS -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException("用户名为空")
+                            throw OperationException(RepositoryMessageCode.USER_NAME_EMPTY)
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
-                            throw OperationException("用户名为空")
+                            throw OperationException(RepositoryMessageCode.USER_NAME_EMPTY)
                         }
                         if (list.size < 3) {
-                            throw OperationException("用户密码为空")
+                            throw OperationException(RepositoryMessageCode.PWD_EMPTY)
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
-                            throw OperationException("用户密码为空")
+                            throw OperationException(RepositoryMessageCode.PWD_EMPTY)
                         }
                         repostioryScmService.checkUsernameAndPassword(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_TGIT,

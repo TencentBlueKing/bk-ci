@@ -47,4 +47,34 @@ object RepositoryMessageCode {
     const val USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2115003" // GIT代码添加成员{0}失败，请稍后再试
     const val USER_GIT_REPOSITORY_MOVE_GROUP_FAIL = "2115004" // 代码库迁移至{0}项目组失败，请稍后再试
     const val USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL = "16150005" // GIT代码库删除成员{0}失败，请稍后再试
+    const val USER_ACCESS_CHECK_FAIL = "16150006" // Gitlab access token 不正确
+    const val GITLAB_TOKEN_EMPTY = "16150007" // GitLab Token为空
+    const val GITLAB_HOOK_URL_EMPTY = "16150008" // GitLab hook url为空
+    const val GITLAB_TOKEN_FAIL = "16150009" // GitLab Token不正确
+    const val GIT_TOKEN_FAIL = "16150010" // Git Token不正确
+    const val SERCRT_EMPTY = "16150011" // GIT 私钥为空
+    const val GIT_SERCRT_WRONG = "16150012" // Git 私钥不对
+    const val PWD_EMPTY = "16150013" // 用户密码为空
+    const val USER_NAME_EMPTY = "16150014" // 用户名为空
+    const val GIT_INVALID = "16150015" // 无效的GIT仓库
+    const val TGIT_INVALID = "16150016" // 无效的TGIT仓库
+    const val SVN_INVALID = "16150017" // 无效的SVN仓库
+    const val GITLAB_INVALID = "16150018" // 无效的GITLAB仓库
+    const val GITHUB_INVALID = "16150019" // 无效的GITHUB仓库
+    const val GET_TICKET_FAIL = "16150020" // 获取凭证异常
+    const val USER_SECRET_EMPTY = "16150021" // 用户私钥为空
+    const val GIT_TOKEN_WRONG = "16150022" // Git Token 不正确
+    const val GIT_LOGIN_FAIL = "16150023" // Git 用户名或者密码不对
+    const val GIT_TOKEN_EMPTY = "16150024" // Git Token为空
+    const val GIT_HOOK_URL_EMPTY = "16150025" // Git hook url为空
+    const val TGIT_LOGIN_FAIL = "16150026" // TGit 用户名或者密码不对
+    const val TGIT_TOKEN_EMPTY = "16150027" // TGit Token 不正确
+    const val TGIT_SECRET_WRONG = "16150028" // TGit 私钥不对
+    const val SVN_SECRET_OR_PATH_ERROR = "16150029" // SVN 私钥不正确 或者 SVN 路径没有权限
+    const val SVN_CREATE_HOOK_FAIL = "16150030" // 添加SVN WEB hook 失败
+    const val LOCK_FAIL = "16150031" // lock失败
+    const val UNLOCK_FAIL = "16150032" // unlock失败
+    const val GIT_REPO_PEM_FAIL = "16150033" // 代码仓库访问未授权
+    const val CALL_REPO_ERROR = "16150034" // 代码仓库访问异常
+
 }
