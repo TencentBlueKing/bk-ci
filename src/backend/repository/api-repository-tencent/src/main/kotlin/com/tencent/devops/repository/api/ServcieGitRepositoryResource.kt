@@ -16,7 +16,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_REPOSITORY"], description = "服务-git代码库资源")
+@Api(tags = ["SERVICE_GIT_REPOSITORY"], description = "服务-git代码库资源")
 @Path("/service/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
