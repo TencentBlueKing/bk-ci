@@ -24,41 +24,69 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
+package com.tencent.devops.store.api.container
 
+import com.tencent.devops.store.pojo.container.BuildResource
+import com.tencent.devops.store.pojo.container.BuildResourceRequest
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.FormParam
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_APPROVAL"], description = "store组件审批")
-@Path("/service/market/approval")
+@Api(tags = ["OP_PIPELINE_BUILD_RESOURCE"], description = "OP-流水线-构建资源")
+@Path("/op/pipeline/build/resource")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceStoreApproveResource {
+interface OpBuildResourceResource {
 
-    @ApiOperation("moa审批回调")
+    @ApiOperation("添加流水线构建资源信息")
     @POST
-    @Path("/moa/callBack")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    fun moaApproveCallBack(
-        @ApiParam(value = "审批人", required = true)
-        @FormParam("verifier")
-        verifier: String,
-        @ApiParam(value = "审批状态 0对应驳回，1对应通过", required = true)
-        @FormParam("result")
-        result: Int,
-        @ApiParam(value = "任务ID", required = true)
-        @FormParam("taskid")
-        taskId: String,
-        @ApiParam(value = "审批信息", required = true)
-        @FormParam("message")
-        message: String
+    @Path("/")
+    fun add(
+        @ApiParam(value = "流水线构建资源请求体", required = true)
+        buildResourceRequest: BuildResourceRequest
+    ): Result<Boolean>
+
+    @ApiOperation("更新流水线构建资源信息")
+    @PUT
+    @Path("/{id}")
+    fun update(
+        @ApiParam("流水线构建资源ID", required = true)
+        @PathParam("id")
+        id: String,
+        @ApiParam(value = "流水线构建资源请求体", required = true)
+        buildResourceRequest: BuildResourceRequest
+    ): Result<Boolean>
+
+    @ApiOperation("获取所有流水线构建资源信息")
+    @GET
+    @Path("/")
+    fun listAllPipelineBuildResources(): Result<List<BuildResource>>
+
+    @ApiOperation("根据ID获取流水线构建资源信息")
+    @GET
+    @Path("/{id}")
+    fun getPipelineBuildResourceById(
+        @ApiParam("流水线构建资源ID", required = true)
+        @PathParam("id")
+        id: String
+    ): Result<BuildResource?>
+
+    @ApiOperation("根据ID获取流水线构建资源信息")
+    @DELETE
+    @Path("/{id}")
+    fun deletePipelineBuildResourceById(
+        @ApiParam("流水线构建资源ID", required = true)
+        @PathParam("id")
+        id: String
     ): Result<Boolean>
 }

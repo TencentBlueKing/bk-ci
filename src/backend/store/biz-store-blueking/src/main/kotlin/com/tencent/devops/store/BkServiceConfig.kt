@@ -34,12 +34,16 @@ import com.tencent.devops.store.service.atom.impl.BkAtomServiceImpl
 import com.tencent.devops.store.service.atom.impl.BkMarketAtomServiceImpl
 import com.tencent.devops.store.service.common.impl.BkStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.BkStoreUserServiceImpl
+import com.tencent.devops.store.service.container.impl.BkContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.BkMarketTemplateServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class BkServiceConfig {
+
+    @Bean
+    fun containerService() = BkContainerServiceImpl()
 
     @Bean
     fun storeUserService() = BkStoreUserServiceImpl()

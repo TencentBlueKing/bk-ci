@@ -36,7 +36,7 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.atom.VersionInfo
+import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

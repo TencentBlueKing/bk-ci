@@ -24,47 +24,79 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.store.pojo.container.ContainerResourceValue
+import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.VisibleAuditInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_CONTAINER_RESOURCE"], description = "获取构建资源")
-@Path("/service/containers")
+@Api(tags = ["OP_AUDIT"], description = "OP页面插件/模板审核范围管理")
+@Path("/op/store/audit")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceContainerResource {
-
-    @ApiOperation("获取镜像")
+interface OpStoreAuditResource {
+    @ApiOperation("获取所有审核记录")
     @GET
-    @Path("/projects/{projectId}")
-    fun getContainers(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+    @Path("/conf")
+    fun getAllAuditConf(
+        @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("构建类型", required = true)
-        @QueryParam("buildType")
-        buildType: BuildType,
-        @ApiParam("操作系统", required = true)
-        @QueryParam("os")
-        os: OS
-    ): Result<ContainerResourceValue?>
+        @ApiParam("商城组件名称")
+        @QueryParam("storeName")
+        storeName: String?,
+        @ApiParam("商城组件类型")
+        @QueryParam("storeType")
+        storeType: Byte?,
+        @ApiParam("审核状态")
+        @QueryParam("status")
+        status: Byte?,
+        @ApiParam("分页总页数")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页记录数量")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<VisibleAuditInfo>>
+
+    @ApiOperation("审核商城组件可见范围")
+    @POST
+    @Path("/ids/{id}/approve")
+    fun approveVisibleDept(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("审核记录ID")
+        @PathParam("id")
+        id: String,
+        @ApiParam("审批信息")
+        storeApproveRequest: StoreApproveRequest
+    ): Result<Boolean>
+
+    @ApiOperation("删除一条审核记录")
+    @DELETE
+    @Path("/ids/{id}/delete")
+    fun deleteAuditConf(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("审核记录ID")
+        @PathParam("id")
+        id: String
+    ): Result<Boolean>
 }

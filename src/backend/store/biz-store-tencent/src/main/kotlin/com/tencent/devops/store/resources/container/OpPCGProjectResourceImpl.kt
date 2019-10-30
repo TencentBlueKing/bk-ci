@@ -24,11 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.container
 
-data class ContainerBuildType(
-    val type: String,
-    val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
-)
+package com.tencent.devops.store.resources.container
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.OpPCGProjectResource
+import com.tencent.devops.store.service.container.PCGImageService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpPCGProjectResourceImpl @Autowired constructor(private val pcgImageService: PCGImageService) :
+    OpPCGProjectResource {
+
+    override fun add(projectId: String): Result<Boolean> {
+        pcgImageService.enableProject(projectId)
+        return Result(true)
+    }
+
+    override fun delete(projectId: String): Result<Boolean> {
+        pcgImageService.disableProject(projectId)
+        return Result(true)
+    }
+}

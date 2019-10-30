@@ -24,19 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.service.atom.TxAtomReleaseService
+import com.tencent.devops.store.api.atom.UserMarketAtomRepositoryResource
+import com.tencent.devops.store.service.atom.AtomRepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class TxUserAtomReleaseResourceImpl @Autowired constructor(
-    private val atomReleaseService: TxAtomReleaseService
-) : TxUserAtomReleaseResource {
+class UserMarketAtomRepositoryResourceImpl @Autowired constructor(
+    private val atomRepositoryService: AtomRepositoryService
+) : UserMarketAtomRepositoryResource {
 
-    override fun rebuild(userId: String, projectId: String, atomId: String): Result<Boolean> {
-        return atomReleaseService.rebuild(projectId, userId, atomId)
+    override fun changeAtomRepositoryUserInfo(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
+        return atomRepositoryService.updateAtomRepositoryUserInfo(userId, projectCode, atomCode)
     }
 }

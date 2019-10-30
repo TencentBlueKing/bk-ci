@@ -24,11 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.container
+package com.tencent.devops.store.resources.container
 
-data class ContainerBuildType(
-    val type: String,
-    val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.OpContainerAppResource
+import com.tencent.devops.store.pojo.app.ContainerApp
+import com.tencent.devops.store.pojo.app.ContainerAppInfo
+import com.tencent.devops.store.pojo.app.ContainerAppRequest
+import com.tencent.devops.store.service.container.ContainerAppService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpContainerAppResourceImpl @Autowired constructor(private val containerAppService: ContainerAppService)
+    : OpContainerAppResource {
+    override fun deleteContainerAppById(id: Int): Result<Boolean> {
+        return containerAppService.deleteContainerAppInfo(id)
+    }
+
+    override fun updateContainerApp(id: Int, containerAppRequest: ContainerAppRequest): Result<Boolean> {
+        return containerAppService.updateContainerAppInfo(id, containerAppRequest)
+    }
+
+    override fun getContainerAppById(id: Int): Result<ContainerAppInfo?> {
+        return containerAppService.getContainerAppInfo(id)
+    }
+
+    override fun listContainerApps(): Result<List<ContainerApp>> {
+        return containerAppService.getAllContainerAppInfos()
+    }
+
+    override fun addContainerApp(containerAppRequest: ContainerAppRequest): Result<Boolean> {
+        return containerAppService.addContainerAppInfo(containerAppRequest)
+    }
+}

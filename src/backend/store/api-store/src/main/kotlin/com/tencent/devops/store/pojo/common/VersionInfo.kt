@@ -24,11 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.container
+package com.tencent.devops.store.pojo.common
 
-data class ContainerBuildType(
-    val type: String,
-    val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("商店组件-版本信息")
+data class VersionInfo(
+    @ApiModelProperty("版本名称", required = true)
+    val versionName: String,
+    @ApiModelProperty("版本值", required = true)
+    val versionValue: String
 )

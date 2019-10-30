@@ -24,11 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.container
+package com.tencent.devops.store.resources.container
 
-data class ContainerBuildType(
-    val type: String,
-    val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
-)
+import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.ServiceContainerResource
+import com.tencent.devops.store.pojo.container.ContainerResourceValue
+import com.tencent.devops.store.service.container.ContainerService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
+    ServiceContainerResource {
+
+    override fun getContainers(
+        userId: String,
+        projectCode: String,
+        buildType: BuildType,
+        os: OS
+    ): Result<ContainerResourceValue?> {
+        return containerService.getContainerResource(userId, projectCode, os, buildType)
+    }
+}

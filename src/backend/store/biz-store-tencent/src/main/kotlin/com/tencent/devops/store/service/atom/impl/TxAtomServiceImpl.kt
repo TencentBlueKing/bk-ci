@@ -33,12 +33,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.api.ServcieGitRepositoryResource
-import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
-import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.service.atom.TxAtomService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,39 +50,6 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
     lateinit var bsAuthProjectApi: BSAuthProjectApi
 
     private val logger = LoggerFactory.getLogger(TxAtomServiceImpl::class.java)
-
-    /**
-     * 把项目迁移到指定项目组下
-     */
-    override fun moveGitProjectToGroup(
-        userId: String,
-        groupCode: String?,
-        atomCode: String
-    ): Result<Boolean> {
-        logger.info("moveGitProjectToGroup userId is:$userId, groupCode is:$groupCode, atomCode is:$atomCode")
-        val atomRecord = atomDao.getRecentAtomByCode(dslContext, atomCode)
-        logger.info("the atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode), false)
-        }
-        val moveProjectToGroupResult: Result<GitProjectInfo?>
-        return try {
-            moveProjectToGroupResult = client.get(ServcieGitRepositoryResource::class)
-                .moveGitProjectToGroup(userId, groupCode, atomRecord.repositoryHashId, TokenTypeEnum.PRIVATE_KEY)
-            logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
-            if (moveProjectToGroupResult.isOk()) {
-                val gitProjectInfo = moveProjectToGroupResult.data!!
-                // 批量更新插件数据库的代码地址信息
-                atomDao.updateAtomByCode(dslContext, userId, atomCode, AtomFeatureUpdateRequest(gitProjectInfo.repositoryUrl))
-                Result(true)
-            } else {
-                Result(moveProjectToGroupResult.status, moveProjectToGroupResult.message ?: "")
-            }
-        } catch (e: Exception) {
-            logger.error("moveProjectToGroupResult error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        }
-    }
 
     override fun hasManagerPermission(projectCode: String, userId: String): Boolean {
         return bsAuthProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)

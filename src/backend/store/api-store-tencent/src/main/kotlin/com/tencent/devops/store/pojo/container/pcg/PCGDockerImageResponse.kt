@@ -24,11 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.container
+package com.tencent.devops.store.pojo.container.pcg
 
-data class ContainerBuildType(
-    val type: String,
-    val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
+data class PCGDockerImageResponse(
+    val id: String,
+    val name: String
 )
