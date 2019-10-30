@@ -15,6 +15,7 @@ import com.tencent.devops.plugin.utils.QualityUtils
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
+import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository

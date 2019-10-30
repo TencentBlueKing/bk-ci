@@ -31,6 +31,7 @@ import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.process.utils.Credential
+import com.tencent.devops.repository.api.ServiceGithubResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
