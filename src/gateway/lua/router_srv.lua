@@ -76,7 +76,7 @@ local devops_gray = ngx.var.gray
 
 -- ngx.log(ngx.ERR, "devops_gray:", devops_gray )
 local ns_config = nil
-if devops_gray ~= true then
+if devops_gray ~= "true" then
   ns_config = config.ns
   -- ngx.log(ngx.ERR, "ns_config" )
 else

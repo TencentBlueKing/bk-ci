@@ -1,16 +1,9 @@
--- 获取灰度设置
-local gray = ngx.var.gray
-local gray_dir = ""
-local devops_gray = ""
-
-if gray ~= true then
-  gray_dir = "prod"
-  devops_gray = "false"
+local gray = grayUtil:get_gray()
+if gray then
+    ngx.header["X-DEVOPS-GRAY"] = "true"
+    ngx.header["X-DEVOPS-GRAY-DIR"] = "gray"
 else
-  gray_dir = "gray"
-  devops_gray = "true"
-end 
-
-ngx.header["x-devops-devops-gray"] = devops_gray
-ngx.header["x-devops-gray-dir"] = gray_dir
+    ngx.header["X-DEVOPS-GRAY"] = "false"
+    ngx.header["X-DEVOPS-GRAY-DIR"] = "prod"
+end
 ngx.exit(200)
