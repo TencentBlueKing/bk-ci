@@ -24,11 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.container
+package com.tencent.devops.store.service.common
 
-data class ContainerBuildType(
-    val type: String,
-    val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
-)
+import com.tencent.devops.common.api.pojo.Result
+
+interface TxStoreMoaApproveCallBackService {
+
+    fun moaApproveCallBack(
+        verifier: String,
+        result: Int,
+        taskId: String,
+        message: String
+    ): Result<Boolean>
+}

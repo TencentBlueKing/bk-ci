@@ -24,49 +24,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.api.container
 
-import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreApproveDetail
-import com.tencent.devops.store.pojo.common.StoreApproveInfo
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
-import com.tencent.devops.store.pojo.common.enums.ApproveTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.store.pojo.container.ContainerResourceValue
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * store审批业务逻辑类
- * since: 2019-08-05
- */
-interface StoreApproveService {
+@Api(tags = ["SERVICE_CONTAINER_RESOURCE"], description = "获取构建资源")
+@Path("/service/containers")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceContainerResource {
 
-    /**
-     * 审批store组件
-     */
-    fun approveStoreInfo(
+    @ApiOperation("获取镜像")
+    @GET
+    @Path("/projects/{projectCode}")
+    fun getContainers(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        approveId: String,
-        storeApproveRequest: StoreApproveRequest
-    ): Result<Boolean>
-
-    fun getStoreApproveInfos(
-        userId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        applicant: String?,
-        approveType: ApproveTypeEnum?,
-        approveStatus: ApproveStatusEnum?,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<StoreApproveInfo>?>
-
-    fun getUserStoreApproveInfo(
-        userId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        approveType: ApproveTypeEnum
-    ): Result<StoreApproveInfo?>
-
-    fun getStoreApproveDetail(userId: String, approveId: String): Result<StoreApproveDetail?>
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("构建类型", required = true)
+        @QueryParam("buildType")
+        buildType: BuildType,
+        @ApiParam("操作系统", required = true)
+        @QueryParam("os")
+        os: OS
+    ): Result<ContainerResourceValue?>
 }

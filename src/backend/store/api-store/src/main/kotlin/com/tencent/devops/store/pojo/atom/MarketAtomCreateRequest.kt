@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("插件市场工作台-新增插件请求报文体")
-open class MarketAtomCreateRequest(
+data class MarketAtomCreateRequest(
     @ApiModelProperty("项目编码", required = true)
     var projectCode: String,
     @ApiModelProperty("插件代码", required = true)
