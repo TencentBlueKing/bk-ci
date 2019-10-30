@@ -273,9 +273,9 @@ export function convertMStoStringByRule (time) {
     }
     let res = ''
     if (window.pipelineVue.$i18n && window.pipelineVue.$i18n.locale === 'en-US') {
-        res = convertToCn(time)
-    } else {
         res = convertToEn(time)
+    } else {
+        res = convertToCn(time)
     }
     return res
 }
