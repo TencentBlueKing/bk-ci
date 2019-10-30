@@ -48,6 +48,7 @@ config = {
       tag = "__BKCI_CONSUL_TAG__",
       nodes_url = "/v1/catalog/nodes"
     },
+    paasCIDomain = "__BKCI_PAASCI_FQDN__",
     job = {
       domain = "__BKCI_JOB_FQDN__"
     },
