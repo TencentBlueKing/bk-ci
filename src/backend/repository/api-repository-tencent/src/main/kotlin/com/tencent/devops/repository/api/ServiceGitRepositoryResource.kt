@@ -3,15 +3,9 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo

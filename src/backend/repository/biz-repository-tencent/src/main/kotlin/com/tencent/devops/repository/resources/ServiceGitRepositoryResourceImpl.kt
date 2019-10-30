@@ -1,21 +1,12 @@
 package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
@@ -24,7 +15,6 @@ import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
 import org.springframework.beans.factory.annotation.Autowired
-import java.net.URLDecoder
 
 @RestResource
 class ServiceGitRepositoryResourceImpl @Autowired constructor(
