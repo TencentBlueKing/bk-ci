@@ -1,5 +1,5 @@
 -- 获取灰度设置
-local gray = grayUtil:get_gray()
+local gray = ngx.var.gray
 local gray_dir = ""
 local devops_gray = ""
 
