@@ -45,5 +45,10 @@
     "svnSshRule": "请输入以svn+ssh://开头的正确的",
     "httpRule": "请输入以http://开头的正确的",
     "httpsRule": "请输入以http://开头，以.git结尾的",
-    "paramBeString": "参数必须为字符串"
+    "paramBeString": "参数必须为字符串",
+    "gitCodeRule": "请输入以http://git.code.oa.com开头，以.git结尾的",
+    "gitlabRule": "请输入以http://gitlab-paas.open.oa.com开头，以.git结尾的",
+    "gitCodeInternalRule": "请输入以git@git.code.oa.com开头，以.git结尾的",
+    "tgitHttpRule": "请输入以https://git.tencent.com开头，以.git结尾的",
+    "tgitRule": "请输入以git@git.tencent.com开头，以.git结尾的"
 }
