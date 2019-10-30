@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.api.ServcieGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -44,7 +45,7 @@ class TxAtomMemberServiceImpl : AtomMemberServiceImpl() {
         logger.info("addRepoMember storeMemberReq is:$storeMemberReq,userId is:$userId,repositoryHashId is:$repositoryHashId")
         if (repositoryHashId.isNotBlank()) {
             val gitAccessLevel = if (storeMemberReq.type == StoreMemberTypeEnum.ADMIN) GitAccessLevelEnum.MASTER else GitAccessLevelEnum.DEVELOPER
-            val addGitProjectMemberResult = client.get(ServiceRepositoryResource::class)
+            val addGitProjectMemberResult = client.get(ServcieGitRepositoryResource::class)
                 .addGitProjectMember(userId, storeMemberReq.member, repositoryHashId, gitAccessLevel, TokenTypeEnum.PRIVATE_KEY)
             logger.info("addGitProjectMemberResult is:$addGitProjectMemberResult")
             return addGitProjectMemberResult
@@ -55,7 +56,7 @@ class TxAtomMemberServiceImpl : AtomMemberServiceImpl() {
     override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
         logger.info("deleteRepoMember userId is:$userId,username is:$username,repositoryHashId is:$repositoryHashId")
         if (repositoryHashId.isNotBlank()) {
-            val deleteGitProjectMemberResult = client.get(ServiceRepositoryResource::class)
+            val deleteGitProjectMemberResult = client.get(ServcieGitRepositoryResource::class)
                 .deleteGitProjectMember(userId, listOf(username), repositoryHashId, TokenTypeEnum.PRIVATE_KEY)
             logger.info("deleteGitProjectMemberResult is:$deleteGitProjectMemberResult")
             return deleteGitProjectMemberResult

@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.api.ServcieGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -69,7 +70,7 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
         }
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
-            moveProjectToGroupResult = client.get(ServiceRepositoryResource::class)
+            moveProjectToGroupResult = client.get(ServcieGitRepositoryResource::class)
                 .moveGitProjectToGroup(userId, groupCode, atomRecord.repositoryHashId, TokenTypeEnum.PRIVATE_KEY)
             logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
             if (moveProjectToGroupResult.isOk()) {
@@ -103,7 +104,7 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
             // 更新git代码库可见范围
             val updateGitRepositoryResult: Result<Boolean>
             try {
-                updateGitRepositoryResult = client.get(ServiceRepositoryResource::class).updateGitCodeRepository(
+                updateGitRepositoryResult = client.get(ServcieGitRepositoryResource::class).updateGitCodeRepository(
                     userId,
                     repositoryHashId,
                     UpdateGitProjectInfo(

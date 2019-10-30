@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.api.ServcieGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -48,7 +49,7 @@ class AtomRepositoryServiceImpl : AtomRepositoryService {
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
-        val updateAtomRepositoryUserInfoResult = client.get(ServiceRepositoryResource::class)
+        val updateAtomRepositoryUserInfoResult = client.get(ServcieGitRepositoryResource::class)
             .updateRepositoryUserInfo(userId, projectCode, atomRecord.repositoryHashId)
         logger.info("updateAtomRepositoryUserInfoResult is:$updateAtomRepositoryUserInfoResult")
         return updateAtomRepositoryUserInfoResult
