@@ -30,8 +30,7 @@ class UserCredentialGrantResourceImpl @Autowired constructor(
         authGroupList.add(BkAuthGroup.MANAGER)
         authGroupList.add(BkAuthGroup.DEVELOPER)
         authGroupList.add(BkAuthGroup.TESTER)
-        credentialService.userCreate(userId, projectId, credential)
-        credentialService.createGrantResource(userId, projectId, credential.credentialId, authGroupList)
+        credentialService.userCreate(userId, projectId, credential, authGroupList)
         return Result(true)
     }
 }

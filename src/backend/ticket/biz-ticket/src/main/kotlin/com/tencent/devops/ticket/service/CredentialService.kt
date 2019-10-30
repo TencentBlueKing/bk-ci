@@ -28,6 +28,7 @@ package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
@@ -37,7 +38,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 
 interface CredentialService {
 
-    fun userCreate(userId: String, projectId: String, credential: CredentialCreate)
+    fun userCreate(userId: String, projectId: String, credential: CredentialCreate, authGroupList: List<BkAuthGroup>?)
 
     fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate)
 
