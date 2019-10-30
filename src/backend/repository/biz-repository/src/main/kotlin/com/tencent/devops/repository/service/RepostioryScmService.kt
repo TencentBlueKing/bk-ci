@@ -2,17 +2,17 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.repository.pojo.Project
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.enums.*
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.QueryParam
+import javax.ws.rs.*
 
 interface RepostioryScmService {
 
@@ -95,4 +95,65 @@ interface RepostioryScmService {
             repositoryName: String,
             tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
+
+    @ApiOperation("更新git代码库信息")
+    fun updateGitCodeRepository(
+            token: String,
+            projectName: String,
+            updateGitProjectInfo: UpdateGitProjectInfo,
+            tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @ApiOperation("创建git代码库")
+    fun createGitCodeRepository(
+            userId: String,
+            token: String,
+            repositoryName: String,
+            sampleProjectPath: String?,
+            namespaceId: Int?,
+            visibilityLevel: VisibilityLevelEnum?,
+            tokenType: TokenTypeEnum
+    ): Result<GitRepositoryResp?>
+
+    @ApiOperation("为项目成员赋予代码库权限")
+    fun addGitProjectMember(
+            userIdList: List<String>,
+            repositorySpaceName: String,
+            gitAccessLevel: GitAccessLevelEnum,
+            token: String,
+            tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @ApiOperation("删除项目成员的代码库权限")
+    fun deleteGitProjectMember(
+            userIdList: List<String>,
+            repositorySpaceName: String,
+            token: String,
+            tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @ApiOperation("Check if the svn private key and passphrase legal")
+    fun checkPrivateKeyAndToken(
+            projectName: String,
+            url: String,
+            type: ScmType,
+            privateKey: String?,
+            passPhrase: String?,
+            token: String?,
+            region: CodeSvnRegion?,
+            userName: String
+    ): Result<TokenCheckResult>
+
+    @ApiOperation("Check if the svn private key and passphrase legal")
+    fun checkUsernameAndPassword(
+            projectName: String,
+            @ApiParam("仓库地址", required = true)
+            url: String,
+            type: ScmType,
+            username: String,
+            password: String,
+            token: String,
+            region: CodeSvnRegion?,
+            repoUsername: String
+    ): Result<TokenCheckResult>
 }

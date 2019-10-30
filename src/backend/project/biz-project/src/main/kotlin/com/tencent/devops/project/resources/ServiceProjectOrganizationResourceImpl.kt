@@ -6,21 +6,23 @@ import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.OrganizationType
-import com.tencent.devops.project.service.tof.TOFService
+import com.tencent.devops.project.service.ProjectOrganizationService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceProjectOrganizationResourceImpl @Autowired constructor(private val tofService: TOFService) : ServiceProjectOrganizationResource {
+class ServiceProjectOrganizationResourceImpl @Autowired constructor(
+        private val projectOrganizationService: ProjectOrganizationService
+) : ServiceProjectOrganizationResource {
 
     override fun getDeptInfo(userId: String, id: Int): Result<DeptInfo> {
-        return Result(tofService.getDeptInfo(userId, id))
+        return Result(projectOrganizationService.getDeptInfo(userId, id))
     }
 
     override fun getOrganizations(userId: String, type: OrganizationType, id: Int): Result<List<OrganizationInfo>> {
-        return Result(tofService.getOrganizationInfo(userId, type, id))
+        return Result(projectOrganizationService.getOrganizations(userId, type, id))
     }
 
     override fun getParentDeptInfos(deptId: String, level: Int): Result<List<DeptInfo>> {
-        return Result(tofService.getParentDeptInfo(deptId, level))
+        return Result(projectOrganizationService.getParentDeptInfos(deptId, level))
     }
 }

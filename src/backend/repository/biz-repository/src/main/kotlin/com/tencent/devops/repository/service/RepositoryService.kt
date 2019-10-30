@@ -48,6 +48,7 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import org.bouncycastle.crypto.tls.ConnectionEnd.client
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -112,16 +113,14 @@ class RepositoryService @Autowired constructor(
         val gitRepositoryRespResult: Result<GitRepositoryResp?>
         val gitRepositoryResp: GitRepositoryResp?
         try {
-            gitRepositoryRespResult = client.getScm(ServiceGitResource::class)
-                .createGitCodeRepository(
-                    userId,
+            gitRepositoryRespResult = repostioryScmService.createGitCodeRepository(userId,
                     token,
                     repositoryName,
                     sampleProjectPath,
                     namespaceId,
                     visibilityLevel,
                     tokenType
-                )
+            )
             logger.info("createGitCodeRepository gitRepositoryRespResult is :$gitRepositoryRespResult")
             if (gitRepositoryRespResult.isOk()) {
                 gitRepositoryResp = gitRepositoryRespResult.data
@@ -192,8 +191,7 @@ class RepositoryService @Autowired constructor(
         val token = getGitTokenResult.data!!
         val gitRepositoryRespResult: Result<Boolean>
         return try {
-            gitRepositoryRespResult = client.getScm(ServiceGitResource::class)
-                .updateGitCodeRepository(token, repo.projectName, updateGitProjectInfo, finalTokenType)
+            gitRepositoryRespResult = repostioryScmService.updateGitCodeRepository(token, repo.projectName, updateGitProjectInfo, finalTokenType)
             logger.info("updateGitCodeRepository gitRepositoryRespResult is :$gitRepositoryRespResult")
             if (gitRepositoryRespResult.isOk()) {
                 Result(true)
@@ -223,7 +221,7 @@ class RepositoryService @Autowired constructor(
             return Result(status = getGitTokenResult.status, message = getGitTokenResult.message, data = false)
         }
         val token = getGitTokenResult.data!!
-        val addGitProjectMemberResult = client.getScm(ServiceGitResource::class)
+        val addGitProjectMemberResult = repostioryScmService
             .addGitProjectMember(userIdList, repo.projectName, gitAccessLevel, token, finalTokenType)
         logger.info("addGitProjectMemberResult is :$addGitProjectMemberResult")
         if (addGitProjectMemberResult.isNotOk()) {
@@ -248,7 +246,7 @@ class RepositoryService @Autowired constructor(
             return Result(status = getGitTokenResult.status, message = getGitTokenResult.message, data = false)
         }
         val token = getGitTokenResult.data!!
-        val deleteGitProjectMemberResult = client.getScm(ServiceGitResource::class)
+        val deleteGitProjectMemberResult = repostioryScmService
             .deleteGitProjectMember(userIdList, repo.projectName, token, finalTokenType)
         logger.info("deleteGitProjectMemberResult is :$deleteGitProjectMemberResult")
         if (deleteGitProjectMemberResult.isNotOk()) {
@@ -999,11 +997,10 @@ class RepositoryService @Autowired constructor(
             }
         }
 
-        val scmResource = client.getScm(ServiceScmResource::class)
         val checkResult = when (repo) {
             is CodeSvnRepository -> {
                 val svnCredential = CredentialUtils.getCredential(repo, list, result.data!!.credentialType)
-                scmResource.checkPrivateKeyAndToken(
+                repostioryScmService.checkPrivateKeyAndToken(
                     repo.projectName, repo.getFormatURL(), ScmType.CODE_SVN,
                     svnCredential.privateKey, svnCredential.passPhrase, null, repo.region, svnCredential.username
                 )
@@ -1029,7 +1026,7 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
-                        scmResource.checkPrivateKeyAndToken(
+                        repostioryScmService.checkPrivateKeyAndToken(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_GIT,
                             privateKey, passPhrase, token, null, repo.userName
                         )
@@ -1050,7 +1047,7 @@ class RepositoryService @Autowired constructor(
                         if (password.isEmpty()) {
                             throw OperationException("用户密码为空")
                         }
-                        scmResource.checkUsernameAndPassword(
+                        repostioryScmService.checkUsernameAndPassword(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_GIT,
                             username, password, token, null, repo.userName
                         )
@@ -1081,7 +1078,7 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
-                        scmResource.checkPrivateKeyAndToken(
+                        repostioryScmService.checkPrivateKeyAndToken(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_GIT,
                             privateKey, passPhrase, token, null, repo.userName
                         )
@@ -1102,7 +1099,7 @@ class RepositoryService @Autowired constructor(
                         if (password.isEmpty()) {
                             throw OperationException("用户密码为空")
                         }
-                        scmResource.checkUsernameAndPassword(
+                        repostioryScmService.checkUsernameAndPassword(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_GIT,
                             username, password, token, null, repo.userName
                         )
@@ -1123,7 +1120,7 @@ class RepositoryService @Autowired constructor(
                         if (password.isEmpty()) {
                             throw OperationException("用户密码为空")
                         }
-                        scmResource.checkUsernameAndPassword(
+                        repostioryScmService.checkUsernameAndPassword(
                             repo.projectName, repo.getFormatURL(), ScmType.CODE_TGIT,
                             username, password, token, null, repo.userName
                         )
@@ -1134,7 +1131,7 @@ class RepositoryService @Autowired constructor(
                 }
             }
             is CodeGitlabRepository -> {
-                scmResource.checkPrivateKeyAndToken(
+                repostioryScmService.checkPrivateKeyAndToken(
                     repo.projectName, repo.getFormatURL(), ScmType.CODE_GITLAB,
                     null, null, list[0], null, repo.userName
                 )
