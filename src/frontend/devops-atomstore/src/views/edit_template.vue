@@ -9,8 +9,6 @@
             <div class="title secondary" @click="toAtomList"> {{ $t('工作台') }} </div>
             <i class="right-arrow"></i>
             <div class="title third-level"> {{ $t('上架模板') }} </div>
-            <a class="develop-guide-link" target="_blank"
-                :href="docsLink"> {{ $t('模板指引') }} </a>
         </div>
         <div class="edit-template-content" v-if="showContent">
             <form class="bk-form edit-template-form">
@@ -173,7 +171,6 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944',
                 sortList: [],
                 labelList: [],
                 categoryList: [],

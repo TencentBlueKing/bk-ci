@@ -7,7 +7,6 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des"> {{ $t('工作台') }} </span>
             </p>
-            <a class="title-work" target="_blank" :href="docLink[currentTab].link">{{ docLink[currentTab].name }}</a>
         </h3>
         <div class="atomstore-list-content">
             <bk-tab :active.sync="currentTab" @tab-change="changeTab" type="unborder-card">
@@ -41,11 +40,7 @@
 
         data () {
             return {
-                currentTab: 'atom',
-                docLink: {
-                    atom: { name: this.$t('插件指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
-                    template: { name: this.$t('模版指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' }
-                }
+                currentTab: 'atom'
             }
         },
 

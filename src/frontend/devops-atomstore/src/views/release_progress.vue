@@ -18,10 +18,6 @@
                     <span> {{ $t('（') }} {{ versionDetail.atomCode }} {{ $t('）') }} </span>
                 </div>
             </div>
-            <div class="sub_header_right">
-                <a class="develop-guide-link" target="_blank"
-                    :href="docsLink"> {{ $t('插件指引') }} </a>
-            </div>
         </div>
         <div class="release-progress-content" v-show="showContent">
             <div class="atom-release-msg">
@@ -181,7 +177,6 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,

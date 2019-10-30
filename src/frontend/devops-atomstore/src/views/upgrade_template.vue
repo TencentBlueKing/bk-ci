@@ -14,7 +14,6 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des"> {{ $t('上架模板') }} </span>
             </p>
-            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('模板指引') }} </a>
         </h3>
 
         <div class="upgrade-template-content" v-show="showContent">
@@ -128,7 +127,6 @@
                 isOverflow: false,
                 isDropdownShow: false,
                 timer: -1,
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944',
                 progressStatus: [{
                     'name': this.$t('开始'),
                     'step': 1,

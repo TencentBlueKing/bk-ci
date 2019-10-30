@@ -77,7 +77,7 @@
                         </div>
                     </div>
                     <div class="item-form item-form-right">
-                        <img :src="atomDetail.logoUrl || defaultUrl">
+                        <img :src="atomDetail.logoUrl">
                     </div>
                 </div>
                 <div class="version-content">
@@ -117,7 +117,6 @@
     export default {
         data () {
             return {
-                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314',
                 showContent: false,
                 isDropdownShow: false,
                 isOverflow: false,

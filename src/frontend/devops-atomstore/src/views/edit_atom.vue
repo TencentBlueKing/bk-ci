@@ -9,7 +9,6 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="">{{ curTitle }}（{{ atomForm.atomCode }}）</span>
             </p>
-            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('插件指引') }} </a>
         </h3>
 
         <div class="edit-atom-content" v-if="showContent">
@@ -242,7 +241,6 @@
                 atomName: 'landun-atom-codecc',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
                 showContent: false,
                 isUploading: false,
                 initOs: [],
