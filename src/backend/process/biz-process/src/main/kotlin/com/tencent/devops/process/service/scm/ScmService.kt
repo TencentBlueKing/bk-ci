@@ -17,7 +17,6 @@ import com.tencent.devops.external.pojo.GithubCheckRuns
 import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
 import com.tencent.devops.process.utils.CredentialUtils
-import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
