@@ -24,11 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.container
+package com.tencent.devops.store.resources.container
 
-data class ContainerBuildType(
-    val type: String,
-    val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.OpContainerResource
+import com.tencent.devops.store.pojo.container.Container
+import com.tencent.devops.store.pojo.container.ContainerRequest
+import com.tencent.devops.store.service.container.ContainerService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
+    OpContainerResource {
+    override fun update(id: String, pipelineContainerRequest: ContainerRequest): Result<Boolean> {
+        return containerService.updatePipelineContainer(id, pipelineContainerRequest)
+    }
+
+    override fun listAllContainers(): Result<List<Container>> {
+        return containerService.getAllPipelineContainer()
+    }
+
+    override fun getContainerById(id: String): Result<Container?> {
+        return containerService.getPipelineContainer(id)
+    }
+
+    override fun deleteContainerById(id: String): Result<Boolean> {
+        return containerService.deletePipelineContainer(id)
+    }
+
+    override fun add(pipelineContainerRequest: ContainerRequest): Result<Boolean> {
+        return containerService.savePipelineContainer(pipelineContainerRequest)
+    }
+}

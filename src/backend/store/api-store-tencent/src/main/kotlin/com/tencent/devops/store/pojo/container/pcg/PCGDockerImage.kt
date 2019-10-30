@@ -24,27 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources
+package com.tencent.devops.store.pojo.container.pcg
 
-import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.ServiceContainerResource
-import com.tencent.devops.store.pojo.container.ContainerResourceValue
-import com.tencent.devops.store.service.container.ContainerService
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-@RestResource
-class ServiceContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
-    ServiceContainerResource {
-
-    override fun getContainers(
-        userId: String,
-        projectId: String,
-        buildType: BuildType,
-        os: OS
-    ): Result<ContainerResourceValue?> {
-        return containerService.getContainerResource(userId, projectId, os, buildType)
-    }
-}
+/**
+ * {
+ *   "img_ver":"3.2.2.1.rc",
+ *   "compile_env":"64位编译环境",
+ *   "os":"tlinux",
+ *   "img_name":"tc/tlinux/book_compiler_jdk1.7_gcc4.4.6",
+ *   "img_from":"maunl",
+ *   "ip":"tc-tlinux-book-jdk17",
+ *   "name":"书城编译集群(JDK1.7)",
+ *   "language":"Java",
+ *   "install_type":"new"
+ * }
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PCGDockerImage(
+    val img_ver: String,
+    val os: String,
+    val img_name: String,
+    val language: String
+)

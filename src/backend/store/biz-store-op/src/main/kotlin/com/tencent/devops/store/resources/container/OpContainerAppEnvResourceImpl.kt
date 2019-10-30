@@ -24,49 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.resources.container
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreApproveDetail
-import com.tencent.devops.store.pojo.common.StoreApproveInfo
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
-import com.tencent.devops.store.pojo.common.enums.ApproveTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.OpContainerAppEnvResource
+import com.tencent.devops.store.pojo.app.ContainerAppEnv
+import com.tencent.devops.store.pojo.app.ContainerAppEnvCreate
+import com.tencent.devops.store.service.container.ContainerAppEnvService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * store审批业务逻辑类
- * since: 2019-08-05
- */
-interface StoreApproveService {
+@RestResource
+class OpContainerAppEnvResourceImpl @Autowired constructor(private val containerAppEnvService: ContainerAppEnvService)
+    : OpContainerAppEnvResource {
 
-    /**
-     * 审批store组件
-     */
-    fun approveStoreInfo(
-        userId: String,
-        approveId: String,
-        storeApproveRequest: StoreApproveRequest
-    ): Result<Boolean>
+    override fun addContainerAppEnv(containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
+        return containerAppEnvService.saveContainerAppEnv(containerAppEnvRequest)
+    }
 
-    fun getStoreApproveInfos(
-        userId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        applicant: String?,
-        approveType: ApproveTypeEnum?,
-        approveStatus: ApproveStatusEnum?,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<StoreApproveInfo>?>
+    override fun deleteContainerAppEnvById(id: Int): Result<Boolean> {
+        return containerAppEnvService.deleteContainerAppEnv(id)
+    }
 
-    fun getUserStoreApproveInfo(
-        userId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        approveType: ApproveTypeEnum
-    ): Result<StoreApproveInfo?>
+    override fun updateContainerAppEnv(id: Int, containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
+        return containerAppEnvService.updateContainerAppEnv(id, containerAppEnvRequest)
+    }
 
-    fun getStoreApproveDetail(userId: String, approveId: String): Result<StoreApproveDetail?>
+    override fun listContainerAppEnvsByAppId(appId: Int): Result<List<ContainerAppEnv>> {
+        return containerAppEnvService.listByAppId(appId)
+    }
+
+    override fun getContainerAppEnvById(id: Int): Result<ContainerAppEnv?> {
+        return containerAppEnvService.getContainerAppEnv(id)
+    }
 }

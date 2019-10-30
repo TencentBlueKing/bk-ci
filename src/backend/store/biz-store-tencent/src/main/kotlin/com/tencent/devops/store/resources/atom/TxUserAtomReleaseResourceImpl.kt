@@ -24,25 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.common
+package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.ServiceStoreApproveResource
-import com.tencent.devops.store.service.common.StoreApproveService
+import com.tencent.devops.store.api.atom.TxUserAtomReleaseResource
+import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceStoreApproveResourceImpl @Autowired constructor(
-    private val storeApproveService: StoreApproveService
-) : ServiceStoreApproveResource {
+class TxUserAtomReleaseResourceImpl @Autowired constructor(
+    private val atomReleaseService: TxAtomReleaseService
+) : TxUserAtomReleaseResource {
 
-    override fun moaApproveCallBack(
-        verifier: String,
-        result: Int,
-        taskId: String,
-        message: String
-    ): Result<Boolean> {
-        return storeApproveService.moaApproveCallBack(verifier, result, taskId, message)
+    override fun rebuild(userId: String, projectId: String, atomId: String): Result<Boolean> {
+        return atomReleaseService.rebuild(projectId, userId, atomId)
     }
 }

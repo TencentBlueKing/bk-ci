@@ -34,12 +34,16 @@ import com.tencent.devops.store.service.atom.impl.SampleAtomServiceImpl
 import com.tencent.devops.store.service.atom.impl.SampleMarketAtomServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreUserServiceImpl
+import com.tencent.devops.store.service.container.impl.SampleContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.SampleMarketTemplateServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class SampleServiceConfig {
+
+    @Bean
+    fun containerService() = SampleContainerServiceImpl()
 
     @Bean
     fun storeUserService() = SampleStoreUserServiceImpl()

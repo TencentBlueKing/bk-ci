@@ -199,25 +199,6 @@ class StoreApproveServiceImpl : StoreApproveService {
         }
     }
 
-    override fun moaApproveCallBack(
-        verifier: String,
-        result: Int,
-        taskId: String,
-        message: String
-    ): Result<Boolean> {
-        logger.info("moaApproveCallBack verifier is :$verifier, result is :$result, taskId is :$taskId, message is :$message")
-        val approveStatus = if (result == 0) ApproveStatusEnum.REFUSE else ApproveStatusEnum.PASS
-        val approveStoreInfoResult = approveStoreInfo(verifier, taskId, StoreApproveRequest(message, approveStatus))
-        logger.info("approveStoreInfoResult is :$approveStoreInfoResult")
-        if (approveStoreInfoResult.isNotOk()) {
-            return approveStoreInfoResult
-        }
-        // 结单
-        // val moaCompleteResult = client.get(ServiceMessageApproveResource::class).moaComplete(taskId)
-        // logger.info("moaCompleteResult is :$moaCompleteResult")
-        return Result(true)
-    }
-
     private fun getStoreApproveSpecifyBusInfoService(approveType: String): AbstractStoreApproveSpecifyBusInfoService {
         return SpringContextUtil.getBean(AbstractStoreApproveSpecifyBusInfoService::class.java, "${approveType}_APPROVE_SERVICE")
     }
