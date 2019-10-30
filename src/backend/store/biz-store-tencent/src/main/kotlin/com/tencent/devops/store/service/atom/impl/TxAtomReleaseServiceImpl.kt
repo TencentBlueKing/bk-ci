@@ -49,8 +49,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.api.ServicePipelineInitResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -298,7 +298,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 atomBaseInfo,
                 buildEnv
             )
-            val atomMarketInitPipelineResp = client.get(ServicePipelineInitResource::class)
+            val atomMarketInitPipelineResp = client.get(ServicePipelineResource::class)
                 .initAtomMarketPipeline(userId, projectCode!!, atomMarketInitPipelineReq).data
             logger.info("the atomMarketInitPipelineResp is:$atomMarketInitPipelineResp")
             if (null != atomMarketInitPipelineResp) {
