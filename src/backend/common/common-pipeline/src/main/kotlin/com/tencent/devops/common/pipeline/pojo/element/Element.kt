@@ -55,7 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.SingleArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.service.*
+import com.tencent.devops.common.pipeline.pojo.element.service.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -100,47 +100,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = KtlintStyleElement::class, name = KtlintStyleElement.classType),
     JsonSubTypes.Type(value = GitCommentCheckElement::class, name = GitCommentCheckElement.classType),
     JsonSubTypes.Type(value = AtomBuildArchiveElement::class, name = AtomBuildArchiveElement.classType),
-    JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType),
-    JsonSubTypes.Type(value = SendRTXNotifyElement::class, name = SendRTXNotifyElement.classType),
-    JsonSubTypes.Type(value = SendEmailNotifyElement::class, name = SendEmailNotifyElement.classType),
-    JsonSubTypes.Type(value = SendSmsNotifyElement::class, name = SendSmsNotifyElement.classType),
-    JsonSubTypes.Type(value = SendWechatNotifyElement::class, name = SendWechatNotifyElement.classType),
-    JsonSubTypes.Type(value = ExperienceElement::class, name = ExperienceElement.classType),
-    JsonSubTypes.Type(value = GcloudElement::class, name = GcloudElement.classType),
-    JsonSubTypes.Type(value = JobExecuteTaskExtElement::class, name = JobExecuteTaskExtElement.classType),
-    JsonSubTypes.Type(value = ComDistributionElement::class, name = ComDistributionElement.classType),
-    JsonSubTypes.Type(value = JobDevOpsFastPushFileElement::class, name = JobDevOpsFastPushFileElement.classType),
-    JsonSubTypes.Type(value = JobDevOpsFastExecuteScriptElement::class, name = JobDevOpsFastExecuteScriptElement.classType),
-    JsonSubTypes.Type(value = JobDevOpsExecuteTaskExtElement::class, name = JobDevOpsExecuteTaskExtElement.classType),
-    JsonSubTypes.Type(value = CosCdnDistributionElementDev::class, name = CosCdnDistributionElementDev.classType),
-    JsonSubTypes.Type(value = CosCdnDistributionElement::class, name = CosCdnDistributionElement.classType),
-    JsonSubTypes.Type(value = SecurityElement::class, name = SecurityElement.classType),
-    JsonSubTypes.Type(value = TclsAddVersionElement::class, name = TclsAddVersionElement.classType),
-    JsonSubTypes.Type(value = GseKitProcRunCmdElementDev::class, name = GseKitProcRunCmdElementDev.classType),
-    JsonSubTypes.Type(value = GseKitProcRunCmdElementProd::class, name = GseKitProcRunCmdElementProd.classType),
-    JsonSubTypes.Type(value = CloudStoneElement::class, name = CloudStoneElement.classType),
-    JsonSubTypes.Type(value = JinGangAppElement::class, name = JinGangAppElement.classType),
-    JsonSubTypes.Type(value = BcsContainerOpElement::class, name = BcsContainerOpElement.classType),
-    JsonSubTypes.Type(value = BcsContainerOpByNameElement::class, name = BcsContainerOpByNameElement.classType),
-    JsonSubTypes.Type(value = GcloudAppElement::class, name = GcloudAppElement.classType),
-    JsonSubTypes.Type(value = AcrossProjectDistributionElement::class, name = AcrossProjectDistributionElement.classType),
-    JsonSubTypes.Type(value = ReportArchiveServiceElement::class, name = ReportArchiveServiceElement.classType),
-    JsonSubTypes.Type(value = TcmElement::class, name = TcmElement.classType),
-    JsonSubTypes.Type(value = ZhiyunPushFileElement::class, name = ZhiyunPushFileElement.classType),
-    JsonSubTypes.Type(value = ZhiyunUpdateAsyncEXElement::class, name = ZhiyunUpdateAsyncEXElement.classType),
-    JsonSubTypes.Type(value = ZhiyunInstanceMaintenanceElement::class, name = ZhiyunInstanceMaintenanceElement.classType),
-    JsonSubTypes.Type(value = MigCDNPushFileElement::class, name = MigCDNPushFileElement.classType),
-    JsonSubTypes.Type(value = LunaPushFileElement::class, name = LunaPushFileElement.classType),
-    JsonSubTypes.Type(value = GcloudUpdateVersionElement::class, name = GcloudUpdateVersionElement.classType),
-    JsonSubTypes.Type(value = OpenStatePushFileElement::class, name = OpenStatePushFileElement.classType),
-    JsonSubTypes.Type(value = GcloudPufferElement::class, name = GcloudPufferElement.classType),
-    JsonSubTypes.Type(value = GcloudDeleteVersionElement::class, name = GcloudDeleteVersionElement.classType),
-    JsonSubTypes.Type(value = GcloudPufferDeleteVersionElement::class, name = GcloudPufferDeleteVersionElement.classType),
-    JsonSubTypes.Type(value = GcloudPufferUpdateVersionElement::class, name = GcloudPufferUpdateVersionElement.classType),
-    JsonSubTypes.Type(value = WetestElement::class, name = WetestElement.classType),
-    JsonSubTypes.Type(value = PushImageToThirdRepoElement::class, name = PushImageToThirdRepoElement.classType),
-    JsonSubTypes.Type(value = JobCloudsFastExecuteScriptElement::class, name = JobCloudsFastExecuteScriptElement.classType),
-    JsonSubTypes.Type(value = JobCloudsFastPushElement::class, name = JobCloudsFastPushElement.classType)
+    JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType)
 )
 
 abstract class Element(
