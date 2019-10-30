@@ -53,7 +53,8 @@ class CredentialServiceImpl @Autowired constructor(
     override fun userCreate(
         userId: String,
         projectId: String,
-        credential: CredentialCreate
+        credential: CredentialCreate,
+        authGroupList: List<BkAuthGroup>?
     ) {
         validatePermission(userId, projectId, AuthPermission.CREATE, "用户($userId)在工程($projectId)下没有凭据创建权限")
 
@@ -84,6 +85,7 @@ class CredentialServiceImpl @Autowired constructor(
             AESUtil.encrypt(aesKey, credential.v4!!)
         }
 
+        createGrantResource(userId, projectId, credential.credentialId, authGroupList)
         credentialDao.create(dslContext,
             projectId,
             userId,
