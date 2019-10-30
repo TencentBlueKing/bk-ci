@@ -27,9 +27,13 @@
 package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.JobControlOption
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -40,6 +44,39 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
  * @version 1.0
  */
 object ModelUtils {
+
+    /**
+     * 初始化旧的数据
+     */
+    fun initContainerOldData(c: Container) {
+        if (c is NormalContainer) {
+            if (c.jobControlOption == null) {
+
+                c.jobControlOption = JobControlOption(
+                    enable = true,
+                    timeout = c.maxRunningMinutes,
+                    runCondition = if (c.enableSkip == true) {
+                        if (c.conditions?.isNotEmpty() == true) {
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                        } else {
+                            JobRunCondition.STAGE_RUNNING
+                        }
+                    } else {
+                        JobRunCondition.STAGE_RUNNING
+                    },
+                    customVariables = c.conditions
+                )
+            }
+        } else if (c is VMBuildContainer) {
+            if (c.jobControlOption == null) {
+                c.jobControlOption = JobControlOption(
+                    enable = true,
+                    timeout = c.maxRunningMinutes,
+                    runCondition = JobRunCondition.STAGE_RUNNING
+                )
+            }
+        }
+    }
 
     fun canManualStartup(triggerContainer: TriggerContainer): Boolean {
         triggerContainer.elements.forEach {
@@ -62,6 +99,7 @@ object ModelUtils {
     fun refreshCanRetry(model: Model, canRetry: Boolean, status: BuildStatus) {
         model.stages.forEach { s ->
             s.containers.forEach { c ->
+                initContainerOldData(c)
                 if (c is VMBuildContainer) {
                     c.canRetry = c.canRetry ?: false && canRetry
                 }
