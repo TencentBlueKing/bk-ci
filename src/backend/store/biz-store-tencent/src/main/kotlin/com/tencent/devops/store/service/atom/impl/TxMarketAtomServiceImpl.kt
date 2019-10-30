@@ -28,7 +28,6 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.api.ServcieGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
