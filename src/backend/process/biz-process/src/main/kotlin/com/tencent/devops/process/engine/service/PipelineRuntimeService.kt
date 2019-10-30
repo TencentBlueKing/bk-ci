@@ -59,6 +59,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -876,6 +877,7 @@ class PipelineRuntimeService @Autowired constructor(
                             }
                         }
                     } else {
+                        ModelUtils.initContainerOldData(container)
                         val controlOption = when (container) {
                             is NormalContainer -> PipelineBuildContainerControlOption(
                                 container.jobControlOption!!,
