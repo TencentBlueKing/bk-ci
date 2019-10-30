@@ -128,37 +128,4 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
         return Result(Page(0, 9999, result.count, result.records))
     }
-
-    override fun createGitCodeRepository(userId: String, projectCode: String, repositoryName: String, sampleProjectPath: String, namespaceId: Int?, visibilityLevel: VisibilityLevelEnum?, tokenType: TokenTypeEnum): Result<RepositoryInfo?> {
-        return repositoryService.createGitCodeRepository(userId, projectCode, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
-    }
-
-    override fun updateGitCodeRepository(userId: String, repoId: String, updateGitProjectInfo: UpdateGitProjectInfo, tokenType: TokenTypeEnum): Result<Boolean> {
-        return repositoryService.updateGitCodeRepository(userId, buildConfig(repoId, null), updateGitProjectInfo, tokenType)
-    }
-
-    override fun addGitProjectMember(userId: String, userIdList: List<String>, repoId: String, gitAccessLevel: GitAccessLevelEnum, tokenType: TokenTypeEnum): Result<Boolean> {
-        return repositoryService.addGitProjectMember(userId, userIdList, buildConfig(repoId, null), gitAccessLevel, tokenType)
-    }
-
-    override fun deleteGitProjectMember(userId: String, userIdList: List<String>, repoId: String, tokenType: TokenTypeEnum): Result<Boolean> {
-        return repositoryService.deleteGitProjectMember(userId, userIdList, buildConfig(repoId, null), tokenType)
-    }
-
-    override fun updateRepositoryUserInfo(userId: String, projectCode: String, repositoryHashId: String): Result<Boolean> {
-        return repositoryUserService.updateRepositoryUserInfo(userId, projectCode, repositoryHashId)
-    }
-
-    override fun moveGitProjectToGroup(userId: String, groupCode: String?, repoId: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
-        return repositoryService.moveGitProjectToGroup(userId, groupCode, buildConfig(repoId, null), tokenType)
-    }
-
-    override fun getFileContent(repoId: String, filePath: String, reversion: String?, branch: String?, repositoryType: RepositoryType?): Result<String> {
-        return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch))
-    }
-
-    override fun delete(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
-        repositoryService.userDelete(userId, projectId, repositoryHashId)
-        return Result(true)
-    }
 }
