@@ -85,7 +85,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
-        return authProjectApi.isProjectUser(userId,bsProjectAuthServiceCode, projectCode, null)
+        return authProjectApi.isProjectUser(userId, bsProjectAuthServiceCode, projectCode, null)
     }
 
     companion object{
