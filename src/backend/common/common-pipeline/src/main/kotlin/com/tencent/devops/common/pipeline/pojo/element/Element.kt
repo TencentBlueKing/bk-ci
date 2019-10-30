@@ -36,22 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.AndroidCertInstallElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.BuglyElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.RqdElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.BuildArchiveGetElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.BuildPushDockerImageElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.CustomizeArchiveGetElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.GitCommentCheckElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.IosCertInstallElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.IosEnterpriseSignElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.IosSJTYSignElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.KtlintStyleElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxPaasCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.ReportArchiveElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.SensitiveScanElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.SingleArchiveElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.*
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -99,8 +84,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = IosSJTYSignElement::class, name = IosSJTYSignElement.classType),
     JsonSubTypes.Type(value = KtlintStyleElement::class, name = KtlintStyleElement.classType),
     JsonSubTypes.Type(value = GitCommentCheckElement::class, name = GitCommentCheckElement.classType),
-    JsonSubTypes.Type(value = AtomBuildArchiveElement::class, name = AtomBuildArchiveElement.classType),
-    JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType)
+    JsonSubTypes.Type(value = AtomBuildArchiveElement::class, name = AtomBuildArchiveElement.classType)
 )
 
 abstract class Element(

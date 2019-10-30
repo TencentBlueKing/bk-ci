@@ -38,12 +38,12 @@ import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
 import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertTls
 import com.tencent.devops.ticket.pojo.enums.CertType
-import com.tencent.devops.ticket.service.CertServiceImpl
+import com.tencent.devops.ticket.service.CertService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceCertResourceImpl @Autowired constructor(
-    private val certService: CertServiceImpl
+    private val certService: CertService
 ) : ServiceCertResource {
     override fun hasUsePermissionAndroidList(
         projectId: String,
