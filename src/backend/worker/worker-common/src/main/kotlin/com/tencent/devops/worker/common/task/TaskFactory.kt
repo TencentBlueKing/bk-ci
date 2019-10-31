@@ -55,13 +55,29 @@ object TaskFactory {
         val reflections = Reflections("com.tencent.devops.plugin.worker.task")
         val taskClasses = reflections.getSubTypesOf(ITask::class.java)
         LoggerService.addNormalLine("Get the ITask classes $taskClasses")
+        val candidatePriorityMap = mutableMapOf<String, Int>()
+        val candidateMap = HashMap<String, KClass<out ITask>>()
         taskClasses?.forEach { taskClazz ->
             if (!Modifier.isAbstract(taskClazz.modifiers)) {
                 val taskClassType = AnnotationUtils.findAnnotation(taskClazz, TaskClassType::class.java)
                 taskClassType?.classTypes?.forEach { classType ->
-                    register(classType, taskClazz.kotlin)
+                    var find = false
+                    var priority = candidatePriorityMap[classType]
+                    if (taskClassType.priority > (priority ?: 0)) {
+                        priority = taskClassType.priority
+                        find = true
+                    }
+
+                    if (priority == null || find) {
+                        candidatePriorityMap[classType] = priority ?: 0
+                        candidateMap[classType] = taskClazz.kotlin
+                    }
                 }
             }
+        }
+
+        candidateMap.forEach { (classType, taskClazz) ->
+            register(classType, taskClazz)
         }
     }
 

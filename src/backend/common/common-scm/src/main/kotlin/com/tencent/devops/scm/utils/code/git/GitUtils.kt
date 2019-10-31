@@ -28,25 +28,33 @@ package com.tencent.devops.scm.utils.code.git
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.exception.ScmException
+import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
 
 object GitUtils {
 
-    fun urlDecode(s: String) = URLDecoder.decode(s, "UTF-8")
+    fun urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")
 
-    fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
+    fun urlEncode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
     fun getProjectName(gitUrl: String) = getDomainAndRepoName(gitUrl).second
 
     fun getDomainAndRepoName(gitUrl: String): Pair<String/*domain*/, String/*repoName*/> {
+        // 兼容http存在端口的情況 http://gitlab.xx:8888/xx.git
         val groups = Regex("git@([-.a-z0-9A-Z]+):(.*).git").find(gitUrl)?.groups
-            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)/(.*).git").find(gitUrl)?.groups
+            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*).git").find(gitUrl)?.groups
             ?: throw ScmException("Invalid git url $gitUrl", ScmType.CODE_GIT.name)
 
         if (groups.size < 3) {
             throw ScmException("Invalid git url $gitUrl", ScmType.CODE_GIT.name)
         }
+
+        if (gitUrl.startsWith("http")) {
+            val url = URL(gitUrl)
+            return url.authority to groups[3]!!.value
+        }
+
         return groups[1]!!.value to groups[2]!!.value
     }
 

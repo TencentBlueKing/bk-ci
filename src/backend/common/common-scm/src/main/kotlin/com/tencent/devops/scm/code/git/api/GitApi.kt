@@ -194,7 +194,34 @@ open class GitApi {
         }
     }
 
-    private fun addHook(host: String, token: String, projectName: String, hookUrl: String, event: String? = null): GitHook {
+    fun createBranch(host: String, token: String, projectName: String, branch: String, ref: String): GitBranch {
+        logger.info("Start to create branches of host $host with token $token by project $projectName")
+        val body = JsonUtil.getObjectMapper().writeValueAsString(
+            mapOf(
+                Pair("branch", branch),
+                Pair("ref", ref)
+            )
+        )
+        val request = post(host, token, "projects/${urlEncode(projectName)}/repository/branches", body)
+        return callMethod(CREATE_BRANCH, request, GitBranch::class.java)
+    }
+
+    fun deleteBranch(host: String, token: String, projectName: String, branch: String) {
+        logger.info("Start to create branches of host $host with token $token by project $projectName")
+        val body = JsonUtil.getObjectMapper().writeValueAsString(
+           emptyMap<String, String>()
+        )
+        val request = delete(host, token, "projects/${urlEncode(projectName)}/repository/branches/$branch", body)
+        callMethod(DELETE_BRANCH, request, String::class.java)
+    }
+
+    private fun addHook(
+        host: String,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String? = null
+    ): GitHook {
         val params = mutableMapOf<String, String>()
 
         params["url"] = hookUrl

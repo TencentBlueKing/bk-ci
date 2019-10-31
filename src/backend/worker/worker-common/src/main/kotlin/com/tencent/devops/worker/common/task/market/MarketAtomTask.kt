@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
+import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -71,6 +72,8 @@ open class MarketAtomTask : ITask() {
     private val sdkFile = ".sdk.json"
 
     private lateinit var atomExecuteFile: File
+
+    private val qualityGatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
 
     @Suppress("UNCHECKED_CAST")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
@@ -235,7 +238,7 @@ open class MarketAtomTask : ITask() {
         } catch (e: Throwable) {
             error = e
         } finally {
-            output(buildTask, atomWorkspace, buildVariables, outputTemplate, namespace)
+            output(buildTask, atomWorkspace, buildVariables, outputTemplate, namespace, atomCode)
             if (error != null)
                 throw error
         }
@@ -325,7 +328,8 @@ open class MarketAtomTask : ITask() {
         atomWorkspace: File,
         buildVariables: BuildVariables,
         outputTemplate: Map<String, Map<String, Any>>,
-        namespace: String?
+        namespace: String?,
+        atomCode: String
     ) {
         val atomResult = readOutputFile(atomWorkspace)
         deletePluginFile()
@@ -391,6 +395,25 @@ open class MarketAtomTask : ITask() {
             if (atomResult.type == "default") {
                 if (env.isNotEmpty()) {
                     addEnv(env)
+                }
+            }
+
+            if (atomResult.type == "quality") {
+                if (env.isNotEmpty()) {
+                    addEnv(env)
+                }
+
+                // 处理质量红线数据
+                val qualityMap = atomResult.qualityData?.map {
+                    val value = it.value["value"]?.toString() ?: ""
+                    it.key to value
+                }?.toMap()
+                if (qualityMap != null) {
+                    qualityGatewayResourceApi.saveScriptHisMetadata(atomCode, qualityMap)
+                }
+            } else {
+                if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {
+                    logger.warn("qualityData is not empty, but type is ${atomResult.type}, expected 'quality' !")
                 }
             }
 
