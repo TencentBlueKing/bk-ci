@@ -13,12 +13,12 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.config.TXDockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
@@ -43,7 +43,8 @@ class DockerHostBuildLessService(
     private val dockerHostWorkSpaceService: DockerHostWorkSpaceService
 ) {
 
-    private val alertApi: AlertApi = AlertApi()
+    private val alertApi: AlertApi =
+        AlertApi()
 
     private val buildApi = BuildResourceApi()
 
@@ -86,6 +87,7 @@ class DockerHostBuildLessService(
         try {
             // docker pull
             try {
+                LocalImageCache.saveOrUpdate(event.dockerImage)
                 dockerCli.pullImageCmd(event.dockerImage).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
                 logger.warn("[${event.buildId}]|Fail to pull the image ${event.dockerImage} of build ${event.buildId}", t)
