@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
@@ -40,13 +41,34 @@ interface AuthResourceApi {
      * @param resourceName 资源在权限中心的名称
      */
     fun createResource(
-            user: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            resourceCode: String,
-            resourceName: String
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
     )
+
+    /**
+     * 创建资源并授权给相关组人员
+     * @param user user
+     * @param serviceCode 服务模块
+     * @param resourceType 资源类型
+     * @param projectCode 项目英文id
+     * @param resourceCode 资源Code唯一标识
+     * @param resourceName 资源在权限中心的名称
+     * @param authGroupList 用户组，可为空
+     */
+    fun createGrantResource(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String,
+        authGroupList: List<BkAuthGroup>? = null
+    )
+
 
     /**
      * 修改资源名称
@@ -57,11 +79,11 @@ interface AuthResourceApi {
      * @param resourceName 资源在权限中心的名称
      */
     fun modifyResource(
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            resourceCode: String,
-            resourceName: String
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
     )
 
     /**
@@ -72,10 +94,10 @@ interface AuthResourceApi {
      * @param resourceCode 资源Code唯一标识
      */
     fun deleteResource(
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            resourceCode: String
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
     )
 
     /**
@@ -86,46 +108,46 @@ interface AuthResourceApi {
      * @param resourceList 资源Code唯一标识列表
      */
     fun batchCreateResource(
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            user: String,
-            resourceList: List<ResourceRegisterInfo>
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        user: String,
+        resourceList: List<ResourceRegisterInfo>
     )
 
     fun batchCreateResource(
-            principalId: String,
-            scopeType: String,
-            scopeId: String,
-            resourceType: AuthResourceType,
-            resourceList: List<ResourceRegisterInfo>,
-            systemId: AuthServiceCode
+        principalId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: AuthResourceType,
+        resourceList: List<ResourceRegisterInfo>,
+        systemId: AuthServiceCode
     ): Boolean
 
     fun deleteResource(
-            scopeType: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            resourceCode: String
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
     )
 
     fun modifyResource(
-            scopeType: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            resourceCode: String,
-            resourceName: String
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
     )
 
     fun createResource(
-            scopeType: String,
-            user: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            resourceCode: String,
-            resourceName: String
+        scopeType: String,
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
     )
 }

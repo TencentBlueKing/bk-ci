@@ -139,7 +139,7 @@ class BSAuthResourceApi @Autowired constructor(
         )
     }
 
-    fun createGrantResource(
+    override fun createGrantResource(
             user: String,
             serviceCode: AuthServiceCode,
             resourceType: AuthResourceType,

@@ -43,9 +43,6 @@ import com.tencent.devops.ticket.pojo.CredentialPermissions
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import com.tencent.devops.ticket.service.CredentialHelper
-import com.tencent.devops.ticket.service.CredentialPermissionService
-import com.tencent.devops.ticket.service.CredentialService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -60,50 +57,8 @@ class CredentialServiceImpl @Autowired constructor(
     private val client: Client,
     private val credentialDao: CredentialDao
 ) : CredentialService {
-    private val credentialIdMaxSize = 32
 
-    override fun userCreate(userId: String, projectId: String, credential: CredentialCreate, authGroupList: List<BkAuthGroup>?) {
-        credentialPermissionService.validatePermission(
-            userId,
-            projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有凭据创建权限"
-        )
-
-        if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
-            throw OperationException("名称${credential.credentialId}已存在")
-        }
-        if (!credentialHelper.isValid(credential)) {
-            throw OperationException("凭证格式不正确")
-        }
-        if (credential.credentialId.length > credentialIdMaxSize) {
-            throw OperationException("凭证ID不能超过32位")
-        }
-
-        credentialPermissionService.createResource(userId, projectId, credential.credentialId)
-        credentialDao.create(
-            dslContext = dslContext,
-            projectId = projectId,
-            credentialUserId = userId,
-            credentialId = credential.credentialId,
-            credentialType = credential.credentialType.name,
-            credentialV1 = credentialHelper.encryptCredential(credential.v1)!!,
-            credentialV2 = credentialHelper.encryptCredential(credential.v2),
-            credentialV3 = credentialHelper.encryptCredential(credential.v3),
-            credentialV4 = credentialHelper.encryptCredential(credential.v4),
-            credentialRemark = credential.credentialRemark
-        )
-    }
-
-    override fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate) {
-        credentialPermissionService.validatePermission(
-            userId,
-            projectId,
-            credentialId,
-            AuthPermission.EDIT,
-            "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
-        )
-
+    override fun serviceEdit(projectId: String, credentialId: String, credential: CredentialUpdate) {
         if (!credentialDao.has(dslContext, projectId, credentialId)) {
             throw OperationException("凭证$credentialId 不存在")
         }
@@ -121,6 +76,58 @@ class CredentialServiceImpl @Autowired constructor(
             credentialV4 = credentialHelper.encryptCredential(credential.v4),
             credentialRemark = credential.credentialRemark
         )
+    }
+
+    private val credentialIdMaxSize = 32
+
+    override fun userCreate(
+        userId: String,
+        projectId: String,
+        credential: CredentialCreate,
+        authGroupList: List<BkAuthGroup>?
+    ) {
+        credentialPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = AuthPermission.CREATE,
+            message = "用户($userId)在工程($projectId)下没有凭据创建权限"
+        )
+
+        if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
+            throw OperationException("名称${credential.credentialId}已存在")
+        }
+        if (!credentialHelper.isValid(credential)) {
+            throw OperationException("凭证格式不正确")
+        }
+        if (credential.credentialId.length > credentialIdMaxSize) {
+            throw OperationException("凭证ID不能超过32位")
+        }
+
+        credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
+        credentialDao.create(
+            dslContext = dslContext,
+            projectId = projectId,
+            credentialUserId = userId,
+            credentialId = credential.credentialId,
+            credentialType = credential.credentialType.name,
+            credentialV1 = credentialHelper.encryptCredential(credential.v1)!!,
+            credentialV2 = credentialHelper.encryptCredential(credential.v2),
+            credentialV3 = credentialHelper.encryptCredential(credential.v3),
+            credentialV4 = credentialHelper.encryptCredential(credential.v4),
+            credentialRemark = credential.credentialRemark
+        )
+    }
+
+    override fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate) {
+        credentialPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            resourceCode = credentialId,
+            authPermission = AuthPermission.EDIT,
+            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
+        )
+
+        serviceEdit(projectId = projectId, credentialId = credentialId, credential = credential)
     }
 
     override fun userDelete(userId: String, projectId: String, credentialId: String) {
@@ -340,7 +347,8 @@ class CredentialServiceImpl @Autowired constructor(
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }
-        val buildBasicInfo = buildBasicInfoResult.data ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
+        val buildBasicInfo = buildBasicInfoResult.data
+            ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
         val credentialInfo = serviceGet(buildBasicInfo.projectId, credentialId)
         val keyMap = CredentialType.getKeyMap(credentialInfo.credentialType.name)
         val credentialMap = mutableMapOf<String, String?>()

@@ -65,7 +65,12 @@ class UserCredentialResourceImpl @Autowired constructor(
         if (credential.v1.isBlank()) {
             throw ParamBlankException("Invalid credential")
         }
-        credentialService.userCreate(userId, projectId, credential, null)
+        credentialService.userCreate(
+            userId = userId,
+            projectId = projectId,
+            credential = credential,
+            authGroupList = null
+        )
         return Result(true)
     }
 
@@ -104,12 +109,12 @@ class UserCredentialResourceImpl @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = credentialService.userList(
-            userId,
-            projectId,
-            credentialTypes,
-            limit.offset,
-            limit.limit,
-            keyword
+            userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            offset = limit.offset,
+            limit = limit.limit,
+            keyword = keyword
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
@@ -132,7 +137,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         val credentialTypes = credentialTypesString?.split(",")?.map {
             CredentialType.valueOf(it)
         }
-        val bkAuthPermission = when (permission) {
+        val authPermission = when (permission) {
             Permission.CREATE -> AuthPermission.CREATE
             Permission.DELETE -> AuthPermission.DELETE
             Permission.LIST -> AuthPermission.LIST
@@ -144,13 +149,13 @@ class UserCredentialResourceImpl @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = credentialService.hasPermissionList(
-            userId,
-            projectId,
-            credentialTypes,
-            bkAuthPermission,
-            limit.offset,
-            limit.limit,
-            keyword
+            userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            authPermission = authPermission,
+            offset = limit.offset,
+            limit = limit.limit,
+            keyword = keyword
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
@@ -171,7 +176,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         val credentialTypes = credentialTypesString?.split(",")?.map {
             CredentialType.valueOf(it)
         }
-        val bkAuthPermission = when (permission) {
+        val authPermission = when (permission) {
             Permission.CREATE -> AuthPermission.CREATE
             Permission.DELETE -> AuthPermission.DELETE
             Permission.LIST -> AuthPermission.LIST
@@ -181,13 +186,13 @@ class UserCredentialResourceImpl @Autowired constructor(
         }
 
         val result = credentialService.hasPermissionList(
-            userId,
-            projectId,
-            credentialTypes,
-            bkAuthPermission,
-            null,
-            null,
-            keyword
+            userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            authPermission = authPermission,
+            offset = null,
+            limit = null,
+            keyword = keyword
         )
         return Result(result.records)
     }
