@@ -44,13 +44,16 @@
                 <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
                     <bk-radio-group v-model="createEnvForm.envType">
                         <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
+                        <bk-radio :value="'DEV'">{{ $t('environment.envInfo.devEnvType') }}</bk-radio>
+                        <bk-radio :value="'PROD'">{{ $t('environment.envInfo.testEnvType') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
                     <div class="env-source-content">
                         <div class="source-type-radio">
                             <bk-radio-group v-model="createEnvForm.source">
-                                <bk-radio :value="'EXISTING'">{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
+                                <bk-radio :value="'EXISTING'" v-if="createEnvForm.envType !== 'BUILD'">{{ $t('environment.envInfo.existingNode') }}</bk-radio>
+                                <bk-radio :value="'EXISTING'" v-else>{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
                             </bk-radio-group>
                             <span class="preview-node-btn"
                                 v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
@@ -99,6 +102,7 @@
         <node-select :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
+            :change-created-user="changeCreatedUser"
             :row-list="nodeList"
             :select-handlerc-conf="selectHandlercConf"
             :toggle-all-select="toggleAllSelect"
@@ -323,7 +327,7 @@
 
                         if (this.createEnvForm.envType === 'BUILD') {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType === 'THIRDPARTY' && item.canUse) {
+                                if (target[i] && str.indexOf(target[i]) > -1 && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -332,7 +336,7 @@
                             }
                         } else {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType !== 'THIRDPARTY' && item.canUse) {
+                                if (target[i] && str.indexOf(target[i]) > -1 && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -356,13 +360,13 @@
 
                     if (this.createEnvForm.envType === 'BUILD') {
                         this.nodeList.forEach(item => {
-                            if (item.nodeType === 'THIRDPARTY' && item.canUse) {
+                            if (['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
                                 item.isDisplay = true
                             }
                         })
                     } else {
                         this.nodeList.forEach(item => {
-                            if (item.nodeType !== 'THIRDPARTY' && item.canUse) {
+                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
                                 item.isDisplay = true
                             }
                         })
@@ -399,11 +403,11 @@
 
                 if (curEnv === 'BUILD') {
                     this.nodeList.forEach(item => {
-                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && item.nodeType === 'THIRDPARTY') {
+                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) {
                             this.buildNodeList.push(item)
                         }
 
-                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && item.nodeType === 'THIRDPARTY') {
+                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) {
                             for (let i = this.buildNodeList.length - 1; i >= 0; i--) {
                                 if (this.buildNodeList[i].nodeHashId === item.nodeHashId) {
                                     this.buildNodeList.splice(i, 1)
@@ -415,11 +419,11 @@
                     this.previewNodeList = this.buildNodeList
                 } else {
                     this.nodeList.forEach(item => {
-                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && item.nodeType !== 'THIRDPARTY') {
+                        if (item.isChecked && !this.checkIsEixt(item.nodeHashId, curEnv) && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType))) {
                             this.devNodeList.push(item)
                         }
 
-                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && item.nodeType !== 'THIRDPARTY') {
+                        if (!item.isChecked && this.checkIsEixt(item.nodeHashId, curEnv) && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType))) {
                             for (let i = this.devNodeList.length - 1; i >= 0; i--) {
                                 if (this.devNodeList[i].nodeHashId === item.nodeHashId) {
                                     this.devNodeList.splice(i, 1)
@@ -572,13 +576,13 @@
                         item.isChecked = false
 
                         if (this.createEnvForm.envType === 'BUILD') {
-                            if (item.nodeType !== 'THIRDPARTY' || !item.canUse) {
+                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) || !item.canUse) {
                                 item.isDisplay = false
                             } else {
                                 item.isDisplay = true
                             }
                         } else {
-                            if (item.nodeType === 'THIRDPARTY' || !item.canUse) {
+                            if (['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) || !item.canUse) {
                                 item.isDisplay = false
                             } else {
                                 item.isDisplay = true
@@ -624,6 +628,47 @@
                 } finally {
                     this.nodeDialogLoading.isLoading = false
                 }
+            },
+            async changeCreatedUser (id) {
+                const h = this.$createElement
+                const content = h('p', {
+                    style: {
+                        textAlign: 'center'
+                    }
+                }, `${this.$t('environment.nodeInfo.modifyOperatorTips')}？`)
+
+                this.$bkInfo({
+                    title: this.$t('environment.nodeInfo.modifyImporter'),
+                    subHeader: content,
+                    confirmFn: async () => {
+                        let message, theme
+                        const params = {}
+                        try {
+                            await this.$store.dispatch('environment/changeCreatedUser', {
+                                projectId: this.projectId,
+                                nodeHashId: id,
+                                params
+                            })
+
+                            message = this.$t('environment.successfullyModified')
+                            theme = 'success'
+                        } catch (err) {
+                            const message = err.message ? err.message : err
+                            const theme = 'error'
+
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                        } finally {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                            this.requestList()
+                        }
+                    }
+                })
             }
         }
     }
@@ -677,6 +722,10 @@
             height: 42px;
             line-height: 38px;
             border-bottom: 1px solid $borderWeightColor;
+
+            .bk-form-radio {
+                line-height: 36px;
+            }
         }
 
         .empty-node-selected {
