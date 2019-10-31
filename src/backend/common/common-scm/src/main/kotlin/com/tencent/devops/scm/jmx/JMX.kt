@@ -31,10 +31,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.jmx.export.MBeanExporter
 import javax.management.ObjectName
 
-/**
- * deng
- * 2019-02-27
- */
 object JMX {
 
     private val logger = LoggerFactory.getLogger(JMX::class.java)

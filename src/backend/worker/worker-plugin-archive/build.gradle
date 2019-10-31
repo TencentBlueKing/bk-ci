@@ -27,6 +27,7 @@
 dependencies {
     compile project(":worker:worker-common")
     compile project(":common:common-archive")
+    compile project(":dockerhost:api-dockerhost")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

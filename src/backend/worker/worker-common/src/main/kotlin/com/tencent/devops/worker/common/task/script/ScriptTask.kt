@@ -32,6 +32,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
@@ -45,6 +47,8 @@ import java.net.URLDecoder
  * 构建脚本任务
  */
 open class ScriptTask : ITask() {
+
+    private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
@@ -117,6 +121,7 @@ open class ScriptTask : ITask() {
                 LinuxScriptElement.classType
             }
             LoggerService.addNormalLine("save gateway value($elementType): $data")
+            gatewayResourceApi.saveScriptHisMetadata(elementType, data)
             gatewayFile.delete()
         } catch (e: Exception) {
             LoggerService.addRedLine("save gateway value fail: ${e.message}")

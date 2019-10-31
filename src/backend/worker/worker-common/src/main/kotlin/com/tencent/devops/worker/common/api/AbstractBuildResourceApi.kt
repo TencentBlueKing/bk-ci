@@ -149,14 +149,8 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val READ_TIMEOUT = 1500L
         private const val WRITE_TIMEOUT = 60L
         private val retryCodes = arrayOf(502, 503)
-        val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
-        private val gateway: String by lazy {
-            when (BuildEnv.getBuildType()) {
-                BuildType.AGENT, BuildType.DOCKER -> {
-                    AgentEnv.getGateway()
-                }
-            }
-        }
+        private val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
+        private val gateway = AgentEnv.getGateway()
 
         private val buildArgs: Map<String, String> by lazy {
             initBuildArgs()

@@ -27,6 +27,7 @@
 package com.tencent.devops.worker.common.env
 
 enum class BuildType {
+    WORKER,
     AGENT,
     DOCKER;
 

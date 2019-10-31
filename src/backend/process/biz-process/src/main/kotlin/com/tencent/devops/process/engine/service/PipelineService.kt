@@ -1210,7 +1210,6 @@ class PipelineService @Autowired constructor(
 
         val pipelines = mutableListOf<Pipeline>()
         val currentTimestamp = System.currentTimeMillis()
-        val templatePipelines = getTemplatePipelines(favorPipelines.plus(authPipelines).toSet())
         val latestBuildEstimatedExecutionSeconds = 1L
         pipelineBuildSummary.forEach {
             val pipelineId = it["PIPELINE_ID"] as String
@@ -1273,7 +1272,7 @@ class PipelineService @Autowired constructor(
                     hasPermission = authPipelines.contains(pipelineId),
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = starter,
-                    instanceFromTemplate = templatePipelines.contains(pipelineId)
+                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
                 )
             )
         }

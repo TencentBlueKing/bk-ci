@@ -51,26 +51,26 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
     /**
      * 下载仓库中指定路径的文件
      *
-     * @param uri       下载路径
-     * @param destPath  下载后存放的文件
+     * @param uri 下载路径
+     * @param destPath 下载后存放的文件
      */
     fun downloadCustomizeFile(uri: String, destPath: File)
 
     /**
      * 按流水线，构建ID来下载仓库中构件
-     * @param pipelineId  流水线id
-     * @param buildId     构建id
-     * @param uri         下载uri
-     * @param destPath    下载后存放的文件
+     * @param pipelineId 流水线id
+     * @param buildId 构建id
+     * @param uri 下载uri
+     * @param destPath 下载后存放的文件
      */
     fun downloadPipelineFile(pipelineId: String, buildId: String, uri: String, destPath: File)
 
     /**
      * 获取下载地址
-     * @param pipelineId        流水线id
-     * @param buildId           构建id
-     * @param fileType          分流水线构件和自定义归档
-     * @param customFilePath    要下载的文件路径，支持如 *.jar 模糊匹配
+     * @param pipelineId 流水线id
+     * @param buildId 构建id
+     * @param fileType 分流水线构件和自定义归档
+     * @param customFilePath 要下载的文件路径，支持如 *.jar 模糊匹配
      * @return 下载地址
      */
     fun getFileDownloadUrls(
@@ -79,4 +79,9 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
         fileType: FileTypeEnum,
         customFilePath: String?
     ): List<String>
+
+    /**
+     * 获取docker build 所需要的凭证
+     */
+    fun dockerBuildCredential(projectId: String): Map<String, String>
 }
