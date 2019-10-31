@@ -144,7 +144,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                     tofAppCode!!,
                     tofAppSecret!!,
                     id.toString()
-            ), "获取部门信息失败"
+            ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
             )
             val response: Response<DeptInfoResponse> =
                     objectMapper.readValue(responseContent)
@@ -172,7 +172,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                     tofAppCode!!,
                     tofAppSecret!!,
                     CCAppNameApplicationID(ccAppId)
-                ), "获取CC APP Name失败", APIModule.cc
+                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL), APIModule.cc
             )
             val response: Response<List<CCAppNameResponse>> = objectMapper.readValue(responseContent)
             if (response.data == null || response.data!!.isEmpty()) {
@@ -195,7 +195,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                     tofAppSecret!!,
                     getParentDeptIdByOrganizationType(type, id),
                     1
-                ), "获取子部门信息失败"
+                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL)
             )
             val response: Response<List<ChildDeptResponse>> =
                 objectMapper.readValue(responseContent)
@@ -230,12 +230,12 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                             path, StaffInfoRequest(
                                 tofAppCode!!,
                                 tofAppSecret!!, operator, userId, bk_ticket
-                            ), "获取用户信息失败"
+                            ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
                         )
                         val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
                         if (response.data == null) {
                             logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
-                            throw OperationException("获取用户信息失败")
+                            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
                         }
                         info = response.data
                         userInfoCache.put(userId, info!!)
@@ -262,7 +262,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
             val path = "get_parent_dept_infos"
             val responseContent = request(
                 path,
-                ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level), "获取公司组织架构信息失败"
+                ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_ORG_FAIL)
             )
             val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {

@@ -50,17 +50,16 @@ class BKUserServiceImpl constructor(
 
     private val logger = LoggerFactory.getLogger(BKUserServiceImpl::class.java)
 
-    // TODO
-//    @Value("\${bk_login.path}")
+    @Value("\${bk_login.path}")
     lateinit var path: String
 
-//    @Value("\${bk_login.getUser}")
+    @Value("\${bk_login.getUser}")
     lateinit var getUser: String
 
-//    @Value("\${bk_login.bk_app_code}")
+    @Value("\${bk_login.bk_app_code}")
     lateinit var bkAppCode: String
 
-//    @Value("\${bk_login.bk_app_secret}")
+    @Value("\${bk_login.bk_app_secret}")
     lateinit var bkAppSecret: String
 
     override fun getStaffInfo(userId: String, bkToken: String?): UserVO {
