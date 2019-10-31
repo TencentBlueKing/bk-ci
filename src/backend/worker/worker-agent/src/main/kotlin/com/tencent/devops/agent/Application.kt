@@ -35,28 +35,52 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
+import java.lang.RuntimeException
 
 fun main(args: Array<String>) {
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()
     ApiFactory.init()
     TaskFactory.init()
-    if (System.getProperty(BUILD_TYPE) == BuildType.DOCKER.name) {
-        System.setProperty(BUILD_TYPE, BuildType.DOCKER.name)
-        Runner.run(object : WorkspaceInterface {
-            override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                val workspace = System.getProperty("devops_workspace")
+    val buildType = System.getProperty(BUILD_TYPE)
+    when(buildType) {
+        BuildType.DOCKER.name ->
+            Runner.run(object : WorkspaceInterface {
+                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                    val workspace = System.getProperty("devops_workspace")
 
-                val dir = if (workspace.isNullOrBlank()) {
-                    File("/data/devops/workspace")
-                } else {
-                    File(workspace)
+                    val dir = if (workspace.isNullOrBlank()) {
+                        File("/data/devops/workspace")
+                    } else {
+                        File(workspace)
+                    }
+                    dir.mkdirs()
+                    return dir
                 }
-                dir.mkdirs()
-                return dir
+            })
+        BuildType.WORKER.name -> {
+            Runner.run(object : WorkspaceInterface {
+                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                    val dir = File("./$pipelineId/src")
+                    if (dir.exists()) {
+                        if (!dir.isDirectory) {
+                            throw RuntimeException("Work space directory conflict: ${dir.canonicalPath}")
+                        }
+                    } else {
+                        dir.mkdirs()
+                    }
+                    return dir
+                }
+            })
+        }
+        BuildType.AGENT.name -> {
+            WorkRunner.execute(args)
+        }
+        else -> {
+            if (buildType.isNullOrBlank()) {
+                throw RuntimeException("The build type is empty")
             }
-        })
-    } else {
-        System.setProperty(BUILD_TYPE, BuildType.AGENT.name)
-        WorkRunner.execute(args)
+            throw RuntimeException("Unknown build type - $buildType")
+        }
     }
 }
+

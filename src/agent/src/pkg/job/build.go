@@ -239,7 +239,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 		"  source ~/.bash_profile",
 		"fi",
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
-		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.role=devops.slave.agent.role.slave -jar %s %s",
+		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -jar %s %s",
 			config.GetJava(), scriptFile, buildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")

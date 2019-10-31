@@ -37,6 +37,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
@@ -87,5 +88,9 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildPost(path)
         val responseContent = request(request, "创建报告失败")
         return objectMapper.readValue(responseContent)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ReportResourceApi::class.java)
     }
 }

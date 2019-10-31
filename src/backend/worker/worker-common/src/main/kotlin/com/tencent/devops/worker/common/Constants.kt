@@ -29,3 +29,5 @@ package com.tencent.devops.worker.common
 const val BUILD_TYPE = "build.type"
 
 const val WORKSPACE_ENV = "WORKSPACE"
+
+const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"

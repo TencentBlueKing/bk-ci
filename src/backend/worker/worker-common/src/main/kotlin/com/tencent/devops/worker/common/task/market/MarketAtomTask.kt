@@ -299,6 +299,17 @@ open class MarketAtomTask : ITask() {
                     gateway = AgentEnv.getGateway()
                 )
             }
+            BuildType.WORKER -> {
+                SdkEnv(
+                    buildType = BuildEnv.getBuildType(),
+                    projectId = buildVariables.projectId,
+                    agentId = "",
+                    secretKey = "",
+                    buildId = buildTask.buildId,
+                    vmSeqId = buildTask.vmSeqId,
+                    gateway = AgentEnv.getGateway()
+                )
+            }
         }
         logger.info("sdkEnv is:$sdkEnv")
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))

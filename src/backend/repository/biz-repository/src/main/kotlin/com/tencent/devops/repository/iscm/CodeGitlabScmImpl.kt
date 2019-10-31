@@ -27,6 +27,7 @@
 package com.tencent.devops.repository.iscm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.scm.IScm
@@ -69,7 +70,7 @@ class CodeGitlabScmImpl constructor(
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
-            throw ScmException(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL, ScmType.CODE_GITLAB.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL), ScmType.CODE_GITLAB.name)
         }
     }
 
@@ -78,22 +79,22 @@ class CodeGitlabScmImpl constructor(
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
-            throw ScmException(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL, ScmType.CODE_GITLAB.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL), ScmType.CODE_GITLAB.name)
         }
     }
 
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
-            throw ScmException(RepositoryMessageCode.GITLAB_TOKEN_EMPTY, ScmType.CODE_GITLAB.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_EMPTY), ScmType.CODE_GITLAB.name)
         }
         if (hookUrl.isEmpty()) {
-            throw ScmException(RepositoryMessageCode.GITLAB_HOOK_URL_EMPTY, ScmType.CODE_GITLAB.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_HOOK_URL_EMPTY), ScmType.CODE_GITLAB.name)
         }
         try {
             logger.info("[HOOK_API]|$apiUrl")
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, null)
         } catch (e: ScmException) {
-            throw ScmException(RepositoryMessageCode.GITLAB_TOKEN_FAIL, ScmType.CODE_GITLAB.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL), ScmType.CODE_GITLAB.name)
         }
     }
 

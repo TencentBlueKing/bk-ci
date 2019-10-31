@@ -35,7 +35,6 @@ import com.tencent.devops.worker.common.task.market.MarketAtomTask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.task.script.shell.LinuxScriptTask
 import org.reflections.Reflections
-import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import java.lang.reflect.Modifier
 import java.util.concurrent.ConcurrentHashMap
@@ -43,8 +42,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
 object TaskFactory {
-
-    private val logger = LoggerFactory.getLogger(TaskFactory::class.java)
 
     private val taskMap = ConcurrentHashMap<String, KClass<out ITask>>()
 
