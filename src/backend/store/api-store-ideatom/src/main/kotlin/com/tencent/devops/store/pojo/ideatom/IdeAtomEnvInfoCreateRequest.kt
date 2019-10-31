@@ -24,10 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.pojo.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("IDE插件环境信息添加请求报文体")
+data class IdeAtomEnvInfoCreateRequest(
+    @ApiModelProperty("插件ID", required = true)
+    val atomId: String,
+    @ApiModelProperty("插件安装包路径", required = true)
+    val pkgPath: String
+)

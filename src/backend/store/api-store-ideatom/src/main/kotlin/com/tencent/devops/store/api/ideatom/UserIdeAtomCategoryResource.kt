@@ -24,10 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.api.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.Category
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["USER_MARKET_IDE_ATOM_CATEGORY"], description = "IDE插件-IDE插件范畴")
+@Path("/user/market/ideAtom/categorys")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserIdeAtomCategoryResource {
+
+    @ApiOperation("获取所有IDE插件范畴信息")
+    @GET
+    @Path("/")
+    fun getAllIdeAtomCategorys(): Result<List<Category>?>
+}

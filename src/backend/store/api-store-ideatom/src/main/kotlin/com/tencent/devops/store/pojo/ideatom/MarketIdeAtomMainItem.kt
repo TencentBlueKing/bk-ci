@@ -24,10 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.pojo.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import io.swagger.annotations.ApiModel
+
+@ApiModel("IDE插件市场-首页")
+data class MarketIdeAtomMainItem(
+    val key: String,
+    val label: String,
+    val records: List<MarketIdeAtomItem?>
+)
