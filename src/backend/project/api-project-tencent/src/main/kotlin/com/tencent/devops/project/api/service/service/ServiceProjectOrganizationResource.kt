@@ -1,4 +1,4 @@
-package com.tencent.devops.project.api.service
+package com.tencent.devops.project.api.service.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE

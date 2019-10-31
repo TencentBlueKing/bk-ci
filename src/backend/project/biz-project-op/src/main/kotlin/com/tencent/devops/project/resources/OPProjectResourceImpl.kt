@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service.resources
+package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectResource
