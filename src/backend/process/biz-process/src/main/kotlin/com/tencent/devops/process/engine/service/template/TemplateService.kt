@@ -33,7 +33,11 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -71,11 +75,13 @@ import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateOperationMessage
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplatePipeline
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
@@ -112,7 +118,9 @@ class TemplateService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
 
     fun createTemplate(projectId: String, userId: String, template: Model): String {
@@ -1190,6 +1198,73 @@ class TemplateService @Autowired constructor(
         return result
     }
 
+    fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {
+        logger.info("[$projectId|$templateIds] List the templates instances")
+        if (templateIds.isEmpty()) return 0
+        return templatePipelineDao.listPipeline(dslContext, templateIds).size
+    }
+
+    fun serviceCountTemplateInstancesDetail(projectId: String, templateIds: Collection<String>): Map<String, Int> {
+        logger.info("[$projectId|$templateIds] List the templates instances")
+        if (templateIds.isEmpty()) return mapOf()
+        return templatePipelineDao.listPipeline(dslContext, templateIds).groupBy { it.templateId }.map { it.key to it.value.size }.toMap()
+    }
+
+    fun listTemplateInstances(projectId: String, userId: String, templateId: String): TemplateInstances {
+        return listTemplateInstances(projectId, userId, setOf(templateId)).first()
+    }
+
+    fun listTemplateInstances(projectId: String, userId: String, templateIds: Set<String>): List<TemplateInstances> {
+        logger.info("[$projectId|$userId|$templateIds] List the templates instances")
+        val associateTemplatePipelines =
+            templatePipelineDao.listPipeline(dslContext, templateIds).groupBy { it.templateId }
+        return templateIds.map { tid ->
+            val associatePipelines = associateTemplatePipelines[tid] ?: listOf()
+
+            val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
+            logger.info("Get the pipelineIds - $associatePipelines")
+            val pipelineSettings = pipelineSettingDao.getSettings(dslContext, pipelineIds).groupBy { it.pipelineId }
+            logger.info("Get the pipeline settings - $pipelineSettings")
+            val hasPermissionList = authPermissionApi.getUserResourceByPermission(
+                userId, pipelineAuthServiceCode,
+                AuthResourceType.PIPELINE_DEFAULT, projectId, AuthPermission.EDIT,
+                null
+            )
+
+            val templatePipelines = associatePipelines.map {
+                val pipelineSetting = pipelineSettings[it.pipelineId]
+                if (pipelineSetting == null || pipelineSetting.isEmpty()) {
+                    throw OperationException("流水线设置配置不存在")
+                }
+                TemplatePipeline(
+                    templateId = it.templateId,
+                    versionName = it.versionName,
+                    version = it.version,
+                    pipelineId = it.pipelineId,
+                    pipelineName = pipelineSetting[0].name,
+                    updateTime = it.updatedTime.timestampmilli(),
+                    hasPermission = hasPermissionList.contains(it.pipelineId)
+                )
+            }
+
+            var latestVersion = templateDao.getLatestTemplate(dslContext, projectId, tid)
+            if (latestVersion.type == TemplateType.CONSTRAINT.name) {
+                latestVersion = templateDao.getLatestTemplate(dslContext, latestVersion.srcTemplateId)
+            }
+
+            TemplateInstances(
+                projectId = projectId,
+                templateId = tid,
+                instances = templatePipelines,
+                latestVersion = TemplateVersion(
+                    version = latestVersion.version,
+                    versionName = latestVersion.versionName,
+                    updateTime = latestVersion.createdTime.timestampmilli(),
+                    creator = latestVersion.creator
+                )
+            )
+        }
+    }
     /**
      * 检查模板是不是合法
      */
