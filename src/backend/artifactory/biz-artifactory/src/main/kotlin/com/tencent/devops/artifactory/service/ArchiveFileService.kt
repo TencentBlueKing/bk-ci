@@ -52,7 +52,7 @@ interface ArchiveFileService {
         filePath: String? = null,
         fileName: String? = null,
         fileType: FileTypeEnum? = null,
-        props: Map<String, String>? = null,
+        props: Map<String, String?>? = null,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?>
 
@@ -66,7 +66,7 @@ interface ArchiveFileService {
         projectCode: String? = null,
         filePath: String? = null,
         fileType: FileTypeEnum? = null,
-        props: Map<String, String>? = null,
+        props: Map<String, String?>? = null,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?>
 
@@ -116,7 +116,7 @@ interface ArchiveFileService {
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        fileType: FileTypeEnum,
+        artifactoryType: ArtifactoryType,
         customFilePath: String?,
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?>
@@ -126,9 +126,9 @@ interface ArchiveFileService {
      */
     fun getFileDownloadUrls(
         filePath: String,
-        fileType: FileTypeEnum,
+        artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum
-    ): Result<GetFileDownloadUrlsResponse>
+    ): Result<GetFileDownloadUrlsResponse?>
 
     /**
      * 根据文件元数据查找文件列表
@@ -161,16 +161,17 @@ interface ArchiveFileService {
      */
     fun generateDestPath(
         fileType: FileTypeEnum,
-        projectCode: String,
+        projectCode: String?,
         customFilePath: String?,
-        pipelineId: String,
-        buildId: String
+        pipelineId: String?,
+        buildId: String?
     ): Result<String>
 
     /**
      * 根据文件路径生成下载连接
      */
     fun transformFileUrl(
+        fileType: FileTypeEnum,
         wildFlag: Boolean,
         pathPattern: String,
         fileChannelType: FileChannelTypeEnum,

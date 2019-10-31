@@ -93,7 +93,7 @@ class FileDao {
         return meta
     }
 
-    fun batchAddFileProps(dslContext: DSLContext, userId: String, fileId: String, props: Map<String, String>) {
+    fun batchAddFileProps(dslContext: DSLContext, userId: String, fileId: String, props: Map<String, String?>) {
         with(TFilePropsInfo.T_FILE_PROPS_INFO) {
             val addStep = props.map {
                 dslContext.insertInto(

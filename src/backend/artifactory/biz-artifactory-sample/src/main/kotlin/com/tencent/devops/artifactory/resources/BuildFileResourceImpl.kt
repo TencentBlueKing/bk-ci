@@ -28,6 +28,7 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.BuildFileResource
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -94,12 +95,17 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
         fileType: FileTypeEnum,
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?> {
+        val artifactoryType = when (fileType) {
+            FileTypeEnum.BK_ARCHIVE -> ArtifactoryType.PIPELINE
+            FileTypeEnum.BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
+            else -> ArtifactoryType.CUSTOM_DIR
+        }
         return archiveFileService.getFileDownloadUrls(
             userId = "",
             projectCode = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
-            fileType = fileType,
+            artifactoryType = artifactoryType,
             customFilePath = customFilePath,
             fileChannelType = FileChannelTypeEnum.BUILD
         )
