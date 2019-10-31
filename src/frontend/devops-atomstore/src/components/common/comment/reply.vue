@@ -65,7 +65,7 @@
             comment () {
                 const data = this.commentData || {}
                 if (this.isReply) {
-                    const preContent = data.replyToUser ? `${this.$t('回复@')}${data.replyToUser}：` : ''
+                    const preContent = data.replyToUser ? `${this.$t('回复')}@${data.replyToUser}：` : ''
                     data.commentContent = preContent + data.replyContent
                     data.commentId = data.replyId
                     data.commenter = data.replyer
