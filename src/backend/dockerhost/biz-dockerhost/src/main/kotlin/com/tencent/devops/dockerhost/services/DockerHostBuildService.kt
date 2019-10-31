@@ -50,6 +50,7 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
+import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
@@ -174,8 +175,8 @@ class DockerHostBuildService(
             val volumeLogs = Volume(dockerHostConfig.volumeLogs)
             val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
 
-            val gateway = System.getProperty("soda.gateway", "gw.open.oa.com")
-            logger.info("gateway is: $gateway")
+            val gateway = DockerEnv.getGatway()
+            logger.info("[${dockerBuildInfo.buildId}]|gateway is: $gateway")
 
             val binds = mutableListOf(
                 Bind(
