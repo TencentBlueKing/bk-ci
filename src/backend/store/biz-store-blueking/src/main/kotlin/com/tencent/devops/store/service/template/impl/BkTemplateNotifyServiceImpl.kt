@@ -24,23 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.store.dao.atom.AtomDao
-import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
-import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.pojo.common.ATOM_RELEASE_AUDIT_PASS_TEMPLATE
-import com.tencent.devops.store.pojo.common.ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE
+import com.tencent.devops.store.dao.template.MarketTemplateDao
+import com.tencent.devops.store.pojo.common.TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE
+import com.tencent.devops.store.pojo.common.TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.AtomNotifyService
+import com.tencent.devops.store.service.template.TemplateNotifyService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,80 +42,51 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class TxAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
-
-    private val logger = LoggerFactory.getLogger(TxAtomNotifyServiceImpl::class.java)
+class BkTemplateNotifyServiceImpl @Autowired constructor() : TemplateNotifyService {
 
     @Autowired
     private lateinit var dslContext: DSLContext
 
     @Autowired
-    private lateinit var atomDao: AtomDao
-
-    @Autowired
-    private lateinit var atomVersionLogDao: MarketAtomVersionLogDao
-
-    @Autowired
-    private lateinit var storeMemberDao: StoreMemberDao
+    private lateinit var templateDao: MarketTemplateDao
 
     @Autowired
     private lateinit var client: Client
 
-    @Value("\${store.atomDetailBaseUrl}")
-    private lateinit var atomDetailBaseUrl: String
+    @Value("\${store.templateDetailBaseUrl}")
+    private lateinit var templateDetailBaseUrl: String
+
+    private val logger = LoggerFactory.getLogger(BkTemplateNotifyServiceImpl::class.java)
 
     /**
-     * 发送插件发布审核结果通知消息
-     * @param atomId 插件ID
+     * 发送模板发布审核结果通知消息
+     * @param templateId 模板ID
      * @param auditType 审核类型
      */
-    override fun sendAtomReleaseAuditNotifyMessage(atomId: String, auditType: AuditTypeEnum) {
-        val atom = atomDao.getPipelineAtom(dslContext, atomId) ?: return
-        // 查出版本日志
-        val atomVersionLog = atomVersionLogDao.getAtomVersion(dslContext, atomId)
-        val atomCode = atom.atomCode
-        val atomName = atom.name
+    override fun sendTemplateReleaseAuditNotifyMessage(templateId: String, auditType: AuditTypeEnum) {
+        val template = templateDao.getTemplate(dslContext, templateId) ?: return
         val titleParams = mapOf(
-            "name" to atomName,
-            "version" to atom.version
+            "name" to template.templateName
         )
-        val releaseType = atomVersionLog.releaseType
         val bodyParams = mapOf(
-            "name" to atomName,
-            "version" to atom.version,
-            "publisher" to atom.publisher,
-            "releaseType" to if (releaseType != null) MessageCodeUtil.getCodeLanMessage(
-                "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt())
-            ) else "",
-            "versionDesc" to (atomVersionLog.content ?: ""),
-            "nameInBody" to atomName,
-            "atomStatusMsg" to atom.atomStatusMsg,
-            "url" to atomDetailBaseUrl + atomCode
+            "name" to template.templateName,
+            "version" to template.version,
+            "publisher" to template.publisher,
+            "nameInBody" to template.templateName,
+            "templateStatusMsg" to template.templateStatusMsg,
+            "url" to templateDetailBaseUrl + template.templateCode
         )
-        val creator = atom.creator
-        val receiver: String = creator
-        val ccs = mutableSetOf(creator)
-        if (auditType == AuditTypeEnum.AUDIT_SUCCESS) {
-            val atomAdminRecords = storeMemberDao.list(
-                dslContext = dslContext,
-                storeCode = atomCode,
-                type = StoreMemberTypeEnum.ADMIN.type.toByte(),
-                storeType = StoreTypeEnum.ATOM.type.toByte()
-            )
-            atomAdminRecords?.map {
-                ccs.add(it.username)
-            }
-        }
+        val receiver: String = template.creator
         val receivers = mutableSetOf(receiver)
         val templateCode = when (auditType) {
             AuditTypeEnum.AUDIT_SUCCESS -> {
-                ATOM_RELEASE_AUDIT_PASS_TEMPLATE
+                TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE
             }
             AuditTypeEnum.AUDIT_REJECT -> {
-                ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE
+                TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE
             }
             else -> {
-                ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE
+                TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE
             }
         }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(

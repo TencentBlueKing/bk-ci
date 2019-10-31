@@ -24,61 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service
+package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.ApproveReq
-import com.tencent.devops.store.pojo.atom.Atom
-import com.tencent.devops.store.pojo.atom.AtomResp
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.model.store.tables.records.TTemplateRecord
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
+import org.jooq.DSLContext
 
-/**
- * 插件OP业务逻辑类
- *
- * since: 2019-10-29
- */
-interface OpAtomService {
+interface TemplateReleaseService {
 
-    /**
-     * op系统获取插件信息
-     */
-    fun getOpPipelineAtoms(
-        atomName: String?,
-        atomType: AtomTypeEnum?,
-        serviceScope: String?,
-        os: String?,
-        category: String?,
-        classifyId: String?,
-        atomStatus: AtomStatusEnum?,
-        sortType: OpSortTypeEnum?,
-        desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<AtomResp<Atom>?>
+    fun addMarketTemplate(userId: String, templateCode: String, marketTemplateRelRequest: MarketTemplateRelRequest): Result<Boolean>
 
-    /**
-     * 根据id获取插件信息
-     */
-    fun getPipelineAtom(id: String): Result<Atom?>
+    fun updateMarketTemplate(userId: String, marketTemplateUpdateRequest: MarketTemplateUpdateRequest): Result<String?>
 
-    /**
-     * 根据插件代码和版本号获取插件信息
-     */
-    fun getPipelineAtom(atomCode: String, version: String): Result<Atom?>
-
-    /**
-     * 把项目迁移到指定项目组下
-     */
-    fun moveGitProjectToGroup(
+    fun handleTemplateRelease(
+        context: DSLContext,
         userId: String,
-        groupCode: String?,
-        atomCode: String
-    ): Result<Boolean>
+        approveResult: String,
+        template: TTemplateRecord,
+        templateStatus: Byte,
+        templateStatusMsg: String
+    )
 
     /**
-     * 审核插件
+     * 获取发布进度
      */
-    fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean>
+    fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo>
+
+    /**
+     * 取消发布
+     */
+    fun cancelRelease(userId: String, templateId: String): Result<Boolean>
+
+    /**
+     * 下架模板
+     */
+    fun offlineTemplate(userId: String, templateCode: String, version: String?, reason: String?): Result<Boolean>
 }

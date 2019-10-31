@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service.template
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
@@ -79,6 +81,7 @@ import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PTemplateDao
+import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import com.tencent.devops.process.util.DateTimeUtils
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -105,6 +108,7 @@ class TemplateService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
+    private val pipelineTemplateDao: PipelineTemplateDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamService,
@@ -1271,48 +1275,81 @@ class TemplateService @Autowired constructor(
         }.toMap()
     }
 
-    fun addMarketTemplate(
-        userId: String,
-        addMarketTemplateRequest: AddMarketTemplateRequest
-    ): com.tencent.devops.common.api.pojo.Result<Boolean> {
+    fun addMarketTemplate(userId: String, addMarketTemplateRequest: AddMarketTemplateRequest): com.tencent.devops.common.api.pojo.Result<Map<String, String>> {
         logger.info("the userId is:$userId,addMarketTemplateRequest is:$addMarketTemplateRequest")
         val templateCode = addMarketTemplateRequest.templateCode
+        val publicFlag = addMarketTemplateRequest.publicFlag // 是否为公共模板
         val category = JsonUtil.toJson(addMarketTemplateRequest.categoryCodeList ?: listOf<String>())
         val projectCodeList = addMarketTemplateRequest.projectCodeList
-
-        val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-        logger.info("the customizeTemplateRecord is:$customizeTemplateRecord")
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            projectCodeList.forEach {
-                val templateId = UUIDUtil.generate()
-                templateDao.createTemplate(
-                    dslContext = context,
-                    projectId = it,
-                    templateId = templateId,
-                    templateName = addMarketTemplateRequest.templateName,
-                    versionName = customizeTemplateRecord.versionName,
-                    userId = userId,
-                    template = null,
-                    type = TemplateType.CONSTRAINT.name,
-                    category = category,
-                    logoUrl = addMarketTemplateRequest.logoUrl,
-                    srcTemplateId = templateCode,
-                    storeFlag = true,
-                    weight = 0
-                )
-                pipelineSettingDao.insertNewSetting(
-                    context,
-                    it,
-                    templateId,
-                    addMarketTemplateRequest.templateName,
-                    true
-                )
+        val projectTemplateMap = mutableMapOf<String, String>()
+        if (publicFlag) {
+            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toInt())
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode), mapOf())
+            logger.info("the publicTemplateRecord is:$publicTemplateRecord")
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                projectCodeList.forEach {
+                    val templateId = UUIDUtil.generate()
+                    templateDao.createTemplate(
+                        dslContext = context,
+                        projectId = it,
+                        templateId = templateId,
+                        templateName = addMarketTemplateRequest.templateName,
+                        versionName = "init",
+                        userId = userId,
+                        template = null,
+                        type = TemplateType.CONSTRAINT.name,
+                        category = category,
+                        logoUrl = addMarketTemplateRequest.logoUrl,
+                        srcTemplateId = templateCode,
+                        storeFlag = true,
+                        weight = 0
+                    )
+                    pipelineSettingDao.insertNewSetting(
+                        dslContext = context,
+                        projectId = it,
+                        pipelineId = templateId,
+                        pipelineName = addMarketTemplateRequest.templateName,
+                        isTemplate = true
+                    )
+                    projectTemplateMap[it] = templateId
+                }
+            }
+        } else {
+            val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
+            logger.info("the customizeTemplateRecord is:$customizeTemplateRecord")
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                projectCodeList.forEach {
+                    val templateId = UUIDUtil.generate()
+                    templateDao.createTemplate(
+                        dslContext = context,
+                        projectId = it,
+                        templateId = templateId,
+                        templateName = addMarketTemplateRequest.templateName,
+                        versionName = customizeTemplateRecord.versionName,
+                        userId = userId,
+                        template = null,
+                        type = TemplateType.CONSTRAINT.name,
+                        category = category,
+                        logoUrl = addMarketTemplateRequest.logoUrl,
+                        srcTemplateId = templateCode,
+                        storeFlag = true,
+                        weight = 0
+                    )
+                    pipelineSettingDao.insertNewSetting(
+                        dslContext = context,
+                        projectId = it,
+                        pipelineId = templateId,
+                        pipelineName = addMarketTemplateRequest.templateName,
+                        isTemplate = true
+                    )
+                    projectTemplateMap[it] = templateId
+                }
             }
         }
-        return com.tencent.devops.common.api.pojo.Result(true)
+        return com.tencent.devops.common.api.pojo.Result(projectTemplateMap)
     }
-
     fun updateMarketTemplateReference(
         userId: String,
         updateMarketTemplateRequest: AddMarketTemplateRequest

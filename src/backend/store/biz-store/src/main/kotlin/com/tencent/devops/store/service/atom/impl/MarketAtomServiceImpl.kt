@@ -430,6 +430,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             Result(data = null)
         } else {
             val atomCode = record["atomCode"] as String
+            // 判断用户是否有查询权限
+            val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
+            if (!queryFlag) {
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            }
             val defaultFlag = record["defaultFlag"] as Boolean
             val htmlTemplateVersion = record["htmlTemplateVersion"] as String
             val projectCode =

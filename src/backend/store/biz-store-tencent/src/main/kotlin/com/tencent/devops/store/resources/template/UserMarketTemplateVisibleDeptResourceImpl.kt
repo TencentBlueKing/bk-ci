@@ -24,25 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.container
+package com.tencent.devops.store.resources.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpPCGProjectResource
-import com.tencent.devops.store.service.container.PCGImageService
+import com.tencent.devops.store.api.template.UserMarketTemplateVisibleDeptResource
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.template.TemplateVisibleDeptReq
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpPCGProjectResourceImpl @Autowired constructor(private val pcgImageService: PCGImageService) :
-    OpPCGProjectResource {
+class UserMarketTemplateVisibleDeptResourceImpl @Autowired constructor(
+    private val storeVisibleDeptService: StoreVisibleDeptService,
+    private val templateVisibleDeptService: TemplateVisibleDeptService
+) : UserMarketTemplateVisibleDeptResource {
 
-    override fun add(projectId: String): Result<Boolean> {
-        pcgImageService.enableProject(projectId)
-        return Result(true)
+    override fun deleteVisibleDept(userId: String, templateCode: String, deptIds: String): Result<Boolean> {
+        return storeVisibleDeptService.deleteVisibleDept(userId, templateCode, deptIds, StoreTypeEnum.TEMPLATE)
     }
 
-    override fun delete(projectId: String): Result<Boolean> {
-        pcgImageService.disableProject(projectId)
-        return Result(true)
+    override fun addVisibleDept(userId: String, templateCode: String, templateVisibleDeptReq: TemplateVisibleDeptReq): Result<Boolean> {
+        return templateVisibleDeptService.addVisibleDept(userId, templateCode, templateVisibleDeptReq.deptInfos)
+    }
+
+    override fun getVisibleDept(templateCode: String): Result<StoreVisibleDeptResp?> {
+        return storeVisibleDeptService.getVisibleDept(templateCode, StoreTypeEnum.TEMPLATE, null)
     }
 }

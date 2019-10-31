@@ -24,14 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.api.template
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomOfflineReq
-import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
-import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -46,86 +45,76 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_ATOM"], description = "插件市场-插件")
-@Path("/user/market/")
+@Api(tags = ["USER_MARKET_TEMPLATE"], description = "模板")
+@Path("/user/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserAtomReleaseResource {
+interface UserTemplateReleaseResource {
 
-    @ApiOperation("插件工作台-新增插件")
+    @ApiOperation("关联模板")
     @POST
-    @Path("/desk/atom/")
-    fun addMarketAtom(
+    @Path("/templates/{templateCode}/store/rel")
+    fun addMarketTemplate(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件市场工作台-新增插件请求报文体", required = true)
-        marketAtomCreateRequest: MarketAtomCreateRequest
+        @ApiParam("模板代码", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @ApiParam("关联模板请求报文体", required = true)
+        marketTemplateRelRequest: MarketTemplateRelRequest
     ): Result<Boolean>
 
-    @ApiOperation("插件工作台-升级插件")
+    @ApiOperation("上架模板")
     @PUT
-    @Path("/desk/atom/")
-    fun updateMarketAtom(
+    @Path("/desk/template/release")
+    fun updateMarketTemplate(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目代码", required = true)
-        @QueryParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件市场工作台-新增插件请求报文体", required = true)
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
+        @ApiParam("上架模板请求报文体", required = true)
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ): Result<String?>
 
-    @ApiOperation("根据插件版本ID获取插件版本进度")
+    @ApiOperation("根据模板版本ID获取模板版本进度")
     @GET
-    @Path("/desk/atom/release/process/{atomId}")
+    @Path("/desk/template/release/process/{templateId}")
     fun getProcessInfo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("atomId", required = true)
-        @PathParam("atomId")
-        atomId: String
+        @ApiParam("templateId", required = true)
+        @PathParam("templateId")
+        templateId: String
     ): Result<StoreProcessInfo>
 
     @ApiOperation("取消发布")
-    @PathParam("atomId")
     @PUT
-    @Path("/desk/atom/release/cancel/{atomId}")
+    @Path("/desk/template/release/cancel/templateIds/{templateId}")
     fun cancelRelease(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("atomId", required = true)
-        @PathParam("atomId")
-        atomId: String
+        @ApiParam("templateId", required = true)
+        @PathParam("templateId")
+        templateId: String
     ): Result<Boolean>
 
-    @ApiOperation("确认通过测试")
-    @PathParam("atomId")
+    @ApiOperation("下架模板")
     @PUT
-    @Path("/desk/atom/release/passTest/{atomId}")
-    fun passTest(
+    @Path("/desk/template/offline/templateCodes/{templateCode}/versions")
+    fun offlineTemplate(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("atomId", required = true)
-        @PathParam("atomId")
-        atomId: String
-    ): Result<Boolean>
-
-    @ApiOperation("下架插件")
-    @PUT
-    @Path("/desk/atom/offline/{atomCode}")
-    fun offlineAtom(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("atomCode", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("下架请求报文")
-        atomOfflineReq: AtomOfflineReq
+        @ApiParam("模版代码", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @ApiParam("版本号", required = false)
+        @QueryParam("version")
+        version: String?,
+        @ApiParam("原因", required = false)
+        @QueryParam("reason")
+        reason: String?
     ): Result<Boolean>
 }
