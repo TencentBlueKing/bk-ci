@@ -36,11 +36,17 @@ enum class ChannelCode {
     @ApiModelProperty("蓝鲸流水线插件市场")
     AM,
     @ApiModelProperty("蓝鲸代码检查平台")
-    CODECC;
+    CODECC,
+    @ApiModelProperty("GCloud")
+    GCLOUD,
+    @ApiModelProperty("工蜂")
+    GIT,
+    @ApiModelProperty("开源扫描")
+    GONGFENGSCAN;
 
     companion object {
         // Only BS need to check the authentication for now
         fun isNeedAuth(channelCode: ChannelCode) =
-            channelCode == BS
+                channelCode == BS
     }
 }

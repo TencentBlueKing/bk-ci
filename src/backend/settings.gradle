@@ -258,6 +258,12 @@ include ":experience:biz-experience-tencent"
 include ":experience:boot-experience-tencent"
 include ":experience:model-experience-tencent"
 
+include ":gitci"
+include ":gitci:api-gitci-tencent"
+include ":gitci:biz-gitci-tencent"
+include ":gitci:boot-gitci-tencent"
+include ":gitci:model-gitci-tencent"
+
 include ":support"
 include ":support:api-support-tencent"
 include ":support:biz-support-tencent"

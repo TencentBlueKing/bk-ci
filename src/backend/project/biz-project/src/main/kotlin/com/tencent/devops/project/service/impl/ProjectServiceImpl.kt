@@ -73,4 +73,7 @@ class ProjectServiceImpl @Autowired constructor(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    override fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }
