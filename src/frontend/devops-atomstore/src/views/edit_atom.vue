@@ -242,7 +242,7 @@
                 atomName: 'landun-atom-codecc',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
+                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
                 showContent: false,
                 isUploading: false,
                 initOs: [],
