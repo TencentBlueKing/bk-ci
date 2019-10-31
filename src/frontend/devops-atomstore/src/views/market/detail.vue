@@ -13,6 +13,7 @@
         </h3>
 
         <main class="store-main" v-show="!isLoading">
+            <ide v-if="type === 'ide'" :detail="detail" />
             <atom v-if="type === 'atom'" :detail="detail" />
             <template-info v-if="type === 'template'" :detail="detail" />
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
@@ -72,6 +73,7 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
+    import ide from '../../components/common/detail-info/ide'
     import atom from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
 
@@ -81,6 +83,7 @@
             commentRate,
             commentDialog,
             animatedInteger,
+            ide,
             atom,
             templateInfo
         },
@@ -92,6 +95,9 @@
                 switch (val) {
                     case 'template':
                         res = bkLocale.i18n('流水线模板')
+                        break
+                    case 'ide':
+                        res = bkLocale.i18n('IDE插件')
                         break
                     default:
                         res = bkLocale.i18n('流水线插件')
@@ -115,11 +121,13 @@
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData)
+                        template: (postData) => this.requestTemplateComments(postData),
+                        ide: (postData) => this.requestIDEComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode)
+                        template: () => this.requestTemplateScoreDetail(this.detailCode),
+                        ide: () => this.requestIDEScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -151,6 +159,9 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
+                'requestIDE',
+                'requestIDEComments',
+                'requestIDEScoreDetail',
                 'getUserApprovalInfo'
             ]),
 
@@ -180,7 +191,8 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
-                    template: () => this.getTemplateDetail()
+                    template: () => this.getTemplateDetail(),
+                    ide: () => this.getIDEDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -215,6 +227,17 @@
                     this.detailId = templateDetail.templateId
                     this.detail.name = templateDetail.templateName
                     this.commentInfo = templateDetail.userCommentInfo || {}
+                })
+            },
+
+            getIDEDetail () {
+                const atomCode = this.detailCode
+
+                return this.requestIDE({ atomCode }).then((res) => {
+                    this.detail = res || {}
+                    this.detailId = res.atomId
+                    this.detail.name = res.atomName
+                    this.commentInfo = res.userCommentInfo || {}
                 })
             },
 

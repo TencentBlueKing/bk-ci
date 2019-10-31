@@ -31,20 +31,20 @@
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('操作系统：') }} </div>
+                                <div class="info-label"> {{ $t('适用Job类型') }}： </div>
                                 <!-- <div class="info-value" v-if="atomDetail.os">{{ atomOs(atomDetail.os) }}</div> -->
-                                <div class="info-value" v-if="atomDetail.os">
-                                    <span v-if="atomDetail.jobType === 'AGENT'">
+                                <div class="info-value" v-if="atomDetail.os">{{ jobTypeMap[atomDetail.jobType] }}
+                                    <span v-if="atomDetail.jobType === 'AGENT'">（
                                         <i class="bk-icon icon-linux-view" v-if="atomDetail.os.indexOf('LINUX') !== -1"></i>
                                         <i class="bk-icon icon-windows" v-if="atomDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                        <i class="bk-icon icon-macos" v-if="atomDetail.os.indexOf('MACOS') !== -1"></i>
+                                        <i class="bk-icon icon-macos" v-if="atomDetail.os.indexOf('MACOS') !== -1"></i>）
                                     </span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('发布包：') }} </div>
-                            <div class="info-value">{{ atomDetail.pkgName }}</div>
+                            <div class="detail-form-item is-open">
+                                <label class="info-label"> {{ $t('是否开源') }}： </label>
+                                <div class="info-value">{{ atomDetail.visibilityLevel | levelFilter }}</div>
+                            </div>
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">

@@ -46,11 +46,13 @@
                 funObj: {
                     expandReplys: {
                         atom: (id) => this.requestAtomReplyList(id),
-                        template: (id) => this.requestTemplateReplyList(id)
+                        template: (id) => this.requestTemplateReplyList(id),
+                        ide: (id) => this.requestIDEReplyList(id)
                     },
                     priase: {
                         atom: (id) => this.requestAtomPraiseComment(id),
-                        template: (id) => this.requestTemplatePraiseComment(id)
+                        template: (id) => this.requestTemplatePraiseComment(id),
+                        ide: (id) => this.requestIDEPraiseComment(id)
                     }
                 },
                 hadShowMore: false
@@ -81,6 +83,8 @@
                 'requestAtomPraiseComment',
                 'requestTemplatePraiseComment',
                 'requestTemplateReplyList',
+                'requestIDEPraiseComment',
+                'requestIDEReplyList',
                 'clearCommentReply'
             ]),
 
