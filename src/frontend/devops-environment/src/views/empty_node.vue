@@ -6,7 +6,24 @@
             <bk-button theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
         </div>
         <div class="create-node-row" v-else>
-            <bk-button theme="primary" class="import-node-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+            <bk-button theme="primary" class="create-node-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
+            <bk-dropdown-menu :align="'right'"
+                @show="dropdownShow"
+                @hide="dropdownHide"
+                ref="dropdown">
+                <bk-button slot="dropdown-trigger">
+                    <span>{{ $t('environment.import') }}</span>
+                    <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                </bk-button>
+                <ul class="bk-dropdown-list" slot="dropdown-content">
+                    <li>
+                        <a href="javascript:;" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</a>
+                    </li>
+                    <li>
+                        <a href="javascript:;" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</a>
+                    </li>
+                </ul>
+            </bk-dropdown-menu>
         </div>
     </div>
 </template>
@@ -68,10 +85,6 @@
 
             .create-env-btn {
                 margin-left: 4px;
-            }
-
-            .import-node-btn {
-                width: 100px;
             }
         }
     }

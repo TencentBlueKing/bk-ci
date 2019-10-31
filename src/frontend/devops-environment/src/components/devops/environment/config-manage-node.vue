@@ -14,10 +14,23 @@
                         {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>{{ $t('environment.nodes') }}
                     </span>
                     <span class="selected-node-prompt">
-                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>{{ $t('environment.nodes') }}
+                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectedNodes }} </span>{{ $t('environment.nodes') }}
                     </span>
+                    <bk-popover placement="right">
+                        <i class="bk-icon icon-info-circle"></i>
+                        <template slot="content">
+                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ $t('environment.cmdbNodeDesc') }}</p>
+                        </template>
+                    </bk-popover>
                 </div>
                 <div class="search-input-row">
+                    <bk-select v-model="operator" class="operator-select" :clearable="false" @change="changeOperator">
+                        <bk-option v-for="(option, index) in operatorList"
+                            :key="index"
+                            :id="option.id"
+                            :name="option.name">
+                        </bk-option>
+                    </bk-select>
                     <div class="biz-search-input">
                         <div class="biz-ip-searcher-wrapper">
                             <div class="biz-searcher" @click="focusSearch" ref="bizSearcher">
@@ -48,6 +61,7 @@
                 </div>
             </div>
             <div class="node-table">
+
                 <div class="node-table-message" v-if="!selectHandlercConf.searchEmpty && rowList.length">
                     <div class="table-node-head">
                         <bk-checkbox
@@ -58,12 +72,9 @@
                         ></bk-checkbox>
                         <div class="table-node-item node-item-ip">IP</div>
                         <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
-                        <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
-                        <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
-                        <div class="table-node-item node-item-agstatus">
-                            <span v-if="hasConstruct">{{ $t('environment.nodeInfo.gateway') }}</span>
-                            <span v-else>{{ $t('environment.nodeInfo.gseAgentStatus') }}</span>
-                        </div>
+                        <div class="table-node-item node-item-operator">{{ $t('environment.operator') }}</div>
+                        <div class="table-node-item node-item-operator">{{ $t('environment.bkOperator') }}</div>
+                        <div class="table-node-item node-item-agstatus">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>
                     </div>
                     <div class="table-node-body">
                         <div class="table-node-row" v-for="(col, index) of rowList" :key="index" v-if="col.isDisplay">
@@ -73,86 +84,63 @@
                                     :false-value="false"
                                     :disabled="col.isEixtEnvNode"
                                     v-model="col.isChecked"
+                                    @change="toggleNodeSelect"
                                 ></bk-checkbox>
                             </div>
                             <div class="table-node-item node-item-ip">
                                 <span class="node-ip">{{ col.ip }}</span>
                             </div>
-                            <div class="table-node-item node-item-name" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
+                            <div class="table-node-item node-item-name">
                                 <span class="node-name">{{ col.name }}</span>
                             </div>
-                            <div class="table-node-item node-item-type" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
-                                <div v-if="(col.nodeType === 'CC' || col.nodeType === 'CMDB') && ((col.nodeType === 'CC' && col.createdUser !== col.operator && col.createdUser !== col.bakOperator)
-                                    || (col.nodeType === 'CMDB' && col.createdUser !== col.operator && col.bakOperator.split(';').indexOf(col.createdUser) === -1))">
-                                    <div class="edit-operator" v-if="curUserInfo.username === col.operator || curUserInfo.username === col.bakOperator">
-                                        <i class="bk-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(col.nodeHashId, 1)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
-                                    </div>
-                                    <div class="prompt-operator" v-else>
-                                        <bk-popover placement="top">
-                                            <span><i class="bk-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
-                                            <template slot="content">
-                                                <p style="text-align: left;">{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ col.createdUser }}</span></p>
-                                                <p style="text-align: left;">{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ col.operator }}</span><span v-if="col.nodeType === 'CC'">/{{ col.bakOperator }}</span></p>
-                                                <p style="text-align: left;">{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                            </template>
-                                        </bk-popover>
-                                    </div>
-                                </div>
-                                <div v-else>
-                                    <span class="node-name">{{ $t('environment.nodeTypeMap')[col.nodeType] }}</span>
-                                    <span>({{ col.createdUser }})</span>
-                                </div>
+                            <div class="table-node-item node-item-operator">
+                                <span class="node-operator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.operator">{{ col.operator }}</span>
                             </div>
-                            <div class="table-node-item node-item-status">
-                                <span class="node-status" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">{{ $t('environment.nodeStatusMap')[col.nodeStatus] }}</span>
+                            <div class="table-node-item node-item-operator">
+                                <P class="node-operator node-bkOperator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.bakOperator">{{ col.bakOperator }}</P>
                             </div>
-                            <div class="table-node-item node-item-agstatus" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
-                                <span v-if="['THIRDPARTY','DEVCLOUD'].includes(col.nodeType)">{{ col.gateway }}</span>
-                                <span v-else>
-                                    <span class="node-agstatus normal-status-node" v-if="col.nodeType === 'BCSVM'"
-                                        :class="{
-                                            'refresh-status-node': !col.agentStatus,
-                                            'over-content': selectHandlercConf.curDisplayCount > 6
-                                        }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.refreshing') }}
-                                    </span>
-                                    <span class="node-agstatus normal-status-node" v-else
-                                        :class="{
-                                            'abnormal-status-node': !col.agentStatus,
-                                            'over-content': selectHandlercConf.curDisplayCount > 6
-                                        }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
-                                    </span>
+                            <div class="table-node-item node-item-agstatus">
+                                <span class="node-agstatus normal-status-node"
+                                    :class="{
+                                        'abnormal-status-node': !col.agentStatus,
+                                        'over-content': selectHandlercConf.curDisplayCount > 10
+                                    }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
-                    <span>{{ $t('environment.noData') }}</span>
+                    <span>{{ $t('environment.nodeEmptyOpertaor') }}</span>
                 </div>
             </div>
+            <full-paging :show-limit="false"
+                :paging-config="pagingConfig"
+                :page-count-config="pageCountConfig"
+                @page-changed="pageChanged"
+            ></full-paging>
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" @click="confirmFn" :disabled="nodeSelectConf.unselected">{{ nodeSelectConf.importText }}</bk-button>
-                <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
+                <bk-button theme="primary" @click="confirmFn" :disabled="!hasSelected || loading.isLoading">{{ importText }}</bk-button>
+                <bk-button theme="default" @click="cancelFn" :disabled="loading.isLoading">{{ $t('environment.cancel') }}</bk-button>
             </div>
         </div>
     </bk-dialog>
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
+    import fullPaging from '@/components/common/full-paging'
+
     export default {
+        components: { fullPaging },
         props: {
             nodeSelectConf: Object,
-            loading: Object,
             curUserInfo: Object,
-            selectHandlercConf: Object,
-            rowList: Array,
-            confirmFn: Function,
-            toggleAllSelect: Function,
-            cancelFn: Function,
             changeCreatedUser: Function,
             query: Function,
+            nodeList: Array,
             searchInfo: {
                 type: Object,
                 default: {
@@ -165,31 +153,107 @@
             return {
                 isSearchFooter: false,
                 inputValue: '',
-                searchKeyList: []
+                operator: 'operator',
+                importText: this.$t('environment.import'),
+                searchKeyList: [],
+                rowList: [],
+                operatorList: [
+                    { id: 'operator', name: this.$t('environment.mainOperator') },
+                    { id: 'bakOperator', name: this.$t('environment.bkOperator') }
+                ],
+                loading: {
+                    isLoading: false,
+                    title: ''
+                },
+                pageCountConfig: {
+                    totalCount: 0,
+                    perPageCountSelected: 100
+                },
+                pagingConfig: {
+                    totalPage: 1,
+                    curPage: 1
+                },
+                selectHandlercConf: {
+                    curTotalCount: 0,
+                    curDisplayCount: 0,
+                    selectedNodeCount: 0,
+                    allNodeSelected: false,
+                    searchEmpty: false
+                }
             }
         },
         computed: {
+            ...mapGetters('environment', [
+                'getNodeTypeMap',
+                'getNodeStatusMap'
+            ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
             // 动态计算输入长度
             inputStyle () {
                 const tag = this.inputValue
                 const charLen = this.getCharLength(tag) + 1
                 return { width: charLen * 8 + 'px' }
             },
-            hasConstruct () {
-                return this.rowList.some(row => {
-                    return ['THIRDPARTY', 'DEVCLOUD'].includes(row.nodeType) && row.isDisplay
-                })
+            hasSelected () {
+                return this.rowList.some(node => node.isChecked && !node.isEixtEnvNode)
+            },
+            selectedNodes () {
+                const result = this.rowList.filter(node => node.isChecked && !node.isEixtEnvNode)
+                return result.length || 0
             }
         },
         watch: {
             'nodeSelectConf.isShow' (val) {
                 if (!val) {
                     this.inputValue = ''
+                    this.operator = 'operator'
+                    this.selectHandlercConf.allNodeSelected = false
                     this.searchKeyList.splice(0, this.searchKeyList.length)
+                } else {
+                    this.pagingConfig.curPage = 1
+                    this.getDate(this.pagingConfig.curPage)
                 }
             }
         },
         methods: {
+            async getDate (page, pageSize = 100) {
+                this.loading.isLoading = true
+
+                try {
+                    const params = {
+                        bakOperator: this.operator === 'bakOperator',
+                        ipList: this.searchKeyList,
+                        page,
+                        pageSize
+                    }
+                    const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
+
+                    this.rowList.splice(0, this.rowList.length)
+                    res.records && res.records.map(item => {
+                        this.rowList.push({
+                            ...item,
+                            isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip),
+                            isDisplay: true,
+                            isEixtEnvNode: this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip)
+                        })
+                    })
+
+                    this.selectHandlercConf.curTotalCount = res.count
+                    this.pageCountConfig.totalCount = res.count
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                } finally {
+                    this.loading.isLoading = false
+                }
+            },
             // 获取字符长度，汉字两个字节
             getCharLength (str) {
                 const len = str.length
@@ -201,6 +265,15 @@
                     bitLen++
                 }
                 return bitLen
+            },
+            changeOperator () {
+                this.selectHandlercConf.allNodeSelected = false
+                this.pagingConfig.curPage = 1
+                this.getDate(this.pagingConfig.curPage)
+            },
+            pageChanged (page) {
+                this.selectHandlercConf.allNodeSelected = false
+                this.getDate(page)
             },
             handleFocus () {
                 this.isSearchFooter = !this.isSearchFooter
@@ -250,14 +323,15 @@
             },
             searchNode () {
                 this.selectedKey(this.inputValue)
-                this.query(this.searchKeyList)
+                this.selectHandlercConf.allNodeSelected = false
+                this.pagingConfig.curPage = 1
+                this.getDate(this.pagingConfig.curPage)
                 this.isSearchFooter = false
             },
             keyupHandler (event) {
                 switch (event.code) {
                     case 'Space':
                         this.selectedKey(this.inputValue)
-
                         break
                     case 'Enter':
                     case 'NumpadEnter':
@@ -274,6 +348,55 @@
             },
             deleteKey (index) {
                 this.searchKeyList.splice(index, 1)
+            },
+            toggleNodeSelect () {
+                const allSelected = this.rowList.every(node => node.isChecked)
+                const allUnSelected = this.rowList.every(node => !node.isChecked || (node.isChecked && node.isEixtEnvNode))
+                if (allSelected) {
+                    this.selectHandlercConf.allNodeSelected = true
+                } else if (allUnSelected) {
+                    this.selectHandlercConf.allNodeSelected = false
+                }
+            },
+            toggleAllSelect () {
+                this.rowList = this.rowList.map(item => {
+                    return {
+                        ...item,
+                        isChecked: item.isEixtEnvNode ? item.isChecked : this.selectHandlercConf.allNodeSelected
+                    }
+                })
+            },
+            async confirmFn () {
+                const selectNodeId = []
+                this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
+                let message, theme
+
+                this.loading.isLoading = true
+                this.importText = `${this.$t('environment.nodeInfo.importing')}...`
+
+                try {
+                    await this.$store.dispatch('environment/importCmdbNode', {
+                        projectId: this.projectId,
+                        params: selectNodeId
+                    })
+
+                    message = this.$t('environment.successfullyImported')
+                    theme = 'success'
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                    this.loading.isLoading = false
+                    this.$emit('confirm-fn')
+                    this.importText = this.$t('environment.import')
+                }
+            },
+            cancelFn () {
+                this.$emit('cancel-fn')
             }
         }
     }
@@ -328,6 +451,13 @@
                 position: absolute;
                 top: 10px;
                 right: 20px;
+            }
+
+            .operator-select {
+                float: left;
+                width: 120px;
+                margin-top: 5px;
+                margin-right: 8px;
             }
 
             .search-tool-row {
@@ -464,7 +594,7 @@
         }
 
         .node-table {
-            height: 294px;
+            height: 450px;
             margin: 0;
             border: none;
         }
@@ -476,7 +606,7 @@
         }
 
         .table-node-body {
-            height: 252px;
+            height: 425px;
             overflow: auto;
         }
 
