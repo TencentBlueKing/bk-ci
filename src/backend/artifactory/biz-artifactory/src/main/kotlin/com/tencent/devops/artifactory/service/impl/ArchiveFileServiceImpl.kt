@@ -45,8 +45,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.FileDigestUtils
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.config.CommonConfig
@@ -183,13 +183,13 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             val saveFilename = "${UUIDUtil.generate()}.$fileSuffix" // 避免文件被他人覆盖，文件名用唯一数替换
             "${getBasePath()}$fileSeparator${getCommonFileFolderName()}$fileSeparator$fileSuffix$fileSeparator$saveFilename"
         } else {
-            //"${getBasePath()}$fileSeparator$filePath"
+            // "${getBasePath()}$fileSeparator$filePath"
             "$filePath"
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
         val shaContent = ShaUtils.sha1(file.readBytes())
-        var fileProps:Map<String,String?> = props ?: mapOf()
+        var fileProps: Map<String, String?> = props ?: mapOf()
         fileProps = fileProps.plus("shaContent" to shaContent)
         val path = destPath.substring(getBasePath().length + 1)
         val fileId = UUIDUtil.generate()
@@ -267,9 +267,12 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         }
         val totalPages = PageUtil.calTotalPage(pageSize, fileCount)
         return Result(
-            Page(
-                count = fileCount, page = page ?: 1, pageSize = pageSize
-                ?: -1, totalPages = totalPages, records = fileInfoList
+            data = Page(
+                count = fileCount,
+                page = page ?: 1,
+                pageSize = pageSize ?: -1,
+                totalPages = totalPages,
+                records = fileInfoList
             )
         )
     }
@@ -301,7 +304,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             return result
         }
         val destPath = result.data + fileSeparator + disposition.fileName
-        val props:Map<String, String?>? = mapOf("pipelineId" to pipelineId, "buildId" to buildId)
+        val props: Map<String, String?>? = mapOf("pipelineId" to pipelineId, "buildId" to buildId)
         return uploadFile(
             userId = userId,
             projectCode = projectCode,
@@ -325,7 +328,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         if (!projectCode.isNullOrBlank()) {
             destPathBuilder.append(projectCode).append(fileSeparator)
         }
-           // .append(projectCode).append(fileSeparator)
+
         if (FileTypeEnum.BK_CUSTOM == fileType) {
             if (customFilePath == null) {
                 return MessageCodeUtil.generateResponseDataObject(
