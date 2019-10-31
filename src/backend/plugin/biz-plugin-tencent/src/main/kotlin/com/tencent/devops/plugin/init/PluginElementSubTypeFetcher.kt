@@ -77,9 +77,7 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             SpmDistributionElement.classType to SpmDistributionElement::class.java,
             ItestProcessCreateElement.classType to ItestProcessCreateElement::class.java,
             ItestReviewCreateElement.classType to ItestReviewCreateElement::class.java,
-            ItestTaskCreateElement.classType to ItestTaskCreateElement::class.java,
-            QualityGateInElement.classType to QualityGateInElement::class.java,
-            QualityGateOutElement.classType to QualityGateOutElement::class.java
+            ItestTaskCreateElement.classType to ItestTaskCreateElement::class.java
         )
     }
 }

@@ -97,7 +97,10 @@ abstract class Element(
     open var startEpoch: Long? = null,
     open var version: String = "1.*",
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
-    open var additionalOptions: ElementAdditionalOptions? = null
+    open var additionalOptions: ElementAdditionalOptions? = null,
+    open var errorType: String? = null,
+    open var errorCode: Int? = null,
+    open var errorMsg: String? = null
 ) {
 
     open fun getAtomCode() = getClassType()

@@ -112,7 +112,7 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
-const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 120
+const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 1
 /**
  * 流水线设置-最大排队时间-最小值 单位:分钟
  */
