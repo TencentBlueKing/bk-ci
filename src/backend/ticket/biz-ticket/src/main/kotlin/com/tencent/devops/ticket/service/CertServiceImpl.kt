@@ -520,14 +520,15 @@ class CertServiceImpl @Autowired constructor(
         disposition: FormDataContentDisposition?
     ) {
         certPermissionService.validatePermission(
-            userId,
-            projectId,
-            certId,
-            AuthPermission.EDIT,
-            "用户($userId)在工程($projectId)下没有证书编辑权限"
+            userId = userId,
+            projectId = projectId,
+            resourceCode = certId,
+            authPermission = AuthPermission.EDIT,
+            message = "用户($userId)在工程($projectId)下没有证书编辑权限"
         )
+
         val certRecord = certDao.getOrNull(dslContext, projectId, certId)
-        certRecord ?: throw OperationException("证书${certId}不存在")
+            ?: throw OperationException("证书${certId}不存在")
 
         certPermissionService.validatePermission(
             userId = userId,
@@ -1080,7 +1081,11 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    override fun queryAndroidByProject(projectId: String, certId: String, publicKey: String): CertAndroidWithCredential {
+    override fun queryAndroidByProject(
+        projectId: String,
+        certId: String,
+        publicKey: String
+    ): CertAndroidWithCredential {
         val certRecord = certDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)

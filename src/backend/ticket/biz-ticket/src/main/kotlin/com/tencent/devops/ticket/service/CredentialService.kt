@@ -78,4 +78,8 @@ interface CredentialService {
     fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo
 
     fun serviceGet(projectId: String, credentialId: String): Credential
+    /**
+     * 修改凭证的服务接口
+     */
+    fun serviceEdit(projectId: String, credentialId: String, credential: CredentialUpdate)
 }

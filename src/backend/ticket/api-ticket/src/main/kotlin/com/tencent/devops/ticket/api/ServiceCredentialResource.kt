@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.enums.Permission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -42,6 +43,7 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -135,4 +137,18 @@ interface ServiceCredentialResource {
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<Credential>>
+
+    @ApiOperation("编辑凭据")
+    @Path("/projects/{projectId}/credentials/{credentialId}/")
+    @PUT
+    fun edit(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String,
+        @ApiParam("凭据", required = true)
+        credential: CredentialUpdate
+    ): Result<Boolean>
 }

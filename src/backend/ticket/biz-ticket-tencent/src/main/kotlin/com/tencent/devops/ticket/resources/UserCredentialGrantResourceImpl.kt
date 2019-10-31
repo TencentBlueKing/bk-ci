@@ -6,12 +6,12 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.UserCredentialGrantResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
-import com.tencent.devops.ticket.service.CredentialServiceImpl
+import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserCredentialGrantResourceImpl @Autowired constructor(
-    private val credentialService: CredentialServiceImpl
+    private val credentialService: CredentialService
 ) : UserCredentialGrantResource {
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
