@@ -14,6 +14,8 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.UserProjectServiceService
+import com.tencent.devops.project.service.tof.TOFService
+import com.tencent.devops.project.utils.BG_IEG_ID
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -22,13 +24,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class UserProjectServiceServiceImpl @Autowired constructor(
-        private val dslContext: DSLContext,
-        private val serviceTypeDao: ServiceTypeDao,
-        private val serviceDao: ServiceDao,
-        private val grayTestDao: GrayTestDao,
-        private val favoriteDao: FavoriteDao,
-        private val gray: Gray,
-        private val redisOperation: RedisOperation
+    private val dslContext: DSLContext,
+    private val serviceTypeDao: ServiceTypeDao,
+    private val serviceDao: ServiceDao,
+    private val grayTestDao: GrayTestDao,
+    private val favoriteDao: FavoriteDao,
+    private val gray: Gray,
+    private val redisOperation: RedisOperation,
+    private val tofService: TOFService
 ) : UserProjectServiceService {
 
     override fun updateServiceUrls(
@@ -42,26 +45,28 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
         if (tServiceRecord != null) {
+            val isIEGMember = tofService.getUserDeptDetail(userId).bgId == BG_IEG_ID
             return Result(
                     ServiceVO(
-                            tServiceRecord.id ?: 0,
-                            tServiceRecord.name,
-                            tServiceRecord.link,
-                            tServiceRecord.linkNew,
-                            tServiceRecord.status, tServiceRecord.injectType,
-                            tServiceRecord.iframeUrl,
-                            tServiceRecord.cssUrl,
-                            tServiceRecord.jsUrl,
-                            tServiceRecord.grayCssUrl,
-                            tServiceRecord.grayJsUrl,
-                            tServiceRecord.showProjectList,
-                            tServiceRecord.showNav,
-                            tServiceRecord.projectIdType,
-                            favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
-                            //TODO: 内部版数据库没有weight字段，此处可能会抛异常。
-                            tServiceRecord.weight,
-                            tServiceRecord.logoUrl,
-                            tServiceRecord.webSocket
+                        tServiceRecord.id ?: 0,
+                        tServiceRecord.name,
+                        tServiceRecord.link,
+                        tServiceRecord.linkNew,
+                        tServiceRecord.status, tServiceRecord.injectType,
+                        tServiceRecord.iframeUrl,
+                        tServiceRecord.cssUrl,
+                        tServiceRecord.jsUrl,
+                        tServiceRecord.grayCssUrl,
+                        tServiceRecord.grayJsUrl,
+                        tServiceRecord.showProjectList,
+                        tServiceRecord.showNav,
+                        tServiceRecord.projectIdType,
+                        favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
+                        //TODO: 内部版数据库没有weight字段，此处可能会抛异常。
+                        tServiceRecord.weight,
+                        tServiceRecord.logoUrl,
+                        tServiceRecord.webSocket,
+                        isServiceHidden(tServiceRecord.name, isIEGMember)
                     )
             )
         } else {
@@ -157,6 +162,8 @@ class UserProjectServiceServiceImpl @Autowired constructor(
         try {
             val serviceListVO = ArrayList<ServiceListVO>()
 
+            val isIEGMember = tofService.getUserDeptDetail(userId).bgId == BG_IEG_ID
+
             val serviceTypeMap = serviceTypeDao.getAllIdAndTitle(dslContext).map {
                 it.value1() to it.value2()
             }.toMap()
@@ -167,7 +174,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
 
             val favorServices = favoriteDao.list(dslContext, userId).map { it.serviceId }.toList()
 
-            serviceTypeMap.forEach { typeId, typeName ->
+            serviceTypeMap.forEach { (typeId, typeName) ->
                 val services = ArrayList<ServiceVO>()
 
                 val s = groupService[typeId]
@@ -175,27 +182,32 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                 s?.forEach {
                     val status = grayTest[it.id] ?: it.status
                     val favor = favorServices.contains(it.id)
+                    /**
+                     * 容器服务和监控中心只有IEG成员才能看得到
+                     */
+                    val hidden = isServiceHidden(it.name, isIEGMember)
                     services.add(
-                            ServiceVO(
-                                    it.id,
-                                    it.name ?: "",
-                                    it.link ?: "",
-                                    it.linkNew ?: "",
-                                    status,
-                                    it.injectType ?: "",
-                                    it.iframeUrl ?: "",
-                                    getCSSUrl(it, projectId),
-                                    getJSUrl(it, projectId),
-                                    it.grayCssUrl ?: "",
-                                    it.grayJsUrl ?: "",
-                                    it.showProjectList ?: false,
-                                    it.showNav ?: false,
-                                    it.projectIdType ?: "",
-                                    favor,
-                                    it.weight ?: 0,
-                                    it.logoUrl,
-                                    it.webSocket
-                            )
+                        ServiceVO(
+                            it.id,
+                            it.name ?: "",
+                            it.link ?: "",
+                            it.linkNew ?: "",
+                            status,
+                            it.injectType ?: "",
+                            it.iframeUrl ?: "",
+                            getCSSUrl(it, projectId),
+                            getJSUrl(it, projectId),
+                            it.grayCssUrl ?: "",
+                            it.grayJsUrl ?: "",
+                            it.showProjectList ?: false,
+                            it.showNav ?: false,
+                            it.projectIdType ?: "",
+                            favor,
+                            it.weight ?: 0,
+                            it.logoUrl,
+                            it.webSocket,
+                            hidden
+                        )
                     )
                 }
 
@@ -256,6 +268,14 @@ class UserProjectServiceServiceImpl @Autowired constructor(
 
         }
         return Result(data = true)
+    }
+
+    private fun isServiceHidden(serviceName: String, isIEGMember: Boolean): Boolean {
+        return !(if (serviceName.contains("(Monitor)", false) || serviceName.contains("(BCS)", false)) {
+            isIEGMember
+        } else {
+            true
+        })
     }
 
     companion object {

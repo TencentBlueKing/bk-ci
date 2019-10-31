@@ -29,6 +29,8 @@ class WebSocketDispatcher(
                         }
                         message
                     }
+                } else{
+                    logger.info("page:${event.page} have new message,bug nobody load page, notifyPost:${event.notifyPost}")
                 }
             }
         } catch (e: Exception) {

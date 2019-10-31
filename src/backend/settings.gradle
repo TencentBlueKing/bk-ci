@@ -309,7 +309,8 @@ include ":scm:boot-scm"
 include ":scm:boot-scm-tencent"
 
 include ":websocket"
-include ":websocket:biz-websocket-blueking"
+include ":websocket:biz-websocket"
+include ":websocket:biz-websocket-tencent"
 include ":websocket:boot-websocket-tencent"
 
 include ":lambda"

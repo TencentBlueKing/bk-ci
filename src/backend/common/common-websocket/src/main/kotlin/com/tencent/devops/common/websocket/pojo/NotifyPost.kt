@@ -6,5 +6,6 @@ data class NotifyPost(
     var code: Int,
     var message: String,
     var dealUrl: String?,
-    var webSocketType: String?
+    var webSocketType: String?,
+    var page: String?
 )
