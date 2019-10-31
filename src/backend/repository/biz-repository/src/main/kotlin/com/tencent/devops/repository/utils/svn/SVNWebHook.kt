@@ -28,57 +28,6 @@ package com.tencent.devops.repository.utils.svn
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-/**
- * 2018/5/19
- *
- *
- * {
- *   "status":"200",
- *   "message":"查询成功",
- *   "exist":true,
- *   "webhooks":[
- *     {
- *       "id":802,
- *       "userName":"xx",
- *       "repName":"pp/hello_world_proj",
- *       "path":"hello_world_proj",
- *       "eventType":1,
- *       "callBack":"http://xx.com/ms/repository/api/codesvn/commit",
- *       "confTime":1526612489000
- *     }
- *   ]
- * }
- *
- *
- * {"status":"200","message":"查询成功","exist":false,"webhooks":[]}
- *
- *
- * {
- *   "status":"200",
- *   "message":"查询成功",
- *   "exist":true,
- *   "webhooks":[
- *     {
- *       "id":802,
- *       "userName":"xx",
- *       "repName":"proj/hello_world_proj",
- *       "path":"hello_world_proj",
- *       "eventType":1,
- *       "callBack":"http://xx.com/ms/repository/api/codesvn/commit",
- *       "confTime":1526612489000
- *     },
- *     {
- *       "id":891,
- *       "userName":"xx",
- *       "repName":"proj/hello_world_proj",
- *       "path":"hello_world_proj/trunk",
- *       "eventType":1,
- *       "callBack":"http://xx.com/ms/repository/api/codesvn/commit",
- *       "confTime":1526699650000
- *     }
- *   ]
- * }
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SVNWebHook(
     val status: String,
