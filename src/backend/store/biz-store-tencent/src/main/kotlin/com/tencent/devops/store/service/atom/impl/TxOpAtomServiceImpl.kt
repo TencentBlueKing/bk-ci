@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.store.dao.atom.AtomDao
@@ -71,7 +71,7 @@ class TxOpAtomServiceImpl @Autowired constructor(
         }
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
-            moveProjectToGroupResult = client.get(ServiceRepositoryResource::class)
+            moveProjectToGroupResult = client.get(ServiceGitRepositoryResource::class)
                 .moveGitProjectToGroup(userId, groupCode, atomRecord.repositoryHashId, TokenTypeEnum.PRIVATE_KEY)
             logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
             if (moveProjectToGroupResult.isOk()) {
