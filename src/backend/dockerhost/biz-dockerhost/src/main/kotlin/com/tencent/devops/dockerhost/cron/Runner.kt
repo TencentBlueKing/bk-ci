@@ -26,25 +26,39 @@
 
 package com.tencent.devops.dockerhost.cron
 
+import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
+import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.dockerhost.utils.SigarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.math.log
 
 // @Component
 class Runner @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
     private val logger = LoggerFactory.getLogger(Runner::class.java)
     private val maxRunningContainerNum = 200
+    private val alertApi: AlertApi = AlertApi()
 
 //    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 5 * 1000)
     fun startBuild() {
     logger.info("Start to start build")
         try {
+            // 优先判断机器负载
+            if (!SigarUtil.loadEnable()) {
+                logger.warn("Docker构建机负载过高, 正在尝试其他构建机, cpuLoad: ${SigarUtil.getAverageCpuLoad()}, memLoad: ${SigarUtil.getAverageMemLoad()}")
+                alertApi.alert(AlertLevel.HIGH.name, "Docker构建机负载过高", "Docker构建机负载过高, " +
+                        "母机IP:${CommonUtils.getInnerIP()}， cpuLoad: ${SigarUtil.getAverageCpuLoad()}, memLoad: ${SigarUtil.getAverageMemLoad()}, memQueue: ${SigarUtil.getMemQueue()}")
+                return
+            }
+
             val containerNum = dockerHostBuildService.getContainerNum()
             if (containerNum >= maxRunningContainerNum) {
                 logger.warn("Too many containers in this host, break to start build.")
+                alertApi.alert(AlertLevel.HIGH.name, "Docker构建机运行的容器太多", "Docker构建机运行的容器太多, " +
+                        "母机IP:${CommonUtils.getInnerIP()}， 容器数量: $containerNum")
                 return
             }
 
@@ -66,6 +80,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                         if (dockerHostBuildService.isContainerRunning(containerId)) {
                             dockerHostBuildService.log(dockerStartBuildInfo.buildId, "构建环境启动成功，等待Agent启动...")
                         } else {
+                        logger.error("Create container container failed, no such image. pipelineId: ${dockerStartBuildInfo.pipelineId}, vmSeqId: ${dockerStartBuildInfo.vmSeqId}")
                             dockerHostBuildService.rollbackBuild(dockerStartBuildInfo.buildId, dockerStartBuildInfo.vmSeqId, true)
                         }
                     } catch (e: ContainerException) {
@@ -107,7 +122,15 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
         try {
             dockerHostBuildService.clearContainers()
         } catch (t: Throwable) {
-            logger.error("EndBuild encounter unknown exception", t)
+            logger.error("clear exited containers encounter unknown exception", t)
+        }
+    }
+
+    fun clearLocalImages() {
+        try {
+            dockerHostBuildService.clearLocalImages()
+        } catch (t: Throwable) {
+            logger.error("clear local images encounter unknown exception", t)
         }
     }
 }

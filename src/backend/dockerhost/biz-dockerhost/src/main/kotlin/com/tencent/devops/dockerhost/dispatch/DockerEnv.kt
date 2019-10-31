@@ -91,9 +91,23 @@ object DockerEnv {
         if (gateway.isNullOrBlank()) {
             synchronized(this) {
                 if (gateway.isNullOrBlank()) {
-                    gateway = getProperty(AGENT_GATEWAY)
-                    if (gateway.isNullOrBlank()) {
-                        throw PropertyNotExistException(AGENT_GATEWAY, "Empty agent gateway")
+                    try {
+                        gateway = getProperty(AGENT_GATEWAY)
+                        if (gateway.isNullOrBlank()) {
+                            throw PropertyNotExistException(AGENT_GATEWAY, "Empty agent gateway")
+                        }
+                    } catch (t: Throwable) {
+                        val tmp = System.getProperty("soda.gateway", "")
+                        gateway = if (tmp.isNotEmpty()) {
+                            tmp
+                        } else {
+                            val debug = System.getProperty("soda.debug", "false")
+                            if (debug == "true") {
+                                "test.gw.open.oa.com"
+                            } else {
+                                "gw.open.oa.com"
+                            }
+                        }
                     }
                     logger.info("Get the gateway($gateway)")
                 }

@@ -541,8 +541,7 @@ class MarketAtomDao : AtomBaseDao() {
             b.CONTENT.`as`("versionContent"),
             d.LANGUAGE.`as`("language"),
             a.VISIBILITY_LEVEL.`as`("visibilityLevel"),
-            a.PRIVATE_REASON.`as`("privateReason"),
-            a.HTML_TEMPLATE_VERSION.`as`("htmlTemplateVersion")
+            a.PRIVATE_REASON.`as`("privateReason")
         )
             .from(a)
             .leftJoin(b)

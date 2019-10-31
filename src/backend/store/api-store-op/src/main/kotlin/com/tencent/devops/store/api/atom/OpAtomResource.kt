@@ -35,8 +35,6 @@ import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import io.swagger.annotations.Api
@@ -112,7 +110,7 @@ interface OpAtomResource {
         atomStatus: AtomStatusEnum?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
-        sortType: OpSortTypeEnum? = OpSortTypeEnum.updateTime,
+        sortType: OpSortTypeEnum? = OpSortTypeEnum.UpdateTime,
         @ApiParam("排序", required = false)
         @QueryParam("desc")
         desc: Boolean?,
@@ -154,43 +152,5 @@ interface OpAtomResource {
         atomId: String,
         @ApiParam("审核插件请求报文")
         approveReq: ApproveReq
-    ): Result<Boolean>
-
-    @ApiOperation("审核可见范围")
-    @PUT
-    @Path("/{atomCode}/visible/approve/")
-    fun approveVisibleDept(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("插件标识", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("可见范围审核请求报文", required = true)
-        visibleApproveReq: VisibleApproveReq
-    ): Result<Boolean>
-
-    @ApiOperation("查看插件可见范围")
-    @GET
-    @Path("/{atomCode}/visible")
-    fun getVisibleDept(
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String
-    ): Result<StoreVisibleDeptResp?>
-
-    @ApiOperation("把项目迁移到指定项目组下")
-    @PUT
-    @Path("/repositories/git/move/codes/{atomCode}/group")
-    fun moveGitProjectToGroup(
-        @ApiParam(value = "用户ID", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @ApiParam("插件插件标识", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam(value = "项目组代码", required = false)
-        @QueryParam("groupCode")
-        groupCode: String?
     ): Result<Boolean>
 }

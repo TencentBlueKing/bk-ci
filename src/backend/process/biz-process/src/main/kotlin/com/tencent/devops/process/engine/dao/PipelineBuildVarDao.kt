@@ -166,6 +166,40 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
+    fun batchSave(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, Any>
+    ) {
+        val sets =
+            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
+        with(T_PIPELINE_BUILD_VAR) {
+            variables.forEach { (key, value) ->
+                val set = dslContext.insertInto(this)
+                    .set(PROJECT_ID, projectId)
+                    .set(PIPELINE_ID, pipelineId)
+                    .set(BUILD_ID, buildId)
+                    .set(KEY, key)
+                    .set(VALUE, value.toString())
+                    .onDuplicateKeyUpdate()
+                    .set(VALUE, value.toString())
+                sets.add(set)
+            }
+        }
+        if (sets.isNotEmpty()) {
+            val count = dslContext.batch(sets).execute()
+            var success = 0
+            count.forEach {
+                if (it == 1) {
+                    success++
+                }
+            }
+            logger.info("[$buildId]|batchSave_vars|total=${count.size}|success_count=$success")
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildVarDao::class.java)
     }

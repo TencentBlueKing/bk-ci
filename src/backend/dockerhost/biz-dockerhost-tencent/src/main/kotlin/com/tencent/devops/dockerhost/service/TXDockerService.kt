@@ -1,5 +1,6 @@
 package com.tencent.devops.dockerhost.service
 
+import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
@@ -8,6 +9,7 @@ import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -19,6 +21,18 @@ class TXDockerService @Autowired constructor(
 
     private val executor = Executors.newFixedThreadPool(10)
     private val buildTask = mutableMapOf<String, Future<Pair<Boolean, String?>>>()
+
+    fun buildImage(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, elementId: String?, dockerBuildParam: DockerBuildParam): Boolean {
+        logger.info("projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerBuildParam: $dockerBuildParam")
+
+        val future = executor.submit(Callable<Pair<Boolean, String?>> {
+            dockerHostBuildService.dockerBuildAndPushImage(projectId, pipelineId, vmSeqId, dockerBuildParam, buildId, elementId)
+        })
+
+        buildTask[getKey(vmSeqId, buildId)] = future
+
+        return true
+    }
 
     fun getBuildResult(vmSeqId: String, buildId: String): Pair<Status, String?> {
         logger.info("vmSeqId: $vmSeqId, buildId: $buildId")

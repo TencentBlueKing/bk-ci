@@ -1,0 +1,13 @@
+dependencies {
+    compile project(":common:common-api")
+    compile project(":common:common-web")
+    compile project(":common:common-event")
+    compile project(":scm:api-scm")
+//    compile project(":api:api-measure")
+//    compile project(":api:api-environment")
+//    compile project(":api:api-image")
+    compile project(":store:api-store")
+    compile project(":process:api-process")
+    compile project(":log:api-log")
+    compile project(":project:api-project")
+}

@@ -167,6 +167,30 @@ interface ServiceBuildResource {
         channelCode: ChannelCode
     ): Result<BuildId>
 
+    @ApiOperation("重试流水线")
+    @POST
+    @Path("/{projectId}/{pipelineId}/{buildId}/retry")
+    fun retry(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("要重试的原子任务ID", required = false)
+        @QueryParam("taskId")
+        taskId: String? = null,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<BuildId>
+
     @ApiOperation("手动停止流水线")
     @DELETE
     //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
