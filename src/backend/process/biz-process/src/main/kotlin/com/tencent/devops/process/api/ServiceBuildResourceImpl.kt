@@ -117,6 +117,15 @@ class ServiceBuildResourceImpl @Autowired constructor(
             )
         )
     }
+    
+        override fun retry(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String?, channelCode: ChannelCode): Result<BuildId> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(BuildId(buildService.retry(userId, projectId, pipelineId, buildId, taskId, false, channelCode, ChannelCode.isNeedAuth(channelCode))))
+    }
 
     override fun manualShutdown(
         userId: String,
