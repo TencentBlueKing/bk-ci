@@ -78,6 +78,24 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun goToReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String
+    ): Result<ReviewParam> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (elementId.isBlank()) {
+            throw ParamBlankException("Invalid elementId")
+        }
+
+        return Result(buildService.goToReview(userId, projectId, pipelineId, buildId, elementId))
+    }
+
     override fun manualStartupInfo(
         userId: String,
         projectId: String,
