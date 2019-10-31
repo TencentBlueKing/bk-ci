@@ -1,11 +1,13 @@
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.pojo.OpGrayProject
@@ -53,7 +55,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         val dbProjectRecord = projectDao.get(dslContext, projectId)
         if (dbProjectRecord == null) {
             logger.warn("The project $projectId is not exist")
-            throw OperationException("项目不存在")
+            throw OperationException(ProjectMessageCode.PROJECT_NOT_EXIST)
         }
         // 判断项目是不是审核的情况
         var flag = false
@@ -72,7 +74,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (ignored: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectInfoRequest", ignored)
-                throw OperationException("项目名或英文名重复")
+                throw OperationException(ProjectMessageCode.PROJECT_NAME_EXIST)
             }
             // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)

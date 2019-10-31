@@ -28,6 +28,7 @@ package com.tencent.devops.repository.iscm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.config.GitConfig
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitOauthApi
@@ -69,14 +70,14 @@ class CodeGitScmOauthImpl constructor(
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
-            throw ScmException("私钥为空", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.SERCRT_EMPTY, ScmType.CODE_GIT.name)
         }
         // Check if token legal
         try {
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
-            throw ScmException("Git Token 不正确", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.GIT_TOKEN_WRONG, ScmType.CODE_GIT.name)
         }
 
         try {
@@ -88,13 +89,13 @@ class CodeGitScmOauthImpl constructor(
                 .call()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
-            throw ScmException("Git 私钥不对", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.GIT_SERCRT_WRONG, ScmType.CODE_GIT.name)
         }
     }
 
     override fun checkTokenAndUsername() {
         if (privateKey == null) {
-            throw ScmException("用户密码为空", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.PWD_EMPTY, ScmType.CODE_GIT.name)
         }
 
         // Check if token legal
@@ -102,7 +103,7 @@ class CodeGitScmOauthImpl constructor(
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
-            throw ScmException("Git Token 不正确", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.GIT_TOKEN_WRONG, ScmType.CODE_GIT.name)
         }
 
         try {
@@ -112,21 +113,21 @@ class CodeGitScmOauthImpl constructor(
             command.call()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
-            throw ScmException("Git 用户名或者密码不对", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.GIT_LOGIN_FAIL, ScmType.CODE_GIT.name)
         }
     }
 
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
-            throw ScmException("Git Token为空", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.GIT_TOKEN_EMPTY, ScmType.CODE_GIT.name)
         }
         if (hookUrl.isEmpty()) {
-            throw ScmException("Git hook url为空", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.GIT_HOOK_URL_EMPTY, ScmType.CODE_GIT.name)
         }
         try {
             gitOauthApi.addWebhook(gitConfig.gitUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
-            throw ScmException("Git Token不正确", ScmType.CODE_GIT.name)
+            throw ScmException(RepositoryMessageCode.GIT_TOKEN_FAIL, ScmType.CODE_GIT.name)
         }
     }
 
@@ -139,7 +140,7 @@ class CodeGitScmOauthImpl constructor(
         block: Boolean
     ) {
         if (token.isEmpty()) {
-            throw RuntimeException("Git Token为空")
+            throw RuntimeException(RepositoryMessageCode.GIT_TOKEN_EMPTY)
         }
         try {
             gitOauthApi.addCommitCheck(
@@ -154,7 +155,7 @@ class CodeGitScmOauthImpl constructor(
                 block
             )
         } catch (e: ScmException) {
-            throw RuntimeException("Git Token不正确")
+            throw RuntimeException(RepositoryMessageCode.GIT_TOKEN_FAIL)
         }
     }
 

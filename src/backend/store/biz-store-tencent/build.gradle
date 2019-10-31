@@ -28,6 +28,7 @@ dependencies {
     compile project(":common:common-auth:common-auth-tencent")
     compile project(":notify:api-notify")
     compile project(":store:api-store-tencent")
+    compile project(":repository:api-repository-tencent")
     compile project(":support:api-support-tencent")
     compile project(":store:biz-store")
 }

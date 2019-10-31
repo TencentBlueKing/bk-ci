@@ -27,6 +27,7 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

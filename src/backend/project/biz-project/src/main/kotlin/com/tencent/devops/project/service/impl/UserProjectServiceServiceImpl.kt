@@ -78,6 +78,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                 )
             )
         } else {
+            //TODO: 国际化
             return Result(405, "无限ID,获取服务信息失败")
         }
     }
@@ -188,6 +189,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     override fun updateCollected(userId: String, serviceId: Long, collector: Boolean): Result<Boolean> {
         if (collector) {
             if (favoriteDao.create(dslContext, userId, serviceId) > 0) {
+                // TODO： 国际化
                 return Result(0, "服务收藏成功", "", true)
             }
         } else {

@@ -30,7 +30,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
-import com.tencent.devops.store.api.ServiceContainerResource
+import com.tencent.devops.store.api.container.ServiceContainerResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

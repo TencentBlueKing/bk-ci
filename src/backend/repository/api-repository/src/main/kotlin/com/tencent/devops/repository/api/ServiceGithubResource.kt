@@ -38,7 +38,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_GITHUB"], description = "服务-github相关")
+@Api(tags = ["SERVICE_GITHUB_BK"], description = "服务-github相关")
 @Path("/service/github")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -48,27 +48,27 @@ interface ServiceGithubResource {
     @POST
     @Path("/accessToken")
     fun createAccessToken(
-        @ApiParam("用户ID", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @ApiParam("accessToken", required = true)
-        @QueryParam("accessToken")
-        accessToken: String,
-        @ApiParam("accessToken类型", required = true)
-        @QueryParam("tokenType")
-        tokenType: String,
-        @ApiParam("accessToken范围", required = true)
-        @QueryParam("scope")
-        scope: String
+            @ApiParam("用户ID", required = true)
+            @QueryParam("userId")
+            userId: String,
+            @ApiParam("accessToken", required = true)
+            @QueryParam("accessToken")
+            accessToken: String,
+            @ApiParam("accessToken类型", required = true)
+            @QueryParam("tokenType")
+            tokenType: String,
+            @ApiParam("accessToken范围", required = true)
+            @QueryParam("scope")
+            scope: String
     ): Result<Boolean>
 
     @ApiOperation("获取github代码库accessToken")
     @GET
     @Path("/accessToken")
     fun getAccessToken(
-        @ApiParam("用户ID", required = true)
-        @QueryParam("userId")
-        userId: String
+            @ApiParam("用户ID", required = true)
+            @QueryParam("userId")
+            userId: String
     ): Result<GithubToken?>
 
     @ApiOperation("获取github文件内容")

@@ -24,19 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.service.container
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.service.atom.AtomRepositoryService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.container.pcg.PCGDockerImage
 
-@RestResource
-class UserMarketAtomRepositoryResourceImpl @Autowired constructor(
-    private val atomRepositoryService: AtomRepositoryService
-) : UserMarketAtomRepositoryResource {
+interface PCGImageService {
 
-    override fun changeAtomRepositoryUserInfo(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        return atomRepositoryService.updateAtomRepositoryUserInfo(userId, projectCode, atomCode)
-    }
+    fun enableProject(projectId: String)
+
+    fun disableProject(projectId: String)
+
+    fun projectEnable(projectId: String): Boolean
+
+    fun getPCGImages(): List<PCGDockerImage>
 }

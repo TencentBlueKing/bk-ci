@@ -51,7 +51,7 @@ import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -95,7 +95,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
             // 远程调工蜂接口创建代码库
             try {
-                val createGitRepositoryResult = client.get(ServiceRepositoryResource::class).createGitCodeRepository(
+                val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
                     userId,
                     marketAtomCreateRequest.projectCode,
                     atomCode,
@@ -135,7 +135,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         logger.info("getFileStr repositoryHashId is:$repositoryHashId,fileName is:$fileName")
         val fileStr = if (repositoryHashId.isNotBlank()) {
             // 从工蜂拉取文件
-            client.get(ServiceRepositoryResource::class).getFileContent(
+            client.get(ServiceGitRepositoryResource::class).getFileContent(
                 repositoryHashId,
                 fileName, null, null, null
             ).data

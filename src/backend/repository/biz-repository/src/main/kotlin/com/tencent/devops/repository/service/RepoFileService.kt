@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -15,12 +14,11 @@ import com.tencent.devops.repository.pojo.github.GithubRepository
 import com.tencent.devops.repository.service.github.GithubService
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
-import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.api.ServiceSvnResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Base64
 
@@ -36,8 +34,10 @@ class RepoFileService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepoFileService::class.java)
-        private val aesKey = "love_G/I%yP{?ST}2TXPg_love"
     }
+
+    @Value("\${aes.git:#{null}}")
+    private val aesKey: String = "func_v%o/Tx{puc}9xVge_pepe"
 
     fun getFileContent(repositoryConfig: RepositoryConfig, filePath: String, reversion: String?, branch: String?, subModule: String? = null): String {
         val repo = repositoryService.serviceGet("", repositoryConfig)

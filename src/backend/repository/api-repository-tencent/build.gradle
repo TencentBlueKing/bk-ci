@@ -27,7 +27,6 @@
 dependencies {
     compile project(":common:common-api")
     compile project(":repository:api-repository")
-//    compile project(":repository:model-repository")
 }
 
 

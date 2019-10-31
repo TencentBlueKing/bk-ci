@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import org.slf4j.LoggerFactory
 
 @ApiModel("流水线模型-创建信息")
 data class Model(
@@ -50,11 +51,20 @@ data class Model(
     @ApiModelProperty("源模版ID", required = false)
     var srcTemplateId: String? = null,
     @ApiModelProperty("模板ID", required = false)
-    var templateId: String? = null
+    var templateId: String? = null,
+    @ApiModelProperty("构建错误类型", required = false)
+    var errorType: String? = null,
+    @ApiModelProperty("构建错误类型", required = false)
+    var errorCode: Int? = null,
+    @ApiModelProperty("构建错误信息", required = false)
+    var errorMsg: String? = null
 ) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(Model::class.java)
+    }
     /**
-     * 删除相关插件
+     * 删除相关原子
      */
     fun removeElements(elementClassTypes: Set<String>): Model {
         val stageList = mutableListOf<Stage>()

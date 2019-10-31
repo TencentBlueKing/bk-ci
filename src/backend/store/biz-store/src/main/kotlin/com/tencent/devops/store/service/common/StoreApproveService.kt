@@ -69,11 +69,4 @@ interface StoreApproveService {
     ): Result<StoreApproveInfo?>
 
     fun getStoreApproveDetail(userId: String, approveId: String): Result<StoreApproveDetail?>
-
-    fun moaApproveCallBack(
-        verifier: String,
-        result: Int,
-        taskId: String,
-        message: String
-    ): Result<Boolean>
 }

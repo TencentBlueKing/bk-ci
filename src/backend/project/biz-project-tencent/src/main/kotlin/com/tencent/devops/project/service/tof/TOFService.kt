@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -124,13 +125,13 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                     objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail to get the dept info of id $id with response $responseContent")
-                throw OperationException("获取部门信息失败")
+                throw OperationException(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
             }
             val deptInfoResp = response.data
             return DeptInfo(deptInfoResp!!.TypeId, deptInfoResp.LeaderId, deptInfoResp.Name, deptInfoResp.Level, deptInfoResp.Enabled, deptInfoResp.ParentId, deptInfoResp.ID)
         } catch (t: Throwable) {
             logger.warn("Fail to get the organization info of id $id", t)
-            throw OperationException("获取部门信息失败")
+            throw OperationException(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
         }
     }
 
@@ -151,12 +152,12 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
             val response: Response<List<CCAppNameResponse>> = objectMapper.readValue(responseContent)
             if (response.data == null || response.data!!.isEmpty()) {
                 logger.warn("Fail to get cc app name of $ccAppId with response $responseContent")
-                throw OperationException("后去CC APP名称失败")
+                throw OperationException(ProjectMessageCode.QUERY_CC_NAME_FAIL)
             }
             return response.data!![0].DisplayName
         } catch (t: Throwable) {
             logger.warn("Fail to get cc app name of $ccAppId", t)
-            throw OperationException("后去CC APP名称失败")
+            throw OperationException(ProjectMessageCode.QUERY_CC_NAME_FAIL)
         }
     }
 
@@ -175,12 +176,12 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                 objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail o get the child dept info of type $type and id $id with response $responseContent")
-                throw OperationException("获取子部门信息失败")
+                throw OperationException(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL)
             }
             return response.data!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the organization info of type $type and id $id", t)
-            throw OperationException("获取子部门信息失败")
+            throw OperationException(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL)
         }
     }
 
@@ -203,12 +204,12 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
             val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
-                throw OperationException("获取用户信息失败")
+                throw OperationException(ProjectMessageCode.QUERY_USER_INFO_FAIL)
             }
             return response.data!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the staff info of userId $userId with ticket $bk_ticket", t)
-            throw OperationException("获取用户信息失败")
+            throw OperationException(ProjectMessageCode.QUERY_USER_INFO_FAIL)
         }
     }
 
@@ -230,12 +231,12 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
             val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail to get the parent dept info of group $groupId and level $level with response $responseContent")
-                throw OperationException("获取公司组织架构信息失败")
+                throw OperationException(ProjectMessageCode.QUERY_ORG_FAIL)
             }
             return response.data!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the parent dept info of group $groupId and level $level", t)
-            throw OperationException("获取父部门信息失败")
+            throw OperationException(ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL)
         }
     }
 
