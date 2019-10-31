@@ -4,7 +4,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.api.service.ServiceTxProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectVO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -24,9 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":project:biz-project-tencent")
-    compile project(":project:biz-project-op")
-}
+package com.tencent.common.digest.enc
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+/**
+ * 安全加解密
+ */
+interface SecurityDigest {
+
+    fun encrypt(content: String): String
+
+    fun decrypt(content: String): String
+
+    fun encrypt(key: String, content: String): String
+
+    fun decrypt(key: String, content: String): String
+
+    fun encrypt(key: String, content: ByteArray): ByteArray
+
+    fun decrypt(key: String, content: ByteArray): ByteArray
+}

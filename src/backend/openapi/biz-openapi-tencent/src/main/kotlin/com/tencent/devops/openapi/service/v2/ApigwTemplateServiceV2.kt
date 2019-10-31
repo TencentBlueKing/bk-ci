@@ -10,7 +10,7 @@ import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.process.api.v2.template.ServiceProjectTemplateResource
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.project.api.service.ServiceTxProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
