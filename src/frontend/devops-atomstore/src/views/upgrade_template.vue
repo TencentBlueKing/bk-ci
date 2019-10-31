@@ -14,7 +14,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des"> {{ $t('上架模板') }} </span>
             </p>
-            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('模板指引') }} </a>
+            <a class="title-work" target="_blank" :href="docsLink">模板指引</a>
         </h3>
 
         <div class="upgrade-template-content" v-show="showContent">

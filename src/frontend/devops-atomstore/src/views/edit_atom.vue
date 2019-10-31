@@ -9,7 +9,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="">{{ curTitle }}（{{ atomForm.atomCode }}）</span>
             </p>
-            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('插件指引') }} </a>
+            <a class="title-work" target="_blank" :href="docsLink">插件指引</a>
         </h3>
 
         <div class="edit-atom-content" v-if="showContent">

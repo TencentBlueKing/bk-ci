@@ -10,7 +10,7 @@
             <i class="right-arrow"></i>
             <div class="title third-level"> {{ $t('上架模板') }} </div>
             <a class="develop-guide-link" target="_blank"
-                :href="docsLink"> {{ $t('模板指引') }} </a>
+                :href="docsLink">模板指引</a>
         </div>
         <div class="edit-template-content" v-if="showContent">
             <form class="bk-form edit-template-form">

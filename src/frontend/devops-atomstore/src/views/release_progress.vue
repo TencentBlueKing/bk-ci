@@ -15,12 +15,12 @@
                 <i class="right-arrow"></i>
                 <div class="title third-level">
                     <span class="">{{ curTitle }}</span>
-                    <span> {{ $t('（') }} {{ versionDetail.atomCode }} {{ $t('）') }} </span>
+                    <span>（{{ versionDetail.atomCode }}）</span>
                 </div>
             </div>
             <div class="sub_header_right">
                 <a class="develop-guide-link" target="_blank"
-                    :href="docsLink"> {{ $t('插件指引') }} </a>
+                    :href="docsLink">插件指引</a>
             </div>
         </div>
         <div class="release-progress-content" v-show="showContent">
