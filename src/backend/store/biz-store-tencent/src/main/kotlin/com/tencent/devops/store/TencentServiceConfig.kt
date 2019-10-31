@@ -36,6 +36,8 @@ import com.tencent.devops.store.service.common.impl.TxStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreUserServiceImpl
 import com.tencent.devops.store.service.container.impl.TxContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.TxMarketTemplateServiceImpl
+import com.tencent.devops.store.service.template.impl.TxTemplateNotifyServiceImpl
+import com.tencent.devops.store.service.template.impl.TxTemplateReleaseServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -70,5 +72,11 @@ class TencentServiceConfig {
     fun atomCooperationService() = TxAtomCooperationServiceImpl()
 
     @Bean
+    fun templateNotifyService() = TxTemplateNotifyServiceImpl()
+
+    @Bean
     fun marketTemplateService() = TxMarketTemplateServiceImpl()
+
+    @Bean
+    fun templateReleaseService() = TxTemplateReleaseServiceImpl()
 }

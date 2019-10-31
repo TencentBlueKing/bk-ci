@@ -53,15 +53,19 @@ class TxAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
     private val logger = LoggerFactory.getLogger(TxAtomNotifyServiceImpl::class.java)
 
     @Autowired
-    lateinit var dslContext: DSLContext
+    private lateinit var dslContext: DSLContext
+
     @Autowired
-    lateinit var atomDao: AtomDao
+    private lateinit var atomDao: AtomDao
+
     @Autowired
-    lateinit var atomVersionLogDao: MarketAtomVersionLogDao
+    private lateinit var atomVersionLogDao: MarketAtomVersionLogDao
+
     @Autowired
-    lateinit var storeMemberDao: StoreMemberDao
+    private lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
-    lateinit var client: Client
+    private lateinit var client: Client
 
     @Value("\${store.atomDetailBaseUrl}")
     private lateinit var atomDetailBaseUrl: String

@@ -794,8 +794,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return if (null == record) {
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
         } else {
-            val status = record.atomStatus.toInt()
             val atomCode = record.atomCode
+            // 判断用户是否有查询权限
+            val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
+            if (!queryFlag) {
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            }
+            val status = record.atomStatus.toInt()
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = getNormalUpgradeFlag(atomCode, status)
             val processInfo = handleProcessInfo(isNormalUpgrade, status)

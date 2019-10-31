@@ -207,9 +207,6 @@ class DownloadAgentInstallService @Autowired constructor(
         return agentFile
     }
 
-    private fun getAgentPackageFiles(os: String) =
-        File(agentPackage, "packages/${os.toLowerCase()}/").listFiles()
-
     private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String/*Name*/, String> {
         val file = File(agentPackage, "script/${agentRecord.os.toLowerCase()}")
         val scripts = file.listFiles()

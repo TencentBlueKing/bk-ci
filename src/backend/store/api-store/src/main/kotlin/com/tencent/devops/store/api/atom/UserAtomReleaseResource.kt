@@ -70,9 +70,9 @@ interface UserAtomReleaseResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("userId", required = true)
-        @QueryParam("projectId")
-        projectId: String,
+        @ApiParam("项目代码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
         @ApiParam("插件市场工作台-新增插件请求报文体", required = true)
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String?>
