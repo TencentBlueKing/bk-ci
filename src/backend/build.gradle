@@ -64,6 +64,7 @@ buildscript {
         jolokiaVersion = "1.6.0"
         awsS3Version = "1.11.461"
         asyncHttpClientVersion = "2.1.0"
+        sigarVersion = "1.6.4"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -294,6 +295,9 @@ subprojects {
             }
             dependencySet(group: 'org.asynchttpclient', version: "$asyncHttpClientVersion") {
                 entry "async-http-client"
+            }
+            dependencySet(group: 'org.fusesource', version: "$sigarVersion") {
+                entry "sigar"
             }
         }
     }

@@ -16,7 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceIdcDockerHostResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) : ServiceIdcDockerHostResource {
 
-    private val alertApi: AlertApi = AlertApi()
+    private val alertApi: AlertApi =
+        AlertApi()
 
     override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
         try {
