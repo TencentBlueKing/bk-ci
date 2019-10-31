@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.archive
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -53,6 +54,11 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             customFilePath
         }
 
+        val artifactoryType = when (fileType) {
+            FileTypeEnum.BK_ARCHIVE -> ArtifactoryType.PIPELINE
+            FileTypeEnum.BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
+            else -> ArtifactoryType.CUSTOM_DIR
+        }
         val url =
             "/ms/artifactory/api/build/artifactories/pipeline/$pipelineId/build/$buildId/file/download/urls/get?fileType=$fileType&customFilePath=$purePath"
         val request = buildGet(url)
@@ -134,5 +140,9 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
         val request = buildGet(url)
         download(request, destPath)
+    }
+
+    override fun dockerBuildCredential(projectId: String): Map<String, String> {
+        return hashMapOf()
     }
 }

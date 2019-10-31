@@ -30,8 +30,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.repository.pojo.GithubRepository
-import com.tencent.devops.scm.code.git.api.GitCredentialSetter
-import org.eclipse.jgit.api.TransportCommand
+import com.tencent.devops.scm.github.GitHubCredentialSetter
 import java.io.File
 
 class GithubPullCodeSetting(
@@ -73,16 +72,16 @@ class GithubPullCodeSetting(
 
         val workspace = getCodeSourceDir(path)
 
-        val credentialSetter = object : GitCredentialSetter {
-            override fun setGitCredential(command: TransportCommand<*, *>) {
-                // do nothing for github
-            }
+        val token: String? = try {
+            getCredential(repo.credentialId)[0]
+        } catch (ignored: Throwable) {
+            null
         }
 
         return pullGitCode(
             repo = repo,
             workspace = workspace,
-            credentialSetter = credentialSetter
+            credentialSetter = GitHubCredentialSetter(token)
         )
     }
 

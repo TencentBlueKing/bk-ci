@@ -44,13 +44,29 @@ object ApiFactory {
         val reflections = Reflections("com.tencent.devops.worker.common.api")
         val apiClasses = reflections.getSubTypesOf(WorkerRestApiSDK::class.java)
         logger.info("Get the Api classes $apiClasses")
+        val candidatePriorityMap = mutableMapOf<String, Int>()
+        val candidateMap = HashMap<String, KClass<*>>()
         apiClasses?.forEach { apiClass ->
             if (!Modifier.isAbstract(apiClass.modifiers)) {
                 apiClass.interfaces?.forEach { apiInterfaceClass ->
-                    apiMap[apiInterfaceClass.canonicalName] = apiClass.kotlin
-                    logger.info("Add API ${apiInterfaceClass.canonicalName} for $apiClass")
+                    var find = false
+                    var priority = candidatePriorityMap[apiInterfaceClass.canonicalName]
+                    val apiPriority = apiClass.getAnnotation(ApiPriority::class.java)
+                    if (apiPriority != null && apiPriority.priority > (priority ?: 0)) {
+                        priority = apiPriority.priority
+                        find = true
+                    }
+
+                    if (priority == null || find) {
+                        candidatePriorityMap[apiInterfaceClass.canonicalName] = priority ?: 0
+                        candidateMap[apiInterfaceClass!!.canonicalName] = apiClass.kotlin
+                    }
                 }
             }
+        }
+        candidateMap.forEach {
+            apiMap[it.key] = it.value
+            logger.info("Add API ${it.key} ApiPriority(${candidatePriorityMap[it.key]}) for ${it.value}")
         }
     }
 
@@ -61,3 +77,8 @@ object ApiFactory {
         return clazz.java.newInstance() as T
     }
 }
+
+/**
+ * 优先级，数字越大胜出
+ */
+annotation class ApiPriority(val priority: Int)
