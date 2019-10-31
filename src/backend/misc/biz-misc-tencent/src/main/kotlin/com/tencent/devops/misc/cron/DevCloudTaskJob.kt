@@ -27,7 +27,7 @@ import com.tencent.devops.model.environment.tables.records.TDevCloudTaskRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.project.api.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.json.JSONObject

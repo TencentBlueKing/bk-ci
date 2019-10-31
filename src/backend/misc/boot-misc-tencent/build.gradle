@@ -1,3 +1,5 @@
 dependencies {
     compile project(":misc:biz-misc-tencent")
 }
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
