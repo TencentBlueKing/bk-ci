@@ -122,10 +122,6 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    /**
-     * curl -XGET --header "apiKey: 123232" "http://code.xx.com/rest/webhooks?event=1&apiKey=802c80e122304505be073e1f29b8bf2c&svnUrl=http://svn.xx.com/sodash/user_svn_single_external_proj"
-     * curl -XPOST --header "apiKey: 3242424" "http://code.xx.com/rest/webhooks?event=1&apiKey=802c80e122304505be073e1f29b8bf2c&svnUrl=http://svn.xx.com/sodash/user_svn_single_external_proj&url=http://test.gw.open.xx.com/external/scm/codesvn/commit,http://gw.open.xx.com/external/scm/codesvn/commit&userName=user"
-     */
     override fun addWebHook(hookUrl: String) {
         logger.info("Start to add the webhook for the repo $projectName")
         try {
