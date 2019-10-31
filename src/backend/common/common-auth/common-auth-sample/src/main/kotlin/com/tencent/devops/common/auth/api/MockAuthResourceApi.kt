@@ -26,10 +26,23 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthResourceApi : AuthResourceApi {
+
+    override fun createGrantResource(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String,
+        authGroupList: List<BkAuthGroup>?
+    ) {
+    }
+
     override fun batchCreateResource(
             principalId: String,
             scopeType: String,

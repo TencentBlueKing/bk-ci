@@ -110,5 +110,4 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         )
         return projectCodes.contains(projectCode)
     }
-
 }

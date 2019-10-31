@@ -53,6 +53,7 @@ class BuildArtifactoryReportResourceImpl @Autowired constructor(
         }
         val filePath = result.data!!
         val url = archiveFileService.transformFileUrl(
+            fileType = FileTypeEnum.BK_REPORT,
             wildFlag = false,
             pathPattern = filePath,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW,

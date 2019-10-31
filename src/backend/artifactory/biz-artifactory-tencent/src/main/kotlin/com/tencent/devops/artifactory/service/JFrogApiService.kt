@@ -2,7 +2,7 @@ package com.tencent.devops.artifactory.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.service.pojo.DockerUser
+import com.tencent.devops.artifactory.pojo.DockerUser
 import com.tencent.devops.artifactory.service.pojo.JFrogApiResponse
 import com.tencent.devops.artifactory.service.pojo.JFrogArchiveFileInfo
 import com.tencent.devops.artifactory.service.pojo.JFrogArchiveRequest
