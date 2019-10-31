@@ -28,6 +28,7 @@ package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 
 interface CredentialPermissionService {
 
@@ -81,8 +82,10 @@ interface CredentialPermissionService {
     fun createResource(
         userId: String,
         projectId: String,
-        credentialId: String
+        credentialId: String,
+        authGroupList: List<BkAuthGroup>? = null
     )
+
     fun deleteResource(
         projectId: String,
         credentialId: String

@@ -274,10 +274,13 @@ class PipelineBuildService(
         pipelineId: String,
         buildId: String,
         taskId: String? = null,
-        isMobile: Boolean = false
+        isMobile: Boolean = false,
+        channelCode: ChannelCode? = ChannelCode.BS,
+        checkPermission: Boolean? = true
     ): String {
-
-        checkPermission(userId, projectId, pipelineId, "用户（$userId) 无权限重启流水线($pipelineId)")
+        if (checkPermission!!) {
+            checkPermission(userId, projectId, pipelineId, "用户（$userId) 无权限重启流水线($pipelineId)")
+        }
 
         val redisLock = RedisLock(redisOperation, "build:concurrency:$buildId", 30L)
         try {
@@ -354,18 +357,19 @@ class PipelineBuildService(
             params[PIPELINE_RETRY_BUILD_ID] = buildId
 
             val readyToBuildPipelineInfo =
-                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
+                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
                     ?: throw NotFoundException("流水线数据异常，请刷新页面后重试")
 
             return startPipeline(
-                userId,
-                readyToBuildPipelineInfo,
-                StartType.MANUAL,
-                params,
-                ChannelCode.BS,
-                isMobile,
-                model,
-                buildInfo.version
+                userId = userId,
+                readyToBuildPipelineInfo = readyToBuildPipelineInfo,
+                startType = StartType.MANUAL,
+                startParams = params,
+                channelCode = channelCode ?: ChannelCode.BS,
+                isMobile = isMobile,
+                model = model,
+                signPipelineVersion = buildInfo.version,
+                frequencyLimit = true
             )
         } finally {
             redisLock.unlock()

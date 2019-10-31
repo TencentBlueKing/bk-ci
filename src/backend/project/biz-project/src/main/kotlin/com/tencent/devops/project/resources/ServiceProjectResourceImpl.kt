@@ -90,4 +90,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(englishName))
     }
 
+    override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
+        return Result(projectService.createGitCIProject(userId, gitProjectId))
+    }
 }

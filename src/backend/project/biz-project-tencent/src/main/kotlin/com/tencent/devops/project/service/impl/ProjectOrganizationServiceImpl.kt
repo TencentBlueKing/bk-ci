@@ -1,9 +1,7 @@
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.service.tof.TOFService

@@ -170,7 +170,7 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    private fun sortPipelines(pipelines: List<Pipeline>, sortType: PipelineSortType) {
+    fun sortPipelines(pipelines: List<Pipeline>, sortType: PipelineSortType) {
         Collections.sort(pipelines) { a, b ->
             when (sortType) {
                 PipelineSortType.NAME -> {
@@ -593,6 +593,28 @@ class PipelineService @Autowired constructor(
         }
     }
 
+    fun listPipelineInfo(userId: String, projectId: String, pipelineIdList: Collection<String>?, templateIdList: Collection<String>? = null): List<Pipeline> {
+        val resultPipelineIds = mutableSetOf<String>()
+
+        val pipelines =
+            listPermissionPipeline(userId, projectId, null, null, PipelineSortType.CREATE_TIME, ChannelCode.BS, false)
+
+        if (pipelineIdList != null) {
+            resultPipelineIds.addAll(pipelineIdList)
+        }
+
+        if (templateIdList != null) {
+            val templatePipelineIds = templatePipelineDao.listPipeline(dslContext, templateIdList).map { it.pipelineId }
+            resultPipelineIds.addAll(templatePipelineIds)
+        }
+
+        return if (resultPipelineIds.isEmpty()) {
+            pipelines.records
+        } else {
+            pipelines.records.filter { it.pipelineId in resultPipelineIds }
+        }
+    }
+
     fun listPermissionPipeline(
         userId: String,
         projectId: String,
@@ -864,7 +886,7 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    private fun filterViewPipelines(
+    fun filterViewPipelines(
         userId: String,
         projectId: String,
         pipelines: List<Pipeline>,
@@ -879,7 +901,7 @@ class PipelineService @Autowired constructor(
     /**
      * 视图的基础上增加简单过滤
      */
-    private fun filterViewPipelines(
+    fun filterViewPipelines(
         pipelines: List<Pipeline>,
         filterByName: String?,
         filterByCreator: String?,
@@ -1201,7 +1223,7 @@ class PipelineService @Autowired constructor(
         return result
     }
 
-    private fun buildPipelines(
+    fun buildPipelines(
         pipelineBuildSummary: Result<out Record>,
         favorPipelines: List<String>,
         authPipelines: List<String>,
