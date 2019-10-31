@@ -46,6 +46,7 @@ object Runner {
             logger.info("Start the worker ...")
             // 启动成功了，报告process我已经启动了
             val buildVariables = ProcessService.setStarted()
+
             // 启动日志服务
             LoggerService.start()
             val retryCount = buildVariables.variables[PIPELINE_RETRY_COUNT] ?: "0"
