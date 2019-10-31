@@ -29,6 +29,7 @@ dependencies {
     compile project(":notify:api-notify")
     compile project(":store:api-store-tencent")
     compile project(":repository:api-repository-tencent")
+    compile project(":project:api-project-tencent")
     compile project(":support:api-support-tencent")
     compile project(":store:biz-store")
 }

@@ -24,25 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.container
+package com.tencent.devops.store.service.template.impl
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpPCGProjectResource
-import com.tencent.devops.store.service.container.PCGImageService
+import com.tencent.devops.store.dao.template.MarketTemplateDao
+import com.tencent.devops.store.service.common.impl.StoreMemberServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class OpPCGProjectResourceImpl @Autowired constructor(private val pcgImageService: PCGImageService) :
-    OpPCGProjectResource {
+@Service("templateMemberService")
+class TemplateMemberServiceImpl : StoreMemberServiceImpl() {
 
-    override fun add(projectId: String): Result<Boolean> {
-        pcgImageService.enableProject(projectId)
-        return Result(true)
-    }
+    @Autowired
+    private lateinit var marketTemplateDao: MarketTemplateDao
 
-    override fun delete(projectId: String): Result<Boolean> {
-        pcgImageService.disableProject(projectId)
-        return Result(true)
+    override fun getStoreName(storeCode: String): String {
+        return marketTemplateDao.getLatestTemplateByCode(dslContext, storeCode)?.templateName ?: ""
     }
 }

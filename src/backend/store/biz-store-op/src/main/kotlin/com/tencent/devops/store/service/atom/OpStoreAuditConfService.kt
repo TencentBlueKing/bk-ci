@@ -24,25 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.container
+package com.tencent.devops.store.service.atom
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpPCGProjectResource
-import com.tencent.devops.store.service.container.PCGImageService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.VisibleAuditInfo
 
-@RestResource
-class OpPCGProjectResourceImpl @Autowired constructor(private val pcgImageService: PCGImageService) :
-    OpPCGProjectResource {
+interface OpStoreAuditConfService {
+    /**
+     * 查询给定条件的审核范围记录
+     * @param storeName 审核组件名称
+     * @param storeType 审核组件类型（0：插件 1：模板）
+     * @param status 审核状态
+     * @param page 分页页数
+     * @param pageSize 分页每页记录条数
+     */
+    fun getAllAuditConf(
+        storeName: String?,
+        storeType: Byte?,
+        status: Byte?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<VisibleAuditInfo>>
 
-    override fun add(projectId: String): Result<Boolean> {
-        pcgImageService.enableProject(projectId)
-        return Result(true)
-    }
+    /**
+     * 审核可见范围，根据记录ID修改相应的审核状态
+     * @param userId 审核人ID
+     * @param id 审核记录ID
+     * @param storeApproveRequest 审核信息对象，半酣审核状态和驳回原因
+     */
+    fun approveVisibleDept(userId: String, id: String, storeApproveRequest: StoreApproveRequest): Result<Boolean>
 
-    override fun delete(projectId: String): Result<Boolean> {
-        pcgImageService.disableProject(projectId)
-        return Result(true)
-    }
+    /**
+     * 根据审核记录的ID删除一条审核记录
+     * @param id 审核记录的ID
+     */
+    fun deleteAuditConf(id: String): Result<Boolean>
 }

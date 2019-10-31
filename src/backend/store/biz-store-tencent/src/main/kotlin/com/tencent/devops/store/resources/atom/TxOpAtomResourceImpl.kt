@@ -24,25 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.container
+package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpPCGProjectResource
-import com.tencent.devops.store.service.container.PCGImageService
+import com.tencent.devops.store.api.atom.TxOpAtomResource
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.TxOpAtomService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpPCGProjectResourceImpl @Autowired constructor(private val pcgImageService: PCGImageService) :
-    OpPCGProjectResource {
+class TxOpAtomResourceImpl @Autowired constructor(
+    private val storeVisibleDeptService: StoreVisibleDeptService,
+    private val opAtomService: TxOpAtomService
+) : TxOpAtomResource {
 
-    override fun add(projectId: String): Result<Boolean> {
-        pcgImageService.enableProject(projectId)
-        return Result(true)
+    override fun moveGitProjectToGroup(userId: String, atomCode: String, groupCode: String?): Result<Boolean> {
+        return opAtomService.moveGitProjectToGroup(userId, groupCode, atomCode)
     }
 
-    override fun delete(projectId: String): Result<Boolean> {
-        pcgImageService.disableProject(projectId)
-        return Result(true)
+    override fun approveVisibleDept(userId: String, atomCode: String, visibleApproveReq: VisibleApproveReq): Result<Boolean> {
+        return storeVisibleDeptService.approveVisibleDept(userId, atomCode, visibleApproveReq, StoreTypeEnum.ATOM)
+    }
+
+    override fun getVisibleDept(atomCode: String): Result<StoreVisibleDeptResp?> {
+        return storeVisibleDeptService.getVisibleDept(atomCode, StoreTypeEnum.ATOM, null)
     }
 }

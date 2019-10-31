@@ -36,6 +36,8 @@ import com.tencent.devops.store.service.common.impl.BkStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.BkStoreUserServiceImpl
 import com.tencent.devops.store.service.container.impl.BkContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.BkMarketTemplateServiceImpl
+import com.tencent.devops.store.service.template.impl.BkTemplateNotifyServiceImpl
+import com.tencent.devops.store.service.template.impl.BkTemplateReleaseServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -70,5 +72,11 @@ class BkServiceConfig {
     fun atomCooperationService() = BkAtomCooperationServiceImpl()
 
     @Bean
+    fun templateNotifyService() = BkTemplateNotifyServiceImpl()
+
+    @Bean
     fun marketTemplateService() = BkMarketTemplateServiceImpl()
+
+    @Bean
+    fun templateReleaseService() = BkTemplateReleaseServiceImpl()
 }

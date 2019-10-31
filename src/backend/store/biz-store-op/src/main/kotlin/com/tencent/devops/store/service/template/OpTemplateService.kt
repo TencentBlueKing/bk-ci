@@ -24,25 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.container
+package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpPCGProjectResource
-import com.tencent.devops.store.service.container.PCGImageService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.template.ApproveReq
+import com.tencent.devops.store.pojo.template.OpTemplateResp
+import com.tencent.devops.store.pojo.template.enums.OpTemplateSortTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateTypeEnum
 
-@RestResource
-class OpPCGProjectResourceImpl @Autowired constructor(private val pcgImageService: PCGImageService) :
-    OpPCGProjectResource {
+interface OpTemplateService {
 
-    override fun add(projectId: String): Result<Boolean> {
-        pcgImageService.enableProject(projectId)
-        return Result(true)
-    }
+    fun list(
+        userId: String,
+        templateName: String?,
+        templateStatus: TemplateStatusEnum?,
+        templateType: TemplateTypeEnum?,
+        classifyCode: String?,
+        category: String?,
+        labelCode: String?,
+        latestFlag: Boolean?,
+        sortType: OpTemplateSortTypeEnum?,
+        desc: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<OpTemplateResp>
 
-    override fun delete(projectId: String): Result<Boolean> {
-        pcgImageService.disableProject(projectId)
-        return Result(true)
-    }
+    /**
+     * 审核模版
+     */
+    fun approveTemplate(userId: String, templateId: String, approveReq: ApproveReq): Result<Boolean>
 }

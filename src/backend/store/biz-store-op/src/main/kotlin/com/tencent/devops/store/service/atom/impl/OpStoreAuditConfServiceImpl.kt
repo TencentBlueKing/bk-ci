@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Page
@@ -37,7 +37,7 @@ import com.tencent.devops.store.dao.common.StoreAudtConfDao
 import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.OpStoreAuditConfService
+import com.tencent.devops.store.service.atom.OpStoreAuditConfService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

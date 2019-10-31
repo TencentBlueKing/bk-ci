@@ -24,41 +24,52 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service
+package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.atom.ApproveReq
+import com.tencent.devops.store.pojo.atom.Atom
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 
-interface OpStoreAuditConfService {
+/**
+ * 插件OP业务逻辑类
+ *
+ * since: 2019-10-29
+ */
+interface OpAtomService {
+
     /**
-     * 查询给定条件的审核范围记录
-     * @param storeName 审核组件名称
-     * @param storeType 审核组件类型（0：插件 1：模板）
-     * @param status 审核状态
-     * @param page 分页页数
-     * @param pageSize 分页每页记录条数
+     * op系统获取插件信息
      */
-    fun getAllAuditConf(
-        storeName: String?,
-        storeType: Byte?,
-        status: Byte?,
+    fun getOpPipelineAtoms(
+        atomName: String?,
+        atomType: AtomTypeEnum?,
+        serviceScope: String?,
+        os: String?,
+        category: String?,
+        classifyId: String?,
+        atomStatus: AtomStatusEnum?,
+        sortType: OpSortTypeEnum?,
+        desc: Boolean?,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<VisibleAuditInfo>>
+    ): Result<AtomResp<Atom>?>
 
     /**
-     * 审核可见范围，根据记录ID修改相应的审核状态
-     * @param userId 审核人ID
-     * @param id 审核记录ID
-     * @param storeApproveRequest 审核信息对象，半酣审核状态和驳回原因
+     * 根据id获取插件信息
      */
-    fun approveVisibleDept(userId: String, id: String, storeApproveRequest: StoreApproveRequest): Result<Boolean>
+    fun getPipelineAtom(id: String): Result<Atom?>
 
     /**
-     * 根据审核记录的ID删除一条审核记录
-     * @param id 审核记录的ID
+     * 根据插件代码和版本号获取插件信息
      */
-    fun deleteAuditConf(id: String): Result<Boolean>
+    fun getPipelineAtom(atomCode: String, version: String): Result<Atom?>
+
+    /**
+     * 审核插件
+     */
+    fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean>
 }

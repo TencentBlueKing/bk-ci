@@ -47,7 +47,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     override fun addMarketTemplate(
         userId: String,
         addMarketTemplateRequest: AddMarketTemplateRequest
-    ): Result<Boolean> {
+    ): Result<Map<String, String>> {
         return templateService.addMarketTemplate(userId, addMarketTemplateRequest)
     }
 

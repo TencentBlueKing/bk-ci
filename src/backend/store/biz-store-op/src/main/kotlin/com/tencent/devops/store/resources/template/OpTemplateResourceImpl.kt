@@ -24,25 +24,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.container
+package com.tencent.devops.store.resources.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpPCGProjectResource
-import com.tencent.devops.store.service.container.PCGImageService
+import com.tencent.devops.store.api.template.OpTemplateResource
+import com.tencent.devops.store.pojo.template.ApproveReq
+import com.tencent.devops.store.pojo.template.OpTemplateResp
+import com.tencent.devops.store.pojo.template.enums.OpTemplateSortTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateTypeEnum
+import com.tencent.devops.store.service.template.OpTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpPCGProjectResourceImpl @Autowired constructor(private val pcgImageService: PCGImageService) :
-    OpPCGProjectResource {
+class OpTemplateResourceImpl @Autowired constructor(
+    private val opTemplateService: OpTemplateService
+) : OpTemplateResource {
 
-    override fun add(projectId: String): Result<Boolean> {
-        pcgImageService.enableProject(projectId)
-        return Result(true)
+    override fun listTemplates(
+        userId: String,
+        templateName: String?,
+        templateStatus: TemplateStatusEnum?,
+        templateType: TemplateTypeEnum?,
+        classifyCode: String?,
+        category: String?,
+        labelCode: String?,
+        latestFlag: Boolean?,
+        sortType: OpTemplateSortTypeEnum?,
+        desc: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<OpTemplateResp> {
+        return opTemplateService.list(
+            userId,
+            templateName,
+            templateStatus,
+            templateType,
+            classifyCode,
+            category,
+            labelCode,
+            latestFlag,
+            sortType,
+            desc,
+            page,
+            pageSize
+        )
     }
 
-    override fun delete(projectId: String): Result<Boolean> {
-        pcgImageService.disableProject(projectId)
-        return Result(true)
+    override fun approveTemplate(userId: String, templateId: String, approveReq: ApproveReq): Result<Boolean> {
+        return opTemplateService.approveTemplate(userId, templateId, approveReq)
     }
 }
