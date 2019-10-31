@@ -616,6 +616,9 @@ class PipelineBuildService(
                         el.reviewUsers.forEach { user ->
                             reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }.toList())
                         }
+                        params.params.forEach {
+                            it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                        }
 //                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
                             logger.warn("User does not have the permission to review, userId:($userId) - (${el.reviewUsers}|$runtimeVars) - ($reviewUser)")

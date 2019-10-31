@@ -1255,6 +1255,15 @@ class PipelineRuntimeService @Autowired constructor(
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
+
+                        val reviewParams = params.params.associate { it.key.toString() to it.value.toString() }
+                        pipelineBuildVarDao.batchSave(
+                            dslContext,
+                            projectId,
+                            pipelineId,
+                            buildId,
+                            reviewParams
+                        )
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(
                                 javaClass.simpleName,
