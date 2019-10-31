@@ -2,6 +2,7 @@ package com.tencent.devops.project.service.tof
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * API
@@ -50,47 +52,69 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
         logger.info("Get the tof host($tofHost), code($tofAppCode) and secret($tofAppSecret)")
     }
 
+    private val userInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*userId*/, StaffInfoResponse>()
+
+    private val userDeptCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*userId*/, UserDeptDetail>()
+
     fun getUserDeptDetail(operator: String?, userId: String, bk_ticket: String): UserDeptDetail {
         validate()
-        val staffInfo = getStaffInfo(operator, userId, bk_ticket)
-        // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
-        val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
-        var bgName = ""
-        var bgId = "0"
-        var deptName = ""
-        var deptId = "0"
-        var centerName = ""
-        var centerId = "0"
-        val groupId = staffInfo.GroupId
-        val groupName = staffInfo.GroupName
-        for (deptInfo in deptInfos) {
-            val level = deptInfo.level
-            val name = deptInfo.name
-            when (level) {
-                "1" -> {
-                    bgName = name
-                    bgId = deptInfo.id
-                }
-                "2" -> {
-                    deptName = name
-                    deptId = deptInfo.id
-                }
-                "3" -> {
-                    centerName = name
-                    centerId = deptInfo.id
+        var detail = userDeptCache.getIfPresent(userId)
+        if (detail == null) {
+            synchronized(this) {
+                detail = userDeptCache.getIfPresent(userId)
+                if (detail == null) {
+                    logger.info("[$operator}|$userId|$bk_ticket] Start to get the staff info")
+                    val staffInfo = getStaffInfo(operator, userId, bk_ticket)
+                    // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
+                    val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
+                    var bgName = ""
+                    var bgId = "0"
+                    var deptName = ""
+                    var deptId = "0"
+                    var centerName = ""
+                    var centerId = "0"
+                    val groupId = staffInfo.GroupId
+                    val groupName = staffInfo.GroupName
+                    for (deptInfo in deptInfos) {
+                        val level = deptInfo.level
+                        val name = deptInfo.name
+                        when (level) {
+                            "1" -> {
+                                bgName = name
+                                bgId = deptInfo.id
+                            }
+                            "2" -> {
+                                deptName = name
+                                deptId = deptInfo.id
+                            }
+                            "3" -> {
+                                centerName = name
+                                centerId = deptInfo.id
+                            }
+                        }
+                    }
+                    detail = UserDeptDetail(
+                        bgName,
+                        bgId,
+                        deptName,
+                        deptId,
+                        centerName,
+                        centerId,
+                        groupId,
+                        groupName
+                    )
+                    userDeptCache.put(userId, detail!!)
                 }
             }
         }
-        return UserDeptDetail(
-            bgName,
-            bgId,
-            deptName,
-            deptId,
-            centerName,
-            centerId,
-            groupId,
-            groupName
-        )
+
+        return detail!!
     }
 
     fun getUserDeptDetail(userId: String): UserDeptDetail {
@@ -195,19 +219,30 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
 
     fun getStaffInfo(operator: String?, userId: String, bk_ticket: String): StaffInfoResponse {
         try {
-            val path = "get_staff_info"
-            val responseContent = request(
-                path, StaffInfoRequest(
-                    tofAppCode!!,
-                    tofAppSecret!!, operator, userId, bk_ticket
-                ), "获取用户信息失败"
-            )
-            val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
-            if (response.data == null) {
-                logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+            var info = userInfoCache.getIfPresent(userId)
+            if (info == null) {
+                synchronized(this) {
+                    info = userInfoCache.getIfPresent(userId)
+                    if (info == null) {
+                        logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
+                        val path = "get_staff_info"
+                        val responseContent = request(
+                            path, StaffInfoRequest(
+                                tofAppCode!!,
+                                tofAppSecret!!, operator, userId, bk_ticket
+                            ), "获取用户信息失败"
+                        )
+                        val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
+                        if (response.data == null) {
+                            logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
+                            throw OperationException("获取用户信息失败")
+                        }
+                        info = response.data
+                        userInfoCache.put(userId, info!!)
+                    }
+                }
             }
-            return response.data!!
+            return info!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the staff info of userId $userId with ticket $bk_ticket", t)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
