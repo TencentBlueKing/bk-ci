@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":notify:biz-notify-blueking") // 企业版实现
+    compile project(":notify:biz-notify") // 开源版实现
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

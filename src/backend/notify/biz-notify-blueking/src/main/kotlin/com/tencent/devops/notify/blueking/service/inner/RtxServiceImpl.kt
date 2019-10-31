@@ -4,23 +4,23 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.notify.blueking.Configuration
-import com.tencent.devops.common.notify.blueking.NotifyService
-import com.tencent.devops.common.notify.blueking.NotifyService.Companion.RTX_URL
-import com.tencent.devops.common.notify.blueking.enums.EnumNotifyPriority
-import com.tencent.devops.common.notify.blueking.enums.EnumNotifySource
-import com.tencent.devops.common.notify.blueking.pojo.RtxNotifyPost
+import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
+import com.tencent.devops.common.notify.enums.EnumNotifyPriority
+import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
-import com.tencent.devops.notify.blueking.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.blueking.ROUTE_RTX
-import com.tencent.devops.notify.blueking.dao.RtxNotifyDao
-import com.tencent.devops.notify.blueking.model.NotificationResponse
-import com.tencent.devops.notify.blueking.model.NotificationResponseWithPage
-import com.tencent.devops.notify.blueking.model.RtxNotifyMessage
-import com.tencent.devops.notify.blueking.model.RtxNotifyMessageWithOperation
-import com.tencent.devops.notify.blueking.service.RtxService
-import com.tencent.devops.notify.blueking.utils.ChineseStringUtil
-import com.tencent.devops.notify.blueking.utils.CommonUtils
+import com.tencent.devops.notify.EXCHANGE_NOTIFY
+import com.tencent.devops.notify.ROUTE_RTX
+import com.tencent.devops.notify.dao.RtxNotifyDao
+import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.NotificationResponse
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.notify.service.RtxService
+import com.tencent.devops.common.notify.utils.ChineseStringUtil
+import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.Configuration
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,7 +36,6 @@ class RtxServiceImpl @Autowired constructor(
     private val configuration: Configuration
 ) : RtxService {
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
-
 
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
@@ -60,24 +59,24 @@ class RtxServiceImpl @Autowired constructor(
         for (notifyPost in rtxNotifyPosts) {
             val id = rtxNotifyMessageWithOperation.id ?: UUIDUtil.generate()
             val result = tofService.post(
-                    RTX_URL, notifyPost, tofConfs!!)
+                RTX_URL, notifyPost, tofConfs!!)
             if (result.Ret == 0) {
                 // 成功
                 rtxNotifyDao.insertOrUpdateRtxNotifyRecord(
-                        true, rtxNotifyMessageWithOperation.source, batchId, id,
-                        retryCount, null, notifyPost.receiver, notifyPost.sender,
-                        notifyPost.title, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                        notifyPost.contentMd5, notifyPost.frequencyLimit,
-                        tofConfs["sys-id"], notifyPost.fromSysId
+                    true, rtxNotifyMessageWithOperation.source, batchId, id,
+                    retryCount, null, notifyPost.receiver, notifyPost.sender,
+                    notifyPost.title, notifyPost.msgInfo, notifyPost.priority.toInt(),
+                    notifyPost.contentMd5, notifyPost.frequencyLimit,
+                    tofConfs["sys-id"], notifyPost.fromSysId
                 )
             } else {
                 // 写入失败记录
                 rtxNotifyDao.insertOrUpdateRtxNotifyRecord(
-                        false, rtxNotifyMessageWithOperation.source, batchId, id,
-                        retryCount, result.ErrMsg, notifyPost.receiver, notifyPost.sender,
-                        notifyPost.title, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                        notifyPost.contentMd5, notifyPost.frequencyLimit,
-                        tofConfs["sys-id"], notifyPost.fromSysId)
+                    false, rtxNotifyMessageWithOperation.source, batchId, id,
+                    retryCount, result.ErrMsg, notifyPost.receiver, notifyPost.sender,
+                    notifyPost.title, notifyPost.msgInfo, notifyPost.priority.toInt(),
+                    notifyPost.contentMd5, notifyPost.frequencyLimit,
+                    tofConfs["sys-id"], notifyPost.fromSysId)
                 if (retryCount < 3) {
                     // 开始重试
                     reSendMessage(notifyPost, rtxNotifyMessageWithOperation.source, retryCount + 1, id, batchId)
@@ -129,7 +128,7 @@ class RtxServiceImpl @Autowired constructor(
 
             val contentMd5 = CommonUtils.getMessageContentMD5(rtxNotifyMessage.title, body)
             val receivers = Lists.newArrayList(filterReceivers(
-                    rtxNotifyMessage.getReceivers(), contentMd5, rtxNotifyMessage.frequencyLimit)
+                rtxNotifyMessage.getReceivers(), contentMd5, rtxNotifyMessage.frequencyLimit)
             )
             if (receivers == null || receivers.isEmpty()) {
                 continue
@@ -167,7 +166,7 @@ class RtxServiceImpl @Autowired constructor(
         val filteredOutReceivers = HashSet<String>()
         if (frequencyLimit != null && frequencyLimit > 0) {
             val recordedReceivers = rtxNotifyDao.getReceiversByContentMd5AndTime(
-                    contentMd5, (frequencyLimit * 60).toLong()
+                contentMd5, (frequencyLimit * 60).toLong()
             )
             receivers.forEach { rec ->
                 for (recordedRec in recordedReceivers) {
@@ -221,12 +220,12 @@ class RtxServiceImpl @Autowired constructor(
         }
 
         return NotificationResponse(record.id, record.success,
-                if (record.createdTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-                if (record.updatedTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-                record.contentMd5, message)
+            if (record.createdTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
+            if (record.updatedTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
+            record.contentMd5, message)
     }
 }

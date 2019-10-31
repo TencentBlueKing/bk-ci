@@ -4,9 +4,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.notify.TOFConfiguration
-import com.tencent.devops.common.notify.TOFService
-import com.tencent.devops.common.notify.TOFService.Companion.RTX_URL
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
@@ -19,8 +16,9 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.service.RtxService
-import com.tencent.devops.notify.utils.ChineseStringUtil
-import com.tencent.devops.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.ChineseStringUtil
+import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.notify.utils.TOFService.Companion.RTX_URL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,10 +29,10 @@ import java.util.stream.Collectors
 
 @Service
 class RtxServiceImpl @Autowired constructor(
-    private val tofService: TOFService,
+    private val tofService: com.tencent.devops.notify.utils.TOFService,
     private val rtxNotifyDao: RtxNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val tofConfiguration: TOFConfiguration
+    private val tofConfiguration: com.tencent.devops.notify.utils.TOFConfiguration
 ) : RtxService {
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
 

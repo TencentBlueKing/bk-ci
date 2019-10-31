@@ -1,4 +1,0 @@
-dependencies {
-    compile project(":common:common-web")
-    compile project(":common:common-pipeline")
-}

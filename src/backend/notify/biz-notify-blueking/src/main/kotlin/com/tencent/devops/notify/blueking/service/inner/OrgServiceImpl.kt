@@ -1,6 +1,6 @@
 package com.tencent.devops.notify.blueking.service.inner
 
-import com.tencent.devops.notify.blueking.service.OrgService
+import com.tencent.devops.notify.service.OrgService
 import org.springframework.stereotype.Service
 
 @Service

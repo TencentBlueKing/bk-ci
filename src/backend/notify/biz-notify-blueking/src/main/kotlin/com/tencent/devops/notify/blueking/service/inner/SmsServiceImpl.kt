@@ -4,23 +4,23 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.notify.blueking.Configuration
-import com.tencent.devops.common.notify.blueking.NotifyService
-import com.tencent.devops.common.notify.blueking.NotifyService.Companion.SMS_URL
-import com.tencent.devops.common.notify.blueking.enums.EnumNotifyPriority
-import com.tencent.devops.common.notify.blueking.enums.EnumNotifySource
-import com.tencent.devops.common.notify.blueking.pojo.SmsNotifyPost
+import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.SMS_URL
+import com.tencent.devops.common.notify.enums.EnumNotifyPriority
+import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.model.notify.tables.records.TNotifySmsRecord
-import com.tencent.devops.notify.blueking.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.blueking.ROUTE_SMS
-import com.tencent.devops.notify.blueking.dao.SmsNotifyDao
-import com.tencent.devops.notify.blueking.model.NotificationResponse
-import com.tencent.devops.notify.blueking.model.NotificationResponseWithPage
-import com.tencent.devops.notify.blueking.model.SmsNotifyMessage
-import com.tencent.devops.notify.blueking.model.SmsNotifyMessageWithOperation
-import com.tencent.devops.notify.blueking.service.SmsService
-import com.tencent.devops.notify.blueking.utils.ChineseStringUtil
-import com.tencent.devops.notify.blueking.utils.CommonUtils
+import com.tencent.devops.notify.EXCHANGE_NOTIFY
+import com.tencent.devops.notify.ROUTE_SMS
+import com.tencent.devops.notify.dao.SmsNotifyDao
+import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
+import com.tencent.devops.notify.service.SmsService
+import com.tencent.devops.common.notify.utils.ChineseStringUtil
+import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.notify.pojo.NotificationResponse
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.SmsNotifyMessage
+import com.tencent.devops.common.notify.utils.Configuration
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,6 @@ class SmsServiceImpl @Autowired constructor(
 ) : SmsService {
 
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)
-
 
 
     override fun sendMqMsg(message: SmsNotifyMessage) {
@@ -57,19 +56,19 @@ class SmsServiceImpl @Autowired constructor(
         for (notifyPost in smsNotifyPosts) {
             val id = smsNotifyMessageWithOperation.id ?: UUIDUtil.generate()
             val result = tofService.post(
-                    SMS_URL, notifyPost, tofConfs!!)
+                SMS_URL, notifyPost, tofConfs!!)
             if (result.Ret == 0) {
                 // 成功
                 smsNotifyDao.insertOrUpdateSmsNotifyRecord(true, smsNotifyMessageWithOperation.source,
-                        batchId, id, retryCount, null, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                        notifyPost.contentMd5, notifyPost.frequencyLimit,
-                        tofConfs["sys-id"], notifyPost.fromSysId)
+                    batchId, id, retryCount, null, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
+                    notifyPost.contentMd5, notifyPost.frequencyLimit,
+                    tofConfs["sys-id"], notifyPost.fromSysId)
             } else {
                 // 写入失败记录
                 smsNotifyDao.insertOrUpdateSmsNotifyRecord(false, smsNotifyMessageWithOperation.source,
-                        batchId, id, retryCount, result.ErrMsg, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                        notifyPost.contentMd5, notifyPost.frequencyLimit,
-                        tofConfs["sys-id"], notifyPost.fromSysId)
+                    batchId, id, retryCount, result.ErrMsg, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
+                    notifyPost.contentMd5, notifyPost.frequencyLimit,
+                    tofConfs["sys-id"], notifyPost.fromSysId)
                 if (retryCount < 3) {
                     // 开始重试
                     reSendMessage(notifyPost, smsNotifyMessageWithOperation.source, retryCount + 1, id, batchId)
@@ -119,7 +118,7 @@ class SmsServiceImpl @Autowired constructor(
 
             val contentMd5 = CommonUtils.getMessageContentMD5("", body)
             val receivers = Lists.newArrayList(filterReceivers(
-                    smsNotifyMessage.getReceivers(), contentMd5, smsNotifyMessage.frequencyLimit)
+                smsNotifyMessage.getReceivers(), contentMd5, smsNotifyMessage.frequencyLimit)
             )
             if (receivers == null || receivers.isEmpty()) {
                 continue
@@ -154,7 +153,7 @@ class SmsServiceImpl @Autowired constructor(
         val filteredOutReceivers = HashSet<String>()
         if (frequencyLimit > 0) {
             val recordedReceivers = smsNotifyDao.getReceiversByContentMd5AndTime(
-                    contentMd5, (frequencyLimit * 60).toLong()
+                contentMd5, (frequencyLimit * 60).toLong()
             )
             receivers.forEach { rec ->
                 for (recordedRec in recordedReceivers) {
@@ -201,12 +200,12 @@ class SmsServiceImpl @Autowired constructor(
         }
 
         return NotificationResponse(record.id, record.success,
-                if (record.createdTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-                if (record.updatedTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-                record.contentMd5, message)
+            if (record.createdTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
+            if (record.updatedTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
+            record.contentMd5, message)
     }
 }

@@ -4,24 +4,24 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.notify.blueking.Configuration
-import com.tencent.devops.common.notify.blueking.NotifyService
-import com.tencent.devops.common.notify.blueking.NotifyService.Companion.EMAIL_URL
-import com.tencent.devops.common.notify.blueking.enums.EnumEmailFormat
-import com.tencent.devops.common.notify.blueking.enums.EnumEmailType
-import com.tencent.devops.common.notify.blueking.enums.EnumNotifyPriority
-import com.tencent.devops.common.notify.blueking.enums.EnumNotifySource
-import com.tencent.devops.common.notify.blueking.pojo.EmailNotifyPost
+import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.notify.enums.EnumEmailType
+import com.tencent.devops.common.notify.enums.EnumNotifyPriority
+import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
-import com.tencent.devops.notify.blueking.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.blueking.ROUTE_EMAIL
-import com.tencent.devops.notify.blueking.dao.EmailNotifyDao
-import com.tencent.devops.notify.blueking.model.EmailNotifyMessage
-import com.tencent.devops.notify.blueking.model.EmailNotifyMessageWithOperation
-import com.tencent.devops.notify.blueking.model.NotificationResponse
-import com.tencent.devops.notify.blueking.model.NotificationResponseWithPage
-import com.tencent.devops.notify.blueking.service.EmailService
-import com.tencent.devops.notify.blueking.utils.CommonUtils
+import com.tencent.devops.notify.EXCHANGE_NOTIFY
+import com.tencent.devops.notify.ROUTE_EMAIL
+import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.EMAIL_URL
+import com.tencent.devops.notify.dao.EmailNotifyDao
+import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.NotificationResponse
+import com.tencent.devops.notify.pojo.NotificationResponseWithPage
+import com.tencent.devops.notify.service.EmailService
+import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.Configuration
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,21 +53,21 @@ class EmailServiceImpl @Autowired constructor(
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
         val tofConfs = configuration.getConfigurations(emailNotifyMessageWithOperation.tofSysId)
         val result = tofService.post(
-                EMAIL_URL, emailNotifyPost, tofConfs!!)
+            EMAIL_URL, emailNotifyPost, tofConfs!!)
         if (result.Ret == 0) {
             // 成功
             emailNotifyDao.insertOrUpdateEmailNotifyRecord(true, emailNotifyMessageWithOperation.source, id,
-                    retryCount, null, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
-                    emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
-                    emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
-                    tofConfs["sys-id"], emailNotifyPost.fromSysId)
+                retryCount, null, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
+                emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
+                emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
+                tofConfs["sys-id"], emailNotifyPost.fromSysId)
         } else {
             // 写入失败记录
             emailNotifyDao.insertOrUpdateEmailNotifyRecord(false, emailNotifyMessageWithOperation.source, id,
-                    retryCount, result.ErrMsg, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
-                    emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
-                    emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
-                    tofConfs["sys-id"], emailNotifyPost.fromSysId)
+                retryCount, result.ErrMsg, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
+                emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
+                emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
+                tofConfs["sys-id"], emailNotifyPost.fromSysId)
             if (retryCount < 3) {
                 // 开始重试
                 reSendMessage(emailNotifyPost, emailNotifyMessageWithOperation.source, retryCount + 1, id)
@@ -114,7 +114,7 @@ class EmailServiceImpl @Autowired constructor(
         // 由于 soda 中 cc 与 bcc 基本没人使用，暂且不对 cc 和 bcc 作频率限制
         val contentMd5 = CommonUtils.getMessageContentMD5("", emailNotifyMessage.body)
         val tos = Lists.newArrayList(filterReceivers(
-                emailNotifyMessage.getReceivers(), contentMd5, emailNotifyMessage.frequencyLimit)
+            emailNotifyMessage.getReceivers(), contentMd5, emailNotifyMessage.frequencyLimit)
         )
         val ccs = emailNotifyMessage.getCc()
         val bccs = emailNotifyMessage.getBcc()
@@ -153,7 +153,7 @@ class EmailServiceImpl @Autowired constructor(
         val filteredOutReceivers = HashSet<String>()
         if (frequencyLimit > 0) {
             val recordedReceivers = emailNotifyDao.getTosByContentMd5AndTime(
-                    contentMd5, (frequencyLimit * 60).toLong()
+                contentMd5, (frequencyLimit * 60).toLong()
             )
             receivers.forEach { rec ->
                 for (recordedRec in recordedReceivers) {
@@ -217,12 +217,12 @@ class EmailServiceImpl @Autowired constructor(
         }
 
         return NotificationResponse(record.id, record.success,
-                if (record.createdTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-                if (record.updatedTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-                record.contentMd5, message)
+            if (record.createdTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
+            if (record.updatedTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
+            record.contentMd5, message)
     }
 }
