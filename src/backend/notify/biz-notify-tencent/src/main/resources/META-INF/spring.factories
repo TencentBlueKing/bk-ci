@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.common.notify.TOFAutoConfiguration
+com.tencent.devops.notify.utils.TOFAutoConfiguration
