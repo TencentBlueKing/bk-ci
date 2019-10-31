@@ -25,12 +25,7 @@
  */
 
 dependencies {
-    compile project(":notify:api-notify")
-    compile project(":notify:api-notify-tencent")
-    compile project(":common:common-auth:common-auth-tencent")
-    compile project(":notify:model-notify-tencent")
-    compile project(":common:common-db")
-    compile project(":common:common-notify")
+    compile project(":notify:biz-notify-blueking") // 企业版实现
 }
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+apply from: "$rootDir/task_spring_boot_package.gradle"

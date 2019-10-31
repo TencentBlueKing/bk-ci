@@ -26,11 +26,11 @@
 
 dependencies {
     compile project(":notify:api-notify")
-    compile project(":notify:api-notify-tencent")
-    compile project(":common:common-auth:common-auth-tencent")
-    compile project(":notify:model-notify-tencent")
+    compile project(":notify:api-notify-blueking")
+    compile project(":common:common-auth:common-auth-blueking")
+    compile project(":notify:model-notify-blueking")
     compile project(":common:common-db")
-    compile project(":common:common-notify")
+    compile project(":common:common-notify:common-notify-blueking")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
