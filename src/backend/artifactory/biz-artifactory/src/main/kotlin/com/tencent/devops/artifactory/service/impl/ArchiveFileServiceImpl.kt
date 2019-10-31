@@ -29,14 +29,21 @@ package com.tencent.devops.artifactory.service.impl
 import com.tencent.devops.artifactory.dao.FileDao
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
+import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -46,26 +53,36 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.util.AntPathMatcher
 import java.io.File
 import java.io.InputStream
 import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletResponse
 
 abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     @Autowired
     lateinit var fileDao: FileDao
+
     @Autowired
     lateinit var pipelineAuthServiceCode: PipelineAuthServiceCode
+
     @Autowired
     lateinit var authPermissionApi: AuthPermissionApi
+
     @Autowired
     lateinit var commonConfig: CommonConfig
+
     @Autowired
     lateinit var dslContext: DSLContext
+
+    private val matcher = AntPathMatcher()
 
     protected val fileSeparator: String = System.getProperty("file.separator")!!
 
@@ -117,7 +134,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         projectCode: String?,
         filePath: String?,
         fileType: FileTypeEnum?,
-        props: Map<String, String>?,
+        props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
         logger.info("the upload file info is:$disposition")
@@ -146,6 +163,126 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         return result
     }
 
+    override fun uploadFile(
+        userId: String,
+        file: File,
+        projectCode: String?,
+        filePath: String?,
+        fileName: String?,
+        fileType: FileTypeEnum?,
+        props: Map<String, String?>?,
+        fileChannelType: FileChannelTypeEnum
+    ): Result<String?> {
+        logger.info("uploadFile userId is:$userId,fileInfo:${file.name}")
+        logger.info("uploadFile projectCode is:$projectCode,filePath:$filePath,fileName:$fileName,fileType:$fileType,props:$props")
+        val uploadFileName = fileName ?: file.name
+        val index = uploadFileName.lastIndexOf(".")
+        val fileSuffix = uploadFileName.substring(index + 1)
+        val fileTypeStr = fileType?.fileType ?: "file"
+        val destPath = if (null == filePath) {
+            val saveFilename = "${UUIDUtil.generate()}.$fileSuffix" // 避免文件被他人覆盖，文件名用唯一数替换
+            "${getBasePath()}$fileSeparator${getCommonFileFolderName()}$fileSeparator$fileSuffix$fileSeparator$saveFilename"
+        } else {
+            //"${getBasePath()}$fileSeparator$filePath"
+            "$filePath"
+        }
+        logger.info("$uploadFileName destPath is:$destPath")
+        uploadFileToRepo(destPath, file)
+        val shaContent = ShaUtils.sha1(file.readBytes())
+        var fileProps:Map<String,String?> = props ?: mapOf()
+        fileProps = fileProps.plus("shaContent" to shaContent)
+        val path = destPath.substring(getBasePath().length + 1)
+        val fileId = UUIDUtil.generate()
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            fileDao.addFileInfo(
+                context,
+                userId,
+                fileId,
+                projectCode,
+                fileTypeStr,
+                path,
+                uploadFileName,
+                file.length()
+            )
+            if (null != props) {
+                fileDao.batchAddFileProps(context, userId, fileId, fileProps)
+            }
+        }
+        return Result(generateFileDownloadPath(fileChannelType, commonConfig, fileTypeStr, path))
+    }
+
+    abstract fun getCommonFileFolderName(): String
+
+    override fun downloadArchiveFile(
+        userId: String,
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        fileType: FileTypeEnum,
+        customFilePath: String,
+        response: HttpServletResponse
+    ) {
+        logger.info("downloadArchiveFile userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,customFilePath is:$customFilePath")
+        val result = generateDestPath(fileType, projectCode, customFilePath, pipelineId, buildId)
+        logger.info("generateDestPath result is:$result")
+        if (result.isNotOk()) {
+            response.writer.println(JsonUtil.toJson(result))
+            return
+        }
+        val destPath = result.data!!.substring(getBasePath().length + 1)
+        downloadFile(destPath, response)
+    }
+
+    override fun searchFileList(
+        userId: String,
+        projectCode: String,
+        page: Int?,
+        pageSize: Int?,
+        searchProps: SearchProps
+    ): Result<Page<FileInfo>> {
+        logger.info("searchFileList userId is:$userId,projectCode is:$projectCode,page is:$page,pageSize is:$pageSize,searchProps is:$searchProps")
+        val props = searchProps.props
+        val fileTypeList = listOf(FileTypeEnum.BK_ARCHIVE.fileType, FileTypeEnum.BK_CUSTOM.fileType)
+        val fileInfoRecords = fileDao.getFileListByProps(dslContext, projectCode, fileTypeList, props, page, pageSize)
+        val fileCount = fileDao.getFileCountByProps(dslContext, projectCode, fileTypeList, props)
+        val fileInfoList = mutableListOf<FileInfo>()
+        fileInfoRecords?.forEach {
+            var artifactoryType = ArtifactoryType.PIPELINE
+            if (it["fileType"] == FileTypeEnum.BK_CUSTOM.fileType) {
+                artifactoryType = ArtifactoryType.CUSTOM_DIR
+            }
+            fileInfoList.add(
+                FileInfo(
+                    name = it["fileName"] as String,
+                    fullName = it["fileName"] as String,
+                    path = it["filePath"] as String,
+                    fullPath = it["filePath"] as String,
+                    size = it["fileSize"] as Long,
+                    folder = false,
+                    modifiedTime = (it["createTime"] as LocalDateTime).timestampmilli(),
+                    artifactoryType = artifactoryType
+                )
+            )
+        }
+        val totalPages = PageUtil.calTotalPage(pageSize, fileCount)
+        return Result(
+            Page(
+                count = fileCount, page = page ?: 1, pageSize = pageSize
+                ?: -1, totalPages = totalPages, records = fileInfoList
+            )
+        )
+    }
+
+    abstract fun uploadFileToRepo(destPath: String, file: File)
+
+    abstract fun generateFileDownloadPath(
+        fileChannelType: FileChannelTypeEnum,
+        commonConfig: CommonConfig,
+        fileType: String,
+        destPath: String
+    ): String
+
     override fun archiveFile(
         userId: String,
         projectCode: String,
@@ -164,13 +301,13 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             return result
         }
         val destPath = result.data + fileSeparator + disposition.fileName
-        val props = mapOf("pipelineId" to pipelineId, "buildId" to buildId)
+        val props:Map<String, String?>? = mapOf("pipelineId" to pipelineId, "buildId" to buildId)
         return uploadFile(
             userId = userId,
             projectCode = projectCode,
             inputStream = inputStream,
             disposition = disposition,
-            filePath = destPath.substring(getBasePath().length + 1),
+            filePath = destPath,
             fileType = fileType,
             props = props,
             fileChannelType = fileChannelType
@@ -179,14 +316,16 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     override fun generateDestPath(
         fileType: FileTypeEnum,
-        projectCode: String,
+        projectCode: String?,
         customFilePath: String?,
-        pipelineId: String,
-        buildId: String
+        pipelineId: String?,
+        buildId: String?
     ): Result<String> {
-        val destPathBuilder =
-            StringBuilder(getBasePath()).append(fileSeparator).append(fileType.fileType).append(fileSeparator)
-                .append(projectCode).append(fileSeparator)
+        val destPathBuilder = StringBuilder(getBasePath()).append(fileType.fileType).append(fileSeparator)
+        if (!projectCode.isNullOrBlank()) {
+            destPathBuilder.append(projectCode).append(fileSeparator)
+        }
+           // .append(projectCode).append(fileSeparator)
         if (FileTypeEnum.BK_CUSTOM == fileType) {
             if (customFilePath == null) {
                 return MessageCodeUtil.generateResponseDataObject(
@@ -212,6 +351,28 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         val destPath = destPathBuilder.toString()
         logger.info("archiveFile destPath is:$destPath")
         return Result(destPath)
+    }
+
+    override fun transformFileUrl(
+        fileType: FileTypeEnum,
+        wildFlag: Boolean,
+        pathPattern: String,
+        fileChannelType: FileChannelTypeEnum,
+        filePath: String
+    ): String? {
+        var flag = false
+        if (wildFlag) {
+            if (matcher.match(pathPattern, filePath)) {
+                flag = true
+            }
+        } else {
+            flag = true
+        }
+        if (flag) {
+            val destPath = filePath.substring(getBasePath().length + 1)
+            return generateFileDownloadPath(fileChannelType, commonConfig, fileType.fileType, destPath)
+        }
+        return null
     }
 
     abstract fun getBasePath(): String

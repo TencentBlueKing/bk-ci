@@ -4,6 +4,7 @@ import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
+import com.tencent.devops.artifactory.pojo.DockerUser
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -11,7 +12,6 @@ import com.tencent.devops.artifactory.pojo.FilePipelineInfo
 import com.tencent.devops.artifactory.pojo.FolderSize
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.pojo.DockerUser
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.exception.OperationException

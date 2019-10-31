@@ -64,4 +64,9 @@ object ProjectMessageCode{
     const val PEM_CREATE_ID_INVALID = "2119019" // 权限中心创建的项目ID无效
     const val PEM_CHECK_FAIL = "2119020" // 没有该项目的操作权限
     const val PEM_QUERY_ERROR = "2119021" // 从权限中心获取用户的项目信息失败
+    const val ID_INVALID = "2119022" // ID无效获取失败
+    const val COLLECTION_SUCC = "2119023" // 服务收藏成功
+    const val COLLECTION_CANCEL_SUCC = "2119024" // 服务取消收藏成功
+    const val SERVICE_ADD_FAIL = "2119025" // 服务添加失败
+    const val LABLE_NAME_EXSIT = "2119026" // {0}已经存在，请换一个再试
 }
