@@ -34,7 +34,7 @@ function download_agent()
   fi
   if exists curl; then
     curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip '##agent_url##'
-    if [[ $? -eq 0 ]]; then
+    if [[ $? -ne 0 ]]; then
       echo "Fail to use curl to download the agent, use wget"
       wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip '##agent_url##'
     fi

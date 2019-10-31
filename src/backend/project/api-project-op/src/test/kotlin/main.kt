@@ -24,9 +24,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":project:biz-project-tencent")
-    compile project(":project:biz-project-op")
-}
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.project.pojo.ProjectVO
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+fun main(array: Array<String>) {
+    val p = ProjectVO(
+        id = 890,
+        projectId = "job",
+        projectName = "定时任务",
+        projectCode = "job",
+        projectType = 1,
+        approvalStatus = 1,
+        approvalTime = "2019-02-12",
+        approver = "fgg",
+        ccAppId = 123,
+        ccAppName = "XXG",
+        createdAt = "2019-02-12",
+        creator = "ggg",
+        dataId = 768,
+        deployType = "n",
+        updatedAt = "2019-02-12",
+        bgId = 6867,
+        bgName = "ssd",
+        centerId = 87987,
+        centerName = "fghfg",
+        deptId = 2,
+        deptName = "",
+        description = "job project",
+        englishName = "job",
+        extra = "",
+        isOfflined = true,
+        isSecrecy = true,
+        isHelmChartEnabled = true,
+        kind = 1,
+        logoAddr = "",
+        remark = "",
+        useBk = true,
+        gray = false,
+        enabled = true,
+        enableExternal = true,
+        hybridCcAppId=0
+    )
+    val message = JsonUtil.toJson(p)
+    println(message)
+    val to = JsonUtil.to(message, object : TypeReference<ProjectVO>() {})
+    println(to)
+}
