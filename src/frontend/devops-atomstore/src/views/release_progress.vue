@@ -34,28 +34,28 @@
                             <div class="step-card" v-for="(entry, index) in progressStatus" :key="index"
                                 :class="{ 'processing-status': entry.status === 'doing',
                                           'fail-status': entry.status === 'fail',
-                                          'success-status': entry.name === $t('结束') && entry.status === 'success' }">
+                                          'success-status': entry.code === 'end' && entry.status === 'success' }">
                                 <div class="card-item">
                                     <i class="bk-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
                                 <div class="retry-bth">
                                     <span class="test-btn"
-                                        v-if="entry.name === $t('提交') && ['doing','success'].includes(entry.status) && !isOver">
+                                        v-if="entry.code === 'commit' && ['doing','success'].includes(entry.status) && !isOver">
                                         <span> {{ $t('重新传包') }} </span>
                                         <input type="file" title="" class="upload-input" @change="selectFile" accept="application/zip">
                                     </span>
                                 </div>
                                 <div class="retry-bth">
                                     <span class="test-btn"
-                                        v-if="entry.name === $t('测试中') && entry.status === 'doing'">
+                                        v-if="entry.code === 'test' && entry.status === 'doing'">
                                         <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}/list`"> {{ $t('测试') }} </a>
                                     </span>
                                 </div>
                                 <bk-button class="pass-btn"
                                     theme="primary"
                                     size="small"
-                                    v-if="entry.name === $t('测试中') || entry.name === $t('测试')"
+                                    v-if="entry.code === 'test'"
                                     :disabled="entry.status !== 'doing' || !permission"
                                     @click.stop="passTest"
                                     :title="permissionMsg"

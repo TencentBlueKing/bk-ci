@@ -28,14 +28,14 @@
                             <div class="step-card" v-for="(entry, index) in progressStatus" :key="index"
                                 :class="{
                                     'processing-status': entry.status === 'doing',
-                                    'success-status': entry.name === $t('结束') && entry.status === 'success',
+                                    'success-status': entry.code === 'end' && entry.status === 'success',
                                     'fail-status': entry.status === 'fail'
                                 }">
                                 <div class="card-item">
                                     <i class="bk-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
-                                <div class="audit-tips" v-if="entry.name === $t('审核中') && entry.status === 'doing'">
+                                <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing'">
                                     <i class="bk-icon icon-info-circle"></i> {{ $t('由蓝盾管理员审核') }} </div>
                             </div>
                         </div>
