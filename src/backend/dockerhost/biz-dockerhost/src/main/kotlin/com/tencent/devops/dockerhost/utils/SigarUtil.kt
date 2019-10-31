@@ -21,16 +21,28 @@ object SigarUtil {
     private var queueCpuValueSum = 0
 
     fun loadEnable(): Boolean {
-        val averageMemLoad = queueMemValueSum / memQueue.size
-        return averageMemLoad < MAX_MEM
+        return try {
+            val averageMemLoad = queueMemValueSum / memQueue.size
+            averageMemLoad < MAX_MEM
+        } catch (e: Exception) {
+            true
+        }
     }
 
     fun getAverageMemLoad(): Int {
-        return queueMemValueSum / memQueue.size
+        return try {
+            queueMemValueSum / memQueue.size
+        } catch (e: Exception) {
+            0
+        }
     }
 
     fun getAverageCpuLoad(): Int {
-        return queueCpuValueSum / cpuQueue.size
+        return try {
+            queueCpuValueSum / cpuQueue.size
+        } catch (e: Exception) {
+            0
+        }
     }
 
     fun pushMem() {

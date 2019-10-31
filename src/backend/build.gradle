@@ -65,6 +65,7 @@ buildscript {
         awsS3Version = "1.11.461"
         asyncHttpClientVersion = "2.1.0"
         sigarVersion = "1.6.4"
+        poiVersion = "3.17"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -298,6 +299,10 @@ subprojects {
             }
             dependencySet(group: 'org.fusesource', version: "$sigarVersion") {
                 entry "sigar"
+            }
+            dependencySet(group: 'org.apache.poi', version: "$poiVersion") {
+                entry "poi"
+                entry "poi-ooxml"
             }
         }
     }
