@@ -19,25 +19,25 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
         pipelineId: String,
         repository: Repository,
         webHookParams: ScmWebhookMatcher.WebHookParams
-    ): Boolean {
+    ):  ScmWebhookMatcher.MatchResult {
         with(webHookParams) {
             if (repository !is CodeGitlabRepository) {
                 logger.warn("The repo($repository) is not code git repo for git web hook")
-                return false
+                return ScmWebhookMatcher.MatchResult(false)
             }
             if (repository.url != event.repository.git_http_url) {
-                return false
+                return ScmWebhookMatcher.MatchResult(false)
             }
 
             if (branchName.isNullOrEmpty()) {
-                return true
+                return ScmWebhookMatcher.MatchResult(true)
             }
 
             val match = isBranchMatch(branchName!!, event.ref)
             if (!match) {
                 logger.info("The branch($branchName) is not match the git update one(${event.ref})")
             }
-            return match
+            return ScmWebhookMatcher.MatchResult(match)
         }
     }
 
