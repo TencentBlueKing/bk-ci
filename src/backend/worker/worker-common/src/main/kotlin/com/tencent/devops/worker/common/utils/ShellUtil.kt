@@ -77,6 +77,7 @@ object ShellUtil {
 
     private val specialKey = listOf(".", "-")
     private val specialValue = listOf("|", "&", "(", ")")
+    private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
     fun execute(script: String, continueNoneZero: Boolean = false): String {
         return execute(buildId, script, dir, buildEnvs, emptyMap(), null, continueNoneZero)
@@ -108,8 +109,8 @@ object ShellUtil {
             }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                // 防止出现可执行的命令
-                val clean = value.replace("'", "\'").replace("`", "")
+                // --bug=75509999 Agent环境变量中替换掉破坏性字符
+                val clean = value.replace(specialCharToReplace, "")
                 command.append("export $name='$clean'\n")
             }
         }
