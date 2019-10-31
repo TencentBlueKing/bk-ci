@@ -27,6 +27,8 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ActivityDao
 import com.tencent.devops.project.pojo.*
 import com.tencent.devops.project.pojo.enums.ActivityType
@@ -70,8 +72,7 @@ class ActivityService @Autowired constructor(
                 )
             })
         }
-        //TODO: 国际化
-        return Result(405, "ID无效获取失败")
+        return Result(405, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID))
     }
 
     fun listOPActivity(userId: String): List<OPActivityVO> {

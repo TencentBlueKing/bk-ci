@@ -1,7 +1,9 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TProjectLabelRecord
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectLabelDao
 import com.tencent.devops.project.pojo.label.ProjectLabel
 import org.jooq.DSLContext
@@ -58,8 +60,8 @@ class ProjectLabelService @Autowired constructor(
         logger.info("the request labelName is :{}", labelName)
         val nameCount = projectLabelDao.countByName(dslContext, labelName)
         if (nameCount > 0) {
-            //TODO:国际化
-            throw CustomException(Response.Status.BAD_REQUEST, "($labelName)已经存在，请换一个再试") // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
+            throw CustomException(Response.Status.BAD_REQUEST,
+                    MessageCodeUtil.generateResponseDataObject<String>(ProjectMessageCode.LABLE_NAME_EXSIT, arrayOf(labelName)).message!! ) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
         }
         projectLabelDao.add(dslContext, labelName)
         return true
@@ -71,7 +73,8 @@ class ProjectLabelService @Autowired constructor(
         if (nameCount > 0) {
             val projectLabel = projectLabelDao.getProjectLabel(dslContext, id)
             if (null != projectLabel && !labelName.equals(projectLabel.labelName)) {
-                throw CustomException(Response.Status.BAD_REQUEST, "($labelName)已经存在，请换一个再试") // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
+                throw CustomException(Response.Status.BAD_REQUEST,
+                        MessageCodeUtil.generateResponseDataObject<String>(ProjectMessageCode.LABLE_NAME_EXSIT, arrayOf(labelName)).message!! ) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
             }
         }
         projectLabelDao.update(dslContext, id, labelName)
