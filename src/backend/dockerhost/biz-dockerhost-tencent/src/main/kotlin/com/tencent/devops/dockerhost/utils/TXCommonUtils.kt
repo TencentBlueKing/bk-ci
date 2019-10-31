@@ -27,7 +27,7 @@ object TXCommonUtils {
         }
     }
 
-    fun parseImage(imageNameInput: String): Triple<String, String, String> {
+    private fun parseImage(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val arry = imageNameStr.split(":")
         if (arry.size == 1) {
@@ -78,13 +78,13 @@ object TXCommonUtils {
 
     fun getDockerDefaultClient(dockerHostConfig: TXDockerHostConfig): DockerClient {
         val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerHost(dockerHostConfig.dockerHost)
-                .withDockerConfig(dockerHostConfig.dockerConfig)
-                .withApiVersion(dockerHostConfig.apiVersion)
-                .withRegistryUrl(dockerHostConfig.registryUrl)
-                .withRegistryUsername(dockerHostConfig.registryUsername)
-                .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
-                .build()
+            .withDockerHost(dockerHostConfig.dockerHost)
+            .withDockerConfig(dockerHostConfig.dockerConfig)
+            .withApiVersion(dockerHostConfig.apiVersion)
+            .withRegistryUrl(dockerHostConfig.registryUrl)
+            .withRegistryUsername(dockerHostConfig.registryUsername)
+            .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+            .build()
 
         return DockerClientBuilder.getInstance(config).build()
     }
@@ -98,15 +98,15 @@ object TXCommonUtils {
             } else {
                 logger.info("registryUser: $registryUser, registryPwd: $registryPwd")
                 AuthConfig()
-                        .withUsername(registryUser)
-                        .withPassword(registryPwd)
-                        .withRegistryAddress(registryHost)
+                    .withUsername(registryUser)
+                    .withPassword(registryPwd)
+                    .withRegistryAddress(registryHost)
             }
         } else {
             AuthConfig()
-                    .withUsername(dockerHostConfig.registryUsername)
-                    .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
-                    .withRegistryAddress(dockerHostConfig.registryUrl)
+                .withUsername(dockerHostConfig.registryUsername)
+                .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+                .withRegistryAddress(dockerHostConfig.registryUrl)
         }
     }
 }

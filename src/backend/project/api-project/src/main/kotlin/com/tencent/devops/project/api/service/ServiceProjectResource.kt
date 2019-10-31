@@ -156,6 +156,16 @@ interface ServiceProjectResource {
             englishName: String
     ): Result<ProjectVO?>
 
-
+    @POST
+    @Path("/gitci/{gitProjectId}/{userId}")
+    @ApiOperation("创建gitCI项目")
+    fun createGitCIProject(
+            @ApiParam("工蜂项目id", required = true)
+            @PathParam("gitProjectId")
+            gitProjectId: Long,
+            @ApiParam("用户名", required = true)
+            @PathParam("userId")
+            userId: String
+    ): Result<ProjectVO>
 
 }

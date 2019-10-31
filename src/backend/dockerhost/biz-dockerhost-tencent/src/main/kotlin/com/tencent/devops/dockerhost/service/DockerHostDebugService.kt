@@ -13,12 +13,12 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.config.TXDockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostDebugResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
+import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.TXCommonUtils
 import org.slf4j.LoggerFactory
@@ -44,7 +44,8 @@ class DockerHostDebugService(
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
     private val dockerHostDebugApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi()
-    private val alertApi: AlertApi = AlertApi()
+    private val alertApi: AlertApi =
+        AlertApi()
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerHost(dockerHostConfig.dockerHost)
@@ -102,9 +103,10 @@ class DockerHostDebugService(
     fun createContainer(containerInfo: ContainerInfo): String {
         try {
             val authConfig = TXCommonUtils.getAuthConfig(containerInfo.imageType, dockerHostConfig, containerInfo.imageName, containerInfo.registryUser, containerInfo.registryPwd)
-            val imageName = TXCommonUtils.normalizeImageName(containerInfo.imageName)
+            val imageName = CommonUtils.normalizeImageName(containerInfo.imageName)
             // docker pull
             try {
+                LocalImageCache.saveOrUpdate(imageName)
                 dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
                 logger.error("Pull images failed， imageName:$imageName")

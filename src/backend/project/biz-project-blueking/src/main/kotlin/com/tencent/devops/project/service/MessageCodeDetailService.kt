@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.pojo.code.AddMessageCodeRequest
 import com.tencent.devops.project.pojo.code.MessageCodeResp
 import com.tencent.devops.project.pojo.code.UpdateMessageCodeRequest
+import com.tencent.devops.project.service.dao.MessageCodeDetailDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
