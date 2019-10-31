@@ -18,11 +18,11 @@ class BuildDockerService @Autowired constructor(
     private val executor = Executors.newFixedThreadPool(10)
     private val buildTask = mutableMapOf<String, Future<Pair<Boolean, String?>>>()
 
-    fun buildImage(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, dockerBuildParam: DockerBuildParamNew): Boolean {
+    fun buildImage(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, elementId: String, dockerBuildParam: DockerBuildParamNew): Boolean {
         logger.info("projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerBuildParam: $dockerBuildParam")
 
         val future = executor.submit(Callable<Pair<Boolean, String?>> {
-            txDockerHostBuildService.dockerBuildAndPushImageNew(projectId, pipelineId, vmSeqId, dockerBuildParam, buildId)
+            txDockerHostBuildService.dockerBuildAndPushImageNew(projectId, pipelineId, vmSeqId, dockerBuildParam, buildId, elementId)
         })
 
         buildTask[getKey(vmSeqId, buildId)] = future

@@ -33,12 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
-import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import com.tencent.devops.store.pojo.template.MyTemplateItem
 import com.tencent.devops.store.pojo.template.TemplateDetail
-import com.tencent.devops.store.pojo.template.TemplateProcessInfo
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import io.swagger.annotations.Api
@@ -49,7 +46,6 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -104,7 +100,7 @@ interface UserTemplateResource {
         rdType: TemplateRdTypeEnum?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
-        sortType: MarketTemplateSortTypeEnum? = MarketTemplateSortTypeEnum.CREATE_TIME,
+        sortType: MarketTemplateSortTypeEnum ? = MarketTemplateSortTypeEnum.CREATE_TIME,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
@@ -112,31 +108,6 @@ interface UserTemplateResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MarketTemplateResp>
-
-    @ApiOperation("关联模板")
-    @POST
-    @Path("/templates/{templateCode}/store/rel")
-    fun addMarketTemplate(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("模板代码", required = true)
-        @PathParam("templateCode")
-        templateCode: String,
-        @ApiParam("关联模板请求报文体", required = true)
-        marketTemplateRelRequest: MarketTemplateRelRequest
-    ): Result<Boolean>
-
-    @ApiOperation("上架模板")
-    @PUT
-    @Path("/desk/template/release")
-    fun updateMarketTemplate(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("上架模板请求报文体", required = true)
-        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
-    ): Result<String?>
 
     @ApiOperation("删除工作台模版")
     @DELETE
@@ -174,15 +145,6 @@ interface UserTemplateResource {
         templateCode: String
     ): Result<TemplateDetail?>
 
-    @ApiOperation("根据插件版本ID获取插件版本进度")
-    @GET
-    @Path("/desk/template/release/process/{templateId}")
-    fun getProcessInfo(
-        @ApiParam("templateId", required = true)
-        @PathParam("templateId")
-        templateId: String
-    ): Result<TemplateProcessInfo>
-
     @ApiOperation("安装模板到项目")
     @POST
     @Path("/template/install")
@@ -212,7 +174,7 @@ interface UserTemplateResource {
         templateCode: String
     ): Result<List<InstalledProjRespItem?>>
 
-    @ApiOperation("根据用户获取插件工作台模板列表")
+    @ApiOperation("根据用户获取原子工作台模板列表")
     @GET
     @Path("/desk/template/list")
     fun getMyTemplates(
@@ -229,34 +191,4 @@ interface UserTemplateResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<MyTemplateItem>?>
-
-    @ApiOperation("取消发布")
-    @PUT
-    @Path("/desk/template/release/cancel/templateIds/{templateId}")
-    fun cancelRelease(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("templateId", required = true)
-        @PathParam("templateId")
-        templateId: String
-    ): Result<Boolean>
-
-    @ApiOperation("下架模板")
-    @PUT
-    @Path("/desk/template/offline/templateCodes/{templateCode}/versions")
-    fun offlineTemplate(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("模版代码", required = true)
-        @PathParam("templateCode")
-        templateCode: String,
-        @ApiParam("版本号", required = false)
-        @QueryParam("version")
-        version: String?,
-        @ApiParam("原因", required = false)
-        @QueryParam("reason")
-        reason: String?
-    ): Result<Boolean>
 }

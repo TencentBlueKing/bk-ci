@@ -27,18 +27,23 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
+import com.tencent.devops.dockerhost.pojo.DockerRunParam
+import com.tencent.devops.dockerhost.pojo.DockerRunResponse
+import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
+import javax.ws.rs.DELETE
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["DOCKER_HOST"], description = "DockerHost")
@@ -49,7 +54,7 @@ interface ServiceDockerHostResource {
 
     @ApiOperation("Docker build")
     @POST
-    @Path("/build/{projectId}/{pipelineId}/{vmSeqId}/{buildId}")
+    @Path("/build/{projectId}/{pipelineId}/{vmSeqId}/{buildId}/{elementId}")
     fun dockerBuild(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -63,8 +68,12 @@ interface ServiceDockerHostResource {
         @ApiParam(value = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
+        @ApiParam(value = "elementId", required = true)
+        @PathParam("elementId")
+        elementId: String?,
         @ApiParam("镜像名称", required = true)
-        dockerBuildParam: DockerBuildParam
+        dockerBuildParam: DockerBuildParam,
+        @Context request: HttpServletRequest
     ): Result<Boolean>
 
     @ApiOperation("Docker build")
@@ -76,22 +85,7 @@ interface ServiceDockerHostResource {
         vmSeqId: String,
         @ApiParam(value = "buildId", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @Context request: HttpServletRequest
     ): Result<Pair<Status, String?>>
-
-    @ApiOperation("startBuild")
-    @POST
-    @Path("/startBuild")
-    fun startBuild(
-        @ApiParam("dockerHost构建信息", required = true)
-        dockerHostBuildInfo: DockerHostBuildInfo
-    ): Result<Boolean>
-
-    @ApiOperation("endBuild")
-    @POST
-    @Path("/endBuild")
-    fun endBuild(
-        @ApiParam("dockerHost构建信息", required = true)
-        dockerHostBuildInfo: DockerHostBuildInfo
-    ): Result<Boolean>
 }

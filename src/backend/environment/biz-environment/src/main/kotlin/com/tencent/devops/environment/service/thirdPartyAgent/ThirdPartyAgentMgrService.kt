@@ -423,10 +423,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.info("The agent(${agentRecord.id}) exist")
             if (!gateway.isNullOrBlank()) {
                 thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = agentRecord.id, gateway = gateway!!)
-            } else {
-                agentRecord
             }
 //            Pair(hashId, secretKey)
+            agentRecord.setGateway(gateway!!)
 
         }
 

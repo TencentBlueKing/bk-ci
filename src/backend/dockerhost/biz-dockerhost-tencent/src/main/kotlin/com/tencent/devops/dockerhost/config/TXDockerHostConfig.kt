@@ -125,4 +125,10 @@ class TXDockerHostConfig {
 
     @Value("\${landunEnv}")
     var landunEnv: String? = null
+
+    @Value("\${localImageCacheDays}")
+    var localImageCacheDays: Int = 7
+
+    @Value("\${run.mode:#{null}}")
+    var runMode: String? = null
 }

@@ -53,7 +53,6 @@ import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import com.tencent.devops.model.environment.tables.records.TEnvNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -502,8 +501,7 @@ class EnvService @Autowired constructor(
             }
         }
 
-        val envNodeList = toAddNodeIds.map { TEnvNodeRecord(envId, it, projectId) }
-        envNodeDao.batchStoreEnvNode(dslContext, envNodeList)
+        envNodeDao.batchStoreEnvNode(dslContext, toAddNodeIds.toList(), envId, projectId)
     }
 
     override fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {

@@ -41,7 +41,7 @@ class GithubTokenService @Autowired constructor(
     private val githubTokenDao: GithubTokenDao
 ) {
     @Value("\${aes.github:#{null}}")
-    private val aesKey = "Bk39Go0rNtOdsI1Y"
+    private val aesKey = ""
 
     fun createAccessToken(userId: String, accessToken: String, tokenType: String, scope: String) {
         val encryptedAccessToken = AESUtil.encrypt(aesKey, accessToken)

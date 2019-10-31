@@ -12,6 +12,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["DOCKER_HOST"], description = "DockerHost")
@@ -36,6 +37,9 @@ interface BuildDockerHostResource {
         @ApiParam(value = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
+        @ApiParam(value = "elementId", required = true)
+        @QueryParam("elementId")
+        elementId: String,
         @ApiParam("镜像名称", required = true)
         dockerBuildParamNew: DockerBuildParamNew
     ): Result<Boolean>

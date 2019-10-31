@@ -6,7 +6,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreAuditResource
 import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
-import com.tencent.devops.store.service.OpStoreAuditConfService
+import com.tencent.devops.store.service.atom.OpStoreAuditConfService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

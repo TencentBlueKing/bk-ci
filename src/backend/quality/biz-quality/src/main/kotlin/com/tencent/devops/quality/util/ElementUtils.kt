@@ -13,6 +13,6 @@ object ElementUtils {
 
     fun getProjectElement(projectId: String): Map<String/* atomCode */, String/* cnName */> {
         val client = SpringContextUtil.getBean(Client::class.java)
-        return client.get(ServiceMarketAtomResource::class).getProjectAtomNames(projectId).data!!
+        return client.get(ServiceMarketAtomResource::class).getProjectElements(projectId).data!!
     }
 }
