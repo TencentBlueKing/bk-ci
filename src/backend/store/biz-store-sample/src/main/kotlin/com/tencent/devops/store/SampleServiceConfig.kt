@@ -36,6 +36,8 @@ import com.tencent.devops.store.service.common.impl.SampleStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreUserServiceImpl
 import com.tencent.devops.store.service.container.impl.SampleContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.SampleMarketTemplateServiceImpl
+import com.tencent.devops.store.service.template.impl.SampleTemplateNotifyServiceImpl
+import com.tencent.devops.store.service.template.impl.SampleTemplateReleaseServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -70,5 +72,11 @@ class SampleServiceConfig {
     fun atomCooperationService() = SampleAtomCooperationServiceImpl()
 
     @Bean
+    fun templateNotifyService() = SampleTemplateNotifyServiceImpl()
+
+    @Bean
     fun marketTemplateService() = SampleMarketTemplateServiceImpl()
+
+    @Bean
+    fun templateReleaseService() = SampleTemplateReleaseServiceImpl()
 }

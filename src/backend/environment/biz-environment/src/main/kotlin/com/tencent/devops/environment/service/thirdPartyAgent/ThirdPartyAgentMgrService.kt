@@ -421,13 +421,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         } else {
             val agentRecord = unimportAgent[0]
             logger.info("The agent(${agentRecord.id}) exist")
-            val hashId = HashUtil.encodeLongId(agentRecord.id)
-            val secretKey = SecurityUtil.decrypt(agentRecord.secretKey)
             if (!gateway.isNullOrBlank()) {
                 thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = agentRecord.id, gateway = gateway!!)
             }
 //            Pair(hashId, secretKey)
-            agentRecord
+            agentRecord.setGateway(gateway!!)
+
         }
 
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)

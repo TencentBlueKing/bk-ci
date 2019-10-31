@@ -27,18 +27,18 @@
 package com.tencent.devops.store.pojo.atom.enums
 
 enum class OpSortTypeEnum(val sortType: String) {
-    atomName("NAME"),
-    atomCode("ATOM_CODE"),
-    jobType("JOB_TYPE"),
-    classifyId("CLASSIFY_ID"),
-    atomType("ATOM_TYPE"),
-    atomStatus("ATOM_STATUS"),
-    defaultFlag("DEFAULT_FLAG"),
-    latestFlag("LATEST_FLAG"),
-    publisher("PUBLISHER"),
-    weight("WEIGHT"),
-    creator("CREATOR"),
-    modifier("MODIFIER"),
-    createTime("CREATE_TIME"),
-    updateTime("UPDATE_TIME")
+    AtomName("NAME"),
+    AtomCode("ATOM_CODE"),
+    JobType("JOB_TYPE"),
+    ClassifyId("CLASSIFY_ID"),
+    AtomType("ATOM_TYPE"),
+    AtomStatus("ATOM_STATUS"),
+    DefaultFlag("DEFAULT_FLAG"),
+    LatestFlag("LATEST_FLAG"),
+    Publisher("PUBLISHER"),
+    Weight("WEIGHT"),
+    Creator("CREATOR"),
+    Modifier("MODIFIER"),
+    CreateTime("CREATE_TIME"),
+    UpdateTime("UPDATE_TIME")
 }
