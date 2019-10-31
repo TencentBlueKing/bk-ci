@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.Element
 
 /**
  * 创建流水线事件
@@ -39,11 +40,15 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
  */
 @Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_CREATE)
 data class PipelineCreateEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildNo: BuildNo? = null,
-    override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
+		override val source: String,
+		override val projectId: String,
+		override val pipelineId: String,
+		override val userId: String,
+		val buildNo: BuildNo? = null,
+		val pipelineName: String? = null,
+		val element: Element? = null,
+		val version: Int? = 1,
+		val variables: Map<String, Any>? = null,
+		override var actionType: ActionType = ActionType.START,
+		override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
