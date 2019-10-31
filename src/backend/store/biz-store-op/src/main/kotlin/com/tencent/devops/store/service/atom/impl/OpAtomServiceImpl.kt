@@ -24,20 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
-import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
@@ -45,7 +41,6 @@ import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
-import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -56,7 +51,9 @@ import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.OpAtomService
+import com.tencent.devops.store.service.atom.OpAtomService
+import com.tencent.devops.store.service.atom.AtomNotifyService
+import com.tencent.devops.store.service.atom.AtomQualityService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -79,8 +76,7 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomFeatureDao: MarketAtomFeatureDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val atomQualityService: AtomQualityService,
-    private val atomNotifyService: AtomNotifyService,
-    private val client: Client
+    private val atomNotifyService: AtomNotifyService
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -198,38 +194,6 @@ class OpAtomServiceImpl @Autowired constructor(
             data = atomDao.convertString(atomRecord.data),
             recommendFlag = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)?.recommendFlag
         )
-    }
-
-    /**
-     * 把项目迁移到指定项目组下
-     */
-    override fun moveGitProjectToGroup(
-        userId: String,
-        groupCode: String?,
-        atomCode: String
-    ): Result<Boolean> {
-        logger.info("moveGitProjectToGroup userId is:$userId, groupCode is:$groupCode, atomCode is:$atomCode")
-        val atomRecord = atomDao.getRecentAtomByCode(dslContext, atomCode)
-        logger.info("the atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode), false)
-        }
-        val moveProjectToGroupResult: Result<GitProjectInfo?>
-        return try {
-            moveProjectToGroupResult = client.get(ServiceRepositoryResource::class)
-                .moveGitProjectToGroup(userId, groupCode, atomRecord.repositoryHashId, TokenTypeEnum.PRIVATE_KEY)
-            logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
-            if (moveProjectToGroupResult.isOk()) {
-                val gitProjectInfo = moveProjectToGroupResult.data!!
-                atomDao.updateAtomByCode(dslContext, userId, atomCode, AtomFeatureUpdateRequest(gitProjectInfo.repositoryUrl)) // 批量更新插件数据库的代码地址信息
-                Result(true)
-            } else {
-                Result(moveProjectToGroupResult.status, moveProjectToGroupResult.message ?: "")
-            }
-        } catch (e: Exception) {
-            logger.error("moveProjectToGroupResult error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        }
     }
 
     /**

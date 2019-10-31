@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
 
     @Autowired
-    lateinit var storeVisibleDeptService: StoreVisibleDeptService
+    private lateinit var storeVisibleDeptService: StoreVisibleDeptService
 
     private val logger = LoggerFactory.getLogger(TxMarketAtomServiceImpl::class.java)
 

@@ -24,7 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.tencent.devops.store.resources.container
 
 import com.tencent.devops.common.api.pojo.Result

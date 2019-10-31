@@ -174,7 +174,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         return Result(dataList)
     }
 
-
     abstract fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean
 
     abstract fun clickable(buildType: BuildType, projectCode: String): Boolean
