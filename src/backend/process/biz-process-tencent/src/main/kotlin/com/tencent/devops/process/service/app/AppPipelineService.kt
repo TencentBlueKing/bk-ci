@@ -3,7 +3,6 @@ package com.tencent.devops.process.service.app
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.api.pojo.BkAuthProject
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client

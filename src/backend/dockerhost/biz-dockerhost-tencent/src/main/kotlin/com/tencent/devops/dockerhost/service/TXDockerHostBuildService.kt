@@ -12,7 +12,6 @@ import com.github.dockerjava.api.model.PushResponseItem
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
-import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
 import org.slf4j.LoggerFactory

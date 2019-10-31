@@ -3,7 +3,6 @@ package com.tencent.devops.process.api.app
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.PipelineSettingService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

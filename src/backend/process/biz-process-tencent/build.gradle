@@ -32,18 +32,25 @@ dependencies {
     compile project(":common:common-db")
     compile project(":common:common-wechatwork")
     compile project(":common:common-auth:common-auth-api")
+    compile project(":common:common-auth:common-auth-tencent")
+    compile project(":common:common-pipeline:common-pipeline-tencent")
+    compile project(":common:common-archive-jfrog")
+    compile project(":common:common-job")
+    compile project(":common:common-itest")
+    compile project(":common:common-gcloud")
     compile project(":process:model-process-tencent")
     compile project(":process:api-process-tencent")
     compile project(":process:api-process")
     compile project(":process:biz-process")
     compile project(":process:model-process-tencent")
-    compile project(":common:common-auth:common-auth-tencent")
-
+    compile project(":experience:api-experience-tencent")
     compile project(":artifactory:api-artifactory-tencent")
-    compile project(":common:common-archive-jfrog")
-
     compile project(":notify:api-notify")
     compile project(":support:api-support-tencent")
+    compile project(":plugin:api-plugin-tencent")
+    compile project(":image:api-image-tencent")
+    compile "org.apache.poi:poi"
+    compile "org.apache.poi:poi-ooxml"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

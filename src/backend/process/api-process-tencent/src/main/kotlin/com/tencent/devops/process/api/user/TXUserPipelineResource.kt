@@ -2,25 +2,9 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.pojo.Permission
-import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.process.pojo.PipelineCopy
-import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.PipelineRemoteToken
-import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.SubscriptionType
-import com.tencent.devops.process.pojo.app.PipelinePage
-import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -28,7 +12,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam

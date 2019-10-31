@@ -50,9 +50,6 @@ interface ServicePluginCosResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("原子ID", required = true)
-        @PathParam("elementId")
-        elementId: String,
         @ApiParam("容器job ID", required = true)
         @PathParam("containerId")
         containerId: String,

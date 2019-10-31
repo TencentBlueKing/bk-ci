@@ -27,7 +27,7 @@
 dependencies {
     compile project(":common:common-db")
     compile project(":common:common-client")
-    compile project(":common:common-pipeline")
+    compile project(":common:common-pipeline:common-pipeline-sample")
     compile project(":process:model-process")
     compile project(":process:api-process")
     compile project(":process:plugin-sdk")

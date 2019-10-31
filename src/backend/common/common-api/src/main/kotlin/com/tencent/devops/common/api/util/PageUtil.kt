@@ -27,6 +27,7 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.pojo.Page
 
 /**
  * Powered By Tencent
@@ -61,5 +62,51 @@ object PageUtil {
             }
         }
         return totalPages.toInt()
+    }
+
+    const val DEFAULT_PAGE = 1
+    const val DEFAULT_PAGE_SIZE = 10
+
+    fun getValidPage(page: Int?): Int {
+        var validPage = page
+        if (validPage == null || validPage <= 0) {
+            validPage = DEFAULT_PAGE
+        }
+        return validPage
+    }
+
+    fun getValidPageSize(pageSize: Int?): Int {
+        var validPageSize = pageSize
+        if (validPageSize == null || validPageSize <= 0) {
+            validPageSize = DEFAULT_PAGE_SIZE
+        }
+        return validPageSize
+    }
+
+    /**
+     * 本地内存中分页，返回Page对象
+     */
+    fun <T> pageList(list: List<T>, page: Int? = DEFAULT_PAGE, pageSize: Int? = DEFAULT_PAGE_SIZE, totalCount: Long?): Page<T> {
+        // 参数校验
+        val validPage = getValidPage(page)
+        val validPageSize = getValidPageSize(pageSize)
+        var validTotalCount = totalCount
+        if (validTotalCount == null || validTotalCount <= 0) {
+            validTotalCount = list.size.toLong()
+        }
+        val offset = (validPage - 1) * validPageSize
+        val limit = validPageSize
+        // 分页
+        val pagedList = when {
+            offset >= list.size -> emptyList()
+            else -> {
+                val toIndex = if (list.size <= (offset + limit)) list.size else offset + limit
+                list.subList(offset, toIndex)
+            }
+        }
+        var totalPages = validTotalCount / validPageSize
+        if (totalPages * validPage<validTotalCount)
+            totalPages++
+        return Page(validTotalCount, validPage, validPageSize, totalPages.toInt(), pagedList)
     }
 }

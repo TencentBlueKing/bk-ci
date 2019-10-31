@@ -7,11 +7,7 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dockerhost.config.TXDockerHostConfig
-import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
-import java.net.Inet4Address
-import java.net.InetAddress
-import java.net.NetworkInterface
 
 object TXCommonUtils {
 

@@ -17,8 +17,6 @@ data class UploadParams(
     val buildNo: Int,
     @ApiModelProperty("原子ID", required = true)
     val elementId: String,
-    @ApiModelProperty("容器ID", required = true)
-    val containerId: String,
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty(value = "是否是自定义仓库", required = true)

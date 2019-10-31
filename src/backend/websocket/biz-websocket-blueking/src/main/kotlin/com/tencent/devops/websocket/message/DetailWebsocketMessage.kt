@@ -2,7 +2,6 @@ package com.tencent.devops.websocket.message
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.message.MqMessage
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMqMessage
