@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class UserProjectServiceServiceImpl @Autowired constructor(
+class UserProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val serviceTypeDao: ServiceTypeDao,
     private val serviceDao: ServiceDao,
@@ -279,6 +279,6 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(UserProjectServiceServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(UserProjectServiceImpl::class.java)
     }
 }
