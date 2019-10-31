@@ -12,7 +12,6 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.enums.NodeSource
-import com.tencent.devops.model.environment.tables.records.TEnvNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,8 +66,7 @@ class BkCmdbEnvCreatorImpl @Autowired constructor(
                 context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
                 envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
             )
-            val envNodeList = nodeLongIds.map { TEnvNodeRecord(envId, it, projectId) }
-            envNodeDao.batchStoreEnvNode(context, envNodeList)
+            envNodeDao.batchStoreEnvNode(context, nodeLongIds, envId, projectId)
             environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
         }
         return EnvironmentId(HashUtil.encodeLongId(envId))
