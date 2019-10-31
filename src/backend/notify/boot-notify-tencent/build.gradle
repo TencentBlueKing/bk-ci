@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":notify:biz-notify-tencent") // 这是对接蓝鲸的实现
+    compile project(":notify:biz-notify-tencent") // 内部版实现
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"
