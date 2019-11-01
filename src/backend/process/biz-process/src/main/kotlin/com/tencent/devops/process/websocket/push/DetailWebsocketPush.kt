@@ -33,6 +33,9 @@ data class DetailWebsocketPush(
     }
 
     override fun findSession(page: String): List<String>? {
+        if(page == "") {
+            logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
+        }
         return super.findSession(page)
     }
 
@@ -44,7 +47,7 @@ data class DetailWebsocketPush(
                 notifyPost = notifyPost,
                 userId = userId,
                 page = page,
-                sessionList = findSession(page!!)!!
+                sessionList = findSession(page ?:"")!!
         )
     }
 

@@ -1,13 +1,18 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.BkAuthServiceCode
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.repository.tables.TRepositoryGtiToken
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -31,7 +36,9 @@ class GitOauthService @Autowired constructor(
         private val gitTokenDao: GitTokenDao,
         private val client: Client,
         private val redisOperation: RedisOperation,
-        private val repositoryScmService: RepostioryScmService
+        private val repositoryScmService: RepostioryScmService,
+        private val bsAuthProjectApi: BSAuthProjectApi,
+        private val bsRepoAuthServiceCode: BSRepoAuthServiceCode
 ) {
 
     @Value("\${aes.git:#{null}}")
@@ -96,6 +103,21 @@ class GitOauthService @Autowired constructor(
         val redirectUrl = repositoryScmService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
         return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build()).build()
+    }
+
+    fun checkAndGetAccessToken(buildId: String, userId: String): GitToken? {
+        logger.info("buildId: $buildId, userId: $userId")
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
+        if (buildBasicInfoResult.isNotOk()) {
+            throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
+        }
+        val buildBasicInfo = buildBasicInfoResult.data ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
+        val projectUsers = bsAuthProjectApi.getProjectUsers(bsRepoAuthServiceCode, buildBasicInfo.projectId)
+        logger.info("projectId: ${buildBasicInfo.projectId}, projectUsers: $projectUsers")
+        if (!projectUsers.contains(userId)) {
+            throw RemoteServiceException("user permission denied: userId=$userId, projectCode=${buildBasicInfo.projectId}")
+        }
+        return getAccessToken(userId)
     }
 
     fun getAccessToken(userId: String): GitToken? {

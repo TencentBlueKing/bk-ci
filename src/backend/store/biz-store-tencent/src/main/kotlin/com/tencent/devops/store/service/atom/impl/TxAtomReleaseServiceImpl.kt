@@ -121,7 +121,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         if (null == repositoryInfo) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
-        return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId, "codeSrc" to repositoryInfo.url))
+        return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
 
     override fun getFileStr(
