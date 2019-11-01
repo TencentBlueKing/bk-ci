@@ -17,14 +17,21 @@
                     <div class="bk-form-item member-form-item is-required">
                         <label class="bk-label"> {{ $t('成员名称：') }} </label>
                         <div class="bk-form-content member-item-content">
-                            <input type="text" class="bk-form-input member-name-input" :placeholder="$t('请输入成员名称')"
-                                name="memberName"
-                                v-model="memberForm.memberName"
-                                v-validate="{
-                                    required: true
-                                }"
-                                :class="{ 'is-danger': errors.has('memberName') }">
-                            <div v-if="errors.has('memberName')" class="error-tips"> {{ $t('成员名称不能为空') }} </div>
+                            <bk-select
+                                searchable
+                                multiple
+                                show-select-all
+                                v-model="memberForm.list"
+                                @selected="selectMember"
+                            >
+                                <bk-option v-for="(option, index) in memberList"
+                                    :key="index"
+                                    :id="option.id"
+                                    :name="option.name">
+                                </bk-option>
+                            </bk-select>
+                            <div class="prompt-tips"> {{ $t('若列表中找不到用户，请先将其添加为插件所属调试项目的成员') }} </div>
+                            <div class="error-tips" v-if="nameError"> {{ $t('成员名称不能为空') }}</div>
                         </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
@@ -79,10 +86,11 @@
                     { name: this.$t('版本发布'), active: true },
                     { name: this.$t('私有配置'), active: true },
                     { name: this.$t('审批'), active: true },
+                    { name: this.$t('可见范围'), active: true },
                     { name: this.$t('成员管理'), active: true }
                 ],
                 memberForm: {
-                    memberName: '',
+                    list: [],
                     type: 'ADMIN'
                 },
                 loading: {
@@ -114,6 +122,7 @@
                         item.active = true
                     })
                 } else {
+                    this.permissionList[1].active = false
                     this.permissionList[2].active = false
                     this.permissionList[3].active = false
                     this.permissionList[4].active = false
@@ -121,21 +130,69 @@
             },
             showDialog (val) {
                 if (!val) {
-                    this.memberForm.memberName = ''
+                    this.nameError = false
+                    // this.$refs.memberSelector.$children[0].localTagList = []
+                    this.memberForm.list = []
                     this.memberForm.type = 'ADMIN'
+                }
+            },
+
+            currentAtom (newVal) {
+                if (newVal) {
+                    this.getMemberList()
                 }
             }
         },
+
+        created () {
+            if (this.currentAtom.projectCode) {
+                this.getMemberList()
+            }
+        },
+
         methods: {
+            async getMemberList () {
+                try {
+                    const res = await this.$store.dispatch('store/requestProjectMember', {
+                        projectCode: this.currentAtom.projectCode
+                    })
+                    this.memberList.splice(0, this.memberList.length)
+                    if (res) {
+                        res.map(item => {
+                            this.memberList.push({
+                                id: item,
+                                name: item
+                            })
+                        })
+                    }
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                }
+            },
+
+            selectMember (data) {
+                this.memberForm.list = data
+                this.nameError = false
+            },
+
+            handleChange () {
+                this.nameError = false
+            },
+
             async toConfirm () {
                 const valid = await this.$validator.validate()
                 if (valid) {
                     const params = {
                         storeCode: this.atomCode,
                         type: this.memberForm.type,
-                        member: []
+                        member: this.memberForm.list
                     }
-                    params.member.push(this.memberForm.memberName)
                     this.$emit('confirmHandle', params)
                 }
             },
@@ -188,16 +245,13 @@
         }
         .permission-list-content {
             display: flex;
+            justify-content: space-between;
             .permission-name {
-                margin-left: 16px;
-                padding: 4px 6px;
+                padding: 4px 9px;
                 border: 1px solid $borderColor;
                 border-radius: 22px;
                 font-size: 12px;
                 color: $fontLigtherColor;
-                &:first-child{
-                    margin-left: 0;
-                }
             }
             .active-item {
                 border-color: $primaryColor;

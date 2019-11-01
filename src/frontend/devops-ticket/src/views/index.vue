@@ -38,25 +38,25 @@
                                     icon: 'icon-id'
                                 }
                             ]
+                        },
+                        {
+                            id: 'certList',
+                            name: this.$t('ticket.myCert'),
+                            icon: 'icon-personal-cert'
+                        },
+                        {
+                            id: 'createCert',
+                            name: this.$t('ticket.createCert'),
+                            icon: 'icon-personal-cert',
+                            showChildren: false,
+                            children: [
+                                {
+                                    id: 'editCert',
+                                    name: this.$t('ticket.editCert'),
+                                    icon: 'icon-personal-cert'
+                                }
+                            ]
                         }
-                        // {
-                        //     id: 'certList',
-                        //     name: this.$t('ticket.myCert'),
-                        //     icon: 'icon-personal-cert'
-                        // },
-                        // {
-                        //     id: 'createCert',
-                        //     name: this.$t('ticket.createCert'),
-                        //     icon: 'icon-personal-cert',
-                        //     showChildren: false,
-                        //     children: [
-                        //         {
-                        //             id: 'editCert',
-                        //             name: this.$t('ticket.editCert'),
-                        //             icon: 'icon-personal-cert'
-                        //         }
-                        //     ]
-                        // }
                     ]
                 }
             }
