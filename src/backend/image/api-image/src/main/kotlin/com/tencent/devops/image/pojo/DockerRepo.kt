@@ -1,6 +1,7 @@
 package com.tencent.devops.image.pojo
 
 data class DockerRepo(
+    var repoUrl: String? = null,
     var repo: String? = null,
     var type: String? = null,
     var repoType: String? = "",

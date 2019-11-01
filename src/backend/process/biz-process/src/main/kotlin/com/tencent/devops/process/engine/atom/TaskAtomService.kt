@@ -77,7 +77,7 @@ class TaskAtomService @Autowired constructor(
                 AtomResponse(BuildStatus.SKIP)
             } else {
                 val atomTaskDaemon = AtomTaskDaemon(task, runVariables)
-                atomTaskDaemon.run()
+                atomTaskDaemon.call()
             }
         } catch (t: BuildTaskException) {
             LogUtils.addRedLine(

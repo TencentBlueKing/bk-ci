@@ -28,9 +28,6 @@ package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
-import com.tencent.devops.dockerhost.pojo.DockerRunParam
-import com.tencent.devops.dockerhost.pojo.DockerRunResponse
-import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -39,7 +36,6 @@ import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
-import javax.ws.rs.DELETE
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces

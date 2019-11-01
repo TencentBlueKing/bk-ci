@@ -25,6 +25,7 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.buildId,
             "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
             "",
+            pipelineAgentStartupEvent.containerHashId,
             pipelineAgentStartupEvent.executeCount ?: 1
         )
         dockerHostBuildService.dockerHostBuild(pipelineAgentStartupEvent)

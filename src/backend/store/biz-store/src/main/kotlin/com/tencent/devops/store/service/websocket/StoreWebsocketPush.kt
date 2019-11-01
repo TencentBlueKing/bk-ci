@@ -39,10 +39,10 @@ data class StoreWebsocketPush(
             pageList.add(associationPage)
         }
         val sessionList = mutableListOf<String>()
-        if(pageList != null && pageList.size > 0){
+        if (pageList != null && pageList.size > 0) {
             pageList.forEach {
                 val pageSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
-                if(pageSession != null){
+                if (pageSession != null) {
                     sessionList.addAll(pageSession)
                 }
             }

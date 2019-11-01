@@ -76,7 +76,7 @@ open class GitApi {
             result.addAll(pageResult)
             if (pageResult.size < 100) {
                 if (result.size >= BRANCH_LIMIT) logger.error("there are ${result.size} branches in project $projectName")
-                return result.sortedBy { it.commit.authoredDate }.map { it.name }.reversed()
+                return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
             }
         }
     }
@@ -92,7 +92,7 @@ open class GitApi {
             result.addAll(pageResult)
             if (pageResult.size < 100) {
                 if (result.size >= TAG_LIMIT) logger.error("there are ${result.size} tags in project $projectName")
-                return result.sortedBy { it.commit.authoredDate }.map { it.name }.reversed()
+                return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
             }
         }
     }
@@ -169,7 +169,7 @@ open class GitApi {
             callMethod(OPERATION_ADD_COMMIT_CHECK, request, GitCommitCheck::class.java)
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, "Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有master权限")
+                throw GitApiException(t.code, "Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
             }
             throw t
         }
@@ -188,7 +188,7 @@ open class GitApi {
             callMethod(OPERATION_ADD_MR_COMMENT, request, GitMRComment::class.java)
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, "添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有master权限")
+                throw GitApiException(t.code, "添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
             }
             throw t
         }
@@ -208,9 +208,7 @@ open class GitApi {
 
     fun deleteBranch(host: String, token: String, projectName: String, branch: String) {
         logger.info("Start to create branches of host $host with token $token by project $projectName")
-        val body = JsonUtil.getObjectMapper().writeValueAsString(
-           emptyMap<String, String>()
-        )
+        val body = JsonUtil.getObjectMapper().writeValueAsString(emptyMap<String, String>())
         val request = delete(host, token, "projects/${urlEncode(projectName)}/repository/branches/$branch", body)
         callMethod(DELETE_BRANCH, request, String::class.java)
     }
@@ -241,7 +239,7 @@ open class GitApi {
             return callMethod(OPERATION_ADD_WEBHOOK, request, GitHook::class.java)
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有master权限")
+                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
             }
             throw t
         }

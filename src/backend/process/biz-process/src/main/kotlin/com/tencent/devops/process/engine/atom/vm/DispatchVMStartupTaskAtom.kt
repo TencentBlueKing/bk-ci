@@ -41,6 +41,8 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_AGENT_STATUS_EXCEPTION
@@ -58,6 +60,7 @@ import com.tencent.devops.process.engine.pojo.event.monitor.PipelineContainerSta
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -128,18 +131,29 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw BuildTaskException(
-                ERROR_PIPELINE_NOT_EXISTS, "流水线不存在", pipelineId, buildId, taskId
+                errorType = ErrorType.SYSTEM,
+                errorCode = ERROR_PIPELINE_NOT_EXISTS,
+                errorMsg = "流水线不存在",
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId
             )
 
         val model = pipelineBuildDetailService.getBuildModel(buildId)
             ?: throw BuildTaskException(
-                ERROR_PIPELINE_MODEL_NOT_EXISTS, "流水线模型不存在", pipelineId, buildId, taskId
+                errorType = ErrorType.SYSTEM,
+                errorCode = ERROR_PIPELINE_MODEL_NOT_EXISTS,
+                errorMsg = "流水线模型不存在",
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId
             )
 
         val container = model.getContainer(vmSeqId)
             ?: throw BuildTaskException(
-                code = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
-                message = "流水线的模型中指定构建容器${vmNames}不存在",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
+                errorMsg = "流水线的模型中指定构建容器${vmNames}不存在",
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
@@ -177,6 +191,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 stageId = task.stageId,
                 containerId = task.containerId,
+                containerHashId = task.containerHashId,
                 containerType = task.containerType
             ),
             PipelineContainerAgentHeartBeatEvent(
@@ -250,8 +265,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             return DockerDispatchType(dockerBuildVersion!!)
         }
 
-        throw BuildTaskException(-1, "unknown type $os")
-    }
+        // tstack节点ID
+        val tstackAgentId = param.tstackAgentId
+
+        if (os == VMBaseOS.WINDOWS) {
+            return TStackDispatchType(tstackAgentId ?: "")
+        }
+        return ESXiDispatchType()    }
 
     private fun getBuildZone(projectId: String, container: Container): Zone? {
         try {
@@ -333,7 +353,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     }
 
     private fun agentException(pipelineId: String, buildId: String) =
-        BuildTaskException(ERROR_PIPELINE_AGENT_STATUS_EXCEPTION, "第三方构建机的Agent状态异常", pipelineId, buildId, null)
+        BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_AGENT_STATUS_EXCEPTION,
+            errorMsg = "第三方构建机的Agent状态异常",
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = null
+        )
 
     companion object {
         /**

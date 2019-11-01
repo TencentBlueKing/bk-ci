@@ -182,7 +182,8 @@ class TstackBuildService @Autowired constructor(
         val tstackConfig = tstackConfigDao.getConfig(dslContext, buildMessage.projectId)
         if (tstackConfig == null || !tstackConfig.tstackEnable) {
             logger.error("TStack VM Build is disable. Please check project config and retry")
-            LogUtils.addLine(rabbitTemplate, buildMessage.buildId, "TStack VM build is disable. Please check project config and retry", "", buildMessage.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildMessage.buildId, "TStack VM build is disable. Please check project config and retry",
+                "", "", buildMessage.executeCount ?: 1)
             throw RuntimeException("TStack VM Build is disabled. Please check project config and retry")
         }
 
@@ -212,7 +213,8 @@ class TstackBuildService @Autowired constructor(
                 }
                 containerInfo.status == TstackContainerStatus.RUNNING -> {
                     logger.info("tstack container is running")
-                    LogUtils.addLine(rabbitTemplate, buildMessage.buildId, "tstack vm(${containerInfo.vmName}) is ready for current build", "", buildMessage.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, buildMessage.buildId, "tstack vm(${containerInfo.vmName}) is ready for current build",
+                        "", "", buildMessage.executeCount ?: 1)
                     val build = RedisBuild(
                             containerInfo.vmName,
                             buildMessage.projectId,
@@ -245,7 +247,8 @@ class TstackBuildService @Autowired constructor(
         val tstackConfig = tstackConfigDao.getConfig(dslContext, pipelineAgentStartupEvent.projectId)
         if (tstackConfig == null || !tstackConfig.tstackEnable) {
             logger.error("TStack VM Build is disable. Please check project config and retry")
-            LogUtils.addLine(rabbitTemplate, pipelineAgentStartupEvent.buildId, "TStack VM build is disable. Please check project config and retry", "", pipelineAgentStartupEvent.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, pipelineAgentStartupEvent.buildId, "TStack VM build is disable. Please check project config and retry", "",
+                pipelineAgentStartupEvent.containerHashId, pipelineAgentStartupEvent.executeCount ?: 1)
             throw RuntimeException("TStack VM Build is disabled. Please check project config and retry")
         }
 
@@ -275,7 +278,8 @@ class TstackBuildService @Autowired constructor(
                 }
                 containerInfo.status == TstackContainerStatus.RUNNING -> {
                     logger.info("tstack container is running")
-                    LogUtils.addLine(rabbitTemplate, pipelineAgentStartupEvent.buildId, "tstack vm(${containerInfo.vmName}) is ready for current build", "", pipelineAgentStartupEvent.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, pipelineAgentStartupEvent.buildId, "tstack vm(${containerInfo.vmName}) is ready for current build",
+                        "", pipelineAgentStartupEvent.containerHashId, pipelineAgentStartupEvent.executeCount ?: 1)
                     val build = RedisBuild(
                         containerInfo.vmName,
                         pipelineAgentStartupEvent.projectId,

@@ -28,7 +28,6 @@ package com.tencent.devops.dispatch.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
-import com.tencent.devops.dispatch.service.PipelineDispatchService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes

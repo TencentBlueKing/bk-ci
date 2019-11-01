@@ -18,6 +18,7 @@ import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.quality.QualityGateOutElement
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -111,8 +112,9 @@ class QualityGateOutTaskAtom @Autowired constructor(
         if (interceptTask == null) {
             logger.error("[$buildId]|QUALITY_OUT|taskId=$elementId|Fail to find quality gate intercept element")
             throw BuildTaskException(
-                ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT,
-                "Fail to find quality gate intercept element"
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT,
+                errorMsg = "Fail to find quality gate intercept element"
             )
         }
 
@@ -126,12 +128,12 @@ class QualityGateOutTaskAtom @Autowired constructor(
         pipelineBuildDetailService.pipelineDetailChangeEvent(buildId)
 
         if (checkResult.success) {
-            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准出)检测已通过", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准出)检测已通过", elementId, task.containerHashId, task.executeCount ?: 1)
 
             checkResult.resultList.forEach {
-                LogUtils.addLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
                 it.messagePairs.forEach { message ->
-                    LogUtils.addLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
                 }
             }
 
@@ -140,26 +142,26 @@ class QualityGateOutTaskAtom @Autowired constructor(
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
             task.taskParams[QUALITY_RESULT] = checkResult.success
         } else {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准出)检测被拦截", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准出)检测被拦截", elementId, task.containerHashId, task.executeCount ?: 1)
 
             checkResult.resultList.forEach {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
                 it.messagePairs.forEach { message ->
-                    LogUtils.addRedLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
                 }
             }
 
             // 直接结束流水线的
             if (checkResult.failEnd) {
                 logger.info("[$buildId]|QUALITY_OUT|taskId=$elementId|quality check fail stop directly")
-                // LogUtils.addFoldEndLine(rabbitTemplate, buildId, elementName, elementId, task.containerHashId,task.executeCount ?: 1)
+                // LogUtils.addFoldEndLine(rabbitTemplate, buildId, elementName, elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(BuildStatus.QUALITY_CHECK_FAIL) // 拦截到直接失败
             }
 
             // 产生MQ消息，等待5分钟审核时间
             logger.info("[$buildId]|QUALITY_OUT|taskId=$elementId|quality check fail wait reviewing")
             val auditUsers = pipelineBuildQualityService.getAuditUserList(client, projectId, pipelineId, buildId, interceptTask)
-            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准出)待审核!审核人：$auditUsers", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准出)待审核!审核人：$auditUsers", elementId, task.containerHashId, task.executeCount ?: 1)
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 60000*5
             task.taskParams[QUALITY_RESULT] = checkResult.success
         }

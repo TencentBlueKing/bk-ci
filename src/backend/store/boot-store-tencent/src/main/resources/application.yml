@@ -37,6 +37,7 @@ store:
   imageDetailBaseUrl: http://dev.devops.oa.com/console/store/atomStore/detail/image/
   moaApproveCallBackUrl: http://dev.api.devops.oa.com/store/api/service/market/approval/moa/callBack
   commentNotifyAdmin: fayewang;carlyin
+  imageAdminUsers: fayewang;carlyin;jsonwan
 
 gateway:
   devnet:

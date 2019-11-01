@@ -35,8 +35,11 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
+import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
@@ -212,7 +215,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     pipelineAgentStartupEvent.buildId,
                     "Start up the agent ${agent.hostname}/${agent.ip} for the build ${pipelineAgentStartupEvent.buildId}",
                     "",
-                        "",
+                    pipelineAgentStartupEvent.containerHashId,
                     pipelineAgentStartupEvent.executeCount ?: 1
                 )
                 return true
@@ -265,54 +268,260 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             return
         }
 
-        val activeAgents = agentsResult.data!!.filter {
-            it.status == AgentStatus.IMPORT_OK &&
-                pipelineAgentStartupEvent.os == it.os
-        }
+        val redisLock = ThirdPartyAgentEnvLock(redisOperation, pipelineAgentStartupEvent.projectId, dispatchType.envName)
+        redisLock.lock()
+        try {
+            /**
+             * 1. 现获取当前正常的agent列表
+             * 2. 获取可用的agent列表
+             * 3. 优先调用可用的agent执行任务
+             * 4. 如果启动可用的agent失败再调用有任务的agent
+             */
+            val activeAgents = agentsResult.data!!.filter {
+                it.status == AgentStatus.IMPORT_OK &&
+                    pipelineAgentStartupEvent.os == it.os
+            }.toHashSet()
+            val agentMaps = activeAgents.map { it.agentId to it }.toMap()
 
-        val preBuildAgents = thirdPartyAgentBuildService.getPreBuildAgents(
-            pipelineAgentStartupEvent.projectId,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.vmSeqId
-        )
-        val commonAgents = preBuildAgents.filter {
-            activeAgents.forEach { agent ->
-                if (agent.agentId == it.agentId) {
-                    return@filter true
+            val preBuildAgents = HashSet<ThirdPartyAgent>()
+            thirdPartyAgentBuildService.getPreBuildAgents(
+                pipelineAgentStartupEvent.projectId,
+                pipelineAgentStartupEvent.pipelineId,
+                pipelineAgentStartupEvent.vmSeqId
+            ).forEach {
+                val agent = agentMaps[it.agentId]
+                if (agent != null) {
+                    preBuildAgents.add(agent)
                 }
             }
-            false
+            logger.info("Get the pre build agents($preBuildAgents) of env($dispatchType) of pipeline(${pipelineAgentStartupEvent.pipelineId})")
+
+            val hasTryAgents = HashSet<String>()
+            val runningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
+
+            /**
+             * 1. 最高优先级的agent:
+             *     a. 最近构建机中使用过这个构建机
+             *     b. 当前没有任何构建机任务
+             * 2. 次高优先级的agent:
+             *     a. 最近构建机中使用过这个构建机
+             *     b. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
+             * 3. 第三优先级的agent:
+             *     a. 当前没有任何构建机任务
+             * 4. 第四优先级的agent:
+             *     a. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
+             * 5. 最低优先级：
+             *     a. 都没有满足以上条件的
+             *
+             */
+
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|" +
+                "${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}]" +
+                " Start to check the empty task agents - $preBuildAgents")
+            /**
+             * 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
+             */
+            if (startEmptyAgents(
+                    event = pipelineAgentStartupEvent,
+                    dispatchType = dispatchType,
+                    agents = preBuildAgents,
+                    hasTryAgents = hasTryAgents,
+                    runningBuildsMapper = runningBuildsMapper
+                )) {
+                return
+            }
+
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|" +
+                "${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}]" +
+                " Start to check the available task agents of pre build agents")
+            /**
+             * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
+             */
+            if (startAvailableAgents(
+                    event = pipelineAgentStartupEvent,
+                    dispatchType = dispatchType,
+                    agents = preBuildAgents,
+                    hasTryAgents = hasTryAgents,
+                    runningBuildsMapper = runningBuildsMapper
+                )) {
+                return
+            }
+
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|" +
+                "${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}]" +
+                " Start to check the empty task agents - $activeAgents")
+            /**
+             * 根据哪些agent没有任何任务
+             */
+            if (startEmptyAgents(
+                    event = pipelineAgentStartupEvent,
+                    dispatchType = dispatchType,
+                    agents = activeAgents,
+                    hasTryAgents = hasTryAgents,
+                    runningBuildsMapper = runningBuildsMapper
+                )) {
+                return
+            }
+
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|" +
+                "${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}]" +
+                " Start to check the available task agents of active agents")
+            /**
+             * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
+             */
+            if (startAvailableAgents(
+                    event = pipelineAgentStartupEvent,
+                    dispatchType = dispatchType,
+                    agents = activeAgents,
+                    hasTryAgents = hasTryAgents,
+                    runningBuildsMapper = runningBuildsMapper
+                )) {
+                return
+            }
+
+            if (pipelineAgentStartupEvent.retryTime == 1) {
+                LogUtils.addLine(
+                    rabbitTemplate,
+                    pipelineAgentStartupEvent.buildId,
+                    "All eligible agents are disabled or offline, Waiting for an available agent...",
+                    "",
+                    pipelineAgentStartupEvent.containerHashId,
+                    pipelineAgentStartupEvent.executeCount ?: 1
+                )
+            }
+            logger.info("Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
+            retry(client, rabbitTemplate, pipelineEventDispatcher, pipelineAgentStartupEvent, errorMessage)
+        } finally {
+            redisLock.unlock()
         }
+    }
 
-        logger.info("Get the pre build agents($commonAgents) of env($dispatchType) of pipeline(${pipelineAgentStartupEvent.pipelineId})")
+    override fun retry(
+        client: Client,
+        rabbitTemplate: RabbitTemplate,
+        pipelineEventDispatcher: PipelineEventDispatcher,
+        event: PipelineAgentStartupEvent,
+        errorMessage: String?
+    ) {
+        if (event.retryTime > 60) {
+            // 置为失败
+            onFailBuild(client, rabbitTemplate, event, errorMessage ?: "Fail to start up after 60 retries")
+            AlertUtils.doAlert(
+                AlertLevel.HIGH, "DevOps Alert Notify",
+                "Job tailed to dispatch(60) the pipeline(${event.pipelineId}) buildId(${event.buildId}) type(${event.dispatchType})"
+            )
+            return
+        }
+        event.retryTime += 1
+        event.delayMills = 10000
+        pipelineEventDispatcher.dispatch(event)
+    }
 
-        val hasTryAgents = ArrayList<String>()
+    private fun startEmptyAgents(
+        event: PipelineAgentStartupEvent,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: HashSet<ThirdPartyAgent>,
+        hasTryAgents: HashSet<String>,
+        runningBuildsMapper: HashMap<String, Int>
+    ): Boolean {
+        return startAgentsForEnvBuild(
+            pipelineAgentStartupEvent = event,
+            dispatchType = dispatchType,
+            agents = agents,
+            hasTryAgents = hasTryAgents,
+            runningBuildsMapper = runningBuildsMapper,
+            agentMatcher = object : AgentMatcher {
+                override fun match(runningCnt: Int, agent: ThirdPartyAgent): Boolean {
+                    return runningCnt == 0
+                }
+            }
+        )
+    }
 
-        if (commonAgents.isNotEmpty()) {
-            commonAgents.forEach {
+    private fun startAvailableAgents(
+        event: PipelineAgentStartupEvent,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: HashSet<ThirdPartyAgent>,
+        hasTryAgents: HashSet<String>,
+        runningBuildsMapper: HashMap<String, Int>
+    ): Boolean {
+        return startAgentsForEnvBuild(
+            pipelineAgentStartupEvent = event,
+            dispatchType = dispatchType,
+            agents = agents,
+            hasTryAgents = hasTryAgents,
+            runningBuildsMapper = runningBuildsMapper,
+            agentMatcher = object : AgentMatcher {
+                override fun match(runningCnt: Int, agent: ThirdPartyAgent): Boolean {
+                    if (agent.parallelTaskCount != null &&
+                        agent.parallelTaskCount!! > 0 &&
+                        agent.parallelTaskCount!! > runningCnt) {
+                        return true
+                    }
+                    return false
+                }
+            }
+        )
+    }
+
+    private fun startAgentsForEnvBuild(
+        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: HashSet<ThirdPartyAgent>,
+        hasTryAgents: HashSet<String>,
+        runningBuildsMapper: HashMap<String, Int>,
+        agentMatcher: AgentMatcher
+    ): Boolean {
+        if (agents.isNotEmpty()) {
+            agents.forEach {
                 if (hasTryAgents.contains(it.agentId)) {
                     return@forEach
                 }
-                hasTryAgents.add(it.agentId)
-                val agent = getAgent(pipelineAgentStartupEvent.projectId, it.agentId) ?: return@forEach
-                if (buildByAgentId(pipelineAgentStartupEvent, agent, dispatchType.workspace)) {
-                    return
+                val runningCnt = getRunningCnt(it.agentId, runningBuildsMapper)
+                if (agentMatcher.match(runningCnt, it)) {
+                    if (startEnvAgentBuild(
+                            pipelineAgentStartupEvent,
+                            it, dispatchType, hasTryAgents
+                        )
+                    ) {
+                        logger.info("[${it.projectId}|$[${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${it.agentId}] " +
+                            "Success to start the build")
+                        return true
+                    }
                 }
             }
         }
+        return false
+    }
 
-        activeAgents.forEach {
-            if (hasTryAgents.contains(it.agentId)) {
-                return@forEach
-            }
-            hasTryAgents.add(it.agentId)
-            val agent = getAgent(pipelineAgentStartupEvent.projectId, it.agentId) ?: return@forEach
-            if (buildByAgentId(pipelineAgentStartupEvent, agent, dispatchType.workspace)) {
-                return
-            }
+    private fun startEnvAgentBuild(
+        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        agent: ThirdPartyAgent,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        hasTryAgents: HashSet<String>
+    ): Boolean {
+        if (hasTryAgents.contains(agent.agentId)) {
+            return false
         }
-        logger.info("Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
-        retry(client, rabbitTemplate, pipelineEventDispatcher, pipelineAgentStartupEvent, errorMessage)
+        hasTryAgents.add(agent.agentId)
+        // val agent = getAgent(pipelineAgentStartupEvent.projectId, agent.agentId) ?: return@forEach
+        if (buildByAgentId(pipelineAgentStartupEvent, agent, dispatchType.workspace)) {
+            return true
+        }
+        return false
+    }
+
+    private fun getRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {
+        var runningCnt = runningBuildsMapper[agentId]
+        if (runningCnt == null) {
+            runningCnt = thirdPartyAgentBuildService.getRunningBuilds(agentId)
+            runningBuildsMapper[agentId] = runningCnt
+        }
+        return runningCnt
+    }
+
+    interface AgentMatcher {
+        fun match(runningCnt: Int, agent: ThirdPartyAgent): Boolean
     }
 
     companion object {

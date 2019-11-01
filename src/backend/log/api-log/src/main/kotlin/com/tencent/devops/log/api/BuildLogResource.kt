@@ -83,6 +83,9 @@ interface BuildLogResource {
         @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("job id或者container的34位id", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
@@ -101,6 +104,9 @@ interface BuildLogResource {
         @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("job id或者container的34位id", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?

@@ -45,7 +45,6 @@ import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -223,10 +222,10 @@ class DockerHostBuildService(
                         "TERM=xterm-256color",
                         "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
                         "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                        "${COMMON_DOCKER_SIGN}=docker",
+                        "$COMMON_DOCKER_SIGN=docker",
                         "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                         // codecc构建机日志落到本地
-                        "${ENV_LOG_SAVE_MODE}=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
+                        "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
                     )
                 )
                 .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeInit)
@@ -530,7 +529,7 @@ class DockerHostBuildService(
                     "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     // codecc构建机日志落到本地
-                    "${ENV_LOG_SAVE_MODE}=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
+                    "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
                 )
             )
             if (dockerRunParam.env != null && dockerRunParam.env!!.isNotEmpty()) {

@@ -12,7 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 // @Component
 class DebugRunner @Autowired constructor(
-    private val dockerHostDebugService: DockerHostDebugService) {
+    private val dockerHostDebugService: DockerHostDebugService
+) {
     private val logger = LoggerFactory.getLogger(DebugRunner::class.java)
     private val maxRunningContainerNum = 200
     private val alertApi: AlertApi =
