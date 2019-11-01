@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service
+package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
@@ -9,8 +9,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.pojo.measure.ElementMeasureData
 import com.tencent.devops.process.pojo.measure.PipelineBuildData
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -43,7 +43,10 @@ class MeasureService @Autowired constructor(
         username: String,
         buildStatus: BuildStatus,
         buildNum: Int,
-        model: Model?
+        model: Model?,
+        errorType: String? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
     ) {
         try {
             if (model == null) {
@@ -61,8 +64,22 @@ class MeasureService @Autowired constructor(
 
             val templateId = getTemplateId(pipelineId)
             val data = PipelineBuildData(
-                projectId, pipelineId, templateId, buildId, startTime, System.currentTimeMillis(),
-                StartType.toStartType(startType), username, false, buildStatus, json, buildNum, metaInfo
+                projectId = projectId,
+                pipelineId = pipelineId,
+                templateId = templateId,
+                buildId = buildId,
+                beginTime = startTime,
+                endTime = System.currentTimeMillis(),
+                startType = StartType.toStartType(startType),
+                buildUser = username,
+                isParallel = false,
+                buildResult = buildStatus,
+                pipeline = json,
+                buildNum = buildNum,
+                metaInfo = metaInfo,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
             )
             val url = "http://$serviceGateway/measure/api/service/pipelines/addData"
 
@@ -85,8 +102,16 @@ class MeasureService @Autowired constructor(
                         val tStartTime = startTime?.timestampmilli() ?: 0
                         val atomCode = task.taskParams["atomCode"] as String? ?: ""
                         postElementDataNew(
-                            event.projectId, pipelineId, taskId, atomCode, taskName,
-                            event.buildId, tStartTime, BuildStatus.CANCELED, taskType, executeCount
+                            projectId = event.projectId,
+                            pipelineId = pipelineId,
+                            taskId = taskId,
+                            atomCode = atomCode,
+                            name = taskName,
+                            buildId = event.buildId,
+                            startTime = tStartTime,
+                            status = BuildStatus.CANCELED,
+                            type = taskType,
+                            executeCount = executeCount
                         )
                     }
                 }
@@ -107,30 +132,37 @@ class MeasureService @Autowired constructor(
         status: BuildStatus,
         type: String,
         executeCount: Int?,
-        extraInfo: Map<String, Any>? = null
+        extraInfo: Map<String, Any>? = null,
+        errorType: String? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
     ) {
         try {
             val url = "http://$serviceGateway/measure/api/service/elements/addData"
 
-            val requestMap = mutableMapOf(
-                "id" to taskId,
-                "name" to name,
-                "pipelineId" to pipelineId,
-                "templateId" to getTemplateId(pipelineId),
-                "projectId" to projectId,
-                "buildId" to buildId,
-                "atomCode" to atomCode,
-                "status" to status,
-                "beginTime" to startTime,
-                "endTime" to System.currentTimeMillis(),
-                "type" to type
+            val elementMeasureData = ElementMeasureData(
+                id = taskId,
+                name = name,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                buildId = buildId,
+                atomCode = atomCode,
+                status = status,
+                beginTime = startTime,
+                endTime = System.currentTimeMillis(),
+                type = type
             )
             if (extraInfo != null && extraInfo.isNotEmpty()) {
                 val extraInfoStr = ObjectMapper().writeValueAsString(extraInfo)
-                requestMap["extraInfo"] = extraInfoStr
+                elementMeasureData.extraInfo = extraInfoStr
             }
-            val requestBody = ObjectMapper().writeValueAsString(requestMap)
-            logger.info("add the element data, request data: $requestMap")
+            if (errorType != null) {
+                elementMeasureData.errorType = errorType
+                elementMeasureData.errorCode = errorCode
+                elementMeasureData.errorMsg = errorMsg
+            }
+            val requestBody = ObjectMapper().writeValueAsString(elementMeasureData)
+            logger.info("add the element data, request data: $elementMeasureData")
             measureEventDispatcher.dispatch(MeasureRequest(projectId, pipelineId, buildId, url, requestBody))
         } catch (e: Throwable) {
             logger.error("Fail to add the element data, $e")

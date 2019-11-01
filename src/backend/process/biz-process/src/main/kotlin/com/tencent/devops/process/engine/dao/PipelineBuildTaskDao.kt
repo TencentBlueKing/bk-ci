@@ -225,6 +225,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
+                containerHashId = containerHashId,
                 containerType = containerType,
                 taskSeq = taskSeq,
                 taskId = taskId,
@@ -261,7 +262,10 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         buildId: String,
         taskId: String,
         userId: String?,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
     ) {
         with(T_PIPELINE_BUILD_TASK) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -276,6 +280,11 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 update.set(START_TIME, LocalDateTime.now())
                 if (!userId.isNullOrBlank())
                     update.set(STARTER, userId)
+            }
+            if (errorType != null) {
+                update.set(ERROR_TYPE, errorType.ordinal)
+                update.set(ERROR_CODE, errorCode)
+                update.set(ERROR_MSG, errorMsg)
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
