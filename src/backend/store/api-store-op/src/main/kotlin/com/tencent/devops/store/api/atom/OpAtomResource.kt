@@ -110,7 +110,7 @@ interface OpAtomResource {
         atomStatus: AtomStatusEnum?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
-        sortType: OpSortTypeEnum? = OpSortTypeEnum.UpdateTime,
+        sortType: OpSortTypeEnum? = OpSortTypeEnum.UPDATE_TIME,
         @ApiParam("排序", required = false)
         @QueryParam("desc")
         desc: Boolean?,

@@ -24,21 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
-
-enum class OpSortTypeEnum(val sortType: String) {
-    ATOM_NAME("NAME"),
-    ATOM_CODE("ATOM_CODE"),
-    JOB_TYPE("JOB_TYPE"),
-    CLASSIFY_ID("CLASSIFY_ID"),
-    ATOM_TYPE("ATOM_TYPE"),
-    ATOM_STATUS("ATOM_STATUS"),
-    DEFAULT_FLAG("DEFAULT_FLAG"),
-    LATEST_FLAG("LATEST_FLAG"),
-    PUBLISHER("PUBLISHER"),
-    WEIGHT("WEIGHT"),
-    CREATOR("CREATOR"),
-    MODIFIER("MODIFIER"),
-    CREATE_TIME("CREATE_TIME"),
-    UPDATE_TIME("UPDATE_TIME")
+dependencies {
+    compile project(":common:common-api")
+    compile project(":common:common-api")
+    compile project(":common:common-event")
+    compile project(":scm:api-scm")
+    compile project(":plugin:api-plugin")
+    compile project(":environment:api-environment")
+    compile project(":image:api-image")
+    compile project(":store:api-store")
+    compile project(":process:api-process")
+    compile project(":log:api-log")
+    compile project(":project:api-project")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

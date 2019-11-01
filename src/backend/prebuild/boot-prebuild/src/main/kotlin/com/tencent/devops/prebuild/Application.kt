@@ -24,21 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.prebuild
 
-enum class OpSortTypeEnum(val sortType: String) {
-    ATOM_NAME("NAME"),
-    ATOM_CODE("ATOM_CODE"),
-    JOB_TYPE("JOB_TYPE"),
-    CLASSIFY_ID("CLASSIFY_ID"),
-    ATOM_TYPE("ATOM_TYPE"),
-    ATOM_STATUS("ATOM_STATUS"),
-    DEFAULT_FLAG("DEFAULT_FLAG"),
-    LATEST_FLAG("LATEST_FLAG"),
-    PUBLISHER("PUBLISHER"),
-    WEIGHT("WEIGHT"),
-    CREATOR("CREATOR"),
-    MODIFIER("MODIFIER"),
-    CREATE_TIME("CREATE_TIME"),
-    UPDATE_TIME("UPDATE_TIME")
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+
+/**
+ *
+ * Powered By Tencent
+ */
+@MicroService
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }
