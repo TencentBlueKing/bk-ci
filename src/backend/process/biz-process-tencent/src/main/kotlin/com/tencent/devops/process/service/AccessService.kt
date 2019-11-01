@@ -28,6 +28,7 @@ import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -37,36 +38,13 @@ class AccessService @Autowired constructor(
     private val pipelineService: PipelineService
 ) {
 
-    private val CMAKE_REPO_URL = "git@git.code.oa.com:bkdevops/cmake.git"
+    @Value("\${git.cmake}")
+    private val CMAKE_REPO_URL = ""
 
-    private val GIT_TOKEN = "g78IwpnylMm_h20UH_Gi"
-    private val GIT_SSH_KEY = "-----BEGIN RSA PRIVATE KEY-----\n" +
-            "MIIEpAIBAAKCAQEAo7WkrPOMixAa/YQQ6WxSbdYV2j68v26vC+FaJXK4ie2TnJsQ\n" +
-            "++zXIt8lWiAN6QFE/OA8Ux/irBbAkP3/+1GG8Ia+1dRijjxY5Umb5DDMoHaqClTt\n" +
-            "O3uNoss4I9qmloT4kCkdhlV8rzvPH2ZxnfAP7IdrKjC4DHoeA4AEfGnQa6Mezq9E\n" +
-            "Ckp6aQDgWyY6796VZcIEIiq2b8RrchlytvJ7n2Q5/sWdUsKdlbrlwsiueMgFiF1y\n" +
-            "XyWyp3kfF3TJF6XYgZGJguuXyhqCoVi7tJB+nFIf/IC/KH1JUISYdjefgd3jHmqA\n" +
-            "Ei1oytrl3woGnxamaGMX6VrqSEgy4ztUzwCUDQIDAQABAoIBABgmf7iT5TPOmGy1\n" +
-            "wtjshex2HJspjiafaWtTPz0vA1I1ngUISyUe903JpXT6LZMmAMtdOQj6NzIz2QyK\n" +
-            "q+yjRkjNV/Grdy6McIDCryCmokk5uDP1+1k/DNHrMMj5RIIH87MwnY5nphEjvZZg\n" +
-            "QnqOI4s9Hu4GaeBNU4gopoDEC18VYNp45Dc9Hyj2vEZTI+jriJ/n9+WQ2Qs9XY5m\n" +
-            "jrYqdiDbnqMipFk45HNzDMZPq5AoAQbLBzC4FrcLY4t8ttzfEMyvssL5zxm61Hri\n" +
-            "9c6Ktsuj4gN1G7wE9dYWtwFXgg2BEj6bAL/m+2vr85jLCv4QsLOqnnF+PCziOVIy\n" +
-            "UGWCHHECgYEAzwW/I2VZHLuayQmB1sUoBu+gqCyM3NBzaxLylK5OksD3unjt4Gsy\n" +
-            "8uuZoaMOQ0+/R4QJecIp43P7ColOVTZ+0z79ZabfVROW88T7R4hxz2TYzdwCA17/\n" +
-            "QLEH681A053h0+oOEBYY8n2Su69vKcZvRcyTfrE74+SUbAXjxxXcQWMCgYEAynCp\n" +
-            "1XCwzJ9eHVP84NQxskap/yLSvTwCSNMglrubo+9uGaoIQuR07nEo/fiiHTXcizV4\n" +
-            "xw0P8s/gFyCFFGglEd7l7BOjj2idPLrpCIV/4VvWluJYacckzYv72eKEGuCeVHuA\n" +
-            "/uUaaU2dwgzmfiCvda0y/4gR8/u8FfkaDazKB88CgYATxXW6uKwpDVW8C3dl/pBT\n" +
-            "EUGjrhWJ5TKQsE+QmZERfPJr0a7ONw63mn6irELpdM1M1DRfd4aunV4FZJWhl8HH\n" +
-            "BQYIVkaQBn3tLAvfig1shDIcfv2GOuVf1UhvYbvmOfbeWUUcji+1wP5phFi2gagQ\n" +
-            "33faqqyQmD0AkBNv6QuPBwKBgQCm47JfL4PRbSCddPvoLYa6vd6vYvnw32PSvZsE\n" +
-            "KK3qvBw8NByTaNutJsTweuTKx/iFGxPypSYcupq29iw/4ouM7AEIWjhgpZHa2wv5\n" +
-            "5nTCSH/j672PlokUmu6JdWAK+FoOs7JocF8RqNcBfrkWCcQccyiz2G1UgpdQVgfQ\n" +
-            "dj4nqQKBgQCRCfigaSk6gsUGp0944BTq0hhhTKU9ScsKOKaUKP0QvMY/6xHe4afD\n" +
-            "Z4Y/UEiL2wwWlgLox3vVzWG0cwnNjScoPy1YJPRhFsRtUd2wadqGXZwHqGpUfpkn\n" +
-            "pu2idWFx3f0/CC71HOdM7MdDoizDSy43KDuyumCKxyOqFj3XWYyFKg==\n" +
-            "-----END RSA PRIVATE KEY-----"
+    @Value("\${git.token}")
+    private val GIT_TOKEN = ""
+    @Value("\${git.ssh.key}")
+    private val GIT_SSH_KEY = ""
 
     fun create(userId: String, accessRepository: AccessRepository): String {
         val timestamp = LocalDateTime.now().timestamp()

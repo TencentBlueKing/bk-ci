@@ -210,6 +210,7 @@ class GithubService @Autowired constructor(
         }, 1, SLEEP_MILLS_FOR_RETRY_500)
     }
 
+    //TODO:脱敏
     fun getFileContent(projectName: String, ref: String, filePath: String): String {
         val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
         OkhttpUtils.doGet(url).use {
@@ -283,6 +284,7 @@ class GithubService @Autowired constructor(
         throw GithubApiException(code, msg)
     }
 
+    //TODO:脱敏
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
         private const val PAGE_SIZE = 100

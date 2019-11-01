@@ -25,15 +25,15 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
         pipelineId: String,
         repository: Repository,
         webHookParams: ScmWebhookMatcher.WebHookParams
-    ): Boolean {
+    ): ScmWebhookMatcher.MatchResult {
         with(webHookParams) {
             if (repository !is GithubRepository) {
                 logger.warn("The repo($repository) is not code git repo for github web hook")
-                return false
+                return ScmWebhookMatcher.MatchResult(false)
             }
             if (!matchUrl(repository.url)) {
                 logger.info("The repo($repository) is not match event($event)")
-                return false
+                return ScmWebhookMatcher.MatchResult(false)
             }
 
             val eventUsername = getUsername()
@@ -42,7 +42,7 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
             // 检测事件类型是否符合
             if (eventType != null && eventType != getEventType()) {
                 logger.info("Git web hook event($event) (${getEventType()}) not match $eventType")
-                return false
+                return ScmWebhookMatcher.MatchResult(false)
             }
 
             if (excludeUsers != null) {
@@ -50,13 +50,13 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
                 excludeUserSet.forEach {
                     if (it == eventUsername) {
                         logger.info("The exclude user($excludeUsers) exclude the git update one($eventBranch)")
-                        return false
+                        return ScmWebhookMatcher.MatchResult(false)
                     }
                 }
             }
 
             if (eventType == CodeEventType.CREATE) {
-                return true
+                return ScmWebhookMatcher.MatchResult(true)
             }
 
             if (excludeBranchName != null) {
@@ -64,26 +64,26 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
                 excludeBranchNameSet.forEach {
                     if (isBranchMatch(it, eventBranch)) {
                         logger.info("The exclude branch($excludeBranchName) exclude the git update one($eventBranch)")
-                        return false
+                        return ScmWebhookMatcher.MatchResult(false)
                     }
                 }
             }
 
             if (branchName.isNullOrBlank()) {
                 logger.info("Git trigger ignore branch name")
-                return true
+                return ScmWebhookMatcher.MatchResult(true)
             } else {
                 val includeBranchNameSet = regex.split(branchName)
                 includeBranchNameSet.forEach {
                     if (isBranchMatch(it, eventBranch)) {
                         logger.info("The include branch($branchName) include the git update one($eventBranch)")
-                        return true
+                        return ScmWebhookMatcher.MatchResult(true)
                     }
                 }
             }
 
             logger.info("The include branch($branchName) doesn't include the git update one($eventBranch)")
-            return false
+            return ScmWebhookMatcher.MatchResult(false)
         }
     }
 

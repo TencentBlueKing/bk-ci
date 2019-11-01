@@ -77,5 +77,7 @@ data class ServiceVO(
     @ApiModelProperty("logo地址")
     val logoUrl: String?,
     @ApiModelProperty("支持webSocket的页面")
-    val webSocket: String?
+    val webSocket: String?,
+    @ApiModelProperty("是否可见")
+    val hidden: Boolean? = false
 )

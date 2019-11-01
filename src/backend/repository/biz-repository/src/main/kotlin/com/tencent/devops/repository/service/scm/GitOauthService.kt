@@ -35,7 +35,7 @@ class GitOauthService @Autowired constructor(
 ) {
 
     @Value("\${aes.git:#{null}}")
-    private val aesKey: String? = "func_v%o/Tx{puc}9xVge_pepe"
+    private val aesKey: String? = ""
 
     companion object {
         val logger = LoggerFactory.getLogger(GitOauthService::class.java)

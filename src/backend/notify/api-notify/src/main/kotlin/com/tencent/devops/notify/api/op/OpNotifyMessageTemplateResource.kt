@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.notify.model.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.model.NotifyTemplateMessageRequest
-import com.tencent.devops.notify.pojo.NotifyMessageTemplate
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -61,15 +60,6 @@ interface OpNotifyMessageTemplateResource {
         templateId: String
     ): Result<Page<SubNotifyMessageTemplate>>
 
-    @ApiOperation("获取消息通知模板")
-    @GET
-    @Path("/ids/{templateId}")
-    fun getNotifyMessageTemplate(
-        @ApiParam("模板ID", required = true)
-        @PathParam("templateId")
-        templateId: String
-    ): Result<NotifyMessageTemplate?>
-
     @ApiOperation("添加消息通知模板")
     @POST
     @Path("/")
@@ -111,54 +101,6 @@ interface OpNotifyMessageTemplateResource {
     @DELETE
     @Path("/commons/ids/{templateId}")
     fun deleteCommonNotifyMessageTemplate(
-        @ApiParam("模板ID", required = true)
-        @PathParam("templateId")
-        templateId: String
-    ): Result<Boolean>
-
-    @ApiOperation("获取消息通知模板")
-    @GET
-//    @Path("/ids/{templateId}")
-    @Path("/ids/templateId/{templateId}")
-    fun getNotifyMessageTemplateV2(
-        @ApiParam("模板ID", required = true)
-        @PathParam("templateId")
-        templateId: String
-    ): Result<NotifyMessageTemplate?>
-
-    @ApiOperation("更新消息通知模板")
-    @PUT
-//    @Path("/ids/{templateId}")
-    @Path("/ids/templateId/{templateId}")
-    fun updateNotifyMessageTemplateV2(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("模板ID", required = true)
-        @PathParam("templateId")
-        templateId: String,
-        @ApiParam("消息通知更新请求报文体", required = true)
-        notifyMessageTemplateRequest: NotifyTemplateMessageRequest
-    ): Result<Boolean>
-
-    @ApiOperation("删除消息通知模板")
-    @DELETE
-//    @Path("/ids/sub/{templateId}/{notifyType}")
-    @Path("/ids/sub/templateId/{templateId}/notifyType/{notifyType}")
-    fun deleteNotifyMessageTemplateV2(
-        @ApiParam("模板ID", required = true)
-        @PathParam("templateId")
-        templateId: String,
-        @ApiParam("模板通知类型", required = true)
-        @PathParam("notifyType")
-        notifyType: String
-    ): Result<Boolean>
-
-    @ApiOperation("删除公共消息通知模板")
-    @DELETE
-//    @Path("/commons/ids/{templateId}")
-    @Path("/commons/ids/templateId/{templateId}")
-    fun deleteCommonNotifyMessageTemplateV2(
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
         templateId: String
