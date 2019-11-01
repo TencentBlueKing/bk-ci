@@ -49,7 +49,7 @@ class RtxTaskAtom @Autowired constructor(
 
             logger.info("Enter RtxTaskDelegate run...")
             if (param.receivers.isEmpty()) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Receivers is empty(接收人为空)", taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Receivers is empty(接收人为空)", taskId, task.containerHashId, task.executeCount ?: 1)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -58,7 +58,7 @@ class RtxTaskAtom @Autowired constructor(
                 )
             }
             if (param.body.isBlank()) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Body is empty(消息内容为空)", taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Body is empty(消息内容为空)", taskId, task.containerHashId, task.executeCount ?: 1)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -67,7 +67,7 @@ class RtxTaskAtom @Autowired constructor(
                 )
             }
             if (param.title.isEmpty()) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Title is empty(标题为空)", taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Title is empty(标题为空)", taskId, task.containerHashId, task.executeCount ?: 1)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -97,7 +97,7 @@ class RtxTaskAtom @Autowired constructor(
             }
 
             val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-            LogUtils.addLine(rabbitTemplate, buildId, "send enterprise wechat message(发送企业微信消息):\n${message.body}\nto\n$receiversStr", taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "send enterprise wechat message(发送企业微信消息):\n${message.body}\nto\n$receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
 
             message.addAllReceivers(getReceivers(receiversStr))
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)

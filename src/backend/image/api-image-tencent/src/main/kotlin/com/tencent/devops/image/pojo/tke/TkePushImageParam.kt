@@ -13,6 +13,7 @@ data class TkePushImageParam(
     val buildId: String,
     val pipelineId: String,
     val taskId: String,
+    val containerId: String,
     val codeUrl: String?,
     val executeCount: Int?,
     val cmdbId: Int,

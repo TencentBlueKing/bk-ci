@@ -50,9 +50,10 @@ class ServiceLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, executeCount)
+        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, jobId, executeCount)
     }
 
     override fun getMoreLogs(
@@ -64,9 +65,10 @@ class ServiceLogResourceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount)
+        return logDispatcher.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, jobId, executeCount)
     }
 
     override fun getAfterLogs(
@@ -77,6 +79,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         return logDispatcher.getAfterLogs(
@@ -87,6 +90,7 @@ class ServiceLogResourceImpl @Autowired constructor(
                 isAnalysis,
                 queryKeywords,
                 tag,
+                jobId,
                 executeCount
         )
     }
@@ -96,8 +100,9 @@ class ServiceLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Response {
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, executeCount)
+        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount)
     }
 }

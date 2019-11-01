@@ -39,7 +39,7 @@ class SmsTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         if (param.receivers.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "The receivers is not init of build", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "The receivers is not init of build", taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -64,7 +64,7 @@ class SmsTaskAtom @Autowired constructor(
             body = bodyStr
         }
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        LogUtils.addLine(rabbitTemplate, buildId, "send SMS message (${message.body}) to $receiversStr", taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "send SMS message (${message.body}) to $receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
 
         message.addAllReceivers(receiversStr.split(",").toSet())
         client.get(ServiceNotifyResource::class).sendSmsNotify(message)

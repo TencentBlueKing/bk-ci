@@ -36,13 +36,14 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
         scriptParam: String,
         ipList: List<SourceIp>,
         elementId: String,
+        containerHashId: String?,
         executeCount: Int,
         type: Int = 1,
         account: String = "root"
     ): Long {
         checkParam(operator, appId, content, account)
 
-        val taskInstanceId = sendTaskRequest(buildId, operator, appId, content, scriptParam, type, ipList, account, elementId, executeCount)
+        val taskInstanceId = sendTaskRequest(buildId, operator, appId, content, scriptParam, type, ipList, account, elementId, containerHashId, executeCount)
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.error("Job start execute script failed.")
@@ -78,6 +79,7 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
         taskInstanceId: Long,
         buildId: String,
         taskId: String,
+        containerHashId: String?,
         executeCount: Int,
         operator: String
     ): BuildStatus {
@@ -89,6 +91,7 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
                 buildId,
                 "Job timeout:$timeoutSeconds seconds",
                 taskId,
+                containerHashId,
                 executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
@@ -99,11 +102,11 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, "Job success! jobId:$taskInstanceId", taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "Job success! jobId:$taskInstanceId", taskId, containerHashId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, "Job fail! jobId:$taskInstanceId", taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "Job fail! jobId:$taskInstanceId", taskId, containerHashId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
@@ -172,6 +175,7 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
         ipList: List<SourceIp>,
         account: String,
         elementId: String,
+        containerHashId: String?,
         executeCount: Int
     ): Long {
         val requestData = emptyMap<String, Any>().toMutableMap()
@@ -186,10 +190,10 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
         requestData["operator"] = operator
 
         val url = esbUrl + "fast_execute_script"
-        return doSendTaskRequest(url, requestData, buildId, elementId, executeCount)
+        return doSendTaskRequest(url, requestData, buildId, elementId, containerHashId, executeCount)
     }
 
-    protected fun doSendTaskRequest(url: String, requestData: MutableMap<String, Any>, buildId: String, elementId: String, executeCount: Int): Long {
+    protected fun doSendTaskRequest(url: String, requestData: MutableMap<String, Any>, buildId: String, elementId: String, containerHashId: String?, executeCount: Int): Long {
         val json = ObjectMapper().writeValueAsString(requestData)
         logger.info("send execute script task request: $json")
         try {
@@ -212,7 +216,8 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
                         buildId,
                         "start execute job task success: taskInstanceId:  $taskInstanceId",
                         elementId,
-                        executeCount
+                containerHashId,
+                executeCount
                     )
                     taskInstanceId
                 } else {
@@ -223,14 +228,15 @@ class JobFastExecuteScript @Autowired constructor(private val rabbitTemplate: Ra
                         buildId,
                         "start execute job task failed: $msg",
                         elementId,
-                        executeCount
+                containerHashId,
+                executeCount
                     )
                     -1
                 }
             }
         } catch (e: Exception) {
             logger.error("error occur", e)
-            LogUtils.addLine(rabbitTemplate, buildId, "error occur while execute job task: ${e.message}", elementId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "error occur while execute job task: ${e.message}", elementId, containerHashId, executeCount)
             throw RuntimeException("error occur while execute job task.")
         }
     }

@@ -268,7 +268,7 @@ class ContainerControl @Autowired constructor(
                     LogUtils.addRedLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = task.buildId, message = "终止执行插件[${task.taskName}]!",
-                        tag = task.taskId, executeCount = task.executeCount ?: 1
+                        tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                     )
                     startVMFail = startVMFail || task.taskSeq == 0
                 }
@@ -488,17 +488,17 @@ class ContainerControl @Autowired constructor(
         LogUtils.addFoldStartLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId, tagName = tagName,
-            tag = task.taskId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId, message = message,
-            tag = task.taskId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         LogUtils.addFoldEndLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId, tagName = tagName,
-            tag = task.taskId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
     }
 }

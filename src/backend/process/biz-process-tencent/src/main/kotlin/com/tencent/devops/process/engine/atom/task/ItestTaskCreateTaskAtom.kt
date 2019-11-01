@@ -62,7 +62,7 @@ class ItestTaskCreateTaskAtom @Autowired constructor(
 
         logger.info("Create task for itest success!")
         val processJson = JSONObject.fromObject(taskCreateResponse.data).toString()
-        LogUtils.addLine(rabbitTemplate, buildId, "创建itest自测任务成功, 详情：$processJson", taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "创建itest自测任务成功, 详情：$processJson", taskId, task.containerHashId, task.executeCount ?: 1)
         return AtomResponse(BuildStatus.SUCCEED)
     }
 

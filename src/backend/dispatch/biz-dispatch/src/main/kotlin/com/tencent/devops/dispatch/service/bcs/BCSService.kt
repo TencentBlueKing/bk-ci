@@ -57,7 +57,7 @@ class BCSService @Autowired constructor(
             else -> templateService.getTemplateById(CUSTOM_ID)
         }
 
-        LogUtils.addLine(rabbitTemplate, buildId, "Start docker $dockerBuildVersion for the build", "", executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "Start docker $dockerBuildVersion for the build", "", "", executeCount ?: 1)
 
         val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url = "${getCreateInstanceUrl(template)}?access_token=$token"
