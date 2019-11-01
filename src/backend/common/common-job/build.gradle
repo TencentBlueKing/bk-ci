@@ -1,0 +1,10 @@
+dependencies {
+    compile project(":common:common-web")
+    compile "com.fasterxml.jackson.core:jackson-databind"
+    compile "com.fasterxml.jackson.core:jackson-core"
+    compile "com.fasterxml.jackson.core:jackson-annotations"
+    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
+    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
+    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
+}

@@ -36,7 +36,6 @@ class UploadCosCdnThread : Runnable {
     var pipelineId: String = ""
     var buildId: String = ""
     var elementId: String = ""
-    var containerId: String = ""
     var executeCount: Int = 1
     private var rabbitTemplate: RabbitTemplate? = null
 
@@ -58,7 +57,6 @@ class UploadCosCdnThread : Runnable {
         this.pipelineId = uploadCosCdnParam.pipelineId
         this.buildId = uploadCosCdnParam.buildId
         this.elementId = uploadCosCdnParam.elementId
-        this.containerId = uploadCosCdnParam.containerId
     }
 
     override fun run() {

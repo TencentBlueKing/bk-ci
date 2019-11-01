@@ -38,7 +38,7 @@ interface ScmWebhookMatcher {
             pipelineId: String,
             repository: Repository,
             webHookParams: WebHookParams
-    ): Boolean
+    ): MatchResult
 
     fun getUsername(): String
 
@@ -105,5 +105,10 @@ interface ScmWebhookMatcher {
             var excludeUsers: String? = "",
             var includeUsers: String? = null,
             var codeType: CodeType = CodeType.GIT
+    )
+
+    data class MatchResult(
+        val isMatch: Boolean,
+        val extra: Map<String, String> = mapOf()
     )
 }

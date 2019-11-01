@@ -12,7 +12,6 @@ import com.tencent.devops.external.pojo.GithubCheckRuns
 import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.utils.QualityUtils
-import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
@@ -21,8 +20,9 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.github.GithubRepository
-import com.tencent.devops.scm.pojo.request.CommitCheckRequest
 import com.tencent.devops.scm.api.ServiceScmOauthResource
+import com.tencent.devops.scm.api.ServiceScmResource
+import com.tencent.devops.scm.pojo.request.CommitCheckRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

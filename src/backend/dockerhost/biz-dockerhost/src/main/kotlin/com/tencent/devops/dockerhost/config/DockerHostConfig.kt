@@ -41,13 +41,13 @@ class DockerHostConfig {
     @Value("\${dockerCli.apiVersion:1.23}")
     var apiVersion: String? = null
 
-    @Value("\${dockerCli.registryUrl:#{null}")
+    @Value("\${dockerCli.registryUrl:#{null}}")
     var registryUrl: String? = null
 
-    @Value("\${dockerCli.registryUsername:#{null}")
+    @Value("\${dockerCli.registryUsername:#{null}}")
     var registryUsername: String? = null
 
-    @Value("\${dockerCli.registryPassword:#{null}")
+    @Value("\${dockerCli.registryPassword:#{null}}")
     var registryPassword: String? = null
 
     @Value("\${dockerCli.volumeWorkspace:/data/devops/workspace}")

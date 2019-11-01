@@ -14,7 +14,6 @@ import com.tencent.devops.environment.pojo.enums.NodeSource
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.utils.BcsVmParamCheckUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import com.tencent.devops.model.environment.tables.records.TEnvNodeRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -112,10 +111,7 @@ class BcsVmEnvCreatorImpl @Autowired constructor(
                 envType = envCreateInfo.envType.name,
                 envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars)
             )
-            envNodeDao.batchStoreEnvNode(
-                dslContext = context,
-                envNodeList = insertedNodeList.map { TEnvNodeRecord(envId, it.nodeId, projectId) })
-
+            envNodeDao.batchStoreEnvNode(context, insertedNodeList.map { it.nodeId }, envId, projectId)
             environmentPermissionService.createEnv(
                 userId = userId,
                 projectId = projectId,

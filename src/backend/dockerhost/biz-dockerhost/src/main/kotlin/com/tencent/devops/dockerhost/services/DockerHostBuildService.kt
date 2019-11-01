@@ -143,6 +143,7 @@ class DockerHostBuildService(
 
     fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
         try {
+            logger.info("Create container with config (${dockerHostConfig.registryPassword})")
             val authConfig = CommonUtils.getAuthConfig(
                 dockerBuildInfo.imageType,
                 dockerHostConfig,

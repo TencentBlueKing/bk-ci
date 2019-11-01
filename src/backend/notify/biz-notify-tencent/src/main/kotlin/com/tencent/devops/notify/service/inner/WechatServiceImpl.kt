@@ -4,9 +4,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.notify.TOFConfiguration
-import com.tencent.devops.common.notify.TOFService
-import com.tencent.devops.common.notify.TOFService.Companion.WECHAT_URL
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
@@ -19,22 +16,27 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.service.WechatService
-import com.tencent.devops.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.notify.utils.TOFService.Companion.WECHAT_URL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
 class WechatServiceImpl @Autowired constructor(
-    private val tofService: TOFService,
+    private val tofService: com.tencent.devops.notify.utils.TOFService,
     private val wechatNotifyDao: WechatNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val configuration: TOFConfiguration
+    private val tofConfiguration: com.tencent.devops.notify.utils.TOFConfiguration
 ) : WechatService {
 
     private val logger = LoggerFactory.getLogger(WechatServiceImpl::class.java)
+
+    @Value("\${tof.defaultSystem.default-wechat-sender}")
+    private lateinit var defaultWechatSender: String
 
     override fun sendMqMsg(message: WechatNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, message)
@@ -53,21 +55,21 @@ class WechatServiceImpl @Autowired constructor(
 
         val retryCount = wechatNotifyMessageWithOperation.retryCount
         val id = wechatNotifyMessageWithOperation.id ?: UUIDUtil.generate()
-        val tofConfs = configuration.getConfigurations(wechatNotifyMessageWithOperation.tofSysId)
+        val tofConfs = tofConfiguration.getConfigurations(wechatNotifyMessageWithOperation.tofSysId)
         val result = tofService.post(
-                WECHAT_URL, wechatNotifyPost, tofConfs!!)
+            WECHAT_URL, wechatNotifyPost, tofConfs!!)
         if (result.Ret == 0) {
             // 成功
             wechatNotifyDao.insertOrUpdateWechatNotifyRecord(true, wechatNotifyMessageWithOperation.source, id,
-                    retryCount, null, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
-                    wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
-                    tofConfs["sys-id"], wechatNotifyPost.fromSysId)
+                retryCount, null, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
+                wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
+                tofConfs["sys-id"], wechatNotifyPost.fromSysId)
         } else {
             // 写入失败记录
             wechatNotifyDao.insertOrUpdateWechatNotifyRecord(false, wechatNotifyMessageWithOperation.source, id,
-                    retryCount, result.ErrMsg, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
-                    wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
-                    tofConfs["sys-id"], wechatNotifyPost.fromSysId)
+                retryCount, result.ErrMsg, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
+                wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
+                tofConfs["sys-id"], wechatNotifyPost.fromSysId)
             if (retryCount < 3) {
                 // 开始重试
                 reSendMessage(wechatNotifyPost, wechatNotifyMessageWithOperation.source, retryCount + 1, id)
@@ -107,7 +109,7 @@ class WechatServiceImpl @Autowired constructor(
     private fun generateWechatNotifyPost(wechatNotifyMessage: WechatNotifyMessage): WechatNotifyPost? {
         val contentMd5 = CommonUtils.getMessageContentMD5("", wechatNotifyMessage.body)
         val receivers = Lists.newArrayList(filterReceivers(
-                wechatNotifyMessage.getReceivers(), contentMd5, wechatNotifyMessage.frequencyLimit)
+            wechatNotifyMessage.getReceivers(), contentMd5, wechatNotifyMessage.frequencyLimit)
         )
         if (receivers == null || receivers.isEmpty()) {
             return null
@@ -118,7 +120,11 @@ class WechatServiceImpl @Autowired constructor(
             receiver = wechatNotifyMessage.getReceivers().joinToString(",")
             msgInfo = wechatNotifyMessage.body
             priority = wechatNotifyMessage.priority.getValue()
-            sender = wechatNotifyMessage.sender
+            sender = if (wechatNotifyMessage.sender.isEmpty()) {
+                defaultWechatSender
+            } else {
+                wechatNotifyMessage.sender
+            }
             this.contentMd5 = contentMd5
             frequencyLimit = wechatNotifyMessage.frequencyLimit
             tofSysId = wechatNotifyMessage.tofSysId
@@ -133,7 +139,7 @@ class WechatServiceImpl @Autowired constructor(
         val filteredOutReceivers = HashSet<String>()
         if (frequencyLimit > 0) {
             val recordedReceivers = wechatNotifyDao.getReceiversByContentMd5AndTime(
-                    contentMd5, (frequencyLimit * 60).toLong()
+                contentMd5, (frequencyLimit * 60).toLong()
             )
             receivers.forEach { rec ->
                 for (recordedRec in recordedReceivers) {
@@ -180,12 +186,12 @@ class WechatServiceImpl @Autowired constructor(
         }
 
         return NotificationResponse(record.id, record.success,
-                if (record.createdTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-                if (record.updatedTime == null) null
-                else
-                    DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-                record.contentMd5, message)
+            if (record.createdTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
+            if (record.updatedTime == null) null
+            else
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
+            record.contentMd5, message)
     }
 }
