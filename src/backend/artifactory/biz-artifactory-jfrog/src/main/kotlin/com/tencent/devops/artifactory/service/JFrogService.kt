@@ -28,23 +28,16 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
     @Value("\${jfrog.password:#{null}}")
     private val JFROG_PASSWORD: String? = null
 
-//    private val okHttpClient = okhttp3.OkHttpClient.Builder()
-//            .connectTimeout(5L, TimeUnit.SECONDS)
-//            .readTimeout(60L, TimeUnit.SECONDS)
-//            .writeTimeout(60L, TimeUnit.SECONDS)
-//            .build()
-
-    fun list(path: String, deep: Boolean, depth: Int): List<JFrogFileInfo> {
+    fun list(path: String, deep: Boolean, depth: Int, includeFolders: Boolean = true): List<JFrogFileInfo> {
         val isDeep = if (deep) 1 else 0
-        val url = "$JFROG_BASE_URL/api/storage/$path?list&deep=$isDeep&depth=$depth&listFolders=1&mdTimestamps=1&includeRootPath=0"
+        val listFolders = if (includeFolders) 1 else 0
+        val url = "$JFROG_BASE_URL/api/storage/$path?list&deep=$isDeep&depth=$depth&listFolders=$listFolders&mdTimestamps=1&includeRootPath=0"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .get()
-                .build()
+            .url(url)
+            .header("Authorization", makeCredential())
+            .get()
+            .build()
 
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -73,13 +66,10 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
     fun file(path: String): JFrogFileDetail {
         val url = "$JFROG_BASE_URL/api/storage/$path"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .get()
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", makeCredential())
+            .get()
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -97,13 +87,10 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
     fun get(path: String): Pair<ByteArray, MediaType> {
         val url = "$JFROG_BASE_URL/$path"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .get()
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", makeCredential())
+            .get()
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.bytes()
             val mediaType = response.body()!!.contentType()!!
@@ -135,13 +122,10 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
         }
 
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .put(requestBody)
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", makeCredential())
+            .put(requestBody)
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -156,13 +140,10 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(mediaType, "")
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .post(requestBody)
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", makeCredential())
+            .post(requestBody)
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -177,13 +158,10 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(mediaType, "")
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .post(requestBody)
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", makeCredential())
+            .post(requestBody)
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -196,16 +174,29 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
     fun delete(path: String) {
         val url = "$JFROG_BASE_URL/$path"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .delete()
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", makeCredential())
+            .delete()
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
+                logger.error("Fail to delete jfrog $path. $responseContent")
+                throw RuntimeException("Fail to delete artifact")
+            }
+        }
+    }
+
+    fun tryDelete(path: String) {
+        val url = "$JFROG_BASE_URL/$path"
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", makeCredential())
+            .delete()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful && response.code() != 404) {
                 logger.error("Fail to delete jfrog $path. $responseContent")
                 throw RuntimeException("Fail to delete artifact")
             }
@@ -218,13 +209,10 @@ class JFrogService @Autowired constructor(private val objectMapper: ObjectMapper
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(mediaType, "")
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", makeCredential())
-                .put(requestBody)
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", makeCredential())
+            .put(requestBody)
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {

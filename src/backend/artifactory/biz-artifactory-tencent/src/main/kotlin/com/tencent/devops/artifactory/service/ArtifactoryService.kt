@@ -309,17 +309,17 @@ class ArtifactoryService @Autowired constructor(
                 appVersion = it.appVersion
 
                 AppFileInfo(
-                    it.name,
-                    it.fullName,
-                    it.path,
-                    it.fullPath,
-                    it.size,
-                    it.folder,
-                    it.modifiedTime,
-                    it.artifactoryType,
-                    show,
-                    canDownload,
-                    appVersion
+                    name = it.name,
+                    fullName = it.fullName,
+                    path = it.path,
+                    fullPath = it.fullPath,
+                    size = it.size,
+                    folder = it.folder,
+                    modifiedTime = it.modifiedTime,
+                    artifactoryType = it.artifactoryType,
+                    show = show,
+                    canDownload = canDownload,
+                    version = appVersion
                 )
             }
         } finally {
@@ -443,8 +443,8 @@ class ArtifactoryService @Autowired constructor(
             )
             jFrogPropertiesApi.setProperties(
                 destPath, mapOf(
-                ARCHIVE_PROPS_PROJECT_ID to listOf(targetProjectId)
-            )
+                    ARCHIVE_PROPS_PROJECT_ID to listOf(targetProjectId)
+                )
             )
         }
 
@@ -502,17 +502,17 @@ class ArtifactoryService @Autowired constructor(
                         val fullName = pipelineService.getFullName(path, pipelineId, pipelineName, buildId, buildName)
                         fileInfoList.add(
                             FileInfo(
-                                it.name,
-                                fullName,
-                                path,
-                                path,
-                                it.size,
-                                false,
-                                LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                                ArtifactoryType.PIPELINE,
-                                properties,
-                                appVersion,
-                                shortUrl
+                                name = it.name,
+                                fullName = fullName,
+                                path = path,
+                                fullPath = path,
+                                size = it.size,
+                                folder = false,
+                                modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                                artifactoryType = ArtifactoryType.PIPELINE,
+                                properties = properties,
+                                appVersion = appVersion,
+                                shortUrl = shortUrl
                             )
                         )
                     }
@@ -520,16 +520,16 @@ class ArtifactoryService @Autowired constructor(
                     val path = "/" + it.path.removePrefix(customDirPathPrefix)
                     fileInfoList.add(
                         FileInfo(
-                            it.name,
-                            path,
-                            path,
-                            path,
-                            it.size,
-                            false,
-                            LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                            ArtifactoryType.CUSTOM_DIR,
-                            properties,
-                            appVersion
+                            name = it.name,
+                            fullName = path,
+                            path = path,
+                            fullPath = path,
+                            size = it.size,
+                            folder = false,
+                            modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                            artifactoryType = ArtifactoryType.CUSTOM_DIR,
+                            properties = properties,
+                            appVersion = appVersion
                         )
                     )
                 }
@@ -581,8 +581,8 @@ class ArtifactoryService @Autowired constructor(
 
     fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
         val allFiles = jFrogAQLService.searchByPathAndProperties(
-            "generic-local/bk-custom/$projectId",
-            condition.properties
+            path = "generic-local/bk-custom/$projectId",
+            properties = condition.properties
         )
 
         if (condition.glob.isNullOrEmpty()) {
@@ -607,7 +607,13 @@ class ArtifactoryService @Autowired constructor(
         return matchedFiles.toSet().toList().sortedByDescending { it.modified }.map { it.path }
     }
 
-    fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq) {
+    fun copyToCustom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        copyToCustomReq: CopyToCustomReq
+    ) {
         checkCopyToCustomReq(copyToCustomReq)
         customDirService.validatePermission(userId, projectId)
 

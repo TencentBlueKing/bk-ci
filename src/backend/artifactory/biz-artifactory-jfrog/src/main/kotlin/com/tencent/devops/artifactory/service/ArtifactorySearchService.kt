@@ -3,7 +3,9 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_FILE_NAME
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -106,11 +108,7 @@ class ArtifactorySearchService @Autowired constructor(
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
-    fun searchFileAndProperty(
-        userId: String,
-        projectId: String,
-        searchProps: SearchProps
-    ): Pair<Long, List<FileInfo>> {
+    fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Pair<Long, List<FileInfo>> {
         logger.info("Service search file and property. [ProjectId=$projectId, Props=$searchProps]")
 
         val repoPathPrefix = JFrogUtil.getRepoPath()
@@ -245,6 +243,45 @@ class ArtifactorySearchService @Autowired constructor(
                 Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) }
             )
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
+    }
+
+    fun getJforgInfoByteewTime(page: Int, pageSize: Int, startTime: Long, endTime: Long): List<FileInfo> {
+        val pageNotNull = page ?: 0
+        var pageSizeNotNull = pageSize ?: 500
+        if (pageSizeNotNull > 500) {
+            pageSizeNotNull = 500
+        }
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val list = jFrogAQLService.searchFileByTime(startTime, endTime, limit.limit, limit.offset)
+
+        val jfrogInfoMapbyProject: MutableMap<String, MutableList<JFrogAQLFileInfo>> = mutableMapOf()
+        list.forEach {
+            var projectId: String? = null
+            val properties = it.properties
+            if (properties != null) {
+                properties.forEach { p ->
+                    if (p.key == "projectId") {
+                        projectId = p.value!!
+                    }
+                }
+                if (!projectId.isNullOrBlank()) {
+                    var jfrogInfoList = mutableListOf<JFrogAQLFileInfo>()
+                    if (jfrogInfoMapbyProject.get(projectId) != null) {
+                        jfrogInfoList = jfrogInfoMapbyProject.get(projectId)!!
+                        jfrogInfoList.add(it)
+                    } else {
+                        jfrogInfoList.add(it)
+                        jfrogInfoMapbyProject.put(projectId!!, jfrogInfoList)
+                    }
+                }
+            }
+        }
+        val fileInfoList: MutableList<FileInfo> = mutableListOf()
+        jfrogInfoMapbyProject.forEach { (projectId, list) ->
+            fileInfoList.addAll(artifactoryService.transferJFrogAQLFileInfo(projectId, list, emptyList(), false))
+        }
+
+        return fileInfoList
     }
 
     companion object {

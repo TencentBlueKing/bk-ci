@@ -36,6 +36,7 @@ dependencies {
     compile project(":common:common-auth:common-auth-blueking")
     compile project(":common:common-notify")
     compile project(":artifactory:api-artifactory-jfrog")
+    compile project(":artifactory:api-artifactory")
     compile project(":artifactory:biz-artifactory")
     compile project(":notify:api-notify")
     compile project(":process:api-process")
