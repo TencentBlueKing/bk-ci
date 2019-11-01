@@ -47,6 +47,7 @@ class WetestTaskAtom @Autowired constructor(
     private lateinit var pipelineId: String
     private lateinit var buildId: String
     private lateinit var elementId: String
+    private lateinit var containerId: String
     private var executeCount: Int = 1
     private lateinit var accessId: String
     private lateinit var accessToken: String
@@ -63,6 +64,7 @@ class WetestTaskAtom @Autowired constructor(
         pipelineId = task.pipelineId
         buildId = task.buildId
         elementId = task.taskId
+        containerId = task.containerHashId ?: ""
         executeCount = task.executeCount ?: 1
 
         val usersMap = pipelineUserService.listCreateUsers(setOf(pipelineId))
@@ -250,7 +252,7 @@ class WetestTaskAtom @Autowired constructor(
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()!!.string()
-            LogUtils.addLine(rabbitTemplate, buildId, "query test status response: $data", elementId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "query test status response: $data", elementId, containerId, executeCount)
             return objectMapper.readValue<Result<Map<String, Any>>>(data).data ?: mapOf()
         }
     }
@@ -262,7 +264,7 @@ class WetestTaskAtom @Autowired constructor(
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()!!.string()
-            LogUtils.addLine(rabbitTemplate, buildId, "update task inst status $data", elementId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "update task inst status $data", elementId, containerId, executeCount)
         }
     }
 
@@ -279,7 +281,7 @@ class WetestTaskAtom @Autowired constructor(
                 .build()
         val result = OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()!!.string()
-            LogUtils.addLine(rabbitTemplate, buildId, "auto test response: $data", elementId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "auto test response: $data", elementId, containerId, executeCount)
             objectMapper.readValue<Result<Map<String, Any>>>(data).data!!
         }
         checkResult(result, "启动任务失败:")
@@ -355,7 +357,7 @@ class WetestTaskAtom @Autowired constructor(
                 .build()
         return OkhttpUtils.doLongHttp(request).use { response ->
             val data = response.body()!!.string()
-            LogUtils.addLine(rabbitTemplate, buildId, "upload res response: $data", elementId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "upload res response: $data", elementId, containerId, executeCount)
             objectMapper.readValue<Result<Map<String, Any>>>(data).data!!
         }
     }
@@ -363,7 +365,7 @@ class WetestTaskAtom @Autowired constructor(
     private fun checkResult(result: Map<String, Any>, errMsg: String) {
         if (!result.containsKey("ret") || result["ret"] as Int != 0) {
             val msg = result["msg"] as String?
-            LogUtils.addRedLine(rabbitTemplate, buildId, "$errMsg : $msg", elementId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "$errMsg : $msg", elementId, containerId, executeCount)
             throw RuntimeException(msg)
         }
     }
