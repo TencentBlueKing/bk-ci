@@ -55,7 +55,8 @@ object BatScriptUtil {
         runtimeVariables: Map<String, String>,
         dir: File,
         outerCommandFunc:
-        ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)? = null
+        ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)? = null,
+        prefix: String = ""
     ): String {
         try {
             val tmpDir = System.getProperty("java.io.tmpdir")
@@ -95,7 +96,7 @@ object BatScriptUtil {
             file.writeText(command.toString(), charset)
             return if (outerCommandFunc == null) {
                 logger.info("start to run windows script")
-                CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true)
+                CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
             } else {
                 logger.info("start to run windows codecc script")
                 outerCommandFunc(BuildScriptType.BAT, buildId, file, dir)

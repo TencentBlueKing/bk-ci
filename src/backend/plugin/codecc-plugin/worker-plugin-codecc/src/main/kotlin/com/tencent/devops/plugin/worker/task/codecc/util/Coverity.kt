@@ -2,7 +2,7 @@ package com.tencent.devops.plugin.worker.task.codecc.util
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityConfig
+import com.tencent.devops.plugin.worker.pojo.CoverityConfig
 import java.io.File
 
 class Coverity constructor(private val coverityConfig: CoverityConfig) {

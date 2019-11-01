@@ -32,9 +32,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
-import com.tencent.devops.dockerhost.pojo.DockerRunParam
-import com.tencent.devops.dockerhost.pojo.DockerRunResponse
-import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.services.DockerService
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import org.slf4j.LoggerFactory

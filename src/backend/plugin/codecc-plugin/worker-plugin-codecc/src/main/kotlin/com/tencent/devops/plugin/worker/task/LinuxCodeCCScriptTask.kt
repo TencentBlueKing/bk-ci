@@ -12,10 +12,11 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptEl
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.replaceCodeProp
-import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityConfig
+import com.tencent.devops.plugin.worker.pojo.CoverityConfig
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccUtils
 import com.tencent.devops.plugin.worker.task.codecc.util.Coverity
 import com.tencent.devops.plugin.worker.task.scm.util.RepositoryUtils
+import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -23,12 +24,13 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.codecc.CodeccSDKApi
+import com.tencent.devops.plugin.worker.api.CodeccSDKApi
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.CommandFactory
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
@@ -58,16 +60,20 @@ class LinuxCodeCCScriptTask : ITask() {
         // 如果指定_CODECC_FILTER_TOOLS，则只做_CODECC_FILTER_TOOLS的扫描
         val filterTools = buildVariables.variables["_CODECC_FILTER_TOOLS"] ?: ""
         val repos = getCodeccRepos(taskParams["id"] ?: "", projectId, pipelineId, buildId, buildVariables)
-        val coverityConfig = CoverityConfig(taskParams["codeCCTaskName"] ?: "",
-            taskParams["codeCCTaskCnName"] ?: "",
-            CodeccUtils.projectType(languages),
-            JsonUtil.to(taskParams["tools"]!!, object : TypeReference<List<String>>() {}),
-            taskParams["asynchronous"] == "true",
-            filterTools.split(",").map { it.trim() }.filter { it.isNotBlank() },
-            repos,
-            taskParams["path"] ?: "",
-            repos.map { it.type }.first().toLowerCase(), // 每次扫描支持一种类型代码库，其他情况先不考虑
-            repos.map { it.authType }.first() // 每次扫描支持一种类型代码库认证类型，其他情况先不考虑
+        val coverityConfig = CoverityConfig(
+            name = taskParams["codeCCTaskName"] ?: "",
+            cnName = taskParams["codeCCTaskCnName"] ?: "",
+            projectType = CodeccUtils.projectType(languages),
+            tools = JsonUtil.to(taskParams["tools"]!!, object : TypeReference<List<String>>() {}),
+            asynchronous = taskParams["asynchronous"] == "true",
+            filterTools = filterTools.split(",").map { it.trim() }.filter { it.isNotBlank() },
+            repos = repos,
+            scanCodePath = taskParams["path"] ?: "",
+            scmType = repos.map { it.type }.first().toLowerCase(), // 每次扫描支持一种类型代码库，其他情况先不考虑
+            certType = repos.map { it.authType }.first(), // 每次扫描支持一种类型代码库认证类型，其他情况先不考虑
+            taskParams = taskParams,
+            buildVariables = buildVariables,
+            buildTask = buildTask
         )
 
         LoggerService.addNormalLine("buildVariables coverityConfig: $coverityConfig")
@@ -168,6 +174,15 @@ class LinuxCodeCCScriptTask : ITask() {
             it.url = repo.url
             it.authType = authType
             it.repoHashId = repo.repoHashId ?: ""
+
+            if (repo is CodeSvnRepository && authType == "HTTP") {
+                val credentialsWithType = CredentialUtils.getCredentialWithType(repo.credentialId)
+                val credentials = credentialsWithType.first
+                val credentialType = credentialsWithType.second
+                val svnCredential = SvnUtil.genSvnCredential(repo, credentials, credentialType)
+                it.svnUerPassPair = Pair(svnCredential.username, svnCredential.password)
+            }
+
             it
         }
     }

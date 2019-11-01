@@ -647,7 +647,7 @@ class DockerHostBuildService @Autowired constructor(
         if (red) {
             LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", "", 1)
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "",  "",1)
+            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", "", 1)
         }
     }
 
