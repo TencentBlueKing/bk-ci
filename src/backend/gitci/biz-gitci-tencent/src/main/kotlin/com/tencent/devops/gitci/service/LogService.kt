@@ -38,7 +38,7 @@ class LogService @Autowired constructor(
                 isAnalysis,
                 queryKeywords,
                 tag,
-//                jobId,
+                jobId,
                 executeCount
             ).data!!
     }
@@ -55,7 +55,7 @@ class LogService @Autowired constructor(
                 start,
                 end,
                 tag,
-//                jobId,
+                jobId,
                 executeCount
         ).data!!
     }
@@ -71,7 +71,7 @@ class LogService @Autowired constructor(
                 isAnalysis,
                 queryKeywords,
                 tag,
-//                jobId,
+                jobId,
                 executeCount
         ).data!!
     }

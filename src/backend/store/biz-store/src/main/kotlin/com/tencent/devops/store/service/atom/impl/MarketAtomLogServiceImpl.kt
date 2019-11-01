@@ -53,6 +53,7 @@ class MarketAtomLogServiceImpl @Autowired constructor(
                 isAnalysis = isAnalysis,
                 queryKeywords = queryKeywords,
                 tag = tag,
+                jobId = null,
                 executeCount = executeCount
             )
         if (queryLogsResult.isNotOk()) {
@@ -88,7 +89,8 @@ class MarketAtomLogServiceImpl @Autowired constructor(
                 isAnalysis = isAnalysis,
                 queryKeywords = queryKeywords,
                 tag = tag,
-                executeCount = executeCount
+                    jobId = null,
+                    executeCount = executeCount
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -125,7 +127,8 @@ class MarketAtomLogServiceImpl @Autowired constructor(
                 start = start,
                 end = end,
                 tag = tag,
-                executeCount = executeCount
+                    jobId = null,
+                    executeCount = executeCount
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
