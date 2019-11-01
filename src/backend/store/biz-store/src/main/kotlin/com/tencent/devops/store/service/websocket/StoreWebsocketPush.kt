@@ -72,5 +72,4 @@ data class StoreWebsocketPush(
             logger.error("StoreWebsocketPush:getProcessInfo error. message:${e.message}")
         }
     }
-
 }

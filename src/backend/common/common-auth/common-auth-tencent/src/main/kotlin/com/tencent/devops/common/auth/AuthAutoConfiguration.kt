@@ -142,4 +142,7 @@ class AuthAutoConfiguration {
 
     @Bean
     fun projectAuthSeriviceCode() = BSProjectServiceCodec()
+
+    @Bean
+    fun artifactoryAuthServiceCode() = BSArtifactoryAuthServiceCode()
 }
