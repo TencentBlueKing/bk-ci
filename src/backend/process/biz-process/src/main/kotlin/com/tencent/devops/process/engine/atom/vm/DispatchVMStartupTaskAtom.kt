@@ -342,7 +342,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         fun makePipelineBuildTask(
             projectId: String,
             pipelineId: String,
-            templateId: String?,
             buildId: String,
             stageId: String,
             container: Container,
@@ -355,7 +354,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                templateId = templateId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,
