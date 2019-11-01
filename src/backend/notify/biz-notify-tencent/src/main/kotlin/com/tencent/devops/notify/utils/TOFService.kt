@@ -17,13 +17,13 @@ class TOFService @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
     companion object {
-        private val CONTENT_TYPE = "application/json; charset=utf-8"
+        private const val CONTENT_TYPE = "application/json; charset=utf-8"
         private val logger = LoggerFactory.getLogger(TOFService::class.java)
 
-        val EMAIL_URL = "/api/v1/Message/SendMailInfo"
-        val RTX_URL = "/api/v1/Message/SendRTXInfo"
-        val SMS_URL = "/api/v1/Message/SendSMSInfo"
-        val WECHAT_URL = "/api/v1/Message/SendWeiXinInfo"
+        const val EMAIL_URL = "/api/v1/Message/SendMailInfo"
+        const val RTX_URL = "/api/v1/Message/SendRTXInfo"
+        const val SMS_URL = "/api/v1/Message/SendSMSInfo"
+        const val WECHAT_URL = "/api/v1/Message/SendWeiXinInfo"
     }
 
     private val okHttpClient = OkHttpClient()

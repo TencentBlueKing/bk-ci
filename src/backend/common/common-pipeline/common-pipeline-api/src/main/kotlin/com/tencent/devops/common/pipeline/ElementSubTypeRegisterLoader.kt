@@ -53,6 +53,7 @@ object ElementSubTypeRegisterLoader {
         }
         val elementSubModule = SimpleModule()
         fetcheries.forEach { fetcher ->
+            logger.info("[ELEMENT_FETCHER]| ${fetcher.javaClass}")
             val jsonSubTypes = fetcher.jsonSubTypes()
             jsonSubTypes.forEach { (classTypeName, clazz) ->
                 elementSubModule.registerSubtypes(NamedType(clazz, classTypeName))

@@ -472,7 +472,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             val title = replaceContentParams(sendNotifyMessageTemplateRequest.titleParams, emailTplRecord.title)
             // 替换内容里的动态参数
             val body = replaceContentParams(sendNotifyMessageTemplateRequest.bodyParams, emailTplRecord.body)
-            sendEmailNotifyMessage(commonNotifyMessageTemplateRecord, sendNotifyMessageTemplateRequest, title, body)
+            sendEmailNotifyMessage(
+                commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+                sendNotifyMessageTemplateRequest = sendNotifyMessageTemplateRequest,
+                title = title,
+                body = body
+            )
         }
         if (notifyTypeScope.contains(NotifyTypeEnum.RTX.name)) {
             val rtxTplRecord =
@@ -481,7 +486,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             val title = replaceContentParams(sendNotifyMessageTemplateRequest.titleParams, rtxTplRecord.title)
             // 替换内容里的动态参数
             val body = replaceContentParams(sendNotifyMessageTemplateRequest.bodyParams, rtxTplRecord.body)
-            sendRtxNotifyMessage(commonNotifyMessageTemplateRecord, sendNotifyMessageTemplateRequest, title, body)
+            sendRtxNotifyMessage(
+                commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+                sendNotifyMessageTemplateRequest = sendNotifyMessageTemplateRequest,
+                title = title,
+                body = body
+            )
         }
         if (notifyTypeScope.contains(NotifyTypeEnum.WECHAT.name)) {
             val wechatTplRecord = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(
@@ -490,7 +500,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             )!!
             // 替换内容里的动态参数
             val body = replaceContentParams(sendNotifyMessageTemplateRequest.bodyParams, wechatTplRecord.body)
-            sendWechatNotifyMessage(commonNotifyMessageTemplateRecord, sendNotifyMessageTemplateRequest, body)
+            sendWechatNotifyMessage(
+                commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+                sendNotifyMessageTemplateRequest = sendNotifyMessageTemplateRequest,
+                body = body
+            )
         }
         return Result(true)
     }

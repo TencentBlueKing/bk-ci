@@ -7,6 +7,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
+import com.tencent.devops.common.notify.utils.ChineseStringUtil
+import com.tencent.devops.common.notify.utils.CommonUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_RTX
@@ -16,8 +18,6 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.service.RtxService
-import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.CommonUtils
 import com.tencent.devops.notify.utils.TOFService.Companion.RTX_URL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -50,7 +50,7 @@ class RtxServiceImpl @Autowired constructor(
     override fun sendMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
         val rtxNotifyPosts = generateRtxNotifyPost(rtxNotifyMessageWithOperation)
         if (rtxNotifyPosts.isEmpty()) {
-            logger.warn("List<RtxNotifyPost> is empty after being processed, RtxNotifyMessageWithOperation: " + rtxNotifyMessageWithOperation.toString())
+            logger.warn("List<RtxNotifyPost> is empty after being processed, RtxNotifyMessageWithOperation: $rtxNotifyMessageWithOperation")
             return
         }
 
@@ -64,29 +64,62 @@ class RtxServiceImpl @Autowired constructor(
             if (result.Ret == 0) {
                 // 成功
                 rtxNotifyDao.insertOrUpdateRtxNotifyRecord(
-                    true, rtxNotifyMessageWithOperation.source, batchId, id,
-                    retryCount, null, notifyPost.receiver, notifyPost.sender,
-                    notifyPost.title, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                    notifyPost.contentMd5, notifyPost.frequencyLimit,
-                    tofConfs["sys-id"], notifyPost.fromSysId
+                    success = true,
+                    source = rtxNotifyMessageWithOperation.source,
+                    batchId = batchId,
+                    id = id,
+                    retryCount = retryCount,
+                    lastErrorMessage = null,
+                    receivers = notifyPost.receiver,
+                    sender = notifyPost.sender,
+                    title = notifyPost.title,
+                    body = notifyPost.msgInfo,
+                    priority = notifyPost.priority.toInt(),
+                    contentMd5 = notifyPost.contentMd5,
+                    frequencyLimit = notifyPost.frequencyLimit,
+                    tofSysId = tofConfs["sys-id"],
+                    fromSysId = notifyPost.fromSysId
                 )
             } else {
                 // 写入失败记录
                 rtxNotifyDao.insertOrUpdateRtxNotifyRecord(
-                    false, rtxNotifyMessageWithOperation.source, batchId, id,
-                    retryCount, result.ErrMsg, notifyPost.receiver, notifyPost.sender,
-                    notifyPost.title, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                    notifyPost.contentMd5, notifyPost.frequencyLimit,
-                    tofConfs["sys-id"], notifyPost.fromSysId)
+                    success = false,
+                    source = rtxNotifyMessageWithOperation.source,
+                    batchId = batchId,
+                    id = id,
+                    retryCount = retryCount,
+                    lastErrorMessage = result.ErrMsg,
+                    receivers = notifyPost.receiver,
+                    sender = notifyPost.sender,
+                    title = notifyPost.title,
+                    body = notifyPost.msgInfo,
+                    priority = notifyPost.priority.toInt(),
+                    contentMd5 = notifyPost.contentMd5,
+                    frequencyLimit = notifyPost.frequencyLimit,
+                    tofSysId = tofConfs["sys-id"],
+                    fromSysId = notifyPost.fromSysId
+                )
                 if (retryCount < 3) {
                     // 开始重试
-                    reSendMessage(notifyPost, rtxNotifyMessageWithOperation.source, retryCount + 1, id, batchId)
+                    reSendMessage(
+                        post = notifyPost,
+                        notifySource = rtxNotifyMessageWithOperation.source,
+                        retryCount = retryCount + 1,
+                        id = id,
+                        batchId = batchId
+                    )
                 }
             }
         }
     }
 
-    private fun reSendMessage(post: RtxNotifyPost, notifySource: EnumNotifySource, retryCount: Int, id: String, batchId: String) {
+    private fun reSendMessage(
+        post: RtxNotifyPost,
+        notifySource: EnumNotifySource,
+        retryCount: Int,
+        id: String,
+        batchId: String
+    ) {
         val rtxNotifyMessageWithOperation = RtxNotifyMessageWithOperation()
         rtxNotifyMessageWithOperation.apply {
             this.batchId = batchId
@@ -122,14 +155,23 @@ class RtxServiceImpl @Autowired constructor(
         val bodyList = ChineseStringUtil.split(rtxNotifyMessage.body, 960) ?: return list
         for (i in bodyList.indices) {
             val body = if (bodyList.size > 1) {
-                String.format("%s(%d/%d)", bodyList[i], i + 1, bodyList.size)
+                String.format(
+                    "%s(%d/%d)",
+                    bodyList[i],
+                    i + 1,
+                    bodyList.size
+                )
             } else {
                 bodyList[i]
             }
 
             val contentMd5 = CommonUtils.getMessageContentMD5(rtxNotifyMessage.title, body)
-            val receivers = Lists.newArrayList(filterReceivers(
-                rtxNotifyMessage.getReceivers(), contentMd5, rtxNotifyMessage.frequencyLimit)
+            val receivers = Lists.newArrayList(
+                filterReceivers(
+                    receivers = rtxNotifyMessage.getReceivers(),
+                    contentMd5 = contentMd5,
+                    frequencyLimit = rtxNotifyMessage.frequencyLimit
+                )
             )
             if (receivers == null || receivers.isEmpty()) {
                 continue
@@ -182,7 +224,7 @@ class RtxServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:" + filteredOutReceivers)
+            logger.warn("Filtered out receivers:$filteredOutReceivers")
         }
         return filteredReceivers
     }
@@ -198,10 +240,21 @@ class RtxServiceImpl @Autowired constructor(
         val result: List<NotificationResponse<RtxNotifyMessageWithOperation>> = if (count == 0) {
             listOf()
         } else {
-            val records = rtxNotifyDao.list(page, pageSize, success, fromSysId, createdTimeSortOrder)
+            val records = rtxNotifyDao.list(
+                page = page,
+                pageSize = pageSize,
+                success = success,
+                fromSysId = fromSysId,
+                createdTimeSortOrder = createdTimeSortOrder
+            )
             records.stream().map(this::parseFromTNotifyRtxToResponse)?.collect(Collectors.toList()) ?: listOf()
         }
-        return NotificationResponseWithPage(count, page, pageSize, result)
+        return NotificationResponseWithPage(
+            count = count,
+            page = page,
+            pageSize = pageSize,
+            data = result
+        )
     }
 
     private fun parseFromTNotifyRtxToResponse(record: TNotifyRtxRecord): NotificationResponse<RtxNotifyMessageWithOperation> {

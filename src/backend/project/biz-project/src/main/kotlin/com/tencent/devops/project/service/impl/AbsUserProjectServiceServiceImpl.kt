@@ -45,8 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
-class UserProjectServiceServiceImpl @Autowired constructor(
+abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         private val dslContext: DSLContext,
         private val serviceTypeDao: ServiceTypeDao,
         private val serviceDao: ServiceDao,
@@ -299,10 +298,10 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     }
 
     override fun updateServiceUrls(userId: String, name: String, serviceUpdateUrls: ServiceUpdateUrls): Result<Boolean> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Result(serviceDao.updateUrls(dslContext, userId, name, serviceUpdateUrls))
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(UserProjectServiceServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(AbsUserProjectServiceServiceImpl::class.java)
     }
 }

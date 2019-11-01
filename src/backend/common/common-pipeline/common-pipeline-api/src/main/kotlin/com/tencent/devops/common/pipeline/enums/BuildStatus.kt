@@ -47,7 +47,8 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     CALL_WAITING("等待回调", true), // 15 等待回调 --运行中状态（新）
     TRY_FINALLY("补偿任务", false), // 16 不可见的后台状态（新）为前面失败的任务做补偿的任务的原子状态，执行中如果前面有失败，则该种状态的任务才会执行。
     QUEUE_TIMEOUT("排队超时", true), // 17 排队超时
-    EXEC_TIMEOUT("执行超时", true); // 18 执行超时
+    EXEC_TIMEOUT("执行超时", true), // 18 执行超时
+    QUEUE_CACHE("队列待处理", true); // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
 
     companion object {
         fun isFailure(status: BuildStatus) = status == FAILED || isCancel(status) || isTimeout(status)
