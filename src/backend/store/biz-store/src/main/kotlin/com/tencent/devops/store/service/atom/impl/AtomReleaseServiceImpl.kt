@@ -28,6 +28,10 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEPLOY
+import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.SECURITY
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -517,10 +521,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val qualityDataMap = JsonUtil.toMap(qualityJsonStr!!)
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stage = when (qualityDataMap["stage"]) {
-                    "DEVELOP" -> "开发"
-                    "TEST" -> "测试"
-                    "DEPLOY" -> "部署"
-                    "SECURITY" -> "安全"
+                    "DEVELOP" -> MessageCodeUtil.getCodeLanMessage(DEVELOP)
+                    "TEST" -> MessageCodeUtil.getCodeLanMessage(TEST)
+                    "DEPLOY" -> MessageCodeUtil.getCodeLanMessage(DEPLOY)
+                    "SECURITY" -> MessageCodeUtil.getCodeLanMessage(SECURITY)
                     else -> throw RuntimeException("unsupported stage type, only allow:DEVELOP, TEST, DEPLOY, SECURITY")
                 }
 
