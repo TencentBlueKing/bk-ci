@@ -1331,7 +1331,6 @@ class TemplateService @Autowired constructor(
                     } else {
                         pipeline.options = template.options
                         pipeline.required = template.required
-                        pipeline.defaultValue = template.defaultValue
                         pipeline.desc = template.desc
                         result.add(pipeline)
                     }
