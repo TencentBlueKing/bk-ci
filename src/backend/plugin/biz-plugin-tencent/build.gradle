@@ -21,6 +21,7 @@ dependencies {
     compile project(":common:common-cos")
     compile project(":common:common-notify")
     compile project(":common:common-db")
+    compile project(":common:common-pipeline:common-pipeline-tencent")
     compile group: 'org.json', name: 'json', version: '20180130'
     compile group: 'net.dongliu', name: 'apk-parser', version: '2.5.3'
     compile 'org.asynchttpclient:async-http-client'

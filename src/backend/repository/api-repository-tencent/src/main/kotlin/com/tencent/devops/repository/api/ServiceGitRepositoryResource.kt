@@ -29,15 +29,15 @@ interface ServiceGitRepositoryResource {
 			@ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
 			@HeaderParam(AUTH_HEADER_USER_ID)
 			userId: String,
-			@ApiParam("项目编码", required = true)
+			@ApiParam("项目编码", required = false)
 			@QueryParam("projectCode")
-			projectCode: String,
+			projectCode: String?,
 			@ApiParam("代码库名称", required = true)
 			@QueryParam("repositoryName")
 			repositoryName: String,
-			@ApiParam("样例工程路径", required = true)
+			@ApiParam("样例工程路径", required = false)
 			@QueryParam("sampleProjectPath")
-			sampleProjectPath: String,
+			sampleProjectPath: String?,
 			@ApiParam(value = "命名空间ID", required = false)
 			@QueryParam("namespaceId")
 			namespaceId: Int?,
@@ -49,9 +49,10 @@ interface ServiceGitRepositoryResource {
 			tokenType: TokenTypeEnum
 	): Result<RepositoryInfo?>
 
-	@ApiOperation("更新git代码库信息")
+
+	@ApiOperation("根据仓库ID更新git代码库信息")
 	@PUT
-	@Path("/git/update/repository")
+	@Path("/git/update/repository/repoId")
 	fun updateGitCodeRepository(
 			@ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
 			@HeaderParam(AUTH_HEADER_USER_ID)
@@ -62,6 +63,23 @@ interface ServiceGitRepositoryResource {
 			@ApiParam("代码库更新信息", required = true)
 			updateGitProjectInfo: UpdateGitProjectInfo,
 			@ApiParam(value = "token类型 1：oauth 2:privateKey", required = true)
+			@QueryParam("tokenType")
+			tokenType: TokenTypeEnum
+	): Result<Boolean>
+
+	@ApiOperation("根据工蜂项目名称更新git代码库信息")
+	@PUT
+	@Path("/git/update/repository/projectName")
+	fun updateGitCodeRepositoryByProjectName(
+			@ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+			@HeaderParam(AUTH_HEADER_USER_ID)
+			userId: String,
+			@ApiParam(value = "项目名称", required = true)
+			@QueryParam("projectName")
+			projectName: String,
+			@ApiParam(value = "更新git项目信息", required = true)
+			updateGitProjectInfo: UpdateGitProjectInfo,
+			@ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
 			@QueryParam("tokenType")
 			tokenType: TokenTypeEnum
 	): Result<Boolean>

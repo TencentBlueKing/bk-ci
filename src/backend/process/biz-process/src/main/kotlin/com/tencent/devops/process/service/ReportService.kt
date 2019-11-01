@@ -28,10 +28,14 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.dao.ReportDao
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -55,7 +59,8 @@ class ReportService @Autowired constructor(
         taskId: String,
         indexFile: String,
         name: String,
-        reportType: ReportTypeEnum
+        reportType: ReportTypeEnum,
+        reportEmail: ReportEmail? = null
     ) {
         val indexFilePath = if (reportType == ReportTypeEnum.INTERNAL) {
             Paths.get(indexFile).normalize().toString()
@@ -67,6 +72,10 @@ class ReportService @Autowired constructor(
                 "|indexFile=$indexFile|name=$name|reportType=$reportType|indexFilePath=$indexFilePath"
         )
         reportDao.create(dslContext, projectId, pipelineId, buildId, taskId, indexFilePath, name, reportType.name)
+
+        if (reportEmail != null) {
+            sendEmail(reportEmail.receivers, reportEmail.title, reportEmail.html)
+        }
     }
 
     fun list(userId: String, projectId: String, pipelineId: String, buildId: String): List<Report> {
@@ -93,5 +102,14 @@ class ReportService @Autowired constructor(
 
     private fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
         return "${HomeHostUtil.innerApiHost()}/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
+    }
+
+    private fun sendEmail(receivers: Set<String>, title: String, html: String) {
+        val emailNotifyMessage = EmailNotifyMessage()
+        emailNotifyMessage.addAllReceivers(receivers)
+        emailNotifyMessage.format = EnumEmailFormat.HTML
+        emailNotifyMessage.title = title
+        emailNotifyMessage.body = html
+        client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 }

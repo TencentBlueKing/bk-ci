@@ -14,6 +14,8 @@ data class JinGangAppCallback(
     val buildId: String,
     @ApiModelProperty("构建下面对应的任务号")
     val taskId: String,
+    @ApiModelProperty("element ID")
+    val elementId: String,
     @ApiModelProperty("该次扫描文件md5")
     val md5: String,
     @ApiModelProperty("结果html地址")

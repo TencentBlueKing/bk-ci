@@ -1,0 +1,414 @@
+package com.tencent.devops.process.engine.atom.task.deploy
+
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.client.JfrogService
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.job.JobClient
+import com.tencent.devops.common.job.api.pojo.EnvSet
+import com.tencent.devops.common.job.api.pojo.OpenStateFastPushFileRequest
+import com.tencent.devops.common.pipeline.element.OpenStatePushFileElement
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
+import com.tencent.devops.process.engine.atom.AtomResponse
+import com.tencent.devops.process.engine.atom.IAtomTask
+import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
+import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
+import com.tencent.devops.process.engine.common.BS_TASK_HOST
+import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS
+import com.tencent.devops.process.engine.exception.BuildTaskException
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.PipelineUserService
+import com.tencent.devops.process.util.CommonUtils
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.context.annotation.Scope
+import org.springframework.stereotype.Component
+import java.nio.file.Files
+
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+class OpenStatePushFileTaskAtom @Autowired constructor(
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val client: Client,
+    private val jobClient: JobClient,
+    private val pipelineUserService: PipelineUserService,
+    private val jfrogService: JfrogService,
+    private val rabbitTemplate: RabbitTemplate
+) : IAtomTask<OpenStatePushFileElement> {
+    override fun tryFinish(
+        task: PipelineBuildTask,
+        param: OpenStatePushFileElement,
+        runVariables: Map<String, String>,
+        force: Boolean
+    ): AtomResponse {
+
+        val taskInstanceId = task.taskParams[JOB_TASK_ID]?.toString()?.toLong()
+            ?: return if (force) defaultFailAtomResponse else AtomResponse(task.status)
+
+        val buildId = task.buildId
+        val taskId = task.taskId
+        val projectId = task.projectId
+        val executeCount = task.executeCount ?: 1
+
+        val startTime = task.taskParams[BS_ATOM_START_TIME_MILLS].toString().toLong()
+        val operator = task.taskParams[STARTER] as String
+
+        logger.info("[$buildId]|LOOP|$taskId|JOB_TASK_ID=$taskInstanceId|startTime=$startTime")
+        val timeout = 0L + getTimeout(param)
+
+        val buildStatus = checkStatus(
+            startTime = startTime,
+            maxRunningMills = timeout,
+            projectId = projectId,
+            taskId = taskId,
+            taskInstanceId = taskInstanceId,
+            operator = operator,
+            buildId = buildId,
+            executeCount = executeCount
+        )
+
+        if (BuildStatus.isFinish(buildStatus)) {
+            clearTempFile(task)
+        }
+
+        return AtomResponse(
+            buildStatus
+        )
+    }
+
+    override fun execute(
+        task: PipelineBuildTask,
+        param: OpenStatePushFileElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
+        parseParam(param, runVariables)
+        val buildStatus = when (param.srcType) {
+            "PIPELINE" -> {
+                archive(task, param, runVariables)
+            }
+            "CUSTOMIZE" -> {
+                customizeArchive(task, param, runVariables)
+            }
+            else -> {
+                logger.error("unknown srcType(${param.srcType}), terminate!")
+                BuildStatus.FAILED
+            }
+        }
+
+        if (BuildStatus.isFinish(buildStatus)) {
+            clearTempFile(task)
+        }
+        return AtomResponse(buildStatus)
+    }
+
+    private fun parseParam(param: OpenStatePushFileElement, runVariables: Map<String, String>) {
+        param.srcType = parseVariable(param.srcType, runVariables)
+        param.srcPath = parseVariable(param.srcPath, runVariables)
+        param.openState = parseVariable(param.openState, runVariables)
+        param.maxRunningTime = parseVariable(param.maxRunningTime, runVariables)
+    }
+
+    override fun getParamElement(task: PipelineBuildTask): OpenStatePushFileElement {
+        return JsonUtil.mapTo(task.taskParams, OpenStatePushFileElement::class.java)
+    }
+
+    private fun customizeArchive(
+        task: PipelineBuildTask,
+        param: OpenStatePushFileElement,
+        runVariables: Map<String, String>
+    ): BuildStatus {
+        return archive(task, param, runVariables, true)
+    }
+
+    private fun archive(
+        task: PipelineBuildTask,
+        param: OpenStatePushFileElement,
+        runVariables: Map<String, String>,
+        isCustom: Boolean = false
+    ): BuildStatus {
+        val buildId = task.buildId
+        val projectId = task.projectId
+        val pipelineId = task.pipelineId
+        val taskId = task.taskId
+        val executeCount = task.executeCount ?: 1
+
+        val srcPath = parseVariable(param.srcPath, runVariables)
+
+        // 下载所有文件
+        var count = 0
+        val destPath = Files.createTempDirectory("openState_").toFile()
+        val localFileList = mutableListOf<String>()
+        LogUtils.addLine(rabbitTemplate, buildId, "准备匹配文件: $srcPath", taskId, executeCount)
+        srcPath.split(",").map {
+            it.trim().removePrefix("/").removePrefix("./")
+        }.forEach { path ->
+            val files = jfrogService.downloadFile(
+                ArtifactorySearchParam(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    regexPath = path,
+                    custom = isCustom,
+                    executeCount = executeCount,
+                    elementId = taskId
+                ), destPath.canonicalPath
+            )
+
+            files.forEach { file ->
+                localFileList.add(file.absolutePath)
+            }
+            count += files.size
+        }
+        if (count == 0) throw RuntimeException("没有匹配到需要分发的文件/File not found")
+        LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count files will be distribute", taskId, executeCount)
+
+        val localIp = CommonUtils.getInnerIP()
+        task.taskParams[BS_TASK_HOST] = localIp
+        task.taskParams[TMP_HOST] = localIp
+        task.taskParams[TEMP_DEST_PATH] = destPath.absolutePath
+        // 执行超时后的保底清理事件
+        pipelineEventDispatcher.dispatch(
+            ClearJobTempFileEvent(
+                source = "archive",
+                pipelineId = pipelineId,
+                buildId = buildId,
+                projectId = projectId,
+                userId = task.starter,
+                clearFileSet = setOf(destPath.absolutePath),
+                taskId = taskId,
+                routeKeySuffix = localIp,
+                delayMills = getTimeout(param) // 分钟 * 60  * 1000 = X毫秒
+            )
+        )
+
+        val fileSource = OpenStateFastPushFileRequest.FileSource(
+            files = localFileList,
+            envSet = EnvSet(listOf(), listOf(), listOf(EnvSet.IpDto(CommonUtils.getInnerIP()))),
+            account = "root"
+        )
+        return distribute(task, param, fileSource)
+    }
+
+    private fun getTimeout(param: OpenStatePushFileElement) =
+        (param.maxRunningTime?.toInt() ?: 600) * 60 * 1000
+
+    // 分发文件
+    private fun distribute(
+        task: PipelineBuildTask,
+        param: OpenStatePushFileElement,
+        fileSource: OpenStateFastPushFileRequest.FileSource
+    ): BuildStatus {
+        val buildId = task.buildId
+        val taskId = task.taskId
+        val targetAccount = "user00"
+        val timeout = getTimeout(param)
+        var operator = task.starter
+        val executeCount = task.executeCount ?: 1
+
+        val pipelineId = task.pipelineId
+        val lastModifyUserMap = pipelineUserService.listUpdateUsers(setOf(pipelineId))
+        val lastModifyUser = lastModifyUserMap[pipelineId]
+        if (null != lastModifyUser && operator != lastModifyUser) {
+            // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
+            logger.info("operator:$operator, lastModifyUser:$lastModifyUser")
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "将以用户${lastModifyUser}执行文件传输/Will use $lastModifyUser to distribute file...",
+                tag = taskId,
+                executeCount = executeCount
+            )
+
+            operator = lastModifyUser
+        }
+        val projectId = task.projectId
+        val targetPath = "/data/home/user00/release"
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "分发目标路径(distribute files to target path) : $targetPath",
+            tag = taskId,
+            executeCount = executeCount
+        )
+
+        val envSet = EnvSet(listOf(), listOf(), listOf())
+        checkEnvNodeExists(buildId, taskId, executeCount, operator, projectId, envSet, client)
+
+        // val fileSource = "{\"files\":[\"$srcPath\"],\"envSet\":{\"nodeHashIds\":[\"$srcNodeId\"]},\"account\":\"$srcAccount\"}"
+        val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
+            ?: run {
+                LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
+                    executeCount
+                )
+                return BuildStatus.FAILED
+            }
+        val fastPushFileReq = OpenStateFastPushFileRequest(
+            operator, listOf(fileSource), targetPath, envSet,
+            targetAccount, timeout * 1L, appId, param.openState
+        )
+        val taskInstanceId = jobClient.openStateFastPushFileDevops(fastPushFileReq, projectId)
+        val startTime = System.currentTimeMillis()
+
+        val buildStatus = checkStatus(
+            startTime = startTime,
+            maxRunningMills = timeout * 1L,
+            projectId = projectId,
+            taskId = taskId,
+            taskInstanceId = taskInstanceId,
+            operator = operator,
+            buildId = buildId,
+            executeCount = executeCount
+        )
+
+        task.taskParams[STARTER] = operator
+        task.taskParams[JOB_TASK_ID] = taskInstanceId
+        task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
+
+        return buildStatus
+    }
+
+    private fun clearTempFile(task: PipelineBuildTask) {
+        val buildId = task.buildId
+        val taskId = task.taskId
+        val workspacePath = task.taskParams[TEMP_DEST_PATH] as String?
+        val starter = task.taskParams[STARTER] as String?
+
+        val clearFileSet = mutableSetOf<String>()
+        if (!workspacePath.isNullOrBlank()) {
+            clearFileSet.add(workspacePath!!)
+        }
+
+        if (clearFileSet.isEmpty()) {
+            logger.info("[$buildId]|clearTempFile| no file need clear")
+            return
+        }
+
+        pipelineEventDispatcher.dispatch(
+            ClearJobTempFileEvent(
+                source = "clearTempFile",
+                pipelineId = task.pipelineId,
+                buildId = buildId,
+                projectId = task.projectId,
+                userId = starter!!,
+                clearFileSet = clearFileSet,
+                taskId = taskId,
+                routeKeySuffix = task.taskParams[TMP_HOST] as String
+            )
+        )
+    }
+
+    private fun checkStatus(
+        startTime: Long,
+        maxRunningMills: Long,
+        projectId: String,
+        taskInstanceId: Long,
+        operator: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ): BuildStatus {
+
+        if (System.currentTimeMillis() - startTime > maxRunningMills) {
+            logger.warn("job getTimeout. getTimeout minutes:${maxRunningMills / 60000}")
+            LogUtils.addRedLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "执行超时/Job getTimeout: ${maxRunningMills / 60000} Minutes",
+                tag = taskId,
+                executeCount = executeCount
+            )
+            return BuildStatus.EXEC_TIMEOUT
+        }
+
+        val taskResult = jobClient.getTaskResult(projectId, taskInstanceId, operator)
+
+        return if (taskResult.isFinish) {
+            if (taskResult.success) {
+                logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
+                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                BuildStatus.SUCCEED
+            } else {
+                logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
+                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                BuildStatus.FAILED
+            }
+        } else {
+            LogUtils.addLine(rabbitTemplate, buildId, "执行中/Waiting for job:$taskInstanceId", taskId, executeCount)
+            BuildStatus.LOOP_WAITING
+        }
+    }
+
+    private fun checkEnvNodeExists(
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        operator: String,
+        projectId: String,
+        envSet: EnvSet,
+        client: Client
+    ) {
+        if (envSet.envHashIds.isNotEmpty()) {
+            val envList = client.get(ServiceEnvironmentResource::class)
+                .listRawByEnvHashIds(operator, projectId, envSet.envHashIds).data
+            val envIdList = mutableListOf<String>()
+            envList!!.forEach {
+                envIdList.add(it.envHashId)
+            }
+            val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
+            if (noExistsEnvIds.isNotEmpty()) {
+                logger.error("The envIds not exists, id:$noExistsEnvIds")
+                LogUtils.addRedLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "以下这些环境id不存在,请重新修改流水线/Can not found any environment by id ：$noExistsEnvIds",
+                    tag = taskId,
+                    executeCount = executeCount
+                )
+                throw BuildTaskException(
+                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+                )
+            }
+        }
+        if (envSet.nodeHashIds.isNotEmpty()) {
+            val nodeList =
+                client.get(ServiceNodeResource::class).listRawByHashIds(operator, projectId, envSet.nodeHashIds).data
+            val nodeIdList = mutableListOf<String>()
+            nodeList!!.forEach {
+                nodeIdList.add(it.nodeHashId)
+            }
+            val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
+            if (noExistsNodeIds.isNotEmpty()) {
+                logger.error("The nodeIds not exists, id:$noExistsNodeIds")
+                LogUtils.addRedLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "以下这些节点id不存在,请重新修改流水线/Can not found any node by id ：$noExistsNodeIds",
+                    tag = taskId,
+                    executeCount = executeCount
+                )
+                throw BuildTaskException(
+                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
+                )
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpenStatePushFileElement::class.java)
+
+        private const val JOB_TASK_ID = "_JOB_TASK_ID"
+        private const val STARTER = "_STARTER"
+        private const val TMP_HOST = "_TMP_HOST"
+        private const val TEMP_DEST_PATH = "_TEMP_DEST_PATH"
+    }
+}
