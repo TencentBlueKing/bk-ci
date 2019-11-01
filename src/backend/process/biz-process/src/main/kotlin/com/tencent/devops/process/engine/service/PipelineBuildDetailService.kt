@@ -128,7 +128,7 @@ class PipelineBuildDetailService @Autowired constructor(
         pipelineDetailChangeEvent(buildId)
     }
 
-    private fun pipelineDetailChangeEvent(buildId: String) {
+    fun pipelineDetailChangeEvent(buildId: String) {
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         logger.info("dispatch pipelineDetailChangeEvent, buildId: $buildId")
         webSocketDispatcher.dispatch(

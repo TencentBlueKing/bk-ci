@@ -12,13 +12,12 @@ import com.tencent.devops.process.websocket.push.StatusWebsocketPush
 import com.tencent.devops.process.websocket.page.DetailPageBuild
 import com.tencent.devops.process.websocket.page.HistoryPageBuild
 import com.tencent.devops.process.websocket.page.StatusPageBuild
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class WebsocketService @Autowired constructor(
-		val pipelineBuildService: PipelineBuildService,
-		val pipelineService: PipelineService,
 		val redisOperation: RedisOperation,
 		val objectMapper: ObjectMapper
 ) {
@@ -30,13 +29,13 @@ class WebsocketService @Autowired constructor(
 						projectId = projectId,
 						atomId = null
 				))
+		logger.info("detail websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
 		return DetailWebsocketPush(
 				buildId = buildId,
 				projectId = projectId,
 				pipelineId = pipelineId,
 				userId = userId,
 				redisOperation = redisOperation,
-				pipelineBuildService = pipelineBuildService,
 				page = page,
 				pushType = WebSocketType.DETAIL,
 				objectMapper = objectMapper,
@@ -61,6 +60,7 @@ class WebsocketService @Autowired constructor(
 						atomId = null
 				)
 		)
+		logger.info("history websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
 		return HistoryWebsocketPush(
 				buildId = buildId,
 				projectId = projectId,
@@ -91,12 +91,12 @@ class WebsocketService @Autowired constructor(
 						atomId = null
 				)
 		)
+		logger.info("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
 		return StatusWebsocketPush(
 				buildId = buildId,
 				projectId = projectId,
 				pipelineId = pipelineId,
 				userId = userId,
-				pipelineService = pipelineService,
 				redisOperation = redisOperation,
 				page = page,
 				pushType = WebSocketType.STATUS,
@@ -111,5 +111,9 @@ class WebsocketService @Autowired constructor(
 						page = page
 				)
 		)
+	}
+
+	companion object {
+		val logger = LoggerFactory.getLogger(this::class.java)
 	}
 }

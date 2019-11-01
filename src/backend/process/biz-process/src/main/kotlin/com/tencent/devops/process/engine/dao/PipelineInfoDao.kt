@@ -33,6 +33,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -188,6 +189,15 @@ class PipelineInfoDao {
         }
     }
 
+    fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(DELETE.eq(false))
+                .fetch()
+        }
+    }
+
     fun listDeletePipelineIdByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
@@ -305,6 +315,51 @@ class PipelineInfoDao {
             val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.`in`(pipelineIds))
+            if (filterDelete) query.and(DELETE.eq(false))
+            query.fetch()
+        }
+    }
+
+    fun getPipelineInfo(
+        dslContext: DSLContext,
+        pipelineId: String,
+        version: Int
+    ): TPipelineInfoRecord {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+            query.fetch().first()
+        }
+    }
+
+    fun getPipelineInfoNum(
+        dslContext: DSLContext,
+        projectIds: Set<String>?,
+        channelCodes: Set<ChannelCode>?
+    ): Record1<Int>? {
+        val conditions = mutableListOf<org.jooq.Condition>()
+        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
+        if (projectIds != null && projectIds.isNotEmpty()) {
+            conditions.add(T_PIPELINE_INFO.PROJECT_ID.`in`(projectIds))
+        }
+        if (channelCodes != null && channelCodes.isNotEmpty()) {
+            conditions.add(T_PIPELINE_INFO.CHANNEL.`in`(channelCodes.map { it.name }))
+        }
+        return dslContext.select(T_PIPELINE_INFO.PROJECT_ID.count()).from(T_PIPELINE_INFO)
+            .where(conditions).fetch().first()
+    }
+
+    fun listInfoByPipelineName(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineNames: Set<String>,
+        filterDelete: Boolean = true
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_NAME.`in`(pipelineNames))
             if (filterDelete) query.and(DELETE.eq(false))
             query.fetch()
         }

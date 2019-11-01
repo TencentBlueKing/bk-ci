@@ -23,8 +23,12 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
 		private val repositoryUserService: RepositoryUserService
 ) : ServiceGitRepositoryResource {
 
-	override fun createGitCodeRepository(userId: String, projectCode: String, repositoryName: String, sampleProjectPath: String, namespaceId: Int?, visibilityLevel: VisibilityLevelEnum?, tokenType: TokenTypeEnum): Result<RepositoryInfo?> {
+	override fun createGitCodeRepository(userId: String, projectCode: String?, repositoryName: String, sampleProjectPath: String?, namespaceId: Int?, visibilityLevel: VisibilityLevelEnum?, tokenType: TokenTypeEnum): Result<RepositoryInfo?> {
 		return repositoryService.createGitCodeRepository(userId, projectCode, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
+	}
+
+	override fun updateGitCodeRepositoryByProjectName(userId: String, projectName: String, updateGitProjectInfo: UpdateGitProjectInfo, tokenType: TokenTypeEnum): Result<Boolean> {
+		return repositoryService.updateGitCodeRepository(userId, projectName, updateGitProjectInfo, tokenType)
 	}
 
 	override fun updateGitCodeRepository(userId: String, repoId: String, updateGitProjectInfo: UpdateGitProjectInfo, tokenType: TokenTypeEnum): Result<Boolean> {

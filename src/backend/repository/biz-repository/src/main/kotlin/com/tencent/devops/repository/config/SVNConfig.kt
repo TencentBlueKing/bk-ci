@@ -35,12 +35,13 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class SVNConfig {
 
-    @Value("\${scm.svn.apiKey:}")
+    @Value("\${scm.svn.apiKey}")
     val apiKey: String = ""
 
-    @Value("\${scm.svn.openApi:}")
+    @Value("\${scm.svn.openApi}")
     val svnOpenApi: String = ""
 
-    @Value("\${scm.svn.hookUrl:}")
+    @Value("\${scm.svn.hookUrl}")
     val svnHookUrl: String = ""
+
 }

@@ -47,7 +47,7 @@ dependencies {
     compile project(":quality:api-quality")
     compile project(":quality:common-quality")
     compile project(":plugin:api-plugin")
-
+    compile project(":notify:api-notify")
     compile project(":process:model-process")
 
     compile "com.zaxxer:HikariCP"
