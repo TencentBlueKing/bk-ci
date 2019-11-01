@@ -257,8 +257,8 @@ class OpAtomServiceImpl @Autowired constructor(
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)
         }
-//         通过websocket推送状态变更消息,推送所有有该插件权限的用户
-         websocketService.sendWebsocketMessageByAtomCodeAndAtomId(atomCode, atomId)
+        // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
+        websocketService.sendWebsocketMessageByAtomCodeAndAtomId(atomCode, atomId)
         // 发送通知消息
         atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, type)
         return Result(true)

@@ -26,8 +26,12 @@
 
 package com.tencent.devops.store.service.container.impl
 
+import com.tencent.devops.common.api.constant.EXCEPTION
+import com.tencent.devops.common.api.constant.NORMAL
+import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.store.pojo.container.ContainerResource
@@ -72,12 +76,14 @@ class BkContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 containerResourceValue = envNodeList?.map {
                     it.name
                 }?.toList()
-
+                val normalName = MessageCodeUtil.getCodeLanMessage(NORMAL)
+                val exceptionName = MessageCodeUtil.getCodeLanMessage(EXCEPTION)
+                val numUnit = MessageCodeUtil.getCodeLanMessage(NUM_UNIT)
                 envNodeList?.map {
                     AgentResponse(
                         it.envHashId,
                         it.name,
-                        "（正常: ${it.normalNodeCount}个，异常: ${it.abnormalNodeCount}个）"
+                        "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName: ${it.abnormalNodeCount}$numUnit）"
                     )
                 }?.toList()
             }
