@@ -77,7 +77,7 @@
                 :quick-close="createAtomsideConfig.quickClose"
                 :width="createAtomsideConfig.width">
                 <template slot="content">
-                    <form class="bk-form create-atom-form"
+                    <form class="bk-form create-atom-form" v-if="hasOauth"
                         v-bkloading="{
                             isLoading: createAtomsideConfig.isLoading
                         }">
@@ -158,11 +158,43 @@
                                 <div v-if="atomErrors.languageError" class="error-tips"> {{ $t('开发语言不能为空') }} </div>
                             </div>
                         </div>
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('授权方式') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-radio-group v-model="createAtomForm.authType">
+                                    <bk-radio :value="entry.value" v-for="(entry, key) in authTypeList" :key="key">{{ entry.label }}</bk-radio>
+                                </bk-radio-group>
+                            </div>
+                        </div>
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('是否开源') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-radio-group v-model="createAtomForm.visibilityLevel">
+                                    <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{ entry.label }}</bk-radio>
+                                </bk-radio-group>
+                                <p v-if="atomErrors.openSourceError" class="error-tips"> {{ $t('是否开源不能为空') }} </p>
+                            </div>
+                        </div>
+                        <div class="bk-form-item is-required" v-if="createAtomForm.visibilityLevel === 'PRIVATE'">
+                            <label class="bk-label"> {{ $t('不开源原因') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-input v-model="createAtomForm.privateReason" type="textarea" :placeholder="$t('请输入不开源原因')" @input="atomErrors.privateReasonError = false"></bk-input>
+                                <p v-if="atomErrors.privateReasonError" class="error-tips"> {{ $t('不开源原因不能为空') }} </p>
+                            </div>
+                        </div>
+                        <form-tips :tips-content="createTips" class="atom-tip"></form-tips>
                         <div class="form-footer">
                             <button class="bk-button bk-primary" type="button" @click="submitCreateAtom()"> {{ $t('提交') }} </button>
                             <button class="bk-button bk-default" type="button" @click="cancelCreateAtom()"> {{ $t('取消') }} </button>
                         </div>
                     </form>
+                    <div class="oauth-tips" v-else style="margin: 30px">
+                        <button class="bk-button bk-primary" type="button" @click="openValidate"> {{ $t('OAUTH认证') }} </button>
+                        <p class="prompt-oauth">
+                            <i class="bk-icon icon-info-circle-shape"></i>
+                            <span> {{ $t('新增插件时将自动初始化插件代码库，请先进行工蜂OAUTH授权') }} </span>
+                        </p>
+                    </div>
                 </template>
             </bk-sideslider>
         </template>
@@ -215,14 +247,19 @@
 </template>
 
 <script>
+    import formTips from '@/components/common/formTips/index'
     import { atomStatusMap } from '@/store/constants'
 
     export default {
+        components: {
+            formTips
+        },
 
         data () {
             return {
                 atomStatusList: atomStatusMap,
                 isInputFocus: false,
+                hasOauth: true,
                 bufferError: false,
                 buffer: '',
                 searchName: '',
@@ -233,6 +270,13 @@
                 renderList: [],
                 projectList: [],
                 languageList: [],
+                authTypeList: [
+                    { label: this.$t('工蜂OAUTH'), value: 'OAUTH' }
+                ],
+                isOpenSource: [
+                    { label: this.$t('是'), value: 'LOGIN_PUBLIC' },
+                    { label: this.$t('否'), value: 'PRIVATE' }
+                ],
                 promptList: [
                     this.$t('1、插件市场不再展示插件'),
                     this.$t('2、已安装插件的项目不能再添加插件到流水线'),
@@ -248,7 +292,9 @@
                     projectCode: '',
                     atomCode: '',
                     name: '',
-                    language: ''
+                    language: '',
+                    authType: 'OAUTH',
+                    visibilityLevel: 'LOGIN_PUBLIC'
                 },
                 isLoading: false,
                 atomErrors: {
@@ -280,6 +326,16 @@
             }
         },
 
+        computed: {
+            createTips () {
+                const host = location.host
+                const innerHosts = ['dev.devops.oa.com', 'test.devops.oa.com']
+                const index = innerHosts.findIndex(innerHost => innerHost === host)
+                const group = index > -1 ? 'bkdevops-plugins-test' : 'bkdevops-plugins'
+                return `${this.$t('提交后，系统将在工蜂自动创建插件代码库，地址示例')}：http://git.code.oa.com/${group}/${this.createAtomForm.atomCode}.git`
+            }
+        },
+
         watch: {
             'createAtomsideConfig.show' (val) {
                 if (!val) {
@@ -304,6 +360,7 @@
 
         created () {
             this.getLanguage()
+            this.checkIsOAuth()
             this.requestList()
         },
 
@@ -312,6 +369,19 @@
                 this.$store.dispatch('store/getDevelopLanguage').then((res) => {
                     this.languageList = (res || []).map(({ language }) => ({ name: language, language }))
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
+            },
+
+            async checkIsOAuth () {
+                try {
+                    const res = await this.$store.dispatch('store/checkIsOAuth', { type: 'ATOM_MARKET', atomCode: '' })
+                    this.hasOauth = res.status === 200
+                    this.gitOAuthUrl = res.url
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
+                }
             },
 
             async requestList () {
@@ -375,6 +445,11 @@
                 }
                 if (!this.createAtomForm.language) {
                     this.atomErrors.languageError = true
+                    errorCount++
+                }
+
+                if (this.isOpenSource.findIndex(x => x.value === this.createAtomForm.visibilityLevel) < 0) {
+                    this.atomErrors.openSourceError = true
                     errorCount++
                 }
 

@@ -99,6 +99,9 @@
                     case 'template':
                         res = bkLocale.i18n('流水线模板')
                         break
+                    case 'ide':
+                        res = bkLocale.i18n('IDE插件')
+                        break
                     default:
                         res = bkLocale.i18n('流水线插件')
                         break
@@ -134,7 +137,8 @@
                 showToTop: false,
                 storeTypes: [
                     { type: 'atom', des: this.$t('流水线插件') },
-                    { type: 'template', des: this.$t('流水线模板') }
+                    { type: 'template', des: this.$t('流水线模板') },
+                    { type: 'ide', des: this.$t('IDE插件') }
                 ]
             }
         },
@@ -185,6 +189,9 @@
                 'requestTplCategorys',
                 'requestTplLabel',
                 'requestTplClassify',
+                'requestIDEClassifys',
+                'requestIDECategorys',
+                'requestIDELabel',
                 'setMarketQuery'
             ]),
 
@@ -279,7 +286,8 @@
             getClassifys () {
                 const fun = {
                     atom: () => this.getAtomClassifys(),
-                    template: () => this.getTemplateClassifys()
+                    template: () => this.getTemplateClassifys(),
+                    ide: () => this.getIDEClassifys()
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const method = fun[type]
@@ -319,6 +327,16 @@
                 return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
                     const res = []
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('按应用范畴'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('按功能'), data: lables })
+                    return res
+                })
+            },
+
+            getIDEClassifys () {
+                return Promise.all([this.requestIDECategorys(), this.requestIDELabel(), this.requestIDEClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('适用IDE'), data: categorys })
                     if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('按分类'), data: classify })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('按功能'), data: lables })
                     return res

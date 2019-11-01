@@ -25,6 +25,7 @@ import validationCNMessages from 'vee-validate/dist/locale/zh_CN';
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import showAskPermissionDialog from './components/AskPermissionDialog'
+import bsWebSocket from './utils/bsWebSocket.js'
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
@@ -67,6 +68,13 @@ VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
 const router = createRouter(store, dynamicLoadModule)
+router.afterEach((route) => {
+    bsWebSocket.changeRoute(route)
+})
+router.beforeEach((to, from, next) => {
+    bsWebSocket.loginOut(from)
+    next()
+})
 window.eventBus = eventBus
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
