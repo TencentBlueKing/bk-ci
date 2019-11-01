@@ -44,6 +44,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -349,7 +350,11 @@ class PipelineBuildDetailService @Autowired constructor(
         }, buildStatus)
     }
 
-    fun buildEnd(buildId: String, buildStatus: BuildStatus) {
+    fun buildEnd(buildId: String, buildStatus: BuildStatus,
+                 cancelUser: String? = null,
+                 errorType: ErrorType? = null,
+                 errorCode: Int? = null,
+                 errorMsg: String? = null) {
         logger.info("Build end $buildId")
 
         val record = buildDetailDao.get(dslContext, buildId)
@@ -368,6 +373,11 @@ class PipelineBuildDetailService @Autowired constructor(
                 stage.containers.forEach { c ->
                     reassignStatusWhenRunning(c, finalStatus)
                 }
+            }
+            if (errorType != null) {
+                model.errorType = errorType.name
+                model.errorCode = errorCode
+                model.errorMsg = errorMsg
             }
 
             buildDetailDao.update(dslContext, buildId, JsonUtil.toJson(model), finalStatus)

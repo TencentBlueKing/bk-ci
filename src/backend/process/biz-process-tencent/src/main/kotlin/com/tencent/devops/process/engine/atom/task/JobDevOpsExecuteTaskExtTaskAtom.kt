@@ -65,6 +65,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                 maxRunningMills = timeout,
                 projectId = projectId,
                 taskId = taskId,
+                containerHashId = task.containerHashId,
                 taskInstanceId = taskInstanceId,
                 operator = operator,
                 buildId = buildId,
@@ -93,7 +94,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         if (param.taskId < 0) {
             logger.warn("taskId is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "taskId is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "taskId is not init", taskId, task.containerHashId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -131,7 +132,8 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
             maxRunningMills = timeout,
             projectId = projectId,
             taskId = taskId,
-            taskInstanceId = taskInstanceId,
+                containerHashId = task.containerHashId,
+                taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
             executeCount = executeCount
@@ -142,7 +144,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
         }
 
         return if (buildStatus == BuildStatus.FAILED) AtomResponse(
@@ -161,6 +163,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         operator: String,
         buildId: String,
         taskId: String,
+        containerHashId: String?,
         executeCount: Int
     ): BuildStatus {
 
@@ -171,6 +174,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                 buildId,
                 "Job getTimeout:${maxRunningMills / 60000} Minutes",
                 taskId,
+                containerHashId,
                 executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
@@ -186,7 +190,8 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                     buildId,
                     "Job devops execute task success! detail: ${taskResult.msg}",
                     taskId,
-                    executeCount
+                containerHashId,
+                executeCount
                 )
                 BuildStatus.SUCCEED
             } else {
@@ -196,7 +201,8 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                     buildId,
                     "start execute task failed! detail: ${taskResult.msg}",
                     taskId,
-                    executeCount
+                containerHashId,
+                executeCount
                 )
                 BuildStatus.FAILED
             }

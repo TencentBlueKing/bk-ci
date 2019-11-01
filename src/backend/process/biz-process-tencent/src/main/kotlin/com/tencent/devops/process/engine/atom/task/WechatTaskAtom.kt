@@ -38,7 +38,7 @@ class WechatTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val buildId = task.buildId
         if (param.receivers.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "通知接收者不合法:[${param.receivers}]", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "通知接收者不合法:[${param.receivers}]", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -47,7 +47,7 @@ class WechatTaskAtom @Autowired constructor(
             )
         }
         if (param.body.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "企业微信通知内容:[${param.body}]", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "企业微信通知内容:[${param.body}]", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -72,7 +72,7 @@ class WechatTaskAtom @Autowired constructor(
             body = bodyStr
         }
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        LogUtils.addLine(rabbitTemplate, buildId, "发送企业微信内容: (${message.body}) 到 $receiversStr", taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "发送企业微信内容: (${message.body}) 到 $receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
 
         message.addAllReceivers(receiversStr.split(",").toSet())
 
@@ -81,11 +81,11 @@ class WechatTaskAtom @Autowired constructor(
                 val resp = client.get(ServiceNotifyResource::class).sendWechatNotify(message)
                 if (resp.isOk()) {
                     if (resp.data!!) {
-                        LogUtils.addLine(rabbitTemplate, buildId, "发送企业微信内容: (${message.body}) 到 [$receiversStr]成功", taskId, task.executeCount ?: 1)
+                        LogUtils.addLine(rabbitTemplate, buildId, "发送企业微信内容: (${message.body}) 到 [$receiversStr]成功", taskId, task.containerHashId, task.executeCount ?: 1)
                         return true
                     }
                 }
-                LogUtils.addRedLine(rabbitTemplate, buildId, "发送企业微信内容: (${message.body}) 到 [$receiversStr]失败: ${resp.message}", taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "发送企业微信内容: (${message.body}) 到 [$receiversStr]失败: ${resp.message}", taskId, task.containerHashId, task.executeCount ?: 1)
                 return false
             }
         }).tryDoIt()

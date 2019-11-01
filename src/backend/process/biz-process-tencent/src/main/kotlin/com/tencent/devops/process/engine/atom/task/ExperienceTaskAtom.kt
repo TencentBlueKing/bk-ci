@@ -41,7 +41,7 @@ class ExperienceTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         if (param.path.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "体验路径为空", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "体验路径为空", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -51,7 +51,7 @@ class ExperienceTaskAtom @Autowired constructor(
         }
 
         if (param.notifyTypes.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "通知方式不正确", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "通知方式不正确", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -99,7 +99,7 @@ class ExperienceTaskAtom @Autowired constructor(
         val artifactoryType = if (customized) com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.CUSTOM_DIR
         else com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.PIPELINE
         if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, realPath).data!!) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "文件($path)不存在", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "文件($path)不存在", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -113,7 +113,7 @@ class ExperienceTaskAtom @Autowired constructor(
         val experience = ExperienceServiceCreate(realPath, expArtifactoryType, expireDate, experienceGroups, innerUsers, outerUsers, notifyTypeSet, enableGroupId, groupId)
         client.get(ServiceExperienceResource::class).create(userId, projectId, experience)
 
-        LogUtils.addLine(rabbitTemplate, buildId, "版本体验($fileName)创建成功", taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "版本体验($fileName)创建成功", taskId, task.containerHashId, task.executeCount ?: 1)
 
         return AtomResponse(BuildStatus.SUCCEED)
     }

@@ -59,11 +59,12 @@ class UserLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
 
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, executeCount)
+        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, jobId, executeCount)
     }
 
     override fun getMoreLogs(
@@ -76,6 +77,7 @@ class UserLogResourceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
@@ -88,6 +90,7 @@ class UserLogResourceImpl @Autowired constructor(
                 start,
                 end,
                 tag,
+                jobId,
                 executeCount
         )
     }
@@ -101,6 +104,7 @@ class UserLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
@@ -112,6 +116,7 @@ class UserLogResourceImpl @Autowired constructor(
                 isAnalysis,
                 queryKeywords,
                 tag,
+                jobId,
                 executeCount
         )
     }
@@ -122,10 +127,11 @@ class UserLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag ?: "", executeCount)
+        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag ?: "", jobId, executeCount)
     }
 
     private fun validateAuth(userId: String, projectId: String, pipelineId: String, buildId: String) {

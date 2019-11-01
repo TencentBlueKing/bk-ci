@@ -100,13 +100,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 task.buildId,
                 "Fail to execute the task atom: ${t.message}",
                 task.taskId,
+                task.containerHashId,
                 task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
         } catch (ignored: Throwable) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.executeCount ?: 1
+                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId,task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", ignored)
         } finally {
@@ -358,6 +359,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,
+                containerHashId = container.containerId,
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
                 taskId = VMUtils.genStartVMTaskId(containerSeq, taskSeq),

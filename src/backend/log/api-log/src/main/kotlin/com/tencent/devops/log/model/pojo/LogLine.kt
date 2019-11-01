@@ -45,6 +45,8 @@ data class LogLine(
     val priority: Byte = 0,
     @ApiModelProperty("日志tag", required = true)
     val tag: String = "",
+    @ApiModelProperty("日志jobId", required = true)
+    val jobId: String = "",
     @ApiModelProperty("日志执行次数", required = true)
     val executeCount: Int? = 1
 ) {
