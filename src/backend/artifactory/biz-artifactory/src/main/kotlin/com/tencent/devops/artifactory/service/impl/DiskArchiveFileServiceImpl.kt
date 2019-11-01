@@ -51,7 +51,7 @@ import javax.ws.rs.core.Response
 @Service
 class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() {
 
-    @Value("\${artifactory.archiveLocalBasePath}")
+    @Value("\${artifactory.archiveLocalBasePath:#{null}}")
     private lateinit var archiveLocalBasePath: String
 
     override fun uploadFileToRepo(destPath: String, file: File) {

@@ -33,6 +33,7 @@ dependencies {
     compile project(":common:common-wechatwork")
     compile project(":common:common-auth:common-auth-api")
     compile project(":common:common-auth:common-auth-tencent")
+    compile project(":common:common-pipeline:common-pipeline-api")
     compile project(":common:common-pipeline:common-pipeline-tencent")
     compile project(":common:common-archive-jfrog")
     compile project(":common:common-job")

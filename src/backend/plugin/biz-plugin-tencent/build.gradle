@@ -7,6 +7,7 @@ dependencies {
     compile project(":notify:api-notify")
     compile project(":external:api-external")
     compile project(":quality:api-quality")
+    compile project(":quality:common-quality")
     compile project(":process:api-process-tencent")
     compile project(":artifactory:api-artifactory-tencent")
     compile project(":plugin:model-plugin")

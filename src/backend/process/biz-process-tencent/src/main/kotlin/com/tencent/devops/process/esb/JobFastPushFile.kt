@@ -40,12 +40,14 @@ class JobFastPushFile @Autowired constructor(
         targetPath: String,
 //        timeout: Int,
         elementId: String,
+        containerId: String,
         executeCount: Int
     ): Long {
         checkParam(operator, appId, sourceFileList, targetPath)
 
         val taskInstanceId =
-            sendTaskRequest(buildId, operator, appId, sourceFileList, targetIpList, targetPath, elementId, executeCount)
+            sendTaskRequest(buildId, operator, appId, sourceFileList, targetIpList,
+                targetPath, elementId, containerId, executeCount)
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.error("Job start push file failed.")
@@ -76,6 +78,7 @@ class JobFastPushFile @Autowired constructor(
         taskInstanceId: Long,
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int,
         userId: String
     ): BuildStatus {
@@ -87,6 +90,7 @@ class JobFastPushFile @Autowired constructor(
                 buildId,
                 "Job timeout:$maxRunningMins Minutes",
                 taskId,
+                containerId,
                 executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
@@ -97,11 +101,11 @@ class JobFastPushFile @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, "Job success! jobId:$taskInstanceId", taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "Job success! jobId:$taskInstanceId", taskId, containerId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, "Job fail! jobId:$taskInstanceId", taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "Job fail! jobId:$taskInstanceId", taskId, containerId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
@@ -169,6 +173,7 @@ class JobFastPushFile @Autowired constructor(
         targetIpList: List<SourceIp>,
         targetPath: String,
         elementId: String,
+        containerId: String,
         executeCount: Int
     ): Long {
         val requestData = emptyMap<String, Any>().toMutableMap()
@@ -193,7 +198,7 @@ class JobFastPushFile @Autowired constructor(
         requestData["ip_list"] = targetIpList
         requestData["operator"] = operator
         val url = esbUrl + "fast_push_file"
-        return doSendTaskRequest(url, requestData, buildId, elementId, executeCount)
+        return doSendTaskRequest(url, requestData, buildId, elementId, containerId, executeCount)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -202,6 +207,7 @@ class JobFastPushFile @Autowired constructor(
         requestData: MutableMap<String, Any>,
         buildId: String,
         elementId: String,
+        containerId: String,
         executeCount: Int
     ): Long {
         val requestStr = ObjectMapper().writeValueAsString(requestData)
@@ -224,6 +230,7 @@ class JobFastPushFile @Autowired constructor(
                         buildId,
                         "start execute job task success: taskInstanceId:  $taskInstanceId",
                         elementId,
+                        containerId,
                         executeCount
                     )
                     taskInstanceId
@@ -235,6 +242,7 @@ class JobFastPushFile @Autowired constructor(
                         buildId,
                         "start execute job task failed: $msg",
                         elementId,
+                        containerId,
                         executeCount
                     )
                     -1
@@ -247,6 +255,7 @@ class JobFastPushFile @Autowired constructor(
                 buildId,
                 "error occur while execute job task: ${e.message}",
                 elementId,
+                containerId,
                 executeCount
             )
             throw RuntimeException("error occur while execute job task.")

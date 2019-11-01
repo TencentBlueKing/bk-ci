@@ -26,8 +26,10 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.tables.records.TPipelineUserRecord
 import com.tencent.devops.process.dao.PipelineUserDao
+import com.tencent.devops.process.pojo.PipelineUser
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +51,22 @@ class PipelineUserService @Autowired constructor(
 
     fun delete(pipelineId: String) {
         pipelineUserDao.delete(dslContext, pipelineId)
+    }
+
+    fun get(pipelineId: String): PipelineUser? {
+        val pipelineUserRecord = pipelineUserDao.get(dslContext, pipelineId)
+        return if (null != pipelineUserRecord) {
+            PipelineUser(
+                id = pipelineUserRecord.id,
+                pipelineId = pipelineUserRecord.pipelineId,
+                createTime = pipelineUserRecord.createTime.timestampmilli(),
+                updateTime = pipelineUserRecord.updateTime.timestampmilli(),
+                creator = pipelineUserRecord.createUser,
+                modifier = pipelineUserRecord.updateUser
+            )
+        } else {
+            null
+        }
     }
 
     fun list(pipelineIds: Set<String>): Result<TPipelineUserRecord> {
