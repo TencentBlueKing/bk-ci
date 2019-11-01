@@ -28,6 +28,10 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEPLOY
+import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.SECURITY
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -87,6 +91,7 @@ import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.websocket.WebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -143,6 +148,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var redisOperation: RedisOperation
     @Autowired
     lateinit var client: Client
+    @Autowired
+    lateinit var websocketService: WebsocketService
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -492,7 +499,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessage(userId, atomId)
+         websocketService.sendWebsocketMessage(userId, atomId)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -517,10 +524,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val qualityDataMap = JsonUtil.toMap(qualityJsonStr!!)
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stage = when (qualityDataMap["stage"]) {
-                    "DEVELOP" -> "开发"
-                    "TEST" -> "测试"
-                    "DEPLOY" -> "部署"
-                    "SECURITY" -> "安全"
+                    "DEVELOP" -> MessageCodeUtil.getCodeLanMessage(DEVELOP)
+                    "TEST" -> MessageCodeUtil.getCodeLanMessage(TEST)
+                    "DEPLOY" -> MessageCodeUtil.getCodeLanMessage(DEPLOY)
+                    "SECURITY" -> MessageCodeUtil.getCodeLanMessage(SECURITY)
                     else -> throw RuntimeException("unsupported stage type, only allow:DEVELOP, TEST, DEPLOY, SECURITY")
                 }
 
@@ -748,7 +755,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             marketAtomUpdateRequest.versionContent
         )
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessage(userId, atomId)
+         websocketService.sendWebsocketMessage(userId, atomId)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -843,7 +850,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
         )
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessage(userId, atomId)
+         websocketService.sendWebsocketMessage(userId, atomId)
         // 删除质量红线相关数据
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
@@ -903,14 +910,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     UpdateAtomInfo(atomStatus = atomStatus, latestFlag = true, pubTime = pubTime)
                 )
                 // 通过websocket推送状态变更消息
-                // websocketService.sendWebsocketMessage(userId, atomId)
+                 websocketService.sendWebsocketMessage(userId, atomId)
             }
             // 发送版本发布邮件
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_SUCCESS)
         } else {
             marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
             // 通过websocket推送状态变更消息
-            // websocketService.sendWebsocketMessage(userId, atomId)
+             websocketService.sendWebsocketMessage(userId, atomId)
         }
         return Result(true)
     }
@@ -970,7 +977,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(), userId, atomOfflineReq.reason
         )
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
+         websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
         // 通知使用方插件即将下架 -- todo
 
         return Result(true)

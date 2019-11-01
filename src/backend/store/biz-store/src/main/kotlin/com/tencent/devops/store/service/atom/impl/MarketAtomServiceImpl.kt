@@ -70,6 +70,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.websocket.WebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -112,8 +113,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var storeCommentService: StoreCommentService
     @Autowired
     lateinit var classifyService: ClassifyService
-/*    @Autowired
-    lateinit var //websocketService: StoreWebsocketService*/
+    @Autowired
+    lateinit var websocketService: WebsocketService
     @Autowired
     lateinit var client: Client
 
@@ -589,7 +590,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             if (AtomStatusEnum.BUILDING.status.toByte() == atomRecord.atomStatus) {
                 marketAtomDao.setAtomStatusById(dslContext, atomRecord.id, atomStatus.status.toByte(), userId, msg)
                 // 通过websocket推送状态变更消息
-                // websocketService.sendWebsocketMessage(userId, atomRecord.id)
+                 websocketService.sendWebsocketMessage(userId, atomRecord.id)
             }
         }
         return Result(true)

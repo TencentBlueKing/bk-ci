@@ -7,8 +7,6 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.process.api.user.TXUserBuildResource
-import com.tencent.devops.process.api.user.TXUserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.Pipeline
@@ -31,8 +29,11 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
+import com.tencent.devops.process.api.user.UserBuildResource
+import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.support.dao.WechatWorkMessageDAO
 import org.dom4j.Element
 import org.slf4j.LoggerFactory
@@ -297,11 +298,11 @@ class WechatWorkCallbackService @Autowired constructor(
         // 只有在群的时候才@发信息的人。
         sendMetionMessage(receiverType, chatId, userName)
 
-        var manualStartupInfo: Result<BuildManualStartupInfo>
+        val manualStartupInfo: Result<BuildManualStartupInfo>
         // 执行流水线的信息，获取启动参数
         try {
             // 正常获取到执行权限的时候
-            manualStartupInfo = client.get(TXUserBuildResource::class).manualStartupInfo(
+            manualStartupInfo = client.get(UserBuildResource::class).manualStartupInfo(
                     userName,
                     projectCode,
                     pipelineId
@@ -323,7 +324,7 @@ class WechatWorkCallbackService @Autowired constructor(
                 }
 
                 // 启动流水线
-                val manualStartResult = client.get(TXUserBuildResource::class).manualStartup(
+                val manualStartResult = client.get(UserBuildResource::class).manualStartup(
                         userName,
                         projectCode,
                         pipelineId,
@@ -422,7 +423,7 @@ class WechatWorkCallbackService @Autowired constructor(
         }
         val pipelineList = mutableListOf<Pipeline>()
         // 获取流水线列表
-        val userViewResult = client.get(TXUserPipelineResource::class).listViewPipelines(
+        val userViewResult = client.get(UserPipelineResource::class).listViewPipelines(
                 userName,
                 projectCode,
                 null,
