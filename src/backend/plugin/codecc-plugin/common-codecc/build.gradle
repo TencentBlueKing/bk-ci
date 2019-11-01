@@ -1,7 +1,7 @@
 apply plugin: "maven"
 
 dependencies {
-    compile project(":common:common-pipeline:common-pipeline-sample")
+    compile project(":common:common-pipeline:common-pipeline-api")
     compile project(":process:plugin-sdk")
     testCompile project(":common:common-test")
 }

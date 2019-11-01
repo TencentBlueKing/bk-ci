@@ -32,5 +32,5 @@ dependencies {
     compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
     compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
     compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile project(":common:common-pipeline:common-pipeline-sample")
+    compile project(":common:common-pipeline:common-pipeline-api")
 }

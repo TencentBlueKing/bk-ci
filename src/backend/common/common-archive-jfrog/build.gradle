@@ -28,6 +28,6 @@ dependencies {
     compile project(":common:common-service")
     compile project(":common:common-api")
     compile project(":common:common-web")
-    compile project(":common:common-pipeline:common-pipeline-sample")
+    compile project(":common:common-pipeline:common-pipeline-api")
     compile project(":common:common-archive")
 }
