@@ -596,7 +596,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             if (AtomStatusEnum.BUILDING.status.toByte() == atomRecord.atomStatus) {
                 marketAtomDao.setAtomStatusById(dslContext, atomRecord.id, atomStatus.status.toByte(), userId, msg)
                 // 通过websocket推送状态变更消息
-                 websocketService.sendWebsocketMessage(userId, atomRecord.id)
+                websocketService.sendWebsocketMessage(userId, atomRecord.id)
             }
         }
         return Result(true)
