@@ -64,7 +64,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
                 operator = task.starter,
                 buildId = buildId,
                 taskId = task.taskId,
-                containerId = task.containerHashId,
+                containerHashId = task.containerHashId,
                 executeCount = executeCount
             )
         )
@@ -88,7 +88,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
             openstate = param.openState,
             targetAppId = param.targetAppId,
             elementId = task.taskId,
-            containerId = task.containerHashId ?: "",
+            containerHashId = task.containerHashId ?: "",
             executeCount = executeCount,
             paramSensitive = if (param.paramSensitive) 1 else 0,
             type = param.type,
@@ -106,7 +106,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
             operator = task.starter,
             buildId = buildId,
             taskId = task.taskId,
-            containerId = task.containerHashId,
+            containerHashId = task.containerHashId,
             executeCount = executeCount
         )
 
