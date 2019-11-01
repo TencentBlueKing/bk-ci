@@ -90,7 +90,8 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         outerCommandFunc: ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?,
-        continueNoneZero: Boolean = false
+        continueNoneZero: Boolean = false,
+        prefix: String = ""
     ): String {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -166,15 +167,15 @@ object ShellUtil {
         file.writeText(command.toString())
         executeUnixCommand("chmod +x ${file.absolutePath}", dir)
         return if (outerCommandFunc == null) {
-            executeUnixCommand(file.absolutePath, dir)
+            executeUnixCommand(file.absolutePath, dir, prefix)
         } else {
             outerCommandFunc(BuildScriptType.SHELL, buildId, file, dir)
         }
     }
 
-    private fun executeUnixCommand(command: String, sourceDir: File): String {
+    private fun executeUnixCommand(command: String, sourceDir: File, prefix: String = ""): String {
         try {
-            return CommandLineUtils.execute(command, sourceDir, true)
+            return CommandLineUtils.execute(command, sourceDir, true, prefix)
         } catch (ignored: Throwable) {
             LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
             throw ignored

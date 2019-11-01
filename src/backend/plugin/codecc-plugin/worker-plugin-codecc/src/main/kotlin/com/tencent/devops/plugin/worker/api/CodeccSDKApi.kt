@@ -1,4 +1,4 @@
-package com.tencent.devops.worker.common.api.codecc
+package com.tencent.devops.plugin.worker.api
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.pojo.Result

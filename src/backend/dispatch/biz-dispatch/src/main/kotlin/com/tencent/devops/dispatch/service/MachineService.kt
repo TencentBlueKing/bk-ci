@@ -42,10 +42,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class MachineService @Autowired constructor(
-        private val machineDao: MachineDao,
-        private val vmDao: VMDao,
-        private val vmCache: VMCache,
-        private val dslContext: DSLContext
+    private val machineDao: MachineDao,
+    private val vmDao: VMDao,
+    private val vmCache: VMCache,
+    private val dslContext: DSLContext
 ) {
 
     private val logger = LoggerFactory.getLogger(MachineService::class.java)
