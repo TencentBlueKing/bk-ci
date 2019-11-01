@@ -66,6 +66,7 @@ buildscript {
         asyncHttpClientVersion = "2.1.0"
         sigarVersion = "1.6.4"
         poiVersion = "3.17"
+        commonLang3Version = "3.5"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -237,6 +238,7 @@ subprojects {
             dependency "com.github.fge:json-schema-validator:$jsonSchemaVersion"
             dependency "com.github.ulisesbocchio:jasypt-spring-boot-starter:$jasyptVersion"
             dependency "org.jolokia:jolokia-core:$jolokiaVersion"
+            dependency("org.apache.commons:commons-lang3:${commonLang3Version}")
 
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"
