@@ -690,11 +690,19 @@ class PipelineBuildDao {
         }
     }
 
-    fun updateArtifactList(dslContext: DSLContext, artifactList: String?, buildId: String) {
-        with(T_PIPELINE_BUILD_HISTORY) {
+    fun updateArtifactList(
+        dslContext: DSLContext,
+        artifactList: String?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
                 .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }

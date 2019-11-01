@@ -164,7 +164,6 @@ class BuildEndControl @Autowired constructor(
         // 记录本流水线最后一次构建的状态
         pipelineRuntimeService.finishLatestRunningBuild(
             latestRunningBuild = LatestRunningBuild(
-                projectId = buildInfo.projectId,
                 pipelineId = buildInfo.pipelineId,
                 buildId = buildInfo.buildId,
                 userId = buildInfo.startUser,

@@ -46,8 +46,9 @@ object ProcessMessageCode {
 
     const val OK = 0
 
-    // 通用参数错误 160000开头
-    const val ERROR_RETRY_3_FAILED = 16000001
+    // 通用参数错误
+    const val ERROR_RETRY_3_FAILED = 2100001
+    const val ERROR_UPDATE_FAILED = 2100002 // 更新失败: {0}
     
     const val ERROR_NO_PUBLIC_WINDOWS_BUILDER = 2101991 // Windows暂时没有公共构建机可用，请联系持续集成助手添加
     const val ERROR_DUPLICATE_BUILD_RETRY_ACT = 2101901 // 重复的重试构建请求
@@ -57,6 +58,7 @@ object ProcessMessageCode {
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = 2101100 // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = 2101101 // 流水线[{0}]不存在
+    const val ERROR_SUBPIPELINE_CYCLE_CALL = 2101102 // 子流水线循环调用
 
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = 2101001 // 子流水线id不存在
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS = 2101002 // 子流水线不存在
@@ -69,5 +71,4 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LOCK = 2101047 // 流水线锁定
     const val ERROR_PIPELINE_QUEUE_FULL = 2101049 // 流水线队列满
     const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = 2101050 // 第三方构建机状态异常
-    const val ERROR_SUBPIPELINE_CYCLE_CALL = 2101102 // 子流水线循环调用
 }

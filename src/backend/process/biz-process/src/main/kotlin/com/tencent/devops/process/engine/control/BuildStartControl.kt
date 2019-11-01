@@ -185,7 +185,6 @@ class BuildStartControl @Autowired constructor(
 
             pipelineRuntimeService.startLatestRunningBuild(
                 LatestRunningBuild(
-                    projectId = event.projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = buildInfo.startUser,
