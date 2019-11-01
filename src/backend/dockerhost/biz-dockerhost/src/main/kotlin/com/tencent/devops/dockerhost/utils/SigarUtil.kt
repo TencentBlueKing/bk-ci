@@ -23,7 +23,8 @@ object SigarUtil {
     fun loadEnable(): Boolean {
         return try {
             val averageMemLoad = queueMemValueSum / memQueue.size
-            averageMemLoad < MAX_MEM
+            val averageCpuLoad = queueCpuValueSum / cpuQueue.size
+            averageMemLoad < MAX_MEM && averageCpuLoad < MAX_CPU
         } catch (e: Exception) {
             true
         }
@@ -82,8 +83,16 @@ object SigarUtil {
 
     private fun getCpuUsedPercent(): Int {
         val sigar = Sigar()
-        val cpu = sigar.cpu
-        val element = (cpu.idle / cpu.total * 100).toInt()
+        val cpuInfoList = sigar.cpuInfoList
+        val cpuList = sigar.cpuPercList
+
+        var cpuTotalIdle = 0.0
+        for (i in cpuInfoList.indices) {
+            val cpuPerc = cpuList[i]
+            cpuTotalIdle += cpuPerc.idle
+        }
+
+        val element = 100 - (cpuTotalIdle / cpuInfoList.size.toDouble() * 100).toInt()
         return if (element in 0..100) {
             element
         } else {
