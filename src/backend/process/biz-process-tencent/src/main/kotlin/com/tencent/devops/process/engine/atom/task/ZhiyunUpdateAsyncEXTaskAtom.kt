@@ -94,7 +94,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 11 * 60 * 1000) {
                 logger.error("Wait for zhiyun timeout")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云任务执行超时", task.taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云任务执行超时", task.taskId, task.containerHashId,task.executeCount ?: 1)
                 throw BuildTaskException(ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL, "织云异步升级失败,织云任务执行超时")
             }
             Thread.sleep(2 * 1000)
@@ -132,7 +132,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
             if ((responseData["code"] as String).toInt() != 0) {
                 val msg = responseData["msg"]
                 logger.error("zhiyun updateAsyncEX getInstanceInfo failed msg:$msg")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.containerHashId,task.executeCount ?: 1)
                 throw BuildTaskException(ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL, "织云异步升级失败,织云返回错误信息：$msg")
             } else {
                 val responseData = responseData["data"] as Map<String, Any>
@@ -143,7 +143,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
                         val errmsg = it["errmsg"] as String
                         val lastErrmsg = it["lastErrmsg"] as String
                         logger.error("zhiyun updateAsyncEX getInstanceInfo failed errmsg:$errmsg, lastErrmsg: $lastErrmsg")
-                        LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.executeCount ?: 1)
+                        LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.containerHashId,task.executeCount ?: 1)
                         throw BuildTaskException(ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL, "织云异步升级失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg")
                     } else if (0 == status) {
                         logger.info("zhiyun updateAsyncEX getInstanceInfo is running, continue waiting...")
@@ -152,7 +152,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
                 }
 
                 logger.info("zhiyun updateAsyncEX getInstanceInfo finished and success")
-                LogUtils.addLine(rabbitTemplate, task.buildId, "织云异步升级成功！", task.taskId, task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, task.buildId, "织云异步升级成功！", task.taskId, task.containerHashId,task.executeCount ?: 1)
                 return true
             }
         }
@@ -172,13 +172,13 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
             if ((responseData["code"] as String).toInt() != 0) {
                 val msg = responseData["msg"]
                 logger.error("zhiyun updateAsyncEX failed msg:$msg")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.containerHashId,task.executeCount ?: 1)
                 throw BuildTaskException(ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL, "织云异步升级失败,织云返回错误信息：$msg")
             } else {
                 val responseData = responseData["data"] as Map<String, Any>
                 val taskInstanceIds = (responseData["instanceId"] as List<String>).map { it.toInt() }
                 logger.info("Zhiyun updateAsyncEX success, instanceId: $taskInstanceIds")
-                LogUtils.addLine(rabbitTemplate, task.buildId, "织云异步升级开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, task.buildId, "织云异步升级开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.containerHashId,task.executeCount ?: 1)
                 return taskInstanceIds
             }
         }

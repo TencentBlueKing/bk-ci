@@ -27,8 +27,10 @@ class JobCloudsFastPushFile @Autowired constructor(rabbitTemplate: RabbitTemplat
         sourceFileList: List<String>,
         targetPath: String,
         openstate: String,
+        ipList: List<String>?,
         targetAppId: Int,
         elementId: String,
+        containerId: String,
         executeCount: Int
     ): Long {
         checkParam(operator, targetAppId, sourceFileList, targetPath)
@@ -39,8 +41,10 @@ class JobCloudsFastPushFile @Autowired constructor(rabbitTemplate: RabbitTemplat
             sourceFileList = sourceFileList,
             targetPath = targetPath,
             openstate = openstate,
+            ipList = ipList,
             targetAppId = targetAppId,
             elementId = elementId,
+            containerId = containerId,
             executeCount = executeCount
         )
         if (taskInstanceId <= 0) {
@@ -57,8 +61,10 @@ class JobCloudsFastPushFile @Autowired constructor(rabbitTemplate: RabbitTemplat
         sourceFileList: List<String>,
         targetPath: String,
         openstate: String,
+        ipList: List<String>?,
         targetAppId: Int,
         elementId: String,
+        containerId: String,
         executeCount: Int
     ): Long {
         val requestData = emptyMap<String, Any>().toMutableMap()
@@ -78,9 +84,32 @@ class JobCloudsFastPushFile @Autowired constructor(rabbitTemplate: RabbitTemplat
         requestData["file_target_path"] = targetPath
         requestData["uin"] = operator
         requestData["openstate"] = openstate
+        if (ipList != null && ipList.isNotEmpty()) {
+            val ips = mutableListOf<Map<String, String>>()
+            ipList.filter { it.isNotBlank() }.forEach {
+                val ip = mutableMapOf<String, String>()
+                val sourceAndIp = it.split(":")
+                when {
+                    sourceAndIp.size == 1 -> {
+                        ip["source"] = "1"
+                        ip["ip"] = sourceAndIp[0]
+                    }
+                    sourceAndIp.size == 2 -> {
+                        ip["source"] = sourceAndIp[0]
+                        ip["ip"] = sourceAndIp[1]
+                    }
+                    else -> return@forEach
+                }
+                ips.add(ip)
+            }
+
+            if (ips.isNotEmpty()) {
+                requestData["ip_list"] = ips
+            }
+        }
         requestData["target_app_id"] = targetAppId
         val url = cloudsEsbUrl + "dev_ops_fast_push_file"
-        return doSendTaskRequest(url, requestData, buildId, elementId, executeCount)
+        return doSendTaskRequest(url, requestData, buildId, elementId, containerId, executeCount)
     }
 
     override fun getTaskResult(appId: Int, taskInstanceId: Long, operator: String): TaskResult {

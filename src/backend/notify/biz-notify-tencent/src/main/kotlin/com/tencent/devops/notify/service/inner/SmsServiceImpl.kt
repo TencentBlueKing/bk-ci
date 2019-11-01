@@ -47,7 +47,7 @@ class SmsServiceImpl @Autowired constructor(
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
         val smsNotifyPosts = generateSmsNotifyPost(smsNotifyMessageWithOperation)
         if (smsNotifyPosts.isEmpty()) {
-            logger.warn("List<SmsNotifyPost> is empty after being processed, SmsNotifyMessageWithOperation: " + smsNotifyMessageWithOperation.toString())
+            logger.warn("List<SmsNotifyPost> is empty after being processed, SmsNotifyMessageWithOperation: $smsNotifyMessageWithOperation")
             return
         }
 
@@ -60,25 +60,61 @@ class SmsServiceImpl @Autowired constructor(
                 SMS_URL, notifyPost, tofConfs!!)
             if (result.Ret == 0) {
                 // 成功
-                smsNotifyDao.insertOrUpdateSmsNotifyRecord(true, smsNotifyMessageWithOperation.source,
-                    batchId, id, retryCount, null, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                    notifyPost.contentMd5, notifyPost.frequencyLimit,
-                    tofConfs["sys-id"], notifyPost.fromSysId)
+                smsNotifyDao.insertOrUpdateSmsNotifyRecord(
+                    success = true,
+                    source = smsNotifyMessageWithOperation.source,
+                    batchId = batchId,
+                    id = id,
+                    retryCount = retryCount,
+                    lastErrorMessage = null,
+                    receivers = notifyPost.receiver,
+                    sender = notifyPost.sender,
+                    body = notifyPost.msgInfo,
+                    priority = notifyPost.priority.toInt(),
+                    contentMd5 = notifyPost.contentMd5,
+                    frequencyLimit = notifyPost.frequencyLimit,
+                    tofSysId = tofConfs["sys-id"],
+                    fromSysId = notifyPost.fromSysId
+                )
             } else {
                 // 写入失败记录
-                smsNotifyDao.insertOrUpdateSmsNotifyRecord(false, smsNotifyMessageWithOperation.source,
-                    batchId, id, retryCount, result.ErrMsg, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                    notifyPost.contentMd5, notifyPost.frequencyLimit,
-                    tofConfs["sys-id"], notifyPost.fromSysId)
+                smsNotifyDao.insertOrUpdateSmsNotifyRecord(
+                    success = false,
+                    source = smsNotifyMessageWithOperation.source,
+                    batchId = batchId,
+                    id = id,
+                    retryCount = retryCount,
+                    lastErrorMessage = result.ErrMsg,
+                    receivers = notifyPost.receiver,
+                    sender = notifyPost.sender,
+                    body = notifyPost.msgInfo,
+                    priority = notifyPost.priority.toInt(),
+                    contentMd5 = notifyPost.contentMd5,
+                    frequencyLimit = notifyPost.frequencyLimit,
+                    tofSysId = tofConfs["sys-id"],
+                    fromSysId = notifyPost.fromSysId
+                )
                 if (retryCount < 3) {
                     // 开始重试
-                    reSendMessage(notifyPost, smsNotifyMessageWithOperation.source, retryCount + 1, id, batchId)
+                    reSendMessage(
+                        post = notifyPost,
+                        source = smsNotifyMessageWithOperation.source,
+                        retryCount = retryCount + 1,
+                        id = id,
+                        batchId = batchId
+                    )
                 }
             }
         }
     }
 
-    private fun reSendMessage(post: SmsNotifyPost, source: EnumNotifySource, retryCount: Int, id: String?, batchId: String?) {
+    private fun reSendMessage(
+        post: SmsNotifyPost,
+        source: EnumNotifySource,
+        retryCount: Int,
+        id: String?,
+        batchId: String?
+    ) {
         val smsNotifyMessageWithOperation = SmsNotifyMessageWithOperation()
         smsNotifyMessageWithOperation.apply {
             this.batchId = batchId
@@ -112,14 +148,23 @@ class SmsServiceImpl @Autowired constructor(
         val bodyList = ChineseStringUtil.split(smsNotifyMessage.body, 220) ?: return list
         for (i in bodyList.indices) {
             val body = if (bodyList.size > 1) {
-                String.format("%s(%d/%d)", bodyList[i], i + 1, bodyList.size)
+                String.format(
+                    "%s(%d/%d)",
+                    bodyList[i],
+                    i + 1,
+                    bodyList.size
+                )
             } else {
                 bodyList[i]
             }
 
             val contentMd5 = CommonUtils.getMessageContentMD5("", body)
-            val receivers = Lists.newArrayList(filterReceivers(
-                smsNotifyMessage.getReceivers(), contentMd5, smsNotifyMessage.frequencyLimit)
+            val receivers = Lists.newArrayList(
+                filterReceivers(
+                    receivers = smsNotifyMessage.getReceivers(),
+                    contentMd5 = contentMd5,
+                    frequencyLimit = smsNotifyMessage.frequencyLimit
+                )
             )
             if (receivers == null || receivers.isEmpty()) {
                 continue
@@ -169,20 +214,37 @@ class SmsServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:" + filteredOutReceivers)
+            logger.warn("Filtered out receivers:$filteredOutReceivers")
         }
         return filteredReceivers
     }
 
-    override fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<SmsNotifyMessageWithOperation> {
+    override fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<SmsNotifyMessageWithOperation> {
         val count = smsNotifyDao.count(success, fromSysId)
         val result: List<NotificationResponse<SmsNotifyMessageWithOperation>> = if (count == 0) {
             listOf()
         } else {
-            val emailRecords = smsNotifyDao.list(page, pageSize, success, fromSysId, createdTimeSortOrder)
+            val emailRecords = smsNotifyDao.list(
+                page = page,
+                pageSize = pageSize,
+                success = success,
+                fromSysId = fromSysId,
+                createdTimeSortOrder = createdTimeSortOrder
+            )
             emailRecords.stream().map(this::parseFromTNotifySmsToResponse)?.collect(Collectors.toList()) ?: listOf()
         }
-        return NotificationResponseWithPage(count, page, pageSize, result)
+        return NotificationResponseWithPage(
+            count = count,
+            page = page,
+            pageSize = pageSize,
+            data = result
+        )
     }
 
     private fun parseFromTNotifySmsToResponse(record: TNotifySmsRecord): NotificationResponse<SmsNotifyMessageWithOperation> {

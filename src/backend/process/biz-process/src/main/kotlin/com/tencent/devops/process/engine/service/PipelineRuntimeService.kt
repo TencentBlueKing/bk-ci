@@ -104,29 +104,9 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
-import com.tencent.devops.process.utils.BUILD_NO
-import com.tencent.devops.process.utils.FIXVERSION
-import com.tencent.devops.process.utils.MAJORVERSION
-import com.tencent.devops.process.utils.MINORVERSION
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_ALIASNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_BRANCHNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
-import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_VERSION
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.utils.*
+import com.tencent.devops.process.websocket.ChangeType
+import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -852,6 +832,7 @@ class PipelineRuntimeService @Autowired constructor(
                                         buildId = buildId,
                                         stageId = stageId,
                                         containerId = containerId,
+                                            containerHashId = container.containerId,
                                         containerType = containerType,
                                         taskSeq = taskSeq,
                                         taskId = atomElement.id!!,
@@ -1492,6 +1473,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
 
+            val remark = getVariable(buildId, PIPELINE_BUILD_REMARK)
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 buildId = buildId,
@@ -1501,6 +1483,7 @@ class PipelineRuntimeService @Autowired constructor(
                 executeTime = executeTime,
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
+                remark = remark,
                 errorType = errorType,
                 errorCode = errorCode,
                 errorMsg = errorMsg

@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":store:biz-store-op")
+    compile project(":store:biz-store-ideatom")
     compile project(":store:biz-store-tencent")
 }
 

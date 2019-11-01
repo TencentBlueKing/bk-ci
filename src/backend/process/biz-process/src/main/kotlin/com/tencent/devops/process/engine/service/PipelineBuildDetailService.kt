@@ -425,6 +425,7 @@ class PipelineBuildDetailService @Autowired constructor(
                                 }
                             }
                         }
+
                     }
                 }
                 if (errorType != null) {

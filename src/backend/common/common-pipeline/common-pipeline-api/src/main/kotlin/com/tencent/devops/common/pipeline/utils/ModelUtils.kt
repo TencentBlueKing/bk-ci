@@ -106,14 +106,24 @@ object ModelUtils {
 
                 val failElements = mutableListOf<Element>()
                 c.elements.forEach { e ->
-                    refreshElement(e, canRetry, failElements)
+                    refreshElement(c, e, canRetry, failElements, status)
                 }
             }
         }
     }
 
-    private fun refreshElement(e: Element, canRetry: Boolean, failElements: MutableList<Element>) {
-        e.canRetry = e.canRetry ?: false && canRetry
+    private fun refreshElement(
+        c: Container,
+        e: Element,
+        canRetry: Boolean,
+        failElements: MutableList<Element>,
+        status: BuildStatus
+    ) {
+        if (c is VMBuildContainer) {
+            e.canRetry = e.canRetry ?: false && canRetry
+        } else { // 目前暂时不放开无构建环境的即时重试，要重新设计重试的方式。
+            e.canRetry = e.canRetry ?: false && BuildStatus.isFailure(status)
+        }
         val additionalOptions = e.additionalOptions
         if (additionalOptions != null) {
             if (additionalOptions.continueWhenFailed) {

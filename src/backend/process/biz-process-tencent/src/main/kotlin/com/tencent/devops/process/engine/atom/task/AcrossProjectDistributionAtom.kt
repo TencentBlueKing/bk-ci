@@ -55,10 +55,10 @@ class AcrossProjectDistributionAtom @Autowired constructor(
                         .acrossProjectCopy(projectId, artifactoryType, relativePath, targetProjectId, targetPath)
 
         return if (result.isOk()) {
-            LogUtils.addLine(rabbitTemplate, buildId, "跨项目构件分发成功，共分发了${result.data}个文件", task.taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "跨项目构件分发成功，共分发了${result.data}个文件", task.taskId, task.containerHashId,task.executeCount ?: 1)
             AtomResponse(BuildStatus.SUCCEED)
         } else {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "跨项目构件分发失败，$result", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "跨项目构件分发失败，$result", task.taskId, task.containerHashId,task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,

@@ -31,6 +31,7 @@ import com.tencent.devops.project.api.service.ServiceProjectServiceResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.UserProjectServiceService
+import com.tencent.devops.project.service.impl.AbsUserProjectServiceServiceImpl
 
 @RestResource
 class ServiceProjectServiceResourceImpl constructor(

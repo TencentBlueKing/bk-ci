@@ -11,11 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildOauthResourceImpl @Autowired constructor(
     private val gitService: GitOauthService
 ) : BuildOauthResource {
-    override fun gitGet(userId: String): Result<GitToken?> {
-        return Result(gitService.getAccessToken(userId))
+
+    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
+        return Result(gitService.checkAndGetAccessToken(buildId, userId))
     }
-//
-//    override fun gitGetV2(userId: String): Result<GitToken?> {
-//        return Result(gitService.getAccessToken(userId))
-//    }
+
 }

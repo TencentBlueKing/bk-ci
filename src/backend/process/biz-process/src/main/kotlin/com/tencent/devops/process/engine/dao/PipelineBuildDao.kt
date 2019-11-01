@@ -85,9 +85,7 @@ class PipelineBuildDao {
                 CHANNEL,
                 VERSION,
                 QUEUE_TIME,
-                WEBHOOK_TYPE,
-                ERROR_TYPE,
-                ERROR_MSG
+                WEBHOOK_TYPE
             ).values(
                 buildId,
                 buildNum,
@@ -105,9 +103,7 @@ class PipelineBuildDao {
                 channelCode.name,
                 version,
                 LocalDateTime.now(),
-                webhookType,
-                null,
-                null
+                webhookType
             ).execute()
         }
     }
@@ -276,10 +272,10 @@ class PipelineBuildDao {
         buildId: String,
         buildStatus: BuildStatus,
         material: String?,
-        artifactList: String?,
         executeTime: Long?,
         buildParameters: String?,
         recommendVersion: String?,
+        remark: String? = null,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
@@ -292,6 +288,9 @@ class PipelineBuildDao {
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
+            if (!remark.isNullOrBlank()) {
+                baseQuery = baseQuery.set(REMARK, remark)
+            }
             if (errorType != null) {
                 baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
                 baseQuery = baseQuery.set(ERROR_CODE, errorCode)
@@ -332,6 +331,20 @@ class PipelineBuildDao {
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny()
         }
+    }
+
+    fun updateStatus(
+        dslContext: DSLContext,
+        buildId: String,
+        oldBuildStatus: BuildStatus,
+        newBuildStatus: BuildStatus
+    ): Boolean {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(STATUS, newBuildStatus.ordinal)
+                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(oldBuildStatus.ordinal))
+                .execute()
+        } == 1
     }
 
     fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
@@ -483,7 +496,6 @@ class PipelineBuildDao {
         }
     }
 
-
     fun listPipelineBuildInfo(
         dslContext: DSLContext,
         projectId: String,
@@ -618,6 +630,17 @@ class PipelineBuildDao {
         }
     }
 
+    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectCount().from(this)
+                .where(ARTIFACT_INFO.isNotNull)
+                .and(ARTIFACT_INFO.notEqual("[ ]"))
+                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
+                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
         return DSL.field(
             "timestampdiff({0}, {1}, {2})",
@@ -667,14 +690,12 @@ class PipelineBuildDao {
         }
     }
 
-    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectCount().from(this)
-                .where(ARTIFACT_INFO.isNotNull)
-                .and(ARTIFACT_INFO.notEqual("[ ]"))
-                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
-                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
-                .fetchOne(0, Int::class.java)
+    fun updateArtifactList(dslContext: DSLContext, artifactList: String?, buildId: String) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(ARTIFACT_INFO, artifactList)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
 }

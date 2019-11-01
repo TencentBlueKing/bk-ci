@@ -327,31 +327,38 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     }
 
     override fun getTemplateDetailByCode(userId: String, templateCode: String): Result<TemplateDetail?> {
-        logger.info("the templateCode is :$templateCode")
+        logger.info("getTemplateDetailByCode userId is :$userId, templateCode is :$templateCode")
         val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
         logger.info("the templateRecord is :$templateRecord")
         if (null == templateRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode))
         }
-        val templateDetail = getTemplateDetail(templateRecord, userId)
-        return Result(templateDetail)
+        return getTemplateDetail(templateRecord, userId)
     }
 
     override fun getTemplateDetailById(userId: String, templateId: String): Result<TemplateDetail?> {
-        logger.info("the templateId is :$templateId")
+        logger.info("getTemplateDetailById userId is :$userId, templateId is :$templateId")
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
         logger.info("the templateRecord is :$templateRecord")
         if (null == templateRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateId))
         }
-        val templateDetail = getTemplateDetail(templateRecord, userId)
-        return Result(templateDetail)
+        return getTemplateDetail(templateRecord, userId)
     }
 
-    private fun getTemplateDetail(templateRecord: TTemplateRecord, userId: String): TemplateDetail {
+    private fun getTemplateDetail(templateRecord: TTemplateRecord, userId: String): Result<TemplateDetail?> {
         val templateCode = templateRecord.templateCode
+        // 判断用户是否有查询权限
+        val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
+        if (!queryFlag) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
         val templateClassifyRecord = classifyDao.getClassify(dslContext, templateRecord.classifyId)
-        val templateStatisticRecord = storeStatisticDao.getStatisticByStoreCode(dslContext, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
+        val templateStatisticRecord = storeStatisticDao.getStatisticByStoreCode(
+            dslContext = dslContext,
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+        )
         val downloads = templateStatisticRecord.value1()?.toInt()
         val comments = templateStatisticRecord.value2()?.toInt()
         val score = templateStatisticRecord.value3()?.toDouble()
@@ -366,7 +373,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             releaseFlag = true
         }
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, templateCode, StoreTypeEnum.TEMPLATE)
-        return TemplateDetail(
+        return Result(TemplateDetail(
             templateId = templateRecord.id,
             templateCode = templateCode,
             templateName = templateRecord.templateName,
@@ -388,7 +395,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             flag = installFlag,
             releaseFlag = releaseFlag,
             userCommentInfo = userCommentInfo
-        )
+        ))
     }
 
     /**

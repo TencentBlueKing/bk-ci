@@ -17,35 +17,35 @@ class TOFService @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
     companion object {
-        private val CONTENT_TYPE = "application/json; charset=utf-8"
-        private val logger = LoggerFactory.getLogger(com.tencent.devops.notify.utils.TOFService::class.java)
+        private const val CONTENT_TYPE = "application/json; charset=utf-8"
+        private val logger = LoggerFactory.getLogger(TOFService::class.java)
 
-        val EMAIL_URL = "/api/v1/Message/SendMailInfo"
-        val RTX_URL = "/api/v1/Message/SendRTXInfo"
-        val SMS_URL = "/api/v1/Message/SendSMSInfo"
-        val WECHAT_URL = "/api/v1/Message/SendWeiXinInfo"
+        const val EMAIL_URL = "/api/v1/Message/SendMailInfo"
+        const val RTX_URL = "/api/v1/Message/SendRTXInfo"
+        const val SMS_URL = "/api/v1/Message/SendSMSInfo"
+        const val WECHAT_URL = "/api/v1/Message/SendWeiXinInfo"
     }
 
     private val okHttpClient = OkHttpClient()
     private val random = Random()
 
-    fun post(url: String, postData: Any, tofConf: Map<String, String>): com.tencent.devops.notify.utils.TOFResult {
+    fun post(url: String, postData: Any, tofConf: Map<String, String>): TOFResult {
 
         val body: String
         try {
             body = objectMapper.writeValueAsString(postData)
         } catch (e: JsonProcessingException) {
-            com.tencent.devops.notify.utils.TOFService.Companion.logger.error(String.format("TOF error, post tof data cannot serialize, url: %s", url), e)
-            return com.tencent.devops.notify.utils.TOFResult("TOF error, post tof data cannot serialize")
+            logger.error(String.format("TOF error, post tof data cannot serialize, url: %s", url), e)
+            return TOFResult("TOF error, post tof data cannot serialize")
         }
 
-        val requestBody = RequestBody.create(MediaType.parse(com.tencent.devops.notify.utils.TOFService.Companion.CONTENT_TYPE), body)
+        val requestBody = RequestBody.create(MediaType.parse(CONTENT_TYPE), body)
         val headers = generateHeaders(tofConf["sys-id"] ?: "", tofConf["app-key"] ?: "")
         if (headers == null) {
-            com.tencent.devops.notify.utils.TOFService.Companion.logger.error(String.format("TOF error, generate signature failure, url: %s", url))
-            return com.tencent.devops.notify.utils.TOFResult("TOF error, generate signature failure")
+            logger.error(String.format("TOF error, generate signature failure, url: %s", url))
+            return TOFResult("TOF error, generate signature failure")
         }
-        com.tencent.devops.notify.utils.TOFService.Companion.logger.info("[$url] Start to request tof with body size: ${body.length}")
+        logger.info("[$url] Start to request tof with body size: ${body.length}")
         val request = Request.Builder()
             .url(String.format("%s%s", tofConf["host"], url))
             .post(requestBody)
@@ -58,19 +58,19 @@ class TOFService @Autowired constructor(
                 responseBody = response.body()!!.string()
                 if (!response.isSuccessful) {
                     // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                    com.tencent.devops.notify.utils.TOFService.Companion.logger.error(String.format("TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s", url, response.code(), responseBody))
-                    return com.tencent.devops.notify.utils.TOFResult("TOF error, post data response failure")
+                    logger.error(String.format("TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s", url, response.code(), responseBody))
+                    return TOFResult("TOF error, post data response failure")
                 }
             }
-            val result = objectMapper.readValue(responseBody, com.tencent.devops.notify.utils.TOFResult::class.java)
+            val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                com.tencent.devops.notify.utils.TOFService.Companion.logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                com.tencent.devops.notify.utils.TOFService.Companion.logger.error("[id--${headers["timestamp"]}]response >>>>$responseBody")
+                logger.error("[id--${headers["timestamp"]}]request >>>> $body")
+                logger.error("[id--${headers["timestamp"]}]response >>>>$responseBody")
             }
             return result
         } catch (e: Throwable) {
-            com.tencent.devops.notify.utils.TOFService.Companion.logger.error(String.format("TOF error, server response serialize failure, url: %s, response: %s", url, responseBody), e)
-            return com.tencent.devops.notify.utils.TOFResult("TOF error, server response serialize failure")
+            logger.error(String.format("TOF error, server response serialize failure, url: %s, response: %s", url, responseBody), e)
+            return TOFResult("TOF error, server response serialize failure")
         }
     }
 

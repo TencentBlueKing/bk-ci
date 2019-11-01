@@ -125,6 +125,7 @@ class TkeService @Autowired constructor(
             pushImageParam.buildId,
             "源镜像：$fromImage",
             pushImageParam.taskId,
+                pushImageParam.containerId,
             pushImageParam.executeCount ?: 1
         )
         val toImageRepo = if (pushImageParam.verifyOa) {
@@ -142,6 +143,7 @@ class TkeService @Autowired constructor(
                 buildId = pushImageParam.buildId,
                 message = "目标镜像：$toImageRepo:${pushImageParam.targetImageTag}",
                 tag = pushImageParam.taskId,
+                    jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1
             )
             pushImageToTke(pushImageParam)
@@ -235,7 +237,8 @@ class TkeService @Autowired constructor(
                         buildId = pushImageParam.buildId,
                         message = "注册镜像成功",
                         tag = pushImageParam.taskId,
-                        executeCount = pushImageParam.executeCount ?: 1
+                            jobId = pushImageParam.containerId,
+                executeCount = pushImageParam.executeCount ?: 1
                     )
                 } else {
                     val msg = responseData["msg"]
@@ -245,7 +248,8 @@ class TkeService @Autowired constructor(
                         buildId = pushImageParam.buildId,
                         message = "注册镜像失败，错误信息：$msg",
                         tag = pushImageParam.taskId,
-                        executeCount = pushImageParam.executeCount ?: 1
+                            jobId = pushImageParam.containerId,
+                executeCount = pushImageParam.executeCount ?: 1
                     )
                 }
             }
@@ -256,6 +260,7 @@ class TkeService @Autowired constructor(
                 buildId = pushImageParam.buildId,
                 message = "注册镜像失败，错误信息：${e.message}",
                 tag = pushImageParam.taskId,
+                    jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1
             )
         }

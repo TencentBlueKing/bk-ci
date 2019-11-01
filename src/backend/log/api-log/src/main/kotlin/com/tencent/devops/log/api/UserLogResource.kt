@@ -78,6 +78,9 @@ interface UserLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
@@ -114,6 +117,9 @@ interface UserLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
@@ -147,6 +153,9 @@ interface UserLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
@@ -172,6 +181,9 @@ interface UserLogResource {
         @ApiParam("对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?

@@ -48,7 +48,7 @@ class NotifyMessageTemplateDao {
             }
             val baseStep = dslContext.selectFrom(this)
                 .where(conditions)
-            return if (null != page && page>0 && null != pageSize && pageSize > 0) {
+            return if (null != page && page > 0 && null != pageSize && pageSize > 0) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             } else {
                 baseStep.fetch()

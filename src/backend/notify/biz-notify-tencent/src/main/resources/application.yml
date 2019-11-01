@@ -1,7 +1,7 @@
 spring:
   application:
     name: notify
-    desc: DevOps Project Service
+    desc: DevOps Notify Service
     version: 4.0
     packageName: com.tencent.devops.notify
 

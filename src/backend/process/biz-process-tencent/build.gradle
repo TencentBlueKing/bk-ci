@@ -33,6 +33,7 @@ dependencies {
     compile project(":common:common-wechatwork")
     compile project(":common:common-auth:common-auth-api")
     compile project(":common:common-auth:common-auth-tencent")
+    compile project(":common:common-pipeline:common-pipeline-api")
     compile project(":common:common-pipeline:common-pipeline-tencent")
     compile project(":common:common-archive-jfrog")
     compile project(":common:common-job")
@@ -48,6 +49,7 @@ dependencies {
     compile project(":support:api-support-tencent")
     compile project(":plugin:api-plugin-tencent")
     compile project(":image:api-image-tencent")
+    compile project(":project:api-project-tencent")
     compile "org.apache.poi:poi"
     compile "org.apache.poi:poi-ooxml"
 }

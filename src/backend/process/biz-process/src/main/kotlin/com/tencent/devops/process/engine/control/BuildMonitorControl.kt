@@ -142,7 +142,7 @@ class BuildMonitorControl @Autowired constructor(
                         arrayOf("Job", "$minute")
                     )
                 logFail(
-                    buildId = buildId, tag = tag,
+                    buildId = buildId, tag = tag, containerId = containerId,
                     message = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!"
                 )
                 logger.warn("[$buildId]|monitor_container_timeout|container=$containerId")
@@ -176,7 +176,7 @@ class BuildMonitorControl @Autowired constructor(
                     arrayOf(event.buildId)
                 )
             logFail(
-                buildId = event.buildId, tag = "QUEUE_TIME_OUT",
+                buildId = event.buildId, tag = "QUEUE_TIME_OUT", containerId = "",
                 message = errorInfo.message ?: "排队超时，取消运行! [${event.buildId}]"
             )
             pipelineEventDispatcher.dispatch(
@@ -211,18 +211,18 @@ class BuildMonitorControl @Autowired constructor(
         return
     }
 
-    private fun logFail(buildId: String, tag: String, message: String) {
+    private fun logFail(buildId: String, tag: String, containerId: String, message: String) {
         LogUtils.addFoldStartLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = buildId, tagName = tag, tag = tag, executeCount = 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId, tagName = tag, tag = tag, jobId = containerId, executeCount = 1
         )
         LogUtils.addRedLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = buildId, message = message, tag = tag, executeCount = 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId, message = message, tag = tag, jobId = containerId, executeCount = 1
         )
         LogUtils.addFoldEndLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = buildId, tagName = tag, tag = tag, executeCount = 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId, tagName = tag, tag = tag, jobId = containerId, executeCount = 1
         )
     }
 }

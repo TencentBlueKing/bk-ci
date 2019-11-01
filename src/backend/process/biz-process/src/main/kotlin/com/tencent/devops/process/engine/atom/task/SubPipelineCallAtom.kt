@@ -92,11 +92,11 @@ class SubPipelineCallAtom @Autowired constructor(
         }
         when {
             BuildStatus.isFailure(buildStatus) ->
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, message, task.taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, message, task.taskId, task.containerHashId,task.executeCount ?: 1)
             BuildStatus.isCancel(buildStatus) ->
-                LogUtils.addYellowLine(rabbitTemplate, task.buildId, message, task.taskId, task.executeCount ?: 1)
+                LogUtils.addYellowLine(rabbitTemplate, task.buildId, message, task.taskId, task.containerHashId,task.executeCount ?: 1)
             message.isNotBlank() ->
-                LogUtils.addLine(rabbitTemplate, task.buildId, message, task.taskId, task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, task.buildId, message, task.taskId, task.containerHashId,task.executeCount ?: 1)
         }
         return AtomResponse(buildStatus)
     }
@@ -156,6 +156,7 @@ class SubPipelineCallAtom @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId,
+            containerHashId = task.containerHashId,
             subPipelineId = subPipelineId,
             channelCode = channelCode,
             startParams = startParams,
@@ -171,6 +172,7 @@ class SubPipelineCallAtom @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String,
+        containerHashId: String?,
         subPipelineId: String,
         channelCode: ChannelCode,
         startParams: MutableMap<String, Any>,
@@ -197,7 +199,8 @@ class SubPipelineCallAtom @Autowired constructor(
             buildId = buildId,
             message = "已启动子流水线 - ${pipelineInfo.pipelineName}",
             tag = taskId,
-            executeCount = executeCount
+                    jobId = containerHashId,
+                    executeCount = executeCount
         )
 
         LogUtils.addLine(
@@ -205,7 +208,8 @@ class SubPipelineCallAtom @Autowired constructor(
             buildId = buildId,
             message = "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$subPipelineId/detail/$subBuildId'>查看子流水线执行详情</a>",
             tag = taskId,
-            executeCount = executeCount
+                    jobId = containerHashId,
+                    executeCount = executeCount
         )
 
         return AtomResponse(if (param.asynchronous) BuildStatus.SUCCEED else BuildStatus.CALL_WAITING)

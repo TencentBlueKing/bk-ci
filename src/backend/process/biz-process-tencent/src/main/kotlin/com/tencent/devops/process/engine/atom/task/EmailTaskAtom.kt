@@ -35,7 +35,7 @@ class EmailTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         if (param.receivers.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "收件人为空", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "收件人为空", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -44,7 +44,7 @@ class EmailTaskAtom @Autowired constructor(
             )
         }
         if (param.body.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "邮件通知内容为空", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "邮件通知内容为空", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -53,7 +53,7 @@ class EmailTaskAtom @Autowired constructor(
             )
         }
         if (param.title.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "邮件主题为空", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "邮件主题为空", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -74,7 +74,7 @@ class EmailTaskAtom @Autowired constructor(
         }
 
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        LogUtils.addLine(rabbitTemplate, buildId, "send Email message ($emailBody) to $receiversStr", taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "send Email message ($emailBody) to $receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
 
         message.addAllReceivers(getSet(receiversStr))
         message.addAllCcs(getCcSet(parseVariable(param.cc.joinToString(","), runVariables)))

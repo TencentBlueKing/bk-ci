@@ -320,6 +320,11 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         } else {
             val status = record.templateStatus.toInt()
             val templateCode = record.templateCode
+            // 判断用户是否有查询权限
+            val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
+            if (!queryFlag) {
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            }
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = getNormalUpgradeFlag(templateCode, status)
             logger.info("getProcessInfo isNormalUpgrade: $isNormalUpgrade")
