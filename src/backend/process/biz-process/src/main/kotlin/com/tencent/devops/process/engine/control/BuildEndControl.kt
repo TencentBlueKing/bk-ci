@@ -172,7 +172,10 @@ class BuildEndControl @Autowired constructor(
                 taskCount = buildInfo.taskCount,
                 buildNum = buildInfo.buildNum
             ),
-            currentBuildStatus = buildInfo.status
+            currentBuildStatus = buildInfo.status,
+            errorType = buildInfo.errorType,
+            errorCode = buildInfo.errorCode,
+            errorMsg = buildInfo.errorMsg
         )
 
         if (buildInfo.trigger == StartType.PIPELINE.name) {
@@ -184,7 +187,14 @@ class BuildEndControl @Autowired constructor(
         setBuildNo(buildInfo.pipelineId, model!!, status)
 
         // 设置状态
-        pipelineBuildDetailService.buildEnd(buildInfo.buildId, status)
+        // 设置状态
+        pipelineBuildDetailService.buildEnd(
+            buildId = buildInfo.buildId,
+            buildStatus = status,
+            errorType = buildInfo.errorType,
+            errorCode = buildInfo.errorCode,
+            errorMsg = buildInfo.errorMsg
+        )
 
         // 广播结束事件
         pipelineEventDispatcher.dispatch(

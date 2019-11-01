@@ -85,7 +85,9 @@ class PipelineBuildDao {
                 CHANNEL,
                 VERSION,
                 QUEUE_TIME,
-                WEBHOOK_TYPE
+                WEBHOOK_TYPE,
+                ERROR_TYPE,
+                ERROR_MSG
             ).values(
                 buildId,
                 buildNum,
@@ -103,7 +105,9 @@ class PipelineBuildDao {
                 channelCode.name,
                 version,
                 LocalDateTime.now(),
-                webhookType
+                webhookType,
+                null,
+                null
             ).execute()
         }
     }
@@ -275,18 +279,25 @@ class PipelineBuildDao {
         artifactList: String?,
         executeTime: Long?,
         buildParameters: String?,
-        recommendVersion: String?
+        recommendVersion: String?,
+        errorType: ErrorType?,
+        errorCode: Int?,
+        errorMsg: String?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
+            var baseQuery = dslContext.update(this)
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(MATERIAL, material)
-                .set(ARTIFACT_INFO, artifactList)
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
-                .where(BUILD_ID.eq(buildId))
+            if (errorType != null) {
+                baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
+                baseQuery = baseQuery.set(ERROR_CODE, errorCode)
+                baseQuery = baseQuery.set(ERROR_MSG, errorMsg)
+            }
+            baseQuery.where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
