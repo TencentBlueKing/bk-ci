@@ -513,7 +513,7 @@ class PipelineVMBuildService @Autowired constructor(
                 errorMsg = result.message
             )
         )
-        LogUtils.stopLog(rabbitTemplate, buildId, result.elementId)
+        LogUtils.stopLog(rabbitTemplate, buildId, result.elementId, result.containerId ?: "")
     }
 
     /**

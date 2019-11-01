@@ -45,6 +45,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
 
         val taskId = task.taskId
         val buildId = task.buildId
+        val containerId = task.containerHashId ?: ""
         if (param.regexPaths.isBlank()) {
             logger.error("regexPaths is not initialized of build($buildId)")
             LogUtils.addRedLine(
@@ -52,6 +53,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
                 buildId,
                 "regexPaths is not initialized",
                 taskId,
+                containerId,
                 task.executeCount ?: 1
             )
             return AtomResponse(
@@ -96,7 +98,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
 
         val cdnUploadFileInfo = CdnUploadFileInfo(regexPathsStr, isCustom, ticketId, cdnPathPrefix)
         val taskResult = client.get(ServicePluginCosResource::class)
-            .uploadCdn(projectId, pipelineId, buildId, taskId, task.containerHashId, task.executeCount ?: 1, cdnUploadFileInfo)
+            .uploadCdn(projectId, pipelineId, buildId, taskId, containerId, task.executeCount ?: 1, cdnUploadFileInfo)
         if (taskResult.isNotOk() || taskResult.data == null) {
             logger.warn("Start upload to cdn task failed.msg:${taskResult.message}")
             LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败", taskId, task.containerHashId, task.executeCount ?: 1)
@@ -110,12 +112,12 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
 
         val startTime = System.currentTimeMillis()
         val cdnUploadTaskId = taskResult.data!!.uploadTaskKey
-        val buildStatus = checkStatus(startTime, maxRunningMins, buildId, cdnUploadtaskId, task.containerHashId, task.executeCount ?: 1)
+        val buildStatus = checkStatus(startTime, maxRunningMins, buildId, cdnUploadTaskId, containerId, task.executeCount ?: 1)
         if (!BuildStatus.isFinish(buildStatus)) {
             task.taskParams["bsCdnUploadTaskId"] = cdnUploadTaskId
             task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
-            LogUtils.addLine(rabbitTemplate, buildId, "等待上传结果", taskId, task.containerHashId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "等待上传结果", taskId, containerId, task.executeCount ?: 1)
         }
         return if (buildStatus == BuildStatus.FAILED)
             AtomResponse(
@@ -134,8 +136,9 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
         force: Boolean
     ): AtomResponse {
         val buildId = task.buildId
+        val containerId = task.containerHashId ?: ""
         if (task.taskParams["bsCdnUploadTaskId"] == null) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到CDN任务ID，请联系管理员", task.taskId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到CDN任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -146,7 +149,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
         val cdnUploadTaskId = task.taskParams["bsCdnUploadTaskId"].toString()
         val startTime = task.taskParams[BS_ATOM_START_TIME_MILLS].toString().toLong()
         val maxRunningMins = param.maxRunningMins
-        return AtomResponse(checkStatus(startTime, maxRunningMins, buildId, cdnUploadtaskId, task.containerHashId, task.executeCount ?: 1))
+        return AtomResponse(checkStatus(startTime, maxRunningMins, buildId, cdnUploadTaskId, containerId, task.executeCount ?: 1))
     }
 
     private fun checkStatus(
@@ -154,12 +157,13 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
         maxRunningMins: Int,
         buildId: String,
         taskId: String,
+        containerId: String,
         executeCount: Int
     ): BuildStatus {
         logger.info("Waiting for upload task done...")
         if (System.currentTimeMillis() - startTime > maxRunningMins * 60 * 1000) {
             logger.warn("Upload to cdn timeout. timeout minutes:$maxRunningMins")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败超时，超时时间:$maxRunningMins", taskId, task.containerHashId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败超时，超时时间:$maxRunningMins", taskId, containerId, executeCount)
             return BuildStatus.FAILED
         }
 
@@ -179,14 +183,14 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
                     buildId,
                     "Upload to cdn success, total file: ${count?.toInt()}, detail: $uploadDetail%",
                     taskId,
-                task.containerHashId,
-                executeCount
+                    containerId,
+                    executeCount
                 )
                 return BuildStatus.SUCCEED
             }
         } else if (status.toInt() == 2) {
             logger.info("Upload to cdn failed!")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败", taskId, task.containerHashId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败", taskId, containerId, executeCount)
             return BuildStatus.FAILED
         }
         return BuildStatus.LOOP_WAITING

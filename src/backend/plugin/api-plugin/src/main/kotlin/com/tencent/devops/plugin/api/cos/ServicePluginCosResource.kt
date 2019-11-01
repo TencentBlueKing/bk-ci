@@ -53,6 +53,9 @@ interface ServicePluginCosResource {
         @ApiParam("原子ID", required = true)
         @PathParam("elementId")
         elementId: String,
+        @ApiParam("容器job ID", required = true)
+        @QueryParam("containerId")
+        containerId: String,
         @ApiParam("执行次数", required = true)
         @QueryParam("executeCount")
         executeCount: Int,

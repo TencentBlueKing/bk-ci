@@ -225,6 +225,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
+                containerHashId = containerHashId,
                 containerType = containerType,
                 taskSeq = taskSeq,
                 taskId = taskId,

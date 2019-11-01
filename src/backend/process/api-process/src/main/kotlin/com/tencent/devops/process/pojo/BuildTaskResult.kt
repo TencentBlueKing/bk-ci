@@ -35,6 +35,8 @@ data class BuildTaskResult(
     val taskId: String,
     @ApiModelProperty("插件ID", required = true)
     val elementId: String,
+    @ApiModelProperty("Container ID", required = true)
+    val containerId: String?,
     @ApiModelProperty("是否执行成功", required = true)
     val success: Boolean,
     @ApiModelProperty("构建结果", required = true)

@@ -272,6 +272,7 @@ class PipelineBuildDao {
         buildId: String,
         buildStatus: BuildStatus,
         material: String?,
+        artifactList: String?,
         executeTime: Long?,
         buildParameters: String?,
         recommendVersion: String?,
@@ -285,6 +286,7 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(MATERIAL, material)
+                .set(ARTIFACT_INFO, artifactList)
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
@@ -496,6 +498,7 @@ class PipelineBuildDao {
         }
     }
 
+
     fun listPipelineBuildInfo(
         dslContext: DSLContext,
         projectId: String,
@@ -630,17 +633,6 @@ class PipelineBuildDao {
         }
     }
 
-    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectCount().from(this)
-                .where(ARTIFACT_INFO.isNotNull)
-                .and(ARTIFACT_INFO.notEqual("[ ]"))
-                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
-                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
-                .fetchOne(0, Int::class.java)
-        }
-    }
-
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
         return DSL.field(
             "timestampdiff({0}, {1}, {2})",
@@ -690,12 +682,14 @@ class PipelineBuildDao {
         }
     }
 
-    fun updateArtifactList(dslContext: DSLContext, artifactList: String?, buildId: String) {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(ARTIFACT_INFO, artifactList)
-                .where(BUILD_ID.eq(buildId))
-                .execute()
+    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectCount().from(this)
+                .where(ARTIFACT_INFO.isNotNull)
+                .and(ARTIFACT_INFO.notEqual("[ ]"))
+                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
+                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
+                .fetchOne(0, Int::class.java)
         }
     }
 }

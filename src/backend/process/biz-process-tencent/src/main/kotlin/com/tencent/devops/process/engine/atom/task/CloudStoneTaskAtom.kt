@@ -73,12 +73,13 @@ class CloudStoneTaskAtom @Autowired constructor(
                 appId, pipelineId, buildNo, releaseNote, file, targetPath, versionId, fileType, customFiled)
             if (result.first) {
                 logger.info("Upload to cloudStone success. file:${file.name}")
-
-                LogUtils.addLine(rabbitTemplate, buildId, "上传云石成功/Upload to cloudStone success ：${result.second}", taskId, task.containerHashId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "上传云石成功，文件：${result.second}",
+                    taskId, task.containerHashId, task.executeCount ?: 1)
             } else {
                 logger.info("Upload to cloudStone failed. msg:${result.second}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "上传云石失败/Upload to cloudStone fail : ${result.second}", taskId, task.containerHashId, executeCount)
-                return return AtomResponse(
+                LogUtils.addRedLine(rabbitTemplate, buildId, "上传云石失败: ${result.second}",
+                    taskId, task.containerHashId, task.executeCount ?: 1)
+                return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
                     errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,

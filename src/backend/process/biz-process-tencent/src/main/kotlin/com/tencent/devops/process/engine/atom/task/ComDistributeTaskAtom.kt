@@ -12,6 +12,7 @@ import com.tencent.devops.common.pipeline.element.ComDistributionElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
+import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -57,6 +58,7 @@ class ComDistributeTaskAtom @Autowired constructor(
     private var buildId = ""
     private var projectId = ""
     private var pipelineId = ""
+    private var containerId = ""
 
     override fun tryFinish(
         task: PipelineBuildTask,
@@ -67,6 +69,7 @@ class ComDistributeTaskAtom @Autowired constructor(
         buildId = task.buildId
         pipelineId = task.pipelineId
         projectId = task.projectId
+        containerId = task.containerHashId ?: ""
         val taskId = task.taskId
         val executeCount = task.executeCount ?: 1
 
@@ -86,7 +89,7 @@ class ComDistributeTaskAtom @Autowired constructor(
                 targetAppId = targetAppId,
                 taskInstanceId = firstId,
                 taskId = taskId,
-                containerId = task.containerHashId,
+                containerId = containerId,
                 buildId = buildId,
                 executeCount = executeCount,
                 userId = task.taskParams[STARTER] as String
@@ -99,13 +102,13 @@ class ComDistributeTaskAtom @Autowired constructor(
 
             task.taskParams[FIRST_STATUS] = buildStatus.name
             if (BuildStatus.isFailure(buildStatus)) { // 步骤1失败，终止
-                LogUtils.addRedLine(rabbitTemplate, buildId, "构件分发失败/send file fail", taskId, task.containerHashId, executeCount)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "构件分发失败/send file to cloud stone fail", taskId, containerId, executeCount)
                 return AtomResponse(buildStatus)
             }
-            LogUtils.addLine(rabbitTemplate, buildId, "构件分发成功/send file done", taskId, task.containerHashId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "构件分发成功/send file to cloud stone done", taskId, containerId, executeCount)
         }
 
-        return defaultFailAtomResponse
+        return defaultSuccessAtomResponse
     }
 
     override fun execute(
@@ -116,6 +119,7 @@ class ComDistributeTaskAtom @Autowired constructor(
         buildId = task.buildId
         pipelineId = task.pipelineId
         projectId = task.projectId
+        containerId = task.containerHashId ?: ""
         val taskId = task.taskId
         val executeCount = task.executeCount ?: 1
         // 分发文件
@@ -127,10 +131,10 @@ class ComDistributeTaskAtom @Autowired constructor(
         clearTempFile(task) // 清理临时文件
 
         if (BuildStatus.isFailure(buildStatus)) { // 如果失败则结束
-            LogUtils.addRedLine(rabbitTemplate, buildId, "构件分发失败/send file fail", taskId, task.containerHashId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "send file to cloud stone fail", taskId, containerId, executeCount)
             return AtomResponse(buildStatus)
         } else if (BuildStatus.isFinish(buildStatus)) { // 成功了，继续
-            LogUtils.addLine(rabbitTemplate, buildId, "构件分发成功/send file done", taskId, task.containerHashId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "send file to cloud stone done", taskId, containerId, executeCount)
         }
 
         return AtomResponse(buildStatus)
@@ -145,6 +149,7 @@ class ComDistributeTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val pipelineId = task.pipelineId
         val taskId = task.taskId
+        val containerId = task.containerHashId
         val executeCount = task.executeCount ?: 1
         val workspace = java.nio.file.Files.createTempDirectory("${DigestUtils.md5Hex("$buildId-$taskId")}_").toFile()
         val localFileList = mutableListOf<String>()
@@ -153,7 +158,7 @@ class ComDistributeTaskAtom @Autowired constructor(
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
         ?: run {
             LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定业务ID/can not found business ID", task.taskId,
-                task.containerHashId, executeCount
+                containerId, executeCount
             )
             return BuildStatus.FAILED
         }
@@ -168,12 +173,12 @@ class ComDistributeTaskAtom @Autowired constructor(
             regexPathsStr.split(",").forEach { regex ->
                 val requestBody = getRequestBody(regex.trim(), isCustom)
                 LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "requestBody:${requestBody.removePrefix("items.find(").removeSuffix(")")}",
-                    tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = executeCount
+                    rabbitTemplate,
+                    buildId,
+                    "requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"),
+                    taskId,
+                    containerId,
+                    executeCount
                 )
 
                 val request = Request.Builder()
@@ -199,14 +204,14 @@ class ComDistributeTaskAtom @Autowired constructor(
                 }
             }
 
-            LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, task.containerHashId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
             if (count == 0) {
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
                     message = "找不到传输文件/Can not find any file! regex: $regexPathsStr",
                     tag = taskId,
-                    jobId = task.containerHashId,
+                    jobId = containerId,
                     executeCount = executeCount
                 )
                 return BuildStatus.FAILED
@@ -231,7 +236,7 @@ class ComDistributeTaskAtom @Autowired constructor(
                 )
             )
 
-            LogUtils.addLine(rabbitTemplate, buildId, "准备发送文件至服务器/Prepare send file to svr", taskId, task.containerHashId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "准备发送文件至服务器/Prepare send file to svr", taskId, containerId, executeCount)
 
             val targetIpList =
                 targetIpsStr.split(",", ";", "\n").filter { StringUtils.isNotBlank(it) }.map { SourceIp(it.trim()) }
@@ -246,14 +251,14 @@ class ComDistributeTaskAtom @Autowired constructor(
                     buildId = buildId,
                     message = "将以用户${lastModifyUser}执行文件传输/Will use $lastModifyUser to distribute file...",
                     tag = taskId,
-                    jobId = task.containerHashId,
+                    jobId = containerId,
                     executeCount = executeCount
                 )
                 userId = lastModifyUser
             }
             task.taskParams[STARTER] = userId
             task.taskParams[WORKSPACE] = workspace.absolutePath
-            LogUtils.addLine(rabbitTemplate, buildId, "开始传输文件/start send file", taskId, task.containerHashId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "开始传输文件/start send file", taskId, containerId, executeCount)
             val taskInstanceId = jobFastPushFile.fastPushFile(
                 buildId = buildId,
                 operator = userId,
@@ -262,8 +267,8 @@ class ComDistributeTaskAtom @Autowired constructor(
                 targetIpList = targetIpList,
                 targetPath = targetPathStr,
                 elementId = taskId,
-                    containerId = task.containerHashId ?: "",
-                    executeCount = executeCount
+                containerId = containerId ?: "",
+                executeCount = executeCount
             )
 
             val startTime = System.currentTimeMillis()
@@ -275,8 +280,8 @@ class ComDistributeTaskAtom @Autowired constructor(
                 taskInstanceId = taskInstanceId,
                 buildId = buildId,
                 taskId = taskId,
-                    containerId = task.containerHashId ?: "",
-                    executeCount = executeCount,
+                containerId = containerId ?: "",
+                executeCount = executeCount,
                 userId = userId
             )
 
