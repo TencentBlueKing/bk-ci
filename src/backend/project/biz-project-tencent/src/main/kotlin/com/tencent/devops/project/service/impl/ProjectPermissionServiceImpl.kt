@@ -66,9 +66,12 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         return emptyList()
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+//    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+//        return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
+////        return authProjectApi.getUserProjectsAvailable(bsProjectAuthServiceCode, userId, null)
+//    }
+    override fun getUserProjectsAvailable(userId: String): List<String> {
         return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
-//        return authProjectApi.getUserProjectsAvailable(bsProjectAuthServiceCode, userId, null)
     }
 
     private fun request(request: Request, errorMessage: String): String {
