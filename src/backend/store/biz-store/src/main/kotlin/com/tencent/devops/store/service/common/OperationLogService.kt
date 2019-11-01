@@ -24,10 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store")
-    compile project(":store:api-store-ideatom")
-    compile project(":repository:api-repository-tencent")
-}
+package com.tencent.devops.store.service.common
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+
+/**
+ * 操作记录
+ * since: 2019-10-28
+ */
+interface OperationLogService {
+
+    fun add(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        optType: StoreOperationTypeEnum,
+        optUser: String,
+        optDesc: String
+    ): Result<Boolean>
+}

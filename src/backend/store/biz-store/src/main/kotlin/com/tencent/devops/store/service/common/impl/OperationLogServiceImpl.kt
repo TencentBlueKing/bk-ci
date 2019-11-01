@@ -24,10 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store")
-    compile project(":store:api-store-ideatom")
-    compile project(":repository:api-repository-tencent")
-}
+package com.tencent.devops.store.service.common.impl
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.store.dao.common.OperationLogDao
+import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.OperationLogService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+/**
+ * 操作记录
+ * since: 2019-10-28
+ */
+@Service
+class OperationLogServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val operationLogDao: OperationLogDao
+) : OperationLogService {
+
+    private val logger = LoggerFactory.getLogger(OperationLogServiceImpl::class.java)
+
+    override fun add(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        optType: StoreOperationTypeEnum,
+        optUser: String,
+        optDesc: String
+    ): Result<Boolean> {
+        logger.info("add operation log: storeCode=$storeCode, storeType=$storeType, optType=$optType, optUser=$optUser, optDesc=$optDesc")
+
+        val id = UUIDUtil.generate()
+        operationLogDao.add(dslContext, id, storeCode, storeType.type.toByte(), optType.type, optUser, optDesc)
+        return Result(true)
+    }
+}

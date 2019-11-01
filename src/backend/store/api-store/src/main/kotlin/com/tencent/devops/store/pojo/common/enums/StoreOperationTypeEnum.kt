@@ -24,10 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store")
-    compile project(":store:api-store-ideatom")
-    compile project(":repository:api-repository-tencent")
-}
+package com.tencent.devops.store.pojo.common.enums
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+enum class StoreOperationTypeEnum(val type: String) {
+    INSTALL_IDE_PLUGIN("INSTALL_IDE_PLUGIN"); // 安装IDE插件
+
+    companion object {
+        fun getStoreOperationType(type: String): String? {
+            return when (type) {
+                "INSTALL_IDE_PLUGIN" -> StoreOperationTypeEnum.INSTALL_IDE_PLUGIN.name
+                else -> null
+            }
+        }
+
+        fun getStoreOperationTypeObj(type: String): StoreOperationTypeEnum? {
+            return when (type) {
+                "INSTALL_IDE_PLUGIN" -> INSTALL_IDE_PLUGIN
+                else -> null
+            }
+        }
+    }
+}

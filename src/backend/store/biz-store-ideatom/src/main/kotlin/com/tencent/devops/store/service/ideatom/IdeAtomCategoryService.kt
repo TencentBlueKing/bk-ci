@@ -24,10 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store")
-    compile project(":store:api-store-ideatom")
-    compile project(":repository:api-repository-tencent")
-}
+package com.tencent.devops.store.service.ideatom
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.Category
+
+interface IdeAtomCategoryService {
+
+    /**
+     * 查找IDE插件范畴
+     */
+    fun getCategorysByAtomId(atomId: String): Result<List<Category>?>
+}

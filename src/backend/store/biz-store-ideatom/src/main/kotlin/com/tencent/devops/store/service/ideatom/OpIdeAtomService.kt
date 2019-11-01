@@ -24,10 +24,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store")
-    compile project(":store:api-store-ideatom")
-    compile project(":repository:api-repository-tencent")
-}
+package com.tencent.devops.store.service.ideatom
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.ideatom.IdeAtomCreateRequest
+import com.tencent.devops.store.pojo.ideatom.IdeAtomReleaseRequest
+import com.tencent.devops.store.pojo.ideatom.IdeAtomUpdateRequest
+import com.tencent.devops.store.pojo.ideatom.OpIdeAtomItem
+import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
+
+interface OpIdeAtomService {
+
+    fun addIdeAtom(userId: String, ideAtomCreateRequest: IdeAtomCreateRequest): Result<Boolean>
+
+    fun updateIdeAtom(userId: String, atomId: String, ideAtomUpdateRequest: IdeAtomUpdateRequest): Result<Boolean>
+
+    fun deleteIdeAtomById(atomId: String): Result<Boolean>
+
+    fun getIdeAtomVersionsByCode(
+        atomCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<OpIdeAtomItem>?>
+
+    fun listIdeAtoms(
+        atomName: String?,
+        atomType: IdeAtomTypeEnum?,
+        classifyCode: String?,
+        categoryCodes: String?,
+        labelCodes: String?,
+        processFlag: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<OpIdeAtomItem>?>
+
+    fun releaseIdeAtom(userId: String, atomId: String, ideAtomReleaseRequest: IdeAtomReleaseRequest): Result<Boolean>
+
+    fun offlineIdeAtom(
+        userId: String,
+        atomCode: String,
+        version: String?,
+        reason: String?
+    ): Result<Boolean>
+}
