@@ -75,30 +75,6 @@ class AtomTaskDaemon(
         }
     }
 
-    fun run(): AtomResponse {
-        val timeout = task.additionalOptions?.timeout
-        var atomResponse = AtomResponse(BuildStatus.FAILED)
-        if (timeout == null || timeout == 0L) {
-            atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, buildVariables)
-            return atomResponse
-        } else {
-            val taskDaemon = AtomTaskDaemon(task, buildVariables)
-            val executor = Executors.newCachedThreadPool()
-            val f1 = executor.submit(taskDaemon)
-            try {
-                atomResponse = f1.get(timeout, TimeUnit.MINUTES)
-            } catch (e: TimeoutException) {
-                logger.error("AtomTaskDaemon run timeout, timeout:$timeout", e)
-                atomResponse.errorType = ErrorType.SYSTEM
-                atomResponse.errorMsg = "原子执行超时, 超时时间:${timeout}分钟"
-                atomResponse.errorCode = AtomErrorCode.SYSTEM_OUTTIME_ERROR
-            } finally {
-                executor.shutdownNow()
-                return atomResponse
-            }
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(AtomTaskDaemon::class.java)
     }

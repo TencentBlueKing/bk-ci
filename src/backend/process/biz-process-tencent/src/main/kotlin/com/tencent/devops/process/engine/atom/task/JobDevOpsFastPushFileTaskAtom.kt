@@ -322,6 +322,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             targetAccount, timeout
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fastPushFileReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(

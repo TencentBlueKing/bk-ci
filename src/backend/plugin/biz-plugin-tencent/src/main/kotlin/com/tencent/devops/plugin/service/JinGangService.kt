@@ -84,7 +84,14 @@ class JinGangService @Autowired constructor(
             val resultJson = convertXml(xml)
             jinGangAppDao.updateTask(dslContext, data.buildId, data.md5, data.status.toInt(), data.taskId.toLong(), data.scanUrl, resultJson)
 
-            LogUtils.addLine(rabbitTemplate, data.buildId, "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】", data.taskId, 1)
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = data.buildId,
+                message = "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】",
+                tag = data.elementId,
+                jobId = "",
+                executeCount = 1
+            )
 
             // 生成元数据
             try {

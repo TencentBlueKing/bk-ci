@@ -226,8 +226,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                 buildId = buildId,
                 message = "将以用户${lastModifyUser}执行文件传输/Will use $lastModifyUser to distribute file...",
                 tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = executeCount
+                jobId = task.containerHashId,
+                executeCount = executeCount
             )
 
             operator = lastModifyUser
@@ -239,8 +239,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             buildId = buildId,
             message = "分发目标路径(distribute files to target path) : $targetPath",
             tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = executeCount
+            jobId = task.containerHashId,
+            executeCount = executeCount
         )
 
         val envSet = EnvSet(listOf(), listOf(), listOf())
@@ -259,6 +259,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             targetAccount, timeout * 1L, appId, param.openState
         )
         val taskInstanceId = jobClient.openStateFastPushFileDevops(fastPushFileReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", taskId, task.containerId, executeCount)
+
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(

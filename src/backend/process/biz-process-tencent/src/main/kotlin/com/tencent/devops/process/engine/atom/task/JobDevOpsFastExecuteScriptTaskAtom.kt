@@ -284,6 +284,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             if (isParamSensitive) 1 else 0, type, envSet, account
         )
         val taskInstanceId = jobClient.fastExecuteScriptDevops(fastExecuteScriptReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(

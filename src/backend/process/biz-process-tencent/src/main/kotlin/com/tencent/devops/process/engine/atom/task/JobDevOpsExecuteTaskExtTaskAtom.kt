@@ -127,6 +127,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         val executeTaskReq = ExecuteTaskRequest(operator, arrayListOf(), globalVars, jobTaskTemplateId, timeout)
         val taskInstanceId = jobClient.executeTaskDevops(executeTaskReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(

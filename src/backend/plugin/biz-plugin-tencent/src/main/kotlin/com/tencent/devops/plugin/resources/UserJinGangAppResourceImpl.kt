@@ -28,8 +28,8 @@ class UserJinGangAppResourceImpl @Autowired constructor(
         return Result(data = jinGangService.getAppResult(userId, taskId))
     }
 
-    override fun scanApp(userId: String, projectId: String, pipelineId: String, buildId: String, buildNo: Int, elementId: String, file: String, isCustom: Boolean, runType: String): Result<String> {
-        return Result(jinGangService.scanApp(userId, projectId, pipelineId, buildId, buildNo, elementId,
+    override fun scanApp(userId: String, projectId: String, pipelineId: String, buildId: String, buildNo: Int, file: String, isCustom: Boolean, runType: String): Result<String> {
+        return Result(jinGangService.scanApp(userId, projectId, pipelineId, buildId, buildNo, "",
                 file, isCustom, runType, true))
     }
 }
