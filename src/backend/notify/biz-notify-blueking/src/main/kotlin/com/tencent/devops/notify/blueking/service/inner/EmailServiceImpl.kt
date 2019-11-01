@@ -9,6 +9,8 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
+import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_EMAIL
@@ -20,8 +22,6 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.service.EmailService
-import com.tencent.devops.common.notify.utils.CommonUtils
-import com.tencent.devops.common.notify.utils.Configuration
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +45,7 @@ class EmailServiceImpl @Autowired constructor(
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
         val emailNotifyPost = generateEmailNotifyPost(emailNotifyMessageWithOperation)
         if (emailNotifyPost == null) {
-            logger.warn("EmailNotifyPost is empty after being processed, EmailNotifyMessageWithOperation: " + emailNotifyMessageWithOperation.toString())
+            logger.warn("EmailNotifyPost is empty after being processed, EmailNotifyMessageWithOperation: $emailNotifyMessageWithOperation")
             return
         }
 
@@ -164,7 +164,7 @@ class EmailServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:" + filteredOutReceivers)
+            logger.warn("Filtered out receivers:$filteredOutReceivers")
         }
         return filteredReceivers
     }

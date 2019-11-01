@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
+import com.tencent.devops.common.notify.utils.CommonUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyWechatRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_WECHAT
@@ -16,7 +17,6 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.service.WechatService
-import com.tencent.devops.common.notify.utils.CommonUtils
 import com.tencent.devops.notify.utils.TOFService.Companion.WECHAT_URL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -49,7 +49,7 @@ class WechatServiceImpl @Autowired constructor(
     override fun sendMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {
         val wechatNotifyPost = generateWechatNotifyPost(wechatNotifyMessageWithOperation)
         if (wechatNotifyPost == null) {
-            logger.warn("WechatNotifyPost is empty after being processed, WechatNotifyMessageWithOperation: " + wechatNotifyMessageWithOperation.toString())
+            logger.warn("WechatNotifyPost is empty after being processed, WechatNotifyMessageWithOperation: $wechatNotifyMessageWithOperation")
             return
         }
 
@@ -57,27 +57,62 @@ class WechatServiceImpl @Autowired constructor(
         val id = wechatNotifyMessageWithOperation.id ?: UUIDUtil.generate()
         val tofConfs = tofConfiguration.getConfigurations(wechatNotifyMessageWithOperation.tofSysId)
         val result = tofService.post(
-            WECHAT_URL, wechatNotifyPost, tofConfs!!)
+            url = WECHAT_URL,
+            postData = wechatNotifyPost,
+            tofConf = tofConfs!!
+        )
         if (result.Ret == 0) {
             // 成功
-            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(true, wechatNotifyMessageWithOperation.source, id,
-                retryCount, null, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
-                wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], wechatNotifyPost.fromSysId)
+            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(
+                success = true,
+                source = wechatNotifyMessageWithOperation.source,
+                id = id,
+                retryCount = retryCount,
+                lastErrorMessage = null,
+                receivers = wechatNotifyPost.receiver,
+                sender = wechatNotifyPost.sender,
+                body = wechatNotifyPost.msgInfo,
+                priority = wechatNotifyPost.priority.toInt(),
+                contentMd5 = wechatNotifyPost.contentMd5,
+                frequencyLimit = wechatNotifyPost.frequencyLimit,
+                tofSysId = tofConfs["sys-id"],
+                fromSysId = wechatNotifyPost.fromSysId
+            )
         } else {
             // 写入失败记录
-            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(false, wechatNotifyMessageWithOperation.source, id,
-                retryCount, result.ErrMsg, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
-                wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], wechatNotifyPost.fromSysId)
+            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(
+                success = false,
+                source = wechatNotifyMessageWithOperation.source,
+                id = id,
+                retryCount = retryCount,
+                lastErrorMessage = result.ErrMsg,
+                receivers = wechatNotifyPost.receiver,
+                sender = wechatNotifyPost.sender,
+                body = wechatNotifyPost.msgInfo,
+                priority = wechatNotifyPost.priority.toInt(),
+                contentMd5 = wechatNotifyPost.contentMd5,
+                frequencyLimit = wechatNotifyPost.frequencyLimit,
+                tofSysId = tofConfs["sys-id"],
+                fromSysId = wechatNotifyPost.fromSysId
+            )
             if (retryCount < 3) {
                 // 开始重试
-                reSendMessage(wechatNotifyPost, wechatNotifyMessageWithOperation.source, retryCount + 1, id)
+                reSendMessage(
+                    post = wechatNotifyPost,
+                    source = wechatNotifyMessageWithOperation.source,
+                    retryCount = retryCount + 1,
+                    id = id
+                )
             }
         }
     }
 
-    private fun reSendMessage(post: WechatNotifyPost, source: EnumNotifySource, retryCount: Int, id: String) {
+    private fun reSendMessage(
+        post: WechatNotifyPost,
+        source: EnumNotifySource,
+        retryCount: Int,
+        id: String
+    ) {
         val wechatNotifyMessageWithOperation = WechatNotifyMessageWithOperation()
         wechatNotifyMessageWithOperation.apply {
             this.id = id
@@ -108,8 +143,12 @@ class WechatServiceImpl @Autowired constructor(
 
     private fun generateWechatNotifyPost(wechatNotifyMessage: WechatNotifyMessage): WechatNotifyPost? {
         val contentMd5 = CommonUtils.getMessageContentMD5("", wechatNotifyMessage.body)
-        val receivers = Lists.newArrayList(filterReceivers(
-            wechatNotifyMessage.getReceivers(), contentMd5, wechatNotifyMessage.frequencyLimit)
+        val receivers = Lists.newArrayList(
+            filterReceivers(
+                receivers = wechatNotifyMessage.getReceivers(),
+                contentMd5 = contentMd5,
+                frequencyLimit = wechatNotifyMessage.frequencyLimit
+            )
         )
         if (receivers == null || receivers.isEmpty()) {
             return null
@@ -150,20 +189,37 @@ class WechatServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:" + filteredOutReceivers)
+            logger.warn("Filtered out receivers:$filteredOutReceivers")
         }
         return filteredReceivers
     }
 
-    override fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<WechatNotifyMessageWithOperation> {
+    override fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<WechatNotifyMessageWithOperation> {
         val count = wechatNotifyDao.count(success, fromSysId)
         val result: List<NotificationResponse<WechatNotifyMessageWithOperation>> = if (count == 0) {
             listOf()
         } else {
-            val emailRecords = wechatNotifyDao.list(page, pageSize, success, fromSysId, createdTimeSortOrder)
+            val emailRecords = wechatNotifyDao.list(
+                page = page,
+                pageSize = pageSize,
+                success = success,
+                fromSysId = fromSysId,
+                createdTimeSortOrder = createdTimeSortOrder
+            )
             emailRecords.stream().map(this::parseFromTNotifyWechatToResponse)?.collect(Collectors.toList()) ?: listOf()
         }
-        return NotificationResponseWithPage(count, page, pageSize, result)
+        return NotificationResponseWithPage(
+            count = count,
+            page = page,
+            pageSize = pageSize,
+            data = result
+        )
     }
 
     private fun parseFromTNotifyWechatToResponse(record: TNotifyWechatRecord): NotificationResponse<WechatNotifyMessageWithOperation> {
