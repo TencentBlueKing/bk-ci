@@ -28,7 +28,6 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -54,6 +53,14 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
     }
 
+    override fun verifyUserProjectPermission(
+        accessToken: String,
+        projectCode: String,
+        userId: String
+    ): Result<Boolean> {
+        return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
+    }
+
     override fun list(userId: String): Result<List<ProjectVO>> {
         return Result(projectService.list(userId))
     }
@@ -71,6 +78,10 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun listByProjectCodeV2(projectCodes: Set<String>): Result<List<ProjectVO>> {
+        return Result(projectService.list(projectCodes))
+    }
+
+    override fun listByProjectCodeList(projectCodes: List<String>): Result<List<ProjectVO>> {
         return Result(projectService.list(projectCodes))
     }
 

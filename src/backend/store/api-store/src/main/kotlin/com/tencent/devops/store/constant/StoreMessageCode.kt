@@ -75,6 +75,14 @@ object StoreMessageCode {
     const val USER_TEMPLATE_RELEASED = "2120205" // 模版{0}已发布到商店，请先下架再删除
     const val USER_TEMPLATE_USED = "2120206" // 模版{0}已安装到其他项目下使用，请勿移除
 
+    const val USER_IMAGE_VERSION_IS_NOT_FINISH = "2120301" // {0}镜像的{1}版本发布未结束，请稍后再试
+    const val USER_IMAGE_VERSION_IS_INVALID = "2120302" // 镜像升级的版本号{0}错误，应为{1}
+    const val USER_IMAGE_RELEASE_STEPS_ERROR = "2120303" // 镜像发布流程中状态变更顺序不正确
+    const val USER_IMAGE_RELEASED = "2120304" // 镜像{0}已发布到商店，请先下架再删除
+    const val USER_IMAGE_USED = "2120305" // 镜像{0}已安装到其他项目下使用，请勿移除
+    const val USER_IMAGE_NOT_INSTALLED = "2120306" // 项目{0}未安装镜像{1}，无法使用
+    const val USER_IMAGE_UNKNOWN_SOURCE_TYPE = "2120307" // 镜像原始来源类型未知：{0}
+
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 你已点赞过
     const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120902" // 你没有权限将组件安装到项目：{0}

@@ -28,7 +28,6 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
@@ -83,6 +82,14 @@ interface ServiceProjectResource {
     ): Result<List<ProjectVO>>
 
     @POST
+    @Path("/listByProjectCodes")
+    @ApiOperation("查询指定项目")
+    fun listByProjectCodeList(
+        @ApiParam(value = "项目id", required = true)
+        projectCodes: List<String>
+    ): Result<List<ProjectVO>>
+
+    @POST
     @Path("/query")
     @ApiOperation("查询指定项目")
     fun listByProjectCodeV2(
@@ -112,6 +119,21 @@ interface ServiceProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @ApiOperation(" 校验用户是否项目成员")
     fun verifyUserProjectPermission(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/{projectCode}/users/{userId}/verify")
+    @ApiOperation(" 校验用户是否项目成员")
+    fun verifyUserProjectPermission(
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
