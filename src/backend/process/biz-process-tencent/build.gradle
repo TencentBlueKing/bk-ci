@@ -48,6 +48,7 @@ dependencies {
     compile project(":support:api-support-tencent")
     compile project(":plugin:api-plugin-tencent")
     compile project(":image:api-image-tencent")
+    compile project(":project:api-project-tencent")
     compile "org.apache.poi:poi"
     compile "org.apache.poi:poi-ooxml"
 }
