@@ -243,6 +243,23 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, projectId, channelCode, pipelineIds)
     }
 
+    fun getBuildSummaryRecords(
+        dslContext: DSLContext,
+        projectIds: Set<String>,
+        channelCodes: Set<ChannelCode>?,
+        limit: Int?,
+        offset: Int?
+    ): Result<out Record> {
+        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, projectIds, channelCodes, limit, offset)
+    }
+
+    fun getBuildSummaryRecords(
+        channelCodes: Set<ChannelCode>?,
+        pipelineIds: Collection<String>
+    ): Result<out Record> {
+        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, channelCodes, pipelineIds)
+    }
+
     fun getVariable(buildId: String, varName: String): String? {
         val vars = pipelineBuildVarDao.getVars(dslContext, buildId, varName)
         return if (vars.isNotEmpty()) vars[varName] else null

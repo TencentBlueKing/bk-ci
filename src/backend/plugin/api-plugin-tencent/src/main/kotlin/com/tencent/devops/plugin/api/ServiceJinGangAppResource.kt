@@ -15,9 +15,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * Created by ddlin on 2018/6/26.
- */
 @Api(tags = ["SERVICE_JIN_GANG"], description = "服务-金刚app扫描任务")
 @Path("/service/jingang")
 @Produces(MediaType.APPLICATION_JSON)

@@ -6,6 +6,7 @@ import com.google.common.io.Files
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.plugin.tables.TPluginZhiyunProduct
 import com.tencent.devops.plugin.dao.ZhiyunProductDao
@@ -28,23 +29,9 @@ class ZhiyunService @Autowired constructor(
     private val jfrogService: JfrogService,
     private val zhiyunProductDao: ZhiyunProductDao,
     private val dslContext: DSLContext,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val zhiyunConfig: ZhiyunConfig
 ) {
-
-    @Value("\${zhiyun.url}")
-    val url: String = ""
-
-    @Value("\${zhiyun.caller}")
-    val caller: String = ""
-
-    @Value("\${zhiyun.password}")
-    val password: String = ""
-
-    @Value("\${zhiyun.apiKey}")
-    val apiKey: String = ""
-
-    @Value("\${zhiyun.esbUrl}")
-    val esbUrl: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(ZhiyunService::class.java)
@@ -69,8 +56,8 @@ class ZhiyunService @Autowired constructor(
                                 val body = MultipartBody.Builder()
                                         .setType(MultipartBody.FORM)
                                         .addFormDataPart("tarball", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
-                                        .addFormDataPart("caller", caller)
-                                        .addFormDataPart("password", password)
+                                        .addFormDataPart("caller", zhiyunConfig.caller)
+                                        .addFormDataPart("password", zhiyunConfig.password)
                                         .addFormDataPart("operator", operator)
                                         .addFormDataPart("para[product]", para.product)
                                         .addFormDataPart("para[name]", para.name)
@@ -81,8 +68,8 @@ class ZhiyunService @Autowired constructor(
                                         .addFormDataPart("para[codeUrl]", para.codeUrl)
                                         .build()
                                 Request.Builder()
-                                        .header("apikey", apiKey)
-                                        .url("${url}/simpleCreateVersion")
+                                        .header("apikey", zhiyunConfig.apiKey)
+                                        .url("${zhiyunConfig.url}/simpleCreateVersion")
                                         .post(body)
                                         .build()
                             }

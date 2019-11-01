@@ -58,7 +58,6 @@ class ServicePluginCosResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        containerId: String,
         executeCount: Int,
         cdnUploadFileInfo: CdnUploadFileInfo
     ): Result<SpmFile> {
@@ -83,7 +82,7 @@ class ServicePluginCosResourceImpl @Autowired constructor(
 
         val uploadTaskKey = "upload_cdn_task_${projectId}_${pipelineId}_${buildId}_$elementId"
         val uploadCosCdnParam = UploadCosCdnParam(
-            projectId, pipelineId, buildId, elementId, containerId, cdnUploadFileInfo.regexPaths,
+            projectId, pipelineId, buildId, elementId, cdnUploadFileInfo.regexPaths,
             cdnUploadFileInfo.customize, cosAppInfo.bucket, cdnPath, cosAppInfo.domain, cosClientConfig
         )
 

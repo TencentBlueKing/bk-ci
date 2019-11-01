@@ -3,8 +3,8 @@ package com.tencent.devops.notify.utils
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 
-//@Configuration
-//@ConfigurationProperties(prefix = "tof")
+@Configuration
+@ConfigurationProperties(prefix = "tof")
 class TOFConfiguration {
     private var defaultSystem: Map<String, String>? = null
     private var optionSystems: Map<String, Map<String, String>>? = null

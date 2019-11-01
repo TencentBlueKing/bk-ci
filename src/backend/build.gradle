@@ -64,6 +64,7 @@ buildscript {
         jolokiaVersion = "1.6.0"
         awsS3Version = "1.11.461"
         asyncHttpClientVersion = "2.1.0"
+        poiVersion = "3.17"
         sigarVersion = "1.6.4"
         poiVersion = "3.17"
         commonLang3Version = "3.5"
@@ -298,6 +299,10 @@ subprojects {
             }
             dependencySet(group: 'org.asynchttpclient', version: "$asyncHttpClientVersion") {
                 entry "async-http-client"
+            }
+            dependencySet(group: 'org.apache.poi', version: "$poiVersion") {
+                entry "poi"
+                entry "poi-ooxml"
             }
             dependencySet(group: 'org.fusesource', version: "$sigarVersion") {
                 entry "sigar"

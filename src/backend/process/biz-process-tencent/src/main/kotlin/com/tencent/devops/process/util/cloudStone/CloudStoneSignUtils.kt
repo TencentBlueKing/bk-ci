@@ -1,0 +1,44 @@
+package com.tencent.devops.process.util.cloudStone
+
+import org.apache.commons.codec.binary.Base64
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
+
+object CloudStoneSignUtils {
+    // 编码方式
+    private val CONTENT_CHARSET = "UTF-8"
+
+    // HMAC算法
+    private val HMAC_ALGORITHM = "HmacSHA1"
+
+    fun sign(signStr: String, secret: String): String {
+        return try {
+            val mac = Mac.getInstance(HMAC_ALGORITHM)
+            val secretKey = SecretKeySpec(secret.toByteArray(charset(CONTENT_CHARSET)), mac.algorithm)
+
+            mac.init(secretKey)
+            val hash = mac.doFinal(signStr.toByteArray(charset(CONTENT_CHARSET)))
+            String(Base64.encodeBase64(hash))
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * 生成待签名字符串
+     * @param method 请求方法 GET/POST
+     * @param url 请求地址
+     * @param data 请求数据
+     */
+    fun getStringForSign(method: String, url: String, data: Map<String, String>): String {
+        return method.toUpperCase() + url + '?'.toString() + getDataStringForSign(data)
+    }
+
+    private fun getDataStringForSign(data: Map<String, String>): String {
+        val sb = StringBuilder()
+        data.forEach { key, value ->
+            sb.append(key).append('=').append(value).append('&')
+        }
+        return sb.toString().removeSuffix("&")
+    }
+}

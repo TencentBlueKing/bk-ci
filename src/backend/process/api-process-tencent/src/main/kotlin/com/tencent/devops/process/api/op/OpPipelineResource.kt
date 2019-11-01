@@ -1,7 +1,6 @@
 package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.DockerEnableProject
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
