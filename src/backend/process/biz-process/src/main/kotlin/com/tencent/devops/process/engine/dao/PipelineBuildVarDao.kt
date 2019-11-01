@@ -66,6 +66,8 @@ class PipelineBuildVarDao @Autowired constructor() {
 
         logger.info("save the buildVariable=$name $value, result=$count")
     }
+
+    @Suppress("unused")
     fun getVarRecords(
         dslContext: DSLContext,
         buildId: String,
@@ -86,6 +88,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         return map
     }
 
+    @Suppress("unused")
     fun getVarRecordsByKeyPrefix(
         dslContext: DSLContext,
         buildId: String,
@@ -104,11 +107,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         return map
     }
 
-    fun getVars(
-        dslContext: DSLContext,
-        buildId: String,
-        key: String? = null
-    ): Map<String, String> {
+    fun getVars(dslContext: DSLContext, buildId: String, key: String? = null): Map<String, String> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
@@ -125,6 +124,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
+    @Suppress("unused")
     fun deleteBuildVar(dslContext: DSLContext, buildId: String, varName: String? = null): Int {
         return with(T_PIPELINE_BUILD_VAR) {
             val delete = dslContext.delete(this).where(BUILD_ID.eq(buildId))
@@ -132,37 +132,6 @@ class PipelineBuildVarDao @Autowired constructor() {
                 delete.and(KEY.eq(varName))
             }
             delete.execute()
-        }
-    }
-
-    fun batchSave(dslContext: DSLContext, buildId: String, variables: Map<String, Any>) {
-//        val records = mutableListOf<TPipelineBuildVarRecord>()
-//        variables.forEach { key, value ->
-//            records.add(TPipelineBuildVarRecord(buildId, key, value.toString()))
-//        }
-        val sets =
-            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
-        with(T_PIPELINE_BUILD_VAR) {
-            variables.forEach { key, value ->
-                val set =
-                    dslContext.insertInto(this)
-                        .set(BUILD_ID, buildId)
-                        .set(KEY, key)
-                        .set(VALUE, value.toString())
-                        .onDuplicateKeyUpdate()
-                        .set(VALUE, value.toString())
-                sets.add(set)
-            }
-        }
-        if (sets.isNotEmpty()) {
-            val count = dslContext.batch(sets).execute()
-            var success = 0
-            count.forEach {
-                if (it == 1) {
-                    success++
-                }
-            }
-            logger.info("[$buildId]|batchSave_vars|total=${count.size}|success_count=$success")
         }
     }
 
@@ -197,6 +166,13 @@ class PipelineBuildVarDao @Autowired constructor() {
                 }
             }
             logger.info("[$buildId]|batchSave_vars|total=${count.size}|success_count=$success")
+        }
+    }
+
+    fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        return with(T_PIPELINE_BUILD_VAR) {
+            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute()
         }
     }
 
