@@ -153,4 +153,13 @@ interface OpAtomResource {
         @ApiParam("审核插件请求报文")
         approveReq: ApproveReq
     ): Result<Boolean>
+
+    @ApiOperation("生成ci yaml")
+    @GET
+    @Path("/gitci/generate")
+    fun generateCiYaml(
+        @ApiParam("原子插件标识", required = false)
+        @QueryParam("atomCode")
+        atomCode: String?
+    ): String
 }

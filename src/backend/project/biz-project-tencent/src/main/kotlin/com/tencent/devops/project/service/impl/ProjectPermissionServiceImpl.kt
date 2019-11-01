@@ -67,7 +67,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        return authProjectApi.getUserProjectsAvailable(bsProjectAuthServiceCode, userId, null)
+        return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
+//        return authProjectApi.getUserProjectsAvailable(bsProjectAuthServiceCode, userId, null)
     }
 
     private fun request(request: Request, errorMessage: String): String {

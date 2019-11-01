@@ -21,9 +21,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineCodeccService @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService,
-    private val websocketPushDispatcher: WebSocketDispatcher,
-    private val redisOperation: RedisOperation
+        private val pipelineTaskService: PipelineTaskService,
+        private val websocketDispatcher: WebSocketDispatcher,
+        private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
@@ -91,7 +91,7 @@ class PipelineCodeccService @Autowired constructor(
                 page = ""
             )
 //
-//            websocketPushDispatcher.dispatch(
+//            websocketDispatcher.dispatch(
 //                pipelineErrorNotifyEvent(pipelineId, userId, projectId, post, WebSocketType.CODECC)
 //            )
             logger.warn("[$pipelineId]调用codecc add返回异常。webSocket推送异常信息[$post]")
@@ -141,7 +141,7 @@ class PipelineCodeccService @Autowired constructor(
 //                code = WebsocketCode.CODECC_UPDATE_ERROR,
 //                webSocketType = WebSocketType.changWebType(WebSocketType.CODECC)
 //            )
-//            websocketPushDispatcher.dispatch(
+//            websocketDispatcher.dispatch(
 //                pipelineErrorNotifyEvent(element.pipelineId, userId, element.projectId, post, WebSocketType.CODECC)
 //            )
 //            logger.warn("[${element.pipelineId}]调用codecc update返回异常。webSocket推送异常信息[$post]")
