@@ -51,7 +51,7 @@ class AtomTaskDaemon(
         } catch (e: InterruptedException) {
             logger.error("AtomTaskDaemon InterruptedException", e)
             AtomResponse(
-                buildStatus = BuildStatus.EXEC_TIMEOUT,
+                buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = AtomErrorCode.SYSTEM_DAEMON_INTERRUPTED,
                 errorMsg = "守护进程启动出错"
@@ -60,15 +60,16 @@ class AtomTaskDaemon(
             logger.error("Backend BuildTaskException", e)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = ErrorType.SYSTEM,
-                errorCode = e.code, // 使用后台服务错误码标识
+                errorType = e.errorType,
+                errorCode = e.errorCode,
                 errorMsg = "后台服务任务执行出错"
             )
-        } catch (e: RuntimeException) {
+        } catch (e: Throwable) {
             logger.error("Backend RuntimeException", e)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
+                errorCode = AtomErrorCode.SYSTEM_DAEMON_INTERRUPTED,
                 errorMsg = "后台服务运行出错"
             )
         }

@@ -22,6 +22,7 @@ import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -381,8 +382,9 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                     executeCount = executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
                 )
             }
         }
@@ -405,8 +407,9 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                     executeCount = executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
                 )
             }
         }

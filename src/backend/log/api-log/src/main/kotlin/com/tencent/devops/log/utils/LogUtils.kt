@@ -34,10 +34,6 @@ import com.tencent.devops.log.model.pojo.enums.LogType
 import com.tencent.devops.log.utils.LogDispatcher.dispatch
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-/**
- * deng
- * 16/01/2018
- */
 object LogUtils {
 
     fun addLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, jobId: String? = null, executeCount: Int) {

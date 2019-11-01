@@ -146,9 +146,10 @@ class PipelineBuildService(
     private fun filterParams(
         userId: String?,
         projectId: String,
+        pipelineId: String,
         params: List<BuildFormProperty>
     ): List<BuildFormProperty> {
-        return paramService.filterParams(userId, projectId, params)
+        return paramService.filterParams(userId, projectId, pipelineId, params)
     }
 
     private fun hasDownloadPermission(userId: String, projectId: String, pipelineId: String): Boolean {
@@ -234,7 +235,7 @@ class PipelineBuildService(
             }
         }
 
-        val params = filterParams(if (checkPermission && userId != null) userId else null, projectId, container.params)
+        val params = filterParams(if (checkPermission && userId != null) userId else null, projectId, pipelineId, container.params)
 
         return BuildManualStartupInfo(canManualStartup, canElementSkip, params)
     }

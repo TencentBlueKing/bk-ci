@@ -19,6 +19,7 @@ import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.service.ReportService
@@ -248,8 +249,11 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
                 containerId,
                 executeCount
             )
-            throw BuildTaskException(ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS, "Index file not exist")
-        }
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS,
+                errorMsg = "Index file not exist"
+            )        }
         LogUtils.addLine(rabbitTemplate, buildId, "入口文件检测完成", taskId, containerId, executeCount)
 
         var indexFileContent = indexFile.readBytes().toString(Charset.defaultCharset())

@@ -1055,7 +1055,7 @@ class TemplateService @Autowired constructor(
                 val pipelineId = it.key
                 val m: Model = objectMapper.readValue(it.value)
                 val container = m.stages[0].containers[0] as TriggerContainer
-                val param = paramService.filterParams(userId, projectId, removeProperties(params, container.params))
+                val param = paramService.filterParams(userId, projectId, pipelineId, removeProperties(params, container.params))
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($param)")
                 val no = if (container.buildNo != null) {
                     container.buildNo
@@ -1319,12 +1319,12 @@ class TemplateService @Autowired constructor(
 
     private fun instanceParamModel(userId: String, projectId: String, model: Model): Model {
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val params = paramService.filterParams(userId, projectId, triggerContainer.params)
+        val params = paramService.filterParams(userId, projectId, null, triggerContainer.params)
         val templateParams =
             if (triggerContainer.templateParams == null || triggerContainer.templateParams!!.isEmpty()) {
                 triggerContainer.templateParams
             } else {
-                paramService.filterParams(userId, projectId, triggerContainer.templateParams!!)
+                paramService.filterParams(userId, projectId, null, triggerContainer.templateParams!!)
             }
         val rewriteContainer = TriggerContainer(
             null,

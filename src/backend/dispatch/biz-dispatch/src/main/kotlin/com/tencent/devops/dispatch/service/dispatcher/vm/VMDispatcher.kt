@@ -96,8 +96,8 @@ class VMDispatcher @Autowired constructor(
                     rabbitTemplate,
                     pipelineAgentStartupEvent.buildId,
                     "Starting the vm(${getVMShotName(vm.name)}) for current build",
-                        "",
-                        "",
+                    "",
+                    pipelineAgentStartupEvent.containerHashId,
                     pipelineAgentStartupEvent.executeCount ?: 1
                 )
                 if (!vmService.startUpVM(
@@ -112,8 +112,8 @@ class VMDispatcher @Autowired constructor(
                         pipelineAgentStartupEvent.buildId,
                         "Fail to start up vm(${vm.name}) for current build, retry",
                         "",
-                            "",
-                            pipelineAgentStartupEvent.executeCount ?: 1
+                        pipelineAgentStartupEvent.containerHashId,
+                        pipelineAgentStartupEvent.executeCount ?: 1
                     )
                     retry(client, rabbitTemplate, pipelineEventDispatcher, pipelineAgentStartupEvent)
                     AlertUtils.doAlert(AlertLevel.HIGH, "DevOps Alert Notify", "Fail to start the vm ${vm.ip}")
