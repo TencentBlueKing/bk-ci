@@ -57,7 +57,7 @@ class GseKitProcRunCmdTaskAtomProd @Autowired constructor(private val rabbitTemp
 
         // 环境类型，配置平台集群的标准属性；可选值为 1（中文含义：测试环境），2（体验环境），3（正式环境）
         if (3 != param.envId) {
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "envId is not validate", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "envId is not validate", task.taskId, task.containerHashId,task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -72,7 +72,7 @@ class GseKitProcRunCmdTaskAtomProd @Autowired constructor(private val rabbitTemp
 
         val sessionRs = createSession(param.appId, param.envId, operator)
         if (!sessionRs.success) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "Gsekit create sesssion failed, msg: ${sessionRs.message}", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "Gsekit create sesssion failed, msg: ${sessionRs.message}", taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -83,7 +83,7 @@ class GseKitProcRunCmdTaskAtomProd @Autowired constructor(private val rabbitTemp
         val sessionId = sessionRs.data as String
         val runProcRs = procRunCmd(param.cmd, procIdValue, paramsValue, operator, sessionId)
         if (!runProcRs.success) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "Gsekit proc run cmd failed, msg: ${runProcRs.message}", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "Gsekit proc run cmd failed, msg: ${runProcRs.message}", taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -99,7 +99,7 @@ class GseKitProcRunCmdTaskAtomProd @Autowired constructor(private val rabbitTemp
             task.taskParams["bsGseKitTaskId"] = gseKitTaskId
             task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 6000
-            LogUtils.addLine(rabbitTemplate, buildId, "等待上传结果", taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "等待上传结果", taskId, task.containerHashId, task.executeCount ?: 1)
         }
         return AtomResponse(buildStatus)
     }
@@ -107,7 +107,7 @@ class GseKitProcRunCmdTaskAtomProd @Autowired constructor(private val rabbitTemp
     override fun tryFinish(task: PipelineBuildTask, param: GseKitProcRunCmdElementProd, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         val buildId = task.buildId
         if (task.taskParams["bsGseKitTaskId"] == null) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到GseKit任务ID，请联系管理员", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到GseKit任务ID，请联系管理员", task.taskId, task.containerHashId,task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -133,7 +133,7 @@ class GseKitProcRunCmdTaskAtomProd @Autowired constructor(private val rabbitTemp
     private fun checkStatus(startTime: Long, timeout: Int, gseKitTaskId: String, buildId: String, taskId: String, operator: String, executeCount: Int): BuildStatus {
         logger.info("waiting for gsekit done, timeout: $timeout min")
         if (System.currentTimeMillis() - startTime > timeout * 60 * 1000) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "execute gsekit timeout", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "execute gsekit timeout", taskId, task.containerHashId, executeCount)
             return BuildStatus.FAILED
         }
 
@@ -144,11 +144,11 @@ class GseKitProcRunCmdTaskAtomProd @Autowired constructor(private val rabbitTemp
                 BuildStatus.LOOP_WAITING
             }
             !success -> {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "execute gsekit failed, msg: $msg", taskId, executeCount)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "execute gsekit failed, msg: $msg", taskId, task.containerHashId, executeCount)
                 BuildStatus.FAILED
             }
             else -> {
-                LogUtils.addLine(rabbitTemplate, buildId, "execute gsekit success!", taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "execute gsekit success!", taskId, task.containerHashId, executeCount)
                 BuildStatus.SUCCEED
             }
         }

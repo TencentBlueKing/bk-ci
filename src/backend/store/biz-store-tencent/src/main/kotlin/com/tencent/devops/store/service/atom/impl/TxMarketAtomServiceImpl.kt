@@ -90,9 +90,12 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
 
     override fun deleteAtomRepository(userId: String, projectCode: String?, repositoryHashId: String): Result<Boolean> {
         // 删除代码库信息
-        val delGitRepositoryResult =
-            client.get(ServiceGitRepositoryResource::class).delete(userId, projectCode!!, repositoryHashId)
-        logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
-        return delGitRepositoryResult
+        if (!projectCode.isNullOrEmpty() && repositoryHashId.isNotBlank()) {
+            val delGitRepositoryResult =
+                client.get(ServiceGitRepositoryResource::class).delete(userId, projectCode!!, repositoryHashId)
+            logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
+            return delGitRepositoryResult
+        }
+        return Result(true)
     }
 }

@@ -310,7 +310,8 @@ class PipelineDockerTaskDao {
     fun getTimeOutTask(dslContext: DSLContext): Result<TDispatchPipelineDockerTaskRecord> {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
+//                    .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
+                .where(UPDATED_TIME.lessOrEqual(timestampSubDay(2)))
                 .fetch()
         }
     }
@@ -318,8 +319,9 @@ class PipelineDockerTaskDao {
     fun updateTimeOutTask(dslContext: DSLContext): Boolean {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.update(this)
-                .set(STATUS, PipelineTaskStatus.FAILURE.status)
-                .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
+                .set(STATUS, com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus.FAILURE.status)
+//                    .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
+                .where(UPDATED_TIME.lessOrEqual(timestampSubDay(2)))
                 .execute() == 1
         }
     }
@@ -327,7 +329,8 @@ class PipelineDockerTaskDao {
     fun getUnclaimedHostTask(dslContext: DSLContext): Result<TDispatchPipelineDockerTaskRecord> {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(20))
+//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(20))
+                .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(20)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
                 .fetch()
@@ -338,7 +341,8 @@ class PipelineDockerTaskDao {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.update(this)
                 .set(HOST_TAG, "")
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(20))
+//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(20))
+                .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(20)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
                 .execute() == 1
@@ -348,7 +352,8 @@ class PipelineDockerTaskDao {
     fun getUnclaimedZoneTask(dslContext: DSLContext): Result<TDispatchPipelineDockerTaskRecord> {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(40))
+//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(40))
+                .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(40)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual(""))
                 .fetch()
@@ -359,16 +364,27 @@ class PipelineDockerTaskDao {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.update(this)
                 .set(ZONE, Zone.SHENZHEN.name)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(40))
+//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(40))
+                .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(40)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual("")).and(ZONE.notEqual(Zone.SHENZHEN.name))
                 .execute() == 1
         }
     }
 
-    fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
-        return DSL.field("timestampdiff({0}, {1}, NOW())",
-            Int::class.java, DSL.keyword(part.toSQL()), t1)
+//    fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
+//        return DSL.field("timestampdiff({0}, {1}, NOW())",
+//                Int::class.java, DSL.keyword(part.toSQL()), t1)
+//    }
+
+    fun timestampSubDay(day: Long): Field<LocalDateTime> {
+        return DSL.field("date_sub(NOW(), interval $day day)",
+            LocalDateTime::class.java)
+    }
+
+    fun timestampSubSecond(second: Long): Field<LocalDateTime> {
+        return DSL.field("date_sub(NOW(), interval $second second)",
+            LocalDateTime::class.java)
     }
 }
 

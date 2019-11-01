@@ -212,6 +212,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     pipelineAgentStartupEvent.buildId,
                     "Start up the agent ${agent.hostname}/${agent.ip} for the build ${pipelineAgentStartupEvent.buildId}",
                     "",
+                        "",
                     pipelineAgentStartupEvent.executeCount ?: 1
                 )
                 return true

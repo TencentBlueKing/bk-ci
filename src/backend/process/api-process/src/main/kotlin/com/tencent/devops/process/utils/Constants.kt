@@ -78,6 +78,8 @@ const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
 
+const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注"
+
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"

@@ -63,7 +63,8 @@ class CloudStoneTaskAtom @Autowired constructor(
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
                 LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
-                    executeCount
+                task.containerHashId,
+                executeCount
                 )
                 return defaultFailAtomResponse
             }
@@ -73,10 +74,10 @@ class CloudStoneTaskAtom @Autowired constructor(
             if (result.first) {
                 logger.info("Upload to cloudStone success. file:${file.name}")
 
-                LogUtils.addLine(rabbitTemplate, buildId, "上传云石成功/Upload to cloudStone success ：${result.second}", taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "上传云石成功/Upload to cloudStone success ：${result.second}", taskId, task.containerHashId, executeCount)
             } else {
                 logger.info("Upload to cloudStone failed. msg:${result.second}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "上传云石失败/Upload to cloudStone fail : ${result.second}", taskId, executeCount)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "上传云石失败/Upload to cloudStone fail : ${result.second}", taskId, task.containerHashId, executeCount)
                 return return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,

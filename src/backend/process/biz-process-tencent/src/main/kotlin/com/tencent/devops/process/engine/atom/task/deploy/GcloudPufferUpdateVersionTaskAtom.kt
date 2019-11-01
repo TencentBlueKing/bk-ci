@@ -31,13 +31,13 @@ class GcloudPufferUpdateVersionTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: GcloudPufferUpdateVersionElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
-        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId,task.executeCount ?: 1)
 
         val gcloudUtil = TicketUtil(client)
 
         with(param) {
             val elementId = task.taskId
-            LogUtils.addLine(rabbitTemplate, task.buildId, "正在开始更新gcloud版本配置信息，结果可以稍后前往http://console.gcloud.oa.com或者http://console.gcloud.qq.com查看\n", elementId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "正在开始更新gcloud版本配置信息，结果可以稍后前往http://console.gcloud.oa.com或者http://console.gcloud.qq.com查看\n", elementId, task.containerHashId,task.executeCount ?: 1)
 
             val projectId = task.projectId
             val buildId = task.buildId
@@ -57,10 +57,10 @@ class GcloudPufferUpdateVersionTaskAtom @Autowired constructor(
             val updateVerParam = DynUpdateVerParam(userId, productId.toInt(), versionStr,
                     if (NumberUtils.isDigits(versionType)) versionType?.toInt() else null,
                     versionDes, customStr)
-            LogUtils.addLine(rabbitTemplate, buildId, "更新的配置信息：\n$updateVerParam", elementId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "更新的配置信息：\n$updateVerParam", elementId, task.containerHashId,task.executeCount ?: 1)
 
             gcloudClient.updateVersion(updateVerParam, commonParam)
-            LogUtils.addLine(rabbitTemplate, buildId, "更新gcloud配置成功!(gameId: $gameId, productId: $productId)", elementId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "更新gcloud配置成功!(gameId: $gameId, productId: $productId)", elementId, task.containerHashId,task.executeCount ?: 1)
             return AtomResponse(BuildStatus.SUCCEED)
         }
     }

@@ -28,6 +28,7 @@ class JobCloudsFastExecuteScript @Autowired constructor(rabbitTemplate: RabbitTe
         openstate: String,
         targetAppId: Int,
         elementId: String,
+        containerHashId: String?,
         executeCount: Int,
         paramSensitive: Int = 0,
         type: Int = 1,
@@ -46,6 +47,7 @@ class JobCloudsFastExecuteScript @Autowired constructor(rabbitTemplate: RabbitTe
             openstate = openstate,
             account = account,
             elementId = elementId,
+            containerHashId = containerHashId,
             executeCount = executeCount
         )
 
@@ -69,6 +71,7 @@ class JobCloudsFastExecuteScript @Autowired constructor(rabbitTemplate: RabbitTe
         openstate: String,
         account: String,
         elementId: String,
+        containerHashId: String?,
         executeCount: Int
     ): Long {
         val requestData = emptyMap<String, Any>().toMutableMap()
@@ -83,7 +86,7 @@ class JobCloudsFastExecuteScript @Autowired constructor(rabbitTemplate: RabbitTe
         requestData["openstate"] = openstate
         requestData["uin"] = operator
         val url = cloudsEsbUrl + "dev_ops_fast_execute_script"
-        return doSendTaskRequest(url, requestData, buildId, elementId, executeCount)
+        return doSendTaskRequest(url, requestData, buildId, elementId, containerHashId, executeCount)
     }
 
     override fun getTaskResult(appId: Int, taskInstanceId: Long, operator: String): TaskResult {

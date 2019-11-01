@@ -65,6 +65,7 @@ class AppLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?,
         page: Int?,
         pageSize: Int?
@@ -78,6 +79,7 @@ class AppLogResourceImpl @Autowired constructor(
                 isAnalysis,
                 queryKeywords,
                 tag,
+                jobId,
                 executeCount,
                 page,
                 pageSize
@@ -94,6 +96,7 @@ class AppLogResourceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
@@ -106,6 +109,7 @@ class AppLogResourceImpl @Autowired constructor(
                 start,
                 end,
                 tag,
+                jobId,
                 executeCount
         )
     }
@@ -119,6 +123,7 @@ class AppLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
@@ -130,6 +135,7 @@ class AppLogResourceImpl @Autowired constructor(
                 isAnalysis,
                 queryKeywords,
                 tag,
+                jobId,
                 executeCount
         )
     }
@@ -140,10 +146,11 @@ class AppLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, executeCount)
+        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount)
     }
 
     override fun getEndLogs(
@@ -153,10 +160,11 @@ class AppLogResourceImpl @Autowired constructor(
         buildId: String,
         size: Int,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getEndLogs(userId, projectId, pipelineId, buildId, size, tag, executeCount)
+        return logDispatcher.getEndLogs(userId, projectId, pipelineId, buildId, size, tag, jobId, executeCount)
     }
 
     private fun validateAuth(userId: String, projectId: String, pipelineId: String, buildId: String) {
