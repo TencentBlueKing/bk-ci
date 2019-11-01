@@ -824,6 +824,7 @@ class LogService @Autowired constructor(
             }
             LogMessageWithLineNo(
                 it.tag,
+                    "",
                 it.message,
                 timestamp,
                 it.logType,
@@ -901,6 +902,7 @@ class LogService @Autowired constructor(
             "$tagPrefix:num=$numMore,start=$start,end=$end",
             Constants.DEFAULT_PRIORITY_NOT_DELETED,
             tag ?: "",
+                "",
             executeCount
         )
     }
@@ -1148,6 +1150,7 @@ class LogService @Autowired constructor(
                     },
                     Constants.DEFAULT_PRIORITY_NOT_DELETED,
                     t,
+                        "",
                     sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                 )
                 logs.add(logLine)
@@ -1554,6 +1557,7 @@ class LogService @Autowired constructor(
                 sourceMap["message"].toString(),
                 Constants.DEFAULT_PRIORITY_NOT_DELETED,
                 sourceMap["tag"].toString(),
+                    "",
                 sourceMap["executeCount"]?.toString()?.toInt() ?: 1
             )
             logs.add(logLine)
