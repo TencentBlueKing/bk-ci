@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
@@ -20,7 +21,6 @@ data class StatusWebsocketPush(
         val buildId: String?,
         val pipelineId: String,
         val projectId: String,
-        val pipelineService: PipelineService,
         override val userId: String,
         override val pushType: WebSocketType,
         override val redisOperation: RedisOperation,
@@ -30,6 +30,7 @@ data class StatusWebsocketPush(
 ) : WebsocketPush(userId,pushType, redisOperation, objectMapper, page, notifyPost) {
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
+        private val pipelineService = SpringContextUtil.getBean(PipelineService::class.java)
     }
 
     override fun findSession(page: String): List<String>? {

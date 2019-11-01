@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class WebsocketService @Autowired constructor(
-		val pipelineBuildService: PipelineBuildService,
-		val pipelineService: PipelineService,
 		val redisOperation: RedisOperation,
 		val objectMapper: ObjectMapper
 ) {
@@ -36,7 +34,6 @@ class WebsocketService @Autowired constructor(
 				pipelineId = pipelineId,
 				userId = userId,
 				redisOperation = redisOperation,
-				pipelineBuildService = pipelineBuildService,
 				page = page,
 				pushType = WebSocketType.DETAIL,
 				objectMapper = objectMapper,
@@ -96,7 +93,6 @@ class WebsocketService @Autowired constructor(
 				projectId = projectId,
 				pipelineId = pipelineId,
 				userId = userId,
-				pipelineService = pipelineService,
 				redisOperation = redisOperation,
 				page = page,
 				pushType = WebSocketType.STATUS,
