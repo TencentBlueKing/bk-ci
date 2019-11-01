@@ -26,9 +26,6 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         const val MATCH_PATHS = "matchPaths"
     }
 
-    var finalIncludePath = ""
-    var finalIncludeBranch = ""
-
     override fun isMatch(
         projectId: String,
         pipelineId: String,
