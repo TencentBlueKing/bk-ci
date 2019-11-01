@@ -107,7 +107,6 @@ class GitOauthService @Autowired constructor(
 
     fun checkAndGetAccessToken(buildId: String, userId: String): GitToken? {
         logger.info("buildId: $buildId, userId: $userId")
-        //TODO: 此处测试，构建ID存在但报构建不存在，同样的构建id直接调接口，能够正常返回。
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
