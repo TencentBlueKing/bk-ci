@@ -34,13 +34,15 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
-import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.process.pojo.BuildInfo
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
@@ -58,26 +60,28 @@ class BuildMonitorControl @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineSettingService: PipelineSettingService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
-    fun handle(event: PipelineBuildMonitorEvent) {
+    fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return false
+        if (BuildStatus.isFinish(buildInfo.status)) {
+            logger.info("[$buildId]|monitor| is ${buildInfo.status}")
+            return true
+        }
 
         return when {
-            BuildStatus.isFinish(buildInfo.status) -> {
-                logger.info("[$buildId]|monitor| is ${buildInfo.status}")
-            }
             BuildStatus.isReadyToRun(buildInfo.status) -> monitorQueueBuild(event, buildInfo)
             else -> monitorContainer(event)
         }
     }
 
-    private fun monitorContainer(event: PipelineBuildMonitorEvent) {
+    private fun monitorContainer(event: PipelineBuildMonitorEvent): Boolean {
 
         val containers = pipelineRuntimeService.listContainers(event.buildId)
             .filter {
@@ -86,10 +90,10 @@ class BuildMonitorControl @Autowired constructor(
 
         if (containers.isEmpty()) {
             logger.info("[${event.buildId}]|monitor| have not need monitor job!")
-            return
+            return true
         }
 
-        var minInterval = Timeout.MAX_MILLS
+        var minInterval = MAX_MILLS
 
         containers.forEach { container ->
             val interval = container.checkNextMonitorIntervals()
@@ -99,13 +103,18 @@ class BuildMonitorControl @Autowired constructor(
             }
         }
 
-        if (minInterval < Timeout.MAX_MILLS) {
+        if (minInterval < MAX_MILLS) {
             logger.info("[${event.buildId}]|monitor_continue|pipelineId=${event.pipelineId}")
             event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
         }
 
-        return
+        return true
+    }
+
+    companion object {
+        val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 最多超时7天
+        val MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
     }
 
     private fun PipelineBuildContainer.checkNextMonitorIntervals(): Int {
@@ -116,65 +125,63 @@ class BuildMonitorControl @Autowired constructor(
             logger.info("[$buildId]|container=$containerId| is $status")
             return interval
         }
+        var minute = controlOption?.jobControlOption?.timeout ?: 900
+        if (minute <= 0 || minute > MAX_MINUTES) {
+            minute = MAX_MINUTES.toInt()
+        }
+        val timeoutMills = TimeUnit.MINUTES.toMillis(minute.toLong())
 
-        if (BuildStatus.isRunning(status) && startTime != null) {
-            var minute = controlOption?.jobControlOption?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN
-            if (minute <= 0 || minute > Timeout.MAX_MINUTES) {
-                minute = Timeout.MAX_MINUTES
+        val usedTimeMills: Long = if (BuildStatus.isRunning(status) && startTime != null) {
+            System.currentTimeMillis() - startTime.timestampmilli()
+        } else {
+            0
+        }
+
+        logger.info("[$buildId]|container=$containerId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
+
+        interval = (timeoutMills - usedTimeMills).toInt()
+        if (interval <= 0) {
+            val tag = if (containerType == "normal") {
+                "TIME_OUT_Job#$containerId(N)"
+            } else {
+                "TIME_OUT_Job#$containerId"
             }
-            val timeoutMills = TimeUnit.MINUTES.toMillis(minute.toLong())
-
-            // 超时就下发终止当前容器下的任务，然后监控结束
-            val usedTimeMills = System.currentTimeMillis() - startTime!!.timestampmilli()
-
-            logger.info("[$buildId]|container=$containerId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
-
-            interval = (timeoutMills - usedTimeMills).toInt()
-            if (interval <= 0) {
-                val tag = if (containerType == "normal") {
-                    "TIME_OUT_Job#$containerId(N)"
-                } else {
-                    "TIME_OUT_Job#$containerId"
-                }
-                val errorInfo =
-                    MessageCodeUtil.generateResponseDataObject<String>(
-                        ERROR_TIMEOUT_IN_RUNNING.toString(),
-                        arrayOf("Job", "$minute")
-                    )
-                logFail(
-                    buildId = buildId, tag = tag, containerId = containerId,
-                    message = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!"
+            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+                messageCode = ERROR_TIMEOUT_IN_RUNNING,
+                params = arrayOf("Job", "$minute")
+            )
+            logFail(
+                buildId = buildId, tag = tag, containerId = containerId,
+                message = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!"
+            )
+            logger.warn("[$buildId]|monitor_container_timeout|container=$containerId")
+            // 终止当前容器下的任务
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildContainerEvent(
+                    source = "running_timeout",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = "System",
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    containerType = containerType,
+                    actionType = ActionType.TERMINATE
                 )
-                logger.warn("[$buildId]|monitor_container_timeout|container=$containerId")
-                // 终止当前容器下的任务
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildContainerEvent(
-                        source = "running_timeout",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = "System",
-                        buildId = buildId,
-                        stageId = stageId,
-                        containerId = containerId,
-                        containerType = containerType,
-                        actionType = ActionType.TERMINATE
-                    )
-                )
-            }
+            )
         }
 
         return interval
     }
 
-    private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo) {
+    private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
         if (pipelineSettingService.isQueueTimeout(event.pipelineId, buildInfo.startTime!!)) {
             logger.info("[${event.buildId}]|monitor| queue timeout")
-            val errorInfo =
-                MessageCodeUtil.generateResponseDataObject<String>(
-                    ERROR_TIMEOUT_IN_BUILD_QUEUE.toString(),
-                    arrayOf(event.buildId)
-                )
+            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+                messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
+                params = arrayOf(event.buildId)
+            )
             logFail(
                 buildId = event.buildId, tag = "QUEUE_TIME_OUT", containerId = "",
                 message = errorInfo.message ?: "排队超时，取消运行! [${event.buildId}]"
@@ -186,43 +193,49 @@ class BuildMonitorControl @Autowired constructor(
                     pipelineId = event.pipelineId,
                     userId = event.userId,
                     buildId = event.buildId,
-                    status = BuildStatus.QUEUE_TIMEOUT
+                    status = BuildStatus.QUEUE_TIMEOUT,
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_JOB_OUTTIME_LIMIT,
+                    errorMsg = "Job排队超时，请检查并发配置"
                 )
             )
         } else {
-            val nextQueueBuildInfo = pipelineRuntimeService.getNextQueueBuildInfo(event.pipelineId)
-            if (nextQueueBuildInfo?.buildId == event.buildId) { // 一直未启动的构建，则进行一次重发
+            // 判断当前监控的排队构建是否可以尝试启动(仅当前是在队列中排第1位的构建可以)
+            if (pipelineRuntimeExtService.queueCanPend2Start(event.pipelineId, buildInfo.buildId)) {
                 logger.info("[${event.buildId}]|monitor| still queue, to start it!")
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
                         source = "start_monitor",
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        userId = event.userId,
-                        buildId = event.buildId,
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        userId = buildInfo.startUser,
+                        buildId = buildInfo.buildId,
                         taskId = buildInfo.firstTaskId,
                         status = BuildStatus.RUNNING,
                         actionType = ActionType.START
-                    ), event
+                    )
                 )
             }
+            // next time to loop monitor
+            pipelineEventDispatcher.dispatch(event)
         }
 
-        return
+        return true
     }
 
     private fun logFail(buildId: String, tag: String, containerId: String, message: String) {
         LogUtils.addFoldStartLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId, tagName = tag, tag = tag, jobId = containerId, executeCount = 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId, tagName = tag, tag = tag, jobId = containerId, executeCount = 1
         )
         LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId, message = message, tag = tag, jobId = containerId, executeCount = 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId, message = message, tag = tag, jobId = containerId, executeCount = 1
         )
         LogUtils.addFoldEndLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId, tagName = tag, tag = tag, jobId = containerId, executeCount = 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId, tagName = tag, tag = tag, jobId = containerId, executeCount = 1
         )
     }
 }
+

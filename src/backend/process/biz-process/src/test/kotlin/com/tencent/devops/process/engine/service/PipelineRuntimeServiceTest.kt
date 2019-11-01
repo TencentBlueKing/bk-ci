@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_NEW_COMMIT_ID
 import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
 import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_URL
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -69,7 +68,6 @@ class PipelineRuntimeServiceTest {
     private val pipelineBuildContainerDao: PipelineBuildContainerDao = mock()
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
     private val buildDetailDao: BuildDetailDao = mock()
-    private val client: Client = mock()
     private val buildStartupParamService: BuildStartupParamService = mock()
     private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
 
@@ -86,9 +84,8 @@ class PipelineRuntimeServiceTest {
         pipelineBuildContainerDao = pipelineBuildContainerDao,
         pipelineBuildVarDao = pipelineBuildVarDao,
         buildDetailDao = buildDetailDao,
-        client = client,
         buildStartupParamService = buildStartupParamService,
-        templatePipelineDao = mock()
+        redisOperation = redisOperation
     )
 
     @Test
