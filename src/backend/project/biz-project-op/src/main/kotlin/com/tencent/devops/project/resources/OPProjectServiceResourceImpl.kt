@@ -32,12 +32,12 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.GrayTestService
 import com.tencent.devops.project.service.ServiceTypeService
-import com.tencent.devops.project.service.impl.UserProjectServiceServiceImpl
+import com.tencent.devops.project.service.UserProjectServiceService
 import org.slf4j.LoggerFactory
 
 @RestResource
 class OPProjectServiceResourceImpl constructor(
-        private val userProjectServiceService: UserProjectServiceServiceImpl,
+        private val userProjectServiceService: UserProjectServiceService,
         private val serviceTypeService: ServiceTypeService,
         private val grayTestService: GrayTestService
 ) : OPProjectServiceResource {
