@@ -34,6 +34,10 @@ data class StatusWebsocketPush(
     }
 
     override fun findSession(page: String): List<String>? {
+        if(page == "") {
+            logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
+        }
+
         val pageList = PageUtils.createAllTagPage(page!!)
 
         var sessionList = mutableListOf<String>()
