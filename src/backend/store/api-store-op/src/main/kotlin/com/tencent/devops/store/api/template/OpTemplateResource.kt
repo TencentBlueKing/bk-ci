@@ -82,7 +82,7 @@ interface OpTemplateResource {
         latestFlag: Boolean?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
-        sortType: OpTemplateSortTypeEnum ? = OpTemplateSortTypeEnum.UpdateTime,
+        sortType: OpTemplateSortTypeEnum ? = OpTemplateSortTypeEnum.UPDATE_TIME,
         @ApiParam("排序", required = false)
         @QueryParam("desc")
         desc: Boolean?,
