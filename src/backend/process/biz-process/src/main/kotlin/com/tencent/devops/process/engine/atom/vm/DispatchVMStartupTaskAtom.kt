@@ -177,6 +177,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 stageId = task.stageId,
                 containerId = task.containerId,
+                containerHashId = task.containerHashId,
                 containerType = task.containerType
             ),
             PipelineContainerAgentHeartBeatEvent(

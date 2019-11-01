@@ -22,6 +22,7 @@ object AtomErrorCode {
     const val SYSTEM_DAEMON_INTERRUPTED = 16015000 // 守护进程中断
     const val SYSTEM_SERVICE_ERROR = 16015001 // 系统内部服务调用出错
     const val SYSTEM_OUTTIME_ERROR = 16015002 // 执行请求超时
+    const val SYSTEM_WORKER_LOADING_ERROR = 16015003 // worker插件加载出错
 
     // 插件执行错误
     const val USER_DEFAULT_ERROR = 16015100 // 默认错误

@@ -152,7 +152,7 @@ class PipelineVMBuildService @Autowired constructor(
                     )
                     return BuildVariables(
                         buildId, vmSeqId, vmName,
-                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs
+                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: ""
                     )
                 }
                 vmId++

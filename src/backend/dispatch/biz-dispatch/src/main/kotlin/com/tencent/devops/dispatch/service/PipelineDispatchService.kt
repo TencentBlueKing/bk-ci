@@ -102,7 +102,7 @@ class PipelineDispatchService @Autowired constructor(
                 buildId = pipelineAgentStartupEvent.buildId,
                 message = "构建环境准备中...",
                 tag = "",
-                jobId = "",
+                jobId = pipelineAgentStartupEvent.containerHashId,
                 executeCount = pipelineAgentStartupEvent.executeCount ?: 1
             )
         }

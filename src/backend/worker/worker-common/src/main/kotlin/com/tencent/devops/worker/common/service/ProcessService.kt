@@ -33,8 +33,10 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import org.slf4j.LoggerFactory
 
 object ProcessService {
+    private val logger = LoggerFactory.getLogger(ProcessService::class.java)
 
     private val buildApi = ApiFactory.create(BuildSDKApi::class)
 
@@ -57,16 +59,29 @@ object ProcessService {
     fun completeTask(
         taskId: String,
         elementId: String,
+        elementName: String,
+        containerId: String,
+        isSuccess: Boolean,
         buildResult: Map<String, String>,
         type: String?,
-        message: String? = null
+        message: String? = null,
+        errorType: String? = null,
+        errorCode: Int? = null
     ) {
+        logger.info("[ERRORCODE] completeTask <$taskId>[$errorType][$errorCode][$message] ")
+        LoggerService.addFoldEndLine("$elementName-[$elementId]")
         LoggerService.flush()
-        val taskResult = if (message == null) {
-            BuildTaskResult(taskId, elementId, true, buildResult, null, type)
-        } else {
-            BuildTaskResult(taskId, elementId, false, buildResult, message, type)
-        }
+        val taskResult = BuildTaskResult(
+            taskId = taskId,
+            elementId = elementId,
+            containerId = containerId,
+            success = isSuccess,
+            buildResult = buildResult,
+            message = message,
+            type = type,
+            errorType = errorType,
+            errorCode = errorCode
+        )
         val result = buildApi.completeTask(taskResult)
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to complete build task")
