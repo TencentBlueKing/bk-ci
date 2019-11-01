@@ -27,15 +27,15 @@
 package com.tencent.devops.store.pojo.template.enums
 
 enum class OpTemplateSortTypeEnum(val sortType: String) {
-    TemplateCode("TEMPLATE_CODE"),
+    TEMPLATE_CODE("TEMPLATE_CODE"),
     TemplateName("TEMPLATE_NAME"),
-    ClassifyId("CLASSIFY_ID"),
+    TEMPLATE_NAME("CLASSIFY_ID"),
     TemplateStatus("TEMPLATE_STATUS"),
-    TemplateType("TEMPLATE_TYPE"),
-    LatestFlag("LATEST_FLAG"),
-    Publisher("PUBLISHER"),
-    Creator("CREATOR"),
-    Modifier("MODIFIER"),
-    CreateTime("CREATE_TIME"),
-    UpdateTime("UPDATE_TIME")
+    TEMPLATE_STATUS("TEMPLATE_TYPE"),
+    LATEST_FLAG("LATEST_FLAG"),
+    PUBLISHER("PUBLISHER"),
+    CREATOR("CREATOR"),
+    MODIFIER("MODIFIER"),
+    CREATE_TIME("CREATE_TIME"),
+    UPDATE_TIME("UPDATE_TIME")
 }
