@@ -32,6 +32,7 @@ dependencies {
     compile project(":project:api-project-tencent")
     compile project(":support:api-support-tencent")
     compile project(":store:biz-store")
+    compile project(":store:biz-store-image")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

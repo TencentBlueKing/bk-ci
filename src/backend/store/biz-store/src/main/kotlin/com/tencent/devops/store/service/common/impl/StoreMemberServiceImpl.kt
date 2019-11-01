@@ -74,7 +74,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
      */
     override fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>> {
         logger.info("getStoreMemberList userId is:$userId,storeCode is:$storeCode,storeType is:$storeType")
-        if (! storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
+        if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val records = storeMemberDao.list(dslContext, storeCode, null, storeType.type.toByte())
@@ -243,7 +243,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         val validateFlag: Boolean?
         try {
             // 判断用户是否项目的成员
-            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(projectCode, userId).data
+            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(accessToken, projectCode, userId).data
         } catch (e: Exception) {
             logger.error("verifyUserProjectPermission error is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
