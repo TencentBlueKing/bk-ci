@@ -24,10 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.service.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.ideatom.ExternalIdeAtomResp
+import com.tencent.devops.store.pojo.ideatom.InstallIdeAtomReq
+import com.tencent.devops.store.pojo.ideatom.InstallIdeAtomResp
+import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
+import com.tencent.devops.store.pojo.ideatom.enums.MarketIdeAtomSortTypeEnum
+
+interface ExternalMarketIdeAtomService {
+
+    /**
+     * 查询插件列表
+     */
+    fun list(
+        categoryCode: String,
+        atomName: String?,
+        classifyCode: String?,
+        labelCode: String?,
+        score: Int?,
+        rdType: IdeAtomTypeEnum?,
+        sortType: MarketIdeAtomSortTypeEnum?,
+        page: Int?,
+        pageSize: Int?
+    ): ExternalIdeAtomResp
+
+    fun installIdeAtom(installIdeAtomReq: InstallIdeAtomReq): Result<InstallIdeAtomResp?>
+}

@@ -24,10 +24,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.service.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.ideatom.IdeAtomDetail
+import com.tencent.devops.store.pojo.ideatom.MarketIdeAtomMainItem
+import com.tencent.devops.store.pojo.ideatom.MarketIdeAtomResp
+import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
+import com.tencent.devops.store.pojo.ideatom.enums.MarketIdeAtomSortTypeEnum
+
+interface MarketIdeAtomService {
+
+    /**
+     * 研发商店，首页
+     */
+    fun mainPageList(
+        userId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<MarketIdeAtomMainItem>>
+
+    /**
+     * 研发商店，查询插件列表
+     */
+    fun list(
+        userId: String,
+        atomName: String?,
+        categoryCode: String?,
+        classifyCode: String?,
+        labelCode: String?,
+        score: Int?,
+        rdType: IdeAtomTypeEnum?,
+        sortType: MarketIdeAtomSortTypeEnum?,
+        page: Int?,
+        pageSize: Int?
+    ): MarketIdeAtomResp
+
+    /**
+     * 根据插件标识获取插件最新、正式版本信息
+     */
+    fun getAtomByCode(userId: String, atomCode: String): Result<IdeAtomDetail?>
+
+    /**
+     * 根据插件ID和插件代码判断插件是否存在
+     */
+    fun judgeAtomExistByIdAndCode(atomId: String, atomCode: String): Result<Boolean>
+}

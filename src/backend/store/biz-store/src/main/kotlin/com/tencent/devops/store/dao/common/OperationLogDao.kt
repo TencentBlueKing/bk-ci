@@ -24,10 +24,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.dao.common
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.model.store.tables.TStoreOptLog
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class OperationLogDao {
+
+    fun add(
+        dslContext: DSLContext,
+        id: String,
+        storeCode: String,
+        storeType: Byte,
+        optType: String,
+        optUser: String,
+        optDesc: String
+    ) {
+        with(TStoreOptLog.T_STORE_OPT_LOG) {
+            dslContext.insertInto(
+                this,
+                ID,
+                STORE_CODE,
+                STORE_TYPE,
+                OPT_TYPE,
+                OPT_DESC,
+                OPT_USER,
+                CREATOR
+            )
+                .values(
+                    id,
+                    storeCode,
+                    storeType,
+                    optType,
+                    optDesc,
+                    optUser,
+                    optUser
+                ).execute()
+        }
+    }
+}

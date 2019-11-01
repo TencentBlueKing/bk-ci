@@ -24,10 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.service.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomStatistic
+
+interface MarketIdeAtomStatisticService {
+
+    /**
+     * 根据标识获取统计数据
+     */
+    fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic>
+
+    /**
+     * 根据批量标识获取统计数据
+     */
+    fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>>
+}

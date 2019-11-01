@@ -24,10 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.resources.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.ideatom.UserIdeAtomClassifyResource
+import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.ClassifyService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserIdeAtomClassifyResourceImpl @Autowired constructor(private val classifyService: ClassifyService) :
+    UserIdeAtomClassifyResource {
+
+    override fun getAllIdeAtomClassifys(): Result<List<Classify>> {
+        return classifyService.getAllClassify(StoreTypeEnum.IDE_ATOM.type.toByte())
+    }
+}

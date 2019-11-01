@@ -25,9 +25,9 @@
  */
 
 dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
+    compile project(":store:biz-store")
+    compile project(":store:api-store-ideatom")
+    compile project(":repository:api-repository-tencent")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"

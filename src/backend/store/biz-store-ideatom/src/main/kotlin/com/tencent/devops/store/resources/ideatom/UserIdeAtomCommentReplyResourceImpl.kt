@@ -24,10 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.resources.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.ideatom.UserIdeAtomCommentReplyResource
+import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.service.common.StoreCommentReplyService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserIdeAtomCommentReplyResourceImpl @Autowired constructor(private val storeCommentReplyService: StoreCommentReplyService) :
+    UserIdeAtomCommentReplyResource {
+
+    override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
+        return storeCommentReplyService.getStoreCommentReplysByCommentId(commentId)
+    }
+
+    override fun addStoreCommentReply(
+        userId: String,
+        commentId: String,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ): Result<StoreCommentReplyInfo?> {
+        return storeCommentReplyService.addStoreCommentReply(userId, commentId, storeCommentReplyRequest)
+    }
+}

@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -65,6 +67,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -116,7 +119,7 @@ import kotlin.reflect.jvm.isAccessible
 @Service
 class TemplateService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val templateDao: PTemplateDao,
+    private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineInfoDao: PipelineInfoDao,
@@ -313,7 +316,7 @@ class TemplateService @Autowired constructor(
                 logger.warn("There are ${pipelines.size} pipeline attach to $templateId of version $version")
                 throw OperationException("模板还存在实例，不允许删除")
             }
-            templateDao.delete(dslContext, templateId, version) == 1
+            templateDao.delete(dslContext, templateId, setOf(version)) == 1
         }
     }
 
@@ -577,6 +580,62 @@ class TemplateService @Autowired constructor(
         }
     }
 
+    fun listTemplateByProjectIds(
+        projectIds: Set<String>,
+        userId: String,
+        templateType: TemplateType?,
+        storeFlag: Boolean?,
+        page: Int?,
+        pageSize: Int?,
+        keywords: String? = null
+    ): Page<TemplateModel> {
+        val projectIdsStr = projectIds.fold("") { s1, s2 -> "$s1:$s2" }
+        logger.info(
+            "listTemplateByProjectIds|$projectIdsStr,$userId,$templateType,$storeFlag,$page,$pageSize,$keywords"
+        )
+        var totalCount = 0
+        val templates = ArrayList<TemplateModel>()
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            totalCount = templateDao.countTemplateByProjectIds(
+                dslContext = context,
+                projectIds = projectIds,
+                includePublicFlag = null,
+                templateType = templateType,
+                templateName = null,
+                storeFlag = storeFlag
+            )
+            val templateRecords = templateDao.listTemplateByProjectIds(
+                dslContext = context,
+                projectIds = projectIds,
+                includePublicFlag = null,
+                templateType = templateType,
+                templateIdList = null,
+                storeFlag = storeFlag,
+                page = page,
+                pageSize = pageSize
+            )
+            // 接口用做统计，操作者是否有单个模板管理权限无意义，hasManagerPermission统一为false
+            fillResult(
+                context = context,
+                templates = templateRecords,
+                hasManagerPermission = false,
+                userId = userId,
+                templateType = templateType,
+                storeFlag = storeFlag,
+                page = page,
+                pageSize = pageSize,
+                keywords = keywords,
+                result = templates
+            )
+        }
+        return Page(
+            page = PageUtil.getValidPage(page),
+            pageSize = PageUtil.getValidPageSize(pageSize),
+            count = totalCount.toLong(),
+            records = templates
+        )
+    }
 
     /**
      * 列举这个模板关联的代码库
@@ -1331,7 +1390,6 @@ class TemplateService @Autowired constructor(
                     } else {
                         pipeline.options = template.options
                         pipeline.required = template.required
-                        pipeline.defaultValue = template.defaultValue
                         pipeline.desc = template.desc
                         result.add(pipeline)
                     }

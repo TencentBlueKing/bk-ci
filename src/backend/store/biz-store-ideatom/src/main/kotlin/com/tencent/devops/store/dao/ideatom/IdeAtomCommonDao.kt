@@ -24,10 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":store:biz-store-op")
-    compile project(":store:biz-store-ideatom")
-    compile project(":store:biz-store-tencent")
-}
+package com.tencent.devops.store.dao.ideatom
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.model.store.tables.TIdeAtom
+import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository(value = "IDE_ATOM_COMMON_DAO")
+class IdeAtomCommonDao : AbstractStoreCommonDao() {
+
+    override fun getStoreNameById(dslContext: DSLContext, storeId: String): String? {
+        return with(TIdeAtom.T_IDE_ATOM) {
+            dslContext.select(ATOM_NAME).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
+        }
+    }
+}
