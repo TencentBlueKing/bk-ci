@@ -437,7 +437,7 @@ class BcsContainerOpAtom @Autowired constructor(
             val message = responseData["message"] as String
             if (code != 0) {
                 logger.error("Create instance failed, msg:$message")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "创建实例失败，详情：$message", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "创建实例失败，详情：$message", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                throw BuildTaskException(ERROR_BUILD_TASK_BCS_CREATE_INSTANCE_FAIL, "Create instance failed, msg:$message")
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -454,7 +454,7 @@ class BcsContainerOpAtom @Autowired constructor(
             instIdList.forEach {
                 val appResult = waitForRunning(appIdStr, projectId, it.toString(), timeout.toLong())
                 if (!appResult.first) {
-                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operation failed", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operation failed", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     LogUtils.addRedLine(rabbitTemplate, task.buildId, appResult.second, task.taskId, task.containerHashId,task.executeCount ?: 1)
 //                    throw BuildTaskException(ERROR_BUILD_TASK_BCS_OPERATE_FAIL, "BCS operate failed, msg: ${appResult.second}")
                     return AtomResponse(
@@ -465,7 +465,7 @@ class BcsContainerOpAtom @Autowired constructor(
                     )
                 }
             }
-            LogUtils.addLine(rabbitTemplate, task.buildId, "BCS operation success!", task.taskId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "BCS operation success!", task.taskId, task.containerHashId, task.executeCount ?: 1)
         }
         return AtomResponse(BuildStatus.SUCCEED)
     }

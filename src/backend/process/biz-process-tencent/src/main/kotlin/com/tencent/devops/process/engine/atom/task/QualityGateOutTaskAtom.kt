@@ -18,6 +18,7 @@ import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.quality.QualityGateOutElement
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -111,8 +112,9 @@ class QualityGateOutTaskAtom @Autowired constructor(
         if (interceptTask == null) {
             logger.error("[$buildId]|QUALITY_OUT|taskId=$elementId|Fail to find quality gate intercept element")
             throw BuildTaskException(
-                ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT,
-                "Fail to find quality gate intercept element"
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT,
+                errorMsg = "Fail to find quality gate intercept element"
             )
         }
 
