@@ -61,7 +61,7 @@ class SubPipelineCallAtom @Autowired constructor(
         } else {
             val buildInfo = pipelineRuntimeService.getBuildInfo(task.subBuildId!!)
             return if (buildInfo == null) {
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "找不到对应子流水线", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "找不到对应子流水线", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -71,11 +71,11 @@ class SubPipelineCallAtom @Autowired constructor(
             } else {
                 when {
                     BuildStatus.isCancel(buildInfo.status) ->
-                        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "子流水线被取消", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "子流水线被取消", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     BuildStatus.isFailure(buildInfo.status) ->
-                        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "子流水线执行失败", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "子流水线执行失败", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     BuildStatus.isSuccess(buildInfo.status) ->
-                        LogUtils.addLine(rabbitTemplate, task.buildId, "子流水线执行成功", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                        LogUtils.addLine(rabbitTemplate, task.buildId, "子流水线执行成功", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     else ->
                         return AtomResponse(
                             buildStatus = task.status,
@@ -146,6 +146,7 @@ class SubPipelineCallAtom @Autowired constructor(
                 buildId,
                 "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$subPipelineId/detail/$subBuildId'>查看子流水线执行详情</a>",
                 taskId,
+                task.containerHashId,
                 task.executeCount ?: 1)
 
         return AtomResponse(if (param.asynchronous) BuildStatus.SUCCEED else BuildStatus.CALL_WAITING)

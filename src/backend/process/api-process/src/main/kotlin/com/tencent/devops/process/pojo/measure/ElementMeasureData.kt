@@ -23,5 +23,17 @@ data class ElementMeasureData(
     @ApiModelProperty("结束时间", required = true)
     val endTime: Long,
     @ApiModelProperty("Element type", required = true)
-    val type: String
+    val type: String,
+    @ApiModelProperty("atomCode", required = false)
+    val atomCode: String = "",
+    @ApiModelProperty("templateId", required = false)
+    val templateId: String? = "",
+    @ApiModelProperty("额外信息", required = false)
+    var extraInfo: String? = null,
+    @ApiModelProperty("错误类型", required = false)
+    var errorType: String? = null,
+    @ApiModelProperty("错误码标识", required = false)
+    var errorCode: Int? = null,
+    @ApiModelProperty("错误描述", required = false)
+    var errorMsg: String? = null
 )

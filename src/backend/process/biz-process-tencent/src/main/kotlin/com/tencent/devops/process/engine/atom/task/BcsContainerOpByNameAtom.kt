@@ -862,12 +862,12 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                                 return TaskResult(true, false, commInspect.toString())
                             } else {
                                 logger.info("Get Command Status, status is finish, msg:${task.message}")
-                                LogUtils.addLine(rabbitTemplate, pipelintTask.buildId, commInspect.stdout, pipelintTask.taskId, pipelintTask.executeCount ?: 1)
+                                LogUtils.addLine(rabbitTemplate, pipelintTask.buildId, commInspect.stdout, pipelintTask.taskId, null, pipelintTask.executeCount ?: 1)
                             }
                         }
                         // 其他状态表示未完成
                         else -> {
-                            LogUtils.addLine(rabbitTemplate, pipelintTask.buildId, commInspect.stdout, pipelintTask.taskId, pipelintTask.executeCount ?: 1)
+                            LogUtils.addLine(rabbitTemplate, pipelintTask.buildId, commInspect.stdout, pipelintTask.taskId, null,pipelintTask.executeCount ?: 1)
                             taskResult.isFinish = false
                         }
                     }
@@ -905,13 +905,13 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 !success -> {
                     logger.error("Send Command for bcsApp running failed, msg: $msg")
                     LogUtils.addRedLine(
-                            rabbitTemplate, pipelintTask.buildId, "命令执行失败，详情： $msg", pipelintTask.taskId, pipelintTask.executeCount ?: 1
+                            rabbitTemplate, pipelintTask.buildId, "命令执行失败，详情： $msg", pipelintTask.taskId, null, pipelintTask.executeCount ?: 1
                     )
                     Pair(400, "Send Command for bcsApp running failed, msg: $msg")
                 }
                 else -> {
                     logger.info("SendCommand Success!")
-                    LogUtils.addLine(rabbitTemplate, pipelintTask.buildId, "命令执行成功，详情： $msg", pipelintTask.taskId, pipelintTask.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, pipelintTask.buildId, "命令执行成功，详情： $msg", pipelintTask.taskId, null, pipelintTask.executeCount ?: 1)
                     Pair(0, msg)
                 }
             }

@@ -97,11 +97,11 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
             verifyByOa!!
         )
 
-        LogUtils.addLine(rabbitTemplate, buildId, "开始推送镜像", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "开始推送镜像", task.taskId, task.containerHashId, task.executeCount ?: 1)
         var pushImageTaskResult = client.get(ServiceTkePushImageResource::class).pushImage(tkePushParams)
         loop@ while (true) {
             if (pushImageTaskResult.isNotOk() || pushImageTaskResult.data == null) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "推送镜像失败", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "推送镜像失败", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -112,7 +112,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
             val pushImageTask = pushImageTaskResult.data!!
             return when (pushImageTask.taskStatus) {
                 TaskStatus.SUCCESS.name -> {
-                    LogUtils.addLine(rabbitTemplate, buildId, "推送镜像成功，【<a target='_blank' href='http://csighub.oa.com/tencenthub/repo'>查看镜像</a>】", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, buildId, "推送镜像成功，【<a target='_blank' href='http://csighub.oa.com/tencenthub/repo'>查看镜像</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     defaultSuccessAtomResponse
                 }
                 TaskStatus.RUNNING.name -> {
@@ -121,7 +121,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
                     continue@loop
                 }
                 else -> {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "推送镜像失败: ${pushImageTask.taskMessage}", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "推送镜像失败: ${pushImageTask.taskMessage}", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
                         errorType = ErrorType.USER,
