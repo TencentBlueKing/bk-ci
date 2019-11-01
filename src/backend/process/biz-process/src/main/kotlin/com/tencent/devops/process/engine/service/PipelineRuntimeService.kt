@@ -100,8 +100,6 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.utils.*
-import com.tencent.devops.process.websocket.ChangeType
-import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
