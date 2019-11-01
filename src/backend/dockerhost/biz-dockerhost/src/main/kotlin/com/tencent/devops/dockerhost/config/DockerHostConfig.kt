@@ -139,4 +139,13 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.cpuQuota:50000}")
     var cpuQuota: Int = 50000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${landunEnv}")
+    var landunEnv: String? = null
+
+    @Value("\${localImageCacheDays}")
+    var localImageCacheDays: Int = 7
+
+    @Value("\${run.mode:#{null}}")
+    var runMode: String? = null
 }

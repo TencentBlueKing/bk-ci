@@ -29,6 +29,7 @@ import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_ID_NOT
 import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.Request
 import org.slf4j.LoggerFactory

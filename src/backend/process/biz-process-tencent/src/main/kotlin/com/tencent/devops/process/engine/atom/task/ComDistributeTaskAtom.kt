@@ -17,6 +17,7 @@ import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.esb.JobFastPushFile
 import com.tencent.devops.process.esb.SourceIp
+import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType

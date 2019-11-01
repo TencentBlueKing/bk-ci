@@ -29,7 +29,9 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -78,7 +80,7 @@ class UserProjectServiceServiceImpl @Autowired constructor(
                 )
             )
         } else {
-            return Result(405, "无限ID,获取服务信息失败")
+            return Result(405, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID))
         }
     }
 
@@ -188,11 +190,11 @@ class UserProjectServiceServiceImpl @Autowired constructor(
     override fun updateCollected(userId: String, serviceId: Long, collector: Boolean): Result<Boolean> {
         if (collector) {
             if (favoriteDao.create(dslContext, userId, serviceId) > 0) {
-                return Result(0, "服务收藏成功", "", true)
+                return Result(0, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.COLLECTION_SUCC), "", true)
             }
         } else {
             if (favoriteDao.delete(dslContext, userId, serviceId) > 0) {
-                return Result(0, "服务取消收藏成功", "", true)
+                return Result(0, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.COLLECTION_CANCEL_SUCC), "", true)
             }
         }
         return Result(false)

@@ -71,6 +71,7 @@ object MQ {
 
     // 构建启动广播exchange
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
+    const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
 
     // 构建结束后续广播exchange
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
@@ -80,6 +81,8 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK = "q.engine.pipeline.build.code.webhook"
     const val QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET = "q.engine.pipeline.build.atom.market"
     const val QUEUE_PIPELINE_BUILD_FINISH_LAMBDA = "q.engine.pipeline.build.lambda"
+
+    const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"
 
     // 插件结束后续广播exchange
     const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "e.engine.pipeline.build.element.finish"
@@ -180,4 +183,9 @@ object MQ {
     const val EXCHANGE_WEBSOCKET_TMP_FANOUT = "e.websocket.fanout"
     const val ROUTE_WEBSOCKET_TMP_EVENT = "r.websocket.file"
     const val QUEUE_WEBSOCKET_TMP_EVENT = "q.websocket.file"
+
+    // 工蜂CI请求
+    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
+    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
+    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
 }

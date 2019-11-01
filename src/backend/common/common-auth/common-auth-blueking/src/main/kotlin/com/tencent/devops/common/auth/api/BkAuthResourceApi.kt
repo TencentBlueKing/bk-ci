@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkDeleteResourceAuthRequest
 import com.tencent.devops.common.auth.api.pojo.BkDeleteResourceAuthResponse
 import com.tencent.devops.common.auth.api.pojo.BkRegisterResourcesRequest
@@ -48,6 +49,21 @@ class BkAuthResourceApi constructor(
     private val objectMapper: ObjectMapper,
     private val authUtils: AuthUtils
 ) : AuthResourceApi {
+
+    override fun createGrantResource(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String,
+        authGroupList: List<BkAuthGroup>?
+    ) {
+        batchCreateResource(
+            serviceCode, resourceType, projectCode, user,
+            listOf(ResourceRegisterInfo(resourceCode, resourceName))
+        )
+    }
 
     override fun createResource(
             user: String,

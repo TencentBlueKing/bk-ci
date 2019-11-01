@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
@@ -67,7 +68,7 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
             // 更新git代码库可见范围
             val updateGitRepositoryResult: Result<Boolean>
             try {
-                updateGitRepositoryResult = client.get(ServcieGitRepositoryResource::class).updateGitCodeRepository(
+                updateGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).updateGitCodeRepository(
                     userId,
                     repositoryHashId,
                     UpdateGitProjectInfo(

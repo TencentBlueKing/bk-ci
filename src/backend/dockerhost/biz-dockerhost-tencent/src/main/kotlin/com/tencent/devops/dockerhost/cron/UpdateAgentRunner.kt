@@ -1,7 +1,6 @@
 package com.tencent.devops.dockerhost.cron
 
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.config.TXDockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import org.slf4j.LoggerFactory

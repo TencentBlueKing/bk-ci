@@ -19,6 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 config = {
     static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
+    static_dir_gray = "__INSTALL_PATH__/__MODULE__/frontend-gray",
     docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
     static_dir_codecc = "__INSTALL_PATH__/codecc/frontend",
     http_schema = "__HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
@@ -48,6 +49,7 @@ config = {
       tag = "__BKCI_CONSUL_TAG__",
       nodes_url = "/v1/catalog/nodes"
     },
+    paasCIDomain = "__BKCI_PAASCI_FQDN__",
     job = {
       domain = "__BKCI_JOB_FQDN__"
     },

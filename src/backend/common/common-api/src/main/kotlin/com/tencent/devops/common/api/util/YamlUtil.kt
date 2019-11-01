@@ -40,4 +40,11 @@ object YamlUtil {
     }
 
     fun getObjectMapper() = objectMapper
+
+    fun toYaml(bean: Any): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        return getObjectMapper().writeValueAsString(bean)!!
+    }
 }

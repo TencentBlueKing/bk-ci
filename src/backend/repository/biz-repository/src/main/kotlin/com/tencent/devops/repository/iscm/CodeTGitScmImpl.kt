@@ -27,7 +27,9 @@
 package com.tencent.devops.repository.iscm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.config.GitConfig
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
@@ -67,14 +69,14 @@ class CodeTGitScmImpl constructor(
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
-            throw ScmException("私钥为空", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SERCRT_EMPTY), ScmType.CODE_TGIT.name)
         }
         // Check if token legal
         try {
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
-            throw ScmException("TGit Token 不正确", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_TOKEN_EMPTY), ScmType.CODE_TGIT.name)
         }
 
         try {
@@ -85,13 +87,13 @@ class CodeTGitScmImpl constructor(
             command.setRemote(url).call()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
-            throw ScmException("TGit 私钥不对", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_SECRET_WRONG), ScmType.CODE_TGIT.name)
         }
     }
 
     override fun checkTokenAndUsername() {
         if (privateKey == null) {
-            throw ScmException("用户密码为空", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY), ScmType.CODE_TGIT.name)
         }
 
         // Check if token legal
@@ -99,7 +101,7 @@ class CodeTGitScmImpl constructor(
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
-            throw ScmException("TGit Token 不正确", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_TOKEN_EMPTY), ScmType.CODE_TGIT.name)
         }
 
         try {
@@ -109,32 +111,32 @@ class CodeTGitScmImpl constructor(
             command.call()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
-            throw ScmException("TGit 用户名或者密码不对", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_LOGIN_FAIL), ScmType.CODE_TGIT.name)
         }
     }
 
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
-            throw ScmException("Git Token为空", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY), ScmType.CODE_TGIT.name)
         }
         if (hookUrl.isEmpty()) {
-            throw ScmException("Git hook url为空", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_HOOK_URL_EMPTY), ScmType.CODE_TGIT.name)
         }
         try {
             gitApi.addWebhook(gitConfig.tGitApiUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
-            throw ScmException("Git Token不正确", ScmType.CODE_TGIT.name)
+            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL), ScmType.CODE_TGIT.name)
         }
     }
 
     override fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean) {
         if (token.isEmpty()) {
-            throw RuntimeException("Git Token为空")
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY))
         }
         try {
             gitApi.addCommitCheck(CODE_TGIT_URL, token, projectName, commitId, state, targetUrl, context, description, block)
         } catch (e: ScmException) {
-            throw RuntimeException("Git Token不正确")
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL))
         }
     }
 

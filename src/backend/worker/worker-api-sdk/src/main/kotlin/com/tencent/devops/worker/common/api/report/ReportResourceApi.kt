@@ -32,10 +32,12 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
@@ -76,7 +78,8 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         taskId: String,
         indexFile: String,
         name: String,
-        reportType: String?
+        reportType: String?,
+        reportEmail: ReportEmail?
     ): Result<Boolean> {
         val indexFileEncode = encode(indexFile)
         val nameEncode = encode(name)
@@ -85,5 +88,9 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildPost(path)
         val responseContent = request(request, "创建报告失败")
         return objectMapper.readValue(responseContent)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ReportResourceApi::class.java)
     }
 }

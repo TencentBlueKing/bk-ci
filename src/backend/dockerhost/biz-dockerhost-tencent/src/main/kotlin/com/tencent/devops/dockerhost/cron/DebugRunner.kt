@@ -15,7 +15,8 @@ class DebugRunner @Autowired constructor(
     private val dockerHostDebugService: DockerHostDebugService) {
     private val logger = LoggerFactory.getLogger(DebugRunner::class.java)
     private val maxRunningContainerNum = 200
-    private val alertApi: AlertApi = AlertApi()
+    private val alertApi: AlertApi =
+        AlertApi()
 
 //    @Scheduled(initialDelay = 30 * 1000, fixedDelay = 5 * 1000)
     fun startBuild() {

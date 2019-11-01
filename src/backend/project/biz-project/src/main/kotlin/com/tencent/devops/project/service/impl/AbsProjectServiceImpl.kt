@@ -37,7 +37,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
@@ -73,28 +75,28 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
-            throw OperationException("名称不能为空")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY))
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
                 if (name.length < 4 || name.length > 12) {
-                    throw OperationException("项目名至多4-12个字符")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
-                    throw OperationException("项目名已经存在")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 }
             }
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < 2 || name.length > 32) {
-                    throw OperationException("英文名长度在3-32个字符")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
                 }
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
-                    throw OperationException("英文名是字符+数字组成，并以小写字母开头")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR))
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
-                    throw OperationException("英文名已经存在")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST))
                 }
             }
         }
@@ -137,7 +139,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 )
             } catch (e: Exception) {
                 logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
-                throw OperationException("权限中心创建项目失败")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
             }
 
             val projectId = UUIDUtil.generate()
@@ -155,7 +157,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.create(dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId)
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
-                throw OperationException("项目名或者英文名重复")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (ignored: Throwable) {
                 logger.warn(
                     "Fail to create the project ($projectCreateInfo)",
@@ -190,7 +192,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 )
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException("项目名或英文名重复")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             }
             success = true
         } finally {
@@ -407,13 +409,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.updateLogoAddress(dslContext, userId, projectId, result.data!!)
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
-                throw OperationException("更新项目logo失败")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
             } finally {
                 logoFile?.delete()
             }
         } else {
             logger.warn("$project is null or $project is empty")
-            throw OperationException("查询不到有效的项目")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
         return Result(true)
     }

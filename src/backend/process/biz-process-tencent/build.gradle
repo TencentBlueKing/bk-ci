@@ -45,7 +45,6 @@ dependencies {
     compile project(":process:model-process-tencent")
     compile project(":experience:api-experience-tencent")
     compile project(":artifactory:api-artifactory-tencent")
-    compile project(":notify:api-notify")
     compile project(":support:api-support-tencent")
     compile project(":plugin:api-plugin-tencent")
     compile project(":image:api-image-tencent")

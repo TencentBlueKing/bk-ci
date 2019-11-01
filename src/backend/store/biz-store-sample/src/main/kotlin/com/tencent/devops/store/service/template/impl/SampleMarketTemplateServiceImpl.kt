@@ -27,11 +27,7 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import com.tencent.devops.store.pojo.template.MarketTemplateMain
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
-import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.template.SampleMarketTemplateService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -41,15 +37,32 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
 
     private val logger = LoggerFactory.getLogger(SampleMarketTemplateServiceImpl::class.java)
 
-    override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketTemplateMain>> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    override fun generateTemplateVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>?> {
+        logger.info("generateTemplateVisibleData storeCodeList is:$storeCodeList,storeType is:$storeType")
+        return Result(data = null)
     }
 
-    override fun list(userId: String, name: String?, classifyCode: String?, category: String?, labelCode: String?, score: Int?, rdType: TemplateRdTypeEnum?, sortType: MarketTemplateSortTypeEnum?, page: Int?, pageSize: Int?): MarketTemplateResp {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    override fun generateInstallFlag(
+        defaultFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
+    ): Boolean {
+        logger.info("generateInstallFlag defaultFlag is:$defaultFlag,members is:$members,userId is:$userId")
+        logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
+        return if (defaultFlag || (members != null && members.contains(userId))) {
+            true
+        } else {
+            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
+        }
     }
 
-    override fun handleProcessInfo(status: Int): List<ReleaseProcessItem> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    override fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String): Result<Boolean> {
+        logger.info("validateUserTemplateAtomVisibleDept userId: $userId，templateCode: $templateCode")
+        return Result(true)
     }
 }

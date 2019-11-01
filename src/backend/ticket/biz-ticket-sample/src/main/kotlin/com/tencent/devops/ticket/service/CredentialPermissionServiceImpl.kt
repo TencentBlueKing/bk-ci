@@ -27,9 +27,10 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.CredentialResourceType
@@ -137,14 +138,20 @@ class CredentialPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun createResource(userId: String, projectId: String, credentialId: String) {
-        authResourceApi.createResource(
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        authGroupList: List<BkAuthGroup>?
+    ) {
+        authResourceApi.createGrantResource(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
             resourceCode = credentialId,
-            resourceName = credentialId
+            resourceName = credentialId,
+            authGroupList = authGroupList
         )
     }
 

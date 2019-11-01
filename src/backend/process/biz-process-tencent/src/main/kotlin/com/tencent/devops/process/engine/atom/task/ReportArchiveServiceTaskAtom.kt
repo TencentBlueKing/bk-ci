@@ -21,6 +21,7 @@ import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.service.ReportService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
 import org.slf4j.LoggerFactory
@@ -261,7 +262,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             reportEmail = ReportEmail(receivers, emailTitle, indexFile.readBytes().toString(Charset.defaultCharset()))
         }
 
-        reportService.create(buildId, taskId, indexFileParam, reportNameParam, ReportTypeEnum.INTERNAL, reportEmail)
+        reportService.create(projectId, pipelineId, buildId, taskId, indexFileParam, reportNameParam, ReportTypeEnum.INTERNAL, reportEmail)
         LogUtils.addLine(rabbitTemplate, buildId, "上传自定义产出物成功，共产生了${count}个文件", taskId, executeCount)
     }
 

@@ -12,12 +12,12 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.mq.*
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.*
@@ -104,12 +104,12 @@ class ProjectLocalService @Autowired constructor(
                 val authProjectForCreateResult = result.data
                 val projectId = if (authProjectForCreateResult != null) {
                     if (authProjectForCreateResult.project_id.isBlank()) {
-                        throw OperationException("权限中心创建的项目ID无效")
+                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
                     }
                     authProjectForCreateResult.project_id
                 } else {
                     logger.warn("Fail to get the project id from response $responseContent")
-                    throw OperationException("权限中心创建的项目ID无效")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                 }
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
                 try {
@@ -124,7 +124,7 @@ class ProjectLocalService @Autowired constructor(
                     )
                 } catch (e: DuplicateKeyException) {
                     logger.warn("Duplicate project $projectCreateInfo", e)
-                    throw OperationException("项目名或者英文名重复")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 } catch (t: Throwable) {
                     logger.warn("Fail to create the project ($projectCreateInfo)", t)
                     deleteProjectFromAuth(projectId, accessToken)
@@ -222,12 +222,12 @@ class ProjectLocalService @Autowired constructor(
                     val authProjectForCreateResult = result.data
                     projectId = if (authProjectForCreateResult != null) {
                         if (authProjectForCreateResult.project_id.isBlank()) {
-                            throw OperationException("权限中心创建的项目ID无效")
+                            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                         }
                         authProjectForCreateResult.project_id
                     } else {
                         logger.warn("Fail to get the project id from response $responseContent")
-                        throw OperationException("权限中心创建的项目ID无效")
+                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                     }
                 }
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
@@ -243,7 +243,7 @@ class ProjectLocalService @Autowired constructor(
                     )
                 } catch (e: DuplicateKeyException) {
                     logger.warn("Duplicate project $projectCreateInfo", e)
-                    throw OperationException("项目名或者英文名重复")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 } catch (t: Throwable) {
                     logger.warn("Fail to create the project ($projectCreateInfo)", t)
                     deleteProjectFromAuth(projectId, accessToken)
@@ -306,7 +306,7 @@ class ProjectLocalService @Autowired constructor(
                     logger.warn("更新数据库出错，变更行数为:$updateCnt")
                 }
             } else {
-                throw OperationException("没有该项目的操作权限")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
             }
             logger.info("[$userId|[$projectId] Project usable status is changed to $enabled")
             success = true
@@ -320,7 +320,7 @@ class ProjectLocalService @Autowired constructor(
         val projectAuthIds = getAuthProjectIds(accessToken)
         if (!projectAuthIds.contains(projectVO!!.projectId)) {
             logger.warn("The user don't have the permission to get the project $englishName")
-            throw OperationException("项目不存在")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         }
         return projectVO
     }
@@ -366,7 +366,7 @@ class ProjectLocalService @Autowired constructor(
                 projectDao.update(dslContext, userId, projectId, projectUpdateInfo)
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException("项目名或英文名重复")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             }
             rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_UPDATE,
@@ -405,13 +405,13 @@ class ProjectLocalService @Autowired constructor(
                 )
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
-                throw OperationException("更新项目logo失败")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
             } finally {
                 logoFile?.delete()
             }
         } else {
             logger.warn("$project is null or $project is empty")
-            throw OperationException("查询不到有效的项目")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
         return Result(true)
     }
@@ -515,7 +515,7 @@ class ProjectLocalService @Autowired constructor(
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException("从权限中心获取用户的项目信息失败")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
         }
         if (result.data == null) {
             return emptyList()
@@ -629,31 +629,31 @@ class ProjectLocalService @Autowired constructor(
             projectId: String? = null
     ) {
         if (name.isBlank()) {
-            throw OperationException("名称不能为空")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY))
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
                 if (name.length > 12) {
-                    throw OperationException("项目名至多12个字符")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
-                    throw OperationException("项目名已经存在")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 }
             }
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < 2) {
-                    throw OperationException("英文名长度至少2个字符")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
                 }
                 if (name.length > 32) {
-                    throw OperationException("英文名长度最多不能超过32个字符")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
                 }
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
-                    throw OperationException("英文名是字符+数字+中划线组成，并以小写字母开头")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR))
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
-                    throw OperationException("英文名已经存在")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST))
                 }
             }
         }

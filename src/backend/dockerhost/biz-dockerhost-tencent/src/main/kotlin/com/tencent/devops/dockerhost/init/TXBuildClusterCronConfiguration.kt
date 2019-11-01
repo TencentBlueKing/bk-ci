@@ -1,6 +1,5 @@
 package com.tencent.devops.dockerhost.init
 
-import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.config.TXDockerHostConfig
 import com.tencent.devops.dockerhost.cron.DebugRunner
 import com.tencent.devops.dockerhost.cron.UpdateAgentRunner

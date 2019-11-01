@@ -28,10 +28,6 @@ package com.tencent.devops.scm.code.git.api
 
 import org.eclipse.jgit.api.TransportCommand
 
-/**
- * deng
- * 30/01/2018
- */
 interface GitCredentialSetter {
     fun setGitCredential(command: TransportCommand<*, *>)
 

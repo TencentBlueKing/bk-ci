@@ -26,43 +26,58 @@
 
 package com.tencent.devops.dockerhost.resources
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
-import com.tencent.devops.dockerhost.services.DockerHostBuildService
+import com.tencent.devops.dockerhost.pojo.DockerRunParam
+import com.tencent.devops.dockerhost.pojo.DockerRunResponse
+import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.services.DockerService
+import com.tencent.devops.dockerhost.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.servlet.http.HttpServletRequest
 
 @RestResource
 class ServiceDockerHostResourceImpl @Autowired constructor(
-    private val dockerService: DockerService,
-    private val dockerHostBuildService: DockerHostBuildService
+    private val dockerService: DockerService
 ) : ServiceDockerHostResource {
-    override fun dockerBuild(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, dockerBuildParam: DockerBuildParam): Result<Boolean> {
+    override fun dockerBuild(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, elementId: String?, dockerBuildParam: DockerBuildParam, request: HttpServletRequest): Result<Boolean> {
+        checkReq(request)
         logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")
-        return Result(dockerService.buildImage(projectId, pipelineId, vmSeqId, buildId, dockerBuildParam))
+        return Result(dockerService.buildImage(projectId, pipelineId, vmSeqId, buildId, elementId, dockerBuildParam))
     }
 
-    override fun getDockerBuildStatus(vmSeqId: String, buildId: String): Result<Pair<Status, String?>> {
+    override fun getDockerBuildStatus(vmSeqId: String, buildId: String, request: HttpServletRequest): Result<Pair<Status, String?>> {
+        checkReq(request)
         logger.info("Enter ServiceDockerHostResourceImpl.getDockerBuildStatus...")
         return Result(dockerService.getBuildResult(vmSeqId, buildId))
     }
 
+    private fun checkReq(request: HttpServletRequest) {
+        var ip = request.getHeader("x-forwarded-for")
+        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+            ip = request.getHeader("Proxy-Client-IP")
+        }
+        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+            ip = request.getHeader("WL-Proxy-Client-IP")
+        }
+        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+            ip = request.remoteAddr
+        }
+        if (ip != null && (CommonUtils.getInnerIP() == ip || ip.startsWith("172.32"))) { // 只允许从本机调用
+            logger.info("Request from $ip")
+        } else {
+            logger.info("Request from $ip")
+            logger.info("Local ip :${CommonUtils.getInnerIP()}")
+            throw PermissionForbiddenException("不允许的操作！")
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceDockerHostResourceImpl::class.java)
-    }
-
-    override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
-        logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")
-        return Result(dockerHostBuildService.startBuildByDispatch(dockerHostBuildInfo))
-    }
-
-    override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
-        logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")
-        return Result(dockerHostBuildService.endBuildByDispatch(dockerHostBuildInfo))
     }
 }

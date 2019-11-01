@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
+import com.tencent.devops.worker.common.SLAVE_AGENT_START_FILE
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
@@ -53,6 +54,19 @@ object WorkRunner {
             logger.info("[${buildInfo.buildId}]|Start worker for build| projectId=${buildInfo.projectId}")
 
             addKillProcessTreeHook(buildInfo)
+
+            val startFile = getStartFile()
+            if (!startFile.isNullOrBlank()) {
+                val file = File(startFile!!)
+                if (file.exists()) {
+                    logger.info("The file ${file.absolutePath} will be deleted when exit")
+                    file.deleteOnExit()
+                } else {
+                    logger.info("The file $file is not exist")
+                }
+            } else {
+                logger.info("The start file is not exist in start file")
+            }
 
             ThirdPartyAgentBuildInfoUtils.setBuildInfo(buildInfo)
 
@@ -116,5 +130,9 @@ object WorkRunner {
             logger.warn("Fail to read the build Info", t)
             exitProcess(1)
         }
+    }
+
+    private fun getStartFile(): String? {
+        return System.getProperty(SLAVE_AGENT_START_FILE, null)
     }
 }
