@@ -57,5 +57,4 @@ data class StoreWebsocketPush(
             logger.error("DetailWebSocketMessage:getBuildDetail error. message:${e.message}")
         }
     }
-
 }

@@ -43,6 +43,7 @@ package com.tencent.devops.store.constant
  *
  */
 object StoreMessageCode {
+    // 插件相关的错误提示
     const val USER_QUERY_ATOM_PERMISSION_IS_INVALID = "2120001" // 您没有查询该插件的权限
     const val USER_QUERY_PROJECT_PERMISSION_IS_INVALID = "2120002" // 您没有查询该项目的权限
     const val USER_CREATE_REPOSITORY_FAIL = "2120003" // 创建代码库失败，请稍后再试
@@ -59,13 +60,14 @@ object StoreMessageCode {
     const val USER_ATOM_CONF_INVALID = "2120014" // 插件配置文件{0}格式不正确，请检查
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 你不在{0}插件的可见范围之内，如需调整插件的可见范围请联系插件的发布者
     const val USER_COMPONENT_ADMIN_COUNT_ERROR = "2120016" // 管理员个数不能少于1个
-    const val USER_ATOM_QUALITY_CONF_INVALID = "16200018" // 插件quality.json配置文件{0}格式不正确，请检查
-    const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "16210019" // 拉取插件quality.json配置文件失败,请确认文件是否正确上传至代码库
-    const val USER_ATOM_USED = "16210020" // 插件{0}已被项目{1}下的流水线使用，不可以卸载
-    const val USER_ATOM_UNINSTALL_REASON_USED = "16210021" // 插件卸载原因{0}已被使用，不能删除。可以禁用原因。
-    const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "16210022" // 插件{0}已发布到商店，请先下架再删除
-    const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "16210023" // 插件{0}已安装到其他项目下使用，请勿移除
+    const val USER_ATOM_QUALITY_CONF_INVALID = "2120018" // 插件quality.json配置文件{0}格式不正确，请检查
+    const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 拉取插件quality.json配置文件失败,请确认文件是否正确上传至代码库
+    const val USER_ATOM_USED = "2120020" // 插件{0}已被项目{1}下的流水线使用，不可以卸载
+    const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 插件卸载原因{0}已被使用，不能删除。可以禁用原因。
+    const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 插件{0}已发布到商店，请先下架再删除
+    const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 插件{0}已安装到其他项目下使用，请勿移除
 
+    // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // {0}模板的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 模板发布流程中状态变更顺序不正确
     const val USER_TEMPLATE_ATOM_VISIBLE_DEPT_IS_INVALID = "2120203" // 模板的可见范围不在{0}插件的可见范围之内，如需调整插件的可见范围请联系插件的发布者
@@ -73,12 +75,12 @@ object StoreMessageCode {
     const val USER_TEMPLATE_RELEASED = "2120205" // 模版{0}已发布到商店，请先下架再删除
     const val USER_TEMPLATE_USED = "2120206" // 模版{0}已安装到其他项目下使用，请勿移除
 
-    const val USER_SENSITIVE_CONF_EXIST = "2120401" // 字段名{0}已存在
-
+    // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 你已点赞过
     const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120902" // 你没有权限将组件安装到项目：{0}
     const val USER_COMMENT_IS_INVALID = "2120903" // 你已评论过，无法继续添加评论，但可以对评论进行修改
     const val USER_CLASSIFY_IS_NOT_ALLOW_DELETE = "2120904" // 该分类下还有项目正在使用的组件，不允许直接删除
-    const val USER_UPLOAD_PACKAGE_INVALID = "2120905" // 请确认上传的包是否正确
-    const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120906" // 你已有处于待审批或审批通过的申请单，请勿重复申请
+    const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120905" // 你已有处于待审批或审批通过的申请单，请勿重复申请
+    const val USER_UPLOAD_PACKAGE_INVALID = "2120906" // 请确认上传的包是否正确
+    const val USER_SENSITIVE_CONF_EXIST = "2120907" // 字段名{0}已存在
 }
