@@ -33,9 +33,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_SETTING
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import org.jooq.*
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -115,7 +113,78 @@ class PipelineBuildSummaryDao {
         channelCode: ChannelCode,
         pipelineIds: Collection<String>? = null
     ): Result<out Record> {
-        val where = dslContext.select(
+        val conditions = mutableListOf<Condition>()
+        conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
+        conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
+
+        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
+            conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
+        }
+        return listPipelineInfoBuildSummaryByConditions(dslContext, conditions)
+    }
+
+    /**
+     * 分页查询多个projectId对应的PipelineInfoBuildSummary
+     */
+    fun listPipelineInfoBuildSummary(
+        dslContext: DSLContext,
+        projectIds: Set<String>?,
+        channelCodes: Set<ChannelCode>?,
+        limit: Int?,
+        offset: Int?
+    ): Result<out Record> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
+        if (projectIds != null && projectIds.isNotEmpty()) {
+            conditions.add(T_PIPELINE_INFO.PROJECT_ID.`in`(projectIds))
+        }
+        if (channelCodes != null && channelCodes.isNotEmpty()) {
+            conditions.add(T_PIPELINE_INFO.CHANNEL.`in`(channelCodes.map { it.name }))
+        }
+        val where = getPipelineInfoBuildSummaryBaseQuery(dslContext).where(conditions)
+        if (limit != null && limit >= 0) {
+            where.limit(limit)
+        }
+        if (offset != null && offset >= 0) {
+            where.offset(offset)
+        }
+        return where.fetch()
+    }
+
+    /**
+     * 无Project信息，直接根据pipelineIds查询
+     */
+    fun listPipelineInfoBuildSummary(
+        dslContext: DSLContext,
+        channelCodes: Set<ChannelCode>?,
+        pipelineIds: Collection<String>
+    ): Result<out Record> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
+        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
+        if (channelCodes != null && channelCodes.isNotEmpty()) {
+            conditions.add(T_PIPELINE_INFO.CHANNEL.`in`(channelCodes.map { it.name }))
+        }
+        return listPipelineInfoBuildSummaryByConditions(dslContext, conditions)
+    }
+
+    /**
+     * 查询条件作为变量进行查询
+     */
+    fun listPipelineInfoBuildSummaryByConditions(
+        dslContext: DSLContext,
+        conditions: MutableCollection<Condition>
+    ): Result<out Record> {
+        val baseQuery = getPipelineInfoBuildSummaryBaseQuery(dslContext)
+        return baseQuery.where(conditions).fetch()
+    }
+
+    /**
+    * 获取PipelineInfo与BuildSummary Join后的表
+    */
+    fun getPipelineInfoBuildSummaryBaseQuery(dslContext: DSLContext): SelectOnConditionStep<Record> {
+        return dslContext.select(
             T_PIPELINE_INFO.PIPELINE_ID,
             T_PIPELINE_INFO.PROJECT_ID,
             T_PIPELINE_INFO.VERSION,
@@ -149,15 +218,11 @@ class PipelineBuildSummaryDao {
                         T_PIPELINE_BUILD_SUMMARY
                     ).on(T_PIPELINE_SETTING.PIPELINE_ID.eq(T_PIPELINE_BUILD_SUMMARY.PIPELINE_ID))
             ).on(T_PIPELINE_INFO.PIPELINE_ID.eq(T_PIPELINE_SETTING.PIPELINE_ID))
-            .where(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
-            .and(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
-            .and(T_PIPELINE_INFO.DELETE.eq(false))
-
-        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
-            where.and(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
-        }
-        return where.fetch()
     }
+
+    /**
+     * 获取PipelineInfo与BuildSummary Join后的表
+     */
 
     /**
      * 1：新构建时都先进入排队，计数

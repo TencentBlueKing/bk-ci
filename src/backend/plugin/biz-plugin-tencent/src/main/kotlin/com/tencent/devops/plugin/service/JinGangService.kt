@@ -44,7 +44,6 @@ import org.json.XML
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
@@ -85,7 +84,7 @@ class JinGangService @Autowired constructor(
             val resultJson = convertXml(xml)
             jinGangAppDao.updateTask(dslContext, data.buildId, data.md5, data.status.toInt(), data.taskId.toLong(), data.scanUrl, resultJson)
 
-            LogUtils.addLine(rabbitTemplate, data.buildId, "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】", data.elementId, 1)
+            LogUtils.addLine(rabbitTemplate, data.buildId, "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】", data.taskId, 1)
 
             // 生成元数据
             try {

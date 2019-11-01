@@ -24,13 +24,3 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "maven"
-
-dependencies {
-    compile project(":common:common-api")
-    compile project(":common:common-event")
-    compile "org.slf4j:slf4j-api"
-    compile "com.squareup.okhttp3:okhttp"
-    compile "com.cronutils:cron-utils"
-}

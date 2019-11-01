@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 
 abstract class WebsocketPush(
     open val userId: String,
-    open val pathClass: IPath,
+//    open val pathClass: IPath,
     open val pushType: WebSocketType,
     open val redisOperation: RedisOperation,
     open val objectMapper: ObjectMapper,

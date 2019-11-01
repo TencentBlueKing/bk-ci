@@ -1,0 +1,5 @@
+
+dependencies {
+    compile project(":websocket:biz-websocket")
+    compile project(":project:api-project")
+}

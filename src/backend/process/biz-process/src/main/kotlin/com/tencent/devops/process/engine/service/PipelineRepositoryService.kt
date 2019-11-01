@@ -40,8 +40,8 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.pipeline.pojo.element.service.SubPipelineCallElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.*
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -198,10 +198,31 @@ class PipelineRepositoryService constructor(
             c.containerId = modelContainerIdGenerator.getNextId()
         }
 
+        val variables = c.params.map {
+            it.id to it.defaultValue.toString()
+        }.toMap()
+
         var taskSeq = 0
         c.elements.forEach { e ->
             if (e.id.isNullOrBlank()) {
                 e.id = modelTaskIdGenerator.getNextId()
+            }
+
+            if (e is CodeGitWebHookTriggerElement || e is CodeGitlabWebHookTriggerElement || e is CodeSVNWebHookTriggerElement || e is CodeGithubWebHookTriggerElement) {
+                logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
+                pipelineEventDispatcher.dispatch(
+                        PipelineCreateEvent(
+                                "createWebhook",
+                                projectId,
+                                pipelineId,
+                                userId,
+                                null,
+                                model.name,
+                                e,
+                                null,
+                                variables
+                        )
+                )
             }
 
             ElementBizRegistrar.getPlugin(e)?.afterCreate(e, projectId, pipelineId, model.name, userId, channelCode)
@@ -509,6 +530,18 @@ class PipelineRepositoryService constructor(
             pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, pipelineIds, filterDelete)
         return listInfoByPipelineIds.map {
             it.pipelineId to it.pipelineName
+        }.toMap()
+    }
+
+    fun listPipelineIdByName(
+        projectId: String,
+        pipelineNames: Set<String>,
+        filterDelete: Boolean = true
+    ): Map<String, String> {
+        val listInfoByPipelineName =
+            pipelineInfoDao.listInfoByPipelineName(dslContext, projectId, pipelineNames, filterDelete)
+        return listInfoByPipelineName.map {
+            it.pipelineName to it.pipelineId
         }.toMap()
     }
 

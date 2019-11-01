@@ -25,19 +25,19 @@ class SvnWebHookMatcher(
         pipelineId: String,
         repository: Repository,
         webHookParams: ScmWebhookMatcher.WebHookParams
-    ): Boolean {
+    ): ScmWebhookMatcher.MatchResult {
         with(webHookParams) {
             logger.info("Code svn $repository")
             if (repository !is CodeSvnRepository) {
                 logger.warn("The repo($repository) is not code svn repo for svn web hook")
-                return false
+                return ScmWebhookMatcher.MatchResult(false)
             }
 
             // check project match
             // 如果项目名是三层的，比如ied/ied_kihan_rep/server_proj，那对应的rep_name 是 ied_kihan_rep
             val isMatchProject = repository.projectName == event.rep_name ||
                 pipelineWebhookService.getProjectName(repository.projectName) == event.rep_name
-            if (!isMatchProject) return false
+            if (!isMatchProject) ScmWebhookMatcher.MatchResult(false)
 
             logger.info("project macth: ${event.rep_name}")
 
@@ -47,7 +47,7 @@ class SvnWebHookMatcher(
                 excludeUserSet.forEach {
                     if (it == getUsername()) {
                         logger.info("The exclude user($excludeUsers) exclude the svn update on pipeline($pipelineId)")
-                        return false
+                        return ScmWebhookMatcher.MatchResult(false)
                     }
                 }
                 logger.info("exclude user do not match: ${excludeUserSet.joinToString(",")}")
@@ -58,7 +58,7 @@ class SvnWebHookMatcher(
                 val includeUserSet = regex.split(includeUsers)
                 if (!includeUserSet.any { it == getUsername() }) {
                     logger.info("include user do not match: ${includeUserSet.joinToString(",")}")
-                    return false
+                    return ScmWebhookMatcher.MatchResult(false)
                 }
             }
 
@@ -76,7 +76,7 @@ class SvnWebHookMatcher(
 
                         if (path.startsWith(finalRelativePath)) {
                             logger.info("Svn exclude path $path match $finalRelativePath")
-                            return false
+                            return ScmWebhookMatcher.MatchResult(false)
                         } else {
                             logger.info("Svn exclude path $path not match $finalRelativePath")
                         }
@@ -94,16 +94,16 @@ class SvnWebHookMatcher(
                                 relativeSubPath.removePrefix("/")).removePrefix("/")
                         if (path.startsWith(finalRelativePath)) {
                             logger.info("Svn path $path match $finalRelativePath")
-                            return true
+                            return ScmWebhookMatcher.MatchResult(true)
                         } else {
                             logger.info("Svn path $path not match $finalRelativePath")
                         }
                     }
                 }
-                return false
+                return ScmWebhookMatcher.MatchResult(false)
             }
 
-            return true
+            return ScmWebhookMatcher.MatchResult(true)
         }
     }
 

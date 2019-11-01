@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":websocket:biz-websocket-blueking")
+    compile project(":websocket:biz-websocket-tencent")
 }
 
 

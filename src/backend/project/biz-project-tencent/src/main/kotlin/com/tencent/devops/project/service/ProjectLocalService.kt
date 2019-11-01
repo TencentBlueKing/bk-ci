@@ -95,11 +95,12 @@ class ProjectLocalService @Autowired constructor(
                 val json = objectMapper.writeValueAsString(param)
                 val requestBody = RequestBody.create(mediaType, json)
                 val request = Request.Builder().url(authUrl).post(requestBody).build()
-                val responseContent = request(request, "调用权限中心创建项目失败")
+                val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.CALL_PEM_FAIL))
                 val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
                 if (result.isNotOk()) {
                     logger.warn("Fail to create the project of response $responseContent")
-                    throw OperationException("调用权限中心创建项目失败: ${result.message}")
+                    throw OperationException(MessageCodeUtil.generateResponseDataObject<String>(
+                            ProjectMessageCode.CALL_PEM_FAIL_PARM, arrayOf(result.message!!)).message!!)
                 }
                 val authProjectForCreateResult = result.data
                 val projectId = if (authProjectForCreateResult != null) {
@@ -213,11 +214,12 @@ class ProjectLocalService @Autowired constructor(
                     val json = objectMapper.writeValueAsString(param)
                     val requestBody = RequestBody.create(mediaType, json)
                     val request = Request.Builder().url(authUrl).post(requestBody).build()
-                    val responseContent = request(request, "调用权限中心创建项目失败")
+                    val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.CALL_PEM_FAIL))
                     val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
                     if (result.isNotOk()) {
                         logger.warn("Fail to create the project of response $responseContent")
-                        throw OperationException("调用权限中心创建项目失败: ${result.message}")
+                        throw OperationException(MessageCodeUtil.generateResponseDataObject<String>(
+                                ProjectMessageCode.CALL_PEM_FAIL_PARM, arrayOf(result.message!!)).message!!)
                     }
                     val authProjectForCreateResult = result.data
                     projectId = if (authProjectForCreateResult != null) {

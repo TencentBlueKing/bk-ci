@@ -1102,6 +1102,38 @@ class PipelineService @Autowired constructor(
         return pipelines
     }
 
+    fun getPipelineInfoNum(
+        dslContext: DSLContext,
+        projectIds: Set<String>?,
+        channelCodes: Set<ChannelCode>?
+    ): Int? {
+        return pipelineInfoDao.getPipelineInfoNum(dslContext, projectIds, channelCodes)!!.value1()
+    }
+
+    fun listPagedPipelines(dslContext: DSLContext, projectIds: Set<String>, channelCodes: Set<ChannelCode>?, limit: Int?, offset: Int?): MutableList<Pipeline> {
+        val watch = StopWatch()
+        val pipelines = mutableListOf<Pipeline>()
+        watch.start("s_s_r_summary")
+        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(dslContext, projectIds, channelCodes, limit, offset)
+        if (pipelineBuildSummary.isNotEmpty)
+            pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
+        watch.stop()
+        logger.info("listPagedPipelines|size=${pipelines.size}|watch=$watch")
+        return pipelines
+    }
+
+    fun listPipelinesByIds(channelCodes: Set<ChannelCode>?, pipelineIds: Set<String>): List<Pipeline> {
+        val watch = StopWatch()
+        val pipelines = mutableListOf<Pipeline>()
+        watch.start("s_s_r_summary")
+        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(channelCodes, pipelineIds)
+        if (pipelineBuildSummary.isNotEmpty)
+            pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
+        watch.stop()
+        logger.info("listPipelines|size=${pipelines.size}|watch=$watch")
+        return pipelines
+    }
+
     fun isPipelineRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         return buildInfo != null && buildInfo.status == BuildStatus.RUNNING
@@ -1435,6 +1467,19 @@ class PipelineService @Autowired constructor(
 
         logger.info("listPermissionPipelineCount|[$projectId]|$userId|$count|watch=$watch")
         return count
+    }
+
+    fun getPipelineIdByNames(projectId: String, pipelineNames: Set<String>, filterDelete: Boolean): Map<String, String> {
+
+        if (pipelineNames.isEmpty()) return mapOf()
+        if (projectId.isBlank()) return mapOf()
+
+        val watch = StopWatch()
+        watch.start("s_r_list_b_ps")
+        val pipelineName = pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
+        watch.stop()
+        logger.info("getPipelineNameByIds|[$projectId]|watch=$watch")
+        return pipelineName
     }
 
     fun getPipelineNameVersion(pipelineId: String): Pair<String, Int> {

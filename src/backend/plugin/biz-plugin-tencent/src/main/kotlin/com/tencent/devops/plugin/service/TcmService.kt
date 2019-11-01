@@ -8,7 +8,6 @@ import com.tencent.devops.common.api.util.UnicodeUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.pojo.ParametersInfo
 import com.tencent.devops.plugin.pojo.tcm.TcmApp
 import com.tencent.devops.plugin.pojo.tcm.TcmException

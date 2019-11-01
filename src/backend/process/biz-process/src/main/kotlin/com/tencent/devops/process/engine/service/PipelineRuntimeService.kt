@@ -61,6 +61,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
@@ -146,6 +147,8 @@ import java.time.temporal.TemporalAccessor
 @Service
 class PipelineRuntimeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val webSocketDispatcher: WebSocketDispatcher,
+    private val websocketService: WebsocketService,
     private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
@@ -238,6 +241,23 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineIds: Collection<String>? = null
     ): Result<out Record> {
         return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, projectId, channelCode, pipelineIds)
+    }
+
+    fun getBuildSummaryRecords(
+        dslContext: DSLContext,
+        projectIds: Set<String>,
+        channelCodes: Set<ChannelCode>?,
+        limit: Int?,
+        offset: Int?
+    ): Result<out Record> {
+        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, projectIds, channelCodes, limit, offset)
+    }
+
+    fun getBuildSummaryRecords(
+        channelCodes: Set<ChannelCode>?,
+        pipelineIds: Collection<String>
+    ): Result<out Record> {
+        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, channelCodes, pipelineIds)
     }
 
     fun getVariable(buildId: String, varName: String): String? {
@@ -1012,23 +1032,28 @@ class PipelineRuntimeService @Autowired constructor(
                 "startBuild",
                 pipelineInfo.projectId, pipelineInfo.pipelineId, userId,
                 buildId, startBuildStatus
-            ),
-            PipelineStatusChangeEvent(
-                source = "pipelineHistoryChangeEvent",
-                pipelineId = pipelineInfo.pipelineId,
-                changeType = ChangeType.HISTORY,
-                buildId = buildId,
-                projectId = pipelineInfo.projectId,
-                userId = userId
-            ),
-            PipelineStatusChangeEvent(
-                source = "pipelineDetailChangeEvent",
-                pipelineId = pipelineInfo.pipelineId,
-                changeType = ChangeType.DETAIL,
-                buildId = buildId,
-                projectId = pipelineInfo.projectId,
-                userId = userId
             )
+//            PipelineStatusChangeEvent(
+//                source = "pipelineHistoryChangeEvent",
+//                pipelineId = pipelineInfo.pipelineId,
+//                changeType = ChangeType.HISTORY,
+//                buildId = buildId,
+//                projectId = pipelineInfo.projectId,
+//                userId = userId
+//            ),
+//            PipelineStatusChangeEvent(
+//                source = "pipelineDetailChangeEvent",
+//                pipelineId = pipelineInfo.pipelineId,
+//                changeType = ChangeType.DETAIL,
+//                buildId = buildId,
+//                projectId = pipelineInfo.projectId,
+//                userId = userId
+//            )
+        )
+
+        webSocketDispatcher.dispatch(
+                websocketService.buildHistoryMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId),
+                websocketService.buildDetailMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId)
         )
         return buildId
     }
@@ -1363,31 +1388,36 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
         }
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
-        pipelineEventDispatcher.dispatch(
-            PipelineStatusChangeEvent(
-                source = "pipelineStatusChangeEvent",
-                pipelineId = latestRunningBuild.pipelineId,
-                changeType = ChangeType.STATUS,
-                buildId = latestRunningBuild.buildId,
-                projectId = pipelineBuildInfo.projectId,
-                userId = latestRunningBuild.userId
-            ),
-            PipelineStatusChangeEvent(
-                source = "pipelineHistoryChangeEvent",
-                pipelineId = latestRunningBuild.pipelineId,
-                changeType = ChangeType.HISTORY,
-                buildId = latestRunningBuild.buildId,
-                projectId = pipelineBuildInfo.projectId,
-                userId = latestRunningBuild.userId
-            ),
-            PipelineStatusChangeEvent(
-                source = "pipelineDetailChangeEvent",
-                pipelineId = pipelineBuildInfo.pipelineId,
-                changeType = ChangeType.DETAIL,
-                buildId = pipelineBuildInfo.buildId,
-                projectId = pipelineBuildInfo.projectId,
-                userId = pipelineBuildInfo.startUser
-            )
+//        pipelineEventDispatcher.dispatch(
+//            PipelineStatusChangeEvent(
+//                source = "pipelineStatusChangeEvent",
+//                pipelineId = latestRunningBuild.pipelineId,
+//                changeType = ChangeType.STATUS,
+//                buildId = latestRunningBuild.buildId,
+//                projectId = pipelineBuildInfo.projectId,
+//                userId = latestRunningBuild.userId
+//            ),
+//            PipelineStatusChangeEvent(
+//                source = "pipelineHistoryChangeEvent",
+//                pipelineId = latestRunningBuild.pipelineId,
+//                changeType = ChangeType.HISTORY,
+//                buildId = latestRunningBuild.buildId,
+//                projectId = pipelineBuildInfo.projectId,
+//                userId = latestRunningBuild.userId
+//            ),
+//            PipelineStatusChangeEvent(
+//                source = "pipelineDetailChangeEvent",
+//                pipelineId = pipelineBuildInfo.pipelineId,
+//                changeType = ChangeType.DETAIL,
+//                buildId = pipelineBuildInfo.buildId,
+//                projectId = pipelineBuildInfo.projectId,
+//                userId = pipelineBuildInfo.startUser
+//            )
+//        )
+        webSocketDispatcher.dispatch(
+                websocketService.buildHistoryMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser),
+                websocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser),
+                websocketService.buildStatusMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
         )
 
         logger.info("[${latestRunningBuild.pipelineId}]|startLatestRunningBuild-${latestRunningBuild.buildId}")
@@ -1457,31 +1487,35 @@ class PipelineRuntimeService @Autowired constructor(
                 recommendVersion
             )
             val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
-            pipelineEventDispatcher.dispatch(
-                PipelineStatusChangeEvent(
-                    source = "pipelineStatusChangeEvent",
-                    pipelineId = latestRunningBuild.pipelineId,
-                    changeType = ChangeType.STATUS,
-                    buildId = latestRunningBuild.buildId,
-                    projectId = pipelineBuildInfo.projectId,
-                    userId = latestRunningBuild.userId
-                ),
-                PipelineStatusChangeEvent(
-                    source = "pipelineHistoryChangeEvent",
-                    pipelineId = latestRunningBuild.pipelineId,
-                    changeType = ChangeType.HISTORY,
-                    buildId = latestRunningBuild.buildId,
-                    projectId = pipelineBuildInfo.projectId,
-                    userId = latestRunningBuild.userId
-                ),
-                PipelineStatusChangeEvent(
-                    source = "pipelineDetailChangeEvent",
-                    pipelineId = latestRunningBuild.pipelineId,
-                    changeType = ChangeType.DETAIL,
-                    buildId = latestRunningBuild.buildId,
-                    projectId = pipelineBuildInfo.projectId,
-                    userId = latestRunningBuild.userId
-                )
+//            pipelineEventDispatcher.dispatch(
+//                PipelineStatusChangeEvent(
+//                    source = "pipelineStatusChangeEvent",
+//                    pipelineId = latestRunningBuild.pipelineId,
+//                    changeType = ChangeType.STATUS,
+//                    buildId = latestRunningBuild.buildId,
+//                    projectId = pipelineBuildInfo.projectId,
+//                    userId = latestRunningBuild.userId
+//                ),
+//                PipelineStatusChangeEvent(
+//                    source = "pipelineHistoryChangeEvent",
+//                    pipelineId = latestRunningBuild.pipelineId,
+//                    changeType = ChangeType.HISTORY,
+//                    buildId = latestRunningBuild.buildId,
+//                    projectId = pipelineBuildInfo.projectId,
+//                    userId = latestRunningBuild.userId
+//                ),
+//                PipelineStatusChangeEvent(
+//                    source = "pipelineDetailChangeEvent",
+//                    pipelineId = latestRunningBuild.pipelineId,
+//                    changeType = ChangeType.DETAIL,
+//                    buildId = latestRunningBuild.buildId,
+//                    projectId = pipelineBuildInfo.projectId,
+//                    userId = latestRunningBuild.userId
+//                )
+            webSocketDispatcher.dispatch(
+                    websocketService.buildHistoryMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser),
+                    websocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser),
+                    websocketService.buildStatusMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
             )
             logger.info("[$pipelineId]|finishLatestRunningBuild-$buildId|status=$status")
         }
@@ -1643,15 +1677,18 @@ class PipelineRuntimeService @Autowired constructor(
                 latestRunningBuild
             )
         }
-        pipelineEventDispatcher.dispatch(
-            PipelineStatusChangeEvent(
-                source = "pipelineStatusChangeEvent",
-                pipelineId = latestRunningBuild.pipelineId,
-                changeType = ChangeType.STATUS,
-                buildId = latestRunningBuild.buildId,
-                projectId = task.projectId,
-                userId = latestRunningBuild.userId
-            )
+//        pipelineEventDispatcher.dispatch(
+//            PipelineStatusChangeEvent(
+//                source = "pipelineStatusChangeEvent",
+//                pipelineId = latestRunningBuild.pipelineId,
+//                changeType = ChangeType.STATUS,
+//                buildId = latestRunningBuild.buildId,
+//                projectId = task.projectId,
+//                userId = latestRunningBuild.userId
+//            )
+//        )
+        webSocketDispatcher.dispatch(
+                websocketService.buildStatusMessage(latestRunningBuild.buildId, task.projectId, latestRunningBuild.pipelineId, latestRunningBuild.userId)
         )
     }
 

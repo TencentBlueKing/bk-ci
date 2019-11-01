@@ -40,12 +40,11 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.process.websocket.ChangeType
-import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,6 +59,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val webSocketDispatcher: WebSocketDispatcher,
+    private val websocketService: WebsocketService,
     private val pipelineBuildDao: PipelineBuildDao
 ) {
 
@@ -127,19 +128,22 @@ class PipelineBuildDetailService @Autowired constructor(
         pipelineDetailChangeEvent(buildId)
     }
 
-    private fun pipelineDetailChangeEvent(buildId: String) {
+    fun pipelineDetailChangeEvent(buildId: String) {
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         logger.info("dispatch pipelineDetailChangeEvent, buildId: $buildId")
-        pipelineEventDispatcher.dispatch(
-            PipelineStatusChangeEvent(
-                source = "pipelineDetailChangeEvent",
-                pipelineId = pipelineBuildInfo.pipelineId,
-                changeType = ChangeType.DETAIL,
-                buildId = pipelineBuildInfo.buildId,
-                projectId = pipelineBuildInfo.projectId,
-                userId = pipelineBuildInfo.startUser
-            )
+        webSocketDispatcher.dispatch(
+                websocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
         )
+//        pipelineEventDispatcher.dispatch(
+//            PipelineStatusChangeEvent(
+//                source = "pipelineDetailChangeEvent",
+//                pipelineId = pipelineBuildInfo.pipelineId,
+//                changeType = ChangeType.DETAIL,
+//                buildId = pipelineBuildInfo.buildId,
+//                projectId = pipelineBuildInfo.projectId,
+//                userId = pipelineBuildInfo.startUser
+//            )
+//        )
     }
 
     fun updateModel(buildId: String, model: Model) {

@@ -68,8 +68,8 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INDCLUDE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INDCLUDE_PATH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
@@ -328,7 +328,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 return@elements
             }
 
-            if (matcher.isMatch(projectId, pipelineId, repo, webHookParams)) {
+            val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
+            if (matchResult.isMatch) {
                 logger.info("do git web hook match success for pipeline: $pipelineId on trigger(atom(${element.name}) of repo(${matcher.getRepoName()})) ")
                 if (!element.isElementEnable()) {
                     logger.info("Trigger element is disable, can not start pipeline")
@@ -339,7 +340,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     val webhookCommit = WebhookCommit(
                         userId,
                         pipelineId,
-                        getStartParams(projectId, element, repo, matcher, variables, webHookParams),
+                        getStartParams(projectId, element, repo, matcher, variables, webHookParams, matchResult),
                         repositoryConfig,
                         matcher.getRepoName(),
                         matcher.getRevision(),
@@ -433,12 +434,13 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     private fun getStartParams(
-            projectId: String,
-            element: Element,
-            repo: Repository,
-            matcher: ScmWebhookMatcher,
-            variables: Map<String, String>,
-            params: WebHookParams
+        projectId: String,
+        element: Element,
+        repo: Repository,
+        matcher: ScmWebhookMatcher,
+        variables: Map<String, String>,
+        params: WebHookParams,
+        matchResult: ScmWebhookMatcher.MatchResult
     ): Map<String, Any> {
         val mrRequestId = matcher.getMergeRequestId()
         val startParams = mutableMapOf<String, Any>()
@@ -495,8 +497,8 @@ class PipelineBuildWebhookService @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS] = triggerElement.includePaths ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS] = triggerElement.excludePaths ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = triggerElement.excludeUsers?.joinToString(",") ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INDCLUDE_BRANCH] = gitMatcher.finalIncludeBranch
-            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INDCLUDE_PATH] = gitMatcher.finalIncludePath
+            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[GitWebHookMatcher.MATCH_PATHS] ?: ""
 
             if (params.eventType == CodeEventType.MERGE_REQUEST || params.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
                 // MR提交人

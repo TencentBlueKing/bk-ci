@@ -7,9 +7,6 @@ import com.tencent.devops.plugin.pojo.TaskData
 import com.tencent.devops.plugin.service.TaskService
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * Created by Aaron Sheng on 2018/4/27.
- */
 @RestResource
 class ServiceTaskResourceImpl @Autowired constructor(
     private val taskService: TaskService
