@@ -40,7 +40,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
  */
 object LogUtils {
 
-    fun addLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, jobId: String?, executeCount: Int) {
+    fun addLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, jobId: String? = null, executeCount: Int) {
         dispatch(rabbitTemplate, genLogEvent(buildId, message, tag, jobId, LogType.LOG, executeCount))
     }
 
@@ -53,7 +53,7 @@ object LogUtils {
         buildId: String,
         tagName: String,
         tag: String,
-        jobId: String?,
+        jobId: String? = null,
         executeCount: Int
     ) {
         dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:start:$tagName", tag, jobId, LogType.START, executeCount))
@@ -64,7 +64,7 @@ object LogUtils {
         buildId: String,
         tagName: String,
         tag: String,
-        jobId: String?,
+        jobId: String? = null,
         executeCount: Int
     ) {
         dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:end:$tagName", tag, jobId, LogType.END, executeCount))
@@ -75,7 +75,7 @@ object LogUtils {
         buildId: String,
         message: String,
         tag: String,
-        jobId: String?,
+        jobId: String? = null,
         executeCount: Int
     ) =
         addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, jobId, executeCount)
@@ -88,7 +88,7 @@ object LogUtils {
         buildId: String,
         finished: Boolean,
         tag: String,
-        jobId: String?,
+        jobId: String? = null,
         executeCount: Int?
     ) {
         dispatch(rabbitTemplate, LogStatusEvent(buildId, finished, tag, jobId ?: "", executeCount))
@@ -102,7 +102,7 @@ object LogUtils {
         buildId: String,
         message: String,
         tag: String,
-        jobId: String?,
+        jobId: String? = null,
         logType: LogType,
         executeCount: Int
     ): LogEvent {

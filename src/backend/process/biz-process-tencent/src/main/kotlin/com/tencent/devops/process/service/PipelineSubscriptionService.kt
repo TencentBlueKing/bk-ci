@@ -27,6 +27,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.process.dao.PipelineSubscriptionDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
+import com.tencent.devops.process.engine.service.MeasureService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.SubscriptionType

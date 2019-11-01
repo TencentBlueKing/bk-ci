@@ -61,24 +61,33 @@ class BuildLogResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun addLogStatus(buildId: String, tag: String?, executeCount: Int?): Result<Boolean> {
+    override fun addLogStatus(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        LogUtils.updateLogStatus(rabbitTemplate, buildId, false, tag ?: "", executeCount)
+        LogUtils.updateLogStatus(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                finished = false,
+                tag = tag ?: "",
+                jobId = jobId ?: "",
+                executeCount = executeCount
+        )
         return Result(true)
     }
 
-    override fun updateLogStatus(
-        buildId: String,
-        finished: Boolean,
-        tag: String?,
-        executeCount: Int?
-    ): Result<Boolean> {
+    override fun updateLogStatus(buildId: String, finished: Boolean, tag: String?, jobId: String?, executeCount: Int?): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        LogUtils.updateLogStatus(rabbitTemplate, buildId, finished, tag ?: "", executeCount)
+        LogUtils.updateLogStatus(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                finished = finished,
+                tag = tag ?: "",
+                jobId = jobId ?: "",
+                executeCount = executeCount
+        )
         return Result(true)
     }
 }

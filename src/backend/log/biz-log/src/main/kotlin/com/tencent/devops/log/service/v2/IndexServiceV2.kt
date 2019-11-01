@@ -62,11 +62,16 @@ class IndexServiceV2 @Autowired constructor(
         return startLineNum
     }
 
-    fun finish(buildId: String, tag: String?, executeCount: Int?, finish: Boolean) {
-        logStatusDaoV2.finish(dslContext, buildId, tag, executeCount, finish)
+    fun finish(buildId: String, tag: String?, jobId: String?, executeCount: Int?, finish: Boolean) {
+        logStatusDaoV2.finish(dslContext, buildId, tag, jobId, executeCount, finish)
     }
 
-    fun isFinish(buildId: String, tag: String?, executeCount: Int?): Boolean {
-        return logStatusDaoV2.isFinish(dslContext, buildId, tag, executeCount)
+    fun isFinish(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Boolean {
+        return if (jobId.isNullOrBlank()) {
+            logStatusDaoV2.isFinish(dslContext, buildId, tag, executeCount)
+        } else {
+            val logStatusList = logStatusDaoV2.listFinish(dslContext, buildId, tag, executeCount)
+            logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
+        }
     }
 }
