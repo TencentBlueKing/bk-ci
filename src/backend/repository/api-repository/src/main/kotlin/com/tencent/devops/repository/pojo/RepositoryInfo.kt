@@ -32,8 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("代码库模型-基本信息")
 data class RepositoryInfo(
-    @ApiModelProperty("仓库哈希ID", required = true)
-    val repositoryHashId: String,
+    @ApiModelProperty("仓库哈希ID", required = false)
+    val repositoryHashId: String?,
     @ApiModelProperty("仓库别名", required = true)
     val aliasName: String,
     @ApiModelProperty("URL", required = true)

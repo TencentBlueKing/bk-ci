@@ -106,9 +106,9 @@ class RepositoryService @Autowired constructor(
 
 	fun createGitCodeRepository(
 			userId: String,
-			projectCode: String,
+			projectCode: String?,
 			repositoryName: String,
-			sampleProjectPath: String,
+			sampleProjectPath: String?,
 			namespaceId: Int?,
 			visibilityLevel: VisibilityLevelEnum?,
 			tokenType: TokenTypeEnum
@@ -153,7 +153,9 @@ class RepositoryService @Autowired constructor(
 					projectCode,
 					null
 			)
-			val repositoryHashId = serviceCreate(userId, projectCode, codeGitRepository) // 关联代码库
+
+			// 关联代码库
+			val repositoryHashId = if (null != projectCode) serviceCreate(userId, projectCode, codeGitRepository) else null
 			logger.info("serviceCreate result>> $repositoryHashId")
 			Result(
 					RepositoryInfo(
@@ -193,15 +195,36 @@ class RepositoryService @Autowired constructor(
 		logger.info("updateGitCodeRepository repositoryConfig is:$repositoryConfig,updateGitProjectInfo is:$updateGitProjectInfo, tokenType is:$tokenType")
 		val repo = serviceGet("", repositoryConfig)
 		logger.info("the repo is:$repo")
-		val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
-		val getGitTokenResult = getGitToken(finalTokenType, userId)
+		val projectName = repo.projectName
+		val finalTokenType = generateFinalTokenType(tokenType, projectName)
+		return updateGitRepositoryInfo(finalTokenType, projectName, userId, updateGitProjectInfo)
+	}
+
+	fun updateGitCodeRepository(
+			userId: String,
+			projectName: String,
+			updateGitProjectInfo: UpdateGitProjectInfo,
+			tokenType: TokenTypeEnum
+	): Result<Boolean> {
+		logger.info("updateGitCodeRepository userId is:$userId,projectName is:$projectName,updateGitProjectInfo is:$updateGitProjectInfo, tokenType is:$tokenType")
+		return updateGitRepositoryInfo(tokenType, projectName, userId, updateGitProjectInfo)
+	}
+
+	private fun updateGitRepositoryInfo(
+			tokenType: TokenTypeEnum,
+			projectName: String,
+			userId: String,
+			updateGitProjectInfo: UpdateGitProjectInfo
+	): Result<Boolean> {
+		val getGitTokenResult = getGitToken(tokenType, userId)
 		if (getGitTokenResult.isNotOk()) {
 			return Result(status = getGitTokenResult.status, message = getGitTokenResult.message ?: "")
 		}
 		val token = getGitTokenResult.data!!
 		val gitRepositoryRespResult: Result<Boolean>
 		return try {
-			gitRepositoryRespResult = repostioryScmService.updateGitCodeRepository(token, repo.projectName, updateGitProjectInfo, finalTokenType)
+			gitRepositoryRespResult = client.getScm(ServiceGitResource::class)
+					.updateGitCodeRepository(token, projectName, updateGitProjectInfo, tokenType)
 			logger.info("updateGitCodeRepository gitRepositoryRespResult is :$gitRepositoryRespResult")
 			if (gitRepositoryRespResult.isOk()) {
 				Result(true)
