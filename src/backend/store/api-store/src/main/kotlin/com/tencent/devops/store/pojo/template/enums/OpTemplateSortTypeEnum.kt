@@ -28,10 +28,10 @@ package com.tencent.devops.store.pojo.template.enums
 
 enum class OpTemplateSortTypeEnum(val sortType: String) {
     TEMPLATE_CODE("TEMPLATE_CODE"),
-    TemplateName("TEMPLATE_NAME"),
-    TEMPLATE_NAME("CLASSIFY_ID"),
-    TemplateStatus("TEMPLATE_STATUS"),
-    TEMPLATE_STATUS("TEMPLATE_TYPE"),
+    TEMPLATE_NAME("TEMPLATE_NAME"),
+    CLASSIFY_ID("CLASSIFY_ID"),
+    TEMPLATE_STATUS("TEMPLATE_STATUS"),
+    TEMPLATE_TYPE("TEMPLATE_TYPE"),
     LATEST_FLAG("LATEST_FLAG"),
     PUBLISHER("PUBLISHER"),
     CREATOR("CREATOR"),
