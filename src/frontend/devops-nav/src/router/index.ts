@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
+import request from '../utils/request'
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -15,7 +16,11 @@ const Home = () => import('../views/Home.vue')
 
 const IFrame = () => import('../views/IFrame.vue')
 
+const QuickStart = () => import('../views/QuickStart.vue')
+
 const ProjectManage = () => import('../views/ProjectManage.vue')
+
+const Docs = () => import('../views/Docs.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
@@ -52,6 +57,15 @@ const routes = [
                 }
             },
             {
+                path: 'quickstart',
+                name: 'quickstart',
+                component: QuickStart,
+                meta: {
+                    showProjectList: false,
+                    showNav: true
+                }
+            },
+            {
                 path: 'pm',
                 name: 'pm',
                 component: ProjectManage,
@@ -68,6 +82,15 @@ const routes = [
                 component: Maintaining
             }
         ]
+    },
+    {
+        path: '/console/docs',
+        name: 'docs',
+        component: Docs,
+        meta: {
+            showProjectList: false,
+            showNav: false
+        }
     }
 ]
 
@@ -103,7 +126,6 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
         }
         
         const { css_url, js_url } = currentPage
-        
         
         if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
             store.dispatch('toggleModuleLoading', true)
@@ -151,6 +173,35 @@ function updateHeaderConfig ({ showProjectList, showNav }) {
     return {
         showProjectList: showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof showProjectList === 'undefined'),
         showNav: showNav || (window.currentPage && window.currentPage.show_nav && typeof showNav === 'undefined')
+    }
+}
+
+/**
+ * 上报用户信息
+ */
+function counterUser (): void {
+    const userId = window.userInfo.username
+    const os = parseOS()
+    
+    request.post('/project/api/user/count/login', {
+        os,
+        userId
+    })
+}
+
+function uploadBKCounter (count: number = 1): void {
+    try {
+        const date: Date = new Date()
+        const appMsg = {
+            bkdevops: {
+                [`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`]: count
+            }
+        }
+        window.JSONP('http://open.oa.com/app_statistics/liveness/save_jsonp?app_msg=' + JSON.stringify(appMsg), function () {
+            // jsonp callback with data
+        })
+    } catch (e) {
+        console.warn('upload bk error', e)
     }
 }
 

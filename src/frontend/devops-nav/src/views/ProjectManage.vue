@@ -93,12 +93,12 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <!-- <bk-table-column
+                    <bk-table-column
                         label="关联CC业务"
                         prop="ccAppName"
                     >
                         {{ ccAppName ? ccAppName : '--' }}
-                    </bk-table-column> -->
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('projectDesc')"
                         prop="description"

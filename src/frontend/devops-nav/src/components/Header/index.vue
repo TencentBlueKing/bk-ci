@@ -55,6 +55,9 @@
             </h3>
         </div>
         <div class="header-right-bar">
+            <qrcode class="feed-back-icon" />
+            <span class="seperate-line">|</span>
+            <!-- <feed-back class='feed-back-icon'></feed-back> -->
             <i
                 class="bk-icon icon-helper"
                 @click.stop="goToDocs"
@@ -79,6 +82,8 @@
     import { State, Action, Getter } from 'vuex-class'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
+    import FeedBack from './FeedBack.vue'
+    import Qrcode from './Qrcode.vue'
     import Logo from '../Logo/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
@@ -91,6 +96,8 @@
         components: {
             User,
             NavMenu,
+            FeedBack,
+            Qrcode,
             ProjectDialog,
             Logo,
             DevopsSelect,
@@ -179,9 +186,7 @@
         goHomeById (projectId: string, reload: boolean = false): void {
             const hasProjectId = this.currentPage.show_project_list
             let path = urlJoin('/console', this.currentPage.link_new)
-            if (this.$route.name === 'codecc') { // hack todo
-                path = `/console/codecc/${projectId}`
-            } else if (hasProjectId) {
+            if (hasProjectId) {
                 if (this.currentPage.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
                 } else {
@@ -210,7 +215,7 @@
             }
 
             cookie.set(X_DEVOPS_PROJECT_ID, id, {
-                domain: 'tencent.com',
+                domain: 'oa.com',
                 path: '/'
             })
 
@@ -342,6 +347,13 @@
             >.user-info.active {
                 color: white;
                 background-color: black;
+            }
+
+            > .seperate-line {
+                padding: 0 5px;
+                font-size: 20px;
+                // color: $fontLigtherColor;
+                line-height: $headerHeight;
             }
 
             > .bk-icon {

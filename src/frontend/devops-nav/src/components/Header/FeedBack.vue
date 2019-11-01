@@ -1,32 +1,29 @@
+
 <template>
     <div
-        v-clickoutside="hideOrcode"
-        :class="{ &quot;devops-qrcode&quot;: true, &quot;active&quot;: show }"
+        v-clickoutside="hideFeedBackMenu"
+        :class="{ &quot;devops-feedback&quot;: true, &quot;active&quot;: show }"
     >
-        <div
-            class="qrcode-tips"
-            @click="toggleOrcode(show)"
-        >
-            <div class="qrcode-icon">
-                <i class="bk-icon icon-phone" />
-            </div>
-            <div><span>{{ $t("DevopsMobile") }}</span></div>
-        </div>
-        <div
+        <icon
+            class="bk-icon"
+            name="feedback"
+            @click="toggleFeedBackMenu(show)"
+        />
+        <ul
             v-if="show"
-            class="qrcode-div"
+            class="feedback-menu"
         >
-            <div class="content">
-                <img
-                    width="120"
-                    height="120"
-                    src="./../../assets/images/devopsapp-qrcode.png"
-                >
-                <p style="text-align: center">
-                    {{ $t('scanToDownload') }}
-                </p>
-            </div>
-        </div>
+            <li
+                v-for="item in menu"
+                :key="item.label"
+            >
+                <a
+                    :href="item.href"
+                    :target="item.target"
+                    @click.stop="hideFeedBackMenu"
+                >{{ item.label }}</a>
+            </li>
+        </ul>
     </div>
 </template>
 
@@ -45,6 +42,18 @@
         @State user
         @Action togglePopupShow
         show: boolean = false
+        menu = [
+            {
+                label: '问题反馈',
+                href: 'http://x.code.oa.com/bkdevops/devops/issues',
+                target: '_blank'
+            },
+            {
+                label: '联系助手',
+                href: 'wxwork://message/?username=DevOps',
+                target: ''
+            }
+        ]
 
         @Watch('show')
         handleShow (show, oldVal) {
@@ -53,10 +62,10 @@
             }
         }
 
-        toggleOrcode (): void {
+        toggleFeedBackMenu (): void {
             this.show = !this.show
         }
-        hideOrcode (): void {
+        hideFeedBackMenu (): void {
             this.show = false
         }
     }
@@ -65,43 +74,29 @@
 <style lang="scss">
     @import '../../assets/scss/conf';
     @import '../../assets/scss/mixins/triangle';
-    .devops-qrcode {
+    .devops-feedback {
         position: relative;
         height: 100%;
         display: flex;
         align-items: center;
         color: $fontLigtherColor;
 
-        > .qrcode-tips {
+        > .bk-icon {
             margin: 0 10px;
+            font-size: 20px;
             cursor: pointer;
-            line-height: 50px;
             margin-top: 2px;
-            vertical-align: middle;
 
-            > div {
-                display: inline;
-            }
-
-            > .qrcode-icon {
-                vertical-align: middle;
-                font-size: 20px;
-                margin-top: 10px;
-            }
         }
 
-        .qrcode-div {
+        .feedback-menu {
             position: absolute;
             background-color: white;
             border: 1px solid $borderWeightColor;
             border-radius: 2px;
             top: 52px;
             left: 6px;
-            width: 140px;
-            height: 160px;
             box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
-            font-size: 12px;
-            color: #7b7d8a;
             &:before {
                 position: absolute;
                 content: '';
@@ -115,10 +110,20 @@
                 transform: rotate(45deg);
                 background: white;
             }
-            > .content {
-                margin: 10px;
-                > p {
-                    text-align: center;
+            li {
+                border-bottom: 1px solid $borderWeightColor;
+                &:last-child {
+                    border: 0;
+                }
+                a {
+                    cursor: pointer;
+                    line-height: 36px;
+                    white-space: nowrap;
+                    padding: 0 14px;
+                    color: $fontWeightColor;
+                    &:hover {
+                        color: $primaryColor;
+                    }
                 }
             }
         }

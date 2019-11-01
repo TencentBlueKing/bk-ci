@@ -1,6 +1,8 @@
 {   
     "okLabel": "确定",
     "cancelLabel": "取消",
+    "logout": "退出",
+    "accessCenter": "权限中心",
     "recentVisiteService": "最近访问服务",
     "allService": "所有服务",
     "switchProject": "切换项目",
@@ -25,6 +27,7 @@
     "NetworkError": "内部服务错误",
     "leaveConfirmTitle": "确认要离开",
     "leaveConfirmMsg": "离开后，新编辑的数据将丢失",
+    "moreDetail": "查看更多",
     "accessDeny": {
         "title": "无该项目权限",
         "desc": "你并非该项目组成员或者该项目不存在，请切换项目试试",
@@ -47,7 +50,28 @@
         "next": "下一步",
         "submit": "提交"
     },
-    "quickstartTitle": "新手接入蓝盾DevOps平台",
+    "quickStart": {
+        "quickstartTitle": "新手接入蓝盾DevOps平台",
+        "configurationTip": "选择配置选项",
+        "projectDescription": "项目是划分资源的最大单位，不同项目之间的资源是互不可见的",
+        "settintTitleDesc": "你可以在蓝盾DevOps平台上选择一个Demo代码库快速配置自己的交付流水线",
+        "isEnableWhiteList": "是否启用白名单",
+        "settingOptionsTitle": "快速配置属于自己的流水线",
+        "settingOptionsDesc": "说明：创建并管理你自己的流水线",
+        "learnMore": "了解更多信息",
+        "selectProject": "选择项目：",
+        "approvalingTips": "你选择的项目正在审批中，我们会在24小时内完成审批。加急请联系",
+        "blueShieldAssistant": "蓝盾助手",
+        "noProjectTips": "必须选择一个项目",
+        "pipelineStepDesc": "根据不同类型的代码库项目，我们为你提供了不同的流水线套餐，目前已支持Code平台的SVN、Git库以及蓝鲸Gitlab库",
+        "previewPipeline": "预览流水线",
+        "previewTips": "根据你选择的代码库，我们推荐如下流水线以完成持续交付",
+        "completeTips": "你已在[{projectName}]下成功创建了一个交付流水线",            
+        "codelib": "代码库：",
+        "getStarted": "开启流水线之旅"
+                
+    },
+    "accessGuide": "新手接入",
     "configProject": "配置项目",
     "configPipeline": "配置流水线",
     "complete": "完成",
@@ -99,6 +123,16 @@
     "enableProjectConfirm": "确定要启用项目",
     "projectSuccess": "项目成功",
     "projectFail": "项目失败",
+    "centerInfo": "所属中心",
+    "projectTypeLabel": "项目类型",
+    "departmentLabel": "部门",
+    "centerLabel": "中心",
+    "BGLabel": "BG",
+    "noBGErrorTips": "请选择BG！",
+    "noDeptErrorTips": "请选择部门！",
+    "noCenterErrorTips": "请选择中心！",
+    "selectProjectTypePlaceholder": "选择项目类型",
+    "questionTips": "如有疑问请联系",
     "subService": {
         "pipeline": "流水线",
         "codelib": "代码库",
@@ -109,6 +143,22 @@
         "quality": "质量红线",
         "vs": "漏洞扫描-终端（金刚）",
         "turbo": "编译加速",
-        "ticket": "凭据管理"
-    }
+        "ticket": "凭据管理",
+        "credentialManage": "凭据管理",
+        "codecc": "代码检查",
+        "bcs": "容器服务",
+        "job": "作业平台",
+        "perm": "权限中心",
+        "apk": "Apk加固",
+        "measure": "度量数据",
+        "teamwork": "敏捷研发"
+    },
+    "hotline": "客服电话：",
+    "contactUs": "联系蓝盾人工客服",
+    "feedback": "问题反馈",
+    "mobileGame": "手游",
+    "pcGame": "端游",
+    "webGame": "页游",
+    "platformProduct": "平台产品",
+    "supportProduct": "支撑产品"
 }

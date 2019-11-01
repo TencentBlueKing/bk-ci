@@ -34,6 +34,13 @@
                         >
                             {{ $t('accessDeny.switchProject') }}
                         </bk-button>
+                        <a
+                            target="_blank"
+                            class="empty-btns-item"
+                            :href="`/console/perm/apply-join-project${$route.params.projectId ? `?project_code=${$route.params.projectId}` : ''}`"
+                        >
+                            <bk-button theme="success">申请加入</bk-button>
+                        </a>
                     </empty-tips>
 
                     <empty-tips

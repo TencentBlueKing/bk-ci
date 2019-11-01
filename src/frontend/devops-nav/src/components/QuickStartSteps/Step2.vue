@@ -1,25 +1,27 @@
 <template>
     <div class="step-wrapper">
         <p class="step-desc">
-            根据不同类型的代码库项目，我们为你提供了不同的流水线套餐，目前已支持Code平台的SVN、Git库以及蓝鲸Gitlab库
+            {{ $t('quickStart.pipelineStepDesc') }}
             <a
                 :href="`${DOCS_URL_PREFIX}/所有服务/代码库/summary.html`"
                 class="text-link"
                 target="_blank"
-            >了解更多信息</a>
+            >{{ $t('quickStart.learnMore') }}</a>
         </p>
         <form>
-            <label>代码库：</label>
+            <label>{{ $t('quickStart.codelib') }}</label>
             <bk-input
                 readonly
                 disabled
-                value="Code Demo（新手接入专用）"
+                :value="`Code Demo（${$t('accessGuide')}）`"
             />
 
             <div class="pipeline-preview">
                 <label class="">
-                    预览流水线:
-                    <span class="desc">根据你选择的代码库，我们推荐如下流水线以完成持续交付</span>
+                    {{ $t("quickStart.previewPipeline") }}
+                    <span class="desc">
+                        {{ $t("quickStart.previewTips") }}
+                    </span>
                 </label>
                 <img src="../../assets/images/codebase.jpg">
             </div>
