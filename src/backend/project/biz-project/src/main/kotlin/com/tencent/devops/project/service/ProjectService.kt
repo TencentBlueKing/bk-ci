@@ -26,7 +26,10 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.*
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
@@ -71,6 +74,8 @@ interface ProjectService {
     fun list(userId: String): List<ProjectVO>
 
     fun list(projectCodes: Set<String>): List<ProjectVO>
+
+    fun list(projectCodes: List<String>): List<ProjectVO>
 
     fun getAllProject(): List<ProjectVO>
 

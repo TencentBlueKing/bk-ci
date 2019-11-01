@@ -47,6 +47,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
 
+    override fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean {
+        return true
+    }
+
     private val supplierForPermission = {
         val fakeList = mutableListOf<String>()
         projectDao.listProjectCodes(dslContext).forEach {
