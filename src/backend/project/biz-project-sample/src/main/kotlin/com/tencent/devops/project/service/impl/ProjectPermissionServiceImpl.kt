@@ -55,13 +55,18 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         fakeList
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+//    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+////
+//////        return bkAuthProjectApi.getUserProjectsAvailable(
+//////            serviceCode = projectAuthServiceCode,
+//////            userId = userId,
+//////            supplier = supplierForPermission
+//////        )
+////        return emptyMap()
+////    }
 
-        return bkAuthProjectApi.getUserProjectsAvailable(
-            serviceCode = projectAuthServiceCode,
-            userId = userId,
-            supplier = supplierForPermission
-        )
+    override fun getUserProjectsAvailable(userId: String): List<String> {
+        return emptyList()
     }
 
     override fun getUserProjects(userId: String): List<String> {

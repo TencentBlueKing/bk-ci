@@ -264,10 +264,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val projectList = projectPermissionService.getUserProjectsAvailable(userName)
+            val projectCodes = projectPermissionService.getUserProjectsAvailable(userName)
 
             val list = ArrayList<ProjectVO>()
-            val projectCodes = projectList.map { it.key }
+//            val projectCodes = projectList.map { it.key }
 
             val grayProjectSet = grayProjectSet()
 

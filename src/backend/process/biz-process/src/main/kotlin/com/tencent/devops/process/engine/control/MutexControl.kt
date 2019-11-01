@@ -308,17 +308,20 @@ class MutexControl @Autowired constructor(
         LogUtils.addFoldStartLine(
             rabbitTemplate = rabbitTemplate,
             buildId = container.buildId, tagName = tagName,
-            tag = tagName, executeCount = container.executeCount
+            tag = tagName, jobId = null,
+            executeCount = container.executeCount
         )
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = container.buildId, message = message,
-            tag = tagName, executeCount = container.executeCount
+            tag = tagName, jobId = null,
+            executeCount = container.executeCount
         )
         LogUtils.addFoldEndLine(
             rabbitTemplate = rabbitTemplate,
             buildId = container.buildId, tagName = tagName,
-            tag = tagName, executeCount = container.executeCount
+            tag = tagName, jobId = null,
+            executeCount = container.executeCount
         )
     }
 }

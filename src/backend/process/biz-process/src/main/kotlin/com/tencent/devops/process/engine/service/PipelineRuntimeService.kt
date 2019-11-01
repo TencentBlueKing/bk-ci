@@ -95,13 +95,16 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
-import com.tencent.devops.process.pojo.*
+import com.tencent.devops.process.pojo.BuildBasicInfo
+import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.utils.*
-import com.tencent.devops.process.websocket.ChangeType
-import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -243,17 +246,19 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildVarDao.getVars(dslContext, buildId)
     }
 
-    fun getRunningTask(projectId: String, buildId: String): List<Pair<String, BuildStatus>> {
+    fun getRunningTask(projectId: String, buildId: String): List<Map<String, String>> {
         val listByStatus = pipelineBuildTaskDao.listByStatus(
-            dslContext,
-            buildId,
-            null,
-            listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+            dslContext = dslContext,
+            buildId = buildId,
+            containerId = null,
+            statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         )
-        val list = mutableListOf<Pair<String, BuildStatus>>()
+        val list = mutableListOf<Map<String, String>>()
         val buildStatus = BuildStatus.values()
         listByStatus.forEach {
-            list.add(Pair(it.taskId, buildStatus[it.status]))
+            list.add(mapOf("taskId" to it.taskId,
+                "containerId" to it.containerId,
+                "status" to buildStatus[it.status].name))
         }
         return list
     }
@@ -546,7 +551,10 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 webHookType = webhookType,
                 startType = getStartType(trigger, webhookType),
-                recommendVersion = recommendVersion
+                recommendVersion = recommendVersion,
+                errorType = if (errorType != null) ErrorType.values()[errorType].name else null,
+                errorCode = errorCode,
+                errorMsg = errorMsg
             )
         }
     }
@@ -1288,10 +1296,18 @@ class PipelineRuntimeService @Autowired constructor(
     /**
      * 完成认领构建的任务
      */
-    fun completeClaimBuildTask(buildId: String, taskId: String, userId: String, buildStatus: BuildStatus) {
+    fun completeClaimBuildTask(
+        buildId: String,
+        taskId: String,
+        userId: String,
+        buildStatus: BuildStatus,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
+    ) {
         val buildTask = getBuildTask(buildId, taskId)
         if (buildTask != null) {
-            updateTaskStatus(buildId, taskId, userId, buildStatus)
+            updateTaskStatus(buildId, taskId, userId, buildStatus, errorType, errorCode, errorMsg)
             // 刷新容器，下发后面的任务
             with(buildTask) {
                 pipelineEventDispatcher.dispatch(
@@ -1403,11 +1419,13 @@ class PipelineRuntimeService @Autowired constructor(
      * @param latestRunningBuild 最一次构建的要更新的状态信息
      * @param currentBuildStatus 当前一次构建的当前状态
      */
-    fun finishLatestRunningBuild(latestRunningBuild: LatestRunningBuild,
-                                 currentBuildStatus: BuildStatus,
-                                 errorType: ErrorType?,
-                                 errorCode: Int?,
-                                 errorMsg: String?) {
+    fun finishLatestRunningBuild(
+        latestRunningBuild: LatestRunningBuild,
+        currentBuildStatus: BuildStatus,
+        errorType: ErrorType?,
+        errorCode: Int?,
+        errorMsg: String?
+    ) {
         if (BuildStatus.isReadyToRun(currentBuildStatus)) {
             // 减1,当作没执行过
             pipelineBuildSummaryDao.updateQueueCount(dslContext, latestRunningBuild.pipelineId, -1)
@@ -1457,44 +1475,20 @@ class PipelineRuntimeService @Autowired constructor(
 
             val remark = getVariable(buildId, PIPELINE_BUILD_REMARK)
             pipelineBuildDao.finishBuild(
-                    dslContext = dslContext,
-                    buildId = buildId,
-                    buildStatus = if (BuildStatus.isFinish(status)) status else BuildStatus.FAILED,
-                    material = JsonUtil.toJson(materials),
-                    executeTime = executeTime,
-                    buildParameters = JsonUtil.toJson(buildParameters),
-                    recommendVersion = recommendVersion,
-                    remark = remark,
-                    errorType = errorType,
-                    errorCode = errorCode,
-                    errorMsg = errorMsg
+                dslContext = dslContext,
+                buildId = buildId,
+                buildStatus = if (BuildStatus.isFinish(status)) status else BuildStatus.FAILED,
+                material = JsonUtil.toJson(materials),
+                artifactList = JsonUtil.toJson(artifactList),
+                executeTime = executeTime,
+                buildParameters = JsonUtil.toJson(buildParameters),
+                recommendVersion = recommendVersion,
+                remark = remark,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
             )
             val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
-//            pipelineEventDispatcher.dispatch(
-//                PipelineStatusChangeEvent(
-//                    source = "pipelineStatusChangeEvent",
-//                    pipelineId = latestRunningBuild.pipelineId,
-//                    changeType = ChangeType.STATUS,
-//                    buildId = latestRunningBuild.buildId,
-//                    projectId = pipelineBuildInfo.projectId,
-//                    userId = latestRunningBuild.userId
-//                ),
-//                PipelineStatusChangeEvent(
-//                    source = "pipelineHistoryChangeEvent",
-//                    pipelineId = latestRunningBuild.pipelineId,
-//                    changeType = ChangeType.HISTORY,
-//                    buildId = latestRunningBuild.buildId,
-//                    projectId = pipelineBuildInfo.projectId,
-//                    userId = latestRunningBuild.userId
-//                ),
-//                PipelineStatusChangeEvent(
-//                    source = "pipelineDetailChangeEvent",
-//                    pipelineId = latestRunningBuild.pipelineId,
-//                    changeType = ChangeType.DETAIL,
-//                    buildId = latestRunningBuild.buildId,
-//                    projectId = pipelineBuildInfo.projectId,
-//                    userId = latestRunningBuild.userId
-//                )
             webSocketDispatcher.dispatch(
                     websocketService.buildHistoryMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser),
                     websocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser),
@@ -1631,14 +1625,29 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildTaskDao.updateSubBuildId(dslContext, buildId, taskId, subBuildId)
     }
 
-    fun updateTaskStatus(buildId: String, taskId: String, userId: String, buildStatus: BuildStatus) {
+    fun updateTaskStatus(
+        buildId: String,
+        taskId: String,
+        userId: String,
+        buildStatus: BuildStatus,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
+    ) {
+        logger.info("[ERRORCODE] updateTaskStatus <$buildId>[$errorType][$errorCode][$errorMsg] ")
         val task = getBuildTask(buildId, taskId)
-        if (task != null) {
-            updateTaskStatus(buildId, task, userId, buildStatus)
-        }
+        if (task != null) updateTaskStatus(buildId, task, userId, buildStatus, errorType, errorCode, errorMsg)
     }
 
-    private fun updateTaskStatus(buildId: String, task: PipelineBuildTask, userId: String, buildStatus: BuildStatus) {
+    private fun updateTaskStatus(
+        buildId: String,
+        task: PipelineBuildTask,
+        userId: String,
+        buildStatus: BuildStatus,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
+    ) {
         val buildInfo = getBuildInfo(buildId) ?: return
         val latestRunningBuild = LatestRunningBuild(
             projectId = buildInfo.projectId,
@@ -1654,24 +1663,23 @@ class PipelineRuntimeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             logger.info("$buildId|${task.taskName} update status, status: ${buildStatus.name}, userId: $userId")
-            pipelineBuildTaskDao.updateStatus(transactionContext, buildId, task.taskId, userId, buildStatus)
+            pipelineBuildTaskDao.updateStatus(
+                dslContext = transactionContext,
+                buildId = buildId,
+                taskId = task.taskId,
+                userId = userId,
+                buildStatus = buildStatus,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
+            )
             pipelineBuildSummaryDao.updateCurrentBuildTask(
                 transactionContext,
                 latestRunningBuild
             )
         }
-//        pipelineEventDispatcher.dispatch(
-//            PipelineStatusChangeEvent(
-//                source = "pipelineStatusChangeEvent",
-//                pipelineId = latestRunningBuild.pipelineId,
-//                changeType = ChangeType.STATUS,
-//                buildId = latestRunningBuild.buildId,
-//                projectId = task.projectId,
-//                userId = latestRunningBuild.userId
-//            )
-//        )
         webSocketDispatcher.dispatch(
-                websocketService.buildStatusMessage(latestRunningBuild.buildId, task.projectId, latestRunningBuild.pipelineId, latestRunningBuild.userId)
+            websocketService.buildStatusMessage(latestRunningBuild.buildId, task.projectId, latestRunningBuild.pipelineId, latestRunningBuild.userId)
         )
     }
 

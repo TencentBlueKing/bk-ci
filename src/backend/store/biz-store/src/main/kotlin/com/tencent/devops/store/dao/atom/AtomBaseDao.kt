@@ -29,8 +29,11 @@ package com.tencent.devops.store.dao.atom
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record1
+import org.jooq.Result
 
 /**
  * 插件数据库操作基类
@@ -66,6 +69,18 @@ abstract class AtomBaseDao {
                     .orderBy(CREATE_TIME.desc())
                     .limit(1)
                     .fetchOne()
+        }
+    }
+
+    fun getSupportGitCiAtom(dslContext: DSLContext): Result<Record1<String>> {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectDistinct(ATOM_CODE)
+                .from(this)
+                .where(JOB_TYPE.eq(JobTypeEnum.AGENT.name))
+                .and(OS.like("%LINUX%"))
+                .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .and(CLASS_TYPE.eq("marketBuild"))
+                .fetch()
         }
     }
 }
