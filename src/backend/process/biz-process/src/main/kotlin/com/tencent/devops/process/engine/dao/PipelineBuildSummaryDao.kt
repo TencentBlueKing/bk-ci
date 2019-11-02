@@ -39,6 +39,7 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildSummaryDao {

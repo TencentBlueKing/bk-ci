@@ -30,8 +30,11 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
+import com.tencent.devops.dockerhost.pojo.CheckImageRequest
+import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
+import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import org.slf4j.LoggerFactory
@@ -40,7 +43,8 @@ import javax.servlet.http.HttpServletRequest
 
 @RestResource
 class ServiceDockerHostResourceImpl @Autowired constructor(
-    private val dockerService: DockerService
+    private val dockerService: DockerService,
+    private val dockerHostBuildService: DockerHostBuildService
 ) : ServiceDockerHostResource {
     override fun dockerBuild(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, elementId: String?, dockerBuildParam: DockerBuildParam, request: HttpServletRequest): Result<Boolean> {
         checkReq(request)
@@ -72,6 +76,10 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
             logger.info("Local ip :${CommonUtils.getInnerIP()}")
             throw PermissionForbiddenException("不允许的操作！")
         }
+    }
+
+    override fun checkImage(buildId: String, checkImageRequest: CheckImageRequest): Result<CheckImageResponse?> {
+        return dockerHostBuildService.checkImage(buildId, checkImageRequest)
     }
 
     companion object {

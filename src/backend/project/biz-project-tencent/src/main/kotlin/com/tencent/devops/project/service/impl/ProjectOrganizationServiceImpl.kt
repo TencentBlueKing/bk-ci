@@ -22,4 +22,5 @@ class ProjectOrganizationServiceImpl @Autowired constructor(private val tofServi
 	override fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo> {
 		return tofService.getParentDeptInfo(deptId, level)
 	}
+
 }

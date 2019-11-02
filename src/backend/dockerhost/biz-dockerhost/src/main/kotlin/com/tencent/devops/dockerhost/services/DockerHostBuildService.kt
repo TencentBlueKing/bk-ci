@@ -44,6 +44,7 @@ import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -53,6 +54,8 @@ import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
+import com.tencent.devops.dockerhost.pojo.CheckImageRequest
+import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
@@ -140,24 +143,72 @@ class DockerHostBuildService(
         return result!!.data!!
     }
 
+    fun pullImage(
+        imageType: String?,
+        imageName: String,
+        registryUser: String?,
+        registryPwd: String?,
+        buildId: String
+    ): Result<Boolean> {
+        val authConfig = CommonUtils.getAuthConfig(
+            imageType,
+            dockerHostConfig,
+            imageName,
+            registryUser,
+            registryPwd
+        )
+        val dockerImageName = CommonUtils.normalizeImageName(imageName)
+        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName")
+        dockerCli.pullImageCmd(dockerImageName).withAuthConfig(authConfig)
+            .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi)).awaitCompletion()
+        log(buildId, "拉取镜像成功，准备启动构建环境...")
+        return Result(true)
+    }
+
+    fun checkImage(
+        buildId: String,
+        checkImageRequest: CheckImageRequest
+    ): Result<CheckImageResponse?> {
+        logger.info("checkImage buildId: $buildId, checkImageRequest: $checkImageRequest")
+        // 判断用户录入的镜像信息是否能正常拉取到镜像
+        val pullImageResult = pullImage(
+            imageType = checkImageRequest.imageType,
+            imageName = checkImageRequest.imageName,
+            registryUser = checkImageRequest.registryUser,
+            registryPwd = checkImageRequest.registryPwd,
+            buildId = buildId
+        )
+        logger.info("pullImageResult: $pullImageResult")
+        if (pullImageResult.isNotOk()) {
+            return Result(pullImageResult.status, pullImageResult.message, null)
+        }
+        val dockerImageName = CommonUtils.normalizeImageName(checkImageRequest.imageName)
+        // 查询镜像详细信息
+        val imageInfo = dockerCli.inspectImageCmd(dockerImageName).exec()
+        logger.info("imageInfo: $imageInfo")
+        val checkImageResponse = CheckImageResponse(
+            author = imageInfo.author,
+            comment = imageInfo.comment,
+            size = imageInfo.size!!,
+            virtualSize = imageInfo.virtualSize,
+            repoTags = imageInfo.repoTags!!
+        )
+        return Result(checkImageResponse)
+    }
+
     fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
         try {
-            logger.info("Create container with config (${dockerHostConfig.registryPassword})")
-            val authConfig = CommonUtils.getAuthConfig(
-                dockerBuildInfo.imageType,
-                dockerHostConfig,
-                dockerBuildInfo.imageName,
-                dockerBuildInfo.registryUser,
-                dockerBuildInfo.registryPwd
-            )
             val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
             // docker pull
             try {
                 LocalImageCache.saveOrUpdate(imageName)
-                log(dockerBuildInfo.buildId, "开始拉取镜像，镜像名称：$imageName")
-                dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig)
-                    .exec(MyPullImageResultCallback(dockerBuildInfo.buildId, dockerHostBuildApi)).awaitCompletion()
-                log(dockerBuildInfo.buildId, "拉取镜像成功，准备启动构建环境...")
+                pullImage(
+                    dockerBuildInfo.imageType,
+                    dockerBuildInfo.imageName,
+                    dockerBuildInfo.registryUser,
+                    dockerBuildInfo.registryPwd,
+                    dockerBuildInfo.buildId
+                )
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}")
@@ -175,8 +226,8 @@ class DockerHostBuildService(
             val volumeLogs = Volume(dockerHostConfig.volumeLogs)
             val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
 
-            val gateway = DockerEnv.getGatway()
-            logger.info("[${dockerBuildInfo.buildId}]|gateway is: $gateway")
+            val gateway = System.getProperty("soda.gateway", "gw.open.oa.com")
+            logger.info("gateway is: $gateway")
 
             val binds = mutableListOf(
                 Bind(
@@ -223,9 +274,7 @@ class DockerHostBuildService(
                         "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
                         "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                         "$COMMON_DOCKER_SIGN=docker",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                        // codecc构建机日志落到本地
-                        "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
+                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}"
                     )
                 )
                 .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeInit)
@@ -237,14 +286,16 @@ class DockerHostBuildService(
 
             return container.id
         } catch (er: Throwable) {
-            logger.warn("Fail to start up docker host - ($dockerBuildInfo)", er)
+            logger.error(er.toString())
+            logger.error(er.cause.toString())
+            logger.error(er.message)
             log(dockerBuildInfo.buildId, true, "启动构建环境失败，错误信息:${er.message}")
             if (er is NotFoundException) {
                 throw NoSuchImageException("Create container failed: ${er.message}")
             } else {
                 alertApi.alert(
                     AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                            "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
+                    "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
                 )
                 throw ContainerException("Create container failed")
             }
