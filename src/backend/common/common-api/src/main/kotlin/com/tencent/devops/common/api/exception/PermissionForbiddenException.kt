@@ -26,4 +26,11 @@
 
 package com.tencent.devops.common.api.exception
 
-class PermissionForbiddenException(message: String) : RuntimeException(message)
+import com.tencent.devops.common.api.constant.CommonMessageCode.PERMISSION_DENIED
+
+class PermissionForbiddenException(
+    message: String?,
+    errorCode: String = PERMISSION_DENIED,
+    params: Array<String>? = null
+) :
+    ErrorCodeException(errorCode, message, params)

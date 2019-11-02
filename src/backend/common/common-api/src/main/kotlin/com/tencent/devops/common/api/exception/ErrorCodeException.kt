@@ -31,7 +31,7 @@ package com.tencent.devops.common.api.exception
  */
 open class ErrorCodeException(
     val errorCode: String,
-    var defaultMessage: String? = null,
-    val params: Array<String>? = emptyArray()
+    val defaultMessage: String?,
+    val params: Array<String>? = null
 ) :
-    RuntimeException(defaultMessage)
+    UniqueIdException("[errorCode=$errorCode]$defaultMessage")
