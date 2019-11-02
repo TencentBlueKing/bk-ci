@@ -34,6 +34,7 @@ import java.time.LocalDateTime
 data class PipelineBuildTask(
     val projectId: String,
     val pipelineId: String,
+    val templateId: String? = null,
     val buildId: String,
     val stageId: String,
     val containerId: String,

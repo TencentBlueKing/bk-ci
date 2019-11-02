@@ -34,6 +34,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
@@ -41,7 +42,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.BuildInfo
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
@@ -132,7 +132,7 @@ class BuildMonitorControl @Autowired constructor(
         val timeoutMills = TimeUnit.MINUTES.toMillis(minute.toLong())
 
         val usedTimeMills: Long = if (BuildStatus.isRunning(status) && startTime != null) {
-            System.currentTimeMillis() - startTime.timestampmilli()
+            System.currentTimeMillis() - startTime!!.timestampmilli()
         } else {
             0
         }
@@ -147,7 +147,7 @@ class BuildMonitorControl @Autowired constructor(
                 "TIME_OUT_Job#$containerId"
             }
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
-                messageCode = ERROR_TIMEOUT_IN_RUNNING,
+                messageCode = ERROR_TIMEOUT_IN_RUNNING.toString(),
                 params = arrayOf("Job", "$minute")
             )
             logFail(
@@ -179,7 +179,7 @@ class BuildMonitorControl @Autowired constructor(
         if (pipelineSettingService.isQueueTimeout(event.pipelineId, buildInfo.startTime!!)) {
             logger.info("[${event.buildId}]|monitor| queue timeout")
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
-                messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
+                messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE.toString(),
                 params = arrayOf(event.buildId)
             )
             logFail(

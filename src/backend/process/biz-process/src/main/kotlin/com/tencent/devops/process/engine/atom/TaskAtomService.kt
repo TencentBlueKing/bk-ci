@@ -95,7 +95,12 @@ class TaskAtomService @Autowired constructor(
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                pipelineRuntimeService.batchSetVariable(task.buildId, atomResponse.outputVars!!)
+                pipelineRuntimeService.batchSetVariable(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    variables = atomResponse.outputVars!!
+                )
             }
             // 循环的是还未结束，直接返回
             if (BuildStatus.isFinish(atomResponse.buildStatus)) {
@@ -200,7 +205,11 @@ class TaskAtomService @Autowired constructor(
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                pipelineRuntimeService.batchSetVariable(task.buildId, atomResponse.outputVars!!)
+                pipelineRuntimeService.batchSetVariable(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    variables = atomResponse.outputVars!!)
             }
             // 循环的是还未结束，直接返回
             if (BuildStatus.isFinish(atomResponse.buildStatus)) {

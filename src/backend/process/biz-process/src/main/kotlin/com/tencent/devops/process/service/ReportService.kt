@@ -84,11 +84,8 @@ class ReportService @Autowired constructor(
         return reportRecordList.map {
             if (it.type == ReportTypeEnum.INTERNAL.name) {
                 val indexFile = Paths.get(it.indexFile).normalize().toString()
-                val result = client.get(ServiceArtifactoryResource::class).getReportRootUrl(
-                    projectCode = projectId, pipelineId = pipelineId, buildId = buildId, taskId = it.elementId
-                )
-                val urlPrefix = "${result.data}/$indexFile"
-                Report(it.name, urlPrefix, it.type)
+                val urlPrefix = getRootUrl(projectId, pipelineId, buildId, it.elementId)
+                Report(it.name, "$urlPrefix$indexFile", it.type)
             } else {
                 Report(it.name, it.indexFile, it.type)
             }
