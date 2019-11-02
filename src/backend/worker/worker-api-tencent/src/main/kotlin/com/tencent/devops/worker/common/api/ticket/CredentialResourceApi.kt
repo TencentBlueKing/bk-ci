@@ -24,17 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_shadow_jar.gradle"
+package com.tencent.devops.worker.common.api.ticket
 
-mainClassName = "com.tencent.devops.agent.ApplicationKt"
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-dependencies {
-    compile project(":worker:worker-common")
-    compile project(":worker:worker-api-tencent")
-    compile project(":worker:worker-plugin-scm")
-    compile project(":worker:worker-plugin-archive")
+class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
 
-    compile project (":plugin:codecc-plugin:worker-plugin-codecc")
-
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
+    override fun get(credentialId: String, publicKey: String): Result<CredentialInfo> {
+        val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
+        val request = buildGet(path)
+        val responseContent = request(request, "获取凭据失败")
+        return objectMapper.readValue(responseContent)
+    }
 }

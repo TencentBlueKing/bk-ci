@@ -268,6 +268,7 @@ include ":worker"
 include ":worker:worker-agent"
 include ":worker:worker-common"
 include ":worker:worker-api-sdk"
+include ":worker:worker-api-tencent"
 include ":worker:worker-plugin-scm"
 include ":worker:worker-plugin-archive"
 

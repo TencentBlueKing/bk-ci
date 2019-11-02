@@ -56,6 +56,8 @@ import java.util.concurrent.TimeUnit
 
 abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
+    val logger = LoggerFactory.getLogger(javaClass)
+
     protected fun requestForResponse(
         request: Request,
         connectTimeoutInSec: Long? = null,

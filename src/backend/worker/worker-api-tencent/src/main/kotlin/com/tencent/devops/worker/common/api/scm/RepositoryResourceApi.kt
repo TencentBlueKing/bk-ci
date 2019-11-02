@@ -24,17 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_shadow_jar.gradle"
+package com.tencent.devops.worker.common.api.scm
 
-mainClassName = "com.tencent.devops.agent.ApplicationKt"
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-dependencies {
-    compile project(":worker:worker-common")
-    compile project(":worker:worker-api-tencent")
-    compile project(":worker:worker-plugin-scm")
-    compile project(":worker:worker-plugin-archive")
+class RepositoryResourceApi : AbstractBuildResourceApi(), RepositorySDKApi {
 
-    compile project (":plugin:codecc-plugin:worker-plugin-codecc")
-
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
+    override fun get(repositoryConfig: RepositoryConfig): Result<Repository> {
+        val repositoryId = repositoryConfig.getURLEncodeRepositoryId()
+        val name = repositoryConfig.repositoryType.name
+        val path = "/ms/repository/api/build/repositories?repositoryId=$repositoryId&repositoryType=$name"
+        val request = buildGet(path)
+        val responseContent = request(request, "获取代码库失败")
+        return objectMapper.readValue(responseContent)
+    }
 }

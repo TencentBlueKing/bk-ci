@@ -24,17 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_shadow_jar.gradle"
-
-mainClassName = "com.tencent.devops.agent.ApplicationKt"
-
 dependencies {
     compile project(":worker:worker-common")
-    compile project(":worker:worker-api-tencent")
-    compile project(":worker:worker-plugin-scm")
-    compile project(":worker:worker-plugin-archive")
-
-    compile project (":plugin:codecc-plugin:worker-plugin-codecc")
-
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
+    compile project(":artifactory:api-artifactory-store")
+    compile project(":common:common-archive:common-archive-tencent")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

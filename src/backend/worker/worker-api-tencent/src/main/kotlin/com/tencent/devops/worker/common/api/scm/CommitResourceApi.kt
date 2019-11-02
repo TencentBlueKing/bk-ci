@@ -24,17 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_shadow_jar.gradle"
+package com.tencent.devops.worker.common.api.scm
 
-mainClassName = "com.tencent.devops.agent.ApplicationKt"
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.commit.CommitData
+import com.tencent.devops.ticket.pojo.CertIOS
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-dependencies {
-    compile project(":worker:worker-common")
-    compile project(":worker:worker-api-tencent")
-    compile project(":worker:worker-plugin-scm")
-    compile project(":worker:worker-plugin-archive")
+class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
 
-    compile project (":plugin:codecc-plugin:worker-plugin-codecc")
+    override fun addCommit(commits: List<CommitData>): Result<CertIOS> {
+        val path = "/ms/repository/api/build/commit/addCommit"
+        val request = buildPost(path, getJsonRequest(commits))
+        val responseContent = request(request, "添加代码库commit信息失败")
+        return objectMapper.readValue(responseContent)
+    }
 
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
+    override fun getLatestCommit(
+        pipelineId: String,
+        elementId: String,
+        repositoryConfig: RepositoryConfig
+    ): Result<CommitData> {
+        val repositoryId = repositoryConfig.getRepositoryId()
+        val name = repositoryConfig.repositoryType.name
+        val path = "/ms/repository/api/build/commit/getLatestCommit?pipelineId=$pipelineId" +
+            "&elementId=$elementId&repoId=$repositoryId&repositoryType=$name"
+        val request = buildGet(path)
+        val responseContent = request(request, "获取最后一次代码commit信息失败")
+        return objectMapper.readValue(responseContent)
+    }
 }

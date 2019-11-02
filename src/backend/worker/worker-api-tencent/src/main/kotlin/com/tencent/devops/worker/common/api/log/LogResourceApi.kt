@@ -24,17 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_shadow_jar.gradle"
+package com.tencent.devops.worker.common.api.log
 
-mainClassName = "com.tencent.devops.agent.ApplicationKt"
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.log.model.message.LogMessage
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import okhttp3.MediaType
+import okhttp3.RequestBody
 
-dependencies {
-    compile project(":worker:worker-common")
-    compile project(":worker:worker-api-tencent")
-    compile project(":worker:worker-plugin-scm")
-    compile project(":worker:worker-plugin-archive")
+class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
-    compile project (":plugin:codecc-plugin:worker-plugin-codecc")
-
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
+    override fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean> {
+        val path = "/ms/log/api/build/logs/multi"
+        val requestBody = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(logMessages)
+        )
+        val request = buildPost(path, requestBody)
+        val responseContent = request(request, "上报日志失败")
+        return objectMapper.readValue(responseContent)
+    }
 }
