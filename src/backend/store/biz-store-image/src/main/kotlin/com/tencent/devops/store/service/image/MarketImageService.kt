@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.MarketImageDao
-import com.tencent.devops.store.pojo.image.ImageBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

@@ -51,9 +51,9 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.image.ImageFeatureCreateRequest
-import com.tencent.devops.store.pojo.image.MarketImageRelRequest
-import com.tencent.devops.store.pojo.image.MarketImageUpdateRequest
+import com.tencent.devops.store.pojo.image.request.ImageFeatureCreateRequest
+import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
+import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.service.common.StoreCommonService

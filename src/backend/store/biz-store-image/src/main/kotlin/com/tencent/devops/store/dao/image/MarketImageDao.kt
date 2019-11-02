@@ -36,9 +36,9 @@ import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.dao.image.Constants.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.exception.image.ClassifyNotExistException
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.image.ImageBaseInfoUpdateRequest
-import com.tencent.devops.store.pojo.image.MarketImageRelRequest
-import com.tencent.devops.store.pojo.image.MarketImageUpdateRequest
+import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
+import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.enums.OpImageSortTypeEnum

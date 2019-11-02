@@ -19,8 +19,8 @@ data class ImageCreateRequest(
     val releaseType: ReleaseTypeEnum,
     @ApiModelProperty("版本日志内容", required = true)
     val versionContent: String,
-    @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
-    val imageSourceType: ImageType,
+    @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方，不传默认为THIRD", required = false)
+    val imageSourceType: ImageType = ImageType.THIRD,
     @ApiModelProperty("镜像仓库地址", required = false)
     val imageRepoUrl: String?,
     @ApiModelProperty("镜像在仓库中的名称", required = true)

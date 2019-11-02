@@ -12,8 +12,8 @@ data class ImageUpdateRequest(
     val labelList: List<String>,
     @ApiModelProperty("版本号", required = true)
     val version: String,
-    @ApiModelProperty("镜像来源", required = true)
-    val imageSourceType: ImageType,
+    @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方，不传默认为THIRD", required = true)
+    val imageSourceType: ImageType = ImageType.THIRD,
     @ApiModelProperty("镜像仓库地址", required = true)
     val imageRepoUrl: String,
     @ApiModelProperty("镜像在仓库的名称", required = true)

@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.records.TImageFeatureRecord
-import com.tencent.devops.store.pojo.image.ImageFeatureCreateRequest
-import com.tencent.devops.store.pojo.image.ImageFeatureUpdateRequest
+import com.tencent.devops.store.pojo.image.request.ImageFeatureCreateRequest
+import com.tencent.devops.store.pojo.image.request.ImageFeatureUpdateRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

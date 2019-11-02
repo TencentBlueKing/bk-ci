@@ -3,7 +3,7 @@ package com.tencent.devops.store.service.image
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.image.ImageStatistic
+import com.tencent.devops.store.pojo.image.response.ImageStatistic
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.slf4j.LoggerFactory
