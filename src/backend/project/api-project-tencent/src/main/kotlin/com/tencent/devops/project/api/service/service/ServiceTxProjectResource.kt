@@ -52,7 +52,6 @@ interface ServiceTxProjectResource {
         centerName: String?
     ): Result<List<ProjectVO>>
 
-
     @GET
     @Path("/preBuild/userProject/{userId}")
     @ApiOperation("查询用户项目")
@@ -100,10 +99,10 @@ interface ServiceTxProjectResource {
     @Path("/newProject")
     @ApiOperation("创建项目")
     fun create(
-            @ApiParam("userId", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam(value = "项目信息", required = true)
-            projectCreateInfo: ProjectCreateInfo
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectCreateInfo: ProjectCreateInfo
     ): Result<String>
 }

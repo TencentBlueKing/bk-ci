@@ -2,45 +2,27 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.app.PipelinePage
-import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByLabel
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.quality.QualityPipeline
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-
 
 /**
  *

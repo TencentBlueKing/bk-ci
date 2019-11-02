@@ -30,10 +30,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubCreateEvent(
-        val ref: String,
-        val ref_type: String,
-        val repository: GithubRepository,
-        override val sender: GithubSender
+    val ref: String,
+    val ref_type: String,
+    val repository: GithubRepository,
+    override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "create"

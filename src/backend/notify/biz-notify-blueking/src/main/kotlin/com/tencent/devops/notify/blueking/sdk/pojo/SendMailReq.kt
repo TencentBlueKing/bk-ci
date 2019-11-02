@@ -4,20 +4,20 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel("邮件发送模型")
 data class SendMailReq(
-        val sender: String?,
-        val title: String,
-        val content: String,
-        val receiver: String?,
-        val receiver__username: String?,
-        val cc: String?,
-        val cc__username: String?,
-        val body_format: String?,
-        val is_content_base64: String?,
+    val sender: String?,
+    val title: String,
+    val content: String,
+    val receiver: String?,
+    val receiver__username: String?,
+    val cc: String?,
+    val cc__username: String?,
+    val body_format: String?,
+    val is_content_base64: String?,
 
-        override var bk_app_code: String? = "",
-        override var bk_app_secret: String? = "",
-        override var bk_token: String? = "",
-        override var bk_username: String? = ""
+    override var bk_app_code: String? = "",
+    override var bk_app_secret: String? = "",
+    override var bk_token: String? = "",
+    override var bk_username: String? = ""
 ) : ApiReq(bk_app_code, bk_app_secret, bk_token, bk_username)
 
 // receiver	string	否	邮件接收者，包含邮件完整地址，多个以逗号分隔，若receiver、receiver__username同时存在，以receiver为准

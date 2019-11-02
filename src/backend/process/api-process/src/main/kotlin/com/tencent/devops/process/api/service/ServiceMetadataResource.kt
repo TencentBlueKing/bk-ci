@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceMetadataResource {
     @ApiOperation("创建元数据")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/")
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun create(
         @ApiParam("项目ID", required = true)
@@ -64,7 +64,7 @@ interface ServiceMetadataResource {
 
     @ApiOperation("获取构建元数据")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/")
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun list(
         @ApiParam("项目ID", required = true)

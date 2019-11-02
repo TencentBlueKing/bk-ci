@@ -15,9 +15,9 @@ data class NocNoticeReq(
     override var bk_username: String? = ""
 ) : ApiReq(bk_app_code, bk_app_secret, bk_token, bk_username) {
     data class User(
-            @JsonProperty("username")
-            val username: String,
-            @JsonProperty("mobile_phone")
-            val mobilePhone: String
+        @JsonProperty("username")
+        val username: String,
+        @JsonProperty("mobile_phone")
+        val mobilePhone: String
     )
 }

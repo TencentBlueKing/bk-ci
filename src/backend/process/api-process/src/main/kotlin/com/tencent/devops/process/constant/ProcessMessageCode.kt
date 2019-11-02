@@ -49,7 +49,7 @@ object ProcessMessageCode {
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = 2100001
     const val ERROR_UPDATE_FAILED = 2100002 // 更新失败: {0}
-    
+
     const val ERROR_NO_PUBLIC_WINDOWS_BUILDER = 2101991 // Windows暂时没有公共构建机可用，请联系持续集成助手添加
     const val ERROR_DUPLICATE_BUILD_RETRY_ACT = 2101901 // 重复的重试构建请求
     const val ERROR_NO_PARAM_IN_JOB_CONDITION = 2101902 //  请设置Job运行的自定义变量

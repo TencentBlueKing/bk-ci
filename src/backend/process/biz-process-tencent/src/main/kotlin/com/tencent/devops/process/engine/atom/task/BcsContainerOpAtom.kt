@@ -389,7 +389,7 @@ class BcsContainerOpAtom @Autowired constructor(
         val showVersionName = parseVariable(param.showVersionName, runVariables)
         val instanceEntityObj = JsonUtil.toMap(instanceEntity)
 
-        LogUtils.addLine(rabbitTemplate, task.buildId, "BCS opType is create, instanceEntity : $instanceEntity", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "BCS opType is create, instanceEntity : $instanceEntity", task.taskId, task.containerHashId, task.executeCount ?: 1)
 
         val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url = bcsAppUrl + "cc_app_ids/$appIdStr/projects/$projectId/instances/?access_token=$token"
@@ -423,7 +423,7 @@ class BcsContainerOpAtom @Autowired constructor(
             logger.info("Create instance, response: $data")
             if (!response.isSuccessful) {
                 logger.error("Create instance failed, msg: $data")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "Create instance failed, msg: $data", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "Create instance failed, msg: $data", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                throw RuntimeException(data)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -455,7 +455,7 @@ class BcsContainerOpAtom @Autowired constructor(
                 val appResult = waitForRunning(appIdStr, projectId, it.toString(), timeout.toLong())
                 if (!appResult.first) {
                     LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operation failed", task.taskId, task.containerHashId, task.executeCount ?: 1)
-                    LogUtils.addRedLine(rabbitTemplate, task.buildId, appResult.second, task.taskId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, task.buildId, appResult.second, task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                    throw BuildTaskException(ERROR_BUILD_TASK_BCS_OPERATE_FAIL, "BCS operate failed, msg: ${appResult.second}")
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,

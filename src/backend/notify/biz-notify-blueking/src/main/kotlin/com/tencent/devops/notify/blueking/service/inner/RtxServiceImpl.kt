@@ -37,7 +37,6 @@ class RtxServiceImpl @Autowired constructor(
 ) : RtxService {
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
 
-
     override fun sendMqMsg(message: RtxNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
     }

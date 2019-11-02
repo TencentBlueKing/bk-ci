@@ -74,7 +74,7 @@ object AtomUtils {
                         pipelineId = task.pipelineId,
                         buildId = task.buildId,
                         taskId = task.taskId
-                    )                }
+                    ) }
 
                 LogUtils.addLine(
                     rabbitTemplate = rabbitTemplate,

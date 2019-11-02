@@ -36,7 +36,6 @@ class WechatServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(WechatServiceImpl::class.java)
 
-
     override fun sendMqMsg(message: WechatNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, message)
     }

@@ -238,7 +238,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
                         errorMsg = "EnvId is not init"
-                    )                }
+                    ) }
                 val targetNodeId = parseVariable(param.nodeId!!.joinToString(","), runVariables).split(",").toList()
                 EnvSet(listOf(), targetNodeId, listOf())
             }
@@ -261,7 +261,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL,
                         errorMsg = "EnvName is not init"
-                    )                }
+                    ) }
                 val targetEnvName = parseVariable(param.envName!!.joinToString(","), runVariables).split(",").toList()
                 val envIdList = checkAuth(buildId, taskId, containerId, executeCount, operator, projectId, targetEnvName, client)
                 EnvSet(envIdList, listOf(), listOf())

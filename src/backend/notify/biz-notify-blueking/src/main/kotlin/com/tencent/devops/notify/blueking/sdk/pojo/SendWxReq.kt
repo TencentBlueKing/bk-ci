@@ -14,11 +14,11 @@ data class SendWxReq(
     override var bk_username: String? = ""
 ) : ApiReq(bk_app_code, bk_app_secret, bk_token, bk_username) {
     data class Data(
-            val heading: String? = "",
-            val message: String? = "",
-            val date: String? = "",
-            val remark: String? = "",
-            val is_message_base64: String? = ""
+        val heading: String? = "",
+        val message: String? = "",
+        val date: String? = "",
+        val remark: String? = "",
+        val is_message_base64: String? = ""
     )
 }
 

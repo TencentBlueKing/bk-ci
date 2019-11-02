@@ -28,7 +28,6 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.builds.BuildReportResource
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired

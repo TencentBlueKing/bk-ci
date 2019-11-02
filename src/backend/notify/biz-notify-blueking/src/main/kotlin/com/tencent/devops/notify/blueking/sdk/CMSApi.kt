@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class CMSApi @Autowired constructor(
-        private val notifyUtils: NotifyUtils
+    private val notifyUtils: NotifyUtils
 ) {
 
     /**

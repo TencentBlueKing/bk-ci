@@ -473,4 +473,3 @@ class BuildStartControl @Autowired constructor(
         }
     }
 }
-

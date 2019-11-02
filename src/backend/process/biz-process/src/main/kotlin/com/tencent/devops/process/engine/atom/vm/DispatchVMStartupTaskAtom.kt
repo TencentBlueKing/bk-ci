@@ -110,7 +110,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         } catch (ignored: Throwable) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId,task.executeCount ?: 1
+                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", ignored)
         } finally {
@@ -271,7 +271,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         if (os == VMBaseOS.WINDOWS) {
             return TStackDispatchType(tstackAgentId ?: "")
         }
-        return ESXiDispatchType()    }
+        return ESXiDispatchType() }
 
     private fun getBuildZone(projectId: String, container: Container): Zone? {
         try {

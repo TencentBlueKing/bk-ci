@@ -62,12 +62,12 @@ interface ServiceProjectResource {
     @Path("/query_all")
     @ApiOperation("查询所有项目")
     fun listV2(
-            @ApiParam("用户ID", required = false)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String
+        @ApiParam("用户ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
     ): Result<List<ProjectVO>>
 
-    //TODO 需移动到企业版，该接口为企业版特有
+    // TODO 需移动到企业版，该接口为企业版特有
     @GET
     @Path("/getAllProject")
     @ApiOperation("查询所有项目")
@@ -93,26 +93,26 @@ interface ServiceProjectResource {
     @Path("/query")
     @ApiOperation("查询指定项目")
     fun listByProjectCodeV2(
-            @ApiParam(value = "项目id", required = true)
-            projectCodes: Set<String>
+        @ApiParam(value = "项目id", required = true)
+        projectCodes: Set<String>
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/getProjectByUser")
     @ApiOperation("查询所有项目")
     fun getProjectByUser(
-            @ApiParam("userId", required = true)
-            @QueryParam("userId")
-            userName: String
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userName: String
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/query/by_username")
     @ApiOperation("根据用户名查询项目")
     fun getProjectByUserV2(
-            @ApiParam("userId", required = true)
-            @QueryParam("userId")
-            userName: String
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userName: String
     ): Result<List<ProjectVO>>
 
     @GET
@@ -155,9 +155,9 @@ interface ServiceProjectResource {
     @Path("/query/by_code")
     @ApiOperation("根据项目Code获取对应的名称")
     fun getNameByCodeV2(
-            @ApiParam("projectCodes，多个以英文逗号分隔", required = true)
-            @QueryParam("projectCodes")
-            projectCodes: String
+        @ApiParam("projectCodes，多个以英文逗号分隔", required = true)
+        @QueryParam("projectCodes")
+        projectCodes: String
     ): Result<HashMap<String, String>>
 
     @GET
@@ -173,21 +173,20 @@ interface ServiceProjectResource {
     @Path("/names/{englishName}")
     @ApiOperation("查询指定EN项目")
     fun getV2(
-            @ApiParam("项目ID", required = true)
-            @PathParam("englishName")
-            englishName: String
+        @ApiParam("项目ID", required = true)
+        @PathParam("englishName")
+        englishName: String
     ): Result<ProjectVO?>
 
     @POST
     @Path("/gitci/{gitProjectId}/{userId}")
     @ApiOperation("创建gitCI项目")
     fun createGitCIProject(
-            @ApiParam("工蜂项目id", required = true)
-            @PathParam("gitProjectId")
-            gitProjectId: Long,
-            @ApiParam("用户名", required = true)
-            @PathParam("userId")
-            userId: String
+        @ApiParam("工蜂项目id", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("用户名", required = true)
+        @PathParam("userId")
+        userId: String
     ): Result<ProjectVO>
-
 }

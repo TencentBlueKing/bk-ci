@@ -39,7 +39,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PIPELINE_TEMPLATE"], description = "服务-流水线-模板资源")
-//@Path("/service/templatePipelines")
+// @Path("/service/templatePipelines")
 @Path("/service/template/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

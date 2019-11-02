@@ -18,7 +18,7 @@ import javax.net.ssl.X509TrustManager
 
 @Component
 class NotifyUtils constructor(
-        notifyProperties: NotifyProperties
+    notifyProperties: NotifyProperties
 ) {
     private val logger = LoggerFactory.getLogger(NotifyUtils::class.java)
     private val appCode = notifyProperties.appCode!!

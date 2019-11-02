@@ -34,9 +34,6 @@ import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 /**
  * 线程池只是做防止出现意外情况长时间运行，实际上并不能真正终止线程

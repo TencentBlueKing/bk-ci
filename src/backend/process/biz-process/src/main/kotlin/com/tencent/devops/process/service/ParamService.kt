@@ -26,8 +26,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -47,7 +45,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import java.io.File
 
 /**
  * deng
@@ -76,7 +73,7 @@ class ParamService @Autowired constructor(
                 filterParams.add(addCodelibProperties(userId, projectId, it))
             } else if (it.type == BuildFormPropertyType.CONTAINER_TYPE && it.containerType != null) {
                 filterParams.add(addContainerTypeProperties(userId, projectId, it))
-                //TODO add artifactory type
+                // TODO add artifactory type
 //            } else if (it.type == BuildFormPropertyType.ARTIFACTORY) {
 //                filterParams.add(addArtifactoryProperties(userId, projectId, it))
             } else if (it.type == BuildFormPropertyType.SUB_PIPELINE) {
@@ -125,7 +122,6 @@ class ParamService @Autowired constructor(
         }
         return copyFormProperty(codelibFormProperty, aliasNames)
     }
-
 
     private fun addContainerTypeProperties(
         userId: String?,

@@ -31,7 +31,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户的所有项目")
     @GET
-    //@Path("/projects")
+    // @Path("/projects")
     @Path("/project/list")
     fun listProjects(
         @ApiParam("用户ID", required = true)
@@ -50,7 +50,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户某项目下的所有流水线")
     @GET
-    //@Path("/projects/{projectId}/listPipelines")
+    // @Path("/projects/{projectId}/listPipelines")
     @Path("/{projectId}/listPipelines")
     fun listPipelines(
         @ApiParam("用户ID", required = true)
@@ -75,7 +75,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户某项目下的流水线的所有构建历史")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/{projectId}/{pipelineId}/history")
     fun listPipelineHistory(
         @ApiParam("用户ID", required = true)
@@ -103,7 +103,7 @@ interface AppPipelineResource {
 
     @ApiOperation("获取流水线构建中的查询条件-分支")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/branchName")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/branchName")
     @Path("/{projectId}/{pipelineId}/historyCondition/branchName")
     fun getHistoryConditionBranch(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -122,7 +122,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户某项目下的流水线的所有收藏")
     @GET
-    //@Path("/collections")
+    // @Path("/collections")
     @Path("/collect/list")
     fun listUserCollect(
         @ApiParam("用户ID", required = true)
@@ -138,7 +138,7 @@ interface AppPipelineResource {
 
     @ApiOperation("收藏流水线")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/collect")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/collect")
     @Path("/{projectId}/{pipelineId}/collect")
     fun collectPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

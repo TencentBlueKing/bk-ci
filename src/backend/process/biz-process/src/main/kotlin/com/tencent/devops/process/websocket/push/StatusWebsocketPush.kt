@@ -18,23 +18,23 @@ import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
 data class StatusWebsocketPush(
-        val buildId: String?,
-        val pipelineId: String,
-        val projectId: String,
-        override val userId: String,
-        override val pushType: WebSocketType,
-        override val redisOperation: RedisOperation,
-        override val objectMapper: ObjectMapper,
-        override var page: String?,
-        override var notifyPost: NotifyPost
-) : WebsocketPush(userId,pushType, redisOperation, objectMapper, page, notifyPost) {
+    val buildId: String?,
+    val pipelineId: String,
+    val projectId: String,
+    override val userId: String,
+    override val pushType: WebSocketType,
+    override val redisOperation: RedisOperation,
+    override val objectMapper: ObjectMapper,
+    override var page: String?,
+    override var notifyPost: NotifyPost
+) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
         private val pipelineService = SpringContextUtil.getBean(PipelineService::class.java)
     }
 
     override fun findSession(page: String): List<String>? {
-        if(page == "") {
+        if (page == "") {
             logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
         }
 
@@ -43,7 +43,7 @@ data class StatusWebsocketPush(
         var sessionList = mutableListOf<String>()
         pageList.forEach {
             val redisSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
-            if(redisSession != null){
+            if (redisSession != null) {
                 sessionList.addAll(redisSession)
             }
         }

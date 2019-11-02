@@ -38,7 +38,6 @@ class SmsServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)
 
-
     override fun sendMqMsg(message: SmsNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
     }

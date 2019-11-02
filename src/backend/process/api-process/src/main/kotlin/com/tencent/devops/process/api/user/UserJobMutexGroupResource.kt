@@ -49,7 +49,7 @@ interface UserJobMutexGroupResource {
 
     @ApiOperation("获取项目已有的Job互斥组")
     @GET
-    //@Path("/projects/{projectId}")
+    // @Path("/projects/{projectId}")
     @Path("/{projectId}")
     fun get(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

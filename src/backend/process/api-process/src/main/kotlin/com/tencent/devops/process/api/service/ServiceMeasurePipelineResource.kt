@@ -46,7 +46,6 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceMeasurePipelineResource {
 
-
     @ApiOperation("获取所有流水线")
     @GET
     @Path("/list")

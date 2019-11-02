@@ -163,7 +163,6 @@ object QualityUtils {
             }
 
             return Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator, null, templateId)
-
         }
     }
 

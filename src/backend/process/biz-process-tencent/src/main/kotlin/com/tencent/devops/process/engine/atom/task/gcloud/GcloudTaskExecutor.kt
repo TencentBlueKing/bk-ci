@@ -66,13 +66,13 @@ class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: S
     }
 
     private fun createTask(
-            operator: String,
-            apiAuthCode: String,
-            templateId: Int,
-            params: Map<String, String>?,
-            elementId: String,
-            containerId: String,
-            executeCount: Int
+        operator: String,
+        apiAuthCode: String,
+        templateId: Int,
+        params: Map<String, String>?,
+        elementId: String,
+        containerId: String,
+        executeCount: Int
     ): CallResult<Int> {
         val requestData = mutableMapOf<String, Any>()
         requestData["app_code"] = appCode
@@ -211,15 +211,15 @@ class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: S
     }
 
     fun syncRunGcloudTask(
-            appId: Int,
-            operator: String,
-            apiAuthCode: String,
-            tmplId: Int,
-            params: Map<String, String>?,
-            timeoutInSeconds: Int,
-            elementId: String,
-            containerId: String,
-            executeCount: Int
+        appId: Int,
+        operator: String,
+        apiAuthCode: String,
+        tmplId: Int,
+        params: Map<String, String>?,
+        timeoutInSeconds: Int,
+        elementId: String,
+        containerId: String,
+        executeCount: Int
     ): CallResult<Any> {
         val createTaskResult = createTask(operator, apiAuthCode, tmplId, params, elementId, containerId, executeCount)
         if (createTaskResult.success) {

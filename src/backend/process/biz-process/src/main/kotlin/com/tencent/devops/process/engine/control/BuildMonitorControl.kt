@@ -238,4 +238,3 @@ class BuildMonitorControl @Autowired constructor(
         )
     }
 }
-

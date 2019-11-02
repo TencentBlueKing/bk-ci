@@ -132,11 +132,11 @@ class PipelineBuildService(
         checkPermission(userId, projectId, pipelineId, AuthPermission.EXECUTE, message)
 
     private fun checkPermission(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            permission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(userId, projectId, pipelineId, permission)) {
             throw PermissionForbiddenException(message)

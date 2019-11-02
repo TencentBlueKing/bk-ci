@@ -98,7 +98,6 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.template.dao.PTemplateDao
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import com.tencent.devops.process.util.DateTimeUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -712,7 +711,6 @@ class TemplateService @Autowired constructor(
         return null
     }
 
-
     @Suppress("UNCHECKED_CAST")
     fun listAllTemplate(
         projectId: String?,
@@ -784,7 +782,6 @@ class TemplateService @Autowired constructor(
             templates = result
         )
     }
-
 
     fun getTemplate(projectId: String, userId: String, templateId: String, version: Long?): TemplateModelDetail {
         var templates = templateDao.listTemplate(dslContext, projectId, templateId)

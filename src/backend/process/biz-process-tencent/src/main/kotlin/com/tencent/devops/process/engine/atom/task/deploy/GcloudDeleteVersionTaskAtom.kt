@@ -30,13 +30,13 @@ class GcloudDeleteVersionTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: GcloudDeleteVersionElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
-        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId, task.executeCount ?: 1)
 
         val gcloudUtil = TicketUtil(client)
         with(param) {
             val elementId = task.taskId
-            LogUtils.addLine(rabbitTemplate, task.buildId, "正在开始更新gcloud版本配置信息，结果可以稍后前往查看：\n", elementId, task.containerHashId,task.executeCount ?: 1)
-            LogUtils.addLine(rabbitTemplate, task.buildId, "<a target='_blank' href='http://console.gcloud.oa.com/dolphin/edit/$gameId/$productId/$versionStr'>查看详情</a>", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "正在开始更新gcloud版本配置信息，结果可以稍后前往查看：\n", elementId, task.containerHashId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "<a target='_blank' href='http://console.gcloud.oa.com/dolphin/edit/$gameId/$productId/$versionStr'>查看详情</a>", elementId, task.containerHashId, task.executeCount ?: 1)
 
             val projectId = task.projectId
             val buildId = task.buildId
@@ -54,9 +54,9 @@ class GcloudDeleteVersionTaskAtom @Autowired constructor(
 
             // step1
             val delVerParam = DeleteVerParam(userId, productId.toInt(), versionStr)
-            LogUtils.addLine(rabbitTemplate, buildId, "删除版本的配置信息：\n$delVerParam", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "删除版本的配置信息：\n$delVerParam", elementId, task.containerHashId, task.executeCount ?: 1)
             gcloudClient.deleteVersion(delVerParam, commonParam)
-            LogUtils.addLine(rabbitTemplate, buildId, "删除版本成功：$versionStr!(gameId: $gameId, productId: $productId)", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "删除版本成功：$versionStr!(gameId: $gameId, productId: $productId)", elementId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(BuildStatus.SUCCEED)
         }
     }

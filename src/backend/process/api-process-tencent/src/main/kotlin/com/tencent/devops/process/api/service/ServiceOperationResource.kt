@@ -18,7 +18,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceOperationResource {
     @ApiOperation("获取修改流水线的用户")
     @POST
-    //@Path("/pipelines/{pipelineId}/getLastUpdateUser")
+    // @Path("/pipelines/{pipelineId}/getLastUpdateUser")
     @Path("/getLastUpdateUser/{pipelineId}/")
     fun getUpdateUser(
         @ApiParam("渠道号，默认为DS", required = false)

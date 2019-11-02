@@ -25,7 +25,7 @@ interface TXUserBuildResource {
 
     @ApiOperation("获取CodeCC报告")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/codeccReport")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/codeccReport")
     @Path("/{projectId}/{pipelineId}/codeccReport")
     fun getCodeccReport(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -41,7 +41,7 @@ interface TXUserBuildResource {
 
     @ApiOperation("质量红线人工审核")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/qualityGateReview/{action}")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/qualityGateReview/{action}")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
     fun manualQualityGateReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
