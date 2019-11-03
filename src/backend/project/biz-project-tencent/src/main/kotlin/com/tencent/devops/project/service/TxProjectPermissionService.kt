@@ -26,22 +26,10 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-
-interface ProjectPermissionService {
+interface TxProjectPermissionService {
 
     /**
      * 校验用户是否有这个项目的权限
      */
-    fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean
-
-    fun createResources(userId: String, projectList: List<ResourceRegisterInfo>)
-
-    fun deleteResource(projectCode: String)
-
-    fun modifyResource(projectCode: String, projectName: String)
-
-    fun getUserProjects(userId: String): List<String>
-
-    fun getUserProjectsAvailable(userId: String): List<String>
+    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean
 }

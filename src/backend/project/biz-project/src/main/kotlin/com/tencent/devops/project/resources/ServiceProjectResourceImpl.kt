@@ -53,14 +53,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
     }
 
-    override fun verifyUserProjectPermission(
-        accessToken: String,
-        projectCode: String,
-        userId: String
-    ): Result<Boolean> {
-        return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
-    }
-
     override fun list(userId: String): Result<List<ProjectVO>> {
         return Result(projectService.list(userId))
     }
