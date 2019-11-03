@@ -44,9 +44,9 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.service.EmailService
-import com.tencent.devops.notify.utils.TOFConfiguration
-import com.tencent.devops.notify.utils.TOFService
-import com.tencent.devops.notify.utils.TOFService.Companion.EMAIL_URL
+import com.tencent.devops.common.notify.utils.TOFConfiguration
+import com.tencent.devops.common.notify.utils.TOFService
+import com.tencent.devops.common.notify.utils.TOFService.Companion.EMAIL_URL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired

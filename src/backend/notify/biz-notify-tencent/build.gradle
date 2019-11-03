@@ -27,7 +27,7 @@
 dependencies {
     compile project(":common:common-auth:common-auth-tencent")
     compile project(":common:common-db")
-    compile project(":common:common-notify")
+    compile project(":common:common-notify:common-notify-tencent")
     compile project(":notify:api-notify")
     compile project(":notify:model-notify-tencent")
     compile project(":notify:biz-notify")

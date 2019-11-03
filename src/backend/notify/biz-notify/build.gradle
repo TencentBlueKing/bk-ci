@@ -30,7 +30,7 @@ dependencies {
     compile project(":common:common-auth:common-auth-blueking")
     compile project(":notify:model-notify")
     compile project(":common:common-db")
-    compile project(":common:common-notify")
+    compile project(":common:common-notify:common-notify-api")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

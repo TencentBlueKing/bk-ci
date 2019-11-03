@@ -26,13 +26,13 @@
 package com.tencent.devops.openapi.exception
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.UniqueIdException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 
 open class InvalidConfigException(
     message: String,
     errorCode: String = CommonMessageCode.ERROR_INVALID_CONFIG,
     params: Array<String>? = null
-) : UniqueIdException(message, errorCode, params) {
+) : ErrorCodeException(errorCode, message, params) {
     override fun toString(): String {
         return "Config is invalid,message:$message"
     }

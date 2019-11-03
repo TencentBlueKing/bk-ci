@@ -23,10 +23,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.utils
+package com.tencent.devops.common.notify.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.notify.DesUtil
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -112,12 +113,12 @@ class TOFService @Autowired constructor(
         val data = String.format("random%dtimestamp%s", randomNumber, timestamp)
         val signatureBytes: ByteArray
         try {
-            signatureBytes = com.tencent.devops.common.notify.DesUtil.encrypt(data, tofSysId)
+            signatureBytes = DesUtil.encrypt(data, tofSysId)
         } catch (e: Exception) {
             return null
         }
 
-        val signature = com.tencent.devops.common.notify.DesUtil.toHexString(signatureBytes).toUpperCase()
+        val signature = DesUtil.toHexString(signatureBytes).toUpperCase()
         val headerMap = HashMap<String, String?>()
         headerMap.apply {
             put("appkey", tofAppKey)

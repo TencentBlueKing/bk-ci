@@ -23,37 +23,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.utils
+package com.tencent.devops.common.notify.utils
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.context.annotation.Configuration
+data class TOFResult constructor(
+    var Ret: Int,
+    var ErrCode: Int,
+    var ErrMsg: String,
+    var StackTrace: String?,
+    var data: Any?
+) {
+    constructor(errorMessage: String) : this(-1, 500, errorMessage, null, null)
 
-@Configuration
-@ConfigurationProperties(prefix = "tof")
-class TOFConfiguration {
-    private var defaultSystem: Map<String, String>? = null
-    private var optionSystems: Map<String, Map<String, String>>? = null
-
-    fun getDefaultSystem(): Map<String, String>? {
-        return defaultSystem
-    }
-
-    fun setDefaultSystem(defaultSystem: Map<String, String>) {
-        this.defaultSystem = defaultSystem
-    }
-
-    fun getOptionSystems(): Map<String, Map<String, String>>? {
-        return optionSystems
-    }
-
-    fun setOptionSystems(optionSystems: Map<String, Map<String, String>>) {
-        this.optionSystems = optionSystems
-    }
-
-    fun getConfigurations(sysId: String?): Map<String, String>? {
-        if (sysId == null || sysId === "" || !optionSystems!!.containsKey(sysId)) {
-            return defaultSystem
-        }
-        return if (optionSystems == null) null else optionSystems!!.get(sysId)
+    override fun toString(): String {
+        return "Ret:$Ret, ErrCode:$ErrCode, ErrMsg:$ErrMsg, StackTrace:$String, data:$data"
     }
 }
