@@ -243,7 +243,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         val validateFlag: Boolean?
         try {
             // 判断用户是否项目的成员
-            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(accessToken, projectCode, userId).data
+            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(projectCode, userId).data
         } catch (e: Exception) {
             logger.error("verifyUserProjectPermission error is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
