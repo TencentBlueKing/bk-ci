@@ -15,7 +15,7 @@ class ProjectServiceImpl @Autowired constructor(
 			val projectList = client.get(ServiceProjectResource::class).getProjectByUser(userId).data
 			val privilegeProjectCodeList = mutableListOf<String>()
 			projectList?.map {
-				privilegeProjectCodeList.add(it.projectId)
+				privilegeProjectCodeList.add(it.projectCode)
 			}
 			if (privilegeProjectCodeList.contains(projectId)) {
 				return true
