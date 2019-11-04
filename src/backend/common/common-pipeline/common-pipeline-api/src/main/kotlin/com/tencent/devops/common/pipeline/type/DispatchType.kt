@@ -58,23 +58,26 @@ abstract class DispatchType(
         replaceField(variables)
     }
 
+//    @JsonIgnore
+//    fun buildType(): BuildType {
+//        return when (this) {
+//            is ThirdPartyAgentIDDispatchType -> {
+//                BuildType.THIRD_PARTY_AGENT_ID
+//            }
+//            is ThirdPartyAgentEnvDispatchType -> {
+//                BuildType.THIRD_PARTY_AGENT_ENV
+//            }
+//            is DockerDispatchType -> {
+//                BuildType.DOCKER
+//            }
+//            else -> {
+//                throw InvalidParamException("Unknown build type - $this")
+//            }
+//        }
+//    }
+
     @JsonIgnore
-    fun buildType(): BuildType {
-        return when (this) {
-            is ThirdPartyAgentIDDispatchType -> {
-                BuildType.THIRD_PARTY_AGENT_ID
-            }
-            is ThirdPartyAgentEnvDispatchType -> {
-                BuildType.THIRD_PARTY_AGENT_ENV
-            }
-            is DockerDispatchType -> {
-                BuildType.DOCKER
-            }
-            else -> {
-                throw InvalidParamException("Unknown build type - $this")
-            }
-        }
-    }
+    abstract fun buildType(): BuildType
 
     /**
      * 用来替换每种类型的自定义字符串
