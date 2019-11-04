@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
@@ -27,6 +28,12 @@ class ImageArtifactoryService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
+    }
+
+    private val credential: String
+    init {
+        logger.info("Image artifactory init with url(${dockerConfig.registryUrl}), user(${dockerConfig.registryUsername}) and password(${SecurityUtil.decrypt(dockerConfig.registryPassword!!)})")
+        credential = makeCredential()
     }
 
     fun listPublicImages(searchKey: String, start: Int, limit: Int): ImagePageData {
@@ -216,7 +223,7 @@ class ImageArtifactoryService @Autowired constructor(
 
         val request = Request.Builder().url(url)
             .post(RequestBody.create(JSON, requestBody))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -272,7 +279,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .build()
         val request = Request.Builder().url(url)
             .post(RequestBody.create(null, aql))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -389,7 +396,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url).delete()
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -416,7 +423,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url).get()
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -450,7 +457,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .build()
         val request = Request.Builder().url(url)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -479,7 +486,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .build()
         val request = Request.Builder().url(url)
             .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -527,5 +534,5 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    private fun makeCredential(): String = Credentials.basic(dockerConfig.registryUsername!!, dockerConfig.registryPassword!!)
+    private fun makeCredential(): String = Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
 }

@@ -38,11 +38,12 @@ import com.tencent.devops.store.service.container.impl.TxContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.TxMarketTemplateServiceImpl
 import com.tencent.devops.store.service.template.impl.TxTemplateNotifyServiceImpl
 import com.tencent.devops.store.service.template.impl.TxTemplateReleaseServiceImpl
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class TencentServiceConfig {
+class TencentServiceConfig @Autowired constructor() {
 
     @Bean
     fun containerService() = TxContainerServiceImpl()
