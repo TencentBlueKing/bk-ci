@@ -48,7 +48,7 @@ interface UserArchivePipelineResource {
     @ApiOperation("获取某个项目的所有流水线")
     @GET
     // @Path("/projects/{projectId}/getAllPipelines")
-    @Path("/service/template/pipelines")
+    @Path("/{projectId}/getAllPipelines")
     @Deprecated("use getDownloadAllPipelines instead")
     fun getAllPipelines(
         @ApiParam(value = "用户id", required = true)
