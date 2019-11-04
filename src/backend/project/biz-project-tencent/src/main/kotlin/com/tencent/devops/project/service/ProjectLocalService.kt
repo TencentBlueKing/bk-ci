@@ -52,7 +52,6 @@ import java.nio.file.Files
 import java.util.*
 import java.util.regex.Pattern
 import javax.imageio.ImageIO
-import kotlin.collections.HashMap
 
 @Service
 class ProjectLocalService @Autowired constructor(
@@ -82,13 +81,13 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // Ëæ»úÉú³ÉÍ¼Æ¬
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼Æ¬
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
             try {
-                // ·¢ËÍ·þÎñÆ÷
+                // ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
 
-                // ´´½¨AUTHÏîÄ¿
+                // ï¿½ï¿½ï¿½ï¿½AUTHï¿½ï¿½Ä¿
                 val authUrl = "$authUrl?access_token=$accessToken"
                 val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.englishName)
                 val mediaType = MediaType.parse("application/json; charset=utf-8")
@@ -112,7 +111,7 @@ class ProjectLocalService @Autowired constructor(
                     logger.warn("Fail to get the project id from response $responseContent")
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // »ñÈ¡ÓÃ»§»ú¹¹ÐÅÏ¢
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ï¿½ï¿½È¡ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
                 try {
                     projectDao.create(
                             dslContext = dslContext,
@@ -197,16 +196,16 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // Ëæ»úÉú³ÉÍ¼Æ¬
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼Æ¬
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
             try {
-                // ·¢ËÍ·þÎñÆ÷
+                // ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
 
                 var projectId = getProjectIdInAuth(projectCode, accessToken)
 
                 if (null == projectId) {
-                    // ´´½¨AUTHÏîÄ¿
+                    // ï¿½ï¿½ï¿½ï¿½AUTHï¿½ï¿½Ä¿
                     val authUrl = "$authUrl?access_token=$accessToken"
                     val param: MutableMap<String, String> =
                             mutableMapOf("project_code" to projectCreateInfo.englishName)
@@ -232,7 +231,7 @@ class ProjectLocalService @Autowired constructor(
                         throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                     }
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // »ñÈ¡ÓÃ»§»ú¹¹ÐÅÏ¢
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ï¿½ï¿½È¡ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
                 try {
                     projectDao.create(
                             dslContext = dslContext,
@@ -305,7 +304,7 @@ class ProjectLocalService @Autowired constructor(
             ) {
                 val updateCnt = projectDao.updateUsableStatus(dslContext, userId, projectId, enabled)
                 if (updateCnt != 1) {
-                    logger.warn("¸üÐÂÊý¾Ý¿â³ö´í£¬±ä¸üÐÐÊýÎª:$updateCnt")
+                    logger.warn("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª:$updateCnt")
                 }
             } else {
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
@@ -334,7 +333,7 @@ class ProjectLocalService @Autowired constructor(
 
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
         logger.info("getProjectUsers accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode")
-        // ¼ì²éÓÃ»§ÊÇ·ñÓÐ²éÑ¯ÏîÄ¿ÏÂÓÃ»§ÁÐ±íµÄÈ¨ÏÞ
+        // ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ç·ï¿½ï¿½Ð²ï¿½Ñ¯ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ð±ï¿½ï¿½È¨ï¿½ï¿½
         val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateResult")
         val validateFlag = validateResult.data
@@ -448,11 +447,11 @@ class ProjectLocalService @Autowired constructor(
         val backgroundIndex = random.nextInt(max) % (max - min + 1) + min
         val width = 128
         val height = 128
-        // ´´½¨BufferedImage¶ÔÏó
+        // ï¿½ï¿½ï¿½ï¿½BufferedImageï¿½ï¿½ï¿½ï¿½
         val bi = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        // »ñÈ¡Graphics2D
+        // ï¿½ï¿½È¡Graphics2D
         val g2d = bi.createGraphics()
-        // ÉèÖÃÍ¸Ã÷¶È
+        // ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½
         g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1.0f)
 
         when (backgroundIndex) {
@@ -472,7 +471,7 @@ class ProjectLocalService @Autowired constructor(
         g2d.clearRect(0, 0, width, height)
         g2d.color = Color.WHITE
         g2d.stroke = BasicStroke(1.0f)
-        val font = Font("ËÎÌå", Font.PLAIN, 64)
+        val font = Font("ï¿½ï¿½ï¿½ï¿½", Font.PLAIN, 64)
         g2d.font = font
         val fontMetrics = g2d.fontMetrics
         val heightAscent = fontMetrics.ascent
@@ -486,11 +485,11 @@ class ProjectLocalService @Autowired constructor(
                 (width / 2 - fontWidth / 2),
                 (height / 2 + heightAscent / 2).toFloat()
         )
-        // Í¸Ã÷¶ÈÉèÖÃ ½áÊø
+        // Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
-        // ÊÍ·Å¶ÔÏó
+        // ï¿½Í·Å¶ï¿½ï¿½ï¿½
         g2d.dispose()
-        // ±£´æÎÄ¼þ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
         val logo = Files.createTempFile("default_", ".png").toFile()
         ImageIO.write(bi, "png", logo)
         return logo
@@ -513,7 +512,7 @@ class ProjectLocalService @Autowired constructor(
     private fun getAuthProjectIds(accessToken: String): List<String/*projectId*/> {
         val url = "$authUrl?access_token=$accessToken"
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, "´ÓÈ¨ÏÞÖÐÐÄ»ñÈ¡ÓÃ»§µÄÏîÄ¿ÐÅÏ¢Ê§°Ü")
+        val responseContent = request(request, "ï¿½ï¿½È¨ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½È¡ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Ï¢Ê§ï¿½ï¿½")
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
@@ -560,8 +559,8 @@ class ProjectLocalService @Autowired constructor(
                 deptName = tProjectRecord.deptName ?: "",
                 description = tProjectRecord.description ?: "",
                 extra = tProjectRecord.extra ?: "",
-                isSecrecy = tProjectRecord.isSecrecy,
-                isHelmChartEnabled = tProjectRecord.isHelmChartEnabled,
+                secrecy = tProjectRecord.isSecrecy,
+                helmChartEnabled = tProjectRecord.isHelmChartEnabled,
                 kind = tProjectRecord.kind,
                 logoAddr = tProjectRecord.logoAddr ?: "",
                 remark = tProjectRecord.remark ?: "",
@@ -576,7 +575,7 @@ class ProjectLocalService @Autowired constructor(
                 hybridCcAppId = tProjectRecord.hybridCcAppId,
                 enableExternal = tProjectRecord.enableExternal,
                 enableIdc = tProjectRecord.enableIdc,
-                isOfflined = tProjectRecord.isOfflined
+                offlined = tProjectRecord.isOfflined
         )
     }
 
@@ -643,7 +642,7 @@ class ProjectLocalService @Autowired constructor(
                 }
             }
             ProjectValidateType.english_name -> {
-                // 2 ~ 32 ¸ö×Ö·û+Êý×Ö£¬ÒÔÐ¡Ð´×ÖÄ¸¿ªÍ·
+                // 2 ~ 32 ï¿½ï¿½ï¿½Ö·ï¿½+ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Ð¡Ð´ï¿½ï¿½Ä¸ï¿½ï¿½Í·
                 if (name.length < 2) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
                 }

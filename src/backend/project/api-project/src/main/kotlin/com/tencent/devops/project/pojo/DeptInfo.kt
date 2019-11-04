@@ -4,18 +4,18 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * {
-"TypeId": "6",
-"LeaderId": "73",
-"Name": "IEG互动娱乐事业群",
+"TypeId": "0",
+"LeaderId": "0",
+"Name": "xxxx",
 "Level": "1",
 "Enabled": "true",
-"SecretaryId": "5095",
+"SecretaryId": "0",
 "TypeName": "20 系统",
-"VicePresidentId": "73",
+"VicePresidentId": "0",
 "ParentId": "0",
 "ExProperties": "",
 "ExchangeGroupName": " ",
-"ID": "956"
+"ID": "0"
 }
  */
 data class DeptInfo(
