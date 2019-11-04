@@ -56,7 +56,6 @@ import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
-import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
@@ -335,13 +334,13 @@ class DockerHostBuildService(
         vmSeqId: String,
         dockerBuildParam: DockerBuildParam,
         buildId: String,
-        elementId: String?
+        elementId: String?,
+        outer: Boolean
     ): Pair<Boolean, String?> {
         try {
             val repoAddr = dockerBuildParam.repoAddr
             val userName = dockerBuildParam.userName
             val password = dockerBuildParam.password
-
             val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerHost(dockerHostConfig.dockerHost)
                 .withDockerConfig(dockerHostConfig.dockerConfig)
@@ -356,95 +355,12 @@ class DockerHostBuildService(
                 .withUsername(userName)
                 .withPassword(password)
                 .withRegistryAddress(repoAddr)
+
             val authConfigurations = AuthConfigurations()
             authConfigurations.addConfig(authConfig)
 
-            val workspace = getWorkspace(pipelineId, vmSeqId.toInt())
-            val buildDir = Paths.get(workspace + dockerBuildParam.buildDir).normalize().toString()
-            val dockerfilePath = Paths.get(workspace + dockerBuildParam.dockerFile).normalize().toString()
-            val baseDirectory = File(buildDir)
-            val dockerfile = File(dockerfilePath)
-            val imageNameTag =
-                getImageNameWithTag(repoAddr, projectId, dockerBuildParam.imageName, dockerBuildParam.imageTag)
-
-            logger.info("Build docker image, workspace: $workspace, buildDir:$buildDir, dockerfile: $dockerfilePath")
-            logger.info("Build docker image, imageNameTag: $imageNameTag")
-            dockerCli.buildImageCmd().withNoCache(true)
-                .withPull(true)
-                .withBuildAuthConfigs(authConfigurations)
-                .withBaseDirectory(baseDirectory)
-                .withDockerfile(dockerfile)
-                .withTags(setOf(imageNameTag))
-                .exec(MyBuildImageResultCallback(buildId, elementId, dockerHostBuildApi))
-                .awaitImageId()
-
-            logger.info("Build image success, now push to repo, image name and tag: $imageNameTag")
-            dockerCli.pushImageCmd(imageNameTag)
-                .withAuthConfig(authConfig)
-                .exec(MyPushImageResultCallback(buildId, elementId, dockerHostBuildApi))
-                .awaitCompletion()
-
-            logger.info("Push image success, now remove local image, image name and tag: $imageNameTag")
-
-            try {
-                dockerCli.removeImageCmd(
-                    getImageNameWithTag(
-                        repoAddr,
-                        projectId,
-                        dockerBuildParam.imageName,
-                        dockerBuildParam.imageTag
-                    )
-                ).exec()
-                logger.info("Remove local image success")
-            } catch (e: Throwable) {
-                logger.error("Docker rmi failed, msg: ${e.message}")
-            }
-
-            return Pair(true, null)
-        } catch (e: Throwable) {
-            logger.error("Docker build and push failed, exception: ", e)
-            val cause = if (e.cause != null && e.cause!!.message != null) {
-                e.cause!!.message!!.removePrefix(getWorkspace(pipelineId, vmSeqId.toInt()))
-            } else {
-                ""
-            }
-            return Pair(false, e.message + if (cause.isBlank()) "" else " cause:【$cause】")
-        }
-    }
-
-    fun dockerBuildAndPushImageNew(
-        projectId: String,
-        pipelineId: String,
-        vmSeqId: String,
-        dockerBuildParam: DockerBuildParamNew,
-        buildId: String,
-        elementId: String?
-    ): Pair<Boolean, String?> {
-        try {
-            val repoAddr = dockerBuildParam.repoAddr
-            val userName = dockerBuildParam.userName
-            val password = dockerBuildParam.password
             val ticket = dockerBuildParam.ticket
             val args = dockerBuildParam.args
-            val host = dockerBuildParam.host
-            val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerHost(dockerHostConfig.dockerHost)
-                .withDockerConfig(dockerHostConfig.dockerConfig)
-                .withApiVersion(dockerHostConfig.apiVersion)
-                .withRegistryUrl(repoAddr)
-                .withRegistryUsername(userName)
-                .withRegistryPassword(password)
-                .build()
-
-            val dockerCli = DockerClientBuilder.getInstance(config).build()
-            val authConfig = AuthConfig()
-                .withUsername(userName)
-                .withPassword(password)
-                .withRegistryAddress(repoAddr)
-
-            val authConfigurations = AuthConfigurations()
-            authConfigurations.addConfig(authConfig)
-
             ticket.forEach { it ->
                 val baseConfig = AuthConfig()
                     .withUsername(it.second)
@@ -459,7 +375,13 @@ class DockerHostBuildService(
             val baseDirectory = File(buildDir)
             val dockerfile = File(dockerfilePath)
             val imageNameTag =
-                getImageNameWithTagNew(repoAddr, projectId, dockerBuildParam.imageName, dockerBuildParam.imageTag)
+                getImageNameWithTag(
+                    repoAddr = repoAddr,
+                    projectId = projectId,
+                    imageName = dockerBuildParam.imageName,
+                    imageTag = dockerBuildParam.imageTag,
+                    outer = outer
+                )
 
             logger.info("Build docker image, workspace: $workspace, buildDir:$buildDir, dockerfile: $dockerfilePath")
             logger.info("Build docker image, imageNameTag: $imageNameTag")
@@ -486,10 +408,10 @@ class DockerHostBuildService(
             try {
                 dockerCli.removeImageCmd(
                     getImageNameWithTag(
-                        repoAddr,
-                        projectId,
-                        dockerBuildParam.imageName,
-                        dockerBuildParam.imageTag
+                        repoAddr = repoAddr,
+                        projectId = projectId,
+                        imageName = dockerBuildParam.imageName,
+                        imageTag = dockerBuildParam.imageTag
                     )
                 ).exec()
                 logger.info("Remove local image success")
@@ -606,7 +528,7 @@ class DockerHostBuildService(
             log(buildId, true, "启动容器失败，错误信息:${er.message}")
             alertApi.alert(
                 AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
+                    "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
             )
             throw ContainerException("启动容器失败，错误信息:${er.message}")
         } finally {
@@ -747,17 +669,18 @@ class DockerHostBuildService(
         }
     }
 
-    private fun getImageNameWithTag(repoAddr: String, projectId: String, imageName: String, imageTag: String): String {
-        return "$repoAddr/paas/$projectId/$imageName:$imageTag"
-    }
-
-    private fun getImageNameWithTagNew(
+    private fun getImageNameWithTag(
         repoAddr: String,
         projectId: String,
         imageName: String,
-        imageTag: String
+        imageTag: String,
+        outer: Boolean = false
     ): String {
-        return "$repoAddr/$imageName:$imageTag"
+        return if (outer) {
+            "$repoAddr/$imageName:$imageTag"
+        } else {
+            "$repoAddr/paas/$projectId/$imageName:$imageTag"
+        }
     }
 
     private fun getWorkspace(pipelineId: String, vmSeqId: Int): String {

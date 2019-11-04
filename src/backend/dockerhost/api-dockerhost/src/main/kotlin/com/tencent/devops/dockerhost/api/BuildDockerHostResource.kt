@@ -27,7 +27,7 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
+import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -67,7 +67,7 @@ interface BuildDockerHostResource {
         @QueryParam("elementId")
         elementId: String,
         @ApiParam("镜像名称", required = true)
-        dockerBuildParamNew: DockerBuildParamNew
+        dockerBuildParam: DockerBuildParam
     ): Result<Boolean>
 
     @ApiOperation("Docker build")

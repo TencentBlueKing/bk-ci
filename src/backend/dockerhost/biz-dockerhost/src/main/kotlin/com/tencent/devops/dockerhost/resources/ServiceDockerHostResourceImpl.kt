@@ -67,7 +67,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         vmSeqId: String,
         buildId: String,
         request: HttpServletRequest
-    ): Result<Pair<Status, String?>> {
+    ): Result<Pair<Status, String>> {
         checkReq(request)
         logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.getDockerBuildStatus...")
         return Result(dockerService.getBuildResult(vmSeqId, buildId))
