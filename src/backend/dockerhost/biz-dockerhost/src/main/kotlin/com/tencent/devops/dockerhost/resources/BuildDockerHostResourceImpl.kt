@@ -47,7 +47,15 @@ class BuildDockerHostResourceImpl @Autowired constructor(private val dockerServi
         dockerBuildParam: DockerBuildParam
     ): Result<Boolean> {
         logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")
-        return Result(dockerService.buildImage(projectId, pipelineId, vmSeqId, buildId, elementId, dockerBuildParam, true))
+        return Result(dockerService.buildImage(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            buildId = buildId,
+            elementId = elementId,
+            dockerBuildParam = dockerBuildParam,
+            outer = true
+        ))
     }
 
     override fun getDockerBuildStatus(vmSeqId: String, buildId: String): Result<Pair<Status, String>> {

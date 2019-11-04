@@ -27,16 +27,13 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.exception.NotFoundException
-import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
-import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.BuildResponseItem
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.api.model.PushResponseItem
-import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.BuildImageResultCallback
@@ -48,25 +45,21 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
+import com.tencent.devops.dockerhost.docker.DockerBindLoader
+import com.tencent.devops.dockerhost.docker.DockerEnvLoader
+import com.tencent.devops.dockerhost.docker.DockerVolumeLoader
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
-import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
-import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
-import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
-import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_ID
-import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_SECRET_KEY
-import com.tencent.devops.dockerhost.utils.ENV_KEY_GATEWAY
-import com.tencent.devops.dockerhost.utils.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -83,9 +76,11 @@ class DockerHostBuildService(
     private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
 
     private val dockerHostBuildApi: DockerHostBuildResourceApi =
-        DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.runMode) "dispatch-codecc" else "dispatch")
+        DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.runMode) "ms/dispatch-codecc" else "ms/dispatch")
+
     private val alertApi: AlertApi =
-        AlertApi(if ("codecc_build" == dockerHostConfig.runMode) "dispatch-codecc" else "dispatch")
+        AlertApi(if ("codecc_build" == dockerHostConfig.runMode) "ms/dispatch-codecc" else "ms/dispatch")
+
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerHost(dockerHostConfig.dockerHost)
         .withDockerConfig(dockerHostConfig.dockerConfig)
@@ -145,11 +140,11 @@ class DockerHostBuildService(
         buildId: String
     ): Result<Boolean> {
         val authConfig = CommonUtils.getAuthConfig(
-            imageType,
-            dockerHostConfig,
-            imageName,
-            registryUser,
-            registryPwd
+            imageType = imageType,
+            dockerHostConfig = dockerHostConfig,
+            imageName = imageName,
+            registryUser = registryUser,
+            registryPwd = registryPwd
         )
         val dockerImageName = CommonUtils.normalizeImageName(imageName)
         log(buildId, "开始拉取镜像，镜像名称：$dockerImageName")
@@ -209,71 +204,12 @@ class DockerHostBuildService(
                 log(dockerBuildInfo.buildId, "尝试使用本地镜像启动...")
             }
             // docker run
-            val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
-            val volumeProjectShare = Volume(dockerHostConfig.volumeProjectShare)
-            val volumeMavenRepo = Volume(dockerHostConfig.volumeMavenRepo)
-            val volumeNpmPrefix = Volume(dockerHostConfig.volumeNpmPrefix)
-            val volumeNpmCache = Volume(dockerHostConfig.volumeNpmCache)
-            val volumeCcache = Volume(dockerHostConfig.volumeCcache)
-            val volumeApps = Volume(dockerHostConfig.volumeApps)
-            val volumeInit = Volume(dockerHostConfig.volumeInit)
-            val volumeLogs = Volume(dockerHostConfig.volumeLogs)
-            val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
-
-            val gateway = System.getProperty("soda.gateway", "gw.open.oa.com")
-            logger.info("gateway is: $gateway")
-
-            val binds = mutableListOf(
-                Bind(
-                    "${dockerHostConfig.hostPathMavenRepo}/${dockerBuildInfo.pipelineId}/${dockerBuildInfo.vmSeqId}/",
-                    volumeMavenRepo
-                ),
-                Bind(
-                    "${dockerHostConfig.hostPathNpmPrefix}/${dockerBuildInfo.pipelineId}/${dockerBuildInfo.vmSeqId}/",
-                    volumeNpmPrefix
-                ),
-                Bind(
-                    "${dockerHostConfig.hostPathNpmCache}/${dockerBuildInfo.pipelineId}/${dockerBuildInfo.vmSeqId}/",
-                    volumeNpmCache
-                ),
-                Bind(
-                    "${dockerHostConfig.hostPathCcache}/${dockerBuildInfo.pipelineId}/${dockerBuildInfo.vmSeqId}/",
-                    volumeCcache
-                ),
-                Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
-                Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
-                Bind(
-                    "${dockerHostConfig.hostPathLogs}/${dockerBuildInfo.buildId}/${dockerBuildInfo.vmSeqId}/",
-                    volumeLogs
-                ),
-                Bind(
-                    "${dockerHostConfig.hostPathGradleCache}/${dockerBuildInfo.pipelineId}/${dockerBuildInfo.vmSeqId}/",
-                    volumeGradleCache
-                ),
-                Bind(getWorkspace(dockerBuildInfo.pipelineId, dockerBuildInfo.vmSeqId), volumeWs)
-            )
-            if (enableProjectShare(dockerBuildInfo.projectId)) {
-                binds.add(Bind(getProjectShareDir(dockerBuildInfo.projectId), volumeProjectShare))
-            }
+            val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
             val container = dockerCli.createContainerCmd(imageName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                .withEnv(
-                    listOf(
-                        "$ENV_KEY_PROJECT_ID=${dockerBuildInfo.projectId}",
-                        "$ENV_KEY_AGENT_ID=${dockerBuildInfo.agentId}",
-                        "$ENV_KEY_AGENT_SECRET_KEY=${dockerBuildInfo.secretKey}",
-                        "$ENV_KEY_GATEWAY=$gateway",
-                        "TERM=xterm-256color",
-                        "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
-                        "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                        "$COMMON_DOCKER_SIGN=docker",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                        // codecc构建机日志落到本地
-                        "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
-                    )
-                )
-                .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeInit)
+                .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
+                .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
                 .exec()
 
@@ -439,79 +375,53 @@ class DockerHostBuildService(
         dockerRunParam: DockerRunParam
     ): Pair<String, Int> {
         try {
-            val authConfig = CommonUtils.getAuthConfig(
-                ImageType.THIRD.type,
-                dockerHostConfig,
-                dockerRunParam.imageName,
-                dockerRunParam.registryUser,
-                dockerRunParam.registryPwd
-            )
             val imageName = CommonUtils.normalizeImageName(dockerRunParam.imageName)
             // docker pull
             try {
                 LocalImageCache.saveOrUpdate(imageName)
-                log(buildId, "开始拉取镜像，镜像名称：$imageName")
-                dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig)
-                    .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi)).awaitCompletion()
-                log(buildId, "拉取镜像成功，准备执行命令...")
+                pullImage(
+                    imageType = ImageType.THIRD.type,
+                    imageName = dockerRunParam.imageName,
+                    registryUser = dockerRunParam.registryUser,
+                    registryPwd = dockerRunParam.registryPwd,
+                    buildId = buildId
+                )
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build $buildId", t)
                 log(buildId, "拉取镜像失败，错误信息：${t.message}")
                 log(buildId, "尝试使用本地镜像执行命令...")
             }
+
+            val dockerBuildInfo = DockerHostBuildInfo(
+                projectId = projectId,
+                agentId = "",
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId.toInt(),
+                secretKey = "",
+                status = PipelineTaskStatus.RUNNING.status,
+                imageName = imageName,
+                containerId = "",
+                wsInHost = true,
+                registryUser = dockerRunParam.registryUser,
+                registryPwd = dockerRunParam.registryPwd,
+                imageType = ImageType.THIRD.type
+            )
             // docker run
-            val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
-            val volumeProjectShare = Volume(dockerHostConfig.volumeProjectShare)
-            val volumeMavenRepo = Volume(dockerHostConfig.volumeMavenRepo)
-            val volumeNpmPrefix = Volume(dockerHostConfig.volumeNpmPrefix)
-            val volumeNpmCache = Volume(dockerHostConfig.volumeNpmCache)
-            val volumeCcache = Volume(dockerHostConfig.volumeCcache)
-            val volumeApps = Volume(dockerHostConfig.volumeApps)
-            val volumeInit = Volume(dockerHostConfig.volumeInit)
-            val volumeLogs = Volume(dockerHostConfig.volumeLogs)
-            val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
-
-            val gateway = System.getProperty("soda.gateway", "gw.open.oa.com")
-            logger.info("gateway is: $gateway")
-
-            val binds = mutableListOf(
-                Bind("${dockerHostConfig.hostPathMavenRepo}/$pipelineId/$vmSeqId/", volumeMavenRepo),
-                Bind("${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/$vmSeqId/", volumeNpmPrefix),
-                Bind("${dockerHostConfig.hostPathNpmCache}/$pipelineId/$vmSeqId/", volumeNpmCache),
-                Bind("${dockerHostConfig.hostPathCcache}/$pipelineId/$vmSeqId/", volumeCcache),
-                Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
-                Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
-                Bind("${dockerHostConfig.hostPathLogs}/$buildId/$vmSeqId/", volumeLogs),
-                Bind("${dockerHostConfig.hostPathGradleCache}/$pipelineId/$vmSeqId/", volumeGradleCache),
-                Bind(getWorkspace(pipelineId, vmSeqId.toInt()), volumeWs)
-            )
-            if (enableProjectShare(projectId)) {
-                binds.add(Bind(getProjectShareDir(projectId), volumeProjectShare))
-            }
-
             val env = mutableListOf<String>()
-            env.addAll(
-                listOf(
-                    "$ENV_KEY_PROJECT_ID=$projectId",
-                    "$ENV_KEY_GATEWAY=$gateway",
-//                    "TERM=xterm-256color",
-                    "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
-                    "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                    // codecc构建机日志落到本地
-                    "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
-                )
-            )
+            env.addAll(DockerEnvLoader.loadEnv(dockerBuildInfo))
             if (dockerRunParam.env != null && dockerRunParam.env!!.isNotEmpty()) {
                 dockerRunParam.env!!.forEach {
                     env.add(it.key + "=" + (it.value ?: ""))
                 }
             }
             logger.info("env is $env")
+            val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
+
             val container = dockerCli.createContainerCmd(imageName)
                 .withCmd(dockerRunParam.command)
                 .withEnv(env)
-                .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeInit)
+                .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
                 .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
                 .withWorkingDir(dockerHostConfig.volumeWorkspace)
                 .exec()
@@ -522,10 +432,9 @@ class DockerHostBuildService(
 
             return Pair(container.id, timestamp)
         } catch (er: Throwable) {
-            logger.error(er.toString())
-            logger.error(er.cause.toString())
-            logger.error(er.message)
-            log(buildId, true, "启动容器失败，错误信息:${er.message}")
+            val errorLog = "[$buildId]|启动容器失败，错误信息:${er.message}"
+            logger.error(errorLog, er)
+            log(buildId, true, errorLog)
             alertApi.alert(
                 AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
                     "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
