@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -34,6 +34,7 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import kotlin.math.max
 
 object Tools {
 
@@ -48,16 +49,39 @@ object Tools {
         concurrency: Int,
         maxConcurrency: Int
     ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        return createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = queue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = startConsumerMinInterval,
+            consecutiveActiveTrigger = consecutiveActiveTrigger,
+            concurrency = concurrency,
+            maxConcurrency = maxConcurrency
+        )
+    }
+
+
+    fun createSimpleMessageListenerContainerByAdapter(
+        connectionFactory: ConnectionFactory,
+        queue: Queue,
+        rabbitAdmin: RabbitAdmin,
+        adapter: MessageListenerAdapter,
+        startConsumerMinInterval: Long,
+        consecutiveActiveTrigger: Int,
+        concurrency: Int,
+        maxConcurrency: Int
+    ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(queue.name)
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(maxConcurrency, concurrency))
+        container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
         container.setRabbitAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(startConsumerMinInterval)
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)
         container.setMismatchedQueuesFatal(true)
-        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container
     }

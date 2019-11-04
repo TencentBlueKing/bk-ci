@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -445,7 +445,7 @@ class ProjectLocalService @Autowired constructor(
         englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean> {
+    ): Result<ProjectLogo> {
         logger.info("Update the logo of project $englishName")
         val project = projectDao.getByEnglishName(dslContext, englishName)
         if (project != null) {
@@ -464,6 +464,7 @@ class ProjectLocalService @Autowired constructor(
                         projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
                     )
                 )
+                return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
@@ -474,7 +475,6 @@ class ProjectLocalService @Autowired constructor(
             logger.warn("$project is null or $project is empty")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
-        return Result(true)
     }
 
     fun list(accessToken: String, includeDisable: Boolean?): List<ProjectVO> {
@@ -605,17 +605,17 @@ class ProjectLocalService @Autowired constructor(
                 DateTimeUtil.toDateTime(tProjectRecord.approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
             },
             approver = tProjectRecord.approver ?: "",
-            bgId = tProjectRecord.bgId?.toLong(),
+            bgId = tProjectRecord.bgId?.toString(),
             bgName = tProjectRecord.bgName ?: "",
             ccAppId = tProjectRecord.ccAppId ?: 0,
             ccAppName = tProjectRecord.ccAppName ?: "",
-            centerId = tProjectRecord.centerId?.toLong() ?: 0,
+            centerId = tProjectRecord.centerId?.toString(),
             centerName = tProjectRecord.centerName ?: "",
             createdAt = DateTimeUtil.toDateTime(tProjectRecord.createdAt, "yyyy-MM-dd"),
             creator = tProjectRecord.creator ?: "",
             dataId = tProjectRecord.dataId ?: 0,
             deployType = tProjectRecord.deployType ?: "",
-            deptId = tProjectRecord.deptId?.toLong() ?: 0,
+            deptId = tProjectRecord.deptId?.toString(),
             deptName = tProjectRecord.deptName ?: "",
             description = tProjectRecord.description ?: "",
             extra = tProjectRecord.extra ?: "",
@@ -686,7 +686,7 @@ class ProjectLocalService @Autowired constructor(
     fun validate(
         validateType: ProjectValidateType,
         name: String,
-        projectId: String? = null
+        englishName: String? = null
     ) {
         if (name.isBlank()) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY))
@@ -696,7 +696,7 @@ class ProjectLocalService @Autowired constructor(
                 if (name.length > 12) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
                 }
-                if (projectDao.existByProjectName(dslContext, name, projectId)) {
+                if (projectDao.checkProjectNameByEnglishName(dslContext, name, englishName)) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 }
             }
@@ -712,7 +712,7 @@ class ProjectLocalService @Autowired constructor(
                     logger.warn("Project English Name($name) is not match")
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR))
                 }
-                if (projectDao.existByEnglishName(dslContext, name, projectId)) {
+                if (projectDao.checkEnglishName(dslContext, name)) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST))
                 }
             }

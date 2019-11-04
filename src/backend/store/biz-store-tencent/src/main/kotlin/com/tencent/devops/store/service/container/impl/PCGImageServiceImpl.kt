@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -85,7 +85,7 @@ class PCGImageServiceImpl @Autowired constructor(
                             logger.warn("[$projectId] The bg id is empty")
                             return false
                         }
-                        val projectEnable = project.bgId == PCG_BG_ID
+                        val projectEnable = project.bgId == PCG_BG_ID.toString()
                         logger.info("[$projectId] The project $projectEnable")
                         return projectEnable
                     } catch (t: Throwable) {

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -128,7 +128,13 @@ class DockerHostConfig {
     @Value("\${dockerCli.hostPathGradleCache:#{null}}")
     var hostPathGradleCache: String? = null
 
-    @Value("\${dockerCli.shareProjectCodeWhiteList:#{null}}")
+    @Value("\${dockerCli.hostPathLinkDir}")
+    var hostPathLinkDir: String = "/tmp/bkci"
+
+    @Value("\${dockerCli.hostPathHosts}")
+    var hostPathHosts: String? = null
+
+    @Value("\${dockerCli.shareProjectCodeWhiteList}")
     var shareProjectCodeWhiteList: String? = null
 
     @Value("\${dockerCli.memoryLimitBytes:2147483648}")
@@ -139,6 +145,15 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.cpuQuota:50000}")
     var cpuQuota: Int = 50000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${dockerAgentPath}")
+    var dockerAgentPath: String? = null
+
+    @Value("\${downloadDockerAgentUrl}")
+    var downloadDockerAgentUrl: String? = null
+
+    @Value("\${downloadAgentCron}")
+    var downloadAgentCron: String? = null
 
     @Value("\${landunEnv}")
     var landunEnv: String? = null

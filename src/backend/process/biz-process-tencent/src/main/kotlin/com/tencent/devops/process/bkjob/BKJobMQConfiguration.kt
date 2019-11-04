@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -27,7 +27,7 @@
 package com.tencent.devops.process.bkjob
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.process.engine.init.Tools
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.util.CommonUtils
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder

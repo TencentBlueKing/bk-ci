@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -63,6 +63,17 @@ class ProjectDao {
         }
     }
 
+    fun checkEnglishName(
+        dslContext: DSLContext,
+        englishName: String
+    ): Boolean {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(ENGLISH_NAME.eq(englishName))
+                .fetchOne() != null
+        }
+    }
+
     fun existByProjectName(
         dslContext: DSLContext,
         projectName: String,
@@ -73,6 +84,21 @@ class ProjectDao {
                 .where(PROJECT_NAME.eq(projectName))
             if (!projectId.isNullOrBlank()) {
                 step.and(PROJECT_ID.ne(projectId))
+            }
+            return step.fetchOne() != null
+        }
+    }
+
+    fun checkProjectNameByEnglishName(
+        dslContext: DSLContext,
+        projectName: String,
+        englishName: String?
+    ): Boolean {
+        with(TProject.T_PROJECT) {
+            val step = dslContext.selectFrom(this)
+                .where(PROJECT_NAME.eq(projectName))
+            if (!englishName.isNullOrBlank()) {
+                step.and(ENGLISH_NAME.ne(englishName))
             }
             return step.fetchOne() != null
         }

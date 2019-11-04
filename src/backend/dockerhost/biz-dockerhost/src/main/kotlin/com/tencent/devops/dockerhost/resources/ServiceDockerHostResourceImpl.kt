@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -33,6 +33,9 @@ import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
+import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
+import com.tencent.devops.dockerhost.pojo.DockerRunParam
+import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
@@ -46,16 +49,78 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     private val dockerService: DockerService,
     private val dockerHostBuildService: DockerHostBuildService
 ) : ServiceDockerHostResource {
-    override fun dockerBuild(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, elementId: String?, dockerBuildParam: DockerBuildParam, request: HttpServletRequest): Result<Boolean> {
+    override fun dockerBuild(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String,
+        elementId: String?,
+        dockerBuildParam: DockerBuildParam,
+        request: HttpServletRequest
+    ): Result<Boolean> {
         checkReq(request)
-        logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")
+        logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerBuild...")
         return Result(dockerService.buildImage(projectId, pipelineId, vmSeqId, buildId, elementId, dockerBuildParam))
     }
 
-    override fun getDockerBuildStatus(vmSeqId: String, buildId: String, request: HttpServletRequest): Result<Pair<Status, String?>> {
+    override fun getDockerBuildStatus(
+        vmSeqId: String,
+        buildId: String,
+        request: HttpServletRequest
+    ): Result<Pair<Status, String?>> {
         checkReq(request)
-        logger.info("Enter ServiceDockerHostResourceImpl.getDockerBuildStatus...")
+        logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.getDockerBuildStatus...")
         return Result(dockerService.getBuildResult(vmSeqId, buildId))
+    }
+
+    override fun dockerRun(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String,
+        dockerRunParam: DockerRunParam,
+        request: HttpServletRequest
+    ): Result<DockerRunResponse> {
+        checkReq(request)
+        logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerRun...")
+        return Result(dockerService.dockerRun(projectId, pipelineId, vmSeqId, buildId, dockerRunParam))
+    }
+
+    override fun getDockerRunLogs(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String,
+        containerId: String,
+        logStartTimeStamp: Int,
+        request: HttpServletRequest
+    ): Result<DockerLogsResponse> {
+        checkReq(request)
+        logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerRun...")
+        return Result(
+            dockerService.getDockerRunLogs(
+                projectId,
+                pipelineId,
+                vmSeqId,
+                buildId,
+                containerId,
+                logStartTimeStamp
+            )
+        )
+    }
+
+    override fun dockerStop(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String,
+        containerId: String,
+        request: HttpServletRequest
+    ): Result<Boolean> {
+        checkReq(request)
+        logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerStop...")
+        dockerService.dockerStop(projectId, pipelineId, vmSeqId, buildId, containerId)
+        return Result(true)
     }
 
     private fun checkReq(request: HttpServletRequest) {

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -28,6 +28,7 @@ package com.tencent.devops.dockerhost.service
 
 import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
 import com.tencent.devops.dockerhost.pojo.Status
+import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -37,7 +38,7 @@ import java.util.concurrent.Future
 
 @Service
 class BuildDockerService @Autowired constructor(
-    private val txDockerHostBuildService: TXDockerHostBuildService
+    private val dockerHostBuildService: DockerHostBuildService
 ) {
 
     private val executor = Executors.newFixedThreadPool(10)
@@ -47,7 +48,7 @@ class BuildDockerService @Autowired constructor(
         logger.info("projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerBuildParam: $dockerBuildParam")
 
         val future = executor.submit(Callable<Pair<Boolean, String?>> {
-            txDockerHostBuildService.dockerBuildAndPushImageNew(projectId, pipelineId, vmSeqId, dockerBuildParam, buildId, elementId)
+            dockerHostBuildService.dockerBuildAndPushImageNew(projectId, pipelineId, vmSeqId, dockerBuildParam, buildId, elementId)
         })
 
         buildTask[getKey(vmSeqId, buildId)] = future

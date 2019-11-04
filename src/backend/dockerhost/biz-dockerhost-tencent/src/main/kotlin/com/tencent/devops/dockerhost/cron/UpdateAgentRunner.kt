@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -27,7 +27,7 @@
 package com.tencent.devops.dockerhost.cron
 
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.dockerhost.config.TXDockerHostConfig
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,7 +35,7 @@ import java.io.File
 import java.util.Random
 
 class UpdateAgentRunner @Autowired constructor(
-    private val dockerHostConfig: TXDockerHostConfig
+    private val dockerHostConfig: DockerHostConfig
 ) {
     private val logger = LoggerFactory.getLogger(UpdateAgentRunner::class.java)
     private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -26,7 +26,7 @@
 
 package com.tencent.devops.dockerhost.init
 
-import com.tencent.devops.dockerhost.config.TXDockerHostConfig
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.cron.DebugRunner
 import com.tencent.devops.dockerhost.cron.UpdateAgentRunner
 import com.tencent.devops.dockerhost.service.DockerHostDebugService
@@ -85,7 +85,7 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun updateAgentRunner(dockerHostConfig: TXDockerHostConfig): UpdateAgentRunner {
+    fun updateAgentRunner(dockerHostConfig: DockerHostConfig): UpdateAgentRunner {
         return UpdateAgentRunner(dockerHostConfig)
     }
 }

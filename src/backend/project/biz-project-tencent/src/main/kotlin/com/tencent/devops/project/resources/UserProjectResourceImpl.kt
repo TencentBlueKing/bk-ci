@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.user.UserProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -85,7 +86,7 @@ class UserProjectResourceImpl @Autowired constructor(
         englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean> {
+    ): Result<ProjectLogo> {
         return projectLocalService.updateLogo(userId, accessToken, englishName, inputStream, disposition)
     }
 
@@ -93,9 +94,9 @@ class UserProjectResourceImpl @Autowired constructor(
         userId: String,
         validateType: ProjectValidateType,
         name: String,
-        project_id: String?
+        englishName: String?
     ): Result<Boolean> {
-        projectLocalService.validate(validateType, name, project_id)
+        projectLocalService.validate(validateType, name, englishName)
         return Result(true)
     }
 }

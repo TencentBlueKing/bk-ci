@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -41,11 +41,11 @@ class AlertApi constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("BuildDockerResourceApi $path fail. $responseContent")
+                    logger.warn("BuildDockerResourceApi $path fail. $responseContent")
                 }
             }
         } catch (e: Throwable) {
-            logger.error("Alert failed.")
+            logger.warn("Alert failed.")
         }
     }
 }

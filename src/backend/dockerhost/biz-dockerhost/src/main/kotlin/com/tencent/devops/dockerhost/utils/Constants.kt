@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -50,6 +50,7 @@ const val ENV_KEY_AGENT_ID = "devops_agent_id"
 const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
 const val ENV_KEY_GATEWAY = "devops_gateway"
 const val ENV_DOCKER_HOST_IP = "docker_host_ip"
+const val ENV_DOCKER_HOST_PORT = "docker_host_port"
 const val ENV_LOG_SAVE_MODE = "devops_log_save_mode"
 const val COMMON_DOCKER_SIGN = "devops_slave_model"
 const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"

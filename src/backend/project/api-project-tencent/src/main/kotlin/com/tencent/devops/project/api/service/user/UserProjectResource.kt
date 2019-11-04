@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -149,7 +150,7 @@ interface UserProjectResource {
         inputStream: InputStream,
         @FormDataParam("logo")
         disposition: FormDataContentDisposition
-    ): Result<Boolean>
+    ): Result<ProjectLogo>
 
     @PUT
     @Path("/{validateType}/names/{name}/validate")
@@ -165,7 +166,7 @@ interface UserProjectResource {
         @PathParam("name")
         name: String,
         @ApiParam("项目ID")
-        @QueryParam("project_id")
-        project_id: String?
+        @QueryParam("english_name")
+        englishName: String?
     ): Result<Boolean>
 }

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -39,21 +39,20 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dockerhost.config.TXDockerHostConfig
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostDebugResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.dockerhost.utils.TXCommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
 
 @Component
 class DockerHostDebugService(
-    private val dockerHostConfig: TXDockerHostConfig
+    private val dockerHostConfig: DockerHostConfig
 ) {
 
     private val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
@@ -128,7 +127,13 @@ class DockerHostDebugService(
 
     fun createContainer(containerInfo: ContainerInfo): String {
         try {
-            val authConfig = TXCommonUtils.getAuthConfig(containerInfo.imageType, dockerHostConfig, containerInfo.imageName, containerInfo.registryUser, containerInfo.registryPwd)
+            val authConfig = CommonUtils.getAuthConfig(
+                imageType = containerInfo.imageType,
+                dockerHostConfig = dockerHostConfig,
+                imageName = containerInfo.imageName,
+                registryUser = containerInfo.registryUser,
+                registryPwd = containerInfo.registryPwd
+            )
             val imageName = CommonUtils.normalizeImageName(containerInfo.imageName)
             // docker pull
             try {
@@ -226,7 +231,7 @@ class DockerHostDebugService(
     }
 
     fun stopContainer(containerInfo: ContainerInfo) {
-        val dockerCli = TXCommonUtils.getDockerDefaultClient(dockerHostConfig)
+        val dockerCli = CommonUtils.getDockerDefaultClient(dockerHostConfig)
         try {
             // docker stop
             val inspectInfo = dockerCli.inspectContainerCmd(containerInfo.containerId).exec()
@@ -247,7 +252,7 @@ class DockerHostDebugService(
 
     fun getContainerNum(): Int {
         try {
-            val dockerCli = TXCommonUtils.getDockerDefaultClient(dockerHostConfig)
+            val dockerCli = CommonUtils.getDockerDefaultClient(dockerHostConfig)
             val dockerInfo = dockerCli.infoCmd().exec()
             return dockerInfo.containersRunning ?: 0
         } catch (e: Throwable) {
