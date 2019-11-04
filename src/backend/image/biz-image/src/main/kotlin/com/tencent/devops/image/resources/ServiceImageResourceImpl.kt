@@ -78,6 +78,17 @@ class ServiceImageResourceImpl @Autowired constructor(
         return Result(artifactoryService.getTagInfo(imageRepo, imageTag))
     }
 
+    override fun listDevCloudImages(userId: String, projectId: String, public: Boolean): Result<List<DockerTag>> {
+        checkUserAndProject(userId, projectId)
+
+        try {
+            return Result(artifactoryService.listDevCloudImages(projectId, public))
+        } catch (e: Exception) {
+            logger.error("list dev cloud image failed", e)
+            throw RuntimeException("list dev cloud image failed")
+        }
+    }
+
     private fun checkUserAndProject(userId: String, projectId: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException("projectId required")
