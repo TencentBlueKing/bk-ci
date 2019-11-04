@@ -414,7 +414,7 @@ class ProjectDao {
                 .set(ENABLED, enabled)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-                .where(ENGLISH_NAME.eq(projectId))
+                .where(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

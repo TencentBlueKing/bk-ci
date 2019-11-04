@@ -142,7 +142,7 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
+        @PathParam("englishName")
         englishName: String,
         @ApiParam("文件", required = true)
         @FormDataParam("logo")
