@@ -85,7 +85,7 @@ class PCGImageServiceImpl @Autowired constructor(
                             logger.warn("[$projectId] The bg id is empty")
                             return false
                         }
-                        val projectEnable = project.bgId == PCG_BG_ID
+                        val projectEnable = project.bgId == PCG_BG_ID.toString()
                         logger.info("[$projectId] The project $projectEnable")
                         return projectEnable
                     } catch (t: Throwable) {
