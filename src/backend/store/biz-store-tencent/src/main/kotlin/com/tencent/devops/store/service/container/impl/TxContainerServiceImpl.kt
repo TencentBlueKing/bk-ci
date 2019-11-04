@@ -51,11 +51,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxContainerServiceImpl @Autowired constructor(
-    private val pcgImageServiceImpl: PCGImageServiceImpl
-) : ContainerServiceImpl() {
+class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
 
     private val logger = LoggerFactory.getLogger(TxContainerServiceImpl::class.java)
+
+    @Autowired
+    private lateinit var pcgImageServiceImpl: PCGImageServiceImpl
 
     override fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean {
         logger.info("buildTypeEnable buildType is :$buildType,projectCode is :$projectCode")
