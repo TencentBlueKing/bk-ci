@@ -80,6 +80,7 @@ import java.nio.file.Files
 import java.util.*
 import java.util.regex.Pattern
 import javax.imageio.ImageIO
+import javax.ws.rs.NotFoundException
 
 @Service
 class ProjectLocalService @Autowired constructor(
@@ -338,10 +339,13 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
+    fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
+            val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId
+                ?: throw NotFoundException("项目 - $englishName 不存在")
+
             logger.info("[$userId|$projectId|$enabled] Start to update project usable status")
             if (bkAuthProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER).contains(
                     userId
@@ -402,22 +406,20 @@ class ProjectLocalService @Autowired constructor(
             .map { UserRole(it.displayName, it.roleId, it.roleName, it.type) }
     }
 
-    fun update(userId: String, accessToken: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo) {
+    fun update(userId: String, accessToken: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo) {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            try {
-                val appName = if (projectUpdateInfo.ccAppId != null && projectUpdateInfo.ccAppId!! > 0) {
-                    tofService.getCCAppName(projectUpdateInfo.ccAppId!!)
-                } else {
-                    null
-                }
-                projectUpdateInfo.ccAppName = appName
-                projectDao.update(dslContext, userId, projectId, projectUpdateInfo)
-            } catch (e: DuplicateKeyException) {
-                logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+            val appName = if (projectUpdateInfo.ccAppId != null && projectUpdateInfo.ccAppId!! > 0) {
+                tofService.getCCAppName(projectUpdateInfo.ccAppId!!)
+            } else {
+                null
             }
+            val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId
+                ?: throw NotFoundException("项目 - $englishName 不存在")
+
+            projectUpdateInfo.ccAppName = appName
+            projectDao.update(dslContext, userId, projectId, projectUpdateInfo)
             rabbitTemplate.convertAndSend(
                 EXCHANGE_PAASCC_PROJECT_UPDATE,
                 ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
@@ -429,6 +431,9 @@ class ProjectLocalService @Autowired constructor(
                 )
             )
             success = true
+        } catch (e: DuplicateKeyException) {
+            logger.warn("Duplicate project $projectUpdateInfo", e)
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
         } finally {
             jmxApi.execute(PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
         }
@@ -437,24 +442,24 @@ class ProjectLocalService @Autowired constructor(
     fun updateLogo(
         userId: String,
         accessToken: String,
-        projectId: String,
+        englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        logger.info("Update the logo of project $projectId")
-        val project = projectDao.get(dslContext, projectId)
+        logger.info("Update the logo of project $englishName")
+        val project = projectDao.getByEnglishName(dslContext, englishName)
         if (project != null) {
             var logoFile: File? = null
             try {
                 logoFile = convertFile(inputStream)
                 val logoAddress = s3Service.saveLogo(logoFile, project.englishName)
-                projectDao.updateLogoAddress(dslContext, userId, projectId, logoAddress)
+                projectDao.updateLogoAddress(dslContext, userId, project.projectId, logoAddress)
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_UPDATE_LOGO,
                     ROUTE_PAASCC_PROJECT_UPDATE_LOGO, PaasCCUpdateProjectLogo(
                         userId = userId,
                         accessToken = accessToken,
-                        projectId = projectId,
+                        projectId = project.projectId,
                         retryCount = 0,
                         projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
                     )
