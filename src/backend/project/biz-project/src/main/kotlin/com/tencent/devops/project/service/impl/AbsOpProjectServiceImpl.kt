@@ -30,18 +30,18 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 ): OpProjectService {
 
     override fun listGrayProject(): Result<OpGrayProject> {
-        // ´ÓredisÖĞ»ñÈ¡»Ò¶ÈÏîÄ¿ÁĞ±í
+        // ä»redisä¸­è·å–ç°åº¦é¡¹ç›®åˆ—è¡¨
         return Result(OpGrayProject(grayProjectSet().toList()))
     }
 
     override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
         logger.info("the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
-        // Ê¹ÓÃset¼¯ºÏ£¨È¥³ıÖØ¸´ÔªËØ£©²Ù×÷Ìá½»µÄÏîÄ¿ÁĞ±í
+        // ä½¿ç”¨seté›†åˆï¼ˆå»é™¤é‡å¤å…ƒç´ ï¼‰æ“ä½œæäº¤çš„é¡¹ç›®åˆ—è¡¨
         for (item in projectCodeList) {
             if (1 == operateFlag) {
-                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // Ìí¼ÓÏîÄ¿Îª»Ò¶ÈÏîÄ¿
+                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // æ·»åŠ é¡¹ç›®ä¸ºç°åº¦é¡¹ç›®
             } else if (2 == operateFlag) {
-                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // È¡ÏûÏîÄ¿Îª»Ò¶ÈÏîÄ¿
+                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // å–æ¶ˆé¡¹ç›®ä¸ºç°åº¦é¡¹ç›®
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -57,7 +57,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             logger.warn("The project $projectId is not exist")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         }
-        // ÅĞ¶ÏÏîÄ¿ÊÇ²»ÊÇÉóºËµÄÇé¿ö
+        // åˆ¤æ–­é¡¹ç›®æ˜¯ä¸æ˜¯å®¡æ ¸çš„æƒ…å†µ
         var flag = false
         if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
             flag = true
@@ -76,7 +76,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 logger.warn("Duplicate project $projectInfoRequest", ignored)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             }
-            // ÏÈ½â³ıÏîÄ¿Óë±êÇ©µÄ¹ØÁª¹ØÏµ£¬È»ºóÔÙ´ÓĞÂ½¨Á¢¶şÕßÖ®¼äµÄ¹ØÏµ
+            // å…ˆè§£é™¤é¡¹ç›®ä¸æ ‡ç­¾çš„å…³è”å…³ç³»ï¼Œç„¶åå†ä»æ–°å»ºç«‹äºŒè€…ä¹‹é—´çš„å…³ç³»
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
             val labelIdList = projectInfoRequest.labelIdList
             if (!CollectionUtils.isEmpty(labelIdList)) projectLabelRelDao.batchAdd(
@@ -87,11 +87,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
         }
         return if (!flag) {
-            0 // ¸üĞÂ²Ù×÷
+            0 // æ›´æ–°æ“ä½œ
         } else {
             return when {
-                2 == projectInfoRequest.approvalStatus -> 1 // ÉóÅúÍ¨¹ı
-                3 == projectInfoRequest.approvalStatus -> 2 // ²µ»Ø
+                2 == projectInfoRequest.approvalStatus -> 1 // å®¡æ‰¹é€šè¿‡
+                3 == projectInfoRequest.approvalStatus -> 2 // é©³å›
                 else -> 0
             }
         }

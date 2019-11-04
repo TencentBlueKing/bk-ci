@@ -74,6 +74,9 @@ class ProjectLocalService @Autowired constructor(
     @Value("\${paas_cc.url}")
     private lateinit var ccUrl: String
 
+    /**
+     * 创建项目信息
+     */
     fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): String {
         validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
@@ -111,7 +114,7 @@ class ProjectLocalService @Autowired constructor(
                     logger.warn("Fail to get the project id from response $responseContent")
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ��ȡ�û�������Ϣ
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
                 try {
                     projectDao.create(
                             dslContext = dslContext,
@@ -231,8 +234,7 @@ class ProjectLocalService @Autowired constructor(
                         throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                     }
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ��ȡ�û�������Ϣ
-                try {
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
                     projectDao.create(
                             dslContext = dslContext,
                             userId = userId,
@@ -512,7 +514,7 @@ class ProjectLocalService @Autowired constructor(
     private fun getAuthProjectIds(accessToken: String): List<String/*projectId*/> {
         val url = "$authUrl?access_token=$accessToken"
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, "��Ȩ�����Ļ�ȡ�û�����Ŀ��Ϣʧ��")
+        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
