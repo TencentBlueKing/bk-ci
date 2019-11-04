@@ -64,7 +64,6 @@ class GrayTestServiceImpl @Autowired constructor(
         return grayTestDao.listByUser(dslContext, userId)
     }
 
-    // ��������ʵ�֣�ֻ����ҵ����У��ڲ���û�С�
     override fun listByCondition(userNameList: List<String>, serviceIdList: List<String>, statusList: List<String>, pageSize: Int, pageNum: Int): List<GrayTestListInfo> {
         val notNullUsers = userNameList.filterNot { it == "" }
         val notNullIds = serviceIdList.filterNot { it == "" }
