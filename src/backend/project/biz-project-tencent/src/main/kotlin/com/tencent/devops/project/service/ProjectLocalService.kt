@@ -686,7 +686,7 @@ class ProjectLocalService @Autowired constructor(
     fun validate(
         validateType: ProjectValidateType,
         name: String,
-        projectId: String? = null
+        englishName: String? = null
     ) {
         if (name.isBlank()) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY))
@@ -696,7 +696,7 @@ class ProjectLocalService @Autowired constructor(
                 if (name.length > 12) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
                 }
-                if (projectDao.existByProjectName(dslContext, name, projectId)) {
+                if (projectDao.checkProjectNameByEnglishName(dslContext, name, englishName)) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 }
             }
@@ -712,7 +712,7 @@ class ProjectLocalService @Autowired constructor(
                     logger.warn("Project English Name($name) is not match")
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR))
                 }
-                if (projectDao.existByEnglishName(dslContext, name, projectId)) {
+                if (projectDao.checkEnglishName(dslContext, name)) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST))
                 }
             }

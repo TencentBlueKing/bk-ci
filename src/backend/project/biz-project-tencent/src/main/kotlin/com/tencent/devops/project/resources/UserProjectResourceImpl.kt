@@ -94,9 +94,9 @@ class UserProjectResourceImpl @Autowired constructor(
         userId: String,
         validateType: ProjectValidateType,
         name: String,
-        project_id: String?
+        englishName: String?
     ): Result<Boolean> {
-        projectLocalService.validate(validateType, name, project_id)
+        projectLocalService.validate(validateType, name, englishName)
         return Result(true)
     }
 }

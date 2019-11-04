@@ -166,7 +166,7 @@ interface UserProjectResource {
         @PathParam("name")
         name: String,
         @ApiParam("项目ID")
-        @QueryParam("project_id")
-        project_id: String?
+        @QueryParam("english_name")
+        englishName: String?
     ): Result<Boolean>
 }
