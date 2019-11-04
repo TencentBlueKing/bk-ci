@@ -546,6 +546,9 @@ class ProjectDao {
             if (projectInfoRequest.enableExternal != null) {
                 step.set(ENABLE_EXTERNAL, projectInfoRequest.enableExternal)
             }
+            if (projectInfoRequest.enableIdc != null) {
+                step.set(ENABLE_IDC, projectInfoRequest.enableIdc)
+            }
 
             step.where(PROJECT_ID.eq(projectInfoRequest.projectId))
                     .execute()
