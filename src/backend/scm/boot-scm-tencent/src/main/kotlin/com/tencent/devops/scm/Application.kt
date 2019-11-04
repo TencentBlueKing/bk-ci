@@ -24,15 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log
+package com.tencent.devops.scm
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 
-/**
- *
- * Powered By Tencent
- */
 @MicroService
 class Application
 
