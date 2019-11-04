@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserReportResource {
     @ApiOperation("获取构建报告列表")
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @Path("/{projectId}/{pipelineId}/{buildId}")
     @GET
     fun get(

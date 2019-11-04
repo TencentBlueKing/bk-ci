@@ -45,6 +45,7 @@ class JinGangAppTaskAtom @Autowired constructor(
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val taskId = task.taskId
+        val containerId = task.containerHashId
         val userId = task.starter
         val buildNo = runVariables[PIPELINE_BUILD_NUM]?.toInt() ?: 0
 
@@ -59,7 +60,7 @@ class JinGangAppTaskAtom @Autowired constructor(
             )
         }
         files.split(",").map { it.trim() }.forEach {
-            LogUtils.addLine(rabbitTemplate, buildId, "jin gang start scan file: $it", taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "jin gang start scan file: $it", taskId, containerId, task.executeCount ?: 1)
             val path = if (isCustom) "/${it.removePrefix("/")}" else "/$pipelineId/$buildId/${it.removePrefix("/")}"
             val data = client.get(ServiceJinGangAppResource::class).scanApp(userId, projectId, pipelineId, buildId, buildNo, taskId, path, isCustom, runType)
             val resourceName = File(it).name + "($buildNo)"
@@ -69,9 +70,9 @@ class JinGangAppTaskAtom @Autowired constructor(
                     projectId, HashUtil.encodeLongId(jinGangTaskId.toLong()), resourceName)
 
             if (data.status != 0) {
-                LogUtils.addLine(rabbitTemplate, buildId, "jin gang fail: $data", taskId, task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "jin gang fail: $data", taskId, containerId, task.executeCount ?: 1)
             } else {
-                LogUtils.addLine(rabbitTemplate, buildId, "jin gang success: $data", taskId, task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "jin gang success: $data", taskId, containerId, task.executeCount ?: 1)
             }
         }
         return AtomResponse(BuildStatus.SUCCEED)

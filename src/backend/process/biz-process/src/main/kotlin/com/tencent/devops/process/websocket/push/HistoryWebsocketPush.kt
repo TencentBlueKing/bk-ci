@@ -13,16 +13,16 @@ import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
 data class HistoryWebsocketPush(
-        val buildId: String?,
-        val pipelineId: String,
-        val projectId: String,
-        override val userId: String,
+    val buildId: String?,
+    val pipelineId: String,
+    val projectId: String,
+    override val userId: String,
 //        override val pathClass: IPath,
-        override val pushType: WebSocketType,
-        override val redisOperation: RedisOperation,
-        override val objectMapper: ObjectMapper,
-        override var page: String?,
-        override var notifyPost: NotifyPost
+    override val pushType: WebSocketType,
+    override val redisOperation: RedisOperation,
+    override val objectMapper: ObjectMapper,
+    override var page: String?,
+    override var notifyPost: NotifyPost
 ) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
 
     companion object {
@@ -30,7 +30,7 @@ data class HistoryWebsocketPush(
     }
 
     override fun findSession(page: String): List<String>? {
-        if(page == "") {
+        if (page == "") {
             logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
         }
         return super.findSession(page)

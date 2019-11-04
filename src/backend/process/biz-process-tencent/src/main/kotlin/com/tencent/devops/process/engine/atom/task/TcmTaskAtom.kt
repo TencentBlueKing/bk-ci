@@ -58,15 +58,15 @@ class TcmTaskAtom @Autowired constructor(
         }
 
         val tcmReqParam = TcmReqParam(userId, appId, tcmAppId, templateId, taskName, workJson)
-        LogUtils.addLine(rabbitTemplate, buildId, "tcm原子请求参数:\n ${tcmReqParam.beanToMap()}", elementId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "tcm原子请求参数:\n ${tcmReqParam.beanToMap()}", elementId, task.containerHashId, task.executeCount ?: 1)
         return try {
             val pipelineId = task.pipelineId
             val lastUpdateUser = pipelineUserService.list(setOf(pipelineId)).firstOrNull()?.updateUser ?: ""
             client.get(ServiceTcmResource::class).startTask(tcmReqParam, buildId, lastUpdateUser)
-            LogUtils.addLine(rabbitTemplate, buildId, "tcm原子执行成功", elementId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "tcm原子执行成功", elementId, task.containerHashId, task.executeCount ?: 1)
             defaultSuccessAtomResponse
         } catch (e: Exception) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "tcm原子执行失败:${e.message}", elementId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "tcm原子执行失败:${e.message}", elementId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,

@@ -45,7 +45,8 @@ class GcloudTaskAtom @Autowired constructor(
         val pAppId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
                 LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
-                    executeCount
+                task.containerHashId,
+                executeCount
                 )
                 return defaultFailAtomResponse
             }
@@ -64,19 +65,19 @@ class GcloudTaskAtom @Autowired constructor(
         if (null != lastModifyUser && operator != lastModifyUser) {
             // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
             logger.info("operator:$operator, lastModifyUser:$lastModifyUser")
-            LogUtils.addLine(rabbitTemplate, task.buildId, "将以用户${lastModifyUser}执行文件传输/Will use $lastModifyUser to execute gcloud task...", task.taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "将以用户${lastModifyUser}执行文件传输/Will use $lastModifyUser to execute gcloud task...", task.taskId, task.containerHashId, executeCount)
             operator = lastModifyUser
         }
 
-        LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行失败/execute gcloud task failed! task($pTemplateId, $pApiAuthCode, $pTaskParameters)", task.taskId, executeCount)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行失败/execute gcloud task failed! task($pTemplateId, $pApiAuthCode, $pTaskParameters)", task.taskId, task.containerHashId, executeCount)
 
         val gcloudTaskExecutor = GcloudTaskExecutor(rabbitTemplate, gcloudApiUrl, task.buildId)
-        val result = gcloudTaskExecutor.syncRunGcloudTask(pAppId, operator, pApiAuthCode, pTemplateId, pTaskParameters, pTimeoutInSeconds, task.taskId, executeCount)
+        val result = gcloudTaskExecutor.syncRunGcloudTask(pAppId, operator, pApiAuthCode, pTemplateId, pTaskParameters, pTimeoutInSeconds, task.taskId, task.containerHashId ?: "", executeCount)
         return if (result.success) {
-            LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行成功/execute gcloud task success!", task.taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行成功/execute gcloud task success!", task.taskId, task.containerHashId, executeCount)
             AtomResponse(BuildStatus.SUCCEED)
         } else {
-            LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行失败/execute gcloud task failed!", task.taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行失败/execute gcloud task failed!", task.taskId, task.containerHashId, executeCount)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,

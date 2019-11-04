@@ -31,7 +31,8 @@ class DockerHostDebugService @Autowired constructor(
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
     private val redisUtils: RedisUtils,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val storeImageService: StoreImageService
 ) {
 
     @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
@@ -44,10 +45,30 @@ class DockerHostDebugService @Autowired constructor(
     private val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
     private val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
 
-    fun insertDebug(projectId: String, pipelineId: String, vmSeqId: String, imageName: String, buildEnvStr: String, imageType: ImageType?, credentialId: String?) {
-        logger.info("Start docker debug  pipelineId:($pipelineId), projectId:($projectId), vmSeqId:($vmSeqId), imageName:($imageName)")
+    fun insertDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        imageCode: String?,
+        imageVersion: String?,
+        imageName: String?,
+        buildEnvStr: String,
+        imageType: ImageType?,
+        credentialId: String?
+    ) {
+        logger.info("Start docker debug  pipelineId:($pipelineId), projectId:($projectId), vmSeqId:($vmSeqId), imageName:($imageName), imageType:($imageType), imageCode:($imageCode), imageVersion:($imageVersion)")
         val dockerImage = if (imageType == ImageType.THIRD) {
-            imageName
+            imageName!!
+        }else if(imageType == ImageType.BKSTORE){
+            // 调商店接口获取镜像完整名称
+            storeImageService.getCompleteImageName(
+                userId = userId,
+                projectId = projectId,
+                imageCode = imageCode,
+                imageVersion = imageVersion,
+                defaultPrefix = dockerBuildImagePrefix
+            )
         } else {
             when (imageName) {
                 DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
@@ -79,18 +100,18 @@ class DockerHostDebugService @Autowired constructor(
         }
 
         pipelineDockerDebugDao.insertDebug(
-                dslContext,
-                projectId,
-                pipelineId,
-                vmSeqId,
-                PipelineTaskStatus.QUEUE,
-                "",
-                dockerImage,
-                hostTag,
-                buildEnvStr,
-                userName,
-                password,
-                imageType = if (null == imageType) { ImageType.BKDEVOPS.type } else { imageType.type })
+            dslContext,
+            projectId,
+            pipelineId,
+            vmSeqId,
+            PipelineTaskStatus.QUEUE,
+            "",
+            dockerImage,
+            hostTag,
+            buildEnvStr,
+            userName,
+            password,
+            imageType = if (null == imageType) { ImageType.BKDEVOPS.type } else { imageType.type })
     }
 
     fun deleteDebug(pipelineId: String, vmSeqId: String): Result<Boolean> {

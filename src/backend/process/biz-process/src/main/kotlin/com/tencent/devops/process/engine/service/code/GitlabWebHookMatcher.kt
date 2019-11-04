@@ -19,7 +19,7 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
         pipelineId: String,
         repository: Repository,
         webHookParams: ScmWebhookMatcher.WebHookParams
-    ):  ScmWebhookMatcher.MatchResult {
+    ): ScmWebhookMatcher.MatchResult {
         with(webHookParams) {
             if (repository !is CodeGitlabRepository) {
                 logger.warn("The repo($repository) is not code git repo for git web hook")

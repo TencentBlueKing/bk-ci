@@ -132,11 +132,11 @@ class PipelineBuildService(
         checkPermission(userId, projectId, pipelineId, AuthPermission.EXECUTE, message)
 
     private fun checkPermission(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            permission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(userId, projectId, pipelineId, permission)) {
             throw PermissionForbiddenException(message)
@@ -146,9 +146,10 @@ class PipelineBuildService(
     private fun filterParams(
         userId: String?,
         projectId: String,
+        pipelineId: String,
         params: List<BuildFormProperty>
     ): List<BuildFormProperty> {
-        return paramService.filterParams(userId, projectId, params)
+        return paramService.filterParams(userId, projectId, pipelineId, params)
     }
 
     private fun hasDownloadPermission(userId: String, projectId: String, pipelineId: String): Boolean {
@@ -234,7 +235,7 @@ class PipelineBuildService(
             }
         }
 
-        val params = filterParams(if (checkPermission && userId != null) userId else null, projectId, container.params)
+        val params = filterParams(if (checkPermission && userId != null) userId else null, projectId, pipelineId, container.params)
 
         return BuildManualStartupInfo(canManualStartup, canElementSkip, params)
     }
@@ -1277,17 +1278,14 @@ class PipelineBuildService(
                 stage.containers.forEach { container ->
                     container.elements.forEach { e ->
                         tasks.forEach { task ->
-                            if (task.first == e.id) {
+                            val taskId = task["taskId"] ?: ""
+                            val containerId = task["containerId"] ?: ""
+                            val status = task["status"] ?: ""
+                            if (taskId == e.id) {
                                 isPrepareEnv = false
-                                logger.info("Pipeline($pipelineId) build($buildId) shutdown by $userId, elementId: ${task.first}")
-                                LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", task.first, 1)
-                                LogUtils.addFoldEndLine(
-                                    rabbitTemplate,
-                                    buildId,
-                                    "${e.name}-[${task.first}]",
-                                    task.first,
-                                    1
-                                )
+                                logger.info("Pipeline($pipelineId) build($buildId) shutdown by $userId, elementId: $taskId")
+                                LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", taskId, containerId, 1)
+                                LogUtils.addFoldEndLine(rabbitTemplate, buildId, "${e.name}-[$taskId]", taskId, containerId, 1)
                             }
                         }
                     }
@@ -1295,7 +1293,7 @@ class PipelineBuildService(
             }
 
             if (isPrepareEnv) {
-                LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", "", 1)
+                LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", "", "", 1)
             }
 
             try {
@@ -1310,7 +1308,7 @@ class PipelineBuildService(
         }
     }
 
-    private fun getRunningTask(projectId: String, buildId: String): List<Pair<String/*taskId*/, BuildStatus>> {
+    private fun getRunningTask(projectId: String, buildId: String): List<Map<String, String>> {
         return pipelineRuntimeService.getRunningTask(projectId, buildId)
     }
 
@@ -1421,7 +1419,6 @@ class PipelineBuildService(
         } else {
             "构建任务对应的Agent进程已退出: ${simpleResult.message}"
         }
-        LogUtils.addRedLine(rabbitTemplate, buildId, errorMsg, "", 1)
 
         var stageId: String? = null
         var containerType = "vmBuild"

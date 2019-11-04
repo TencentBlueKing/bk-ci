@@ -67,8 +67,8 @@ class SecurityTaskAtom @Autowired constructor(
         val type = if (isCustom) ArtifactoryType.CUSTOM_DIR else ArtifactoryType.PIPELINE
         val buildNo = runVariables[PIPELINE_BUILD_NUM]?.toInt() ?: 0
 
-        LogUtils.addLine(rabbitTemplate, buildId, "maxTimes: $maxTimes", taskId, task.executeCount ?: 1)
-        LogUtils.addLine(rabbitTemplate, buildId, "isAlert: $isAlert", taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "maxTimes: $maxTimes", taskId, task.containerHashId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "isAlert: $isAlert", taskId, task.containerHashId, task.executeCount ?: 1)
 
         val jfrogClient = JfrogClient(gatewayUrl ?: "", projectId, pipelineId, buildId)
         val apkTaskIdMap = mutableMapOf<String, String>()
@@ -85,42 +85,42 @@ class SecurityTaskAtom @Autowired constructor(
                         .removePrefix("$projectId/")
             }.forEach { apkFile ->
                 if (!apkFile.endsWith(".apk")) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "非法apkFile: $apkFile", taskId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "非法apkFile: $apkFile", taskId, task.containerHashId, task.executeCount ?: 1)
                     return AtomResponse(BuildStatus.FAILED)
                 }
                 val apkTaskId = apkUpload(task, apkFile, type, envId, isCustom, userId, buildNo)
                 if (apkTaskId.isBlank()) {
-                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "启动[$apkFile]apk包加固任务失败!", task.taskId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "启动[$apkFile]apk包加固任务失败!", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     return AtomResponse(BuildStatus.FAILED)
                 } else {
-                    LogUtils.addLine(rabbitTemplate, task.buildId, "启动[$apkFile]apk包加固任务成功!", task.taskId, task.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, task.buildId, "启动[$apkFile]apk包加固任务成功!", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     val checkStatus = checkStatus(task, envId, times, apkTaskId)
                     when {
                         BuildStatus.isFailure(checkStatus) -> {
-                            LogUtils.addRedLine(rabbitTemplate, task.buildId, "[$apkFile]apk包加固任务失败!", task.taskId, task.executeCount ?: 1)
+                            LogUtils.addRedLine(rabbitTemplate, task.buildId, "[$apkFile]apk包加固任务失败!", task.taskId, task.containerHashId, task.executeCount ?: 1)
                             return AtomResponse(BuildStatus.FAILED)
                         }
                         BuildStatus.isRunning(checkStatus) -> {
-                            LogUtils.addLine(rabbitTemplate, buildId, "[$apkFile]等待上传结果", taskId, task.executeCount ?: 1)
+                            LogUtils.addLine(rabbitTemplate, buildId, "[$apkFile]等待上传结果", taskId, task.containerHashId, task.executeCount ?: 1)
                             apkTaskIdMap[apkFile] = apkTaskId
                         }
-                        else -> LogUtils.addLine(rabbitTemplate, buildId, "[$apkFile]apk包加固完成", taskId, task.executeCount ?: 1)
+                        else -> LogUtils.addLine(rabbitTemplate, buildId, "[$apkFile]apk包加固完成", taskId, task.containerHashId, task.executeCount ?: 1)
                     }
                 }
             }
         }
 
         if (fileConut == 0) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "There are 0 file found to execute apk security task", taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "There are 0 file found to execute apk security task", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(BuildStatus.FAILED)
         }
 
         // 异步直接返回成功
         if (asynchronous) {
-            LogUtils.addLine(rabbitTemplate, buildId, "开启异步处理立即返回，详情稍后请前往APK加固：<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/apk/$projectId/$envId/detail'>查看详情</a>", taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "开启异步处理立即返回，详情稍后请前往APK加固：<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/apk/$projectId/$envId/detail'>查看详情</a>", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(BuildStatus.SUCCEED)
         } else if (apkTaskIdMap.isEmpty()) {
-            LogUtils.addLine(rabbitTemplate, buildId, "全部加固完成，详情请前往APK加固：<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/apk/$projectId/$envId/detail'>查看详情</a>", taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "全部加固完成，详情请前往APK加固：<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/apk/$projectId/$envId/detail'>查看详情</a>", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(BuildStatus.SUCCEED)
         }
 
@@ -133,7 +133,7 @@ class SecurityTaskAtom @Autowired constructor(
     override fun tryFinish(task: PipelineBuildTask, param: SecurityElement, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         val buildId = task.buildId
         if (task.taskParams["bsApkTaskIdMap"] == null) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到APK加固任务ID，请联系管理员", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到APK加固任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -153,14 +153,14 @@ class SecurityTaskAtom @Autowired constructor(
                 val checkStatus = checkStatus(task, envId, times, apkTaskId)
                 when {
                     BuildStatus.isFailure(checkStatus) -> {
-                        LogUtils.addRedLine(rabbitTemplate, task.buildId, "[$apkFile]apk包加固任务失败!", task.taskId, task.executeCount ?: 1)
+                        LogUtils.addRedLine(rabbitTemplate, task.buildId, "[$apkFile]apk包加固任务失败!", task.taskId, task.containerHashId, task.executeCount ?: 1)
                         fail = true
                     }
                     BuildStatus.isRunning(checkStatus) -> {
                         apkTaskIdMap[apkFile] = apkTaskId
                     }
                     else -> {
-                        LogUtils.addLine(rabbitTemplate, buildId, "[$apkFile]apk包加固完成", task.taskId, task.executeCount ?: 1)
+                        LogUtils.addLine(rabbitTemplate, buildId, "[$apkFile]apk包加固完成", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     }
                 }
             }
@@ -176,7 +176,7 @@ class SecurityTaskAtom @Autowired constructor(
         }
 
         if (apkTaskIdMap.isEmpty()) {
-            LogUtils.addLine(rabbitTemplate, buildId, "全部加固完成，详情请前往APK加固：<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/apk/${task.projectId}/$envId/detail'>查看详情</a>", task.taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "全部加固完成，详情请前往APK加固：<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/apk/${task.projectId}/$envId/detail'>查看详情</a>", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(BuildStatus.SUCCEED)
         }
 
@@ -195,7 +195,7 @@ class SecurityTaskAtom @Autowired constructor(
         buildNo: Int
     ): String {
 
-        LogUtils.addLine(rabbitTemplate, task.buildId, "security file path: $apkFile", task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "security file path: $apkFile", task.taskId, task.containerHashId, task.executeCount ?: 1)
         // 获取文件信息，并上传文件
         val jfrogFile = client.get(ServiceArtifactoryResource::class).show(task.projectId, type, apkFile).data!!
 
@@ -206,6 +206,7 @@ class SecurityTaskAtom @Autowired constructor(
                 task.buildId,
                 buildNo,
                 task.taskId,
+                task.containerHashId ?: "",
                 task.executeCount ?: 1,
                 isCustom,
                 userId,
@@ -218,17 +219,17 @@ class SecurityTaskAtom @Autowired constructor(
         )
         val result = client.getWithoutRetry(ServiceFileResource::class).securityUpload(uploadParams).data ?: ""
         // 解析和保存结果
-        LogUtils.addLine(rabbitTemplate, task.buildId, (("security upload response is:\n $result")), task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, (("security upload response is:\n $result")), task.taskId, task.containerHashId, task.executeCount ?: 1)
         return result.replace("\\\"", "\"").replace("\"{", "{").replace("}\"", "}")
     }
 
     private fun checkStatus(task: PipelineBuildTask, envId: String, times: Int, apkTaskId: String): BuildStatus {
         val finalResult = client.get(ServiceFileResource::class).getSecurityResult(envId, task.projectId, task.buildId, task.taskId, apkTaskId).data
         if (parser.parse(finalResult).asJsonObject["ret"].asString == "0") {
-            LogUtils.addLine(rabbitTemplate, task.buildId, (("apk包加固完成: $finalResult")), task.taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, task.buildId, (("apk包加固完成: $finalResult")), task.taskId, task.containerHashId, task.executeCount ?: 1)
             return BuildStatus.SUCCEED
         }
-        LogUtils.addLine(rabbitTemplate, task.buildId, "get the task[$apkTaskId] result is :$finalResult", task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "get the task[$apkTaskId] result is :$finalResult", task.taskId, task.containerHashId, task.executeCount ?: 1)
         // 一个小时多点就算超时
         if (times > maxTimes) {
             if (isAlert) {
@@ -236,7 +237,7 @@ class SecurityTaskAtom @Autowired constructor(
                         "apk加固超时, projectId: ${task.projectId}, pipelineId: ${task.pipelineId}, buildId: ${task.buildId}\n\n$finalResult")
             }
 
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "apk加固超时", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "apk加固超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
@@ -250,7 +251,7 @@ class SecurityTaskAtom @Autowired constructor(
             AlertUtils.doAlert("ATOM_SECURITY", AlertLevel.LOW, "apk加固时间过长告警",
                     "apk加固时间过长, projectId: ${task.projectId}, pipelineId: ${task.pipelineId}, buildId: ${task.buildId}\n\n$finalResult")
 
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "apk加固过长，继续轮循", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "apk加固过长，继续轮循", task.taskId, task.containerHashId, task.executeCount ?: 1)
         }
 
         return BuildStatus.LOOP_WAITING

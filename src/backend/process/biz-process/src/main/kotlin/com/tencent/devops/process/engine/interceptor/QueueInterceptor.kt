@@ -77,7 +77,7 @@ class QueueInterceptor @Autowired constructor(
                 // 排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
                 val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(pipelineId)
                 if (buildInfo != null) {
-                    LogUtils.addRedLine(rabbitTemplate, buildInfo.buildId, "$pipelineId] queue outSize,cancel first Queue build", "QueueInterceptor", 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildInfo.buildId, "$pipelineId] queue outSize,cancel first Queue build", "QueueInterceptor", "", 1)
                     logger.info("$pipelineId] queue outSize,shutdown first Queue build")
                     pipelineEventDispatcher.dispatch(
                             PipelineBuildCancelEvent(javaClass.simpleName, buildInfo.projectId, pipelineId, buildSummaryRecord.latestStartUser, buildInfo.buildId, BuildStatus.CANCELED)

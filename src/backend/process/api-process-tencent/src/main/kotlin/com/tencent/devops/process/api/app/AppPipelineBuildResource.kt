@@ -30,7 +30,7 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("获取流水线手动启动参数")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -46,7 +46,7 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("手动启动流水线")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartup")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartup")
     @Path("/{projectId}/{pipelineId}/")
     fun manualStartup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -64,7 +64,7 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("手动停止流水线")
     @DELETE
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -83,7 +83,7 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("重试流水线")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -105,7 +105,7 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("获取构建详情")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -124,7 +124,7 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("质量红线人工审核")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/qualityGateReview/{action}")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/qualityGateReview/{action}")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
     fun manualQualityGateReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -149,7 +149,7 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("人工审核")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/review")
     fun manualReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

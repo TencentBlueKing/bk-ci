@@ -28,7 +28,7 @@ package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.service.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import com.tencent.devops.store.service.template.TxMarketTemplateService
 import org.slf4j.LoggerFactory

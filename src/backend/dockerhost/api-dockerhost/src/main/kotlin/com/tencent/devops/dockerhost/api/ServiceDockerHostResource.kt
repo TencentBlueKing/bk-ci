@@ -27,10 +27,9 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dockerhost.pojo.CheckImageRequest
+import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
-import com.tencent.devops.dockerhost.pojo.DockerRunParam
-import com.tencent.devops.dockerhost.pojo.DockerRunResponse
-import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -39,7 +38,6 @@ import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
-import javax.ws.rs.DELETE
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -88,4 +86,15 @@ interface ServiceDockerHostResource {
         buildId: String,
         @Context request: HttpServletRequest
     ): Result<Pair<Status, String?>>
+
+    @ApiOperation("验证镜像是否合法")
+    @POST
+    @Path("/build/image/buildIds/{buildId}/check")
+    fun checkImage(
+        @ApiParam(value = "buildId", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("验证镜像合法性请求报文体", required = true)
+        checkImageRequest: CheckImageRequest
+    ): Result<CheckImageResponse?>
 }

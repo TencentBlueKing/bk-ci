@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":quality:biz-quality")
     compile project(":common:common-auth:common-auth-tencent")
 

@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component
 class BcsContainerOpAtom @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val bkAuthTokenApi: BSAuthTokenApi,
-    private val serviceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : IAtomTask<BcsContainerOpElement> {
 
     override fun getParamElement(task: PipelineBuildTask): BcsContainerOpElement {
@@ -56,7 +56,8 @@ class BcsContainerOpAtom @Autowired constructor(
     ): AtomResponse {
 
         if (param.opType.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "opType is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "opType is not init",
+                task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -90,7 +91,7 @@ class BcsContainerOpAtom @Autowired constructor(
         // 公共的参数校验
         if (param.category.isNullOrBlank()) {
             logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| category is not init")
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "category is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "category is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //            throw BuildTaskException(ERROR_BUILD_TASK_BCS_PARAM_CATEGORY, "category is not init")
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -102,7 +103,7 @@ class BcsContainerOpAtom @Autowired constructor(
 
         if (param.bcsAppInstId.isNullOrBlank()) {
             logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsAppInstId is not init")
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "bcsAppInstId is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "bcsAppInstId is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //            throw BuildTaskException(ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID, "bcsAppInstId is not init")
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -132,6 +133,7 @@ class BcsContainerOpAtom @Autowired constructor(
                     task.buildId,
                     "BCS opType is reCreate, instanceId : $bcsAppInstId",
                     task.taskId,
+                    task.containerHashId,
                     task.executeCount ?: 1
                 )
                 result = reCreateInstance(category, appIdStr, projectId, bcsAppInstId)
@@ -139,7 +141,7 @@ class BcsContainerOpAtom @Autowired constructor(
             BcsOperation.SCALE -> {
                 if (param.bcsInstNum == null) {
                     logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsInstNum is not init")
-                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "bcsInstNum is not init", task.taskId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "bcsInstNum is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                    throw BuildTaskException(ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM, "bcsInstNum is not init")
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
@@ -154,6 +156,7 @@ class BcsContainerOpAtom @Autowired constructor(
                     task.buildId,
                     "BCS opType is scale, instanceId : $bcsAppInstId and instanceNum: $instNum",
                     task.taskId,
+                    task.containerHashId,
                     task.executeCount ?: 1
                 )
                 result = scaleInstance(category, appIdStr, projectId, bcsAppInstId, instNum)
@@ -161,7 +164,8 @@ class BcsContainerOpAtom @Autowired constructor(
             BcsOperation.ROLLINGUPDATE -> {
                 if (param.instVersionId == null) {
                     logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| instVersionId is not init")
-                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "instVersionId is not init", task.taskId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "instVersionId is not init",
+                        task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                    throw BuildTaskException(ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID, "instVersionId is not init")
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
@@ -180,6 +184,7 @@ class BcsContainerOpAtom @Autowired constructor(
                             task.buildId,
                             "BCS opType is application update, instanceId : $bcsAppInstId",
                             task.taskId,
+                            task.containerHashId,
                             task.executeCount ?: 1
                         )
                         applicationUpdate(appIdStr, projectId, versionId, bcsAppInstId, instVar)
@@ -187,7 +192,8 @@ class BcsContainerOpAtom @Autowired constructor(
                     else -> {
                         if (param.bcsInstNum == null) {
                             logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsInstNum is not init")
-                            LogUtils.addRedLine(rabbitTemplate, task.buildId, "bcsInstNum is not init", task.taskId, task.executeCount ?: 1)
+                            LogUtils.addRedLine(rabbitTemplate, task.buildId, "bcsInstNum is not init",
+                                task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                            throw BuildTaskException(ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM, "bcsInstNum is not init")
                             return AtomResponse(
                                 buildStatus = BuildStatus.FAILED,
@@ -203,6 +209,7 @@ class BcsContainerOpAtom @Autowired constructor(
                             task.buildId,
                             "BCS opType is batch update, instanceId : $bcsAppInstId",
                             task.taskId,
+                            task.containerHashId,
                             task.executeCount ?: 1
                         )
                         updateInstance(category, appIdStr, projectId, versionId, instNum, bcsAppInstId, instVar)
@@ -210,7 +217,7 @@ class BcsContainerOpAtom @Autowired constructor(
                 }
             }
             BcsOperation.DELETE -> {
-                LogUtils.addLine(rabbitTemplate, task.buildId, "BCS opType is delete", task.taskId, task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, task.buildId, "BCS opType is delete", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 result = deleteInstance(category, appIdStr, projectId, bcsAppInstId)
             }
             else -> {
@@ -218,7 +225,7 @@ class BcsContainerOpAtom @Autowired constructor(
         }
         if (result.first != 0) {
             logger.error("BCS operate failed msg: ${result.second}")
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operate result:${result.second}", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operate result:${result.second}", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //            throw BuildTaskException(ERROR_BUILD_TASK_BCS_OPERATE_FAIL, "BCS operate failed, msg: ${result.second}")
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -233,8 +240,8 @@ class BcsContainerOpAtom @Autowired constructor(
         if (opType != BcsOperation.DELETE) {
             val appResult = waitForRunning(appIdStr, projectId, bcsAppInstId, timeout.toLong())
             if (!appResult.first) {
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operation failed", task.taskId, task.executeCount ?: 1)
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, appResult.second, task.taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operation failed", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, appResult.second, task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                throw BuildTaskException(ERROR_BUILD_TASK_BCS_OPERATE_FAIL, "BCS operate failed, msg: ${appResult.second}")
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -245,7 +252,7 @@ class BcsContainerOpAtom @Autowired constructor(
             }
         }
 
-        LogUtils.addLine(rabbitTemplate, task.buildId, "BCS operation success!", task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "BCS operation success!", task.taskId, task.containerHashId, task.executeCount ?: 1)
         return AtomResponse(BuildStatus.SUCCEED)
     }
 
@@ -279,7 +286,7 @@ class BcsContainerOpAtom @Autowired constructor(
     }
 
     private fun getInstanceStatus(appidStr: String, projectId: String, instanceId: String): TaskResult {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url =
             bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/$instanceId/status/?access_token=$token"
         logger.info("Get instance status, request url: $url")
@@ -322,7 +329,7 @@ class BcsContainerOpAtom @Autowired constructor(
 
         val timeout = param.timeout
         if (param.clusterId.isNullOrBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "clusterId is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "clusterId is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -333,19 +340,19 @@ class BcsContainerOpAtom @Autowired constructor(
         }
         if (param.namespaceVar == null) {
             logger.error("namespaceVar is not init of build(${task.buildId})")
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "namespaceVar is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "namespaceVar is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = USER_INPUT_INVAILD,
-                errorMsg = "namespaceVar is not init"
+                errorMsg = "versionId is not init"
             )
             // throw BuildTaskException(ERROR_BUILD_TASK_BCS_PARAM_NAMESPACE_VAR, "namespaceVar is not init")
         }
         val variableInfo = param.namespaceVar!!
         if (param.versionId.isNullOrBlank()) {
             logger.error("versionId is not init of build(${task.buildId})")
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "versionId is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "versionId is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -355,7 +362,7 @@ class BcsContainerOpAtom @Autowired constructor(
         }
         if (param.showVersionId.isNullOrBlank()) {
             logger.error("showVersionId is not init of build(${task.buildId})")
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "showVersionId is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "showVersionId is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -365,7 +372,7 @@ class BcsContainerOpAtom @Autowired constructor(
         }
         if (param.instanceEntity.isNullOrBlank()) {
             logger.error("instanceEntity is not init of build(${task.buildId})")
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "instanceEntity is not init", task.taskId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, task.buildId, "instanceEntity is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -382,9 +389,9 @@ class BcsContainerOpAtom @Autowired constructor(
         val showVersionName = parseVariable(param.showVersionName, runVariables)
         val instanceEntityObj = JsonUtil.toMap(instanceEntity)
 
-        LogUtils.addLine(rabbitTemplate, task.buildId, "BCS opType is create, instanceEntity : $instanceEntity", task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "BCS opType is create, instanceEntity : $instanceEntity", task.taskId, task.containerHashId, task.executeCount ?: 1)
 
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url = bcsAppUrl + "cc_app_ids/$appIdStr/projects/$projectId/instances/?access_token=$token"
         logger.info("Create instance, request url: $url")
 
@@ -416,7 +423,7 @@ class BcsContainerOpAtom @Autowired constructor(
             logger.info("Create instance, response: $data")
             if (!response.isSuccessful) {
                 logger.error("Create instance failed, msg: $data")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "Create instance failed, msg: $data", task.taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "Create instance failed, msg: $data", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                throw RuntimeException(data)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -430,7 +437,7 @@ class BcsContainerOpAtom @Autowired constructor(
             val message = responseData["message"] as String
             if (code != 0) {
                 logger.error("Create instance failed, msg:$message")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "创建实例失败，详情：$message", task.taskId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "创建实例失败，详情：$message", task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                throw BuildTaskException(ERROR_BUILD_TASK_BCS_CREATE_INSTANCE_FAIL, "Create instance failed, msg:$message")
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -447,8 +454,8 @@ class BcsContainerOpAtom @Autowired constructor(
             instIdList.forEach {
                 val appResult = waitForRunning(appIdStr, projectId, it.toString(), timeout.toLong())
                 if (!appResult.first) {
-                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operation failed", task.taskId, task.executeCount ?: 1)
-                    LogUtils.addRedLine(rabbitTemplate, task.buildId, appResult.second, task.taskId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS operation failed", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, task.buildId, appResult.second, task.taskId, task.containerHashId, task.executeCount ?: 1)
 //                    throw BuildTaskException(ERROR_BUILD_TASK_BCS_OPERATE_FAIL, "BCS operate failed, msg: ${appResult.second}")
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
@@ -458,7 +465,7 @@ class BcsContainerOpAtom @Autowired constructor(
                     )
                 }
             }
-            LogUtils.addLine(rabbitTemplate, task.buildId, "BCS operation success!", task.taskId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "BCS operation success!", task.taskId, task.containerHashId, task.executeCount ?: 1)
         }
         return AtomResponse(BuildStatus.SUCCEED)
     }
@@ -469,7 +476,7 @@ class BcsContainerOpAtom @Autowired constructor(
         projectId: String,
         instIdList: String
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url =
             bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_recreate/?access_token=$token&category=${category.getValue()}"
         logger.info("Recreate instance, request url: $url")
@@ -499,7 +506,7 @@ class BcsContainerOpAtom @Autowired constructor(
         projectId: String,
         instIdList: String
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url =
             bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_delete/?access_token=$token&category=${category.getValue()}"
         logger.info("delete instance, request url: $url")
@@ -530,7 +537,7 @@ class BcsContainerOpAtom @Autowired constructor(
         instIdList: String,
         instNum: Int
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url =
             bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_scale/?access_token=$token&category=${category.getValue()}&instance_num=$instNum"
         logger.info("Scale instance, request url: $url")
@@ -561,7 +568,7 @@ class BcsContainerOpAtom @Autowired constructor(
         instIdList: String,
         namespaceVar: Map<String, Map<String, String>>
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url =
             bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_application_update/?access_token=$token&category=${BcsCategory.APPLICATION.getValue()}&version_id=$versionId"
         logger.info("Update application instance, request url: $url")
@@ -597,7 +604,7 @@ class BcsContainerOpAtom @Autowired constructor(
         instIdList: String,
         instVar: Map<String, Map<String, String>>
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url =
             bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_update/?access_token=$token&category=${category.getValue()}&version_id=$versionId&instance_num=$instNum"
         logger.info("Update instance, request url: $url")
@@ -625,7 +632,7 @@ class BcsContainerOpAtom @Autowired constructor(
     }
 
     private fun getProjectOriginId(projectCode: String): String {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val url = "$projectUrl$projectCode/?access_token=$token"
         logger.info("Get project info, request url: $url")
         val request = Request.Builder()

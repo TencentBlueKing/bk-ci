@@ -73,6 +73,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 maxRunningMills = getTimeoutMills(param),
                 projectId = projectId,
                 taskId = taskId,
+                containerId = task.containerHashId,
                 taskInstanceId = taskInstanceId,
                 operator = operator,
                 buildId = buildId,
@@ -92,10 +93,11 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         val executeCount = task.executeCount ?: 1
+        val containerId = task.containerHashId
 
         if (param.content.isBlank()) {
             logger.error("content is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "content is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "content is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -107,7 +109,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
 
         if (param.type < 0) {
             logger.warn("type is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "type is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "type is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -117,7 +119,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         }
         if (param.envType.isBlank()) {
             logger.warn("envType is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "envType is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "envType is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -129,7 +131,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val envTypeValue = parseVariable(param.envType, runVariables)
         if (envTypeValue == "ENV" && (param.envId == null || param.envId!!.isEmpty())) {
             logger.warn("EnvId is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -139,7 +141,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         }
         if (envTypeValue == "ENV_NAME" && (param.envName == null || param.envName!!.isEmpty())) {
             logger.warn("EnvName is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -149,7 +151,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         }
         if (envTypeValue == "NODE" && (param.nodeId == null || param.nodeId!!.isEmpty())) {
             logger.warn("NodeId is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "NodeId is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "NodeId is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -161,7 +163,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         if (param.account.isBlank()) {
             logger.warn("ipList is not init of build($buildId)")
 
-            LogUtils.addRedLine(rabbitTemplate, buildId, "account is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "account is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -193,6 +195,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 buildId,
                 "Invalid content, it's not in valid Base64 scheme",
                 taskId,
+                containerId,
                 executeCount
             )
             return AtomResponse(
@@ -218,6 +221,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 buildId,
                 "Will use $lastModifyUser to distribute file...",
                 taskId,
+                containerId,
                 executeCount
             )
 
@@ -229,31 +233,41 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val envSet = when (envTypeValue) {
             "NODE" -> {
                 if (param.nodeId == null || param.nodeId!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, executeCount)
-                    throw BuildTaskException(ERROR_BUILD_TASK_ENV_ID_IS_NULL, "EnvId is not init")
-                }
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorMsg = "EnvId is not init"
+                    ) }
                 val targetNodeId = parseVariable(param.nodeId!!.joinToString(","), runVariables).split(",").toList()
                 EnvSet(listOf(), targetNodeId, listOf())
             }
             "ENV" -> {
                 if (param.envId == null || param.envId!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, executeCount)
-                    throw BuildTaskException(ERROR_BUILD_TASK_ENV_ID_IS_NULL, "EnvId is not init")
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorMsg = "EnvId is not init"
+                    )
                 }
                 val targetEnvId = parseVariable(param.envId!!.joinToString(","), runVariables).split(",").toList()
                 EnvSet(targetEnvId, listOf(), listOf())
             }
             "ENV_NAME" -> {
                 if (param.envName == null || param.envName!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, executeCount)
-                    throw BuildTaskException(ERROR_BUILD_TASK_ENV_NAME_IS_NULL, "EnvName is not init")
-                }
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, containerId, executeCount)
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL,
+                        errorMsg = "EnvName is not init"
+                    ) }
                 val targetEnvName = parseVariable(param.envName!!.joinToString(","), runVariables).split(",").toList()
-                val envIdList = checkAuth(buildId, taskId, executeCount, operator, projectId, targetEnvName, client)
+                val envIdList = checkAuth(buildId, taskId, containerId, executeCount, operator, projectId, targetEnvName, client)
                 EnvSet(envIdList, listOf(), listOf())
             }
             else -> {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "Unsupported EnvType: $type ", taskId, executeCount)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "Unsupported EnvType: $type ", taskId, containerId, executeCount)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -263,13 +277,14 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             }
         }
 
-        checkEnvNodeExists(buildId, taskId, executeCount, operator, projectId, envSet, client)
+        checkEnvNodeExists(buildId, taskId, containerId, executeCount, operator, projectId, envSet, client)
 
         val fastExecuteScriptReq = FastExecuteScriptRequest(
             operator, contentValue, scriptTimeout, scriptParamsValue,
             if (isParamSensitive) 1 else 0, type, envSet, account
         )
         val taskInstanceId = jobClient.fastExecuteScriptDevops(fastExecuteScriptReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -277,6 +292,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             maxRunningMills = getTimeoutMills(param),
             projectId = projectId,
             taskId = taskId,
+            containerId = task.containerHashId,
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
@@ -288,7 +304,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, containerId, executeCount)
         }
 
         return AtomResponse(buildStatus)
@@ -302,6 +318,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         operator: String,
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int
     ): BuildStatus {
 
@@ -312,6 +329,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 buildId,
                 "Job getTimeout: ${maxRunningMills / 60000} Minutes",
                 taskId,
+                containerId,
                 executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
@@ -322,11 +340,11 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
@@ -337,6 +355,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
     private fun checkAuth(
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int,
         operator: String,
         projectId: String,
@@ -354,8 +373,12 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.error("The envNames not exists, name:$noExistsEnvNames")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, executeCount)
-            throw BuildTaskException(ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames")
+            LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                errorMsg = "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames"
+            )
         }
 
         // 校验权限
@@ -368,8 +391,12 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.error("User does not permit to access the env: $noAuthEnvIds")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, executeCount)
-            throw BuildTaskException(ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds")
+            LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                errorMsg = "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds"
+            )
         }
         return envIdList
     }
@@ -377,6 +404,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
     private fun checkEnvNodeExists(
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int,
         operator: String,
         projectId: String,
@@ -398,11 +426,13 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                     buildId,
                     "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds",
                     taskId,
+                    containerId,
                     executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
                 )
             }
         }
@@ -421,11 +451,13 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                     buildId,
                     "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds",
                     taskId,
+                    containerId,
                     executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
                 )
             }
         }

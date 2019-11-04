@@ -63,7 +63,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线手动启动参数")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -79,7 +79,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建参数")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/parameters")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/parameters")
     @Path("/{projectId}/{pipelineId}/{buildId}/parameters")
     fun getBuildParameters(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -98,7 +98,7 @@ interface UserBuildResource {
 
     @ApiOperation("手动启动流水线")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/start")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/start")
     @Path("/{projectId}/{pipelineId}")
     fun manualStartup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -116,7 +116,7 @@ interface UserBuildResource {
 
     @ApiOperation("重试流水线")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -138,7 +138,7 @@ interface UserBuildResource {
 
     @ApiOperation("手动停止流水线")
     @DELETE
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -157,7 +157,7 @@ interface UserBuildResource {
 
     @ApiOperation("人工审核")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/review")
     fun manualReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -181,7 +181,7 @@ interface UserBuildResource {
 
     @ApiOperation("人工审核(new)")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/toReview")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/toReview")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/toReview")
     fun goToReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -200,10 +200,10 @@ interface UserBuildResource {
         @PathParam("elementId")
         elementId: String
     ): Result<ReviewParam>
-    
+
     @ApiOperation("获取构建详情")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -222,7 +222,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取构建详情")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/buildNo/{buildNo}/detail")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNo/{buildNo}/detail")
     @Path("/{projectId}/{pipelineId}/detail/{buildNo}")
     fun getBuildDetailByBuildNo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -241,7 +241,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取已完成的最新构建详情")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/latestFinished")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/latestFinished")
     @Path("/projects/{projectId}/pipelines/{pipelineId}/latestFinished")
     fun goToLatestFinishedBuild(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -257,7 +257,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建历史")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/{projectId}/{pipelineId}/history")
     fun getHistoryBuild(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -282,7 +282,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建历史-new")
     @GET
-    //@Path("/{projectId}/{pipelineId}/history/new")
+    // @Path("/{projectId}/{pipelineId}/history/new")
     @Path("/{projectId}/{pipelineId}/history/new")
     fun getHistoryBuildNew(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -358,7 +358,7 @@ interface UserBuildResource {
 
     @ApiOperation("修改流水线备注")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateRemark")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateRemark")
     @Path("/{projectId}/{pipelineId}/{buildId}/updateRemark")
     fun updateBuildHistoryRemark(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -379,7 +379,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建中的查询条件-状态")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionStatus")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionStatus")
     @Path("/{projectId}/{pipelineId}/historyCondition/status")
     fun getHistoryConditionStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -395,7 +395,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建中的查询条件-触发方式")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionTrigger")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionTrigger")
     @Path("/{projectId}/{pipelineId}/historyCondition/trigger")
     fun getHistoryConditionTrigger(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -411,7 +411,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建中的查询条件-代码库")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionRepo")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionRepo")
     @Path("/{projectId}/{pipelineId}/historyCondition/repo")
     fun getHistoryConditionRepo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -427,7 +427,7 @@ interface UserBuildResource {
 
     @ApiOperation("获取流水线构建中的查询条件-分支")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionBranchName")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/historyConditionBranchName")
     @Path("/{projectId}/{pipelineId}/historyCondition/branchName")
     fun getHistoryConditionBranch(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

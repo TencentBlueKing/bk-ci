@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -84,11 +83,8 @@ class ReportService @Autowired constructor(
         return reportRecordList.map {
             if (it.type == ReportTypeEnum.INTERNAL.name) {
                 val indexFile = Paths.get(it.indexFile).normalize().toString()
-                val result = client.get(ServiceArtifactoryResource::class).getReportRootUrl(
-                    projectCode = projectId, pipelineId = pipelineId, buildId = buildId, taskId = it.elementId
-                )
-                val urlPrefix = "${result.data}/$indexFile"
-                Report(it.name, urlPrefix, it.type)
+                val urlPrefix = getRootUrl(projectId, pipelineId, buildId, it.elementId)
+                Report(it.name, "$urlPrefix$indexFile", it.type)
             } else {
                 Report(it.name, it.indexFile, it.type)
             }

@@ -2,7 +2,6 @@ package com.tencent.devops.dockerhost.service
 
 import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
 import com.tencent.devops.dockerhost.pojo.Status
-import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

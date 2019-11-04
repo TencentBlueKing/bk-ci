@@ -91,7 +91,6 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
         fun makePipelineBuildTasks(
             projectId: String,
             pipelineId: String,
-            templateId: String?,
             buildId: String,
             stageId: String,
             container: Container,
@@ -111,10 +110,10 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 PipelineBuildTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    templateId = templateId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
+                    containerHashId = container.containerId ?: "",
                     containerType = containerType,
                     taskSeq = endTaskSeq,
                     taskId = VMUtils.genEndPointTaskId(endTaskSeq),
@@ -137,10 +136,10 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 PipelineBuildTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    templateId = templateId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
+                    containerHashId = container.containerId ?: "",
                     containerType = containerType,
                     taskSeq = stopVMTaskSeq,
                     taskId = VMUtils.genStopVMTaskId(stopVMTaskSeq),

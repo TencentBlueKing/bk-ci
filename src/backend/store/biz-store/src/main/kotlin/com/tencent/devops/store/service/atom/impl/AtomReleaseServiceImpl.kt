@@ -28,6 +28,10 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEPLOY
+import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.SECURITY
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -87,6 +91,7 @@ import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.websocket.WebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -137,12 +142,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var marketAtomArchiveService: MarketAtomArchiveService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
-/*    @Autowired
-    lateinit var websocketService: websocketService*/
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
     lateinit var client: Client
+    @Autowired
+    lateinit var websocketService: WebsocketService
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -178,18 +183,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 false
             )
         }
-        if (marketAtomCreateRequest.atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
-            marketAtomCreateRequest.authType ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_NULL,
-                arrayOf("authType"),
-                false
-            )
-            marketAtomCreateRequest.visibilityLevel ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_NULL,
-                arrayOf("visibilityLevel"),
-                false
-            )
-        }
         return Result(true)
     }
 
@@ -204,8 +197,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (validateResult.isNotOk()) {
             return validateResult
         }
-        val atomPackageSourceType = marketAtomCreateRequest.atomPackageSourceType
-        val handleAtomPackageResult = handleAtomPackage(atomPackageSourceType, marketAtomCreateRequest, userId, atomCode)
+        val handleAtomPackageResult = handleAtomPackage(marketAtomCreateRequest, userId, atomCode)
         logger.info("the handleAtomPackageResult is :$handleAtomPackageResult")
         if (handleAtomPackageResult.isNotOk()) {
             return Result(handleAtomPackageResult.status, handleAtomPackageResult.message, null)
@@ -273,11 +265,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     abstract fun handleAtomPackage(
-        atomPackageSourceType: AtomPackageSourceTypeEnum,
         marketAtomCreateRequest: MarketAtomCreateRequest,
         userId: String,
         atomCode: String
     ): Result<Map<String, String>?>
+
+    abstract fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum
 
     @Suppress("UNCHECKED_CAST")
     override fun updateMarketAtom(
@@ -285,9 +278,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         projectCode: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String?> {
-        logger.info("the get userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
-        val atomPackageSourceType = marketAtomUpdateRequest.atomPackageSourceType
+        logger.info("updateMarketAtom userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
+        val atomPackageSourceType = getAtomPackageSourceType(atomCode)
+        logger.info("updateMarketAtom atomPackageSourceType is :$atomPackageSourceType")
         val version = marketAtomUpdateRequest.version
         if (atomPackageSourceType == AtomPackageSourceTypeEnum.UPLOAD) {
             // 校验可执行包sha摘要内容是否有效
@@ -492,7 +486,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessage(userId, atomId)
+        websocketService.sendWebsocketMessage(userId, atomId)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -517,10 +511,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val qualityDataMap = JsonUtil.toMap(qualityJsonStr!!)
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stage = when (qualityDataMap["stage"]) {
-                    "DEVELOP" -> "开发"
-                    "TEST" -> "测试"
-                    "DEPLOY" -> "部署"
-                    "SECURITY" -> "安全"
+                    "DEVELOP" -> MessageCodeUtil.getCodeLanMessage(DEVELOP)
+                    "TEST" -> MessageCodeUtil.getCodeLanMessage(TEST)
+                    "DEPLOY" -> MessageCodeUtil.getCodeLanMessage(DEPLOY)
+                    "SECURITY" -> MessageCodeUtil.getCodeLanMessage(SECURITY)
                     else -> throw RuntimeException("unsupported stage type, only allow:DEVELOP, TEST, DEPLOY, SECURITY")
                 }
 
@@ -748,7 +742,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             marketAtomUpdateRequest.versionContent
         )
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessage(userId, atomId)
+        websocketService.sendWebsocketMessage(userId, atomId)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -843,7 +837,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
         )
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessage(userId, atomId)
+        websocketService.sendWebsocketMessage(userId, atomId)
         // 删除质量红线相关数据
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
@@ -903,14 +897,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     UpdateAtomInfo(atomStatus = atomStatus, latestFlag = true, pubTime = pubTime)
                 )
                 // 通过websocket推送状态变更消息
-                // websocketService.sendWebsocketMessage(userId, atomId)
+                websocketService.sendWebsocketMessage(userId, atomId)
             }
             // 发送版本发布邮件
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_SUCCESS)
         } else {
             marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
             // 通过websocket推送状态变更消息
-            // websocketService.sendWebsocketMessage(userId, atomId)
+            websocketService.sendWebsocketMessage(userId, atomId)
         }
         return Result(true)
     }
@@ -970,7 +964,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(), userId, atomOfflineReq.reason
         )
         // 通过websocket推送状态变更消息
-        // websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
+        websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
         // 通知使用方插件即将下架 -- todo
 
         return Result(true)

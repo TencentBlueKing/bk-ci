@@ -38,30 +38,40 @@ import java.util.regex.Pattern
 object ArchiveUtils {
 
     private val api = ApiFactory.create(ArchiveSDKApi::class)
-
     private val FIlTER_FILE = listOf(".md5", ".sha1", ".sha256", ".ds_store")
+    private const val maxFileCount = 50
 
     fun archiveCustomFiles(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): Int {
+        checkFileCount(filePath, workspace)
+
         var count = 0
-        filePath.split(",").forEach { f ->
-            matchFiles(workspace, f.trim()).forEach {
-                count++
-                if (!isFileLegal(it.name)) throw ExecuteException("不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}")
-                api.uploadCustomize(it, destPath, buildVariables)
-            }
+        filePath.split(",").forEach { f -> matchFiles(workspace, f.trim()).forEach {
+            count++
+            if (!isFileLegal(it.name)) throw RuntimeException("不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}")
+            api.uploadCustomize(it, destPath, buildVariables) }
         }
         LoggerService.addNormalLine("共成功自定义归档了 $count 个文件")
         return count
     }
 
-    fun archivePipelineFiles(filePath: String, workspace: File, buildVariables: BuildVariables): Int {
-        var count = 0
+    private fun checkFileCount(filePath: String, workspace: File) {
+        var fileNum = 0
         filePath.split(",").forEach { f ->
-            matchFiles(workspace, f.trim()).forEach {
-                count++
-                if (!isFileLegal(it.name)) throw ExecuteException("不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}")
-                api.uploadPipeline(it, buildVariables)
-            }
+            fileNum += matchFiles(workspace, f.trim()).size
+        }
+        if (fileNum > maxFileCount) {
+            throw RuntimeException("单次归档文件数太多，请打包后再归档！")
+        }
+    }
+
+    fun archivePipelineFiles(filePath: String, workspace: File, buildVariables: BuildVariables): Int {
+        checkFileCount(filePath, workspace)
+
+        var count = 0
+        filePath.split(",").forEach { f -> matchFiles(workspace, f.trim()).forEach {
+            count++
+            if (!isFileLegal(it.name)) throw RuntimeException("不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}")
+            api.uploadPipeline(it, buildVariables) }
         }
         LoggerService.addNormalLine("共成功归档了 $count 个文件")
         return count

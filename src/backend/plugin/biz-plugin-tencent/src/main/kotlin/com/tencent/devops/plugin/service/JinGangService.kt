@@ -1,27 +1,29 @@
 package com.tencent.devops.plugin.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_COUNT
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_HIGH_COUNT
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_LIGHT_COUNT
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_MIDDLE_COUNT
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.VSAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
@@ -33,7 +35,6 @@ import com.tencent.devops.plugin.pojo.JinGangAppResultReponse
 import com.tencent.devops.plugin.pojo.JinGangBugCount
 import com.tencent.devops.process.api.service.ServiceJfrogResource
 import com.tencent.devops.process.api.service.ServiceMetadataResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Property
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType
@@ -84,7 +85,14 @@ class JinGangService @Autowired constructor(
             val resultJson = convertXml(xml)
             jinGangAppDao.updateTask(dslContext, data.buildId, data.md5, data.status.toInt(), data.taskId.toLong(), data.scanUrl, resultJson)
 
-            LogUtils.addLine(rabbitTemplate, data.buildId, "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】", data.taskId, 1)
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = data.buildId,
+                message = "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】",
+                tag = data.elementId,
+                jobId = "",
+                executeCount = 1
+            )
 
             // 生成元数据
             try {

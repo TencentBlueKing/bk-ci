@@ -108,7 +108,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
     override fun getFileDownloadUrls(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         artifactoryType: ArtifactoryType,
@@ -116,10 +116,10 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?> {
         logger.info("getFileDownloadUrls fileChannelType is:$fileChannelType")
-        logger.info("getFileDownloadUrls userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId")
+        logger.info("getFileDownloadUrls userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId")
         logger.info("getFileDownloadUrls buildId is:$buildId,artifactoryType is:$artifactoryType,customFilePath is:$customFilePath")
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
-        val result = generateDestPath(fileType, projectCode, customFilePath, pipelineId, buildId)
+        val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
         logger.info("generateDestPath result is:$result")
         if (result.isNotOk()) {
             return Result(result.status, result.message, null)

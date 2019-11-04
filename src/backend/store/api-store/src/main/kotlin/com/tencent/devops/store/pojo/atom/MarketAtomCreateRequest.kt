@@ -27,7 +27,6 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -41,8 +40,6 @@ data class MarketAtomCreateRequest(
     var name: String,
     @ApiModelProperty("开发语言", required = true)
     var language: String,
-    @ApiModelProperty("插件发布包方式", required = true)
-    var atomPackageSourceType: AtomPackageSourceTypeEnum = AtomPackageSourceTypeEnum.UPLOAD,
     @ApiModelProperty("认证方式", required = false)
     val authType: String? = null,
     @ApiModelProperty(value = "项目可视范围", required = false)

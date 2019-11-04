@@ -14,7 +14,6 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.websocket.EditPageBuild
-import com.tencent.devops.process.websocket.HistoryPageBuild
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineCodeccService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
-    private val websocketPushDispatcher: WebSocketDispatcher,
+    private val websocketDispatcher: WebSocketDispatcher,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -91,7 +90,7 @@ class PipelineCodeccService @Autowired constructor(
                 page = ""
             )
 //
-//            websocketPushDispatcher.dispatch(
+//            websocketDispatcher.dispatch(
 //                pipelineErrorNotifyEvent(pipelineId, userId, projectId, post, WebSocketType.CODECC)
 //            )
             logger.warn("[$pipelineId]调用codecc add返回异常。webSocket推送异常信息[$post]")
@@ -141,7 +140,7 @@ class PipelineCodeccService @Autowired constructor(
 //                code = WebsocketCode.CODECC_UPDATE_ERROR,
 //                webSocketType = WebSocketType.changWebType(WebSocketType.CODECC)
 //            )
-//            websocketPushDispatcher.dispatch(
+//            websocketDispatcher.dispatch(
 //                pipelineErrorNotifyEvent(element.pipelineId, userId, element.projectId, post, WebSocketType.CODECC)
 //            )
 //            logger.warn("[${element.pipelineId}]调用codecc update返回异常。webSocket推送异常信息[$post]")

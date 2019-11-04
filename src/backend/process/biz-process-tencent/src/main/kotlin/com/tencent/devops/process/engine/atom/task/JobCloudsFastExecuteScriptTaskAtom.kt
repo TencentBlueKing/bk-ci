@@ -64,6 +64,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
                 operator = task.starter,
                 buildId = buildId,
                 taskId = task.taskId,
+                containerHashId = task.containerHashId,
                 executeCount = executeCount
             )
         )
@@ -87,6 +88,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
             openstate = param.openState,
             targetAppId = param.targetAppId,
             elementId = task.taskId,
+            containerHashId = task.containerHashId ?: "",
             executeCount = executeCount,
             paramSensitive = if (param.paramSensitive) 1 else 0,
             type = param.type,
@@ -104,6 +106,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
             operator = task.starter,
             buildId = buildId,
             taskId = task.taskId,
+            containerHashId = task.containerHashId,
             executeCount = executeCount
         )
 
@@ -111,7 +114,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
         }
         return if (buildStatus == BuildStatus.FAILED)
             AtomResponse(

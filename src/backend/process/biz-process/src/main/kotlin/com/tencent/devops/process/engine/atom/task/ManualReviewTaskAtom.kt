@@ -73,7 +73,8 @@ class ManualReviewTaskAtom(private val rabbitTemplate: RabbitTemplate) : IAtomTa
                         buildId = buildId,
                         message = "步骤审核结束，审核结果：[继续]，审核人：$manualActionUserId",
                         tag = taskId,
-                        executeCount = task.executeCount ?: 1
+                            jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
                     )
                     AtomResponse(BuildStatus.SUCCEED)
                 }
@@ -83,7 +84,8 @@ class ManualReviewTaskAtom(private val rabbitTemplate: RabbitTemplate) : IAtomTa
                         buildId = buildId,
                         message = "步骤审核结束，审核结果：[驳回]，审核人：$manualActionUserId",
                         tag = taskId,
-                        executeCount = task.executeCount ?: 1
+                            jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
                     )
                     AtomResponse(BuildStatus.REVIEW_ABORT)
                 }
@@ -108,7 +110,7 @@ class ManualReviewTaskAtom(private val rabbitTemplate: RabbitTemplate) : IAtomTa
         }
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
-        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "步骤等待审核，审核人：$reviewUsers", taskId, task.executeCount ?: 1)
+        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "步骤等待审核，审核人：$reviewUsers", taskId, task.containerHashId, task.executeCount ?: 1)
         logger.info("[$buildId]|START|taskId=$taskId|Start to send the email message to $reviewUsers")
 
         return AtomResponse(BuildStatus.REVIEWING)

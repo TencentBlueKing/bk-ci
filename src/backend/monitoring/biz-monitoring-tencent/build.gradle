@@ -1,7 +1,9 @@
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":monitoring:api-monitoring-tencent")
     compile project(":notify:api-notify")
+    compile project(":notify:biz-notify-tencent")
     compile project(":monitoring:model-monitoring-tencent")
-    compile project(":common:common-notify")
+    compile project(":common:common-notify:common-notify-tencent")
     compile project(":common:common-db")
 }

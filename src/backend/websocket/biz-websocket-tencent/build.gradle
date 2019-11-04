@@ -1,5 +1,6 @@
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":websocket:biz-websocket")
     compile project(":project:api-project")
 }

@@ -51,6 +51,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val projectId = task.projectId
         val executeCount = task.executeCount ?: 1
+        val containerId = task.containerHashId
 
         val startTime = task.taskParams[BS_ATOM_START_TIME_MILLS].toString().toLong()
         val operator = task.taskParams[STARTER] as String
@@ -65,6 +66,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                 maxRunningMills = timeout,
                 projectId = projectId,
                 taskId = taskId,
+                containerId = containerId,
                 taskInstanceId = taskInstanceId,
                 operator = operator,
                 buildId = buildId,
@@ -89,11 +91,12 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         val projectId = task.projectId
+        val containerId = task.containerHashId
         val executeCount = task.executeCount ?: 1
 
         if (param.taskId < 0) {
             logger.warn("taskId is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "taskId is not init", taskId, executeCount)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "taskId is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -124,6 +127,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         val executeTaskReq = ExecuteTaskRequest(operator, arrayListOf(), globalVars, jobTaskTemplateId, timeout)
         val taskInstanceId = jobClient.executeTaskDevops(executeTaskReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -131,6 +135,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
             maxRunningMills = timeout,
             projectId = projectId,
             taskId = taskId,
+            containerId = containerId,
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
@@ -142,7 +147,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, containerId, executeCount)
         }
 
         return if (buildStatus == BuildStatus.FAILED) AtomResponse(
@@ -161,6 +166,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         operator: String,
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int
     ): BuildStatus {
 
@@ -171,6 +177,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                 buildId,
                 "Job getTimeout:${maxRunningMills / 60000} Minutes",
                 taskId,
+                containerId,
                 executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
@@ -186,6 +193,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                     buildId,
                     "Job devops execute task success! detail: ${taskResult.msg}",
                     taskId,
+                    containerId,
                     executeCount
                 )
                 BuildStatus.SUCCEED
@@ -196,6 +204,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                     buildId,
                     "start execute task failed! detail: ${taskResult.msg}",
                     taskId,
+                    containerId,
                     executeCount
                 )
                 BuildStatus.FAILED

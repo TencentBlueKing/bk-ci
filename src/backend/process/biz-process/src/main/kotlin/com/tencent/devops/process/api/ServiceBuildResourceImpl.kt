@@ -117,7 +117,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             )
         )
     }
-    
+
         override fun retry(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String?, channelCode: ChannelCode): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)

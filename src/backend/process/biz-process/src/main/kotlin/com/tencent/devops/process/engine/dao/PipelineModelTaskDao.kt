@@ -174,7 +174,6 @@ class PipelineModelTaskDao {
         }
     }
 
-
     private fun getListByAtomCodeCond(a: TPipelineInfo, b: TPipelineModelTask, atomCode: String, projectCode: String?): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.DELETE.eq(false))

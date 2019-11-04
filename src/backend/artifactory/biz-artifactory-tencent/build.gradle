@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":common:common-service")
     compile project(":common:common-web")
     compile project(":common:common-client")
@@ -35,6 +36,7 @@ dependencies {
     compile "net.coobird:thumbnailator:0.4.8"
     compile project(":artifactory:model-artifactory-tencent")
     compile project(":artifactory:api-artifactory-tencent")
+    compile project(":artifactory:api-artifactory")
     compile project(":common:common-auth:common-auth-tencent")
     compile project(":common:common-archive:common-archive-tencent")
     compile project(":process:api-process-tencent")

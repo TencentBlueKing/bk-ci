@@ -102,15 +102,14 @@ interface OpMessageCodeResource {
         updateMessageCodeRequest: UpdateMessageCodeRequest
     ): Result<Boolean>
 
-
     @ApiOperation("获取返回码信息")
     @GET
     //    @Path("/{messageCode}")
     @Path("/messageCode/{messageCode}")
     fun getMessageCodeDetailV2(
-            @ApiParam(value = "返回码", required = true)
-            @PathParam("messageCode")
-            messageCode: String
+        @ApiParam(value = "返回码", required = true)
+        @PathParam("messageCode")
+        messageCode: String
     ): Result<MessageCodeDetail?>
 
     @ApiOperation("刷新返回码在redis的缓存")
@@ -118,9 +117,9 @@ interface OpMessageCodeResource {
 //    @Path("/{messageCode}/refresh")
     @Path("/messageCode/{messageCode}/refresh")
     fun refreshMessageCodeCacheV2(
-            @ApiParam(value = "返回码", required = true)
-            @PathParam("messageCode")
-            messageCode: String
+        @ApiParam(value = "返回码", required = true)
+        @PathParam("messageCode")
+        messageCode: String
     ): Result<Boolean>
 
     @ApiOperation("更新返回码信息")
@@ -128,10 +127,10 @@ interface OpMessageCodeResource {
 //    @Path("/{messageCode}")
     @Path("/messageCode/{messageCode}")
     fun updateMessageCodeDetailV2(
-            @ApiParam(value = "返回码", required = true)
-            @PathParam("messageCode")
-            messageCode: String,
-            @ApiParam(value = "返回码更新请求报文体", required = true)
-            updateMessageCodeRequest: UpdateMessageCodeRequest
+        @ApiParam(value = "返回码", required = true)
+        @PathParam("messageCode")
+        messageCode: String,
+        @ApiParam(value = "返回码更新请求报文体", required = true)
+        updateMessageCodeRequest: UpdateMessageCodeRequest
     ): Result<Boolean>
 }

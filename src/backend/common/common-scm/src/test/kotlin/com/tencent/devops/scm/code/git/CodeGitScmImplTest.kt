@@ -26,6 +26,4 @@
 
 package com.tencent.devops.scm.code.git
 
-class CodeGitScmImplTest {
-
-}
+class CodeGitScmImplTest

@@ -27,6 +27,7 @@ class LogServiceDispatcher @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         if (v2ProjectService.buildEnable(buildId, projectId)) {
@@ -36,6 +37,7 @@ class LogServiceDispatcher @Autowired constructor(
                     isAnalysis ?: false,
                     queryKeywords,
                     tag,
+                    jobId,
                     executeCount
                 )
             )
@@ -63,6 +65,7 @@ class LogServiceDispatcher @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?,
         page: Int?,
         pageSize: Int?
@@ -74,7 +77,8 @@ class LogServiceDispatcher @Autowired constructor(
                     isAnalysis ?: false,
                     queryKeywords,
                     tag,
-                    executeCount,
+                    jobId,
+                        executeCount,
                     page ?: -1,
                     pageSize ?: -1
                 )
@@ -89,7 +93,7 @@ class LogServiceDispatcher @Autowired constructor(
                     isAnalysis ?: false,
                     queryKeywords,
                     tag,
-                    executeCount,
+                        executeCount,
                     page ?: -1,
                     pageSize ?: -1
                 )
@@ -106,6 +110,7 @@ class LogServiceDispatcher @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         if (v2ProjectService.buildEnable(buildId, projectId)) {
@@ -117,7 +122,8 @@ class LogServiceDispatcher @Autowired constructor(
                     start,
                     end,
                     tag,
-                    executeCount
+                    jobId,
+                        executeCount
                 )
             )
         } else {
@@ -147,6 +153,7 @@ class LogServiceDispatcher @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         if (v2ProjectService.buildEnable(buildId, projectId)) {
@@ -157,7 +164,8 @@ class LogServiceDispatcher @Autowired constructor(
                     isAnalysis ?: false,
                     queryKeywords,
                     tag,
-                    executeCount
+                    jobId,
+                        executeCount
                 )
             )
         } else {
@@ -183,10 +191,11 @@ class LogServiceDispatcher @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Response {
         return if (v2ProjectService.buildEnable(buildId, projectId)) {
-            logServiceV2.downloadLogs(pipelineId, buildId, tag, executeCount)
+            logServiceV2.downloadLogs(pipelineId, buildId, tag, jobId, executeCount)
         } else {
             logService.downloadLogs(pipelineId, buildId, tag ?: "", executeCount)
         }
@@ -199,10 +208,11 @@ class LogServiceDispatcher @Autowired constructor(
         buildId: String,
         size: Int,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
         return if (v2ProjectService.buildEnable(buildId, projectId)) {
-            Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, executeCount, size))
+            Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, jobId, executeCount, size))
         } else {
             Result(logService.getEndLogs(pipelineId, buildId, tag ?: "", executeCount, size))
         }

@@ -1,7 +1,9 @@
 package com.tencent.devops.log.dao.v2
 
 import com.tencent.devops.model.log.tables.TLogStatusV2
+import com.tencent.devops.model.log.tables.records.TLogStatusV2Record
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -11,6 +13,7 @@ class LogStatusDaoV2 {
         dslContext: DSLContext,
         buildId: String,
         tag: String?,
+        jobId: String?,
         executeCount: Int?,
         finish: Boolean
     ) {
@@ -21,6 +24,20 @@ class LogStatusDaoV2 {
                 .onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
                 .execute()
+        }
+    }
+
+    fun listFinish(
+        dslContext: DSLContext,
+        buildId: String,
+        tag: String?,
+        executeCount: Int?
+    ): Result<TLogStatusV2Record>? {
+        with(TLogStatusV2.T_LOG_STATUS_V2) {
+            return dslContext.selectFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .and(EXECUTE_COUNT.eq(executeCount ?: 1))
+                    .fetch()
         }
     }
 

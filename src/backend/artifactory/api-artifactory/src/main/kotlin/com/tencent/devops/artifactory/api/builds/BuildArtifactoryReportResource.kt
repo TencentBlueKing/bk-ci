@@ -51,9 +51,9 @@ interface BuildArtifactoryReportResource {
     @Path("/{taskId}/root")
     @GET
     fun getRootUrl(
-        @ApiParam("projectCode", required = true)
+        @ApiParam("projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String,
+        projectId: String,
         @ApiParam("pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,

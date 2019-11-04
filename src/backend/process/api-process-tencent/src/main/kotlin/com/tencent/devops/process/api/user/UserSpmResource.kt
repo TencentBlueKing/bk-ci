@@ -25,7 +25,7 @@ import javax.ws.rs.core.MediaType
 interface UserSpmResource {
     @ApiOperation("根据下载URL获取CDN文件信息")
     @GET
-    //@Path("/projects/{projectId}/getFileInfo")
+    // @Path("/projects/{projectId}/getFileInfo")
     @Path("/{projectId}/getfileinfo")
     fun getFileInfo(
         @ApiParam("项目ID", required = true)

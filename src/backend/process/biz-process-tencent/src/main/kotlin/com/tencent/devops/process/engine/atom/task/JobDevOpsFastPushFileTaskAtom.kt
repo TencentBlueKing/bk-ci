@@ -29,6 +29,7 @@ import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_ID_NOT
 import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.Request
@@ -74,6 +75,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val projectId = task.projectId
         val executeCount = task.executeCount ?: 1
+        val containerId = task.containerHashId
 
         val startTime = task.taskParams[BS_ATOM_START_TIME_MILLS].toString().toLong()
         val operator = task.taskParams[STARTER] as String
@@ -86,6 +88,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             maxRunningMills = timeout,
             projectId = projectId,
             taskId = taskId,
+            containerId = containerId,
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
@@ -144,6 +147,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val taskId = task.taskId
+        val containerId = task.containerHashId
 
         val executeCount = task.executeCount ?: 1
         val srcPath = parseVariable(param.srcPath, runVariables)
@@ -152,7 +156,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         var count = 0
         val destPath = Files.createTempDirectory("").toFile().absolutePath
         val localFileList = mutableListOf<String>()
-        LogUtils.addLine(rabbitTemplate, buildId, "准备匹配文件: $srcPath", taskId, executeCount)
+        LogUtils.addLine(rabbitTemplate, buildId, "准备匹配文件: $srcPath", taskId, containerId, executeCount)
         srcPath.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
@@ -160,7 +164,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             val fileList = matchFile(path, projectId, pipelineId, buildId, isCustom)
 
             fileList.forEach { jfrogFile ->
-                LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${jfrogFile.uri})", taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${jfrogFile.uri})", taskId, containerId, executeCount)
                 count++
                 val url = if (isCustom) "http://$gatewayUrl/jfrog/storage/service/custom/$projectId${jfrogFile.uri}"
                 else "http://$gatewayUrl/jfrog/storage/service/archive/$projectId/$pipelineId/$buildId${jfrogFile.uri}"
@@ -171,7 +175,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             }
         }
         if (count == 0) throw RuntimeException("没有匹配到需要分发的文件")
-        LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发", taskId, executeCount)
+        LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发", taskId, containerId, executeCount)
 
         val fileSource = FastPushFileRequest.FileSource(
             files = localFileList,
@@ -225,6 +229,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     ): BuildStatus {
         val buildId = task.buildId
         val taskId = task.taskId
+        val containerId = task.containerHashId
         val targetAccount = parseVariable(param.targetAccount, runVariables)
         val timeout = 0L + (param.timeout ?: 600) * 60000
         var operator = task.starter
@@ -241,6 +246,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 buildId,
                 "Will use $lastModifyUser to distribute file...",
                 taskId,
+                containerId,
                 executeCount
             )
 
@@ -248,35 +254,47 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         }
         val projectId = task.projectId
         val targetPath = parseVariable(param.targetPath, runVariables)
-        LogUtils.addLine(rabbitTemplate, buildId, "distribute files to target path : $targetPath", taskId, executeCount)
+        LogUtils.addLine(rabbitTemplate, buildId, "distribute files to target path : $targetPath", taskId, containerId, executeCount)
 
         val targetEnvType = parseVariable(param.targetEnvType, runVariables)
 
         val envSet = when (targetEnvType) {
             "NODE" -> {
                 if (param.targetNodeId == null || param.targetNodeId!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, executeCount)
-                    throw BuildTaskException(ERROR_BUILD_TASK_ENV_ID_IS_NULL, "EnvId is not init")
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorMsg = "EnvId is not init"
+                    )
                 }
                 val targetNodeId = parseVariable(param.targetNodeId!!.joinToString(","), runVariables).split(",")
                 EnvSet(listOf(), targetNodeId, listOf())
             }
             "ENV" -> {
                 if (param.targetEnvId == null || param.targetEnvId!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, executeCount)
-                    throw BuildTaskException(ERROR_BUILD_TASK_ENV_ID_IS_NULL, "EnvId is not init")
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorMsg = "EnvId is not init"
+                    )
                 }
                 val targetEnvId = parseVariable(param.targetEnvId!!.joinToString(","), runVariables).split(",")
                 EnvSet(targetEnvId, listOf(), listOf())
             }
             "ENV_NAME" -> {
                 if (param.targetEnvName == null || param.targetEnvName!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, executeCount)
-                    throw BuildTaskException(ERROR_BUILD_TASK_ENV_NAME_IS_NULL, "EnvName is not init")
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, containerId, executeCount)
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL,
+                        errorMsg = "EnvName is not init"
+                    )
                 }
                 val targetEnvName =
                     parseVariable(param.targetEnvName!!.joinToString(","), runVariables).split(",").map { it.trim() }
-                val envIdList = checkAuth(buildId, taskId, executeCount, operator, projectId, targetEnvName, client)
+                val envIdList = checkAuth(buildId, taskId, containerId, executeCount, operator, projectId, targetEnvName, client)
                 EnvSet(envIdList, listOf(), listOf())
             }
             else -> {
@@ -285,16 +303,18 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                     buildId,
                     "Unsupported targetEnvType: $targetEnvType ",
                     taskId,
+                    containerId,
                     executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL,
-                    "Unsupported targetEnvType: $targetEnvType "
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL,
+                    errorMsg = "Unsupported targetEnvType: $targetEnvType "
                 )
             }
         }
 
-        checkEnvNodeExists(buildId, taskId, executeCount, operator, projectId, envSet, client)
+        checkEnvNodeExists(buildId, taskId, containerId, executeCount, operator, projectId, envSet, client)
 
         // val fileSource = "{\"files\":[\"$srcPath\"],\"envSet\":{\"nodeHashIds\":[\"$srcNodeId\"]},\"account\":\"$srcAccount\"}"
         val fastPushFileReq = FastPushFileRequest(
@@ -302,6 +322,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             targetAccount, timeout
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fastPushFileReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -309,6 +330,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             maxRunningMills = timeout,
             projectId = projectId,
             taskId = taskId,
+            containerId = containerId,
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
@@ -322,7 +344,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         if (BuildStatus.isFinish(buildStatus)) {
             clearTempFile(task)
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", taskId, containerId, executeCount)
         }
 
         return buildStatus
@@ -336,6 +358,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         operator: String,
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int
     ): BuildStatus {
 
@@ -346,6 +369,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 buildId,
                 "Job getTimeout: ${maxRunningMills / 60000} Minutes",
                 taskId,
+                containerId,
                 executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
@@ -356,11 +380,11 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
@@ -401,6 +425,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     private fun checkAuth(
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int,
         operator: String,
         projectId: String,
@@ -418,8 +443,12 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.error("The envNames not exists, name:$noExistsEnvNames")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, executeCount)
-            throw BuildTaskException(ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames")
+            LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                errorMsg = "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames"
+            )
         }
 
         // 校验权限
@@ -432,8 +461,12 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.error("User does not permit to access the env: $noAuthEnvIds")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, executeCount)
-            throw BuildTaskException(ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds")
+            LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                errorMsg = "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds"
+            )
         }
         return envIdList
     }
@@ -441,6 +474,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     private fun checkEnvNodeExists(
         buildId: String,
         taskId: String,
+        containerId: String?,
         executeCount: Int,
         operator: String,
         projectId: String,
@@ -462,11 +496,13 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                     buildId,
                     "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds",
                     taskId,
+                    containerId,
                     executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
                 )
             }
         }
@@ -485,11 +521,13 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                     buildId,
                     "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds",
                     taskId,
+                    containerId,
                     executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
                 )
             }
         }

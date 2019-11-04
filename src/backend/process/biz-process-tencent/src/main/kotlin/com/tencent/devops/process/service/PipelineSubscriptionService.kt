@@ -27,6 +27,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.process.dao.PipelineSubscriptionDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
+import com.tencent.devops.process.engine.service.MeasureService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.SubscriptionType
@@ -215,7 +216,8 @@ class PipelineSubscriptionService @Autowired constructor(
             if (shutdownType == TYPE_SHUTDOWN_SUCCESS) {
                 val settingDetailFlag = setting.successDetailFlag
                 val successUsers = mutableSetOf<String>()
-                projectGroup.filter { it.roleName in setting.successGroup }
+                val successGroup = setting.successGroup?.split(",") ?: listOf()
+                projectGroup.filter { it.roleName in successGroup }
                         .forEach { successUsers.addAll(it.userIdList) }
                 successUsers.addAll(setting.successReceiver.split(","))
                 val typeList = setting.successType.split(",")
@@ -267,7 +269,8 @@ class PipelineSubscriptionService @Autowired constructor(
 
                 val settingDetailFlag = setting.failDetailFlag
                 val failUsers = mutableSetOf<String>()
-                projectGroup.filter { it.roleName in setting.failGroup }
+                val failGroup = setting.failGroup?.split(",") ?: listOf()
+                projectGroup.filter { it.roleName in failGroup }
                         .forEach { failUsers.addAll(it.userIdList) }
                 failUsers.addAll(setting.failReceiver.split(","))
                 val typeList = setting.failType.split(",")

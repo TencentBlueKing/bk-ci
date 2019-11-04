@@ -55,6 +55,7 @@ object Tools {
         container.setRabbitAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(startConsumerMinInterval)
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)
+        container.setMismatchedQueuesFatal(true)
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter

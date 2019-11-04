@@ -34,14 +34,10 @@ import com.tencent.devops.log.model.pojo.enums.LogType
 import com.tencent.devops.log.utils.LogDispatcher.dispatch
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-/**
- * deng
- * 16/01/2018
- */
 object LogUtils {
 
-    fun addLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, executeCount: Int) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, message, tag, LogType.LOG, executeCount))
+    fun addLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, jobId: String? = null, executeCount: Int) {
+        dispatch(rabbitTemplate, genLogEvent(buildId, message, tag, jobId, LogType.LOG, executeCount))
     }
 
     fun addLines(rabbitTemplate: RabbitTemplate, buildId: String, logMessages: List<LogMessage>) {
@@ -53,9 +49,10 @@ object LogUtils {
         buildId: String,
         tagName: String,
         tag: String,
+        jobId: String? = null,
         executeCount: Int
     ) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:start:$tagName", tag, LogType.START, executeCount))
+        dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:start:$tagName", tag, jobId, LogType.START, executeCount))
     }
 
     fun addFoldEndLine(
@@ -63,9 +60,10 @@ object LogUtils {
         buildId: String,
         tagName: String,
         tag: String,
+        jobId: String? = null,
         executeCount: Int
     ) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:end:$tagName", tag, LogType.END, executeCount))
+        dispatch(rabbitTemplate, genLogEvent(buildId, "soda_fold:end:$tagName", tag, jobId, LogType.END, executeCount))
     }
 
     fun addYellowLine(
@@ -73,35 +71,38 @@ object LogUtils {
         buildId: String,
         message: String,
         tag: String,
+        jobId: String? = null,
         executeCount: Int
     ) =
-        addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, executeCount)
+        addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, jobId, executeCount)
 
-    fun addRedLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, executeCount: Int) =
-        addLine(rabbitTemplate, buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, executeCount)
+    fun addRedLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, jobId: String?, executeCount: Int) =
+        addLine(rabbitTemplate, buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, jobId, executeCount)
 
     fun updateLogStatus(
         rabbitTemplate: RabbitTemplate,
         buildId: String,
         finished: Boolean,
         tag: String,
+        jobId: String? = null,
         executeCount: Int?
     ) {
-        dispatch(rabbitTemplate, LogStatusEvent(buildId, finished, tag, executeCount))
+        dispatch(rabbitTemplate, LogStatusEvent(buildId, finished, tag, jobId ?: "", executeCount))
     }
 
-    fun stopLog(rabbitTemplate: RabbitTemplate, buildId: String, tag: String, executeCount: Int? = null) {
-        updateLogStatus(rabbitTemplate, buildId, true, tag, executeCount)
+    fun stopLog(rabbitTemplate: RabbitTemplate, buildId: String, tag: String, jobId: String?, executeCount: Int? = null) {
+        updateLogStatus(rabbitTemplate, buildId, true, tag, jobId, executeCount)
     }
 
     private fun genLogEvent(
         buildId: String,
         message: String,
         tag: String,
+        jobId: String? = null,
         logType: LogType,
         executeCount: Int
     ): LogEvent {
-        val logs = listOf(LogMessage(message, System.currentTimeMillis(), tag, logType, executeCount))
+        val logs = listOf(LogMessage(message, System.currentTimeMillis(), tag, jobId ?: "", logType, executeCount))
         return LogEvent(buildId, logs)
     }
 }

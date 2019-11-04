@@ -26,16 +26,20 @@
 
 package com.tencent.devops.process.engine.exception
 
+import com.tencent.devops.process.pojo.ErrorType
+
 /**
  * 构建任务执行异常
  * @version 1.0
  */
 class BuildTaskException(
-    val code: Int,
-    message: String,
+    val errorType: ErrorType,
+    val errorCode: Int,
+    errorMsg: String,
     val pipelineId: String?,
     val buildId: String?,
     val taskId: String?
-) : RuntimeException(message) {
-    constructor(code: Int, message: String) : this(code, message, null, null, null)
+)
+    : Exception(errorMsg) {
+    constructor(errorType: ErrorType, errorCode: Int, errorMsg: String) : this(errorType, errorCode, errorMsg, null, null, null)
 }

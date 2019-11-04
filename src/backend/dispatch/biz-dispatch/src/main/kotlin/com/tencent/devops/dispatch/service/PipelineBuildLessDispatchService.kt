@@ -97,6 +97,7 @@ class PipelineBuildLessDispatchService @Autowired constructor(
                 buildId,
                 "Prepare BuildLess Job(#$vmSeqId)...",
                 "",
+                pipelineBuildLessAgentStartupEvent.containerHashId,
                 pipelineBuildLessAgentStartupEvent.executeCount ?: 1
             )
         }

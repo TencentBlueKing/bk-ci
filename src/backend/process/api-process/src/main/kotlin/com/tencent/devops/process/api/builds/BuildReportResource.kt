@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 interface BuildReportResource {
 
     @ApiOperation("创建自定义报告")
-    //@Path("/tasks/{taskId}")
+    // @Path("/tasks/{taskId}")
     @Path("/{taskId}")
     @POST
     fun create(

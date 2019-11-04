@@ -48,12 +48,12 @@ import javax.ws.rs.NotFoundException
 
 @Service
 class PipelineDispatchService @Autowired constructor(
-        private val client: Client,
-        private val dslContext: DSLContext,
-        private val pipelineBuildDao: PipelineBuildDao,
-        private val logService: LogService,
-        private val pipelineEventDispatcher: PipelineEventDispatcher,
-        private val rabbitTemplate: RabbitTemplate
+    private val client: Client,
+    private val dslContext: DSLContext,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val logService: LogService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     private var dispatchers: Set<Dispatcher>? = null
@@ -102,6 +102,7 @@ class PipelineDispatchService @Autowired constructor(
                 buildId = pipelineAgentStartupEvent.buildId,
                 message = "构建环境准备中...",
                 tag = "",
+                jobId = pipelineAgentStartupEvent.containerHashId,
                 executeCount = pipelineAgentStartupEvent.executeCount ?: 1
             )
         }

@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":openapi:model-openapi-tencent")
     compile project(":openapi:api-openapi-tencent")
     compile project (":common:common-client")

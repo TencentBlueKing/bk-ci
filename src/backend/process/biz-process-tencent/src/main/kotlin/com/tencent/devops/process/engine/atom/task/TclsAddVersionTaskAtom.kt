@@ -54,7 +54,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
         if (isMtclsApp) {
             if (param.serviceId.isNullOrBlank()) {
                 logger.error("TCLS serviceId is not init of build($buildId)")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS serviceId is not init", elementId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS serviceId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -65,7 +65,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
         } else {
             if (param.tclsAppId.isNullOrBlank()) {
                 logger.error("TCLS appId is not init of build($buildId)")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS appId is not init", elementId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS appId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -77,7 +77,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
 
         if (param.ticketId.isBlank()) {
             logger.error("ticketId is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not init", elementId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -164,12 +164,12 @@ class TclsAddVersionTaskAtom @Autowired constructor(
                     val msg = responseData["message"]
 
                     logger.error("add version failed: $msg")
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "添加 TCLS 版本失败,错误信息：$msg", elementId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "添加 TCLS 版本失败,错误信息：$msg", elementId, task.containerHashId, task.executeCount ?: 1)
                     return defaultFailAtomResponse
                 }
             } catch (e: Exception) {
                 logger.error("add version error", e)
-                LogUtils.addRedLine(rabbitTemplate, buildId, "添加 TCLS 版本失败,错误信息：${e.message}", elementId, task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "添加 TCLS 版本失败,错误信息：${e.message}", elementId, task.containerHashId, task.executeCount ?: 1)
                 return defaultFailAtomResponse
             }
         }

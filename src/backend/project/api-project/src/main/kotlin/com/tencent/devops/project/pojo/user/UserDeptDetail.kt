@@ -26,15 +26,13 @@
 
 package com.tencent.devops.project.pojo.user
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 /**
  * 用户机构信息
  *
  * since: 2018-12-09
  */
 data class UserDeptDetail(
-        //TODO 给别名会报错。不给别名成功
+        // TODO 给别名会报错。不给别名成功
 //    @JsonProperty("bg_name")
     val bgName: String,
 //    @JsonProperty("bg_id")

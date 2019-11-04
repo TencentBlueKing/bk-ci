@@ -97,6 +97,13 @@ const val FIXVERSION = "BK_CI_FIX_VERSION" // fixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 
 /**
+ * 后续新增的变量统一用“BK_CI_大写的变量名称”命名，历史的变量名称统一整改
+ */
+const val PIPELINE_CREATE_USER = "BK_CI_PIPELINE_CREATE_USER" // "流水线创建用户"
+const val PIPELINE_UPDATE_USER = "BK_CI_PIPELINE_UPDATE_USER" // "流水线最后更新用户"
+const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注"
+
+/**
  * 流水线设置-最大排队数量-默认值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10

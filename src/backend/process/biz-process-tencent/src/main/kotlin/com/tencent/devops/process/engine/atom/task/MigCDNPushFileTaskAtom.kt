@@ -68,10 +68,13 @@ class MigCDNPushFileTaskAtom @Autowired constructor(
             )
         )
 
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传对应文件到CDN...", task.taskId, task.executeCount ?: 1)
-        LogUtils.addLine(rabbitTemplate, buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)", task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "开始上传对应文件到CDN...",
+            task.taskId, task.containerHashId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)",
+            task.taskId, task.containerHashId, task.executeCount ?: 1)
         val pushFile = client.get(ServiceMigCDNResource::class).pushFile(uploadParams)
-        LogUtils.addLine(rabbitTemplate, buildId, "上传对应文件到CDN结束! result=$pushFile", task.taskId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "上传对应文件到CDN结束! result=$pushFile",
+            task.taskId, task.containerHashId, task.executeCount ?: 1)
         return defaultSuccessAtomResponse
     }
 }

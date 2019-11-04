@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 class SvnWebHookMatcher(
-        val event: SvnCommitEvent,
-        private val pipelineWebhookService: PipelineWebhookService
+    val event: SvnCommitEvent,
+    private val pipelineWebhookService: PipelineWebhookService
 ) : ScmWebhookMatcher {
 
     companion object {

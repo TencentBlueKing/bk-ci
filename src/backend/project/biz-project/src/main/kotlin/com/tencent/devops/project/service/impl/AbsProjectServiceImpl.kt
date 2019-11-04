@@ -52,6 +52,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.util.ImageUtil
+import com.tencent.devops.project.util.exception.ProjectNotExistException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -242,6 +243,31 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    /**
+     * 根据有序projectCode列表获取有序项目信息列表
+     * 不过滤已删除项目，调用业务端根据enable过滤
+     */
+    override fun list(projectCodes: List<String>): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val list = ArrayList<ProjectVO>()
+            val grayProjectSet = grayProjectSet()
+
+            projectCodes.forEach {
+                //多次查询保证有序
+                val projectRecord =
+                    projectDao.getByEnglishName(dslContext, it) ?: throw ProjectNotExistException("projectCode=$it")
+                list.add(packagingBean(projectRecord, grayProjectSet))
+            }
+            success = true
+            return list
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
     override fun getAllProject(): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -264,10 +290,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val projectList = projectPermissionService.getUserProjectsAvailable(userName)
+            val projectCodes = projectPermissionService.getUserProjectsAvailable(userName)
 
             val list = ArrayList<ProjectVO>()
-            val projectCodes = projectList.map { it.key }
+//            val projectCodes = projectList.map { it.key }
 
             val grayProjectSet = grayProjectSet()
 
@@ -337,7 +363,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             enabled = tProjectRecord.enabled,
             gray = false,
             hybridCcAppId = tProjectRecord.hybridCcAppId,
-            enableExternal = tProjectRecord.enableExternal
+            enableExternal = tProjectRecord.enableExternal,
+            enableIdc = tProjectRecord.enableIdc
         )
     }
     fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {

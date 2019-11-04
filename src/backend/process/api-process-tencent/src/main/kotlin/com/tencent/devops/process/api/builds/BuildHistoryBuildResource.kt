@@ -21,7 +21,7 @@ interface BuildHistoryBuildResource {
 
     @ApiOperation("获取流水线构建单条历史")
     @GET
-    //@Path("/listByBuildId")
+    // @Path("/listByBuildId")
     @Path("/id")
     fun getSingleHistoryByBuildId(
         @ApiParam("流水线buildId", required = true)

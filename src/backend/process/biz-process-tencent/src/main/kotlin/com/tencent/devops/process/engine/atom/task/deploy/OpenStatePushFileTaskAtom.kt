@@ -22,6 +22,7 @@ import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -69,6 +70,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             maxRunningMills = timeout,
             projectId = projectId,
             taskId = taskId,
+            containerHashId = task.containerHashId,
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
@@ -146,7 +148,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         var count = 0
         val destPath = Files.createTempDirectory("openState_").toFile()
         val localFileList = mutableListOf<String>()
-        LogUtils.addLine(rabbitTemplate, buildId, "准备匹配文件: $srcPath", taskId, executeCount)
+        LogUtils.addLine(rabbitTemplate, buildId, "准备匹配文件: $srcPath", taskId, task.containerHashId, executeCount)
         srcPath.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
@@ -168,7 +170,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             count += files.size
         }
         if (count == 0) throw RuntimeException("没有匹配到需要分发的文件/File not found")
-        LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count files will be distribute", taskId, executeCount)
+        LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count files will be distribute", taskId, task.containerHashId, executeCount)
 
         val localIp = CommonUtils.getInnerIP()
         task.taskParams[BS_TASK_HOST] = localIp
@@ -224,6 +226,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                 buildId = buildId,
                 message = "将以用户${lastModifyUser}执行文件传输/Will use $lastModifyUser to distribute file...",
                 tag = taskId,
+                jobId = task.containerHashId,
                 executeCount = executeCount
             )
 
@@ -236,17 +239,18 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             buildId = buildId,
             message = "分发目标路径(distribute files to target path) : $targetPath",
             tag = taskId,
+            jobId = task.containerHashId,
             executeCount = executeCount
         )
 
         val envSet = EnvSet(listOf(), listOf(), listOf())
-        checkEnvNodeExists(buildId, taskId, executeCount, operator, projectId, envSet, client)
+        checkEnvNodeExists(buildId, taskId, task.containerHashId, executeCount, operator, projectId, envSet, client)
 
         // val fileSource = "{\"files\":[\"$srcPath\"],\"envSet\":{\"nodeHashIds\":[\"$srcNodeId\"]},\"account\":\"$srcAccount\"}"
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
                 LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
-                    executeCount
+                    task.containerHashId, executeCount
                 )
                 return BuildStatus.FAILED
             }
@@ -255,6 +259,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             targetAccount, timeout * 1L, appId, param.openState
         )
         val taskInstanceId = jobClient.openStateFastPushFileDevops(fastPushFileReq, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", taskId, task.containerId, executeCount)
+
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -262,6 +268,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             maxRunningMills = timeout * 1L,
             projectId = projectId,
             taskId = taskId,
+            containerHashId = task.containerHashId,
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
@@ -313,6 +320,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         operator: String,
         buildId: String,
         taskId: String,
+        containerHashId: String?,
         executeCount: Int
     ): BuildStatus {
 
@@ -323,7 +331,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                 buildId = buildId,
                 message = "执行超时/Job getTimeout: ${maxRunningMills / 60000} Minutes",
                 tag = taskId,
-                executeCount = executeCount
+                    jobId = containerHashId,
+                    executeCount = executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
         }
@@ -333,15 +342,15 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerHashId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, executeCount)
+                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerHashId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, "执行中/Waiting for job:$taskInstanceId", taskId, executeCount)
+            LogUtils.addLine(rabbitTemplate, buildId, "执行中/Waiting for job:$taskInstanceId", taskId, containerHashId, executeCount)
             BuildStatus.LOOP_WAITING
         }
     }
@@ -349,6 +358,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
     private fun checkEnvNodeExists(
         buildId: String,
         taskId: String,
+        containerHashId: String?,
         executeCount: Int,
         operator: String,
         projectId: String,
@@ -370,11 +380,13 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                     buildId = buildId,
                     message = "以下这些环境id不存在,请重新修改流水线/Can not found any environment by id ：$noExistsEnvIds",
                     tag = taskId,
+                    jobId = containerHashId,
                     executeCount = executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
                 )
             }
         }
@@ -393,11 +405,13 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                     buildId = buildId,
                     message = "以下这些节点id不存在,请重新修改流水线/Can not found any node by id ：$noExistsNodeIds",
                     tag = taskId,
+                    jobId = containerHashId,
                     executeCount = executeCount
                 )
                 throw BuildTaskException(
-                    ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
-                    "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
+                    errorType = ErrorType.USER,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
                 )
             }
         }

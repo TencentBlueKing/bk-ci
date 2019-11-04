@@ -2,7 +2,7 @@ package com.tencent.devops.plugin.worker.task.codecc.util
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement.ProjectLanguage
-import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityConfig
+import com.tencent.devops.plugin.worker.pojo.CoverityConfig
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
 import com.tencent.devops.plugin.worker.task.codecc.ANT_PATH
 import com.tencent.devops.plugin.worker.task.codecc.GOMETALINTER_PATH
@@ -29,7 +29,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.CommandLineUtils
+import com.tencent.devops.worker.common.utils.ShellUtil
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -154,10 +154,10 @@ object CodeccUtils {
             )}'"
         )
 
-        val svnHttpCredential = CommonEnv.getSvnHttpCredential()
-        if (svnHttpCredential != null) {
-            list.add("-D$SVN_USER=${svnHttpCredential.first}")
-            list.add("-D$SVN_PASSWORD='${svnHttpCredential.second}'")
+        val svnUerPassPair = CommonEnv.getSvnHttpCredential() ?: coverityConfig.repos.firstOrNull()?.svnUerPassPair
+        if (svnUerPassPair != null) {
+            list.add("-D$SVN_USER=${svnUerPassPair.first}")
+            list.add("-D$SVN_PASSWORD='${svnUerPassPair.second}'")
         }
         list.add("-DSUB_CODE_PATH_LIST=${coverityConfig.scanCodePath}")
         list.add(
@@ -204,7 +204,16 @@ object CodeccUtils {
             }
         }
 
-        return CommandLineUtils.execute(toolsScript, workspace, true, "[tools] ")
+        val variables = coverityConfig.buildVariables.variables.plus(coverityConfig.buildTask.buildVariable ?: mapOf())
+        return ShellUtil.execute(
+            buildId = buildId,
+            script = toolsScript.readText(),
+            dir = workspace,
+            buildEnvs = coverityConfig.buildVariables.buildEnvs,
+            runtimeVariables = variables,
+            outerCommandFunc = null,
+            prefix = "[tools] "
+        )
     }
 
     private fun getLocalToolScript(workspace: File): String {

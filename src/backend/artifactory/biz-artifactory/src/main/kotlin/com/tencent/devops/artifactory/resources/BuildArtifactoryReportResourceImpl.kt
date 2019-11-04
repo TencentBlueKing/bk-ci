@@ -39,10 +39,10 @@ class BuildArtifactoryReportResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) :
     BuildArtifactoryReportResource {
-    override fun getRootUrl(projectCode: String, pipelineId: String, buildId: String, taskId: String): Result<String> {
+    override fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): Result<String> {
         val result = archiveFileService.generateDestPath(
             fileType = FileTypeEnum.BK_REPORT,
-            projectCode = projectCode,
+            projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             customFilePath = taskId

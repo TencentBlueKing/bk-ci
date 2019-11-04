@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":plugin:biz-plugin-tencent")
 //    compile project(":plugin:codecc-plugin:biz-codecc")
     compile project(":common:common-auth:common-auth-tencent")

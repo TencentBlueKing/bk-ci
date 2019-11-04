@@ -54,6 +54,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
+import com.tencent.devops.store.service.websocket.WebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -76,7 +77,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomFeatureDao: MarketAtomFeatureDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val atomQualityService: AtomQualityService,
-    private val atomNotifyService: AtomNotifyService
+    private val atomNotifyService: AtomNotifyService,
+    private val websocketService: WebsocketService
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -256,7 +258,7 @@ class OpAtomServiceImpl @Autowired constructor(
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)
         }
         // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
-        // websocketService.sendWebsocketMessageByAtomCodeAndAtomId(atomCode, atomId)
+        websocketService.sendWebsocketMessageByAtomCodeAndAtomId(atomCode, atomId)
         // 发送通知消息
         atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, type)
         return Result(true)

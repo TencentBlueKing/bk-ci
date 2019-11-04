@@ -50,21 +50,21 @@ class ScmService @Autowired constructor(private val client: Client) {
                 getCredential(projectId, repo).privateKey
 
             val request = CommitCheckRequest(
-                    repo.projectName,
-                    repo.url,
-                    ScmType.CODE_GIT,
-                    null,
-                    null,
-                    token,
-                    null,
-                    commitId,
-                    state,
-                    targetUrl,
-                    context,
-                    description,
-                    block,
-                    event.mergeRequestId,
-                    QualityUtils.getQualityGitMrResult(client, event)
+                projectName = repo.projectName,
+                url = repo.url,
+                type = ScmType.CODE_GIT,
+                privateKey = null,
+                passPhrase = null,
+                token = token,
+                region = null,
+                commitId = commitId,
+                state = state,
+                targetUrl = targetUrl,
+                context = context,
+                description = description,
+                block = block,
+                mrRequestId = event.mergeRequestId,
+                reportData = QualityUtils.getQualityGitMrResult(client, event)
             )
             if (isOauth) {
                 client.getScm(ServiceScmOauthResource::class).addCommitCheck(request)
@@ -93,20 +93,20 @@ class ScmService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
-            name,
-            commitId,
-            detailUrl,
-            externalId,
-            status,
-            startedAt,
-            conclusion,
-            completedAt
+            name = name,
+            headSha = commitId,
+            detailsUrl = detailUrl,
+            externalId = externalId,
+            status = status,
+            startedAt = startedAt,
+            conclusion = conclusion,
+            completedAt = completedAt
         )
 
         return client.get(com.tencent.devops.external.api.ServiceGithubResource::class).addCheckRuns(
-            accessToken,
-            repo.projectName,
-            checkRuns
+            accessToken = accessToken,
+            projectName = repo.projectName,
+            checkRuns = checkRuns
         ).data!!
     }
 
@@ -129,18 +129,23 @@ class ScmService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
-            name,
-            commitId,
-            detailUrl,
-            externalId,
-            status,
-            startedAt,
-            conclusion,
-            completedAt
+            name = name,
+            headSha = commitId,
+            detailsUrl = detailUrl,
+            externalId = externalId,
+            status = status,
+            startedAt = startedAt,
+            conclusion = conclusion,
+            completedAt = completedAt
         )
 
         client.get(com.tencent.devops.external.api.ServiceGithubResource::class)
-            .updateCheckRuns(accessToken, repo.projectName, checkRunId, checkRuns)
+            .updateCheckRuns(
+                accessToken = accessToken,
+                projectName = repo.projectName,
+                checkRunId = checkRunId,
+                checkRuns = checkRuns
+            )
     }
 
     private fun checkRepoID(repositoryConfig: RepositoryConfig) {
@@ -161,7 +166,11 @@ class ScmService @Autowired constructor(private val client: Client) {
             URLEncoder.encode(EnvUtils.parseEnv(repositoryConfig.getRepositoryId(), variables), "UTF-8")
         }
         logger.info("[$projectId] Start to get repo - ($repositoryId|${repositoryConfig.repositoryType})")
-        val repoResult = client.get(ServiceRepositoryResource::class).get(projectId, repositoryId, repositoryConfig.repositoryType)
+        val repoResult = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryId,
+            repositoryType = repositoryConfig.repositoryType
+        )
         if (repoResult.isNotOk() || repoResult.data == null) {
             logger.error("Fail to get the repo($repositoryConfig) of project($projectId) because of ${repoResult.message}")
             throw RuntimeException("Fail to get the repo")
@@ -187,17 +196,17 @@ class ScmService @Autowired constructor(private val client: Client) {
 
         val privateKey = String(
             DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
             )
         )
 
         val passPhrase = if (credential.v2.isNullOrBlank()) "" else String(
             DHUtil.decrypt(
-                decoder.decode(credential.v2),
-                decoder.decode(credential.publicKey),
-                pair.privateKey
+                data = decoder.decode(credential.v2),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
             )
         )
 
@@ -207,7 +216,11 @@ class ScmService @Autowired constructor(private val client: Client) {
             listOf(privateKey, passPhrase)
         }
 
-        return CredentialUtils.getCredential(repository, list, credentialResult.data!!.credentialType)
+        return CredentialUtils.getCredential(
+            repository = repository,
+            credentials = list,
+            credentialType = credentialResult.data!!.credentialType
+        )
     }
 
     private fun getAccessToken(userName: String): Pair<String, String?> {

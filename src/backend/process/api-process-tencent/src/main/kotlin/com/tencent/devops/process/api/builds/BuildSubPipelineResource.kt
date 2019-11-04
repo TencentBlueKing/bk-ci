@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType
 interface BuildSubPipelineResource {
     @ApiOperation("获取子流水线状态")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/subPipeline/{projectId}/{pipelineId}/{buildId}/detail")
     fun getSubPipelineStatus(
         @ApiParam("项目ID", required = true)
@@ -42,7 +42,7 @@ interface BuildSubPipelineResource {
 
     @ApiOperation("从构建机启动子流水线")
     @POST
-    //@Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
+    // @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     @Path("/pipelines/{callPipelineId}/{atomCode}/startByPipeline")
     fun callPipelineStartup(
         @ApiParam(value = "项目ID", required = true)

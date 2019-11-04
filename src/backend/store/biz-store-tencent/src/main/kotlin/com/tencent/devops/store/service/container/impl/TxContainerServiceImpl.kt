@@ -26,13 +26,26 @@
 
 package com.tencent.devops.store.service.container.impl
 
+import com.tencent.devops.common.api.constant.EXCEPTION
+import com.tencent.devops.common.api.constant.NORMAL
+import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.tstack.ServiceTstackResource
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.image.api.ServiceDevCloudImageResource
+import com.tencent.devops.image.api.ServiceImageResource
+import com.tencent.devops.store.pojo.app.ContainerResourceItem
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.agent.AgentResponse
+import com.tencent.devops.store.pojo.container.macos.MacOSNode
+import com.tencent.devops.store.pojo.container.pcg.PCGDockerImageResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -41,6 +54,9 @@ import org.springframework.stereotype.Service
 class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
 
     private val logger = LoggerFactory.getLogger(TxContainerServiceImpl::class.java)
+
+    @Autowired
+    private lateinit var pcgImageServiceImpl: PCGImageServiceImpl
 
     override fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean {
         logger.info("buildTypeEnable buildType is :$buildType,projectCode is :$projectCode")
@@ -63,6 +79,20 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
         logger.info("getResource containerOS is :$containerOS,buildType is :$buildType")
         val containerResourceValue: List<String>?
         val resource = when (buildType) {
+            BuildType.THIRD_PARTY_DEVCLOUD -> {
+                val agentNodeList = client.get(ServiceNodeResource::class).listNodeByType(userId, projectCode, NodeType.DEVCLOUD.name).data
+                logger.info("the agentNodeList is :$agentNodeList")
+                containerResourceValue = agentNodeList?.filter { it.nodeStatus == NodeStatus.NORMAL.name }?.map {
+                    it.displayName!!
+                }!!.toList()
+                agentNodeList.map {
+                    AgentResponse(
+                        it.nodeHashId,
+                        it.displayName!!,
+                        "/${it.ip}（${NodeStatus.getStatusName(it.nodeStatus)}）"
+                    )
+                }
+            }
             BuildType.THIRD_PARTY_AGENT_ENV -> {
                 val envNodeList =
                     client.get(ServiceEnvironmentResource::class).listBuildEnvs(userId, projectCode, containerOS)
@@ -72,12 +102,14 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 containerResourceValue = envNodeList?.map {
                     it.name
                 }?.toList()
-
+                val normalName = MessageCodeUtil.getCodeLanMessage(NORMAL)
+                val exceptionName = MessageCodeUtil.getCodeLanMessage(EXCEPTION)
+                val numUnit = MessageCodeUtil.getCodeLanMessage(NUM_UNIT)
                 envNodeList?.map {
                     AgentResponse(
                         it.envHashId,
                         it.name,
-                        "（正常: ${it.normalNodeCount}个，异常: ${it.abnormalNodeCount}个）"
+                        "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName: ${it.abnormalNodeCount}$numUnit）"
                     )
                 }?.toList()
             }
@@ -96,6 +128,132 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                         "/${it.ip}（${it.status}）"
                     )
                 }
+            }
+            BuildType.TSTACK -> {
+                val tstackNodeList =
+                    client.get(ServiceTstackResource::class).listAvailableTstackNodes(projectCode).data // Tstack节点
+                logger.info("the tstackNodeList is :$tstackNodeList")
+                containerResourceValue = tstackNodeList?.map {
+                    it.hashId
+                }?.toList()
+                tstackNodeList
+            }
+            BuildType.ESXi -> {
+                val l = listOf(MacOSNode("蓝盾公共构建资源", "蓝盾公共构建资源"))
+                containerResourceValue = l.map {
+                    it.name
+                }.toList()
+                l
+            }
+            BuildType.DOCKER -> {
+                val buildResourceRecord = buildResourceDao.getBuildResourceByContainerId(dslContext, containerId, null)
+                var containerResourceList: Set<ContainerResourceItem>? = null
+                if (buildResourceRecord != null && buildResourceRecord.size > 0) {
+                    containerResourceList = HashSet()
+                    for (buildResourceItem in buildResourceRecord) {
+                        val buildResourceCode = buildResourceItem["buildResourceCode"] as String
+                        containerResourceList.add(
+                            ContainerResourceItem(
+                                id = buildResourceCode,
+                                name = buildResourceCode
+                            )
+                        )
+                    }
+                }
+                val dockerList = mutableListOf<ContainerResourceItem>()
+                if (null != containerResourceList) {
+                    dockerList.addAll(containerResourceList.sortedBy { it.name })
+                }
+                val dockerBuildImageList =
+                    client.get(ServiceImageResource::class).listDockerBuildImages(userId, projectCode)
+                        .data // linux环境第三方镜像
+                logger.info("the dockerBuildImageList is :$dockerBuildImageList")
+                dockerBuildImageList?.forEach {
+                    val image = it.image
+                    if (null != image) {
+                        val array = image.split("/paas/bkdevops/")
+                        dockerList.add(ContainerResourceItem(id = array[1], name = array[1]))
+                    }
+                }
+                containerResourceValue = dockerList.map {
+                    it.name
+                }.toList()
+                dockerList
+            }
+            BuildType.THIRD_PARTY_PCG -> {
+                val l = if (pcgImageServiceImpl.projectEnable(projectCode)) {
+                    pcgImageServiceImpl.getPCGImages().map {
+                        val name = "${it.img_name}:${it.img_ver}:${it.os}:${it.language}"
+                        PCGDockerImageResponse(name, name)
+                    }.toList()
+                } else {
+                    emptyList()
+                }
+                containerResourceValue = l.map {
+                    it.name
+                }.toList()
+                l
+            }
+            BuildType.PUBLIC_DEVCLOUD, BuildType.GIT_CI -> {
+                val publicImageList = client.get(ServiceDevCloudImageResource::class).listDevCloudImages(userId, projectCode, true).data // 公共镜像
+                logger.info("the publicImageList is :$publicImageList")
+                val projectImageList = client.get(ServiceDevCloudImageResource::class).listDevCloudImages(userId, projectCode, false).data // 项目镜像
+                logger.info("the projectImageList is :$projectImageList")
+
+                val dockerList = mutableListOf<ContainerResourceItem>()
+                publicImageList?.forEach {
+                    val image = it.image
+                    if (null != image) {
+                        val array = image.split("/devcloud/")
+                        dockerList.add(ContainerResourceItem(id = array[1], name = array[1]))
+                    }
+                }
+                projectImageList?.forEach {
+                    val image = it.image
+                    if (null != image) {
+                        val array = image.split("/devcloud/")
+                        dockerList.add(ContainerResourceItem(id = array[1], name = array[1]))
+                    }
+                }
+                containerResourceValue = dockerList.map {
+                    it.name
+                }.toList()
+                dockerList
+            }
+            BuildType.IDC -> {
+                val buildResourceRecord = buildResourceDao.getBuildResourceByContainerId(dslContext, containerId, null)
+                var containerResourceList: Set<ContainerResourceItem>? = null
+                if (buildResourceRecord != null && buildResourceRecord.size > 0) {
+                    containerResourceList = HashSet()
+                    for (buildResourceItem in buildResourceRecord) {
+                        val buildResourceCode = buildResourceItem["buildResourceCode"] as String
+                        containerResourceList.add(
+                            ContainerResourceItem(
+                                id = buildResourceCode,
+                                name = buildResourceCode
+                            )
+                        )
+                    }
+                }
+                val dockerList = mutableListOf<ContainerResourceItem>()
+                if (null != containerResourceList) {
+                    dockerList.addAll(containerResourceList.sortedBy { it.name })
+                }
+                val dockerBuildImageList =
+                    client.get(ServiceImageResource::class).listDockerBuildImages(userId, projectCode)
+                        .data // linux环境第三方镜像
+                logger.info("the dockerBuildImageList is :$dockerBuildImageList")
+                dockerBuildImageList?.forEach {
+                    val image = it.image
+                    if (null != image) {
+                        val array = image.split("/paas/bkdevops/")
+                        dockerList.add(ContainerResourceItem(id = array[1], name = array[1]))
+                    }
+                }
+                containerResourceValue = dockerList.map {
+                    it.name
+                }.toList()
+                dockerList
             }
             else -> {
                 containerResourceValue = emptyList()

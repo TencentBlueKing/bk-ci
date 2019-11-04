@@ -102,6 +102,15 @@ class ClassifyDao {
         }
     }
 
+    fun getClassifyByCode(dslContext: DSLContext, classifyCode: String, type: StoreTypeEnum): TClassifyRecord? {
+        with(TClassify.T_CLASSIFY) {
+            return dslContext.selectFrom(this)
+                .where(CLASSIFY_CODE.eq(classifyCode))
+                .and(TYPE.eq(type.type.toByte()))
+                .fetchOne()
+        }
+    }
+
     fun getAllClassify(dslContext: DSLContext, type: Byte): Result<TClassifyRecord> {
         with(TClassify.T_CLASSIFY) {
             return dslContext

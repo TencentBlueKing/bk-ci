@@ -29,6 +29,14 @@ object JFrogUtil {
         return "generic-local/bk-custom/$projectId/"
     }
 
+    fun getPipelineToCustomPath(projectId: String, pipelineName: String, buildNo: String): String {
+        return "generic-local/bk-custom/$projectId/_from_pipeline/$pipelineName/$buildNo"
+    }
+
+    fun getPipelineBuildPath(projectId: String, pipelineId: String, buildId: String): String {
+        return "generic-local/bk-archive/$projectId/$pipelineId/$buildId"
+    }
+
     private fun removePrefix(relativePath: String): String {
         return relativePath.removePrefix("/")
     }
@@ -92,10 +100,10 @@ object JFrogUtil {
 
     fun isCompressed(path: String): Boolean {
         return path.endsWith(".tar") ||
-                path.endsWith(".gz") ||
-                path.endsWith(".tgz") ||
-                path.endsWith(".jar") ||
-                path.endsWith(".zip")
+            path.endsWith(".gz") ||
+            path.endsWith(".tgz") ||
+            path.endsWith(".jar") ||
+            path.endsWith(".zip")
     }
 
     /**
@@ -104,17 +112,21 @@ object JFrogUtil {
      * asc = true 文件名短在文件名长之上
      * asc = false 文件名短在文件名长之下
      */
-    fun sort(bkFileInfoList: List<FileInfo>, asc: Boolean = true): List<FileInfo> {
+    fun sort(fileInfoList: List<FileInfo>, asc: Boolean = true): List<FileInfo> {
         val ascInt = if (asc) 1 else -1
-        return bkFileInfoList.sortedWith(Comparator {
-            file1, file2 -> when {
+        return fileInfoList.sortedWith(Comparator { file1, file2 ->
+            when {
                 // 文件夹排在文件之上
                 file1.folder && !file2.folder -> -1
                 !file1.folder && file2.folder -> 1
 
                 // 文件名短在文件名长之上
-                file1.name.length < file2.name.length -> -ascInt
-                file1.name.length > file2.name.length -> ascInt
+//                file1.name.length < file2.name.length -> -ascInt
+//                file1.name.length > file2.name.length -> ascInt
+
+                // 根据最后修改时间倒叙
+                file1.modifiedTime < file2.modifiedTime -> ascInt
+                file1.modifiedTime > file2.modifiedTime -> -ascInt
 
                 // 类型相同长度相同，字母序排列
                 else -> {

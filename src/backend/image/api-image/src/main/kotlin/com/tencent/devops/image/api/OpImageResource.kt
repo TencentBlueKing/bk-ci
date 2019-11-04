@@ -1,0 +1,63 @@
+package com.tencent.devops.image.api
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.image.pojo.ImagePageData
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_IMAGE"], description = "镜像-镜像服务")
+@Path("/op/image")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.MULTIPART_FORM_DATA)
+interface OpImageResource {
+
+    @ApiOperation("获取公共镜像列表")
+    @Path("/listPublicImages")
+    @GET
+    fun listPublicImages(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "查询关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?,
+        @ApiParam(value = "分页start", required = false)
+        @QueryParam("start")
+        start: Int?,
+        @ApiParam(value = "分页大小", required = false)
+        @QueryParam("limit")
+        limit: Int?
+    ): Result<ImagePageData>
+
+    @ApiOperation("获取项目镜像列表")
+    @Path("/projects/{projectId}/listImages")
+    @GET
+    fun listProjectImages(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "查询关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?,
+        @ApiParam(value = "分页start", required = false)
+        @QueryParam("start")
+        start: Int?,
+        @ApiParam(value = "分页大小", required = false)
+        @QueryParam("limit")
+        limit: Int?
+    ): Result<ImagePageData>
+}

@@ -29,7 +29,7 @@ class WebSocketDispatcher(
                         }
                         message
                     }
-                } else{
+                } else {
                     logger.info("page:${event.page} have new message,bug nobody load page, notifyPost:${event.notifyPost}")
                 }
             }

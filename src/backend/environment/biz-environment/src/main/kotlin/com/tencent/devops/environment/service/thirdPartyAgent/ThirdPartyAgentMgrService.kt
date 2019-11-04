@@ -426,7 +426,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
 //            Pair(hashId, secretKey)
             agentRecord.setGateway(gateway!!)
-
         }
 
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
