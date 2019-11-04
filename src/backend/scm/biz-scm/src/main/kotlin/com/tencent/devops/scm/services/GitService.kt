@@ -54,6 +54,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.CODE_GIT_URL
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import okhttp3.MediaType
 import okhttp3.Request
@@ -76,6 +77,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Service
 class GitService @Autowired constructor(
+    private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -94,20 +96,20 @@ class GitService @Autowired constructor(
     @Value("\${gitCI.oauthUrl}")
     private lateinit var gitCIOauthUrl: String
 
-    @Value("\${git.url}")
-    private lateinit var gitUrl: String
+//    @Value("\${git.url}")
+    private val gitUrl: String = gitConfig.gitUrl
 
-    @Value("\${git.clientId}")
-    private lateinit var clientId: String
+//    @Value("\${git.clientId}")
+    private val clientId: String = gitConfig.clientId
 
-    @Value("\${git.clientSecret}")
-    private lateinit var clientSecret: String
+//    @Value("\${git.clientSecret}")
+    private val clientSecret: String = gitConfig.clientSecret
 
-    @Value("\${git.callbackUrl}")
-    private lateinit var callbackUrl: String
+//    @Value("\${git.callbackUrl}")
+    private val callbackUrl: String = gitConfig.callbackUrl
 
-    @Value("\${git.redirectUrl}")
-    private lateinit var redirectUrl: String
+//    @Value("\${git.redirectUrl}")
+    private val redirectUrl: String = gitConfig.redirectUrl
 
     @Value("\${git.public.account}")
     private lateinit var gitPublicAccount: String
@@ -118,11 +120,11 @@ class GitService @Autowired constructor(
     @Value("\${git.public.secret}")
     private lateinit var gitPublicSecret: String
 
-    @Value("\${git.redirectAtomMarketUrl}")
-    private lateinit var redirectAtomMarketUrl: String
+//    @Value("\${git.redirectAtomMarketUrl}")
+    private val redirectAtomMarketUrl: String = gitConfig.redirectAtomMarketUrl
 
-    @Value("\${git.redirectAtomRepositoryUrl}")
-    private lateinit var redirectAtomRepositoryUrl: String
+//    @Value("\${git.redirectAtomRepositoryUrl}")
+    private val redirectAtomRepositoryUrl: String = gitConfig.redirectAtomRepositoryUrl
 
     private val executorService = Executors.newFixedThreadPool(2)
 
