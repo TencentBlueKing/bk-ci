@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":environment:biz-environment")
     compile project(":common:common-bcs")
     compile project(":common:common-devcloud")

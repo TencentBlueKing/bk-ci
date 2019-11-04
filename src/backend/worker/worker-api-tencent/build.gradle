@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":worker:worker-common")
     compile project(":artifactory:api-artifactory-store")
     compile project(":common:common-archive:common-archive-tencent")

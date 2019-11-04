@@ -24,8 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.digest.enc
 
-dependencies {
-    compile "org.slf4j:slf4j-api"
+import com.tencent.devops.common.api.digest.enc.AESSecurityDigest
+import com.tencent.devops.common.api.digest.enc.DigestPriority
+
+/**
+ * Tencent实现
+ * DigestPriority 优化级越高
+ */
+@DigestPriority(name = "SecurityUtil", priority = Int.MAX_VALUE - 1)
+class TencentAESSecurityDigest : AESSecurityDigest(aesKey = "k&nM\$3+1") {
 }

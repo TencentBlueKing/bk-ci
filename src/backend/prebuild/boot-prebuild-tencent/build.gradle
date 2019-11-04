@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":prebuild:biz-prebuild-tencent")
 }
 

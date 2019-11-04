@@ -24,13 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":common:common-digest-tencent")
-    compile project(":openapi:model-openapi-tencent")
-    compile project(":openapi:api-openapi-tencent")
-    compile project (":common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-}
+package com.tencent.devops.common.digest.enc
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.digest.enc.DigestFactory
+import org.junit.Assert
+import org.junit.Test
+
+class TencentAESSecurityDigestTest {
+
+    @Test
+    fun hello() {
+        val digest = DigestFactory.getDigest("SecurityUtil")
+        println(digest.javaClass)
+        Assert.assertEquals(TencentAESSecurityDigest::class.java, digest.javaClass)
+    }
+}

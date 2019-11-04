@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":common:common-kafka")
     compile project(":common:common-es")
     compile project(":common:common-event")

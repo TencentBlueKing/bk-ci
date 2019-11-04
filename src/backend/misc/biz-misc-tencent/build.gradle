@@ -1,4 +1,5 @@
 dependencies {
+    compile project(":common:common-digest-tencent")
     compile project(":misc:biz-misc")
     compile project(":common:common-bcs")
     compile project(":common:common-devcloud")

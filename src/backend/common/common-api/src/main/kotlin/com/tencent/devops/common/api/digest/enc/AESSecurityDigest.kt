@@ -37,7 +37,7 @@ import javax.crypto.spec.SecretKeySpec
  * 默认实现
  */
 @DigestPriority("SecurityUtil", priority = 1)
-class AESSecurityDigest(private val aesKey: String = "b*nK#3%t") : SecurityDigest {
+open class AESSecurityDigest(private val aesKey: String = "b*nK#3%t") : SecurityDigest {
 
     private val secretKeySpec: SecretKeySpec
 

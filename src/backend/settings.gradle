@@ -27,7 +27,7 @@
 rootProject.name = "bk-ci-backend"
 
 include ":common"
-include ":common:common-digest"
+include ":common:common-digest-tencent"
 include ":common:common-event"
 include ":common:common-api"
 include ":common:common-web"
