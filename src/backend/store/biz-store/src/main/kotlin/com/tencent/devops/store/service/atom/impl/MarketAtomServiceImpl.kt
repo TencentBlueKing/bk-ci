@@ -300,8 +300,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         labelCode = null,
                         score = null,
                         rdType = null,
-                        sortType = MarketAtomSortTypeEnum.NAME,
-                        desc = false,
+                        sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+                        desc = true,
                         page = page,
                         pageSize = pageSize
                     )
