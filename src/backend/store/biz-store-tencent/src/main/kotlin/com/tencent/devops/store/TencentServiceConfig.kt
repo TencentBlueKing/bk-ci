@@ -34,7 +34,6 @@ import com.tencent.devops.store.service.atom.impl.TxAtomServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxMarketAtomServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreUserServiceImpl
-import com.tencent.devops.store.service.container.impl.PCGImageServiceImpl
 import com.tencent.devops.store.service.container.impl.TxContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.TxMarketTemplateServiceImpl
 import com.tencent.devops.store.service.template.impl.TxTemplateNotifyServiceImpl
@@ -44,12 +43,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class TencentServiceConfig @Autowired constructor(
-    private val pcgImageServiceImpl: PCGImageServiceImpl
-) {
+class TencentServiceConfig @Autowired constructor() {
 
     @Bean
-    fun containerService() = TxContainerServiceImpl(pcgImageServiceImpl)
+    fun containerService() = TxContainerServiceImpl()
 
     @Bean
     fun storeUserService() = TxStoreUserServiceImpl()
