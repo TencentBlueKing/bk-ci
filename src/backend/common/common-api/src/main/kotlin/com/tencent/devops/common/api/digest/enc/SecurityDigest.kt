@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.common.digest.enc
+package com.tencent.devops.common.api.digest.enc
 
 /**
  * 安全加解密
@@ -33,13 +33,13 @@ interface SecurityDigest {
 
     fun encrypt(content: String): String
 
-    fun decrypt(content: String): String
+    fun decrypt(encryptString: String): String
 
     fun encrypt(key: String, content: String): String
 
-    fun decrypt(key: String, content: String): String
+    fun decrypt(key: String, encryptString: String): String
 
-    fun encrypt(key: String, content: ByteArray): ByteArray
+    fun encrypt(key: String, bytes: ByteArray): ByteArray
 
-    fun decrypt(key: String, content: ByteArray): ByteArray
+    fun decrypt(key: String, encryptBytes: ByteArray): ByteArray
 }

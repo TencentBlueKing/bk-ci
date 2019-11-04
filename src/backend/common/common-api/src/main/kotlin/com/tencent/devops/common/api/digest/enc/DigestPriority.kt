@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.common.digest.enc
+package com.tencent.devops.common.api.digest.enc
 
 /**
  * Digest优先级
