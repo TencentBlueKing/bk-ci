@@ -24,33 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.utils.scm
+package com.tencent.devops.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.repository.config.GitConfig
-import com.tencent.devops.repository.config.SVNConfig
-import com.tencent.devops.repository.iscm.CodeGitScmImpl
-import com.tencent.devops.repository.iscm.CodeGitlabScmImpl
-import com.tencent.devops.repository.iscm.CodeSvnScmImpl
-import com.tencent.devops.repository.iscm.CodeTGitScmImpl
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
-import com.tencent.devops.scm.IScm
+import com.tencent.devops.scm.code.CodeGitScmImpl
+import com.tencent.devops.scm.code.CodeGitlabScmImpl
+import com.tencent.devops.scm.code.CodeSvnScmImpl
+import com.tencent.devops.scm.code.CodeTGitScmImpl
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
+import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.SVNConfig
+import com.tencent.devops.scm.enums.CodeSvnRegion
 
 object ScmFactory {
 
     fun getScm(
-            projectName: String,
-            url: String,
-            type: ScmType,
-            branchName: String?,
-            privateKey: String?,
-            passPhrase: String?,
-            token: String?,
-            region: CodeSvnRegion?,
-            userName: String?,
-            event: String? = null
+        projectName: String,
+        url: String,
+        type: ScmType,
+        branchName: String?,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String?,
+        event: String? = null
     ): IScm {
         return when (type) {
             ScmType.CODE_SVN -> {
@@ -66,13 +65,15 @@ object ScmFactory {
                     throw RuntimeException("The svn private key is null")
                 }
                 val svnConfig = SpringContextUtil.getBean(SVNConfig::class.java)
-                CodeSvnScmImpl(projectName,
-                        branchName,
-                        url,
-                        userName,
-                        privateKey,
-                        passPhrase,
-                        svnConfig)
+                CodeSvnScmImpl(
+                    projectName = projectName,
+                    branchName = branchName,
+                    url = url,
+                    username = userName,
+                    privateKey = privateKey,
+                    passphrase = passPhrase,
+                    svnConfig = svnConfig
+                )
             }
             ScmType.CODE_GIT -> {
                 if (token == null) {
@@ -82,14 +83,15 @@ object ScmFactory {
                     throw RuntimeException("The git event is invalid")
                 }
                 val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
-                CodeGitScmImpl(projectName,
-                        branchName,
-                        url,
-                        privateKey,
-                        passPhrase,
-                        token,
-                        gitConfig,
-                        event
+                CodeGitScmImpl(
+                    projectName = projectName,
+                    branchName = branchName,
+                    url = url,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = token,
+                    gitConfig = gitConfig,
+                    event = event
                 )
             }
             ScmType.CODE_TGIT -> {
@@ -100,21 +102,29 @@ object ScmFactory {
                     throw RuntimeException("The git event is invalid")
                 }
                 val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
-                CodeTGitScmImpl(projectName,
-                        branchName,
-                        url,
-                        privateKey,
-                        passPhrase,
-                        token,
-                        gitConfig,
-                        event)
+                CodeTGitScmImpl(
+                    projectName = projectName,
+                    branchName = branchName,
+                    url = url,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = token,
+                    gitConfig = gitConfig,
+                    event = event
+                )
             }
             ScmType.CODE_GITLAB -> {
                 if (token == null) {
                     throw RuntimeException("The gitlab access token is null")
                 }
                 val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
-                CodeGitlabScmImpl(projectName, branchName, url, token, gitConfig)
+                CodeGitlabScmImpl(
+                    projectName = projectName,
+                    branchName = branchName,
+                    url = url,
+                    token = token,
+                    gitConfig = gitConfig
+                )
             }
             else -> throw RuntimeException("Unknown repo($type)")
         }

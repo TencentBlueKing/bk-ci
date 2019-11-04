@@ -27,13 +27,13 @@
 package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.request.CommitCheckRequest
 import com.tencent.devops.scm.utils.QualityUtils
-import com.tencent.devops.scm.utils.ScmFactory
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -65,7 +65,17 @@ class ScmService {
         logger.info("[$projectName|$url|$type|$userName] Start to get latest revision")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmFactory.getScm(projectName, url, type, branchName, privateKey, passPhrase, token, region, userName).getLatestRevision()
+            return ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = branchName,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            ).getLatestRevision()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the latest revision")
         }
@@ -84,8 +94,17 @@ class ScmService {
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
-                .getBranches()
+            return ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            ).getBranches()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -101,7 +120,17 @@ class ScmService {
         logger.info("[$projectName|$url|$type|$token|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmFactory.getScm(projectName, url, type, null, null, null, token, null, userName).getTags()
+            return ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = null,
+                passPhrase = null,
+                token = token,
+                region = null,
+                userName = userName
+            ).getTags()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
@@ -120,9 +149,22 @@ class ScmService {
         logger.info("[$projectName|$url|$type|$token|$userName] Start to check the private key and token")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName).checkTokenAndPrivateKey()
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            ).checkTokenAndPrivateKey()
         } catch (e: Throwable) {
-            logger.warn("Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName", e)
+            logger.warn(
+                "Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName",
+                e
+            )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check the private key and token")
@@ -143,9 +185,22 @@ class ScmService {
         logger.info("[$projectName|$url|$type|$username|$password|$token|$region|$repoUsername] Start to check the username and password")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmFactory.getScm(projectName, url, type, null, username, password, token, region, repoUsername).checkTokenAndUsername()
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = username,
+                passPhrase = password,
+                token = token,
+                region = region,
+                userName = repoUsername
+            ).checkTokenAndUsername()
         } catch (e: Throwable) {
-            logger.warn("Fail to check the private key (projectName=$projectName, type=$type, username=$username, token=$token, region=$region, repoUsername=$repoUsername", e)
+            logger.warn(
+                "Fail to check the private key (projectName=$projectName, type=$type, username=$username, token=$token, region=$region, repoUsername=$repoUsername",
+                e
+            )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check username and password")
@@ -208,16 +263,16 @@ class ScmService {
         try {
             with(request) {
                 val scm = ScmFactory.getScm(
-                        projectName,
-                        url,
-                        type,
-                        null,
-                        privateKey,
-                        passPhrase,
-                        token,
-                        region,
-                        "",
-                        CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+                    projectName = projectName,
+                    url = url,
+                    type = type,
+                    branchName = null,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = token,
+                    region = region,
+                    userName = "",
+                    event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
                 )
                 scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
                 if (mrRequestId != null) {
@@ -246,7 +301,17 @@ class ScmService {
         val subPath = SvnUtils.getSvnSubPath(url)
         val svnRegion = region ?: CodeSvnRegion.getRegion(url)
 
-        ScmFactory.getScm(projectName, url, type, null, "", "", "", svnRegion, userName).lock(repName, userName, subPath)
+        ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = "",
+            passPhrase = "",
+            token = "",
+            region = svnRegion,
+            userName = userName
+        ).lock(repName, userName, subPath)
     }
 
     fun unlock(
@@ -264,7 +329,17 @@ class ScmService {
         val subPath = SvnUtils.getSvnSubPath(url)
         val svnRegion = region ?: CodeSvnRegion.getRegion(url)
 
-        ScmFactory.getScm(projectName, url, type, null, "", "", "", svnRegion, userName).unlock(repName, userName, subPath)
+        ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = "",
+            passPhrase = "",
+            token = "",
+            region = svnRegion,
+            userName = userName
+        ).unlock(repName, userName, subPath)
     }
 
     companion object {

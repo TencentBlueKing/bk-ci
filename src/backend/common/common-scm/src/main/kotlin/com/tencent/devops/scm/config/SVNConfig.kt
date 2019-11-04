@@ -35,12 +35,12 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class SVNConfig {
 
-    @Value("\${svn.apiUrl}")
+    @Value("\${scm.svn.apiUrl:}")
     val apiUrl: String = ""
 
-    @Value("\${svn.apiKey}")
+    @Value("\${svn.apiKey:}")
     val apiKey: String = ""
 
-    @Value("\${svn.webhookApiUrl}")
+    @Value("\${svn.webhookApiUrl:}")
     val webhookApiUrl: String = ""
 }

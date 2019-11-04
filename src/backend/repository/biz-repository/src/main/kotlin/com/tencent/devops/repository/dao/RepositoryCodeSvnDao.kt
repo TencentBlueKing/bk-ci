@@ -29,7 +29,7 @@ package com.tencent.devops.repository.dao
 import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeSvnRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

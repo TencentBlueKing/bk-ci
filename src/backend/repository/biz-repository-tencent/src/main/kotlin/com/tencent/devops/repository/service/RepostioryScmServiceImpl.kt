@@ -29,8 +29,6 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.*
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
@@ -39,6 +37,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.api.ServiceSvnResource
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired

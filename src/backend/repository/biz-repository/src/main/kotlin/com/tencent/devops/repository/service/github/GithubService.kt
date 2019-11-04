@@ -41,12 +41,12 @@ import com.tencent.devops.external.pojo.GithubCheckRuns
 import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
-import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import okhttp3.MediaType
 import okhttp3.Request

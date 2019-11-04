@@ -27,7 +27,7 @@
 package com.tencent.devops.repository.pojo.scm.request
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.annotations.ApiParam
 
 data class CommitCheckRequest(

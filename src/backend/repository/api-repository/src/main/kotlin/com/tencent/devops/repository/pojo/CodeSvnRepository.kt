@@ -26,7 +26,7 @@
 
 package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

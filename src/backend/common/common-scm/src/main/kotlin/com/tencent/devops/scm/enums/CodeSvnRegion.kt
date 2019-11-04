@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.enums
+package com.tencent.devops.scm.enums
 
 enum class CodeSvnRegion(val prefix: String) {
     TC("tc-svn"),

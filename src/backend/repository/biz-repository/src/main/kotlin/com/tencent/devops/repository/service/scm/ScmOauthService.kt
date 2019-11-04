@@ -27,13 +27,13 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.scm.TokenCheckResult
 import com.tencent.devops.repository.pojo.scm.request.CommitCheckRequest
 import com.tencent.devops.repository.utils.scm.QualityUtils
-import com.tencent.devops.repository.utils.scm.ScmOauthFactory
-import com.tencent.devops.repository.config.GitConfig
-import com.tencent.devops.repository.config.SVNConfig
+import com.tencent.devops.scm.ScmOauthFactory
+import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.pojo.RevisionInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -167,7 +167,7 @@ class ScmOauthService @Autowired constructor(
                     gitConfig.gitlabHookUrl
                 }
                 ScmType.CODE_SVN -> {
-                    svnConfig.svnHookUrl
+                    svnConfig.webhookApiUrl
                 }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")

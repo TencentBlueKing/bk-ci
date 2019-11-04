@@ -24,15 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.iscm
+package com.tencent.devops.scm.code
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.IScm
-import com.tencent.devops.repository.utils.svn.SVNApi
-import com.tencent.devops.repository.config.SVNConfig
-import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.scm.code.svn.api.SVNApi
+import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -109,7 +109,10 @@ class CodeSvnScmImpl constructor(
             getLatestRevision()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR), ScmType.CODE_SVN.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR),
+                ScmType.CODE_SVN.name
+            )
         }
     }
 
@@ -118,7 +121,10 @@ class CodeSvnScmImpl constructor(
             getLatestRevision()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR), ScmType.CODE_SVN.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR),
+                ScmType.CODE_SVN.name
+            )
         }
     }
 
@@ -150,7 +156,14 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    override fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean) {
+    override fun addCommitCheck(
+        commitId: String,
+        state: String,
+        targetUrl: String,
+        context: String,
+        description: String,
+        block: Boolean
+    ) {
     }
 
     override fun addMRComment(mrId: Long, comment: String) {
@@ -159,8 +172,7 @@ class CodeSvnScmImpl constructor(
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to lock the repo $repoName")
         try {
-            // TODO check if already locked
-            SVNApi.lock(repoName, applicant, subpath)
+            SVNApi.lock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to lock the repo:$repoName", e)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.LOCK_FAIL))
@@ -170,7 +182,7 @@ class CodeSvnScmImpl constructor(
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to unlock the repo $repoName")
         try {
-            SVNApi.unlock(repoName, applicant, subpath)
+            SVNApi.unlock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to unlock the repo:$repoName", e)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.UNLOCK_FAIL))
@@ -193,10 +205,16 @@ class CodeSvnScmImpl constructor(
             }
         } catch (e: SVNException) {
             if (e.errorMessage.errorCode.isAuthentication) {
-                throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_REPO_PEM_FAIL), ScmType.CODE_SVN.name)
+                throw ScmException(
+                    MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_REPO_PEM_FAIL),
+                    ScmType.CODE_SVN.name
+                )
             } else {
                 logger.error("工程($projectName)获取分支失败", e)
-                throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR), ScmType.CODE_SVN.name)
+                throw ScmException(
+                    MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                    ScmType.CODE_SVN.name
+                )
             }
         }
     }
@@ -207,7 +225,10 @@ class CodeSvnScmImpl constructor(
             return SvnUtils.getRepository(url, username, privateKey, passphrase)
         } catch (e: SVNException) {
             logger.error("工程($projectName)本地仓库创建失败", e)
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR), ScmType.CODE_SVN.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                ScmType.CODE_SVN.name
+            )
         }
     }
 
@@ -228,7 +249,10 @@ class CodeSvnScmImpl constructor(
             return sb.toString()
         } catch (e: SVNException) {
             logger.error("获取工程($projectName})版本更新日志失败", e)
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR), ScmType.CODE_SVN.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                ScmType.CODE_SVN.name
+            )
         }
     }
 

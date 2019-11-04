@@ -28,17 +28,16 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.*
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.*
 
 interface RepostioryScmService {
 

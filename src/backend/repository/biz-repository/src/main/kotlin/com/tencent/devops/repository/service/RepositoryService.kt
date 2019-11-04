@@ -38,23 +38,14 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.repository.constant.RepositoryMessageCode
-import com.tencent.devops.repository.constant.RepositoryMessageCode.GET_TICKET_FAIL
-import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVALID
-import com.tencent.devops.repository.constant.RepositoryMessageCode.GITLAB_INVALID
-import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
-import com.tencent.devops.repository.constant.RepositoryMessageCode.PWD_EMPTY
-import com.tencent.devops.repository.constant.RepositoryMessageCode.SVN_INVALID
-import com.tencent.devops.repository.constant.RepositoryMessageCode.TGIT_INVALID
-import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_NAME_EMPTY
-import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.repository.dao.CommitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
@@ -70,7 +61,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.repository.pojo.commit.CommitResponse
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -81,10 +72,8 @@ import com.tencent.devops.repository.pojo.github.GithubRepository
 import com.tencent.devops.repository.service.scm.GitOauthService
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.ticket.api.ServiceCredentialResource
-import org.bouncycastle.crypto.tls.ConnectionEnd.client
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -108,7 +97,6 @@ class RepositoryService @Autowired constructor(
 		private val dslContext: DSLContext,
 		private val client: Client,
 		private val repositoryPermissionService: RepositoryPermissionService
-//        private val authResourceApi: BkAuthResourceApi
 ) {
 
 	@Value("\${git.devopsPrivateToken}")

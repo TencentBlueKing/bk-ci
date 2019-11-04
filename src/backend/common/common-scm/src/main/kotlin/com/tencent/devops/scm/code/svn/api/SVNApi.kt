@@ -38,11 +38,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
-/**
- *
- * curl -XGET --header "apiKey: 2a3423424e" "http://svn.com/rest/webhooks?event=1&apiKey=802c80e122304505be073e1f29b8bf2c&svnUrl=http://svn.xx.com/project/svn_single_external_proj"
- * curl -XPOST --header "apiKey: 3afafsfsf" "http://svn.com/rest/webhooks?event=1&apiKey=802c80e122304505be073e1f29b8bf2c&svnUrl=http://svn.xx.com/project/svn_single_external_proj&url=http://xx.com/ms/repository/api/codesvn/commit,http://xx.com/ms/repository/api/codesvn/commit&userName=yy"
- */
+
 object SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)

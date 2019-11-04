@@ -35,58 +35,63 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class GitConfig {
 
-    @Value("\${git.tGitUrl}")
-    val tGitUrl: String = ""
-
-    @Value("\${git.tGitApiUrl}")
-    val tGitApiUrl: String = ""
-
-    @Value("\${git.gitUrl}")
-    val gitUrl: String = ""
-
-    @Value("\${git.gitApiUrl}")
-    val gitApiUrl: String = ""
-
-    @Value("\${git.gitlabUrl}")
+    @Value("\${scm.git.gitlabUrl:}")
     val gitlabUrl: String = ""
 
-    @Value("\${git.gitlabApiUrl}")
+    @Value("\${scm.external.gitlab.apiUrl:}")
     val gitlabApiUrl: String = ""
 
-    @Value("\${git.clientId}")
+    @Value("\${scm.external.gitlab.gitlabHookUrl:}")
+    val gitlabHookUrl: String = ""
+
+    /* 定制版的内部git config*/
+    @Value("\${scm.git.url:}")
+    val gitUrl: String = ""
+
+    @Value("\${scm.git.apiUrl:}")
+    val gitApiUrl: String = ""
+
+    @Value("\${scm.git.clientId:}")
     val clientId: String = ""
 
-    @Value("\${git.clientSecret}")
+    @Value("\${scm.git.clientSecret:}")
     val clientSecret: String = ""
 
-    @Value("\${git.callbackUrl}")
-    val callbackUrl: String = ""
-
-    @Value("\${git.redirectUrl}")
+    @Value("\${scm.git.redirectUrl:}")
     val redirectUrl: String = ""
 
-    @Value("\${git.redirectAtomMarketUrl}")
+    @Value("\${scm.git.redirectAtomMarketUrl:}")
     val redirectAtomMarketUrl: String = ""
 
     @Value("\${scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
 
+    @Value("\${scm.git.callbackUrl}")
+    val callbackUrl: String = ""
+
     /* github config */
-    @Value("\${scm.github.signSecret:}")
+    @Value("\${scm.external.github.signSecret:}")
     val signSecret: String = ""
 
-    @Value("\${scm.github.clientId:}")
+    @Value("\${scm.external.github.clientId:}")
     val githubClientId: String = ""
 
-    @Value("\${scm.github.clientSecret:}")
+    @Value("\${scm.external.github.clientSecret:}")
     val githubClientSecret: String = ""
 
-    @Value("\${scm.github.webhookUrl:}")
+    @Value("\${scm.external.github.webhookUrl:}")
     val githubWebhookUrl: String = ""
 
-    @Value("\${scm.github.redirectUrl:}")
+    @Value("\${scm.external.github.redirectUrl:}")
     val githubRedirectUrl: String = ""
 
-    @Value("\${scm.github.appUrl:}")
+    @Value("\${scm.external.github.appUrl:}")
     val githubAppUrl: String = ""
+
+    /* tGit config */
+    @Value("\${scm.git.tGitUrl:}")
+    val tGitUrl: String = ""
+
+    @Value("\${scm.external.tGit.apiUrl:}")
+    val tGitApiUrl: String = ""
 }

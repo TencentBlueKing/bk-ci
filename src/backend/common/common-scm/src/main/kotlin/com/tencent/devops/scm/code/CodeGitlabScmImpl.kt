@@ -24,17 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.iscm
+package com.tencent.devops.scm.code
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.repository.config.GitConfig
-import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.GitApi
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
@@ -51,11 +49,11 @@ class CodeGitlabScmImpl constructor(
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
-        val gitBranch = gitApi.getBranch(apiUrl, token, projectName, branch)
+        val gitBranch = gitApi.getBranch(host = apiUrl, token = token, projectName = projectName, branchName = branch)
         return RevisionInfo(
-            gitBranch.commit.id,
-            gitBranch.commit.message,
-            branch
+            revision = gitBranch.commit.id,
+            updatedMessage = gitBranch.commit.message,
+            branchName = branch
         )
     }
 
@@ -70,7 +68,10 @@ class CodeGitlabScmImpl constructor(
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL), ScmType.CODE_GITLAB.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ScmType.CODE_GITLAB.name
+            )
         }
     }
 
@@ -79,22 +80,34 @@ class CodeGitlabScmImpl constructor(
             getBranches()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL), ScmType.CODE_GITLAB.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ScmType.CODE_GITLAB.name
+            )
         }
     }
 
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_EMPTY), ScmType.CODE_GITLAB.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_EMPTY),
+                ScmType.CODE_GITLAB.name
+            )
         }
         if (hookUrl.isEmpty()) {
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_HOOK_URL_EMPTY), ScmType.CODE_GITLAB.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_HOOK_URL_EMPTY),
+                ScmType.CODE_GITLAB.name
+            )
         }
         try {
             logger.info("[HOOK_API]|$apiUrl")
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, null)
         } catch (e: ScmException) {
-            throw ScmException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL), ScmType.CODE_GITLAB.name)
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
+                ScmType.CODE_GITLAB.name
+            )
         }
     }
 
@@ -118,39 +131,6 @@ class CodeGitlabScmImpl constructor(
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("gitlab can not unlock")
     }
-//
-//    override fun createBranch(branch: String, ref: String) {
-//        if (branch.isEmpty()) {
-//            throw RuntimeException("Git branch为空")
-//        }
-//        if (ref.isEmpty()) {
-//            throw RuntimeException("Git ref为空")
-//        }
-//        try {
-//            gitApi.createBranch(apiUrl, token, projectName, branch, ref)
-//        } catch (e: ScmException) {
-//            throw RuntimeException("Git Token不正确")
-//        }
-//    }
-//
-//    override fun deleteBranch(branch: String) {
-//        if (branch.isEmpty()) {
-//            throw RuntimeException("Git branch为空")
-//        }
-//        try {
-//            gitApi.deleteBranch(apiUrl, token, projectName, branch)
-//        } catch (e: ScmException) {
-//            throw RuntimeException("Git Token不正确")
-//        }
-//    }
-//
-//    override fun getCommits(branch: String?, all: Boolean, page: Int, size: Int): List<GitCommit> {
-//        return gitApi.listCommits(apiUrl, branch, token, projectName, all, page, size)
-//    }
-//
-//    override fun getCommitDiff(sha: String): List<GitDiff> {
-//        return gitApi.getCommitDiff(apiUrl, sha, token, projectName)
-//    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitlabScmImpl::class.java)

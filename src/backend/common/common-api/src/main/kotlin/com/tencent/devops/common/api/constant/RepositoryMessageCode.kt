@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.constant
+package com.tencent.devops.common.api.constant
 
 /**
  * 流水线微服务模块请求返回状态码

@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
