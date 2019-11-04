@@ -26,23 +26,34 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import javax.annotation.PostConstruct
+import com.fasterxml.jackson.databind.jsontype.NamedType
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.tencent.devops.common.api.util.JsonUtil
+import org.slf4j.LoggerFactory
+import java.util.ServiceLoader
 
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
+object DispatchSubTypeRegisterLoader {
 
-    @Autowired(required = false)
-    private var objectMapper: ObjectMapper? = null
+    private val logger = LoggerFactory.getLogger(DispatchSubTypeRegisterLoader::class.java)
 
-    @PostConstruct
-    fun registerSubtypesObjectMapper() {
-        ElementSubTypeRegisterLoader.registerElement(objectMapper)
-        DispatchSubTypeRegisterLoader.registerElement()
+    fun registerElement() {
+
+        val clazz = DispatchSubTypeFetcher::class.java
+        var fetcheries = ServiceLoader.load(clazz)
+
+        if (!fetcheries.iterator().hasNext()) {
+            fetcheries = ServiceLoader.load(clazz, ServiceLoader::class.java.classLoader)
+        }
+        val elementSubModule = SimpleModule()
+        fetcheries.forEach { fetcher ->
+            logger.info("[DISPATCH_FETCHER]| ${fetcher.javaClass}")
+            val jsonSubTypes = fetcher.jsonSubTypes()
+            jsonSubTypes.forEach { (classTypeName, clazz) ->
+                elementSubModule.registerSubtypes(NamedType(clazz, classTypeName))
+                logger.info("[REGISTER_DISPATCH]|$clazz for $classTypeName")
+            }
+        }
+
+        JsonUtil.registerModule(elementSubModule)
     }
 }

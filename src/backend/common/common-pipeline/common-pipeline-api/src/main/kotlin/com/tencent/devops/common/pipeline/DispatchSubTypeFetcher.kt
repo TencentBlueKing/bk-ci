@@ -26,23 +26,15 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import javax.annotation.PostConstruct
+import com.tencent.devops.common.pipeline.type.DispatchType
 
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
+/**
+ * 扩展Element的子类
+ */
+interface DispatchSubTypeFetcher {
 
-    @Autowired(required = false)
-    private var objectMapper: ObjectMapper? = null
-
-    @PostConstruct
-    fun registerSubtypesObjectMapper() {
-        ElementSubTypeRegisterLoader.registerElement(objectMapper)
-        DispatchSubTypeRegisterLoader.registerElement()
-    }
+    /**
+     * 返回扩展的子类
+     */
+    fun jsonSubTypes(): Map<String, Class<out DispatchType>>
 }

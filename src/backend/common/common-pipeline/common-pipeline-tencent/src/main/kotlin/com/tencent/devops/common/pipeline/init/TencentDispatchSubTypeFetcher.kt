@@ -24,25 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.common.pipeline.init
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import javax.annotation.PostConstruct
+import com.tencent.devops.common.pipeline.DispatchSubTypeFetcher
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
+import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
+import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
+import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
+class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
 
-    @Autowired(required = false)
-    private var objectMapper: ObjectMapper? = null
-
-    @PostConstruct
-    fun registerSubtypesObjectMapper() {
-        ElementSubTypeRegisterLoader.registerElement(objectMapper)
-        DispatchSubTypeRegisterLoader.registerElement()
+    override fun jsonSubTypes(): Map<String, Class<out DispatchType>> {
+        return mapOf(
+            "THIRD_PARTY_PCG" to PCGDispatchType::class.java,
+            "PUBLIC_DEVCLOUD" to PublicDevCloudDispathcType::class.java,
+            "IDC" to IDCDispatchType::class.java,
+            "GIT_CI" to GitCIDispatchType::class.java
+        )
     }
 }

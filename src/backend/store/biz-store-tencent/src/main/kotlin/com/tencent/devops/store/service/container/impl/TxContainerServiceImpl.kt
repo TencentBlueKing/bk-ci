@@ -40,6 +40,7 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.image.api.ServiceDevCloudImageResource
 import com.tencent.devops.image.api.ServiceImageResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.pojo.app.ContainerResourceItem
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
@@ -51,20 +52,33 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxContainerServiceImpl @Autowired constructor(
-    private val pcgImageServiceImpl: PCGImageServiceImpl
-) : ContainerServiceImpl() {
+class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
 
     private val logger = LoggerFactory.getLogger(TxContainerServiceImpl::class.java)
 
+    @Autowired
+    private lateinit var pcgImageServiceImpl: PCGImageServiceImpl
+
     override fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean {
-        logger.info("buildTypeEnable buildType is :$buildType,projectCode is :$projectCode")
-        return true
+        return when (buildType) {
+            BuildType.THIRD_PARTY_PCG -> {
+                pcgImageServiceImpl.projectEnable(projectCode)
+            }
+            else -> true
+        }
     }
 
     override fun clickable(buildType: BuildType, projectCode: String): Boolean {
-        logger.info("clickable buildType is :$buildType,projectCode is :$projectCode")
-        return true
+        return when (buildType) {
+            BuildType.IDC -> {
+                val projectVO = client.get(ServiceProjectResource::class).get(projectCode).data
+                if (projectVO?.enableIdc != null) {
+                    projectVO.enableIdc ?: false
+                } else {
+                    false
+                }
+            } else -> buildType.clickable
+        }
     }
 
     override fun getResource(
