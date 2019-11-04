@@ -54,12 +54,15 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
 
     override fun handleAtomPackage(
-        atomPackageSourceType: AtomPackageSourceTypeEnum,
         marketAtomCreateRequest: MarketAtomCreateRequest,
         userId: String,
         atomCode: String
     ): Result<Map<String, String>?> {
         return Result(data = null)
+    }
+
+    override fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum {
+        return AtomPackageSourceTypeEnum.UPLOAD
     }
 
     override fun getFileStr(
