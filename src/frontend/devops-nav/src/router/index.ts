@@ -223,7 +223,7 @@ function parseOS (): string {
 }
 
 function getProjectId (store, params): string {
-    const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].project_code
+    const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
     return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
 }
 

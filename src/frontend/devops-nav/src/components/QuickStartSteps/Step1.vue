@@ -20,9 +20,9 @@
                 >
                     <bk-option
                         v-for="item in enableProjectList"
-                        :id="item.project_code"
-                        :key="item.project_code"
-                        :name="item.project_name"
+                        :id="item.projectCode"
+                        :key="item.projectCode"
+                        :name="item.projectName"
                     />
                     <template slot="extension">
                         <span @click="createNewProject">{{ $t('newProject') }}</span>
@@ -77,7 +77,7 @@
             // if (this.selectedProjectId === '') {
             //     this.errorTip = 1
             //     return false
-            // } else if(this.projectList.filter(item => item.approval_status === 1).find(item => item.project_code === this.selectedProjectId)) {
+            // } else if(this.projectList.filter(item => item.approval_status === 1).find(item => item.projectCode === this.selectedProjectId)) {
             //     this.errorTip = 2
             //     return false
             // } else {
@@ -93,7 +93,7 @@
 
         handleProjectChange (id: string): void {
             this.selectedProjectId = id
-            const project: ObjectMap = this.enableProjectList.find((proj: ObjectMap) => proj.project_code === id)
+            const project: ObjectMap = this.enableProjectList.find((proj: ObjectMap) => proj.projectCode === id)
             this.selectDemoProject({
                 project
             })
@@ -110,11 +110,11 @@
             eventBus.$off('addNewProject')
             eventBus.$on('addNewProject', project => {
                 // 默认选中新创建的项目\
-                this.selectedProjectId = project.english_name
+                this.selectedProjectId = project.englishName
                 this.selectDemoProject({
                     project: {
                         ...project,
-                        project_code: this.selectedProjectId
+                        projectCode: this.selectedProjectId
                     }
                 })
             })

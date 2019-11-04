@@ -137,7 +137,7 @@
         get selectProjectList (): Project[] {
             return this.enableProjectList.map(project => ({
                 ...project,
-                id: project.project_code,
+                id: project.projectCode,
                 name: project.project_name
             }))
         }
@@ -201,8 +201,8 @@
 
         handleProjectChange (id: string) {
             const { projectId } = this.$route.params
-            const oldProject = this.selectProjectList.find(project => project.project_code === projectId)
-            const project = this.selectProjectList.find(project => project.project_code === id)
+            const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
+            const project = this.selectProjectList.find(project => project.projectCode === id)
             
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)

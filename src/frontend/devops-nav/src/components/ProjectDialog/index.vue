@@ -21,21 +21,21 @@
             <devops-form-item
                 :label="$t('projectName')"
                 :required="true"
-                :is-error="errors.has('project_name')"
+                :is-error="errors.has('projectName')"
             >
                 <bk-input
-                    v-model="newProject.project_name"
-                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.project_id] }"
+                    v-model="newProject.projectName"
+                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.projectId] }"
                     maxlength="12"
-                    name="project_name"
+                    name="projectName"
                     :placeholder="$t('projectNamePlaceholder')"
                 />
                 <div
-                    v-if="errors.has('project_name')"
+                    v-if="errors.has('projectName')"
                     slot="error-tips"
                     class="project-dialog-error-tips"
                 >
-                    {{ errors.first('project_name') }}
+                    {{ errors.first('projectName') }}
                     <span v-if="isErrorsRule(errors, 'projectNameUnique')">
                         {{ $t('questionTips') }}
                         <a
@@ -51,15 +51,15 @@
                 :label="$t('englishName')"
                 :required="true"
                 :rules="[]"
-                property="english_name"
-                :is-error="errors.has('english_name')"
-                :error-msg="errors.first('english_name')"
+                property="englishName"
+                :is-error="errors.has('englishName')"
+                :error-msg="errors.first('englishName')"
             >
                 <bk-input
-                    v-model="newProject.english_name"
+                    v-model="newProject.englishName"
                     v-validate="{ required: true, min: 2, max: 32, projectEnglishNameReg: true, projectEnglishNameUnique: isNew }"
                     :placeholder="$t('projectEnglishNamePlaceholder')"
-                    name="english_name"
+                    name="englishName"
                     maxlength="32"
                     :disabled="!isNew"
                 />
@@ -85,7 +85,7 @@
             >
                 <div class="bk-dropdown-box">
                     <bk-select
-                        v-model="newProject.bg_id"
+                        v-model="newProject.bgId"
                         :placeholder="$t('BGLabel')"
                         name="bg"
                         :loading="deptLoading.bg"
@@ -102,7 +102,7 @@
                 </div>
                 <div class="bk-dropdown-box">
                     <bk-select
-                        v-model="newProject.dept_id"
+                        v-model="newProject.deptId"
                         :placeholder="$t('departmentLabel')"
                         name="dept"
                         :loading="deptLoading.dept"
@@ -119,7 +119,7 @@
                 </div>
                 <div class="bk-dropdown-box">
                     <bk-select
-                        v-model="newProject.center_id"
+                        v-model="newProject.centerId"
                         :placeholder="$t('centerLabel')"
                         name="center"
                         :loading="deptLoading.center"
@@ -138,10 +138,10 @@
             <bk-form-item
                 :label="$t('projectTypeLabel')"
                 :required="true"
-                property="project_type"
+                property="projectType"
             >
                 <bk-select
-                    v-model="newProject.project_type"
+                    v-model="newProject.projectType"
                     :placeholder="$t('selectProjectTypePlaceholder')"
                     name="center"
                     searchable
@@ -266,48 +266,50 @@
         }
 
         get title () {
-            return this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
+            return this.isNew ? this.$t('newProject') : this.$t('editProject')
         }
 
         @Watch('showDialog')
         async watchDialog (show: boolean) {
             if (show) {
                 this.$validator.reset()
-                if (this.newProject.project_name) {
+                if (this.newProject.projectName) {
                     this.isNew = false
                 } else {
                     this.isNew = true
                 }
-                this.getDepartment('bg', 0)
+                this.getDepartment('bg', '0')
                 
                 if (this.isEmptyProject(this.newProject)) {
                     this.deptLoading['bg'] = true
                     this.deptLoading['dept'] = true
                     this.deptLoading['center'] = true
                     const res = await this.getMyDepartmentInfo()
+                    console.log(this.newProject.bgId, res.bgId)
                     if (res) {
-                        this.newProject.bg_id = res.bg_id
-                        this.newProject.bg_name = res.bg_name
-                        this.newProject.dept_id = res.dept_id
-                        this.newProject.dept_name = res.dept_name
-                        this.newProject.center_id = res.center_id
-                        this.newProject.center_name = res.center_name
+                        this.newProject.bgId = res.bgId
+                        this.newProject.bgName = res.bgName
+                        this.newProject.deptId = res.deptId
+                        this.newProject.deptName = res.deptName
+                        this.newProject.centerId = res.centerId
+                        this.newProject.centerName = res.centerName
                     }
                 }
             }
         }
 
-        @Watch('newProject.bg_id')
-        watchBg (bgId: number): void {
+        @Watch('newProject.bgId')
+        watchBg (bgId: string): void {
+            console.log('watch')
             this.curDepartmentInfo['dept'] = []
             this.curDepartmentInfo['center'] = []
-            bgId && this.getDepartment('dept', this.newProject.bg_id)
+            bgId && this.getDepartment('dept', this.newProject.bgId)
         }
 
-        @Watch('newProject.dept_id')
-        watchDept (deptId: number): void {
+        @Watch('newProject.deptId')
+        watchDept (deptId: string): void {
             this.curDepartmentInfo['center'] = []
-            deptId && this.getDepartment('center', this.newProject.dept_id)
+            deptId && this.getDepartment('center', this.newProject.deptId)
         }
 
         isErrorsRule (errors, rule): boolean {
@@ -319,15 +321,15 @@
             }
         }
 
-        async getDepartment (type: string, id: number) {
+        async getDepartment (type: string, id: string) {
             this.deptLoading[type] = true
             try {
                 const res = await this.getDepartmentInfo({
                     type,
                     id
                 })
-                this.curDepartmentInfo[type] = res
-                this.curDepartmentInfo[type].splice(0, this.curDepartmentInfo[type].length, ...res)
+                this.curDepartmentInfo[type] = [...res]
+                console.log(type, this.curDepartmentInfo[type])
             } catch (e) {
                 this.curDepartmentInfo[type] = []
             }
@@ -337,21 +339,21 @@
         setBgName (id) {
             const data = this.curDepartmentInfo.bg.find(bg => bg.id === id)
             if (data) {
-                this.newProject.bg_name = data.name
+                this.newProject.bgName = data.name
             }
         }
 
         setDeptName (id) {
             const data = this.curDepartmentInfo.dept.find(dept => dept.id === id)
             if (data) {
-                this.newProject.dept_name = data.name
+                this.newProject.deptName = data.name
             }
         }
 
         setCenterName (id) {
             const data = this.curDepartmentInfo.center.find(center => center.id === id)
             if (data) {
-                this.newProject.center_name = data.name
+                this.newProject.centerName = data.name
             }
         }
 
@@ -430,28 +432,28 @@
             if (!valid) {
                 return valid
             }
-            if (data.bg_id === '') {
+            if (data.bgId === '') {
                 this.$bkMessage({
                     theme: 'error',
                     message: this.$t('noBGErrorTips')
                 })
                 return false
             }
-            if (data.dept_id === '') {
+            if (data.deptId === '') {
                 this.$bkMessage({
                     theme: 'error',
                     message: this.$t('noDeptErrorTips')
                 })
                 return false
             }
-            if (data.center_id === '') {
+            if (data.centerId === '') {
                 this.$bkMessage({
                     theme: 'error',
                     message: this.$t('noCenterErrorTips')
                 })
                 return false
             }
-            if (data.project_type === '') {
+            if (data.projectType === '') {
                 this.$bkMessage({
                     theme: 'error',
                     message: this.$t('selectProjectTypePlaceholder')
@@ -462,7 +464,7 @@
             if (this.isNew) {
                 this.addProject()
             } else {
-                const id = this.newProject.project_id
+                const id = this.newProject.projectId
                 const params = {
                     id: id,
                     data: this.newProject

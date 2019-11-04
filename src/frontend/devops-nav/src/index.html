@@ -115,7 +115,7 @@
         function isValidPid (projectList, pid) {
             for(var i = 0; i < projectList.length; i++) {
                 var proj = projectList[i]
-                if (proj.project_code === pid) {
+                if (proj.projectCode === pid) {
                     return true
                 }
             }
@@ -151,7 +151,7 @@
                     for(var i = 0; i < queryArr.length; i++) {
                         var item = queryArr[i].split('=')
                         var key = decodeURIComponent(item[0])
-                        if (key === 'project_code') {
+                        if (key === 'projectCode') {
                             return decodeURIComponent(item[1])
                         } 
                     }
@@ -258,7 +258,7 @@
             var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
             var page = serviceMap[subServiceId] || null
 
-            var defaultPid = projectList[0] && projectList[0].project_code
+            var defaultPid = projectList[0] && projectList[0].projectCode
             var isPidOk = isValidPid(projectList, pathPid)
             if (!isPidOk && defaultPid) {
                 setProjectIdCookie(defaultPid)
