@@ -24,7 +24,7 @@ class BlueShieldWebSocket {
     }
 
     connect (callBack) {
-        const socket = new SockJS(`${WS_URL_PREFIX}/websocket/ws/user?sessionId=${this.uuid}`)
+        const socket = new SockJS(`http://v2.dev.devops.oa.com/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
         this.stompClient.connect({}, () => {
