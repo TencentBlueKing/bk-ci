@@ -55,18 +55,18 @@ interface RepostioryScmService {
             code: String
     ): GitToken
 
-    @ApiOperation("��ȡת����ַ")
+    @ApiOperation("获取转发地址ַ")
     fun getRedirectUrl(
             redirectUrlType: String
     ): String
 
-    @ApiOperation("ˢ���û���token")
+    @ApiOperation("刷新用户的token")
     fun refreshToken(
             userId: String,
             accessToken: GitToken
     ): GitToken
 
-    @ApiOperation("��ȡ�ļ�����")
+    @ApiOperation("获取文件内容")
     fun getSvnFileContent(
             url: String,
             userId: String,
@@ -77,7 +77,7 @@ interface RepostioryScmService {
             credential2: String? = null
     ): String
 
-    @ApiOperation("��ȡgit�ļ�����")
+    @ApiOperation("获取git文件内容")
     fun getGitFileContent(
             repoName: String,
             filePath: String,
@@ -86,7 +86,7 @@ interface RepostioryScmService {
             ref: String
     ): String
 
-    @ApiOperation("��ȡgitlab�ļ�����")
+    @ApiOperation("获取gitlab文件内容")
     fun getGitlabFileContent(
             repoUrl: String,
             repoName: String,
@@ -113,7 +113,7 @@ interface RepostioryScmService {
             userName: String
     ): Boolean
 
-    @ApiOperation("����ĿǨ�Ƶ�ָ����Ŀ����")
+    @ApiOperation("把项目迁移到指定项目组下")
     fun moveProjectToGroup(
             token: String,
             groupCode: String,
@@ -121,7 +121,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
 
-    @ApiOperation("����git�������Ϣ")
+    @ApiOperation("更新git代码库信息")
     fun updateGitCodeRepository(
             token: String,
             projectName: String,
@@ -129,7 +129,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("����git�����")
+    @ApiOperation("创建git代码库")
     fun createGitCodeRepository(
             userId: String,
             token: String,
@@ -140,7 +140,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<GitRepositoryResp?>
 
-    @ApiOperation("Ϊ��Ŀ��Ա��������Ȩ��")
+    @ApiOperation("为项目成员赋予代码库权限")
     fun addGitProjectMember(
             userIdList: List<String>,
             repositorySpaceName: String,
@@ -149,7 +149,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("ɾ����Ŀ��Ա�Ĵ����Ȩ��")
+    @ApiOperation("删除项目成员的代码库权限")
     fun deleteGitProjectMember(
             userIdList: List<String>,
             repositorySpaceName: String,
@@ -172,7 +172,6 @@ interface RepostioryScmService {
     @ApiOperation("Check if the svn private key and passphrase legal")
     fun checkUsernameAndPassword(
             projectName: String,
-            @ApiParam("�ֿ��ַ", required = true)
             url: String,
             type: ScmType,
             username: String,

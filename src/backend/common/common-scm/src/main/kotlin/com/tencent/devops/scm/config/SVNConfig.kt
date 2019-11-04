@@ -27,12 +27,17 @@
 package com.tencent.devops.scm.config
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
 /**
  * SVN通用配置
  */
 @Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class SVNConfig {
 
     @Value("\${scm.svn.apiUrl:}")
