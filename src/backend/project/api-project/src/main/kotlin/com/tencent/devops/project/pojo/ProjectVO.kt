@@ -72,19 +72,19 @@ data class ProjectVO(
     val deployType: String?,
     @ApiModelProperty("事业群ID")
     // @JsonProperty("bg_id")
-    val bgId: Long?,
+    val bgId: String?,
     @ApiModelProperty("事业群名字")
     // @JsonProperty("bg_name")
     val bgName: String?,
     @ApiModelProperty("中心ID")
     // @JsonProperty("center_id")
-    val centerId: Long?,
+    val centerId: String?,
     @ApiModelProperty("中心名称")
     // @JsonProperty("center_name")
     val centerName: String?,
     @ApiModelProperty("部门ID")
     // @JsonProperty("dept_id")
-    val deptId: Long?,
+    val deptId: String?,
     @ApiModelProperty("部门名称")
     // @JsonProperty("dept_name")
     val deptName: String?,
