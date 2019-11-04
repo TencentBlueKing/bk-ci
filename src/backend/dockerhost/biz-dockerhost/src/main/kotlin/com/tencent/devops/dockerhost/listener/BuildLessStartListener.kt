@@ -42,8 +42,7 @@ class BuildLessStartListener(
     private val dockerHostBuildLessService: DockerHostBuildLessService
 ) {
 
-    private val alertApi: AlertApi =
-        AlertApi()
+    private val alertApi: AlertApi = AlertApi()
 
     private val maxRunningContainerNum = 200
 

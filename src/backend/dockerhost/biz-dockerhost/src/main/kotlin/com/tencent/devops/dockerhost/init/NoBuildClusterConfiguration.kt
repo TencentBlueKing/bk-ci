@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.listener.BuildLessStartListener
@@ -148,19 +149,18 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         @Autowired buildLessStartListener: BuildLessStartListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(buildStartQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(50)
-        container.setStartConsumerMinInterval(1)
-        container.setConsecutiveActiveTrigger(1)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
-        val messageListenerAdapter =
-            MessageListenerAdapter(buildLessStartListener, buildLessStartListener::handleMessage.name)
+        val messageListenerAdapter = MessageListenerAdapter(buildLessStartListener, buildLessStartListener::handleMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildStartQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = messageListenerAdapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 10,
+            maxConcurrency = 50
+        )
     }
 
     @Bean
@@ -171,16 +171,16 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     fun buildStopQueue(): Queue {
         val hostTag = CommonUtils.getInnerIP()
         logger.info("[Init]| hostTag=$hostTag")
-//        val result = dockerHostBuildApi.getHost(hostTag)
-//        if (result == null) {
-//            logger.error("[Init]| hostTag=$hostTag fail exit!")
-//            System.exit(199)
-//        }
-//        val hostInfo = result!!.data
-//        if (hostInfo == null) {
-//            logger.error("[Init]| hostTag=$hostTag  hostInfo is null, exit!")
-//            System.exit(198)
-//        }
+        val result = dockerHostBuildApi.getHost(hostTag)
+        if (result == null) {
+            logger.error("[Init]| hostTag=$hostTag fail exit!")
+            System.exit(199)
+        }
+        val hostInfo = result!!.data
+        if (hostInfo == null) {
+            logger.error("[Init]| hostTag=$hostTag  hostInfo is null, exit!")
+            exitProcess(198)
+        }
         return Queue(MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_PREFFIX + hostTag)
     }
 
