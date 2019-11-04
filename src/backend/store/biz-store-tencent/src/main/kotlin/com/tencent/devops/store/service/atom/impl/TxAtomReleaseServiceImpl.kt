@@ -77,51 +77,64 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     private val logger = LoggerFactory.getLogger(TxAtomReleaseServiceImpl::class.java)
 
     override fun handleAtomPackage(
-        atomPackageSourceType: AtomPackageSourceTypeEnum,
         marketAtomCreateRequest: MarketAtomCreateRequest,
         userId: String,
         atomCode: String
     ): Result<Map<String, String>?> {
-        var repositoryInfo: RepositoryInfo? = null
-        if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
-            if (marketAtomCreateRequest.visibilityLevel == VisibilityLevelEnum.PRIVATE) {
-                if (marketAtomCreateRequest.privateReason.isNullOrBlank()) {
-                    return MessageCodeUtil.generateResponseDataObject(
-                        CommonMessageCode.PARAMETER_IS_NULL,
-                        arrayOf("privateReason"),
-                        null
-                    )
-                }
-            }
-            // 远程调工蜂接口创建代码库
-            try {
-                val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
-                    userId,
-                    marketAtomCreateRequest.projectCode,
-                    atomCode,
-                    marketAtomBuildInfoDao.getAtomBuildInfoByLanguage(
-                        dslContext,
-                        marketAtomCreateRequest.language
-                    ).sampleProjectPath,
-                    pluginNameSpaceId.toInt(),
-                    marketAtomCreateRequest.visibilityLevel,
-                    TokenTypeEnum.PRIVATE_KEY
+        logger.info("handleAtomPackage marketAtomCreateRequest is:$marketAtomCreateRequest,atomCode is:$atomCode,userId is:$userId")
+        marketAtomCreateRequest.authType ?: return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PARAMETER_IS_NULL,
+            arrayOf("authType"),
+            null
+        )
+        marketAtomCreateRequest.visibilityLevel ?: return MessageCodeUtil.generateResponseDataObject(
+            CommonMessageCode.PARAMETER_IS_NULL,
+            arrayOf("visibilityLevel"),
+            null
+        )
+        val repositoryInfo: RepositoryInfo?
+        if (marketAtomCreateRequest.visibilityLevel == VisibilityLevelEnum.PRIVATE) {
+            if (marketAtomCreateRequest.privateReason.isNullOrBlank()) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.PARAMETER_IS_NULL,
+                    arrayOf("privateReason"),
+                    null
                 )
-                logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
-                if (createGitRepositoryResult.isOk()) {
-                    repositoryInfo = createGitRepositoryResult.data
-                } else {
-                    return Result(createGitRepositoryResult.status, createGitRepositoryResult.message, null)
-                }
-            } catch (e: Exception) {
-                logger.info("createGitCodeRepository error  is :$e", e)
-                return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
             }
+        }
+        // 远程调工蜂接口创建代码库
+        try {
+            val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
+                userId,
+                marketAtomCreateRequest.projectCode,
+                atomCode,
+                marketAtomBuildInfoDao.getAtomBuildInfoByLanguage(
+                    dslContext,
+                    marketAtomCreateRequest.language
+                ).sampleProjectPath,
+                pluginNameSpaceId.toInt(),
+                marketAtomCreateRequest.visibilityLevel,
+                TokenTypeEnum.PRIVATE_KEY
+            )
+            logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
+            if (createGitRepositoryResult.isOk()) {
+                repositoryInfo = createGitRepositoryResult.data
+            } else {
+                return Result(createGitRepositoryResult.status, createGitRepositoryResult.message, null)
+            }
+        } catch (e: Exception) {
+            logger.info("createGitCodeRepository error  is :$e", e)
+            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
         if (null == repositoryInfo) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
+    }
+
+    override fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum {
+        // 内部版暂时只支持代码库打包的方式，后续支持用户传可执行包的方式
+        return AtomPackageSourceTypeEnum.REPO
     }
 
     override fun getFileStr(
@@ -133,7 +146,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): String? {
         logger.info("getFileStr projectCode is:$projectCode,atomCode is:$atomCode,atomVersion is:$atomVersion")
         logger.info("getFileStr repositoryHashId is:$repositoryHashId,fileName is:$fileName")
-        val fileStr = if (repositoryHashId.isNotBlank()) {
+        val atomPackageSourceType = getAtomPackageSourceType(atomCode)
+        val fileStr = if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
             // 从工蜂拉取文件
             client.get(ServiceGitRepositoryResource::class).getFileContent(
                 repositoryHashId,
