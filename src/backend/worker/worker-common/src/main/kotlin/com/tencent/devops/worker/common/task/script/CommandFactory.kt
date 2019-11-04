@@ -27,6 +27,9 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.task.script.bat.CommandBatImpl
 import com.tencent.devops.worker.common.task.script.shell.CommandShellImpl
 import java.io.File
@@ -40,7 +43,11 @@ object CommandFactory {
             BuildScriptType.SHELL -> CommandShellImpl(outerCommandFunc)
             BuildScriptType.BAT -> CommandBatImpl(outerCommandFunc)
             else -> {
-                throw NotImplementedError("Unsupported script type: $scriptType")
+                throw TaskExecuteException(
+                    errorMsg = "Unsupported script type: $scriptType",
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                )
             }
         }
     }
