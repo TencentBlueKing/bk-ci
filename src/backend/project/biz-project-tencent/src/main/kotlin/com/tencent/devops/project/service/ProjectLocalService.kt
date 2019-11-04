@@ -445,7 +445,7 @@ class ProjectLocalService @Autowired constructor(
         englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean> {
+    ): Result<ProjectLogo> {
         logger.info("Update the logo of project $englishName")
         val project = projectDao.getByEnglishName(dslContext, englishName)
         if (project != null) {
@@ -464,6 +464,7 @@ class ProjectLocalService @Autowired constructor(
                         projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
                     )
                 )
+                return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
@@ -474,7 +475,6 @@ class ProjectLocalService @Autowired constructor(
             logger.warn("$project is null or $project is empty")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
-        return Result(true)
     }
 
     fun list(accessToken: String, includeDisable: Boolean?): List<ProjectVO> {
