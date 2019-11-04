@@ -3,6 +3,7 @@ package com.tencent.devops.common.pipeline.type.idc
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -20,4 +21,6 @@ data class IDCDispatchType(
 
         image = JsonUtil.toJson(valueMap)
     }
+
+    override fun buildType() = BuildType.IDC
 }

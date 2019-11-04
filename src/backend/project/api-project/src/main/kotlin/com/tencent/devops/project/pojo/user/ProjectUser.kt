@@ -26,12 +26,10 @@
 
 package com.tencent.devops.project.pojo.user
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class ProjectUser(
-    @JsonProperty("chinese_name")
+//    @JsonProperty("chinese_name")
     val chineseName: String,
-    @JsonProperty("avatar_url")
+//    @JsonProperty("avatar_url")
     val avatarUrl: String,
     val username: String,
     val permissions: List<String> = emptyList()

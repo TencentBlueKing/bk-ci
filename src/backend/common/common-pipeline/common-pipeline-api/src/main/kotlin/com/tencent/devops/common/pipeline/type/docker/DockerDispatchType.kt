@@ -28,10 +28,13 @@ package com.tencent.devops.common.pipeline.type.docker
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class DockerDispatchType(@JsonProperty("value") var dockerBuildVersion: String, var imageType: ImageType? = ImageType.BKDEVOPS, val credentialId: String? = "") : DispatchType(dockerBuildVersion) {
     override fun replaceField(variables: Map<String, String>) {
         dockerBuildVersion = EnvUtils.parseEnv(dockerBuildVersion, variables)
     }
+
+    override fun buildType() = BuildType.DOCKER
 }

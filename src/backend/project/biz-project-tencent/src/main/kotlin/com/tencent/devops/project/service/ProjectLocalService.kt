@@ -52,7 +52,6 @@ import java.nio.file.Files
 import java.util.*
 import java.util.regex.Pattern
 import javax.imageio.ImageIO
-import kotlin.collections.HashMap
 
 @Service
 class ProjectLocalService @Autowired constructor(
@@ -85,13 +84,13 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // 随机生成图片
+            // �������ͼƬ
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
             try {
-                // 发送服务器
+                // ���ͷ�����
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
 
-                // 创建AUTH项目
+                // ����AUTH��Ŀ
                 val authUrl = "$authUrl?access_token=$accessToken"
                 val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.englishName)
                 val mediaType = MediaType.parse("application/json; charset=utf-8")
@@ -115,7 +114,7 @@ class ProjectLocalService @Autowired constructor(
                     logger.warn("Fail to get the project id from response $responseContent")
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ?????????????
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
                 try {
                     projectDao.create(
                             dslContext = dslContext,
@@ -200,16 +199,16 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // 随机生成图片
+            // �������ͼƬ
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
             try {
-                // 发送服务器
+                // ���ͷ�����
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
 
                 var projectId = getProjectIdInAuth(projectCode, accessToken)
 
                 if (null == projectId) {
-                    // 创建AUTH项目
+                    // ����AUTH��Ŀ
                     val authUrl = "$authUrl?access_token=$accessToken"
                     val param: MutableMap<String, String> =
                             mutableMapOf("project_code" to projectCreateInfo.englishName)
@@ -235,8 +234,7 @@ class ProjectLocalService @Autowired constructor(
                         throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                     }
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ?????????????
-                try {
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
                     projectDao.create(
                             dslContext = dslContext,
                             userId = userId,
@@ -308,7 +306,7 @@ class ProjectLocalService @Autowired constructor(
             ) {
                 val updateCnt = projectDao.updateUsableStatus(dslContext, userId, projectId, enabled)
                 if (updateCnt != 1) {
-                    logger.warn("更新数据库出错，变更行数为:$updateCnt")
+                    logger.warn("�������ݿ�����������Ϊ:$updateCnt")
                 }
             } else {
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
@@ -337,7 +335,7 @@ class ProjectLocalService @Autowired constructor(
 
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
         logger.info("getProjectUsers accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode")
-        // 检查用户是否有查询项目下用户列表的权限
+        // ����û��Ƿ��в�ѯ��Ŀ���û��б��Ȩ��
         val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateResult")
         val validateFlag = validateResult.data
@@ -451,11 +449,11 @@ class ProjectLocalService @Autowired constructor(
         val backgroundIndex = random.nextInt(max) % (max - min + 1) + min
         val width = 128
         val height = 128
-        // 创建BufferedImage对象
+        // ����BufferedImage����
         val bi = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        // 获取Graphics2D
+        // ��ȡGraphics2D
         val g2d = bi.createGraphics()
-        // 设置透明度
+        // ����͸����
         g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1.0f)
 
         when (backgroundIndex) {
@@ -475,7 +473,7 @@ class ProjectLocalService @Autowired constructor(
         g2d.clearRect(0, 0, width, height)
         g2d.color = Color.WHITE
         g2d.stroke = BasicStroke(1.0f)
-        val font = Font("宋体", Font.PLAIN, 64)
+        val font = Font("����", Font.PLAIN, 64)
         g2d.font = font
         val fontMetrics = g2d.fontMetrics
         val heightAscent = fontMetrics.ascent
@@ -489,11 +487,11 @@ class ProjectLocalService @Autowired constructor(
                 (width / 2 - fontWidth / 2),
                 (height / 2 + heightAscent / 2).toFloat()
         )
-        // 透明度设置 结束
+        // ͸�������� ����
         g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
-        // 释放对象
+        // �ͷŶ���
         g2d.dispose()
-        // 保存文件
+        // �����ļ�
         val logo = Files.createTempFile("default_", ".png").toFile()
         ImageIO.write(bi, "png", logo)
         return logo
@@ -563,8 +561,8 @@ class ProjectLocalService @Autowired constructor(
                 deptName = tProjectRecord.deptName ?: "",
                 description = tProjectRecord.description ?: "",
                 extra = tProjectRecord.extra ?: "",
-                isSecrecy = tProjectRecord.isSecrecy,
-                isHelmChartEnabled = tProjectRecord.isHelmChartEnabled,
+                secrecy = tProjectRecord.isSecrecy,
+                helmChartEnabled = tProjectRecord.isHelmChartEnabled,
                 kind = tProjectRecord.kind,
                 logoAddr = tProjectRecord.logoAddr ?: "",
                 remark = tProjectRecord.remark ?: "",
@@ -579,7 +577,7 @@ class ProjectLocalService @Autowired constructor(
                 hybridCcAppId = tProjectRecord.hybridCcAppId,
                 enableExternal = tProjectRecord.enableExternal,
                 enableIdc = tProjectRecord.enableIdc,
-                isOfflined = tProjectRecord.isOfflined
+                offlined = tProjectRecord.isOfflined
         )
     }
 
@@ -646,7 +644,7 @@ class ProjectLocalService @Autowired constructor(
                 }
             }
             ProjectValidateType.english_name -> {
-                // 2 ~ 32 个字符+数字，以小写字母开头
+                // 2 ~ 32 ���ַ�+���֣���Сд��ĸ��ͷ
                 if (name.length < 2) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
                 }
