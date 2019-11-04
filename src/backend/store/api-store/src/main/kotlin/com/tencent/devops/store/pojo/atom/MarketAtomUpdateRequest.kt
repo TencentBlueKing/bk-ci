@@ -27,7 +27,6 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.ApiModel
@@ -66,8 +65,6 @@ data class MarketAtomUpdateRequest(
     val publisher: String,
     @ApiModelProperty("插件标签列表", required = false)
     val labelIdList: ArrayList<String>?,
-    @ApiModelProperty("插件发布包方式", required = true)
-    var atomPackageSourceType: AtomPackageSourceTypeEnum = AtomPackageSourceTypeEnum.UPLOAD,
     @ApiModelProperty("插件包名", required = true)
     val pkgName: String = "",
     @ApiModelProperty("可执行包sha摘要内容", required = true)

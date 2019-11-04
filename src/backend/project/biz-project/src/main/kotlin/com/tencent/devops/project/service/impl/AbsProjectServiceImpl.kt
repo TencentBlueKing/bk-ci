@@ -363,7 +363,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             enabled = tProjectRecord.enabled,
             gray = false,
             hybridCcAppId = tProjectRecord.hybridCcAppId,
-            enableExternal = tProjectRecord.enableExternal
+            enableExternal = tProjectRecord.enableExternal,
+            enableIdc = tProjectRecord.enableIdc
         )
     }
     fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {

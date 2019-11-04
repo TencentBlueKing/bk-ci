@@ -67,5 +67,7 @@ data class OpProjectUpdateInfoRequest(
     @ApiModelProperty("混合云CC业务ID")
     val hybridCCAppId: Long?,
     @ApiModelProperty("支持构建机访问外网")
-    val enableExternal: Boolean?
+    val enableExternal: Boolean?,
+    @ApiModelProperty(value = "支持IDC构建机", required = false)
+    val enableIdc: Boolean? = false
 )
