@@ -2,10 +2,6 @@ package com.tencent.devops.common.cos;
 
 import com.tencent.devops.common.cos.model.enums.EnvEnum;
 
-/**
- * Created by liangyuzhou on 2017/2/9.
- * Powered By Tencent
- */
 public class COSClientConfig {
     private Long appId;
     private String secretId;

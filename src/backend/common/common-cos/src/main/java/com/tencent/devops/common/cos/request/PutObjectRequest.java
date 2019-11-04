@@ -12,10 +12,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class PutObjectRequest extends AbstractRequest {
 
     private final String objectName;

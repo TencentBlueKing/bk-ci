@@ -3,9 +3,6 @@ package com.tencent.devops.plugin.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- * Created by Aaron Sheng on 2018/4/26.
- */
 @ApiModel("任务数据-上传文件任务数据")
 data class FileTaskData(
     @ApiModelProperty("执行时间", required = true)

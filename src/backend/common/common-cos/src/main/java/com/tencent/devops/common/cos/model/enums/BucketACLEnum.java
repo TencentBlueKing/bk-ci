@@ -2,10 +2,6 @@ package com.tencent.devops.common.cos.model.enums;
 
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * Created by liangyuzhou on 2017/2/9.
- * Powered By Tencent
- */
 public enum BucketACLEnum {
     ACL_PRIVATE("prviate"),
     ACL_PUBLIC("public-read");

@@ -2,10 +2,6 @@ package com.tencent.devops.common.cos.model.enums;
 
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * Created by liangyuzhou on 2017/2/10.
- * Powered By Tencent
- */
 public enum EnvEnum {
     OA_TEST("sztest.file.tencent-cloud.com"),
     IDC("gfp.tencent-cloud.com");

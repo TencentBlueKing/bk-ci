@@ -10,10 +10,6 @@ import okio.Source;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class InputStreamRequestBody extends RequestBody {
     private final InputStream inputStream;
     private final MediaType mediaType;

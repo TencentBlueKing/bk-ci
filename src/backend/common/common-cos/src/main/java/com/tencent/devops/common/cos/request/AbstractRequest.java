@@ -16,10 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by liangyuzhou on 2017/2/10.
- * Powered By Tencent
- */
 public abstract class AbstractRequest implements IRequest {
     private final static String FORMAT_STRING_SEP = "\n";
     private final static String SIGN_ALGORITHM = "sha1";

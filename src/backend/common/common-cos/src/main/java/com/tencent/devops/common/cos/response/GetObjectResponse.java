@@ -4,10 +4,6 @@ import okhttp3.Response;
 
 import java.io.IOException;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class GetObjectResponse extends BaseResponse {
     private byte[] content;
 

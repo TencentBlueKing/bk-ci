@@ -2,10 +2,6 @@ package com.tencent.devops.common.cos.response;
 
 import okhttp3.Response;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class PutObjectResponse extends BaseResponse {
     private String sha1;
 

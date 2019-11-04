@@ -7,10 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by liangyuzhou on 2017/2/10.
- * Powered By Tencent
- */
 public class ParamsUtil {
     private final static String DEFAULT_ENCODE = "UTF-8";
 

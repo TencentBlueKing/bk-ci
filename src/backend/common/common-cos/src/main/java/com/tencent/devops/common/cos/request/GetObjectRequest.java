@@ -6,10 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class GetObjectRequest extends AbstractRequest {
     private final String objectName;
     private final Long startByte;

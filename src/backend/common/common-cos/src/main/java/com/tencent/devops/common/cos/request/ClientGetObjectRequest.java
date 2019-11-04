@@ -4,10 +4,6 @@ import com.tencent.devops.common.cos.model.enums.SignTypeEnum;
 import com.tencent.devops.common.cos.model.exception.COSException;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class ClientGetObjectRequest extends AbstractRequest {
     private String objectName;
     private long expireSeconds;

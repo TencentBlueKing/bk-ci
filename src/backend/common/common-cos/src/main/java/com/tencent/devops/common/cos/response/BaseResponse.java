@@ -5,10 +5,6 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Created by liangyuzhou on 2017/2/10.
- * Powered By Tencent
- */
 public class BaseResponse {
     private boolean success;
     private String errorMessage;

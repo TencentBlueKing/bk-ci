@@ -5,10 +5,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
 
-/**
- * Created by liangyuzhou on 2017/2/10.
- * Powered By Tencent
- */
 public class EncodeUtil {
     private static final String MAC_NAME = "HmacSHA1";
     private static final String ENCODING = "UTF-8";

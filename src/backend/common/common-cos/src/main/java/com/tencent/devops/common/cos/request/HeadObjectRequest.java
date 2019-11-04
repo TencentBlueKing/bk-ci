@@ -6,10 +6,6 @@ import okhttp3.RequestBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class HeadObjectRequest extends AbstractRequest {
     private final String objectName;
 

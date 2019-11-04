@@ -10,10 +10,6 @@ import com.vmware.vim25.mo.VirtualMachineSnapshot
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
-/**
- * Created by liangyuzhou on 2017/3/14.
- * Powered By Tencent
- */
 @Component
 class PowerOffVM(private val vmCache: VMCache) {
 

@@ -11,9 +11,6 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-/**
- * Created by Aaron Sheng on 2018/4/26.
- */
 @Api(tags = ["SERVICE_TASK"], description = "服务-创建异步任务")
 @Path("/service/task")
 @Produces(MediaType.APPLICATION_JSON)

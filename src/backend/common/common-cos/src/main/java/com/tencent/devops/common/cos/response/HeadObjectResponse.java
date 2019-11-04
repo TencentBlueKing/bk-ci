@@ -9,10 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by liangyuzhou on 2017/2/13.
- * Powered By Tencent
- */
 public class HeadObjectResponse extends BaseResponse {
     private Map<String, String> metaMap;
     private Long size;

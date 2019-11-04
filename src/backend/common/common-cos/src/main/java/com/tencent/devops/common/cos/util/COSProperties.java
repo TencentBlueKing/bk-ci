@@ -2,10 +2,6 @@ package com.tencent.devops.common.cos.util;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Created by liangyuzhou on 2017/2/10.
- * Powered By Tencent
- */
 @ConfigurationProperties(prefix = "cos")
 public class COSProperties {
     private long appId;

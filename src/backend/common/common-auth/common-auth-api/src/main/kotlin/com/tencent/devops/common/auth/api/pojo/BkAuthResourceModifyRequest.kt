@@ -2,9 +2,6 @@ package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- * Created by Aaron Sheng on 2018/1/23.
- */
 data class BkAuthResourceModifyRequest(
     @JsonProperty("project_Code")
     val projectCode: String,

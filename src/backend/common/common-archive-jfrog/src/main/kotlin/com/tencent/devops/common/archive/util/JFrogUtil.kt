@@ -3,9 +3,6 @@ package com.tencent.devops.common.archive.util
 import okhttp3.Credentials
 import java.nio.file.Paths
 
-/**
- * Created by Aaron Sheng on 2017/12/28.
- */
 object JFrogUtil {
     private val regex = Regex("/([0-9]|[a-z]|[A-Z]|-|_|/|\\.)*")
 

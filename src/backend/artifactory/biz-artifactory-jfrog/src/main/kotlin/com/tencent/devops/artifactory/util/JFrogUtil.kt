@@ -46,7 +46,6 @@ object JFrogUtil {
     }
 
     fun getDockerRealPath(projectId: String, path: String): String {
-        //   docker-local/devcloud/ijobs/tlinux-1.2-base/latest/manifest.json
         return "docker-local/${removePrefix(path)}/manifest.json"
     }
 

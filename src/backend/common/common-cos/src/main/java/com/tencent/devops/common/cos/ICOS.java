@@ -4,10 +4,6 @@ import com.tencent.devops.common.cos.model.exception.COSException;
 import com.tencent.devops.common.cos.request.*;
 import com.tencent.devops.common.cos.response.*;
 
-/**
- * Created by liangyuzhou on 2017/2/9.
- * Powered By Tencent
- */
 public interface ICOS {
     PutBucketResponse putBucket(final PutBucketRequest request) throws COSException;
     HeadBucketResponse headBucket(final HeadBucketRequest request) throws COSException;

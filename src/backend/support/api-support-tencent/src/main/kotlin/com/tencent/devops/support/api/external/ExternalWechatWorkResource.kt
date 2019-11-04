@@ -12,9 +12,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * Created by Aaron Sheng on 2018/4/26.
- */
 @Api(tags = ["EXTERNAL_WECHART_WORK"], description = "外部-企业微信")
 @Path("/external/wechat-work")
 @Produces(MediaType.APPLICATION_JSON)

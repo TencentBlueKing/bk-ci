@@ -15,9 +15,6 @@
 // import javax.ws.rs.Produces
 // import javax.ws.rs.core.MediaType
 //
-// /**
-// * Created by Aaron Sheng on 2018/4/26.
-// */
 // @Api(tags = ["BUILD_PLUGIN_AGENT"], description = "构建-插件原子构建机")
 // @Path("/build/pluginAgent/")
 // @Produces(MediaType.APPLICATION_JSON)

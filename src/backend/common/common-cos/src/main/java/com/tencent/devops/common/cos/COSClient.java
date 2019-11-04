@@ -13,10 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by liangyuzhou on 2017/2/9.
- * Powered By Tencent
- */
 public class COSClient implements ICOS {
     private final COSClientConfig cosClientConfig;
     private final OkHttpClient httpClient;

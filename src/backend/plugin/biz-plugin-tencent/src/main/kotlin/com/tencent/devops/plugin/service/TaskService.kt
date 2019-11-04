@@ -16,9 +16,6 @@ import java.util.TimerTask
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 
-/**
- * Created by Aaron Sheng on 2018/4/27.
- */
 @Service
 class TaskService @Autowired constructor(
     private val objectMapper: ObjectMapper,
