@@ -24,13 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.user
+package com.tencent.devops.common.pipeline
 
-data class ProjectUser(
-//    @JsonProperty("chinese_name")
-    val chineseName: String,
-//    @JsonProperty("avatar_url")
-    val avatarUrl: String,
-    val username: String,
-    val permissions: List<String> = emptyList()
-)
+import com.fasterxml.jackson.databind.jsontype.NamedType
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.tencent.devops.common.api.util.JsonUtil
+import org.slf4j.LoggerFactory
+import java.util.ServiceLoader
+
+object DispatchSubTypeRegisterLoader {
+
+    private val logger = LoggerFactory.getLogger(DispatchSubTypeRegisterLoader::class.java)
+
+    fun registerElement() {
+
+        val clazz = DispatchSubTypeFetcher::class.java
+        var fetcheries = ServiceLoader.load(clazz)
+
+        if (!fetcheries.iterator().hasNext()) {
+            fetcheries = ServiceLoader.load(clazz, ServiceLoader::class.java.classLoader)
+        }
+        val elementSubModule = SimpleModule()
+        fetcheries.forEach { fetcher ->
+            logger.info("[DISPATCH_FETCHER]| ${fetcher.javaClass}")
+            val jsonSubTypes = fetcher.jsonSubTypes()
+            jsonSubTypes.forEach { (classTypeName, clazz) ->
+                elementSubModule.registerSubtypes(NamedType(clazz, classTypeName))
+                logger.info("[REGISTER_DISPATCH]|$clazz for $classTypeName")
+            }
+        }
+
+        JsonUtil.registerModule(elementSubModule)
+    }
+}

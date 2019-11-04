@@ -43,5 +43,6 @@ class AutoConfiguration {
     @PostConstruct
     fun registerSubtypesObjectMapper() {
         ElementSubTypeRegisterLoader.registerElement(objectMapper)
+        DispatchSubTypeRegisterLoader.registerElement()
     }
 }
