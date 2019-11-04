@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -271,8 +271,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     labelCode = null,
                     score = null,
                     rdType = null,
-                    sortType = MarketTemplateSortTypeEnum.NAME,
-                    desc = false,
+                    sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
+                    desc = true,
                     page = page,
                     pageSize = pageSize
                 )

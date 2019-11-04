@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO è“é²¸åˆ¶å“åº“ available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI è“é²¸æŒç»­é›†æˆå¹³å° is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.ScmType
@@ -30,18 +56,18 @@ interface RepostioryScmService {
             code: String
     ): GitToken
 
-    @ApiOperation("»ñÈ¡×ª·¢µØÖ·")
+    @ApiOperation("ï¿½ï¿½È¡×ªï¿½ï¿½ï¿½ï¿½Ö·")
     fun getRedirectUrl(
             redirectUrlType: String
     ): String
 
-    @ApiOperation("Ë¢ĞÂÓÃ»§µÄtoken")
+    @ApiOperation("Ë¢ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½token")
     fun refreshToken(
             userId: String,
             accessToken: GitToken
     ): GitToken
 
-    @ApiOperation("»ñÈ¡ÎÄ¼şÄÚÈİ")
+    @ApiOperation("ï¿½ï¿½È¡ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½")
     fun getSvnFileContent(
             url: String,
             userId: String,
@@ -52,7 +78,7 @@ interface RepostioryScmService {
             credential2: String? = null
     ): String
 
-    @ApiOperation("»ñÈ¡gitÎÄ¼şÄÚÈİ")
+    @ApiOperation("ï¿½ï¿½È¡gitï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½")
     fun getGitFileContent(
             repoName: String,
             filePath: String,
@@ -61,7 +87,7 @@ interface RepostioryScmService {
             ref: String
     ): String
 
-    @ApiOperation("»ñÈ¡gitlabÎÄ¼şÄÚÈİ")
+    @ApiOperation("ï¿½ï¿½È¡gitlabï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½")
     fun getGitlabFileContent(
             repoUrl: String,
             repoName: String,
@@ -88,7 +114,7 @@ interface RepostioryScmService {
             userName: String
     ): Boolean
 
-    @ApiOperation("°ÑÏîÄ¿Ç¨ÒÆµ½Ö¸¶¨ÏîÄ¿×éÏÂ")
+    @ApiOperation("ï¿½ï¿½ï¿½ï¿½Ä¿Ç¨ï¿½Æµï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½")
     fun moveProjectToGroup(
             token: String,
             groupCode: String,
@@ -96,7 +122,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
 
-    @ApiOperation("¸üĞÂgit´úÂë¿âĞÅÏ¢")
+    @ApiOperation("ï¿½ï¿½ï¿½ï¿½gitï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢")
     fun updateGitCodeRepository(
             token: String,
             projectName: String,
@@ -104,7 +130,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("´´½¨git´úÂë¿â")
+    @ApiOperation("ï¿½ï¿½ï¿½ï¿½gitï¿½ï¿½ï¿½ï¿½ï¿½")
     fun createGitCodeRepository(
             userId: String,
             token: String,
@@ -115,7 +141,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<GitRepositoryResp?>
 
-    @ApiOperation("ÎªÏîÄ¿³ÉÔ±¸³Óè´úÂë¿âÈ¨ÏŞ")
+    @ApiOperation("Îªï¿½ï¿½Ä¿ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½")
     fun addGitProjectMember(
             userIdList: List<String>,
             repositorySpaceName: String,
@@ -124,7 +150,7 @@ interface RepostioryScmService {
             tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("É¾³ıÏîÄ¿³ÉÔ±µÄ´úÂë¿âÈ¨ÏŞ")
+    @ApiOperation("É¾ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Ô±ï¿½Ä´ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½")
     fun deleteGitProjectMember(
             userIdList: List<String>,
             repositorySpaceName: String,
@@ -147,7 +173,7 @@ interface RepostioryScmService {
     @ApiOperation("Check if the svn private key and passphrase legal")
     fun checkUsernameAndPassword(
             projectName: String,
-            @ApiParam("²Ö¿âµØÖ·", required = true)
+            @ApiParam("ï¿½Ö¿ï¿½ï¿½Ö·", required = true)
             url: String,
             type: ScmType,
             username: String,

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -70,15 +70,15 @@ interface UserProjectResource {
     ): Result<List<ProjectVO>>
 
     @GET
-    @Path("/{english_name}")
+    @Path("/{englishName}")
     @ApiOperation("通过项目名获取项目信息")
     fun get(
         @ApiParam("PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
         @ApiParam("项目名", required = true)
-        @PathParam("english_name")
-        english_name: String
+        @PathParam("englishName")
+        englishName: String
     ): Result<ProjectVO>
 
     @POST
@@ -96,7 +96,7 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{project_id}")
+    @Path("/{englishName}")
     @ApiOperation("修改项目")
     fun update(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -106,14 +106,14 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
+        @PathParam("englishName")
+        englishName: String,
         @ApiParam(value = "项目信息", required = true)
         projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @PUT
-    @Path("/{project_id}/enable")
+    @Path("/{englishName}/enable")
     @ApiOperation("启用或停用项目")
     fun enable(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -123,15 +123,15 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
+        @PathParam("englishName")
+        englishName: String,
         @ApiParam("待变更的新状态", required = true)
         @QueryParam("enabled")
         enabled: Boolean
     ): Result<Boolean>
 
     @PUT
-    @Path("/{project_id}/logo")
+    @Path("/{englishName}/logo")
     @ApiOperation("更改项目logo")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateLogo(
@@ -142,8 +142,8 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
+        @PathParam("englishName")
+        englishName: String,
         @ApiParam("文件", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
@@ -155,96 +155,6 @@ interface UserProjectResource {
     @Path("/{validateType}/names/{name}/validate")
     @ApiOperation("校验项目名称和项目英文名")
     fun validate(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("校验的是项目名称或者项目英文名")
-        @PathParam("validateType")
-        validateType: ProjectValidateType,
-        @ApiParam("项目名称或者项目英文名")
-        @PathParam("name")
-        name: String,
-        @ApiParam("项目ID")
-        @QueryParam("project_id")
-        project_id: String?
-    ): Result<Boolean>
-
-    @GET
-    @Path("/englishName/{english_name}")
-    @ApiOperation("通过项目名获取项目信息")
-    fun getV2(
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("项目名", required = true)
-        @PathParam("english_name")
-        english_name: String
-    ): Result<ProjectVO>
-
-    @PUT
-//    @Path("/{project_id}")
-    @Path("/projectId/{project_id}")
-    @ApiOperation("修改项目")
-    fun updateV2(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
-        @ApiParam(value = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo
-    ): Result<Boolean>
-
-    @PUT
-//    @Path("/{project_id}/enable")
-    @Path("/projectId/{project_id}/enable")
-    @ApiOperation("启用或停用项目")
-    fun enableV2(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
-        @ApiParam("待变更的新状态", required = true)
-        @QueryParam("enabled")
-        enabled: Boolean
-    ): Result<Boolean>
-
-    @PUT
-//    @Path("/{project_id}/logo")
-    @Path("/projectId/{project_id}/logo")
-    @ApiOperation("更改项目logo")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun updateLogoV2(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
-        @ApiParam("文件", required = true)
-        @FormDataParam("logo")
-        inputStream: InputStream,
-        @FormDataParam("logo")
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
-
-    @PUT
-//    @Path("/{validateType}/names/{name}/validate")
-    @Path("/validateType/{validateType}/names/{name}/validate")
-    @ApiOperation("校验项目名称和项目英文名")
-    fun validateV2(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
