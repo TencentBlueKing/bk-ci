@@ -24,7 +24,7 @@ interface AppPipelineSettingResource {
 
     @ApiOperation("app获取流水线基础配置")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/setting")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/setting")
     @Path("/{projectId}/{pipelineId}/setting")
     fun getPipelineSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -40,7 +40,7 @@ interface AppPipelineSettingResource {
 
     @ApiOperation("app保存流水线基础配置")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/save")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/save")
     @Path("/{projectId}/{pipelineId}/save")
     fun saveSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

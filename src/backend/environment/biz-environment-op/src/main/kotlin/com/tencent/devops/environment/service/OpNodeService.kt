@@ -153,7 +153,6 @@ class OpNodeService @Autowired constructor(
         }
     }
 
-
     fun listPage(page: Int, pageSize: Int, nodeName: String?): List<NodeDevCloudInfo> {
         return nodeDao.listPage(dslContext, page, pageSize, nodeName).map {
             NodeDevCloudInfo(
@@ -184,7 +183,6 @@ class OpNodeService @Autowired constructor(
         nodeDao.batchDeleteNode(dslContext, projectId, listOf(nodeId))
         return true
     }
-
 
     private fun checkImportCount(dslContext: DSLContext, projectConfigDao: ProjectConfigDao, nodeDao: NodeDao, projectId: String, userId: String, toAddNodeCount: Int) {
         val projectConfig = projectConfigDao.get(dslContext, projectId, userId)

@@ -2,7 +2,6 @@ package com.tencent.devops.process.api.quality
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.quality.UserQualityTemplateResource
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail

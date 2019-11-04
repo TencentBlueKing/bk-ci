@@ -8,7 +8,7 @@ import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.tof.TOFService
-import com.tencent.devops.project.user.api.UserProjectUserResource
+import com.tencent.devops.project.api.service.user.UserProjectUserResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

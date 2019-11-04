@@ -34,10 +34,10 @@ import com.tencent.devops.repository.pojo.Repository
 interface ScmWebhookMatcher {
 
     fun isMatch(
-            projectId: String,
-            pipelineId: String,
-            repository: Repository,
-            webHookParams: WebHookParams
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
     ): MatchResult
 
     fun getUsername(): String
@@ -94,17 +94,17 @@ interface ScmWebhookMatcher {
     fun getMergeRequestId(): Long? = null
 
     data class WebHookParams(
-            val repositoryConfig: RepositoryConfig,
-            var branchName: String? = null,
-            var excludeBranchName: String? = null,
-            var includePaths: String? = null,
-            var excludePaths: String? = null,
-            var eventType: CodeEventType? = null,
-            var block: Boolean = false,
-            var relativePath: String? = null,
-            var excludeUsers: String? = "",
-            var includeUsers: String? = null,
-            var codeType: CodeType = CodeType.GIT
+        val repositoryConfig: RepositoryConfig,
+        var branchName: String? = null,
+        var excludeBranchName: String? = null,
+        var includePaths: String? = null,
+        var excludePaths: String? = null,
+        var eventType: CodeEventType? = null,
+        var block: Boolean = false,
+        var relativePath: String? = null,
+        var excludeUsers: String? = "",
+        var includeUsers: String? = null,
+        var codeType: CodeType = CodeType.GIT
     )
 
     data class MatchResult(

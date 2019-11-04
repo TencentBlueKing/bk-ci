@@ -156,7 +156,6 @@ class BuildDetailDao {
         }
     }
 
-
     fun updateModel(
         dslContext: DSLContext,
         buildId: String,

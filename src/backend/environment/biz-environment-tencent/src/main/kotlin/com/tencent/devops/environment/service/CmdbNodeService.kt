@@ -61,8 +61,6 @@ class CmdbNodeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
     }
 
-
-
     fun getUserCmdbNodes(userId: String, offset: Int, limit: Int): List<CmdbNode> {
         val cmdbNodes =
             ImportServerNodeUtils.getUserCmdbNode(

@@ -14,16 +14,15 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.websocket.EditPageBuild
-import com.tencent.devops.process.websocket.HistoryPageBuild
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineCodeccService @Autowired constructor(
-        private val pipelineTaskService: PipelineTaskService,
-        private val websocketDispatcher: WebSocketDispatcher,
-        private val redisOperation: RedisOperation
+    private val pipelineTaskService: PipelineTaskService,
+    private val websocketDispatcher: WebSocketDispatcher,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)

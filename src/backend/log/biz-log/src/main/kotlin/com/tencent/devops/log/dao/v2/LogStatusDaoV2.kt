@@ -28,10 +28,10 @@ class LogStatusDaoV2 {
     }
 
     fun listFinish(
-            dslContext: DSLContext,
-            buildId: String,
-            tag: String?,
-            executeCount: Int?
+        dslContext: DSLContext,
+        buildId: String,
+        tag: String?,
+        executeCount: Int?
     ): Result<TLogStatusV2Record>? {
         with(TLogStatusV2.T_LOG_STATUS_V2) {
             return dslContext.selectFrom(this)

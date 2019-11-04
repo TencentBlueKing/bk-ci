@@ -40,7 +40,7 @@ object SecurityUtil {
     private const val AES = "AES"
     private const val ALGORITHM_PATTERN_COMPLEMENT = "AES/ECB/PKCS5Padding" // 算法/模式/补码方式
     private val secretKeySpec: SecretKeySpec
-    //private const val AES_KEY = "b*nK#3%t"
+    // private const val AES_KEY = "b*nK#3%t"
     private const val AES_KEY = "k&nM$3+1"
     private const val SEED = 128
 

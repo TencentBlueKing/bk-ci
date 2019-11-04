@@ -79,7 +79,6 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         register(AllExceptionMapper::class.java)
         register(MultiPartFeature::class.java)
         register(PipelineAlreadyExistExceptionMapper::class.java)
-        register(ErrorCodeExceptionMapper::class.java)
         register(CustomExceptionMapper::class.java)
         register(PermissionForbiddenExceptionMapper::class.java)
         register(CodeccReportExceptionMapper::class.java)

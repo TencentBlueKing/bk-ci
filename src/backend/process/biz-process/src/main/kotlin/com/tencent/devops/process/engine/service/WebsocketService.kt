@@ -18,102 +18,102 @@ import org.springframework.stereotype.Service
 
 @Service
 class WebsocketService @Autowired constructor(
-		val redisOperation: RedisOperation,
-		val objectMapper: ObjectMapper
+    val redisOperation: RedisOperation,
+    val objectMapper: ObjectMapper
 ) {
-	fun buildDetailMessage(buildId:String, projectId: String, pipelineId: String, userId: String): DetailWebsocketPush {
-		val page = DetailPageBuild().buildPage(
-				buildPageInfo = BuildPageInfo(
-						buildId = buildId,
-						pipelineId = pipelineId,
-						projectId = projectId,
-						atomId = null
-				))
-		logger.info("detail websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
-		return DetailWebsocketPush(
-				buildId = buildId,
-				projectId = projectId,
-				pipelineId = pipelineId,
-				userId = userId,
-				redisOperation = redisOperation,
-				page = page,
-				pushType = WebSocketType.DETAIL,
-				objectMapper = objectMapper,
-				notifyPost = NotifyPost(
-						module = "process",
-						level = NotityLevel.LOW_LEVEL.getLevel(),
-						message = "",
-						dealUrl = null,
-						code = 200,
-						webSocketType = WebSocketType.changWebType(WebSocketType.DETAIL),
-						page = page
-				)
-		)
-	}
+    fun buildDetailMessage(buildId: String, projectId: String, pipelineId: String, userId: String): DetailWebsocketPush {
+        val page = DetailPageBuild().buildPage(
+                buildPageInfo = BuildPageInfo(
+                        buildId = buildId,
+                        pipelineId = pipelineId,
+                        projectId = projectId,
+                        atomId = null
+                ))
+        logger.info("detail websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        return DetailWebsocketPush(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                redisOperation = redisOperation,
+                page = page,
+                pushType = WebSocketType.DETAIL,
+                objectMapper = objectMapper,
+                notifyPost = NotifyPost(
+                        module = "process",
+                        level = NotityLevel.LOW_LEVEL.getLevel(),
+                        message = "",
+                        dealUrl = null,
+                        code = 200,
+                        webSocketType = WebSocketType.changWebType(WebSocketType.DETAIL),
+                        page = page
+                )
+        )
+    }
 
-	fun buildHistoryMessage(buildId:String, projectId: String, pipelineId: String, userId: String): HistoryWebsocketPush {
-		val page = HistoryPageBuild().buildPage(
-				buildPageInfo = BuildPageInfo(
-						buildId = buildId,
-						pipelineId = pipelineId,
-						projectId = projectId,
-						atomId = null
-				)
-		)
-		logger.info("history websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
-		return HistoryWebsocketPush(
-				buildId = buildId,
-				projectId = projectId,
-				pipelineId = pipelineId,
-				userId = userId,
-				redisOperation = redisOperation,
-				page = page,
-				pushType = WebSocketType.HISTORY,
-				objectMapper = objectMapper,
-				notifyPost = NotifyPost(
-						module = "process",
-						level = NotityLevel.LOW_LEVEL.getLevel(),
-						message = "",
-						dealUrl = null,
-						code = 200,
-						webSocketType = WebSocketType.changWebType(WebSocketType.HISTORY),
-						page = page
-				)
-		)
-	}
+    fun buildHistoryMessage(buildId: String, projectId: String, pipelineId: String, userId: String): HistoryWebsocketPush {
+        val page = HistoryPageBuild().buildPage(
+                buildPageInfo = BuildPageInfo(
+                        buildId = buildId,
+                        pipelineId = pipelineId,
+                        projectId = projectId,
+                        atomId = null
+                )
+        )
+        logger.info("history websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        return HistoryWebsocketPush(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                redisOperation = redisOperation,
+                page = page,
+                pushType = WebSocketType.HISTORY,
+                objectMapper = objectMapper,
+                notifyPost = NotifyPost(
+                        module = "process",
+                        level = NotityLevel.LOW_LEVEL.getLevel(),
+                        message = "",
+                        dealUrl = null,
+                        code = 200,
+                        webSocketType = WebSocketType.changWebType(WebSocketType.HISTORY),
+                        page = page
+                )
+        )
+    }
 
-	fun buildStatusMessage(buildId:String, projectId: String, pipelineId: String, userId: String): StatusWebsocketPush {
-		val page = StatusPageBuild().buildPage(
-				buildPageInfo = BuildPageInfo(
-						buildId = buildId,
-						pipelineId = pipelineId,
-						projectId = projectId,
-						atomId = null
-				)
-		)
-		logger.info("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
-		return StatusWebsocketPush(
-				buildId = buildId,
-				projectId = projectId,
-				pipelineId = pipelineId,
-				userId = userId,
-				redisOperation = redisOperation,
-				page = page,
-				pushType = WebSocketType.STATUS,
-				objectMapper = objectMapper,
-				notifyPost = NotifyPost(
-						module = "process",
-						level = NotityLevel.LOW_LEVEL.getLevel(),
-						message = "",
-						dealUrl = null,
-						code = 200,
-						webSocketType = WebSocketType.changWebType(WebSocketType.STATUS),
-						page = page
-				)
-		)
-	}
+    fun buildStatusMessage(buildId: String, projectId: String, pipelineId: String, userId: String): StatusWebsocketPush {
+        val page = StatusPageBuild().buildPage(
+                buildPageInfo = BuildPageInfo(
+                        buildId = buildId,
+                        pipelineId = pipelineId,
+                        projectId = projectId,
+                        atomId = null
+                )
+        )
+        logger.info("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        return StatusWebsocketPush(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                redisOperation = redisOperation,
+                page = page,
+                pushType = WebSocketType.STATUS,
+                objectMapper = objectMapper,
+                notifyPost = NotifyPost(
+                        module = "process",
+                        level = NotityLevel.LOW_LEVEL.getLevel(),
+                        message = "",
+                        dealUrl = null,
+                        code = 200,
+                        webSocketType = WebSocketType.changWebType(WebSocketType.STATUS),
+                        page = page
+                )
+        )
+    }
 
-	companion object {
-		val logger = LoggerFactory.getLogger(this::class.java)
-	}
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

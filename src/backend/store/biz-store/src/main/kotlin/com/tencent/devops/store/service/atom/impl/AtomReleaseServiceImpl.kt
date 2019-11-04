@@ -142,8 +142,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var marketAtomArchiveService: MarketAtomArchiveService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
-/*    @Autowired
-    lateinit var websocketService: websocketService*/
+    /*    @Autowired
+        lateinit var websocketService: websocketService*/
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
@@ -499,7 +499,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
         // 通过websocket推送状态变更消息
-         websocketService.sendWebsocketMessage(userId, atomId)
+        websocketService.sendWebsocketMessage(userId, atomId)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -755,7 +755,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             marketAtomUpdateRequest.versionContent
         )
         // 通过websocket推送状态变更消息
-         websocketService.sendWebsocketMessage(userId, atomId)
+        websocketService.sendWebsocketMessage(userId, atomId)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -850,7 +850,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
         )
         // 通过websocket推送状态变更消息
-         websocketService.sendWebsocketMessage(userId, atomId)
+        websocketService.sendWebsocketMessage(userId, atomId)
         // 删除质量红线相关数据
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
@@ -910,14 +910,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     UpdateAtomInfo(atomStatus = atomStatus, latestFlag = true, pubTime = pubTime)
                 )
                 // 通过websocket推送状态变更消息
-                 websocketService.sendWebsocketMessage(userId, atomId)
+                websocketService.sendWebsocketMessage(userId, atomId)
             }
             // 发送版本发布邮件
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_SUCCESS)
         } else {
             marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
             // 通过websocket推送状态变更消息
-             websocketService.sendWebsocketMessage(userId, atomId)
+            websocketService.sendWebsocketMessage(userId, atomId)
         }
         return Result(true)
     }
@@ -977,7 +977,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(), userId, atomOfflineReq.reason
         )
         // 通过websocket推送状态变更消息
-         websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
+        websocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
         // 通知使用方插件即将下架 -- todo
 
         return Result(true)

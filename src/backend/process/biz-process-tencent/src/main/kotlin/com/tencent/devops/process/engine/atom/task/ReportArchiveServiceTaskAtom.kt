@@ -19,6 +19,7 @@ import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.service.ReportService
@@ -169,6 +170,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             getTimeoutMills().toLong()
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fileRequest, projectId)
+        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkFileTransferStatus(
@@ -248,8 +250,11 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
                 containerId,
                 executeCount
             )
-            throw BuildTaskException(ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS, "Index file not exist")
-        }
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS,
+                errorMsg = "Index file not exist"
+            ) }
         LogUtils.addLine(rabbitTemplate, buildId, "入口文件检测完成", taskId, containerId, executeCount)
 
         var indexFileContent = indexFile.readBytes().toString(Charset.defaultCharset())
@@ -270,7 +275,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             reportEmail = ReportEmail(receivers, emailTitle, indexFile.readBytes().toString(Charset.defaultCharset()))
         }
 
-        reportService.create(buildId, taskId, indexFileParam, reportNameParam, ReportTypeEnum.INTERNAL, reportEmail)
+        reportService.create(projectId, pipelineId, buildId, taskId, indexFileParam, reportNameParam, ReportTypeEnum.INTERNAL, reportEmail)
         LogUtils.addLine(rabbitTemplate, buildId, "上传自定义产出物成功，共产生了${count}个文件", taskId, containerId, executeCount)
     }
 

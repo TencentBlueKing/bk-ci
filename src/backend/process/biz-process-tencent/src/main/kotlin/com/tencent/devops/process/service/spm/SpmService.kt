@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.exception.BuildTaskException
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.third.spm.SpmFileInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -52,7 +53,11 @@ class SpmService {
             val retCode = responseJson["code"].asInt
             if (0 != retCode) {
                 logger.error("Response failed. msg: ${responseJson["msg"].asString}")
-                throw BuildTaskException(ERROR_BUILD_TASK_CDN_FAIL, "查询CDN信息失败")
+                throw BuildTaskException(
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ERROR_BUILD_TASK_CDN_FAIL,
+                    errorMsg = "查询CDN信息失败"
+                )
             }
 
             val results = parser.parse(body).asJsonObject["file_list"].asJsonArray

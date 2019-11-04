@@ -40,11 +40,15 @@ data class DebugStartParam(
     val pipelineId: String,
     @ApiModelProperty("vmSeqId", required = true)
     val vmSeqId: String,
-    @ApiModelProperty("镜像名称", required = true)
-    val imageName: String,
+    @ApiModelProperty("imageType为BKSTORE时的镜像编码", required = false)
+    val imageCode: String?,
+    @ApiModelProperty("imageType为BKSTORE时的镜像版本", required = false)
+    val imageVersion: String?,
+    @ApiModelProperty("镜像名称", required = false)
+    val imageName: String?,
     @ApiModelProperty("环境变量", required = true)
     val buildEnv: Map<String, String>?,
-    @ApiModelProperty("镜像类型(bkdevops或thrid)", required = true)
+    @ApiModelProperty("镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = true)
     val imageType: String?,
     @ApiModelProperty("镜像仓库凭证ID", required = true)
     val credentialId: String?

@@ -14,4 +14,3 @@ data class UploadCosCdnParam(
     var domain: String,
     var cosClientConfig: COSClientConfig
 )
-

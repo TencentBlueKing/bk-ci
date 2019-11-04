@@ -34,9 +34,6 @@ import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 /**
  * 线程池只是做防止出现意外情况长时间运行，实际上并不能真正终止线程
@@ -51,7 +48,7 @@ class AtomTaskDaemon(
         } catch (e: InterruptedException) {
             logger.error("AtomTaskDaemon InterruptedException", e)
             AtomResponse(
-                buildStatus = BuildStatus.EXEC_TIMEOUT,
+                buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = AtomErrorCode.SYSTEM_DAEMON_INTERRUPTED,
                 errorMsg = "守护进程启动出错"
@@ -60,41 +57,18 @@ class AtomTaskDaemon(
             logger.error("Backend BuildTaskException", e)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = ErrorType.SYSTEM,
-                errorCode = e.code, // 使用后台服务错误码标识
+                errorType = e.errorType,
+                errorCode = e.errorCode,
                 errorMsg = "后台服务任务执行出错"
             )
-        } catch (e: RuntimeException) {
+        } catch (e: Throwable) {
             logger.error("Backend RuntimeException", e)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
+                errorCode = AtomErrorCode.SYSTEM_DAEMON_INTERRUPTED,
                 errorMsg = "后台服务运行出错"
             )
-        }
-    }
-
-    fun run(): AtomResponse {
-        val timeout = task.additionalOptions?.timeout
-        var atomResponse = AtomResponse(BuildStatus.FAILED)
-        if (timeout == null || timeout == 0L) {
-            atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, buildVariables)
-            return atomResponse
-        } else {
-            val taskDaemon = AtomTaskDaemon(task, buildVariables)
-            val executor = Executors.newCachedThreadPool()
-            val f1 = executor.submit(taskDaemon)
-            try {
-                atomResponse = f1.get(timeout, TimeUnit.MINUTES)
-            } catch (e: TimeoutException) {
-                logger.error("AtomTaskDaemon run timeout, timeout:$timeout", e)
-                atomResponse.errorType = ErrorType.SYSTEM
-                atomResponse.errorMsg = "原子执行超时, 超时时间:${timeout}分钟"
-                atomResponse.errorCode = AtomErrorCode.SYSTEM_OUTTIME_ERROR
-            } finally {
-                executor.shutdownNow()
-                return atomResponse
-            }
         }
     }
 

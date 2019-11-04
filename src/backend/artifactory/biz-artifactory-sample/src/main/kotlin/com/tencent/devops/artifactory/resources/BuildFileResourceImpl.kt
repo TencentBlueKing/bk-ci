@@ -58,7 +58,7 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
     ): Result<String?> {
         return archiveFileService.archiveFile(
             userId = "",
-            projectCode = projectCode,
+            projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
             fileType = fileType,
@@ -79,7 +79,7 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
     ) {
         return archiveFileService.downloadArchiveFile(
             userId = "",
-            projectCode = projectCode,
+            projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
             fileType = fileType,
@@ -102,7 +102,7 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
         }
         return archiveFileService.getFileDownloadUrls(
             userId = "",
-            projectCode = projectCode,
+            projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
             artifactoryType = artifactoryType,

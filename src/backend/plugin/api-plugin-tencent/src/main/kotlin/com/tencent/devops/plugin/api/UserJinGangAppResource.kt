@@ -40,11 +40,8 @@ interface UserJinGangAppResource {
         @PathParam("buildId")
         buildId: String,
         @ApiParam("流水线构建No", required = true)
-        @PathParam("buildNo")
+        @QueryParam("buildNo")
         buildNo: Int,
-        @ApiParam("element ID", required = true)
-        @QueryParam("elementId")
-        elementId: String,
         @ApiParam("文件路径", required = true)
         @QueryParam("file")
         file: String,

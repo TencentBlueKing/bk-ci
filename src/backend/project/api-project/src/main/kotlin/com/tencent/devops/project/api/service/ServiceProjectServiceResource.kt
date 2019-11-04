@@ -27,22 +27,16 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.*
+import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PROJECT_SERVICE"], description = "SERVICE-持续集成项目列表接口")
@@ -55,10 +49,10 @@ interface ServiceProjectServiceResource {
     @Path("/")
     @ApiOperation("批量修改服务")
     fun updateServiceUrlByBatch(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("修改服务的js和css连接", required = false)
-            serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("修改服务的js和css连接", required = false)
+        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
     ): Result<Boolean>
 }

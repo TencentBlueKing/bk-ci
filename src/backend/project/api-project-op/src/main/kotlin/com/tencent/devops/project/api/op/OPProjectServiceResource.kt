@@ -29,7 +29,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.*
+import com.tencent.devops.project.pojo.service.GrayTestInfo
+import com.tencent.devops.project.pojo.service.GrayTestListInfo
+import com.tencent.devops.project.pojo.service.OPPServiceVO
+import com.tencent.devops.project.pojo.service.ServiceCreateInfo
+import com.tencent.devops.project.pojo.service.ServiceListVO
+import com.tencent.devops.project.pojo.service.ServiceType
+import com.tencent.devops.project.pojo.service.ServiceTypeModify
+import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
+import com.tencent.devops.project.pojo.service.ServiceVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -67,7 +75,7 @@ interface OPProjectServiceResource {
     ): Result<ServiceType>
 
 //    @POST
-////    @Path("/types/{title}")
+// //    @Path("/types/{title}")
 //    @Path("/types/titles/{title}")
 //    @ApiOperation("创建服务类型")
 //    fun createServiceTypeV2(
@@ -95,7 +103,7 @@ interface OPProjectServiceResource {
     ): Result<Boolean>
 
 //    @DELETE
-////    @Path("/types/{serviceTypeId}")
+// //    @Path("/types/{serviceTypeId}")
 //    @Path("/types/{typeId}")
 //    @ApiOperation("删除服务类型")
 //    fun deleteServiceTypeV2(
@@ -122,7 +130,7 @@ interface OPProjectServiceResource {
     ): Result<Boolean>
 //
 //    @PUT
-////    @Path("/types/{serviceTypeId}")
+// //    @Path("/types/{serviceTypeId}")
 //    @Path("/types/{typeId}")
 //    @ApiOperation("修改服务类型")
 //    fun updateServiceTypeV2(
@@ -167,7 +175,7 @@ interface OPProjectServiceResource {
     ): Result<ServiceType>
 
 //    @GET
-////    @Path("/types/{serviceTypeId}")
+// //    @Path("/types/{serviceTypeId}")
 //    @Path("/types/{typeId}")
 //    @ApiOperation("根据ID查找服务类型")
 //    fun getServiceTypeByIdV2(
@@ -223,11 +231,11 @@ interface OPProjectServiceResource {
     @Path("/")
     @ApiOperation("批量修改服务")
     fun updateServiceUrlByBatch(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("修改服务的js和css连接", required = false)
-            serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("修改服务的js和css连接", required = false)
+        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
     ): Result<Boolean>
 
 //    @PUT
@@ -316,7 +324,7 @@ interface OPProjectServiceResource {
     ): Result<Boolean>
 
 //    @PUT
-////    @Path("/grayTest/{id}")
+// //    @Path("/grayTest/{id}")
 //    @Path("/{serviceId}/update_gray")
 //    @ApiOperation("修改用户对服务权限状态（灰度）")
 //    fun updateUserAuthV2(
@@ -465,5 +473,4 @@ interface OPProjectServiceResource {
 //            @ApiParam("服务列表")
 //            services: List<ServiceListVO>
 //    ): Result<Boolean>
-
 }

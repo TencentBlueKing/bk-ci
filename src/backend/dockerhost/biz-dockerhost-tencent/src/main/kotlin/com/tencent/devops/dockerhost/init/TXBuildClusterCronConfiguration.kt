@@ -53,8 +53,6 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
     @Autowired
     private lateinit var updateAgentRunner: UpdateAgentRunner
 
-
-
     @Bean
     fun debugRunner(dockerHostDebugService: DockerHostDebugService): DebugRunner {
         return DebugRunner(dockerHostDebugService)

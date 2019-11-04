@@ -152,7 +152,7 @@ class PipelineVMBuildService @Autowired constructor(
                     )
                     return BuildVariables(
                         buildId, vmSeqId, vmName,
-                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs
+                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: ""
                     )
                 }
                 vmId++
@@ -459,7 +459,11 @@ class PipelineVMBuildService @Autowired constructor(
         if (result.buildResult.isNotEmpty()) {
             logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
             try {
-                pipelineRuntimeService.batchSetVariable(buildId, result.buildResult)
+                pipelineRuntimeService.batchSetVariable(
+                    projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    variables = result.buildResult)
             } catch (ignored: Exception) {
                 // 防止因为变量字符过长而失败。做下拦截
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)

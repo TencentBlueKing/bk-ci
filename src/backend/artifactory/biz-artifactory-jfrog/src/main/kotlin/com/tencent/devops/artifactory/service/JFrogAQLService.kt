@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Service
 class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMapper) {
@@ -624,6 +627,162 @@ class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMap
             }
         } finally {
             logger.info("searchFileByRegex cost ${System.currentTimeMillis() - startTimestamp}ms")
+        }
+    }
+
+    /**
+     * 通过JFrog AQL接口根据时间段文件和元数据
+     *
+     * 参数：
+     * @param parentFolder 父目录包含repo，例如: generic-local/bk-custom/a90/
+     * @param relativePaths 父目录下相对了路径，例如: {/a/, /b/}
+     * @param names 匹配文件名，支持模糊匹配
+     *
+     * 返回：
+     * @return List<JFrogAQLFileInfo>
+     * JFrogAQLFileInfo(
+     *   path: parentFolder下的相对路径
+     *   name: 文件名
+     *   size: 文件大小字节
+     *   created: 创建时间
+     * )
+     *
+     * JFrog接口：
+     *  curl -X POST 'http://test.artifactory.oa.com/api/search/aql' -H 'Content-Type:text/plain' -d 'items.find(
+     *      {
+     *         "modified" : {"$gt" : "2019-07-12T19:20:30.45+01:00"},
+     *         "modified" : {"$lt" : "2019-07-19T19:20:30.45+01:00"}})
+     *
+     *      }
+     *  ).include("property",..).sort({"$desc": ["modified"]}).offset(0).limit(10)'
+     *
+     */
+
+    fun searchFileByTime(
+        startTime: Long,
+        endTime: Long,
+        limit: Int,
+        offset: Int
+    ): List<JFrogAQLFileInfo> {
+        val startTimestamp = System.currentTimeMillis()
+        try {
+            if (startTime == 0L && endTime == 0L) {
+                return emptyList()
+            }
+
+            val startTimeDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(startTime), ZoneId.systemDefault())
+            val endTimeDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(endTime), ZoneId.systemDefault())
+
+            val sb = StringBuilder()
+            sb.append("items.find({")
+            sb.append("\"modified\": {\"\$gt\": \"$startTimeDateTime\"}")
+            sb.append(",\"modified\": {\"\$lt\": \"$endTimeDateTime\"}")
+
+            sb.append("}).include(\"property\")")
+            sb.append(".sort({\"\$desc\": [\"modified\"]})")
+
+            sb.append(".offset($offset)")
+            sb.append(".limit($limit)")
+            logger.info("searchFileByTime:$sb")
+            val url = "$JFROG_BASE_URL/api/search/aql"
+            val mediaType = MediaType.parse("text/plain")
+            val requestBody = RequestBody.create(mediaType, sb.toString())
+            val request = Request.Builder()
+                .url(url)
+                .header("Authorization", makeCredential())
+                .post(requestBody)
+                .build()
+
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                logger.info("searchFileByTime result code:${response.code()},result message:${response.message()}")
+                if (!response.isSuccessful) {
+                    logger.error("Fail to search by regex. $responseContent")
+                    throw RuntimeException("Fail to search by regex")
+                }
+                val jFrogAQLFileInfoList =
+                    objectMapper.readValue<JFrogAQLResponse<JFrogAQLFileInfo>>(responseContent).results
+                return jFrogAQLFileInfoList.map {
+                    JFrogAQLFileInfo(
+//                            "/${it.path.removePrefix(relativeParentPath)}/${it.name}",
+                        it.path,
+                        it.name,
+                        it.size,
+                        it.created,
+                        it.modified,
+                        it.properties ?: emptyList()
+                    )
+                }
+            }
+        } finally {
+            logger.info("searchFileByTime cost ${System.currentTimeMillis() - startTimestamp}ms")
+        }
+    }
+
+    /**
+     * 根据路径（目录）和 属性查询文件
+     *
+     * {
+     *    "repo": "docker-local",
+     *    "type": "file",
+     *    "$and": [{
+     *        "path":{"$match":"bk-custom/a90*"}
+     *    },{
+     *        "@userId":{"$eq":"jack"}
+     *    }]
+     * }
+     *
+     */
+    fun searchByPathAndProperties(
+        path: String,
+        properties: Map<String, String>
+    ): List<JFrogAQLFileInfo> {
+        val startTimestamp = System.currentTimeMillis()
+
+        val roadList = path.split("/")
+        val repoKey = roadList.first()
+        val filterPath = path.removePrefix("$repoKey/").removeSuffix("/")
+
+        try {
+            val sb = StringBuilder()
+            sb.append("items.find(")
+            sb.append("{\"repo\":\"$repoKey\",\"type\":\"file\"")
+            sb.append(",\"\$and\":[{\"path\":{\"\$match\":\"$filterPath*\"}}")
+            if (properties.isNotEmpty()) {
+                sb.append(",")
+                sb.append(properties.map { "{\"@${it.key}\":{\"\$eq\":\"${it.value}\"}}" }.joinToString(","))
+            }
+            sb.append("]})")
+
+            val url = "$JFROG_BASE_URL/api/search/aql"
+            val mediaType = MediaType.parse("text/plain")
+            val requestBody = RequestBody.create(mediaType, sb.toString())
+            val request = Request.Builder().url(url)
+                .header("Authorization", makeCredential())
+                .post(requestBody)
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("aql search failed. $responseContent")
+                    throw RuntimeException("aql search failed")
+                }
+
+                val jFrogAQLFileInfoList =
+                    objectMapper.readValue<JFrogAQLResponse<JFrogAQLFileInfo>>(responseContent).results
+                return jFrogAQLFileInfoList.map {
+                    JFrogAQLFileInfo(
+                        "${it.path.removePrefix(filterPath)}/${it.name}",
+                        it.name,
+                        it.size,
+                        it.created,
+                        it.modified,
+                        it.properties ?: emptyList()
+                    )
+                }
+            }
+        } finally {
+            logger.info("searchFileAndPropertyByPropertyByAnd cost ${System.currentTimeMillis() - startTimestamp}ms")
         }
     }
 

@@ -57,78 +57,77 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserProjectResource {
 
-
     @GET
     @Path("/")
     @ApiOperation("查询所有项目")
     fun list(
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("是否获取全部项目")
-            @QueryParam("includeDisable")
-            includeDisable: Boolean? = true
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("是否获取全部项目")
+        @QueryParam("includeDisable")
+        includeDisable: Boolean? = true
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/{english_name}")
     @ApiOperation("通过项目名获取项目信息")
     fun get(
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目名", required = true)
-            @PathParam("english_name")
-            english_name: String
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目名", required = true)
+        @PathParam("english_name")
+        english_name: String
     ): Result<ProjectVO>
 
     @POST
     @Path("/")
     @ApiOperation("创建项目")
     fun create(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam(value = "项目信息", required = true)
-            projectCreateInfo: ProjectCreateInfo
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectCreateInfo: ProjectCreateInfo
     ): Result<Boolean>
 
     @PUT
     @Path("/{project_id}")
     @ApiOperation("修改项目")
     fun update(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("project_id")
-            projectId: String,
-            @ApiParam(value = "项目信息", required = true)
-            projectUpdateInfo: ProjectUpdateInfo
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @PUT
     @Path("/{project_id}/enable")
     @ApiOperation("启用或停用项目")
     fun enable(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("project_id")
-            projectId: String,
-            @ApiParam("待变更的新状态", required = true)
-            @QueryParam("enabled")
-            enabled: Boolean
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam("待变更的新状态", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
     ): Result<Boolean>
 
     @PUT
@@ -136,50 +135,50 @@ interface UserProjectResource {
     @ApiOperation("更改项目logo")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateLogo(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("project_id")
-            projectId: String,
-            @ApiParam("文件", required = true)
-            @FormDataParam("logo")
-            inputStream: InputStream,
-            @FormDataParam("logo")
-            disposition: FormDataContentDisposition
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("logo")
+        inputStream: InputStream,
+        @FormDataParam("logo")
+        disposition: FormDataContentDisposition
     ): Result<Boolean>
 
     @PUT
     @Path("/{validateType}/names/{name}/validate")
     @ApiOperation("校验项目名称和项目英文名")
     fun validate(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("校验的是项目名称或者项目英文名")
-            @PathParam("validateType")
-            validateType: ProjectValidateType,
-            @ApiParam("项目名称或者项目英文名")
-            @PathParam("name")
-            name: String,
-            @ApiParam("项目ID")
-            @QueryParam("project_id")
-            project_id: String?
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("校验的是项目名称或者项目英文名")
+        @PathParam("validateType")
+        validateType: ProjectValidateType,
+        @ApiParam("项目名称或者项目英文名")
+        @PathParam("name")
+        name: String,
+        @ApiParam("项目ID")
+        @QueryParam("project_id")
+        project_id: String?
     ): Result<Boolean>
 
     @GET
     @Path("/englishName/{english_name}")
     @ApiOperation("通过项目名获取项目信息")
     fun getV2(
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目名", required = true)
-            @PathParam("english_name")
-            english_name: String
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目名", required = true)
+        @PathParam("english_name")
+        english_name: String
     ): Result<ProjectVO>
 
     @PUT
@@ -187,17 +186,17 @@ interface UserProjectResource {
     @Path("/projectId/{project_id}")
     @ApiOperation("修改项目")
     fun updateV2(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("project_id")
-            projectId: String,
-            @ApiParam(value = "项目信息", required = true)
-            projectUpdateInfo: ProjectUpdateInfo
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @PUT
@@ -205,18 +204,18 @@ interface UserProjectResource {
     @Path("/projectId/{project_id}/enable")
     @ApiOperation("启用或停用项目")
     fun enableV2(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("project_id")
-            projectId: String,
-            @ApiParam("待变更的新状态", required = true)
-            @QueryParam("enabled")
-            enabled: Boolean
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam("待变更的新状态", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
     ): Result<Boolean>
 
     @PUT
@@ -225,20 +224,20 @@ interface UserProjectResource {
     @ApiOperation("更改项目logo")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateLogoV2(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("PAAS_CC Token", required = true)
-            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-            accessToken: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("project_id")
-            projectId: String,
-            @ApiParam("文件", required = true)
-            @FormDataParam("logo")
-            inputStream: InputStream,
-            @FormDataParam("logo")
-            disposition: FormDataContentDisposition
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("logo")
+        inputStream: InputStream,
+        @FormDataParam("logo")
+        disposition: FormDataContentDisposition
     ): Result<Boolean>
 
     @PUT
@@ -246,17 +245,17 @@ interface UserProjectResource {
     @Path("/validateType/{validateType}/names/{name}/validate")
     @ApiOperation("校验项目名称和项目英文名")
     fun validateV2(
-            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("校验的是项目名称或者项目英文名")
-            @PathParam("validateType")
-            validateType: ProjectValidateType,
-            @ApiParam("项目名称或者项目英文名")
-            @PathParam("name")
-            name: String,
-            @ApiParam("项目ID")
-            @QueryParam("project_id")
-            project_id: String?
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("校验的是项目名称或者项目英文名")
+        @PathParam("validateType")
+        validateType: ProjectValidateType,
+        @ApiParam("项目名称或者项目英文名")
+        @PathParam("name")
+        name: String,
+        @ApiParam("项目ID")
+        @QueryParam("project_id")
+        project_id: String?
     ): Result<Boolean>
 }

@@ -44,7 +44,7 @@ class UserFileResourceImpl @Autowired constructor(private val archiveFileService
 
     override fun uploadFile(
         userId: String,
-        projectCode: String?,
+        projectId: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
@@ -52,7 +52,7 @@ class UserFileResourceImpl @Autowired constructor(private val archiveFileService
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            projectCode = projectCode,
+            projectId = projectId,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
     }

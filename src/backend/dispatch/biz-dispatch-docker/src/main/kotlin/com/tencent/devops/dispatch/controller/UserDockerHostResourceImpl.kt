@@ -1,13 +1,11 @@
 package com.tencent.devops.dispatch.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -18,6 +16,8 @@ import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DebugStartParam
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import com.tencent.devops.store.pojo.app.BuildEnv
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -73,7 +73,18 @@ class UserDockerHostResourceImpl @Autowired constructor(
         logger.info("Container ready to start, buildEnvStr: $buildEnvStr")
 
         with(debugStartParam) {
-            dockerHostDebugService.insertDebug(projectId, pipelineId, vmSeqId, imageName, buildEnvStr, ImageType.getType(imageType), credentialId)
+            dockerHostDebugService.insertDebug(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                imageCode = imageCode,
+                imageVersion = imageVersion,
+                imageName = imageName,
+                buildEnvStr = buildEnvStr,
+                imageType = ImageType.getType(imageType),
+                credentialId = credentialId
+            )
         }
 
         return Result(true)

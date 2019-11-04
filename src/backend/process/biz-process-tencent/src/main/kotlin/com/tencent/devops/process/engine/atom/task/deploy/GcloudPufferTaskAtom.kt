@@ -39,7 +39,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: GcloudPufferElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
-        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId, task.executeCount ?: 1)
 
         val gcloudUtil = TicketUtil(client)
         val buildId = task.buildId
@@ -48,7 +48,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
         with(param) {
             val host = client.get(ServiceGcloudConfResource::class).getByConfigId(configId.toInt()).data
             if (host == null) {
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "unknown configId($configId)", task.taskId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, task.buildId, "unknown configId($configId)", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(BuildStatus.FAILED)
             }
 

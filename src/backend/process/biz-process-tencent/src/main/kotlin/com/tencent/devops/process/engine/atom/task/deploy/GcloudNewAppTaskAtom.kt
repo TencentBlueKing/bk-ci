@@ -48,7 +48,7 @@ class GcloudNewAppTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: GcloudAppElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
-        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId, task.executeCount ?: 1)
 
         val gcloudUtil = TicketUtil(client)
         val configId = parseVariable(param.configId, runVariables)

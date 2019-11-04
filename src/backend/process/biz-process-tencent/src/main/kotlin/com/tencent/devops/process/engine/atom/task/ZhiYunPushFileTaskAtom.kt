@@ -67,11 +67,11 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
                 )
         )
 
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传对应文件到织云...【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode("http://yun.ccc.oa.com/index.php/package/versions?product=$product&package=$packageName","UTF-8")}'>查看详情</a>】", task.taskId, task.containerHashId,task.executeCount ?: 1)
-        LogUtils.addLine(rabbitTemplate, buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "开始上传对应文件到织云...【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode("http://yun.ccc.oa.com/index.php/package/versions?product=$product&package=$packageName","UTF-8")}'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)", task.taskId, task.containerHashId, task.executeCount ?: 1)
         val versions = client.getWithoutRetry(ServiceZhiyunResource::class).pushFile(uploadParams).data ?: throw RuntimeException("0 file send to zhiyun")
         val ver = versions.lastOrNull() ?: throw RuntimeException("0 file send to zhiyun")
-        LogUtils.addLine(rabbitTemplate, buildId, "上传对应文件到织云成功!", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "上传对应文件到织云成功!", task.taskId, task.containerHashId, task.executeCount ?: 1)
         return AtomResponse(BuildStatus.SUCCEED, mapOf("bk_zhiyun_version_$packageName" to ver))
     }
 

@@ -34,6 +34,7 @@ import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_NOT_FOUND
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
@@ -66,8 +67,14 @@ object AtomUtils {
                 val atomEnv = atomEnvResult.data
                 if (atomEnvResult.isNotOk() || atomEnv == null) {
                     val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}"
-                    throw BuildTaskException(ERROR_ATOM_NOT_FOUND, message, task.pipelineId, task.buildId, task.taskId)
-                }
+                    throw BuildTaskException(
+                        errorType = ErrorType.SYSTEM,
+                        errorCode = com.tencent.devops.process.engine.common.ERROR_ATOM_NOT_FOUND,
+                        errorMsg = message,
+                        pipelineId = task.pipelineId,
+                        buildId = task.buildId,
+                        taskId = task.taskId
+                    ) }
 
                 LogUtils.addLine(
                     rabbitTemplate = rabbitTemplate,

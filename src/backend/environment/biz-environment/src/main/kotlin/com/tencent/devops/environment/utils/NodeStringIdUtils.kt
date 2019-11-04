@@ -52,7 +52,7 @@ object NodeStringIdUtils {
         }
     }
 
-    fun getNodeBaseInfo(nodeRecord: TNodeRecord) : NodeBaseInfo {
+    fun getNodeBaseInfo(nodeRecord: TNodeRecord): NodeBaseInfo {
         val nodeStringId = getNodeStringId(nodeRecord)
         return NodeBaseInfo(
             nodeHashId = HashUtil.encodeLongId(nodeRecord.nodeId),

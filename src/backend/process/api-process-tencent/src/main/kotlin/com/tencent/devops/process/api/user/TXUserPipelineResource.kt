@@ -27,7 +27,7 @@ interface TXUserPipelineResource {
 
     @ApiOperation("项目是否灰度Docker构建方案")
     @GET
-    //@Path("/projects/{projectId}/enableDocker")
+    // @Path("/projects/{projectId}/enableDocker")
     @Path("/{projectId}/enableDocker")
     fun enableDockerBuild(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -40,7 +40,7 @@ interface TXUserPipelineResource {
 
     @ApiOperation("订阅流水线消息")
     @PUT
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
     @Path("/{projectId}/{pipelineId}/subscription")
     fun subscription(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -59,7 +59,7 @@ interface TXUserPipelineResource {
 
     @ApiOperation("获取是否订阅流水线")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
     @Path("/{projectId}/{pipelineId}/subscription")
     fun getSubscription(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -75,7 +75,7 @@ interface TXUserPipelineResource {
 
     @ApiOperation("取消订阅流水线消息")
     @DELETE
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/subscription")
     @Path("/{projectId}/{pipelineId}/subscription")
     fun cancelSubscription(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

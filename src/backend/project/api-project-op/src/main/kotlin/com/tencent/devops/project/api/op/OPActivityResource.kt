@@ -79,7 +79,7 @@ interface OPActivityResource {
     ): Result<List<String>>
 
 //    @GET
-////    @Path("/{fieldName}/enum")
+// //    @Path("/{fieldName}/enum")
 //    @Path("/fields/{fieldName}/enum")
 //    @ApiOperation("获取字段常量信息")
 //    fun getFieldV2(
@@ -137,6 +137,4 @@ interface OPActivityResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<OPActivityVO>>
-
-
 }

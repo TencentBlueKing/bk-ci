@@ -241,7 +241,11 @@ class SpmDistributionTaskAtom @Autowired constructor(
             val retCode = responseJson["code"].asInt
             if (0 != retCode) {
                 logger.error("Response failed. msg: ${responseJson["msg"].asString}")
-                throw BuildTaskException(ERROR_BUILD_TASK_CDN_FAIL, "分发CDN失败")
+                throw BuildTaskException(
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ERROR_BUILD_TASK_CDN_FAIL,
+                    errorMsg = "分发CDN失败"
+                )
             }
 
             val results = praser.parse(body).asJsonObject["file_list"].asJsonArray

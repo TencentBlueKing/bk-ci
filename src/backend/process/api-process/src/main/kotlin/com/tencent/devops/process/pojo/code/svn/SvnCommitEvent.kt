@@ -27,16 +27,15 @@
 package com.tencent.devops.process.pojo.code.svn
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEventFile
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SvnCommitEvent(
-        val userName: String,
-        val eventType: Int,
-        val log: String,
-        val rep_name: String,
-        val revision: Int,
-        val paths: List<String>,
-        val files: List<SvnCommitEventFile>,
-        val commitTime: Long?
+    val userName: String,
+    val eventType: Int,
+    val log: String,
+    val rep_name: String,
+    val revision: Int,
+    val paths: List<String>,
+    val files: List<SvnCommitEventFile>,
+    val commitTime: Long?
 )

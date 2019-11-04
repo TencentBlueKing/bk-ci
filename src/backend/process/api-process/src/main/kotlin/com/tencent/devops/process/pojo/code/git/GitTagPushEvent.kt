@@ -30,16 +30,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitTagPushEvent(
-        val before: String,
-        val after: String,
-        val ref: String,
-        val checkout_sha: String?,
-        val user_name: String,
-        val project_id: Long,
-        val repository: GitCommitRepository,
-        val commits: List<GitCommit>,
-        val total_commits_count: Int,
-        val operation_kind: String?
+    val before: String,
+    val after: String,
+    val ref: String,
+    val checkout_sha: String?,
+    val user_name: String,
+    val project_id: Long,
+    val repository: GitCommitRepository,
+    val commits: List<GitCommit>,
+    val total_commits_count: Int,
+    val operation_kind: String?
 ) : GitEvent() {
     companion object {
         const val classType = "tag_push"

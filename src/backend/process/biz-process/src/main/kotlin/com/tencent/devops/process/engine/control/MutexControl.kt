@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
@@ -47,13 +48,13 @@ class MutexControl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    internal fun initMutexGroup(mutexGroup: MutexGroup?): MutexGroup? {
+    internal fun initMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
         if (mutexGroup == null) {
             return null
         }
         // 超时时间为1-2880分钟
         val timeOut = when {
-            mutexGroup.timeout > 2880 -> 2880
+            mutexGroup.timeout > 10080 -> 10080
             mutexGroup.timeout < 0 -> 0
             else -> mutexGroup.timeout
         }
@@ -62,6 +63,12 @@ class MutexControl @Autowired constructor(
             mutexGroup.queue > 10 -> 10
             mutexGroup.queue < 0 -> 0
             else -> mutexGroup.queue
+        }
+        // 替换环境变量
+        val mutexGroupName = if (mutexGroup.mutexGroupName != null) {
+            EnvUtils.parseEnv(mutexGroup.mutexGroupName!!, variables)
+        } else {
+            null
         }
         return MutexGroup(
             enable = mutexGroup.enable,

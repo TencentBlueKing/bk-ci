@@ -60,7 +60,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("新建流水线编排")
     @POST
-    //@Path("/projects/{projectId}/createPipeline")
+    // @Path("/projects/{projectId}/createPipeline")
     @Path("/{projectId}/")
     fun create(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -78,7 +78,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("编辑流水线编排")
     @PUT
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun edit(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -99,7 +99,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("获取流水线编排")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun get(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -118,7 +118,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("删除流水线编排")
     @DELETE
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun delete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -137,7 +137,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("流水线编排列表")
     @GET
-    //@Path("/projects/{projectId}/listPipelines")
+    // @Path("/projects/{projectId}/listPipelines")
     @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -162,7 +162,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("获取流水线状态")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/status")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/status")
     @Path("/{projectId}/{pipelineId}/status")
     fun status(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -178,7 +178,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("获取流水线完整状态")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/allStatus")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/allStatus")
     @Path("/{projectId}/{pipelineId}/allStatus")
     fun getAllstatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -194,7 +194,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("流水线是否运行中")
     @GET
-    //@Path("/projects/{projectId}/builds/{buildId}/running")
+    // @Path("/projects/{projectId}/builds/{buildId}/running")
     @Path("/{projectId}/build/{buildId}/running")
     fun isPipelineRunning(
         @ApiParam("项目ID", required = true)
@@ -222,7 +222,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("根据流水线id获取流水线名字")
     @POST
-    //@Path("/projects/{projectId}/getPipelines")
+    // @Path("/projects/{projectId}/getPipelines")
     @Path("/{projectId}/getPipelines")
     fun getPipelineByIds(
         @ApiParam("项目id", required = true)
@@ -234,7 +234,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("根据流水线id获取流水线名字")
     @POST
-    //@Path("/projects/{projectId}/getPipelineNames")
+    // @Path("/projects/{projectId}/getPipelineNames")
     @Path("/{projectId}/getPipelineNames")
     fun getPipelineNameByIds(
         @ApiParam("项目id", required = true)
@@ -246,7 +246,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("根据构建id获取构建号")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/getBuildNos")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/getBuildNos")
     @Path("/{projectId}/{pipelineId}/getBuildNos")
     fun getBuildNoByBuildIds(
         @ApiParam("项目id", required = true)
@@ -261,7 +261,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("根据构建id，获取build num")
     @POST
-    //@Path("/getBuildNoByIds")
+    // @Path("/getBuildNoByIds")
     @Path("/buildIds/getBuildNo")
     fun getBuildNoByBuildIds(
         @ApiParam("构建id", required = true)
@@ -270,7 +270,7 @@ interface ServicePipelineResource {
 
     @ApiOperation("原子市场初始化流水线")
     @POST
-    //@Path("/projects/{projectId}/initMarketPipeline")
+    // @Path("/projects/{projectId}/initMarketPipeline")
     @Path("/market/pipeline/init/{projectCode}")
     fun initAtomMarketPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

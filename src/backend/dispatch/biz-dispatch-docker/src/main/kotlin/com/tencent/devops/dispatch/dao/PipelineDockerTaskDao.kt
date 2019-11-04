@@ -31,12 +31,10 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTask
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskRecord
 import org.jooq.DSLContext
-import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Repository

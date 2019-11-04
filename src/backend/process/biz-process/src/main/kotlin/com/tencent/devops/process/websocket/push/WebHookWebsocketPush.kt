@@ -12,41 +12,41 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
-data class WebHookWebsocketPush (
-		val buildId: String?,
-		val pipelineId: String,
-		val projectId: String,
-		override val userId: String,
-		override val pushType: WebSocketType,
-		override val redisOperation: RedisOperation,
-		override val objectMapper: ObjectMapper,
-		override var page: String?,
-		override var notifyPost: NotifyPost
-): WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
+data class WebHookWebsocketPush(
+    val buildId: String?,
+    val pipelineId: String,
+    val projectId: String,
+    override val userId: String,
+    override val pushType: WebSocketType,
+    override val redisOperation: RedisOperation,
+    override val objectMapper: ObjectMapper,
+    override var page: String?,
+    override var notifyPost: NotifyPost
+) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
 
-	override fun findSession(page: String): List<String>? {
-		return super.findSession(page)
-	}
+    override fun findSession(page: String): List<String>? {
+        return super.findSession(page)
+    }
 
-	override fun buildMqMessage(): SendMessage? {
-		val sessionId =  RedisUtlis.getSessionIdByUserId(redisOperation, userId)
-		val sessionList = mutableListOf<String>()
-		if(sessionId != null) {
-			sessionList.add(sessionId!!)
-		}
-		return NotifyMessage(
-				buildId = buildId,
-				projectId = projectId,
-				pipelineId = pipelineId,
-				userId = userId,
-				page = page,
-				notifyPost = notifyPost,
-				sessionList = sessionList
-		)
-	}
+    override fun buildMqMessage(): SendMessage? {
+        val sessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
+        val sessionList = mutableListOf<String>()
+        if (sessionId != null) {
+            sessionList.add(sessionId!!)
+        }
+        return NotifyMessage(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                page = page,
+                notifyPost = notifyPost,
+                sessionList = sessionList
+        )
+    }
 
-	override fun buildNotifyMessage(message: SendMessage) {
-		val webhookMessage = message.notifyPost.message
-		logger.info("WebHookWebsocketPush message: $notifyPost")
-	}
+    override fun buildNotifyMessage(message: SendMessage) {
+        val webhookMessage = message.notifyPost.message
+        logger.info("WebHookWebsocketPush message: $notifyPost")
+    }
 }

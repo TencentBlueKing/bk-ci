@@ -42,7 +42,7 @@ package com.tencent.devops.project.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object ProjectMessageCode{
+object ProjectMessageCode {
     const val PROJECT_NOT_EXIST = "2119001" // 项目不存在
     const val PROJECT_NAME_EXIST = "2119002" // 项目名或英文名重复
     const val NAME_EMPTY = "2119003" // 名称不能为空

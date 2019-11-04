@@ -50,7 +50,7 @@ interface ServicePipelineTaskResource {
 
     @ApiOperation("获取流水线所有插件")
     @POST
-    //@Path("/projects/{projectId}/list")
+    // @Path("/projects/{projectId}/list")
     @Path("/{projectId}/list")
     fun list(
         @ApiParam("项目ID", required = true)

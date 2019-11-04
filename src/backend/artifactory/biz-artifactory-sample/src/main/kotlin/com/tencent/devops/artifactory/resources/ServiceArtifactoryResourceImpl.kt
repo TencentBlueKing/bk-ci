@@ -27,8 +27,17 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.pojo.ArtifactoryCreateInfo
+import com.tencent.devops.artifactory.pojo.Count
+import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
+import com.tencent.devops.artifactory.pojo.DockerUser
+import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -42,15 +51,172 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : ServiceArtifactoryResource {
 
+    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
+        val fileDetail =
+            archiveFileService.show(userId = "", projectId = projectId, artifactoryType = artifactoryType, path = path)
+        return Result(fileDetail.name.isNotBlank())
+    }
+
+    override fun acrossProjectCopy(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        targetProjectId: String,
+        targetPath: String
+    ): Result<Count> {
+//        val fileDetail =
+//            archiveFileService.show(userId = "", projectId = projectId, artifactoryType = artifactoryType, path = path)
+//
+//        val realPath = archiveFileService.getRealPath(fileDetail.path)
+//        val sourceFile = File(realPath)
+//        if (!sourceFile.exists()) {
+//            return Result(Count(0))
+//        }
+//        moveFile(projectId, sourceFile, path, targetPath)
+        TODO("not implemented")
+    }
+
+//    private fun moveFile(projectId: String, sourceFile: File, startPath: String, targetPath: String) {
+//        if (sourceFile.isDirectory) {
+//            sourceFile.listFiles()?.forEach { file ->
+//                if (file.isDirectory) {
+//                    moveFile(projectId, file, startPath, targetPath)
+//                } else {
+//                    val i = file.absolutePath.indexOf(startPath)
+//                    val fileName =
+//                    if (i + startPath.length == file.absolutePath.length) {
+//                        targetPath + file.name
+//                    } else {
+//                        targetPath + file.absolutePath.substring(i + startPath.length)
+//                    }
+//
+//                    archiveFileService.uploadFile("", file, projectId, targetPath)
+//                }
+//            }
+//        } else {
+//
+//        }
+//    }
+
+    override fun properties(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
+        TODO("not implemented")
+    }
+
+    override fun externalUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        path: String,
+        ttl: Int,
+        directed: Boolean?
+    ): Result<Url> {
+        TODO("not implemented")
+    }
+
+    override fun downloadUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        path: String,
+        ttl: Int,
+        directed: Boolean?
+    ): Result<Url> {
+        TODO("not implemented")
+    }
+
+    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FileDetail> {
+        TODO("not implemented")
+    }
+
+    override fun search(
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchProps: List<Property>
+    ): Result<FileInfoPage<FileInfo>> {
+        TODO("not implemented")
+    }
+
+    override fun searchFile(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        regexPath: String,
+        customized: Boolean,
+        page: Int?,
+        pageSize: Int?
+    ): Result<FileInfoPage<FileInfo>> {
+        TODO("not implemented")
+    }
+
+    override fun searchFileAndPropertyByAnd(
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchProps: List<Property>
+    ): Result<FileInfoPage<FileInfo>> {
+        TODO("not implemented")
+    }
+
+    override fun searchFileAndPropertyByOr(
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchProps: List<Property>
+    ): Result<FileInfoPage<FileInfo>> {
+        TODO("not implemented")
+    }
+
+    override fun createDockerUser(projectId: String): Result<DockerUser> {
+        TODO("not implemented")
+    }
+
+    override fun setProperties(
+        projectId: String,
+        imageName: String,
+        tag: String,
+        properties: Map<String, String>
+    ): Result<Boolean> {
+        TODO("not implemented")
+    }
+
+    override fun searchCustomFiles(projectId: String, condition: CustomFileSearchCondition): Result<List<String>> {
+        TODO("not implemented")
+    }
+
+    override fun getJforgInfoByteewTime(
+        startTime: Long,
+        endTime: Long,
+        page: Int,
+        pageSize: Int
+    ): Result<List<FileInfo>> {
+        TODO("not implemented")
+    }
+
+    override fun createArtifactoryInfo(
+        buildId: String,
+        pipelineId: String,
+        projectId: String,
+        buildNum: Int,
+        fileInfo: FileInfo,
+        dataFrom: Int
+    ): Result<Long> {
+        TODO("not implemented")
+    }
+
+    override fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Result<Int> {
+        TODO("not implemented")
+    }
+
     override fun getReportRootUrl(
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         taskId: String
     ): Result<String> {
         val result = archiveFileService.generateDestPath(
             fileType = FileTypeEnum.BK_REPORT,
-            projectCode = projectCode,
+            projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             customFilePath = taskId
@@ -75,11 +241,17 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
 
     override fun searchFile(
         userId: String,
-        projectCode: String,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
-        return archiveFileService.searchFileList(userId, projectCode, page, pageSize, searchProps)
+        return archiveFileService.searchFileList(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            searchProps = searchProps
+        )
     }
 }

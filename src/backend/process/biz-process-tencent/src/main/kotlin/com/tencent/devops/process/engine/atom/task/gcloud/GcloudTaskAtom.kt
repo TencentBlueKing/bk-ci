@@ -72,7 +72,7 @@ class GcloudTaskAtom @Autowired constructor(
         LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行失败/execute gcloud task failed! task($pTemplateId, $pApiAuthCode, $pTaskParameters)", task.taskId, task.containerHashId, executeCount)
 
         val gcloudTaskExecutor = GcloudTaskExecutor(rabbitTemplate, gcloudApiUrl, task.buildId)
-        val result = gcloudTaskExecutor.syncRunGcloudTask(pAppId, operator, pApiAuthCode, pTemplateId, pTaskParameters, pTimeoutInSeconds, task.taskId, task.containerHashId, executeCount)
+        val result = gcloudTaskExecutor.syncRunGcloudTask(pAppId, operator, pApiAuthCode, pTemplateId, pTaskParameters, pTimeoutInSeconds, task.taskId, task.containerHashId ?: "", executeCount)
         return if (result.success) {
             LogUtils.addLine(rabbitTemplate, task.buildId, "标准运维执行成功/execute gcloud task success!", task.taskId, task.containerHashId, executeCount)
             AtomResponse(BuildStatus.SUCCEED)

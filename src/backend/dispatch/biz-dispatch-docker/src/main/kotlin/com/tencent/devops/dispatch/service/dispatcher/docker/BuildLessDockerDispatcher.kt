@@ -21,7 +21,14 @@ class BuildLessDockerDispatcher @Autowired constructor(
     override fun startUp(event: PipelineBuildLessStartupDispatchEvent) {
         val dockerDispatch = event.dispatchType as DockerDispatchType
         val dockerBuildVersion = dockerDispatch.dockerBuildVersion
-        LogUtils.addLine(rabbitTemplate, event.buildId, "Start buildLessDocker $dockerBuildVersion for the build", "", event.executeCount ?: 1)
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = event.buildId,
+            message = "Start buildLessDocker $dockerBuildVersion for the build",
+            tag = "",
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
+        )
         dockerHostBuildService.buildLessDockerHost(event)
     }
 

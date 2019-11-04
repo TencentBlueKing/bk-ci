@@ -48,7 +48,7 @@ class ScmService @Autowired constructor(private val client: Client) {
         repositoryConfig: RepositoryConfig,
         branchName: String?,
         variables: Map<String, String>,
-        retry: Int = 3
+        retry: Int = 1
     ): Result<RevisionInfo> {
 
         return RetryUtils.execute(object : RetryUtils.Action<Result<RevisionInfo>> {
