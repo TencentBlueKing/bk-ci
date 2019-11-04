@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -57,7 +57,7 @@ interface UserPipelineViewResource {
     @ApiOperation("获取视图设置")
     @GET
     @Path("/projects/{projectId}/settings")
-    //@Path("/{projectId}/settings")
+    // @Path("/{projectId}/settings")
     fun getViewSettings(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -70,7 +70,7 @@ interface UserPipelineViewResource {
     @ApiOperation("更新视图设置")
     @POST
     @Path("/projects/{projectId}/settings")
-    //@Path("/{projectId}/settings")
+    // @Path("/{projectId}/settings")
     fun updateViewSettings(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -84,7 +84,7 @@ interface UserPipelineViewResource {
     @ApiOperation("获取所有视图")
     @GET
     @Path("/projects/{projectId}/")
-    //@Path("/{projectId}/")
+    // @Path("/{projectId}/")
     fun getViews(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -97,7 +97,7 @@ interface UserPipelineViewResource {
     @ApiOperation("添加视图")
     @POST
     @Path("/projects/{projectId}/")
-    //@Path("/{projectId}/")
+    // @Path("/{projectId}/")
     fun addView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -111,7 +111,7 @@ interface UserPipelineViewResource {
     @ApiOperation("获取视图")
     @GET
     @Path("/projects/{projectId}/views/{viewId}")
-    //@Path("/{projectId}/{viewId}")
+    // @Path("/{projectId}/{viewId}")
     fun getView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -126,7 +126,7 @@ interface UserPipelineViewResource {
     @ApiOperation("删除视图")
     @DELETE
     @Path("/projects/{projectId}/views/{viewId}")
-    //Path("/{projectId}/{viewId}")
+    // Path("/{projectId}/{viewId}")
     fun deleteView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -142,7 +142,7 @@ interface UserPipelineViewResource {
     @ApiOperation("更改视图")
     @PUT
     @Path("/projects/{projectId}/views/{viewId}")
-    //@Path("/{projectId}/{viewId}")
+    // @Path("/{projectId}/{viewId}")
     fun updateView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

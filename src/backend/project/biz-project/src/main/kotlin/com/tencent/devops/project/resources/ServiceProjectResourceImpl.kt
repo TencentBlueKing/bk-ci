@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -51,14 +51,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun verifyUserProjectPermission(
         projectCode: String, userId: String): Result<Boolean> {
         return Result(projectPermissionService.verifyUserProjectPermission(projectCode, userId))
-    }
-
-    override fun verifyUserProjectPermission(
-        accessToken: String,
-        projectCode: String,
-        userId: String
-    ): Result<Boolean> {
-        return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
     }
 
     override fun list(userId: String): Result<List<ProjectVO>> {

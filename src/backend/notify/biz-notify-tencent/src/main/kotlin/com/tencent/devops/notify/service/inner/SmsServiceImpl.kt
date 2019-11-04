@@ -1,3 +1,28 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package com.tencent.devops.notify.service.inner
 
 import com.google.common.collect.Lists
@@ -9,6 +34,8 @@ import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
 import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.TOFConfiguration
+import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.model.notify.tables.records.TNotifySmsRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_SMS
@@ -18,7 +45,7 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.service.SmsService
-import com.tencent.devops.notify.utils.TOFService.Companion.SMS_URL
+import com.tencent.devops.common.notify.utils.TOFService.Companion.SMS_URL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,10 +56,10 @@ import java.util.stream.Collectors
 
 @Service
 class SmsServiceImpl @Autowired constructor(
-    private val tofService: com.tencent.devops.notify.utils.TOFService,
+    private val tofService: TOFService,
     private val smsNotifyDao: SmsNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val tofConfiguration: com.tencent.devops.notify.utils.TOFConfiguration
+    private val tofConfiguration: TOFConfiguration
 ) : SmsService {
 
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -30,11 +30,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubPullRequestEvent(
-        val action: String,
-        val number: Long,
-        val pull_request: GithubPullRequest,
-        val repository: GithubRepository,
-        override val sender: GithubSender
+    val action: String,
+    val number: Long,
+    val pull_request: GithubPullRequest,
+    val repository: GithubRepository,
+    override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "pull_request"
@@ -42,45 +42,45 @@ data class GithubPullRequestEvent(
 }
 
 data class GithubPullRequest(
-        val id: Long,
-        val url: String,
-        val head: GithubPullRequestBranch,
-        val base: GithubPullRequestBranch,
-        val labels: List<GithubLabel>,
-        val comments_url: String?,
-        val created_at: String?,
-        val update_at: String?,
-        val assignees: List<GithubAssignee>,
-        val milestone: GithubMilestone?,
-        val title: String?,
-        val requested_reviewers: List<GithubReviewer>
+    val id: Long,
+    val url: String,
+    val head: GithubPullRequestBranch,
+    val base: GithubPullRequestBranch,
+    val labels: List<GithubLabel>,
+    val comments_url: String?,
+    val created_at: String?,
+    val update_at: String?,
+    val assignees: List<GithubAssignee>,
+    val milestone: GithubMilestone?,
+    val title: String?,
+    val requested_reviewers: List<GithubReviewer>
 )
 
 data class GithubPullRequestBranch(
-        val ref: String,
-        val sha: String,
-        val repo: GithubRepo
+    val ref: String,
+    val sha: String,
+    val repo: GithubRepo
 )
 
 data class GithubRepo(
-        val name: String,
-        val full_name: String,
-        val clone_url: String
+    val name: String,
+    val full_name: String,
+    val clone_url: String
 )
 
 data class GithubAssignee(
-        val login: String?
+    val login: String?
 )
 
 data class GithubReviewer(
-        val login: String?
+    val login: String?
 )
 
 data class GithubMilestone(
-        val title: String?,
-        val due_on: String?
+    val title: String?,
+    val due_on: String?
 )
 
 data class GithubLabel(
-        val name: String
+    val name: String
 )

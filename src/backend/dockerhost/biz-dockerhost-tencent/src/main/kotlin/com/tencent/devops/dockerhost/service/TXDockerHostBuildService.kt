@@ -1,10 +1,49 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.dockerhost.service
 
 import com.github.dockerjava.api.exception.NotFoundException
-import com.github.dockerjava.api.model.*
+import com.github.dockerjava.api.model.AccessMode
+import com.github.dockerjava.api.model.AuthConfig
+import com.github.dockerjava.api.model.AuthConfigurations
+import com.github.dockerjava.api.model.Bind
+import com.github.dockerjava.api.model.BuildResponseItem
+import com.github.dockerjava.api.model.Frame
+import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.PullResponseItem
+import com.github.dockerjava.api.model.PushResponseItem
+import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
-import com.github.dockerjava.core.command.*
+import com.github.dockerjava.core.command.BuildImageResultCallback
+import com.github.dockerjava.core.command.LogContainerResultCallback
+import com.github.dockerjava.core.command.PullImageResultCallback
+import com.github.dockerjava.core.command.PushImageResultCallback
+import com.github.dockerjava.core.command.WaitContainerResultCallback
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -18,7 +57,17 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.LocalImageCache
-import com.tencent.devops.dockerhost.utils.*
+import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
+import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
+import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
+import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
+import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_ID
+import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_SECRET_KEY
+import com.tencent.devops.dockerhost.utils.ENV_KEY_GATEWAY
+import com.tencent.devops.dockerhost.utils.ENV_KEY_PROJECT_ID
+import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
+import com.tencent.devops.dockerhost.utils.TXCommonUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -26,18 +75,7 @@ import java.io.File
 import java.nio.file.Paths
 import java.util.Date
 import javax.annotation.PostConstruct
-import kotlin.collections.ArrayList
-import kotlin.collections.List
-import kotlin.collections.first
-import kotlin.collections.forEach
-import kotlin.collections.isNotEmpty
-import kotlin.collections.last
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
-import kotlin.collections.setOf
 
 @Component
 class TXDockerHostBuildService(

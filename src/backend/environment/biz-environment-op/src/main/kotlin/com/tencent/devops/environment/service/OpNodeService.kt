@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -153,7 +153,6 @@ class OpNodeService @Autowired constructor(
         }
     }
 
-
     fun listPage(page: Int, pageSize: Int, nodeName: String?): List<NodeDevCloudInfo> {
         return nodeDao.listPage(dslContext, page, pageSize, nodeName).map {
             NodeDevCloudInfo(
@@ -184,7 +183,6 @@ class OpNodeService @Autowired constructor(
         nodeDao.batchDeleteNode(dslContext, projectId, listOf(nodeId))
         return true
     }
-
 
     private fun checkImportCount(dslContext: DSLContext, projectConfigDao: ProjectConfigDao, nodeDao: NodeDao, projectId: String, userId: String, toAddNodeCount: Int) {
         val projectConfig = projectConfigDao.get(dslContext, projectId, userId)

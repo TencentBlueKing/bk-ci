@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.type.agent
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class ThirdPartyAgentIDDispatchType(
@@ -43,4 +44,6 @@ data class ThirdPartyAgentIDDispatchType(
             workspace = EnvUtils.parseEnv(workspace!!, variables)
         }
     }
+
+    override fun buildType() = BuildType.THIRD_PARTY_AGENT_ID
 }

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 interface UserPipelineInfoResource {
     @ApiOperation("列出所有流水线")
     @GET
-    //@Path("/projects/{projectId}/")
+    // @Path("/projects/{projectId}/")
     @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

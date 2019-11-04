@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -348,9 +348,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             description = tProjectRecord.description ?: "",
             englishName = tProjectRecord.englishName ?: "",
             extra = tProjectRecord.extra ?: "",
-            isOfflined = tProjectRecord.isOfflined,
-            isSecrecy = tProjectRecord.isSecrecy,
-            isHelmChartEnabled = tProjectRecord.isHelmChartEnabled,
+            offlined = tProjectRecord.isOfflined,
+            secrecy = tProjectRecord.isSecrecy,
+            helmChartEnabled = tProjectRecord.isHelmChartEnabled,
             kind = tProjectRecord.kind,
             logoAddr = tProjectRecord.logoAddr ?: "",
             remark = tProjectRecord.remark ?: "",
@@ -363,7 +363,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             enabled = tProjectRecord.enabled,
             gray = false,
             hybridCcAppId = tProjectRecord.hybridCcAppId,
-            enableExternal = tProjectRecord.enableExternal
+            enableExternal = tProjectRecord.enableExternal,
+            enableIdc = tProjectRecord.enableIdc
         )
     }
     fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {
@@ -395,9 +396,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             description = tProjectRecord.description ?: "",
             englishName = tProjectRecord.englishName ?: "",
             extra = tProjectRecord.extra ?: "",
-            isOfflined = tProjectRecord.isOfflined,
-            isSecrecy = tProjectRecord.isSecrecy,
-            isHelmChartEnabled = tProjectRecord.isHelmChartEnabled,
+            offlined = tProjectRecord.isOfflined,
+            secrecy = tProjectRecord.isSecrecy,
+            helmChartEnabled = tProjectRecord.isHelmChartEnabled,
             kind = tProjectRecord.kind,
             logoAddr = tProjectRecord.logoAddr ?: "",
             remark = tProjectRecord.remark ?: "",

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -39,10 +39,10 @@ class BuildArtifactoryReportResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) :
     BuildArtifactoryReportResource {
-    override fun getRootUrl(projectCode: String, pipelineId: String, buildId: String, taskId: String): Result<String> {
+    override fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): Result<String> {
         val result = archiveFileService.generateDestPath(
             fileType = FileTypeEnum.BK_REPORT,
-            projectCode = projectCode,
+            projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             customFilePath = taskId

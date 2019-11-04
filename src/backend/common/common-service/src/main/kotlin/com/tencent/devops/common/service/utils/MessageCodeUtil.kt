@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -95,10 +95,12 @@ class MessageCodeUtil @Autowired constructor() {
         fun <T> generateResponseDataObject(
             messageCode: String,
             params: Array<String>?,
-            data: T?
+            data: T?,
+            defaultMessage: String? = null
         ): Result<T> {
-            val message = getCodeMessage(messageCode, params) ?: "[$messageCode] System service busy, please try again later"
-            return Result(messageCode.toInt(), message, data) // 生成Result对象
+            val message = getCodeMessage(messageCode, params) ?: "[$messageCode]$defaultMessage"
+            ?: "[$messageCode] System service busy, please try again later"
+            return Result(messageCode.toInt(), message, data) // 生成Result对象`
         }
 
         /**
@@ -114,7 +116,7 @@ class MessageCodeUtil @Autowired constructor() {
          * @param messageCode code
          * @param params 替换描述信息占位符的参数数组
          */
-        private fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
+        protected fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
             var message: String? = null
             try {
                 val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)

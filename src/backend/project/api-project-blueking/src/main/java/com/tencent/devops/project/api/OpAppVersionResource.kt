@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -97,15 +97,14 @@ interface OpAppVersionResource {
         appVersionId: Long
     ): Result<Int>
 
-
     @ApiOperation("获取app版本日志")
     @GET
 //    @Path("/{appVersionId}")
     @Path("/appVersionId/{appVersionId}")
     fun getAppVersionV2(
-            @ApiParam(value = "app版本号id", required = true)
-            @PathParam("appVersionId")
-            appVersionId: Long
+        @ApiParam(value = "app版本号id", required = true)
+        @PathParam("appVersionId")
+        appVersionId: Long
     ): Result<AppVersion?>
 
     @ApiOperation("更新app版本日志")
@@ -113,11 +112,11 @@ interface OpAppVersionResource {
 //    @Path("/{appVersionId}")
     @Path("/appVersionId/{appVersionId}")
     fun updateAppVersionV2(
-            @ApiParam(value = "app版本号id", required = true)
-            @PathParam("appVersionId")
-            appVersionId: Long,
-            @ApiParam(value = "APP版本", required = true)
-            appVersionRequest: AppVersionRequest
+        @ApiParam(value = "app版本号id", required = true)
+        @PathParam("appVersionId")
+        appVersionId: Long,
+        @ApiParam(value = "APP版本", required = true)
+        appVersionRequest: AppVersionRequest
     ): Result<Int>
 
     @ApiOperation("删除app版本日志")
@@ -125,8 +124,8 @@ interface OpAppVersionResource {
 //    @Path("/{appVersionId}")
     @Path("/appVersionId/{appVersionId}")
     fun deleteAppVersionV2(
-            @ApiParam(value = "app版本号id", required = true)
-            @PathParam("appVersionId")
-            appVersionId: Long
+        @ApiParam(value = "app版本号id", required = true)
+        @PathParam("appVersionId")
+        appVersionId: Long
     ): Result<Int>
 }

@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.image.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -6,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
@@ -27,6 +54,12 @@ class ImageArtifactoryService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
+    }
+
+    private val credential: String
+    init {
+        logger.info("Image artifactory init with url(${dockerConfig.registryUrl}), user(${dockerConfig.registryUsername}) and password(${SecurityUtil.decrypt(dockerConfig.registryPassword!!)})")
+        credential = makeCredential()
     }
 
     fun listPublicImages(searchKey: String, start: Int, limit: Int): ImagePageData {
@@ -216,7 +249,7 @@ class ImageArtifactoryService @Autowired constructor(
 
         val request = Request.Builder().url(url)
             .post(RequestBody.create(JSON, requestBody))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -272,7 +305,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .build()
         val request = Request.Builder().url(url)
             .post(RequestBody.create(null, aql))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -389,7 +422,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url).delete()
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -416,7 +449,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url).get()
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -450,7 +483,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .build()
         val request = Request.Builder().url(url)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -479,7 +512,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .build()
         val request = Request.Builder().url(url)
             .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
-            .header("Authorization", makeCredential())
+            .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
         OkhttpUtils.doHttp(request).use { response ->
@@ -527,5 +560,5 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    private fun makeCredential(): String = Credentials.basic(dockerConfig.registryUsername!!, dockerConfig.registryPassword!!)
+    private fun makeCredential(): String = Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
 }

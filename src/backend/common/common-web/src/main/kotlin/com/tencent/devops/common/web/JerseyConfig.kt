@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -79,7 +79,6 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         register(AllExceptionMapper::class.java)
         register(MultiPartFeature::class.java)
         register(PipelineAlreadyExistExceptionMapper::class.java)
-        register(ErrorCodeExceptionMapper::class.java)
         register(CustomExceptionMapper::class.java)
         register(PermissionForbiddenExceptionMapper::class.java)
         register(CodeccReportExceptionMapper::class.java)

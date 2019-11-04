@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -272,7 +272,6 @@ class PipelineBuildDao {
         buildId: String,
         buildStatus: BuildStatus,
         material: String?,
-        artifactList: String?,
         executeTime: Long?,
         buildParameters: String?,
         recommendVersion: String?,
@@ -286,7 +285,6 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(MATERIAL, material)
-                .set(ARTIFACT_INFO, artifactList)
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
@@ -498,7 +496,6 @@ class PipelineBuildDao {
         }
     }
 
-
     fun listPipelineBuildInfo(
         dslContext: DSLContext,
         projectId: String,
@@ -633,6 +630,17 @@ class PipelineBuildDao {
         }
     }
 
+    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectCount().from(this)
+                .where(ARTIFACT_INFO.isNotNull)
+                .and(ARTIFACT_INFO.notEqual("[ ]"))
+                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
+                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
         return DSL.field(
             "timestampdiff({0}, {1}, {2})",
@@ -682,14 +690,20 @@ class PipelineBuildDao {
         }
     }
 
-    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
+    fun updateArtifactList(
+        dslContext: DSLContext,
+        artifactList: String?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectCount().from(this)
-                .where(ARTIFACT_INFO.isNotNull)
-                .and(ARTIFACT_INFO.notEqual("[ ]"))
-                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
-                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
-                .fetchOne(0, Int::class.java)
+            dslContext.update(this)
+                .set(ARTIFACT_INFO, artifactList)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 }

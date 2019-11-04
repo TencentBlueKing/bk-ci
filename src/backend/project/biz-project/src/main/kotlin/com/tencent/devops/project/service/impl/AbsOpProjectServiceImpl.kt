@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO ËìùÈ≤∏Âà∂ÂìÅÂ∫ì available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI ËìùÈ≤∏ÊåÅÁª≠ÈõÜÊàêÂπ≥Âè∞ is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
@@ -30,18 +56,18 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 ): OpProjectService {
 
     override fun listGrayProject(): Result<OpGrayProject> {
-        // ¥”redis÷–ªÒ»°ª“∂»œÓƒø¡–±Ì
+        // ‰ªéredis‰∏≠Ëé∑ÂèñÁÅ∞Â∫¶È°πÁõÆÂàóË°®
         return Result(OpGrayProject(grayProjectSet().toList()))
     }
 
     override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
         logger.info("the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
-        //  π”√setºØ∫œ£®»•≥˝÷ÿ∏¥‘™Àÿ£©≤Ÿ◊˜Ã·ΩªµƒœÓƒø¡–±Ì
+        // ‰ΩøÁî®setÈõÜÂêàÔºàÂéªÈô§ÈáçÂ§çÂÖÉÁ¥†ÔºâÊìç‰ΩúÊèê‰∫§ÁöÑÈ°πÁõÆÂàóË°®
         for (item in projectCodeList) {
             if (1 == operateFlag) {
-                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // ÃÌº”œÓƒøŒ™ª“∂»œÓƒø
+                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // Ê∑ªÂä†È°πÁõÆ‰∏∫ÁÅ∞Â∫¶È°πÁõÆ
             } else if (2 == operateFlag) {
-                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // »°œ˚œÓƒøŒ™ª“∂»œÓƒø
+                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // ÂèñÊ∂àÈ°πÁõÆ‰∏∫ÁÅ∞Â∫¶È°πÁõÆ
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -57,7 +83,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             logger.warn("The project $projectId is not exist")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         }
-        // ≈–∂œœÓƒø «≤ª «…Û∫Àµƒ«Èøˆ
+        // Âà§Êñ≠È°πÁõÆÊòØ‰∏çÊòØÂÆ°Ê†∏ÁöÑÊÉÖÂÜµ
         var flag = false
         if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
             flag = true
@@ -76,7 +102,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 logger.warn("Duplicate project $projectInfoRequest", ignored)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             }
-            // œ»Ω‚≥˝œÓƒø”Î±Í«©µƒπÿ¡™πÿœµ£¨»ª∫Û‘Ÿ¥”–¬Ω®¡¢∂˛’ﬂ÷Æº‰µƒπÿœµ
+            // ÂÖàËß£Èô§È°πÁõÆ‰∏éÊ†áÁ≠æÁöÑÂÖ≥ËÅîÂÖ≥Á≥ªÔºåÁÑ∂ÂêéÂÜç‰ªéÊñ∞Âª∫Á´ã‰∫åËÄÖ‰πãÈó¥ÁöÑÂÖ≥Á≥ª
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
             val labelIdList = projectInfoRequest.labelIdList
             if (!CollectionUtils.isEmpty(labelIdList)) projectLabelRelDao.batchAdd(
@@ -87,11 +113,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
         }
         return if (!flag) {
-            0 // ∏¸–¬≤Ÿ◊˜
+            0 // Êõ¥Êñ∞Êìç‰Ωú
         } else {
             return when {
-                2 == projectInfoRequest.approvalStatus -> 1 // …Û≈˙Õ®π˝
-                3 == projectInfoRequest.approvalStatus -> 2 // ≤µªÿ
+                2 == projectInfoRequest.approvalStatus -> 1 // ÂÆ°ÊâπÈÄöËøá
+                3 == projectInfoRequest.approvalStatus -> 2 // È©≥Âõû
                 else -> 0
             }
         }

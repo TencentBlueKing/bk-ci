@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -34,10 +34,10 @@ import com.tencent.devops.repository.pojo.Repository
 interface ScmWebhookMatcher {
 
     fun isMatch(
-            projectId: String,
-            pipelineId: String,
-            repository: Repository,
-            webHookParams: WebHookParams
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
     ): MatchResult
 
     fun getUsername(): String
@@ -94,17 +94,17 @@ interface ScmWebhookMatcher {
     fun getMergeRequestId(): Long? = null
 
     data class WebHookParams(
-            val repositoryConfig: RepositoryConfig,
-            var branchName: String? = null,
-            var excludeBranchName: String? = null,
-            var includePaths: String? = null,
-            var excludePaths: String? = null,
-            var eventType: CodeEventType? = null,
-            var block: Boolean = false,
-            var relativePath: String? = null,
-            var excludeUsers: String? = "",
-            var includeUsers: String? = null,
-            var codeType: CodeType = CodeType.GIT
+        val repositoryConfig: RepositoryConfig,
+        var branchName: String? = null,
+        var excludeBranchName: String? = null,
+        var includePaths: String? = null,
+        var excludePaths: String? = null,
+        var eventType: CodeEventType? = null,
+        var block: Boolean = false,
+        var relativePath: String? = null,
+        var excludeUsers: String? = "",
+        var includeUsers: String? = null,
+        var codeType: CodeType = CodeType.GIT
     )
 
     data class MatchResult(

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -55,6 +55,8 @@ import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
+
+    val logger = LoggerFactory.getLogger(javaClass)
 
     protected fun requestForResponse(
         request: Request,

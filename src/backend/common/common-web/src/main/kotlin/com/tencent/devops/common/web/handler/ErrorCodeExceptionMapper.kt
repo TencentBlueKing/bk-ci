@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -44,16 +44,18 @@ class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
     override fun toResponse(exception: ErrorCodeException): Response {
         logger.error("Failed with errorCode client exception:$exception")
         val status = Response.Status.BAD_REQUEST
-        val errorMsg = MessageCodeUtil.generateResponseDataObject<String>(
+        var errorResult = MessageCodeUtil.generateResponseDataObject(
             messageCode = exception.errorCode,
-            params = exception.params
+            params = exception.params,
+            data = null,
+            defaultMessage = exception.message
         )
+        // 在提示信息末尾附加uniqueId定位信息
+        if (null != errorResult.message && errorResult.message!!.startsWith("[uniqueId=")) {
+            errorResult =
+                Result(errorResult.status, errorResult.message + "[uniqueId=${exception.uniqueId}]", errorResult.data)
+        }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(
-                Result<Void>(
-                    status = status.statusCode,
-                    message = errorMsg.message ?: exception.message ?: "Unknown Error: ${exception.errorCode}"
-                )
-            ).build()
+            .entity(errorResult).build()
     }
 }

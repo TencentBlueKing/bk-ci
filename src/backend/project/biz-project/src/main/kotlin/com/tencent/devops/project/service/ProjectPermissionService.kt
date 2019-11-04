@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -34,8 +34,6 @@ interface ProjectPermissionService {
      * 校验用户是否有这个项目的权限
      */
     fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean
-
-    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean
 
     fun createResources(userId: String, projectList: List<ResourceRegisterInfo>)
 

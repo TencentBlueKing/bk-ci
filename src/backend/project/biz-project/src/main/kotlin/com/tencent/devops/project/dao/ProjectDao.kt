@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -414,7 +414,7 @@ class ProjectDao {
                 .set(ENABLED, enabled)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-                .where(ENGLISH_NAME.eq(projectId))
+                .where(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
@@ -545,6 +545,9 @@ class ProjectDao {
             }
             if (projectInfoRequest.enableExternal != null) {
                 step.set(ENABLE_EXTERNAL, projectInfoRequest.enableExternal)
+            }
+            if (projectInfoRequest.enableIdc != null) {
+                step.set(ENABLE_IDC, projectInfoRequest.enableIdc)
             }
 
             step.where(PROJECT_ID.eq(projectInfoRequest.projectId))

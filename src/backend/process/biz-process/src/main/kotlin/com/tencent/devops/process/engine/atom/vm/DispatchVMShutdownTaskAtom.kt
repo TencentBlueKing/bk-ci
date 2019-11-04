@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -91,7 +91,6 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
         fun makePipelineBuildTasks(
             projectId: String,
             pipelineId: String,
-            templateId: String?,
             buildId: String,
             stageId: String,
             container: Container,
@@ -111,12 +110,11 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 PipelineBuildTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    templateId = templateId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
-                        containerHashId = container.containerId ?: "",
-                        containerType = containerType,
+                    containerHashId = container.containerId ?: "",
+                    containerType = containerType,
                     taskSeq = endTaskSeq,
                     taskId = VMUtils.genEndPointTaskId(endTaskSeq),
                     taskName = "Wait_Finish_Job#$containerId",
@@ -138,12 +136,11 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 PipelineBuildTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    templateId = templateId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
-                        containerHashId = container.containerId ?: "",
-                        containerType = containerType,
+                    containerHashId = container.containerId ?: "",
+                    containerType = containerType,
                     taskSeq = stopVMTaskSeq,
                     taskId = VMUtils.genStopVMTaskId(stopVMTaskSeq),
                     taskName = "Clean_Job#$containerId",

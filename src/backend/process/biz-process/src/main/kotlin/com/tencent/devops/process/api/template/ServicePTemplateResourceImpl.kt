@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -95,5 +95,4 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     override fun listTemplateById(templateIds: Collection<String>, templateType: TemplateType?): Result<OptionalTemplateList> {
         return Result(templateService.listAllTemplate(null, templateType, templateIds, null, null))
     }
-
 }

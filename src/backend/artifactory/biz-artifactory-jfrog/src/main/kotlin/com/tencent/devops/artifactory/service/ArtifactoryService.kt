@@ -1,7 +1,35 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.pojo.AppFileInfo
+import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
+import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.artifactory.pojo.DockerUser
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -12,6 +40,7 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
@@ -25,6 +54,8 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.nio.file.FileSystems
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
@@ -76,12 +107,7 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    fun folderSize(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String
-    ): FolderSize {
+    fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): FolderSize {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -255,7 +281,6 @@ class ArtifactoryService @Autowired constructor(
             val jFrogAQLFileInfoList =
                 jFrogAQLService.searchFileAndPropertyByPropertyByAnd(repoPathPrefix, relativePathSet, emptySet(), props)
             val fileInfoList = transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false)
-
             val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId, AuthPermission.DOWNLOAD)
 
             return fileInfoList.map {
@@ -501,10 +526,7 @@ class ArtifactoryService @Autowired constructor(
                                 fullPath = path,
                                 size = it.size,
                                 folder = false,
-                                modifiedTime = LocalDateTime.parse(
-                                    it.modified,
-                                    DateTimeFormatter.ISO_DATE_TIME
-                                ).timestamp(),
+                                modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                                 artifactoryType = ArtifactoryType.PIPELINE,
                                 properties = properties,
                                 appVersion = appVersion,
@@ -522,10 +544,7 @@ class ArtifactoryService @Autowired constructor(
                             fullPath = path,
                             size = it.size,
                             folder = false,
-                            modifiedTime = LocalDateTime.parse(
-                                it.modified,
-                                DateTimeFormatter.ISO_DATE_TIME
-                            ).timestamp(),
+                            modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                             artifactoryType = ArtifactoryType.CUSTOM_DIR,
                             properties = properties
                         )
@@ -541,6 +560,68 @@ class ArtifactoryService @Autowired constructor(
 
     fun createDockerUser(projectCode: String): DockerUser {
         return jFrogApiService.createDockerUser(projectCode)
+    }
+
+    fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
+        val allFiles = jFrogAQLService.searchByPathAndProperties(
+            path = "generic-local/bk-custom/$projectId",
+            properties = condition.properties
+        )
+
+        if (condition.glob.isNullOrEmpty()) {
+            return allFiles.map { it.path }
+        }
+
+        val globs = condition.glob!!.split(",").map {
+            it.trim().removePrefix("/").removePrefix("./")
+        }.filter { it.isNotEmpty() }
+        val matchers = globs.map {
+            FileSystems.getDefault().getPathMatcher("glob:$it")
+        }
+        val matchedFiles = mutableListOf<JFrogAQLFileInfo>()
+        matchers.forEach { matcher ->
+            allFiles.forEach {
+                if (matcher.matches(Paths.get(it.path.removePrefix("/")))) {
+                    matchedFiles.add(it)
+                }
+            }
+        }
+
+        return matchedFiles.toSet().toList().sortedByDescending { it.modified }.map { it.path }
+    }
+
+    fun copyToCustom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        copyToCustomReq: CopyToCustomReq
+    ) {
+        checkCopyToCustomReq(copyToCustomReq)
+        customDirService.validatePermission(userId, projectId)
+
+        val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
+        val buildNo = pipelineService.getBuildName(buildId)
+        val fromPath = JFrogUtil.getPipelineBuildPath(projectId, pipelineId, buildId)
+        val toPath = JFrogUtil.getPipelineToCustomPath(projectId, pipelineName, buildNo)
+
+        if (copyToCustomReq.copyAll) {
+            jFrogService.tryDelete(toPath)
+            jFrogService.copy(fromPath, toPath)
+        } else {
+            copyToCustomReq.files.forEach { file ->
+                val fileName = file.removePrefix("/")
+                val fromFilePath = "$fromPath/$fileName"
+                jFrogService.file(fromFilePath)
+                jFrogService.copy("$fromPath/$fileName", "$toPath/$fileName")
+            }
+        }
+    }
+
+    private fun checkCopyToCustomReq(copyToCustomReq: CopyToCustomReq) {
+        if (!copyToCustomReq.copyAll && copyToCustomReq.files.isEmpty()) {
+            throw OperationException("invalid request")
+        }
     }
 
     companion object {

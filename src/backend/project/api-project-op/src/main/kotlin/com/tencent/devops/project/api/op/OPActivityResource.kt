@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -79,7 +79,7 @@ interface OPActivityResource {
     ): Result<List<String>>
 
 //    @GET
-////    @Path("/{fieldName}/enum")
+// //    @Path("/{fieldName}/enum")
 //    @Path("/fields/{fieldName}/enum")
 //    @ApiOperation("获取字段常量信息")
 //    fun getFieldV2(
@@ -137,6 +137,4 @@ interface OPActivityResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<OPActivityVO>>
-
-
 }

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -48,7 +48,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.websocket.page.EditPageBuild
-import com.tencent.devops.process.websocket.page.HistoryPageBuild
 import com.tencent.devops.process.websocket.push.WebHookWebsocketPush
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

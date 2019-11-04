@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -44,7 +44,7 @@ class FileDao {
         dslContext: DSLContext,
         userId: String,
         fileId: String,
-        projectCode: String?,
+        projectId: String?,
         fileType: String,
         filePath: String,
         fileName: String,
@@ -64,7 +64,7 @@ class FileDao {
             )
                 .values(
                     fileId,
-                    projectCode,
+                    projectId,
                     fileType,
                     filePath,
                     fileName,
@@ -120,7 +120,7 @@ class FileDao {
 
     fun getFileListByProps(
         dslContext: DSLContext,
-        projectCode: String,
+        projectId: String,
         fileTypeList: List<String>?,
         props: Map<String, String>,
         page: Int?,
@@ -131,7 +131,7 @@ class FileDao {
         val propsCount = generatePropsCountField(props, dslContext, b, a)
         val t = dslContext.select(
             a.ID.`as`("id"),
-            a.PROJECT_CODE.`as`("projectCode"),
+            a.PROJECT_CODE.`as`("projectId"),
             a.FILE_TYPE.`as`("fileType"),
             a.FILE_PATH.`as`("filePath"),
             a.FILE_NAME.`as`("fileName"),
@@ -141,7 +141,7 @@ class FileDao {
             a.CREATE_TIME.`as`("createTime"),
             a.UPDATE_TIME.`as`("updateTime"),
             propsCount
-        ).from(a).where(setFileByPropsCondition(a, projectCode, fileTypeList)).asTable("t")
+        ).from(a).where(setFileByPropsCondition(a, projectId, fileTypeList)).asTable("t")
         val baseStep =
             dslContext.selectFrom(t).where(t.field("propsCount", Int::class.java).eq(props.keys.size))
                 .orderBy(t.field("createTime").desc())
@@ -154,11 +154,11 @@ class FileDao {
 
     private fun setFileByPropsCondition(
         a: TFileInfo,
-        projectCode: String,
+        projectId: String,
         fileTypeList: List<String>?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(a.PROJECT_CODE.eq(projectCode))
+        conditions.add(a.PROJECT_CODE.eq(projectId))
         if (null != fileTypeList) {
             conditions.add(a.FILE_TYPE.`in`(fileTypeList))
         }
@@ -181,7 +181,7 @@ class FileDao {
 
     fun getFileCountByProps(
         dslContext: DSLContext,
-        projectCode: String,
+        projectId: String,
         fileTypeList: List<String>?,
         props: Map<String, String>
     ): Long {
@@ -190,7 +190,7 @@ class FileDao {
         val propsCount = generatePropsCountField(props, dslContext, b, a)
         val t = dslContext.select(
             a.ID.`as`("id"),
-            a.PROJECT_CODE.`as`("projectCode"),
+            a.PROJECT_CODE.`as`("projectId"),
             a.FILE_TYPE.`as`("fileType"),
             a.FILE_PATH.`as`("filePath"),
             a.FILE_NAME.`as`("fileName"),
@@ -200,7 +200,7 @@ class FileDao {
             a.CREATE_TIME.`as`("createTime"),
             a.UPDATE_TIME.`as`("updateTime"),
             propsCount
-        ).from(a).where(setFileByPropsCondition(a, projectCode, fileTypeList)).asTable("t")
+        ).from(a).where(setFileByPropsCondition(a, projectId, fileTypeList)).asTable("t")
         return dslContext.selectCount().from(t).where(t.field("propsCount", Int::class.java).eq(props.keys.size))
             .fetchOne(0, Long::class.java)
     }

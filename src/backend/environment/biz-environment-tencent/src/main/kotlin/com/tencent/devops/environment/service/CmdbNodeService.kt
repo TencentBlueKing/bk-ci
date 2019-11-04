@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -60,8 +60,6 @@ class CmdbNodeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
     }
-
-
 
     fun getUserCmdbNodes(userId: String, offset: Int, limit: Int): List<CmdbNode> {
         val cmdbNodes =

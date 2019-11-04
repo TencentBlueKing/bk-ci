@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -32,36 +32,53 @@ import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.api.tstack.ServiceTstackResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.tstack.ServiceTstackResource
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.image.api.ServiceDevCloudImageResource
 import com.tencent.devops.image.api.ServiceImageResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.pojo.app.ContainerResourceItem
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.agent.AgentResponse
 import com.tencent.devops.store.pojo.container.macos.MacOSNode
 import com.tencent.devops.store.pojo.container.pcg.PCGDockerImageResponse
-import com.tencent.devops.store.service.container.PCGImageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxContainerServiceImpl @Autowired constructor(
-    private val pcgImageService: PCGImageService
-) : ContainerServiceImpl() {
+class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
 
     private val logger = LoggerFactory.getLogger(TxContainerServiceImpl::class.java)
 
+    @Autowired
+    private lateinit var pcgImageServiceImpl: PCGImageServiceImpl
+
     override fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean {
-        logger.info("buildTypeEnable buildType is :$buildType,projectCode is :$projectCode")
-        return true
+        return when (buildType) {
+            BuildType.THIRD_PARTY_PCG -> {
+                pcgImageServiceImpl.projectEnable(projectCode)
+            }
+            else -> true
+        }
     }
 
     override fun clickable(buildType: BuildType, projectCode: String): Boolean {
-        logger.info("clickable buildType is :$buildType,projectCode is :$projectCode")
-        return true
+        return when (buildType) {
+            BuildType.IDC -> {
+                val projectVO = client.get(ServiceProjectResource::class).get(projectCode).data
+                if (projectVO?.enableIdc != null) {
+                    projectVO.enableIdc ?: false
+                } else {
+                    false
+                }
+            } else -> buildType.clickable
+        }
     }
 
     override fun getResource(
@@ -75,6 +92,20 @@ class TxContainerServiceImpl @Autowired constructor(
         logger.info("getResource containerOS is :$containerOS,buildType is :$buildType")
         val containerResourceValue: List<String>?
         val resource = when (buildType) {
+            BuildType.THIRD_PARTY_DEVCLOUD -> {
+                val agentNodeList = client.get(ServiceNodeResource::class).listNodeByType(userId, projectCode, NodeType.DEVCLOUD.name).data
+                logger.info("the agentNodeList is :$agentNodeList")
+                containerResourceValue = agentNodeList?.filter { it.nodeStatus == NodeStatus.NORMAL.name }?.map {
+                    it.displayName!!
+                }!!.toList()
+                agentNodeList.map {
+                    AgentResponse(
+                        it.nodeHashId,
+                        it.displayName!!,
+                        "/${it.ip}（${NodeStatus.getStatusName(it.nodeStatus)}）"
+                    )
+                }
+            }
             BuildType.THIRD_PARTY_AGENT_ENV -> {
                 val envNodeList =
                     client.get(ServiceEnvironmentResource::class).listBuildEnvs(userId, projectCode, containerOS)
@@ -163,8 +194,8 @@ class TxContainerServiceImpl @Autowired constructor(
                 dockerList
             }
             BuildType.THIRD_PARTY_PCG -> {
-                val l = if (pcgImageService.projectEnable(projectCode)) {
-                    pcgImageService.getPCGImages().map {
+                val l = if (pcgImageServiceImpl.projectEnable(projectCode)) {
+                    pcgImageServiceImpl.getPCGImages().map {
                         val name = "${it.img_name}:${it.img_ver}:${it.os}:${it.language}"
                         PCGDockerImageResponse(name, name)
                     }.toList()
@@ -177,9 +208,9 @@ class TxContainerServiceImpl @Autowired constructor(
                 l
             }
             BuildType.PUBLIC_DEVCLOUD, BuildType.GIT_CI -> {
-                val publicImageList = client.get(ServiceImageResource::class).listDevCloudImages(userId, projectCode, true).data // 公共镜像
+                val publicImageList = client.get(ServiceDevCloudImageResource::class).listDevCloudImages(userId, projectCode, true).data // 公共镜像
                 logger.info("the publicImageList is :$publicImageList")
-                val projectImageList = client.get(ServiceImageResource::class).listDevCloudImages(userId, projectCode, false).data // 项目镜像
+                val projectImageList = client.get(ServiceDevCloudImageResource::class).listDevCloudImages(userId, projectCode, false).data // 项目镜像
                 logger.info("the projectImageList is :$projectImageList")
 
                 val dockerList = mutableListOf<ContainerResourceItem>()

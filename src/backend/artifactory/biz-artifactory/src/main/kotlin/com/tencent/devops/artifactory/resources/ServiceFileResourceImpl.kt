@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -44,14 +44,14 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
-        projectCode: String?,
+        projectId: String?,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
         return archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            projectCode = projectCode,
+            projectId = projectId,
             fileChannelType = fileChannelType
         )
     }

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -82,20 +82,25 @@ class TaskAtomService @Autowired constructor(
         } catch (t: BuildTaskException) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId, "当前原子执行出现异常: " +
-                    "${t.message}", task.taskId, task.containerHashId,task.executeCount ?: 1
+                    "${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
         } catch (ignored: Throwable) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId,
                 "Fail to execute the task atom: " +
-                    "${ignored.message}", task.taskId, task.containerHashId,task.executeCount ?: 1
+                    "${ignored.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", ignored)
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                pipelineRuntimeService.batchSetVariable(task.buildId, atomResponse.outputVars!!)
+                pipelineRuntimeService.batchSetVariable(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    variables = atomResponse.outputVars!!
+                )
             }
             // 循环的是还未结束，直接返回
             if (BuildStatus.isFinish(atomResponse.buildStatus)) {
@@ -161,7 +166,7 @@ class TaskAtomService @Autowired constructor(
             )
             LogUtils.addFoldEndLine(
                 rabbitTemplate, task.buildId, logTagName,
-                task.taskId, task.containerHashId,task.executeCount ?: 1
+                task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             if (BuildStatus.isFailure(status)) {
                 jmxElements.fail(elementType)
@@ -187,20 +192,24 @@ class TaskAtomService @Autowired constructor(
         } catch (t: BuildTaskException) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId, "Fail to execute the task atom: ${t.message}",
-                task.taskId, task.containerHashId,task.executeCount ?: 1
+                task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
         } catch (ignored: Throwable) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId,
                 "Fail to execute the task atom: ${ignored.message}",
-                task.taskId, task.containerHashId,task.executeCount ?: 1
+                task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", ignored)
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                pipelineRuntimeService.batchSetVariable(task.buildId, atomResponse.outputVars!!)
+                pipelineRuntimeService.batchSetVariable(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    variables = atomResponse.outputVars!!)
             }
             // 循环的是还未结束，直接返回
             if (BuildStatus.isFinish(atomResponse.buildStatus)) {
@@ -241,13 +250,13 @@ class TaskAtomService @Autowired constructor(
         if (BuildStatus.isFinish(atomResponse.buildStatus)) {
             LogUtils.addLine(
                 rabbitTemplate, task.buildId, "当前原子执行结束",
-                task.taskId, task.containerHashId,task.executeCount ?: 1
+                task.taskId, task.containerHashId, task.executeCount ?: 1
             )
         } else {
             if (force) {
                 LogUtils.addLine(
                     rabbitTemplate, task.buildId, "尝试强制终止当前原子未成功，重试中...",
-                    task.taskId, task.containerHashId,task.executeCount ?: 1
+                    task.taskId, task.containerHashId, task.executeCount ?: 1
                 )
             }
         }

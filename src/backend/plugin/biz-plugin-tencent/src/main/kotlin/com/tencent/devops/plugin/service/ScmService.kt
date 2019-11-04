@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.plugin.service
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
@@ -50,21 +76,21 @@ class ScmService @Autowired constructor(private val client: Client) {
                 getCredential(projectId, repo).privateKey
 
             val request = CommitCheckRequest(
-                    repo.projectName,
-                    repo.url,
-                    ScmType.CODE_GIT,
-                    null,
-                    null,
-                    token,
-                    null,
-                    commitId,
-                    state,
-                    targetUrl,
-                    context,
-                    description,
-                    block,
-                    event.mergeRequestId,
-                    QualityUtils.getQualityGitMrResult(client, event)
+                projectName = repo.projectName,
+                url = repo.url,
+                type = ScmType.CODE_GIT,
+                privateKey = null,
+                passPhrase = null,
+                token = token,
+                region = null,
+                commitId = commitId,
+                state = state,
+                targetUrl = targetUrl,
+                context = context,
+                description = description,
+                block = block,
+                mrRequestId = event.mergeRequestId,
+                reportData = QualityUtils.getQualityGitMrResult(client, event)
             )
             if (isOauth) {
                 client.getScm(ServiceScmOauthResource::class).addCommitCheck(request)
@@ -93,20 +119,20 @@ class ScmService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
-            name,
-            commitId,
-            detailUrl,
-            externalId,
-            status,
-            startedAt,
-            conclusion,
-            completedAt
+            name = name,
+            headSha = commitId,
+            detailsUrl = detailUrl,
+            externalId = externalId,
+            status = status,
+            startedAt = startedAt,
+            conclusion = conclusion,
+            completedAt = completedAt
         )
 
         return client.get(com.tencent.devops.external.api.ServiceGithubResource::class).addCheckRuns(
-            accessToken,
-            repo.projectName,
-            checkRuns
+            accessToken = accessToken,
+            projectName = repo.projectName,
+            checkRuns = checkRuns
         ).data!!
     }
 
@@ -129,18 +155,23 @@ class ScmService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
-            name,
-            commitId,
-            detailUrl,
-            externalId,
-            status,
-            startedAt,
-            conclusion,
-            completedAt
+            name = name,
+            headSha = commitId,
+            detailsUrl = detailUrl,
+            externalId = externalId,
+            status = status,
+            startedAt = startedAt,
+            conclusion = conclusion,
+            completedAt = completedAt
         )
 
         client.get(com.tencent.devops.external.api.ServiceGithubResource::class)
-            .updateCheckRuns(accessToken, repo.projectName, checkRunId, checkRuns)
+            .updateCheckRuns(
+                accessToken = accessToken,
+                projectName = repo.projectName,
+                checkRunId = checkRunId,
+                checkRuns = checkRuns
+            )
     }
 
     private fun checkRepoID(repositoryConfig: RepositoryConfig) {
@@ -161,7 +192,11 @@ class ScmService @Autowired constructor(private val client: Client) {
             URLEncoder.encode(EnvUtils.parseEnv(repositoryConfig.getRepositoryId(), variables), "UTF-8")
         }
         logger.info("[$projectId] Start to get repo - ($repositoryId|${repositoryConfig.repositoryType})")
-        val repoResult = client.get(ServiceRepositoryResource::class).get(projectId, repositoryId, repositoryConfig.repositoryType)
+        val repoResult = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryId,
+            repositoryType = repositoryConfig.repositoryType
+        )
         if (repoResult.isNotOk() || repoResult.data == null) {
             logger.error("Fail to get the repo($repositoryConfig) of project($projectId) because of ${repoResult.message}")
             throw RuntimeException("Fail to get the repo")
@@ -187,17 +222,17 @@ class ScmService @Autowired constructor(private val client: Client) {
 
         val privateKey = String(
             DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
             )
         )
 
         val passPhrase = if (credential.v2.isNullOrBlank()) "" else String(
             DHUtil.decrypt(
-                decoder.decode(credential.v2),
-                decoder.decode(credential.publicKey),
-                pair.privateKey
+                data = decoder.decode(credential.v2),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
             )
         )
 
@@ -207,7 +242,11 @@ class ScmService @Autowired constructor(private val client: Client) {
             listOf(privateKey, passPhrase)
         }
 
-        return CredentialUtils.getCredential(repository, list, credentialResult.data!!.credentialType)
+        return CredentialUtils.getCredential(
+            repository = repository,
+            credentials = list,
+            credentialType = credentialResult.data!!.credentialType
+        )
     }
 
     private fun getAccessToken(userName: String): Pair<String, String?> {

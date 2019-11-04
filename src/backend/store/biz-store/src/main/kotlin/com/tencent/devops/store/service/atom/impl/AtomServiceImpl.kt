@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -139,7 +139,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("getPipelineAtoms projectCode is :$projectCode,category is :$category,classifyId is :$classifyId,page is :$page,pageSize is :$pageSize")
         val validateFlag: Boolean?
         try {
-            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(accessToken,projectCode, userId).data
+            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(projectCode, userId).data
         } catch (e: Exception) {
             logger.info("verifyUserProjectPermission error is :$e")
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -79,8 +79,18 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = IosSJTYSignElement::class, name = IosSJTYSignElement.classType),
     JsonSubTypes.Type(value = KtlintStyleElement::class, name = KtlintStyleElement.classType),
     JsonSubTypes.Type(value = GitCommentCheckElement::class, name = GitCommentCheckElement.classType),
-    JsonSubTypes.Type(value = AtomBuildArchiveElement::class, name = AtomBuildArchiveElement.classType)
-)
+    JsonSubTypes.Type(value = AtomBuildArchiveElement::class, name = AtomBuildArchiveElement.classType),
+    JsonSubTypes.Type(value = BuildArchiveGetElement::class, name = BuildArchiveGetElement.classType),
+    JsonSubTypes.Type(value = CustomizeArchiveGetElement::class, name = CustomizeArchiveGetElement.classType),
+    JsonSubTypes.Type(value = CustomizeFileArchiveElement::class, name = CustomizeFileArchiveElement.classType),
+    JsonSubTypes.Type(value = DeployDistributionElement::class, name = DeployDistributionElement.classType),
+    JsonSubTypes.Type(value = FileArchiveElement::class, name = FileArchiveElement.classType),
+    JsonSubTypes.Type(value = MetaFileScanElement::class, name = MetaFileScanElement.classType),
+    JsonSubTypes.Type(value = ReportArchiveElement::class, name = ReportArchiveElement.classType),
+    JsonSubTypes.Type(value = Unity3dBuildElement::class, name = Unity3dBuildElement.classType),
+    JsonSubTypes.Type(value = XcodeBuildElement::class, name = XcodeBuildElement.classType),
+    JsonSubTypes.Type(value = XcodeBuildElement2::class, name = XcodeBuildElement2.classType)
+    )
 
 abstract class Element(
     open val name: String,

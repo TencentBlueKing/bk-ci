@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -110,7 +110,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         } catch (ignored: Throwable) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId,task.executeCount ?: 1
+                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", ignored)
         } finally {
@@ -271,7 +271,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         if (os == VMBaseOS.WINDOWS) {
             return TStackDispatchType(tstackAgentId ?: "")
         }
-        return ESXiDispatchType()    }
+        return ESXiDispatchType() }
 
     private fun getBuildZone(projectId: String, container: Container): Zone? {
         try {
@@ -369,7 +369,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         fun makePipelineBuildTask(
             projectId: String,
             pipelineId: String,
-            templateId: String?,
             buildId: String,
             stageId: String,
             container: Container,
@@ -382,7 +381,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                templateId = templateId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,

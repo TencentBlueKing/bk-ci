@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -142,8 +142,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var marketAtomArchiveService: MarketAtomArchiveService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
-    /*    @Autowired
-        lateinit var websocketService: websocketService*/
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
@@ -185,18 +183,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 false
             )
         }
-        if (marketAtomCreateRequest.atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
-            marketAtomCreateRequest.authType ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_NULL,
-                arrayOf("authType"),
-                false
-            )
-            marketAtomCreateRequest.visibilityLevel ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_NULL,
-                arrayOf("visibilityLevel"),
-                false
-            )
-        }
         return Result(true)
     }
 
@@ -211,8 +197,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (validateResult.isNotOk()) {
             return validateResult
         }
-        val atomPackageSourceType = marketAtomCreateRequest.atomPackageSourceType
-        val handleAtomPackageResult = handleAtomPackage(atomPackageSourceType, marketAtomCreateRequest, userId, atomCode)
+        val handleAtomPackageResult = handleAtomPackage(marketAtomCreateRequest, userId, atomCode)
         logger.info("the handleAtomPackageResult is :$handleAtomPackageResult")
         if (handleAtomPackageResult.isNotOk()) {
             return Result(handleAtomPackageResult.status, handleAtomPackageResult.message, null)
@@ -280,11 +265,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     abstract fun handleAtomPackage(
-        atomPackageSourceType: AtomPackageSourceTypeEnum,
         marketAtomCreateRequest: MarketAtomCreateRequest,
         userId: String,
         atomCode: String
     ): Result<Map<String, String>?>
+
+    abstract fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum
 
     @Suppress("UNCHECKED_CAST")
     override fun updateMarketAtom(
@@ -292,9 +278,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         projectCode: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String?> {
-        logger.info("the get userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
-        val atomPackageSourceType = marketAtomUpdateRequest.atomPackageSourceType
+        logger.info("updateMarketAtom userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
+        val atomPackageSourceType = getAtomPackageSourceType(atomCode)
+        logger.info("updateMarketAtom atomPackageSourceType is :$atomPackageSourceType")
         val version = marketAtomUpdateRequest.version
         if (atomPackageSourceType == AtomPackageSourceTypeEnum.UPLOAD) {
             // 校验可执行包sha摘要内容是否有效

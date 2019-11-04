@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -30,10 +30,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubCreateEvent(
-        val ref: String,
-        val ref_type: String,
-        val repository: GithubRepository,
-        override val sender: GithubSender
+    val ref: String,
+    val ref_type: String,
+    val repository: GithubRepository,
+    override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "create"

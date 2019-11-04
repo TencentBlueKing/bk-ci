@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.process.engine.atom.task.test
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -9,11 +35,15 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.pipeline.element.WetestElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.common.pipeline.element.WetestElement
-import com.tencent.devops.plugin.pojo.wetest.*
+import com.tencent.devops.plugin.pojo.wetest.WetestAutoTestRequest
+import com.tencent.devops.plugin.pojo.wetest.WetestEmailGroup
+import com.tencent.devops.plugin.pojo.wetest.WetestInstStatus
+import com.tencent.devops.plugin.pojo.wetest.WetestTask
+import com.tencent.devops.plugin.pojo.wetest.WetestTaskInst
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -70,7 +100,7 @@ class WetestTaskAtom @Autowired constructor(
         val usersMap = pipelineUserService.listCreateUsers(setOf(pipelineId))
         val pipelineCreateUser = usersMap[pipelineId]
         if (pipelineCreateUser.isNullOrEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "获取流水线创建人失败", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "获取流水线创建人失败", elementId, task.containerHashId, task.executeCount ?: 1)
             throw RuntimeException("获取流水线创建人失败， pipelineId = （$pipelineId）")
         }
         val (accessId, accessToken) = CommonUtils.getCredential(pipelineCreateUser!!)
@@ -87,8 +117,8 @@ class WetestTaskAtom @Autowired constructor(
             val testAccountFileStr = parseVariable(testAccountFile, runVariables)
             val preTestApkFilesStr = parseVariable(preTestApkFiles, runVariables)
 
-            LogUtils.addLine(rabbitTemplate, buildId, "详细结果可稍后前往查看：<a target='_blank' href=\"https://wetest.qq.com/console/report/cloud/\">查看详情</a>", elementId, task.containerHashId,task.executeCount ?: 1)
-            LogUtils.addLine(rabbitTemplate, buildId, "正准备进行 $testType 测试", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "详细结果可稍后前往查看：<a target='_blank' href=\"https://wetest.qq.com/console/report/cloud/\">查看详情</a>", elementId, task.containerHashId, task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "正准备进行 $testType 测试", elementId, task.containerHashId, task.executeCount ?: 1)
 
             val request = Request.Builder()
                     .url("$apiHost/wetest/api/service/wetest/task/getTask?taskId=$taskId&projectId=$projectId")
@@ -96,7 +126,7 @@ class WetestTaskAtom @Autowired constructor(
                     .build()
             val wetestTask = OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
-                LogUtils.addLine(rabbitTemplate, buildId, "get task response: $data", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "get task response: $data", elementId, task.containerHashId, task.executeCount ?: 1)
                 objectMapper.readValue<Result<WetestTask>>(data).data ?: throw RuntimeException("在 $projectId 项目下面找不到 $taskId 的任务数据")
             }
             val isPrivateCloud = !wetestTask.mobileModelId.isBlank()
@@ -120,7 +150,7 @@ class WetestTaskAtom @Autowired constructor(
                     .build()
             val weTestGroupId = OkhttpUtils.doHttp(groupRequest).use { response ->
                 val data = response.body()!!.string()
-                LogUtils.addLine(rabbitTemplate, buildId, "get group response: $data", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "get group response: $data", elementId, task.containerHashId, task.executeCount ?: 1)
                 objectMapper.readValue<Result<WetestEmailGroup?>>(data).data!!.wetestGroupId
             }
             if (null != weTestGroupId) {
@@ -196,9 +226,9 @@ class WetestTaskAtom @Autowired constructor(
                     .build()
             OkhttpUtils.doHttp(saveTaskRequest).use { response ->
                 val data = response.body()!!.string()
-                LogUtils.addLine(rabbitTemplate, buildId, "save task response: $data", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "save task response: $data", elementId, task.containerHashId, task.executeCount ?: 1)
             }
-            LogUtils.addLine(rabbitTemplate, buildId, "成功提交wetest测试(testId: $testId)", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "成功提交wetest测试(testId: $testId)", elementId, task.containerHashId, task.executeCount ?: 1)
 
             // step 5
             // 私有云最长8小时;公有云快速兼容最长900秒,其余测试2小时
@@ -211,21 +241,21 @@ class WetestTaskAtom @Autowired constructor(
                         checkResult(statusResult, "wetest原子查询结果失败")
                         val testStatus = statusResult["teststatus"] as Map<*, *>
                         if (testStatus["isdone"] as Boolean) {
-                            LogUtils.addLine(rabbitTemplate, buildId, "wetest测试成功，具体结果可以点击查看：<a target='_blank' href='https://wetest.qq.com/console/report/cloud'>查看详情</a>", elementId, task.containerHashId,task.executeCount ?: 1)
+                            LogUtils.addLine(rabbitTemplate, buildId, "wetest测试成功，具体结果可以点击查看：<a target='_blank' href='https://wetest.qq.com/console/report/cloud'>查看详情</a>", elementId, task.containerHashId, task.executeCount ?: 1)
                             updateTaskInstStatus(testId, WetestInstStatus.SUCCESS)
                             break
                         }
-                        LogUtils.addLine(rabbitTemplate, buildId, "测试进行中，请稍等...", elementId, task.containerHashId,task.executeCount ?: 1)
+                        LogUtils.addLine(rabbitTemplate, buildId, "测试进行中，请稍等...", elementId, task.containerHashId, task.executeCount ?: 1)
                         Thread.sleep(Math.min(5000L * count, 60 * 1000L)) // 最多等待1分钟
                         count++
                         if (count > maxTimes) throw TaskTimeoutExistException("wetest原子执行失败")
                     }
                 } catch (e: TaskTimeoutExistException) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "wetest原子执行超时了", elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "wetest原子执行超时了", elementId, task.containerHashId, task.executeCount ?: 1)
                     updateTaskInstStatus(testId, WetestInstStatus.TIMEOUT)
                     throw e
                 } catch (e: Throwable) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "wetest原子执行失败了", elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, "wetest原子执行失败了", elementId, task.containerHashId, task.executeCount ?: 1)
                     updateTaskInstStatus(testId, WetestInstStatus.FAIL)
                     throw e
                 }
@@ -291,7 +321,7 @@ class WetestTaskAtom @Autowired constructor(
     private fun getAccountMap(testAccountFile: String?, sourceType: String?, task: PipelineBuildTask): List<List<String>>? {
         val accountExcelFile = Files.createTempDir().canonicalPath
         return if (!testAccountFile.isNullOrBlank()) {
-            LogUtils.addLine(rabbitTemplate, buildId, "正在获取用户的数据: $testAccountFile($sourceType)", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "正在获取用户的数据: $testAccountFile($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
             val excelFile = jfrogService.downloadFile(ArtifactorySearchParam(
                     projectId,
                     pipelineId,
@@ -304,7 +334,7 @@ class WetestTaskAtom @Autowired constructor(
                     ?: throw RuntimeException("account file can not be found: $accountExcelFile($sourceType)")
             excelFile.deleteOnExit()
             val list = ExcelUtils.getAccountFromExcel(excelFile.canonicalPath).map { listOf(it.key, it.value) }
-            LogUtils.addLine(rabbitTemplate, buildId, "共获取用户的数据 ${list.size} 条", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "共获取用户的数据 ${list.size} 条", elementId, task.containerHashId, task.executeCount ?: 1)
             return list
         } else {
             null
@@ -313,7 +343,7 @@ class WetestTaskAtom @Autowired constructor(
 
     private fun uploadScript(scriptPath: String?, sourceType: String?, task: PipelineBuildTask): Int {
         return if (!scriptPath.isNullOrBlank()) {
-            LogUtils.addLine(rabbitTemplate, buildId, "上传相应的脚本到wetest: $scriptPath($sourceType)", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "上传相应的脚本到wetest: $scriptPath($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
             val param = ArtifactorySearchParam(
                     projectId,
                     pipelineId,
@@ -327,13 +357,13 @@ class WetestTaskAtom @Autowired constructor(
             checkResult(scriptUploadResult, "上传脚本到wetest失败!")
             scriptUploadResult["scriptid"] as? Int ?: throw RuntimeException("上传脚本到wetest失败!")
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, "跳过上传相应的脚本到wetest步骤", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "跳过上传相应的脚本到wetest步骤", elementId, task.containerHashId, task.executeCount ?: 1)
             0
         }
     }
 
     private fun uploadApp(sourcePath: String, sourceType: String, type: String, task: PipelineBuildTask): Map<String, Any> {
-        LogUtils.addLine(rabbitTemplate, buildId, "上传相应的包到wetest: $sourcePath($sourceType)", elementId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, buildId, "上传相应的包到wetest: $sourcePath($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
         val param = ArtifactorySearchParam(
                 projectId,
                 pipelineId,

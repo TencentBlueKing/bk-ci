@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -23,3 +23,280 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+package com.tencent.devops.process.engine.interceptor
+
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
+import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.process.engine.common.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
+import com.tencent.devops.process.engine.common.OK
+import com.tencent.devops.process.engine.pojo.Response
+import com.tencent.devops.process.service.scm.ScmService
+import com.tencent.devops.repository.api.ServiceCommitResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+/**
+ * 定时触发的锁定
+ * @version 1.0
+ */
+@Component
+class TimerTriggerScmChangeInterceptor @Autowired constructor(
+    private val scmService: ScmService,
+    private val client: Client
+) : PipelineInterceptor {
+
+    override fun execute(task: InterceptData): Response<BuildStatus> {
+        // 非定时触发的直接跳过
+        if (task.startType != StartType.TIME_TRIGGER) {
+            return Response(OK, "非定时触发，直接跳过")
+        }
+
+        val pipelineId = task.pipelineInfo.pipelineId
+        val projectId = task.pipelineInfo.projectId
+        val model = task.model
+
+        var noScm = false
+        var hasCodeChange = false
+        var hasScmElement = false
+        val variables = HashMap<String, String>()
+        run outer@{
+            model.stages.forEach { stage ->
+                stage.containers.forEach { container ->
+                    if (container is TriggerContainer) {
+                        container.elements.forEach { ele ->
+                            if (ele is TimerTriggerElement) {
+                                noScm = ele.noScm ?: false
+                                if (!noScm) {
+                                    return@outer
+                                }
+                            }
+                        }
+                        // 解析变量
+                        container.params.forEach { param ->
+                            variables[param.id] = param.defaultValue.toString()
+                        }
+                    } else if (noScm && container is VMBuildContainer) {
+                        container.elements.forEach ele@{ ele ->
+                            if (!ele.isElementEnable()) {
+                                return@ele
+                            }
+                            val (existScmElement, codeChange) = scmElementCheck(ele, projectId, pipelineId, variables)
+                            hasScmElement = existScmElement || hasScmElement // 只要有一个拉代码插件的，即标识为存在
+                            hasCodeChange = (existScmElement && codeChange) || hasCodeChange // 当前库有更新
+                            if (hasCodeChange) { // 只要有一个库有更新 就返回
+                                return@outer
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return when {
+            !noScm -> Response(OK) // 没有开启【源代码未更新时不触发构建】, 则允许执行
+            hasCodeChange -> Response(OK) //  有代码变更，【源代码未更新时不触发构建】不成立，允许执行
+            !hasScmElement -> Response(OK) // 没有任何拉代码的插件，【源代码未更新时不触发构建】无效，允许执行
+            else -> Response(ERROR_PIPELINE_TIMER_SCM_NO_CHANGE, "代码没有变更，跳过执行")
+        }
+    }
+
+    private fun scmElementCheck(
+        ele: Element,
+        projectId: String,
+        pipelineId: String,
+        variables: HashMap<String, String>
+    ): Pair<Boolean, Boolean> {
+
+        // 默认没有拉代码的原子
+        var existScmElement = false
+        var codeChange = false
+
+        when (ele) {
+            is CodeSvnElement -> {
+                existScmElement = true
+                codeChange = checkSvnChange(projectId, pipelineId, ele, variables)
+            }
+            is CodeGitElement -> {
+                existScmElement = true
+                codeChange = checkGitChange(
+                    ele.branchName,
+                    ele.gitPullMode,
+                    buildConfig(ele),
+                    variables,
+                    projectId,
+                    pipelineId,
+                    ele
+                )
+            }
+            is CodeGitlabElement -> {
+                existScmElement = true
+                codeChange = checkGitChange(
+                    ele.branchName,
+                    ele.gitPullMode,
+                    buildConfig(ele),
+                    variables,
+                    projectId,
+                    pipelineId,
+                    ele
+                )
+            }
+            is GithubElement -> {
+                existScmElement = true
+                codeChange = checkGitChange(
+                    null,
+                    ele.gitPullMode,
+                    buildConfig(ele),
+                    variables,
+                    projectId,
+                    pipelineId,
+                    ele
+                )
+            }
+        }
+        // 没有拉代码原子的直接通过|有拉代码原子则一定要有代码变更
+        return existScmElement to codeChange
+    }
+
+    private fun checkSvnChange(
+        projectId: String,
+        pipelineId: String,
+        ele: CodeSvnElement,
+        variables: Map<String, String>
+    ): Boolean {
+        val repositoryConfig = buildConfig(ele)
+        // 如果没有初始化，就初始化一下
+        if (ele.revision.isNullOrBlank()) {
+
+            val latestRevision =
+                scmService.recursiveFetchLatestRevision(projectId, pipelineId, repositoryConfig, ele.svnPath, variables)
+
+            if (latestRevision.isNotOk() || latestRevision.data == null) {
+                logger.warn("[$pipelineId] get svn latestRevision fail!")
+                return false
+            }
+            ele.revision = latestRevision.data!!.revision
+            ele.specifyRevision = true
+        }
+        val latestCommit = try {
+            client.get(ServiceCommitResource::class).getLatestCommit(
+                pipelineId,
+                ele.id!!,
+                repositoryConfig.getRepositoryId(),
+                repositoryConfig.repositoryType
+            )
+        } catch (e: Exception) {
+            logger.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            AlertUtils.doAlert(
+                "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
+                "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
+            )
+            return false
+        }
+        if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != ele.revision)) {
+            logger.info("[$pipelineId] [${ele.id}] svn change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=${ele.revision}")
+            return true
+        }
+        return false
+    }
+
+    private fun checkGitChange(
+        oldBranchName: String?,
+        gitPullMode: GitPullMode?,
+        repositoryConfig: RepositoryConfig,
+        variables: HashMap<String, String>,
+        projectId: String,
+        pipelineId: String,
+        ele: Element
+    ): Boolean {
+
+        val branchName = when {
+            gitPullMode != null -> EnvUtils.parseEnv(gitPullMode.value, variables)
+            !oldBranchName.isNullOrBlank() -> EnvUtils.parseEnv(oldBranchName!!, variables)
+            else -> return false
+        }
+        val gitPullModeType = gitPullMode?.type ?: GitPullModeType.BRANCH
+//        val latestRevision =
+//        // 如果是commit id ,则直接比对就可以了，不需要再拉commit id
+//            if (gitPullModeType == GitPullModeType.COMMIT_ID) {
+//                Result(RevisionInfo(gitPullMode!!.value, "", branchName))
+//            } else {
+//                recursiveFetchLatestRevision(scmService, projectId, pipelineId, repositoryHashId, branchName)
+//            }
+//
+//        if (latestRevision.isNotOk() || latestRevision.data == null) {
+//            logger.warn("[$pipelineId] get git latestRevision empty! msg=${latestRevision.message}")
+//            return false
+//        }
+        // 如果是commit id ,则gitPullModeType直接比对就可以了，不需要再拉commit id
+        val latestRevision =
+            if (gitPullModeType == GitPullModeType.COMMIT_ID) {
+                gitPullMode!!.value
+            } else {
+                val t = when (ele) {
+                    is CodeGitElement -> ele.revision
+                    is CodeGitlabElement -> ele.revision
+                    is GithubElement -> ele.revision
+                    else -> return false // 非法类型退出
+                }
+                // 如果没有初始化，就初始化一下
+                if (t.isNullOrBlank()) {
+                    val result =
+                        scmService.recursiveFetchLatestRevision(
+                            projectId,
+                            pipelineId,
+                            repositoryConfig,
+                            branchName,
+                            variables
+                        )
+
+                    if (result.isNotOk() || result.data == null) {
+                        logger.warn("[$pipelineId] get git latestRevision empty! msg=${result.message}")
+                        return false
+                    }
+                    result.data!!.revision
+                } else t
+            }
+        val latestCommit = try {
+            client.get(ServiceCommitResource::class).getLatestCommit(
+                pipelineId,
+                ele.id!!,
+                EnvUtils.parseEnv(repositoryConfig.getRepositoryId(), variables),
+                repositoryConfig.repositoryType
+            )
+        } catch (e: Exception) {
+            logger.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            AlertUtils.doAlert(
+                "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
+                "拉取上一次构建${ele.getClassType()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
+            )
+            return false
+        }
+        if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != latestRevision)) {
+            logger.info("[$pipelineId] [${ele.id}] ${ele.getClassType()} change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$latestRevision")
+            return true
+        }
+        return false
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineInterceptor::class.java)
+    }
+}

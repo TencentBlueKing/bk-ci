@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -54,12 +54,15 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
     private val logger = LoggerFactory.getLogger(BkAtomReleaseServiceImpl::class.java)
 
     override fun handleAtomPackage(
-        atomPackageSourceType: AtomPackageSourceTypeEnum,
         marketAtomCreateRequest: MarketAtomCreateRequest,
         userId: String,
         atomCode: String
     ): Result<Map<String, String>?> {
         return Result(data = null)
+    }
+
+    override fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum {
+        return AtomPackageSourceTypeEnum.UPLOAD
     }
 
     override fun getFileStr(

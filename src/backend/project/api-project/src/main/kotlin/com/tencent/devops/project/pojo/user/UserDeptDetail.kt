@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -26,15 +26,13 @@
 
 package com.tencent.devops.project.pojo.user
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 /**
  * 用户机构信息
  *
  * since: 2018-12-09
  */
 data class UserDeptDetail(
-        //TODO 给别名会报错。不给别名成功
+        // TODO 给别名会报错。不给别名成功
 //    @JsonProperty("bg_name")
     val bgName: String,
 //    @JsonProperty("bg_id")

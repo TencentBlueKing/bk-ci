@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -27,18 +27,17 @@
 package com.tencent.devops.process.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.process.pojo.code.github.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubPushEvent(
-        val before: String,
-        val after: String,
-        val ref: String,
-        val repository: GithubRepository,
-        val commits: List<GithubCommit>,
-        val head_commit: GithubCommit,
-        val pusher: GithubPusher,
-        override val sender: GithubSender
+    val before: String,
+    val after: String,
+    val ref: String,
+    val repository: GithubRepository,
+    val commits: List<GithubCommit>,
+    val head_commit: GithubCommit,
+    val pusher: GithubPusher,
+    override val sender: GithubSender
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "push"

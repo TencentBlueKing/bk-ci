@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -60,8 +60,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     STAGE_ID,
                     CONTAINER_TYPE,
                     CONTAINER_ID,
-                        CONTAINER_HASH_ID,
-                        TASK_SEQ,
+                    CONTAINER_HASH_ID,
+                    TASK_SEQ,
                     TASK_ID,
                     TASK_TYPE,
                     TASK_ATOM,
@@ -80,8 +80,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         buildTask.stageId,
                         buildTask.containerType,
                         buildTask.containerId,
-                            buildTask.containerHashId,
-                            buildTask.taskSeq,
+                        buildTask.containerHashId,
+                        buildTask.taskSeq,
                         buildTask.taskId,
                         buildTask.taskType,
                         buildTask.taskAtom,
@@ -218,12 +218,11 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         }
     }
 
-    fun convert(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord, templateId: String?): PipelineBuildTask? {
+    fun convert(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord): PipelineBuildTask? {
         return with(tPipelineBuildTaskRecord) {
             PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                templateId = templateId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,

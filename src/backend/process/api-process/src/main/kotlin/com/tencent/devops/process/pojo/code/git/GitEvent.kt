@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -47,13 +47,13 @@ data class GitCommitRepository(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCommit(
-        val id: String,
-        val message: String,
-        val timestamp: String,
-        val author: GitCommitAuthor,
-        val modified: List<String>?,
-        val added: List<String>?,
-        val removed: List<String>?
+    val id: String,
+    val message: String,
+    val timestamp: String,
+    val author: GitCommitAuthor,
+    val modified: List<String>?,
+    val added: List<String>?,
+    val removed: List<String>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

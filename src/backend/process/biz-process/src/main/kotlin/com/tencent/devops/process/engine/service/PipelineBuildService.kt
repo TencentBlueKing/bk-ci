@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -132,11 +132,11 @@ class PipelineBuildService(
         checkPermission(userId, projectId, pipelineId, AuthPermission.EXECUTE, message)
 
     private fun checkPermission(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            permission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(userId, projectId, pipelineId, permission)) {
             throw PermissionForbiddenException(message)

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -78,9 +78,9 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     private val logger = LoggerFactory.getLogger(ContainerServiceImpl::class.java)
 
     private val OSDefaultBuildType = mapOf(
+        OS.LINUX to BuildType.DOCKER,
         OS.WINDOWS to BuildType.THIRD_PARTY_AGENT_ID,
-        OS.LINUX to BuildType.THIRD_PARTY_AGENT_ID,
-        OS.MACOS to BuildType.THIRD_PARTY_AGENT_ID
+        OS.MACOS to BuildType.ESXi
     )
 
     /**

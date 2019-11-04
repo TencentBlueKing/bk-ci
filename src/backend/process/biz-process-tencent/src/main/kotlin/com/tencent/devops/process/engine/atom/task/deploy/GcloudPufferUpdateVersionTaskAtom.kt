@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.process.engine.atom.task.deploy
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -31,13 +57,13 @@ class GcloudPufferUpdateVersionTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: GcloudPufferUpdateVersionElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
-        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId,task.executeCount ?: 1)
+        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId, task.executeCount ?: 1)
 
         val gcloudUtil = TicketUtil(client)
 
         with(param) {
             val elementId = task.taskId
-            LogUtils.addLine(rabbitTemplate, task.buildId, "正在开始更新gcloud版本配置信息，结果可以稍后前往http://console.gcloud.oa.com或者http://console.gcloud.qq.com查看\n", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, task.buildId, "正在开始更新gcloud版本配置信息，结果可以稍后前往http://console.gcloud.oa.com或者http://console.gcloud.qq.com查看\n", elementId, task.containerHashId, task.executeCount ?: 1)
 
             val projectId = task.projectId
             val buildId = task.buildId
@@ -57,10 +83,10 @@ class GcloudPufferUpdateVersionTaskAtom @Autowired constructor(
             val updateVerParam = DynUpdateVerParam(userId, productId.toInt(), versionStr,
                     if (NumberUtils.isDigits(versionType)) versionType?.toInt() else null,
                     versionDes, customStr)
-            LogUtils.addLine(rabbitTemplate, buildId, "更新的配置信息：\n$updateVerParam", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "更新的配置信息：\n$updateVerParam", elementId, task.containerHashId, task.executeCount ?: 1)
 
             gcloudClient.updateVersion(updateVerParam, commonParam)
-            LogUtils.addLine(rabbitTemplate, buildId, "更新gcloud配置成功!(gameId: $gameId, productId: $productId)", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "更新gcloud配置成功!(gameId: $gameId, productId: $productId)", elementId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(BuildStatus.SUCCEED)
         }
     }

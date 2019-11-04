@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -42,7 +42,7 @@ package com.tencent.devops.project.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object ProjectMessageCode{
+object ProjectMessageCode {
     const val PROJECT_NOT_EXIST = "2119001" // 项目不存在
     const val PROJECT_NAME_EXIST = "2119002" // 项目名或英文名重复
     const val NAME_EMPTY = "2119003" // 名称不能为空

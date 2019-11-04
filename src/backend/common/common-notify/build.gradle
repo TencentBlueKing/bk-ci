@@ -1,8 +1,0 @@
-apply plugin: "maven"
-
-dependencies {
-    compile project(":common:common-pipeline:common-pipeline-api")
-    compile project(":common:common-web")
-    compile "org.mockito:mockito-all"
-    compile "com.nhaarman:mockito-kotlin-kt1.1:1.6.0"
-}

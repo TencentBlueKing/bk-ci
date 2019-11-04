@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -459,7 +459,11 @@ class PipelineVMBuildService @Autowired constructor(
         if (result.buildResult.isNotEmpty()) {
             logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
             try {
-                pipelineRuntimeService.batchSetVariable(buildId, result.buildResult)
+                pipelineRuntimeService.batchSetVariable(
+                    projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    variables = result.buildResult)
             } catch (ignored: Exception) {
                 // 防止因为变量字符过长而失败。做下拦截
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)

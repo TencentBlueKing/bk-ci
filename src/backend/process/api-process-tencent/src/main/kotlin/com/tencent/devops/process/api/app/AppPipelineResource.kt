@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.process.api.app
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -31,7 +57,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户的所有项目")
     @GET
-    //@Path("/projects")
+    // @Path("/projects")
     @Path("/project/list")
     fun listProjects(
         @ApiParam("用户ID", required = true)
@@ -50,7 +76,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户某项目下的所有流水线")
     @GET
-    //@Path("/projects/{projectId}/listPipelines")
+    // @Path("/projects/{projectId}/listPipelines")
     @Path("/{projectId}/listPipelines")
     fun listPipelines(
         @ApiParam("用户ID", required = true)
@@ -75,7 +101,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户某项目下的流水线的所有构建历史")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/{projectId}/{pipelineId}/history")
     fun listPipelineHistory(
         @ApiParam("用户ID", required = true)
@@ -103,7 +129,7 @@ interface AppPipelineResource {
 
     @ApiOperation("获取流水线构建中的查询条件-分支")
     @GET
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/branchName")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/branchName")
     @Path("/{projectId}/{pipelineId}/historyCondition/branchName")
     fun getHistoryConditionBranch(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -122,7 +148,7 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户某项目下的流水线的所有收藏")
     @GET
-    //@Path("/collections")
+    // @Path("/collections")
     @Path("/collect/list")
     fun listUserCollect(
         @ApiParam("用户ID", required = true)
@@ -138,7 +164,7 @@ interface AppPipelineResource {
 
     @ApiOperation("收藏流水线")
     @POST
-    //@Path("/projects/{projectId}/pipelines/{pipelineId}/collect")
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/collect")
     @Path("/{projectId}/{pipelineId}/collect")
     fun collectPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -42,13 +42,19 @@ import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
 
 interface ArchiveFileService {
+
+    /**
+     * 获取真正的文件路径
+     */
+    fun getRealPath(filePath: String): String
+
     /**
      * 上传文件
      */
     fun uploadFile(
         userId: String,
         file: File,
-        projectCode: String? = null,
+        projectId: String? = null,
         filePath: String? = null,
         fileName: String? = null,
         fileType: FileTypeEnum? = null,
@@ -63,7 +69,7 @@ interface ArchiveFileService {
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
-        projectCode: String? = null,
+        projectId: String? = null,
         filePath: String? = null,
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
@@ -75,7 +81,7 @@ interface ArchiveFileService {
      */
     fun archiveFile(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
@@ -100,7 +106,7 @@ interface ArchiveFileService {
      */
     fun downloadArchiveFile(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
@@ -113,7 +119,7 @@ interface ArchiveFileService {
      */
     fun getFileDownloadUrls(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         artifactoryType: ArtifactoryType,
@@ -135,7 +141,7 @@ interface ArchiveFileService {
      */
     fun searchFileList(
         userId: String,
-        projectCode: String,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         searchProps: SearchProps
@@ -154,14 +160,14 @@ interface ArchiveFileService {
     /**
      * 根据用户自定义路径与 fileType 来生成真正存储文件的路径
      * @param fileType 文件存储的类型
-     * @param projectCode 项目id 英文名称
+     * @param projectId 项目id 英文名称
      * @param customFilePath 自定义路径
      * @param pipelineId 流水线id
      * @param buildId 构建id
      */
     fun generateDestPath(
         fileType: FileTypeEnum,
-        projectCode: String?,
+        projectId: String?,
         customFilePath: String?,
         pipelineId: String?,
         buildId: String?

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -106,7 +106,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 meta = emptyMap()
             )
         } else {
-            val filePath = "${getBasePath()}$fileSeparator$path"
+            val filePath = getRealPath(path)
             val file = File(filePath)
             val inputFiles = arrayOf(file.absolutePath)
             return FileDetail(
@@ -127,11 +127,13 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         }
     }
 
+    override fun getRealPath(filePath: String) = "${getBasePath()}$fileSeparator$filePath"
+
     override fun uploadFile(
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
-        projectCode: String?,
+        projectId: String?,
         filePath: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
@@ -149,7 +151,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         try {
             result = uploadFile(
                 userId = userId,
-                projectCode = projectCode,
+                projectId = projectId,
                 file = file,
                 filePath = filePath,
                 fileName = fileName,
@@ -166,7 +168,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
     override fun uploadFile(
         userId: String,
         file: File,
-        projectCode: String?,
+        projectId: String?,
         filePath: String?,
         fileName: String?,
         fileType: FileTypeEnum?,
@@ -174,7 +176,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
         logger.info("uploadFile userId is:$userId,fileInfo:${file.name}")
-        logger.info("uploadFile projectCode is:$projectCode,filePath:$filePath,fileName:$fileName,fileType:$fileType,props:$props")
+        logger.info("uploadFile projectId is:$projectId,filePath:$filePath,fileName:$fileName,fileType:$fileType,props:$props")
         val uploadFileName = fileName ?: file.name
         val index = uploadFileName.lastIndexOf(".")
         val fileSuffix = uploadFileName.substring(index + 1)
@@ -183,8 +185,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             val saveFilename = "${UUIDUtil.generate()}.$fileSuffix" // 避免文件被他人覆盖，文件名用唯一数替换
             "${getBasePath()}$fileSeparator${getCommonFileFolderName()}$fileSeparator$fileSuffix$fileSeparator$saveFilename"
         } else {
-            // "${getBasePath()}$fileSeparator$filePath"
-            "$filePath"
+            if (filePath.startsWith(getBasePath())) "$filePath" else "${getBasePath()}$fileSeparator$filePath"
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
@@ -196,14 +197,14 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             fileDao.addFileInfo(
-                context,
-                userId,
-                fileId,
-                projectCode,
-                fileTypeStr,
-                path,
-                uploadFileName,
-                file.length()
+                dslContext = context,
+                userId = userId,
+                fileId = fileId,
+                projectId = projectId,
+                fileType = fileTypeStr,
+                filePath = path,
+                fileName = uploadFileName,
+                fileSize = file.length()
             )
             if (null != props) {
                 fileDao.batchAddFileProps(context, userId, fileId, fileProps)
@@ -216,15 +217,15 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     override fun downloadArchiveFile(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
         customFilePath: String,
         response: HttpServletResponse
     ) {
-        logger.info("downloadArchiveFile userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,customFilePath is:$customFilePath")
-        val result = generateDestPath(fileType, projectCode, customFilePath, pipelineId, buildId)
+        logger.info("downloadArchiveFile userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,customFilePath is:$customFilePath")
+        val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
         logger.info("generateDestPath result is:$result")
         if (result.isNotOk()) {
             response.writer.println(JsonUtil.toJson(result))
@@ -236,16 +237,16 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     override fun searchFileList(
         userId: String,
-        projectCode: String,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
-        logger.info("searchFileList userId is:$userId,projectCode is:$projectCode,page is:$page,pageSize is:$pageSize,searchProps is:$searchProps")
+        logger.info("searchFileList userId is:$userId,projectId is:$projectId,page is:$page,pageSize is:$pageSize,searchProps is:$searchProps")
         val props = searchProps.props
         val fileTypeList = listOf(FileTypeEnum.BK_ARCHIVE.fileType, FileTypeEnum.BK_CUSTOM.fileType)
-        val fileInfoRecords = fileDao.getFileListByProps(dslContext, projectCode, fileTypeList, props, page, pageSize)
-        val fileCount = fileDao.getFileCountByProps(dslContext, projectCode, fileTypeList, props)
+        val fileInfoRecords = fileDao.getFileListByProps(dslContext, projectId, fileTypeList, props, page, pageSize)
+        val fileCount = fileDao.getFileCountByProps(dslContext, projectId, fileTypeList, props)
         val fileInfoList = mutableListOf<FileInfo>()
         fileInfoRecords?.forEach {
             var artifactoryType = ArtifactoryType.PIPELINE
@@ -288,7 +289,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     override fun archiveFile(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
@@ -297,8 +298,8 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
-        logger.info("archiveFile userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,filePath is:$customFilePath")
-        val result = generateDestPath(fileType, projectCode, customFilePath, pipelineId, buildId)
+        logger.info("archiveFile userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,filePath is:$customFilePath")
+        val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
         logger.info("generateDestPath result is:$result")
         if (result.isNotOk()) {
             return result
@@ -307,7 +308,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         val props: Map<String, String?>? = mapOf("pipelineId" to pipelineId, "buildId" to buildId)
         return uploadFile(
             userId = userId,
-            projectCode = projectCode,
+            projectId = projectId,
             inputStream = inputStream,
             disposition = disposition,
             filePath = destPath,
@@ -319,14 +320,14 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     override fun generateDestPath(
         fileType: FileTypeEnum,
-        projectCode: String?,
+        projectId: String?,
         customFilePath: String?,
         pipelineId: String?,
         buildId: String?
     ): Result<String> {
         val destPathBuilder = StringBuilder(getBasePath()).append(fileType.fileType).append(fileSeparator)
-        if (!projectCode.isNullOrBlank()) {
-            destPathBuilder.append(projectCode).append(fileSeparator)
+        if (!projectId.isNullOrBlank()) {
+            destPathBuilder.append(projectId).append(fileSeparator)
         }
 
         if (FileTypeEnum.BK_CUSTOM == fileType) {

@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -49,7 +49,7 @@ interface UserJobMutexGroupResource {
 
     @ApiOperation("获取项目已有的Job互斥组")
     @GET
-    //@Path("/projects/{projectId}")
+    // @Path("/projects/{projectId}")
     @Path("/{projectId}")
     fun get(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

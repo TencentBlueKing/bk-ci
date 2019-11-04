@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -38,11 +38,12 @@ import com.tencent.devops.store.service.container.impl.TxContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.TxMarketTemplateServiceImpl
 import com.tencent.devops.store.service.template.impl.TxTemplateNotifyServiceImpl
 import com.tencent.devops.store.service.template.impl.TxTemplateReleaseServiceImpl
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class TencentServiceConfig {
+class TencentServiceConfig @Autowired constructor() {
 
     @Bean
     fun containerService() = TxContainerServiceImpl()

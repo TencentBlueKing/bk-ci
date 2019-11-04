@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -33,13 +33,19 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "buildType", visible = false)
 @JsonSubTypes(
     JsonSubTypes.Type(value = DockerDispatchType::class, name = "DOCKER"),
+    JsonSubTypes.Type(value = ESXiDispatchType::class, name = "ESXi"),
+    JsonSubTypes.Type(value = TStackDispatchType::class, name = "TSTACK"),
     JsonSubTypes.Type(value = ThirdPartyAgentIDDispatchType::class, name = "THIRD_PARTY_AGENT_ID"),
-    JsonSubTypes.Type(value = ThirdPartyAgentEnvDispatchType::class, name = "THIRD_PARTY_AGENT_ENV")
+    JsonSubTypes.Type(value = ThirdPartyAgentEnvDispatchType::class, name = "THIRD_PARTY_AGENT_ENV"),
+    JsonSubTypes.Type(value = ThirdPartyDevCloudDispatchType::class, name = "THIRD_PARTY_DEVCLOUD")
 )
 abstract class DispatchType(
     open var value: String,
@@ -52,23 +58,26 @@ abstract class DispatchType(
         replaceField(variables)
     }
 
+//    @JsonIgnore
+//    fun buildType(): BuildType {
+//        return when (this) {
+//            is ThirdPartyAgentIDDispatchType -> {
+//                BuildType.THIRD_PARTY_AGENT_ID
+//            }
+//            is ThirdPartyAgentEnvDispatchType -> {
+//                BuildType.THIRD_PARTY_AGENT_ENV
+//            }
+//            is DockerDispatchType -> {
+//                BuildType.DOCKER
+//            }
+//            else -> {
+//                throw InvalidParamException("Unknown build type - $this")
+//            }
+//        }
+//    }
+
     @JsonIgnore
-    fun buildType(): BuildType {
-        return when (this) {
-            is ThirdPartyAgentIDDispatchType -> {
-                BuildType.THIRD_PARTY_AGENT_ID
-            }
-            is ThirdPartyAgentEnvDispatchType -> {
-                BuildType.THIRD_PARTY_AGENT_ENV
-            }
-            is DockerDispatchType -> {
-                BuildType.DOCKER
-            }
-            else -> {
-                throw InvalidParamException("Unknown build type - $this")
-            }
-        }
-    }
+    abstract fun buildType(): BuildType
 
     /**
      * 用来替换每种类型的自定义字符串

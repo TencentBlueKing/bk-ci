@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -64,7 +64,7 @@ fun main(array: Array<String>) {
         gray = false,
         enabled = true,
         enableExternal = true,
-        hybridCcAppId=0
+        hybridCcAppId = 0
     )
     val message = JsonUtil.toJson(p)
     println(message)

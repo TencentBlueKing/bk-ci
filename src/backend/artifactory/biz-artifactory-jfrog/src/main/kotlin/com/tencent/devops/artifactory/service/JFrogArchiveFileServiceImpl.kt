@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -132,7 +132,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
 
     override fun getFileDownloadUrls(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         artifactoryType: ArtifactoryType,
@@ -140,10 +140,10 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?> {
         logger.info("getFileDownloadUrls fileChannelType is:$fileChannelType")
-        logger.info("getFileDownloadUrls userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId")
+        logger.info("getFileDownloadUrls userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId")
         logger.info("getFileDownloadUrls buildId is:$buildId,artifactoryType is:$artifactoryType,customFilePath is:$customFilePath")
         val param = ArtifactorySearchParam(
-            projectId = projectCode,
+            projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             regexPath = customFilePath ?: "",
@@ -175,11 +175,19 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
                 num++
             }
         }
-        val projectCode = dataList[1]
+        val projectId = dataList[1]
         val pipelineId = if (isCustom(artifactoryType)) "" else dataList[2]
         val buildId = if (isCustom(artifactoryType)) "" else dataList[3]
         val customFilePath = if (isCustom(artifactoryType)) dataList[2] else dataList[4]
-        return getFileDownloadUrls("", projectCode, pipelineId, buildId, artifactoryType, customFilePath, fileChannelType)
+        return getFileDownloadUrls(
+            userId = "",
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            artifactoryType = artifactoryType,
+            customFilePath = customFilePath,
+            fileChannelType = fileChannelType
+        )
     }
 
     private fun isCustom(artifactoryType: ArtifactoryType): Boolean {

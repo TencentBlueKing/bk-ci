@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -112,11 +112,11 @@ class PipelineService @Autowired constructor(
     }
 
     private fun checkPermission(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            permission: AuthPermission,
-            message: String
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
@@ -130,10 +130,10 @@ class PipelineService @Autowired constructor(
     }
 
     private fun checkCreatePermission(
-            userId: String?,
-            projectId: String,
-            permission: AuthPermission,
-            message: String
+        userId: String?,
+        projectId: String,
+        permission: AuthPermission,
+        message: String
     ) {
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId!!,
@@ -146,10 +146,10 @@ class PipelineService @Autowired constructor(
     }
 
     fun hasPermission(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            authPermission: AuthPermission
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        authPermission: AuthPermission
     ): Boolean = pipelinePermissionService.checkPipelinePermission(
         userId = userId,
         projectId = projectId,
@@ -715,12 +715,12 @@ class PipelineService @Autowired constructor(
     }
 
     fun hasPermissionList(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            excludePipelineId: String?,
-            offset: Int,
-            limit: Int
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        excludePipelineId: String?,
+        offset: Int,
+        limit: Int
     ): SQLPage<Pipeline> {
 
         val watch = StopWatch()

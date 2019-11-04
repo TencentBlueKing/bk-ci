@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
@@ -27,16 +27,15 @@
 package com.tencent.devops.process.pojo.code.svn
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEventFile
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SvnCommitEvent(
-        val userName: String,
-        val eventType: Int,
-        val log: String,
-        val rep_name: String,
-        val revision: Int,
-        val paths: List<String>,
-        val files: List<SvnCommitEventFile>,
-        val commitTime: Long?
+    val userName: String,
+    val eventType: Int,
+    val log: String,
+    val rep_name: String,
+    val revision: Int,
+    val paths: List<String>,
+    val files: List<SvnCommitEventFile>,
+    val commitTime: Long?
 )

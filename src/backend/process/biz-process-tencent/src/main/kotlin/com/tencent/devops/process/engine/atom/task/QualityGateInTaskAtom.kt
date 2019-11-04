@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO 蓝鲸制品库 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.util.JsonUtil
@@ -125,12 +151,12 @@ class QualityGateInTaskAtom @Autowired constructor(
         pipelineBuildDetailService.pipelineDetailChangeEvent(buildId)
 
         if (checkResult.success) {
-            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)检测已通过", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)检测已通过", elementId, task.containerHashId, task.executeCount ?: 1)
 
             checkResult.resultList.forEach {
-                LogUtils.addLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
                 it.messagePairs.forEach { message ->
-                    LogUtils.addLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
                 }
             }
 
@@ -139,12 +165,12 @@ class QualityGateInTaskAtom @Autowired constructor(
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
             task.taskParams[QUALITY_RESULT] = checkResult.success
         } else {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准入)检测被拦截", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准入)检测被拦截", elementId, task.containerHashId, task.executeCount ?: 1)
 
             checkResult.resultList.forEach {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
                 it.messagePairs.forEach { message ->
-                    LogUtils.addRedLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
                 }
             }
 
@@ -158,7 +184,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             // 产生MQ消息，等待5分钟审核时间
             logger.info("quality check fail wait reviewing")
             val auditUsers = pipelineBuildQualityService.getAuditUserList(client, projectId, pipelineId, buildId, interceptTask)
-            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)待审核!审核人：$auditUsers", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)待审核!审核人：$auditUsers", elementId, task.containerHashId, task.executeCount ?: 1)
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
             task.taskParams[QUALITY_RESULT] = checkResult.success
         }
