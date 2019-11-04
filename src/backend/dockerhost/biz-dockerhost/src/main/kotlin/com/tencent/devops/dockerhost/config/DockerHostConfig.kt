@@ -146,19 +146,16 @@ class DockerHostConfig {
     @Value("\${dockerCli.cpuQuota:50000}")
     var cpuQuota: Int = 50000 // Limit the CPU CFS (Completely Fair Scheduler) period
 
-    @Value("\${dockerAgentPath}")
+    @Value("\${dockerCli.dockerAgentPath}")
     var dockerAgentPath: String? = null
 
-    @Value("\${downloadDockerAgentUrl}")
+    @Value("\${dockerCli.downloadDockerAgentUrl}")
     var downloadDockerAgentUrl: String? = null
 
-    @Value("\${downloadAgentCron}")
-    var downloadAgentCron: String? = null
-
-    @Value("\${landunEnv}")
+    @Value("\${dockerCli.landunEnv}")
     var landunEnv: String? = null
 
-    @Value("\${localImageCacheDays}")
+    @Value("\${dockerCli.localImageCacheDays}")
     var localImageCacheDays: Int = 7
 
     @Value("\${run.mode:#{null}}")

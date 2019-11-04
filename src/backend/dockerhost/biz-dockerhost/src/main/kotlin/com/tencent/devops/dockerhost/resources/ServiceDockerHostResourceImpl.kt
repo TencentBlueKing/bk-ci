@@ -60,14 +60,21 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkReq(request)
         logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerBuild...")
-        return Result(dockerService.buildImage(projectId, pipelineId, vmSeqId, buildId, elementId, dockerBuildParam))
+        return Result(dockerService.buildImage(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            buildId = buildId,
+            elementId = elementId,
+            dockerBuildParam = dockerBuildParam
+        ))
     }
 
     override fun getDockerBuildStatus(
         vmSeqId: String,
         buildId: String,
         request: HttpServletRequest
-    ): Result<Pair<Status, String?>> {
+    ): Result<Pair<Status, String>> {
         checkReq(request)
         logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.getDockerBuildStatus...")
         return Result(dockerService.getBuildResult(vmSeqId, buildId))

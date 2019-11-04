@@ -26,6 +26,8 @@
 
 dependencies {
     compile project(":dockerhost:biz-dockerhost-tencent")
+    compile project(":dockerhost:plugin-dockerhost-distcc")
+    compile project(":dockerhost:plugin-dockerhost-codecc")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

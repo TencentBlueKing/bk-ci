@@ -44,6 +44,12 @@ data class DockerBuildParam(
     @ApiModelProperty("userName", required = true)
     val userName: String,
     @ApiModelProperty("password", required = true)
-    val password: String
+    val password: String,
+    @ApiModelProperty("基础镜像凭证", required = true)
+    val ticket: List<Triple<String, String, String>> = emptyList(),
+    @ApiModelProperty("构建的参数", required = true)
+    val args: List<String> = emptyList(),
+    @ApiModelProperty("host配置", required = true)
+    val host: List<String> = emptyList()
 
 )

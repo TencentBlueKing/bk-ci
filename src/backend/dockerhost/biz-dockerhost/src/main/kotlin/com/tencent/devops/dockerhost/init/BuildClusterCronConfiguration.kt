@@ -49,7 +49,7 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class BuildClusterCronConfiguration : SchedulingConfigurer {
 
-    @Value("\${clearLocalImageCron}")
+    @Value("\${dockerCli.clearLocalImageCron:0 0 2 * * ?}")
     var clearLocalImageCron: String? = null
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {

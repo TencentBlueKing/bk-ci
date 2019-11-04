@@ -51,7 +51,7 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class TXBuildClusterCronConfiguration : SchedulingConfigurer {
 
-    @Value("\${downloadAgentCron}")
+    @Value("\${dockerCli.downloadAgentCron:0 0/30 * * * ?}")
     var downloadAgentCron: String? = null
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {

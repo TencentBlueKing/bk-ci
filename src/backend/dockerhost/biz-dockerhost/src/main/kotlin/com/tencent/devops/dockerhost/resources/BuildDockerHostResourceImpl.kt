@@ -24,61 +24,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.api
+package com.tencent.devops.dockerhost.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dockerhost.pojo.DockerBuildParamNew
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dockerhost.api.BuildDockerHostResource
+import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.dockerhost.services.DockerService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
-@Path("/dockernew")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildDockerHostResource {
-
-    @ApiOperation("Docker build")
-    @POST
-    @Path("/build/{projectId}/{pipelineId}/{vmSeqId}/{buildId}")
-    fun dockerBuild(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
+@RestResource
+class BuildDockerHostResourceImpl @Autowired constructor(private val dockerService: DockerService) :
+    BuildDockerHostResource {
+    override fun dockerBuild(
         projectId: String,
-        @ApiParam(value = "流水线Id", required = true)
-        @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "vmSeqId", required = true)
-        @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
         buildId: String,
-        @ApiParam(value = "elementId", required = true)
-        @QueryParam("elementId")
         elementId: String,
-        @ApiParam("镜像名称", required = true)
-        dockerBuildParamNew: DockerBuildParamNew
-    ): Result<Boolean>
+        dockerBuildParam: DockerBuildParam
+    ): Result<Boolean> {
+        logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")
+        return Result(dockerService.buildImage(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            buildId = buildId,
+            elementId = elementId,
+            dockerBuildParam = dockerBuildParam,
+            outer = true
+        ))
+    }
 
-    @ApiOperation("Docker build")
-    @GET
-    @Path("/build/{vmSeqId}/{buildId}")
-    fun getDockerBuildStatus(
-        @ApiParam(value = "vmSeqId", required = true)
-        @PathParam("vmSeqId")
-        vmSeqId: String,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<Pair<Status, String>>
+    override fun getDockerBuildStatus(vmSeqId: String, buildId: String): Result<Pair<Status, String>> {
+        logger.info("Enter ServiceDockerHostResourceImpl.getDockerBuildStatus...")
+        return Result(dockerService.getBuildResult(vmSeqId, buildId))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildDockerHostResourceImpl::class.java)
+    }
 }

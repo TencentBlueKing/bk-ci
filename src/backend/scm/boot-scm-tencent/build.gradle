@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":scm:biz-scm-tencent")
+    compile project(":scm:biz-scm")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"
