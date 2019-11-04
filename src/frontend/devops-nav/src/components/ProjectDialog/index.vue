@@ -212,7 +212,6 @@
         @State showProjectDialog
         @Getter isEmptyProject
         @Action updateNewProject
-        @Action checkProjectField
         @Action toggleProjectDialog
         @Action getDepartmentInfo
         @Action ajaxUpdatePM

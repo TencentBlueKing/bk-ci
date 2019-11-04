@@ -71,13 +71,6 @@ const actions: ActionTree<RootState, any> = {
         dispatch('setProjectList', projectList)
         window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
     },
-    checkProjectField (_, { field, value, projectId }) {
-        if (field === 'project_name') {
-            return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${field}/validate/?project_name=${value}${projectId ? `&project_id=${projectId}` : ''}`)
-        } else {
-            return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${field}/${value}/validate/`)
-        }
-    },
     getDepartmentInfo (_, { type, id }) {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/organizations/types/${type}/ids/${id}`)
     },

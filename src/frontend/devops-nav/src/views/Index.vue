@@ -150,7 +150,7 @@
 
         saveProjectId (): void {
             const { $route, projectList } = this
-            if (projectList.find(project => (project.projectCode === $route.params.projectId && project.enabled && (project.approval_status === 2 || project.approval_status === 1)))) {
+            if (projectList.find(project => (project.projectCode === $route.params.projectId && project.enabled && (project.approvalStatus === 2 || project.approvalStatus === 1)))) {
                 localStorage.setItem('projectId', $route.params.projectId)
             }
         }

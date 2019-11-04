@@ -138,7 +138,7 @@
             return this.enableProjectList.map(project => ({
                 ...project,
                 id: project.projectCode,
-                name: project.project_name
+                name: project.projectName
             }))
         }
 
