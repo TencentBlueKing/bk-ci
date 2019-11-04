@@ -16,179 +16,179 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_GIT_REPOSITORY"], description = "·şÎñ-git´úÂë¿â×ÊÔ´")
+@Api(tags = ["SERVICE_GIT_REPOSITORY"], description = "æœåŠ¡-gitä»£ç åº“èµ„æº")
 @Path("/service/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitRepositoryResource {
 
-	@ApiOperation("´´½¨git´úÂë¿â")
+	@ApiOperation("åˆ›å»ºgitä»£ç åº“")
 	@POST
 	@Path("/git/create/repository")
 	fun createGitCodeRepository(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam("ÏîÄ¿±àÂë", required = false)
-			@QueryParam("projectCode")
-			projectCode: String?,
-			@ApiParam("´úÂë¿âÃû³Æ", required = true)
-			@QueryParam("repositoryName")
-			repositoryName: String,
-			@ApiParam("ÑùÀı¹¤³ÌÂ·¾¶", required = false)
-			@QueryParam("sampleProjectPath")
-			sampleProjectPath: String?,
-			@ApiParam(value = "ÃüÃû¿Õ¼äID", required = false)
-			@QueryParam("namespaceId")
-			namespaceId: Int?,
-			@ApiParam(value = "ÏîÄ¿¿ÉÊÓ·¶Î§", required = false)
-			@QueryParam("visibilityLevel")
-			visibilityLevel: VisibilityLevelEnum?,
-			@ApiParam(value = "tokenÀàĞÍ 1£ºoauth 2:privateKey", required = true)
-			@QueryParam("tokenType")
-			tokenType: TokenTypeEnum
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam("é¡¹ç›®ç¼–ç ", required = false)
+		@QueryParam("projectCode")
+		projectCode: String?,
+		@ApiParam("ä»£ç åº“åç§°", required = true)
+		@QueryParam("repositoryName")
+		repositoryName: String,
+		@ApiParam("æ ·ä¾‹å·¥ç¨‹è·¯å¾„", required = false)
+		@QueryParam("sampleProjectPath")
+		sampleProjectPath: String?,
+		@ApiParam(value = "å‘½åç©ºé—´ID", required = false)
+		@QueryParam("namespaceId")
+		namespaceId: Int?,
+		@ApiParam(value = "é¡¹ç›®å¯è§†èŒƒå›´", required = false)
+		@QueryParam("visibilityLevel")
+		visibilityLevel: VisibilityLevelEnum?,
+		@ApiParam(value = "tokenç±»å‹ 1ï¼šoauth 2:privateKey", required = true)
+		@QueryParam("tokenType")
+		tokenType: TokenTypeEnum
 	): Result<RepositoryInfo?>
 
 
-	@ApiOperation("¸ù¾İ²Ö¿âID¸üĞÂgit´úÂë¿âĞÅÏ¢")
+	@ApiOperation("æ ¹æ®ä»“åº“IDæ›´æ–°gitä»£ç åº“ä¿¡æ¯")
 	@PUT
 	@Path("/git/update/repository/repoId")
 	fun updateGitCodeRepository(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam(value = "²Ö¿âid", required = true)
-			@QueryParam("repoId")
-			repoId: String,
-			@ApiParam("´úÂë¿â¸üĞÂĞÅÏ¢", required = true)
-			updateGitProjectInfo: UpdateGitProjectInfo,
-			@ApiParam(value = "tokenÀàĞÍ 1£ºoauth 2:privateKey", required = true)
-			@QueryParam("tokenType")
-			tokenType: TokenTypeEnum
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam(value = "ä»“åº“id", required = true)
+		@QueryParam("repoId")
+		repoId: String,
+		@ApiParam("ä»£ç åº“æ›´æ–°ä¿¡æ¯", required = true)
+		updateGitProjectInfo: UpdateGitProjectInfo,
+		@ApiParam(value = "tokenç±»å‹ 1ï¼šoauth 2:privateKey", required = true)
+		@QueryParam("tokenType")
+		tokenType: TokenTypeEnum
 	): Result<Boolean>
 
-	@ApiOperation("¸ù¾İ¹¤·äÏîÄ¿Ãû³Æ¸üĞÂgit´úÂë¿âĞÅÏ¢")
+	@ApiOperation("æ ¹æ®å·¥èœ‚é¡¹ç›®åç§°æ›´æ–°gitä»£ç åº“ä¿¡æ¯")
 	@PUT
 	@Path("/git/update/repository/projectName")
 	fun updateGitCodeRepositoryByProjectName(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam(value = "ÏîÄ¿Ãû³Æ", required = true)
-			@QueryParam("projectName")
-			projectName: String,
-			@ApiParam(value = "¸üĞÂgitÏîÄ¿ĞÅÏ¢", required = true)
-			updateGitProjectInfo: UpdateGitProjectInfo,
-			@ApiParam(value = "tokenÀàĞÍ 0£ºoauth 1:privateKey", required = true)
-			@QueryParam("tokenType")
-			tokenType: TokenTypeEnum
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam(value = "é¡¹ç›®åç§°", required = true)
+		@QueryParam("projectName")
+		projectName: String,
+		@ApiParam(value = "æ›´æ–°gité¡¹ç›®ä¿¡æ¯", required = true)
+		updateGitProjectInfo: UpdateGitProjectInfo,
+		@ApiParam(value = "tokenç±»å‹ 0ï¼šoauth 1:privateKey", required = true)
+		@QueryParam("tokenType")
+		tokenType: TokenTypeEnum
 	): Result<Boolean>
 
-	@ApiOperation("ÎªÏîÄ¿³ÉÔ±¸³Óè´úÂë¿âÈ¨ÏŞ")
+	@ApiOperation("ä¸ºé¡¹ç›®æˆå‘˜èµ‹äºˆä»£ç åº“æƒé™")
 	@POST
 	@Path("/git/repository/members/add")
 	fun addGitProjectMember(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam("Ôö¼ÓµÄÓÃ»§ÁĞ±í", required = true)
-			@QueryParam("userIdList")
-			userIdList: List<String>,
-			@ApiParam(value = "²Ö¿âid", required = true)
-			@QueryParam("repoId")
-			repoId: String,
-			@ApiParam(value = "git·ÃÎÊÈ¨ÏŞ", required = true)
-			@QueryParam("gitAccessLevel")
-			gitAccessLevel: GitAccessLevelEnum,
-			@ApiParam(value = "tokenÀàĞÍ 1£ºoauth 2:privateKey", required = true)
-			@QueryParam("tokenType")
-			tokenType: TokenTypeEnum
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam("å¢åŠ çš„ç”¨æˆ·åˆ—è¡¨", required = true)
+		@QueryParam("userIdList")
+		userIdList: List<String>,
+		@ApiParam(value = "ä»“åº“id", required = true)
+		@QueryParam("repoId")
+		repoId: String,
+		@ApiParam(value = "gitè®¿é—®æƒé™", required = true)
+		@QueryParam("gitAccessLevel")
+		gitAccessLevel: GitAccessLevelEnum,
+		@ApiParam(value = "tokenç±»å‹ 1ï¼šoauth 2:privateKey", required = true)
+		@QueryParam("tokenType")
+		tokenType: TokenTypeEnum
 	): Result<Boolean>
 
-	@ApiOperation("É¾³ıÏîÄ¿³ÉÔ±µÄ´úÂë¿âÈ¨ÏŞ")
+	@ApiOperation("åˆ é™¤é¡¹ç›®æˆå‘˜çš„ä»£ç åº“æƒé™")
 	@DELETE
 	@Path("/git/repository/members/delete")
 	fun deleteGitProjectMember(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam("É¾³ıµÄÓÃ»§ÁĞ±í", required = true)
-			@QueryParam("userIdList")
-			userIdList: List<String>,
-			@ApiParam(value = "²Ö¿âid", required = true)
-			@QueryParam("repoId")
-			repoId: String,
-			@ApiParam(value = "tokenÀàĞÍ 1£ºoauth 2:privateKey", required = true)
-			@QueryParam("tokenType")
-			tokenType: TokenTypeEnum
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam("åˆ é™¤çš„ç”¨æˆ·åˆ—è¡¨", required = true)
+		@QueryParam("userIdList")
+		userIdList: List<String>,
+		@ApiParam(value = "ä»“åº“id", required = true)
+		@QueryParam("repoId")
+		repoId: String,
+		@ApiParam(value = "tokenç±»å‹ 1ï¼šoauth 2:privateKey", required = true)
+		@QueryParam("tokenType")
+		tokenType: TokenTypeEnum
 	): Result<Boolean>
 
-	@ApiOperation("¸üĞÂ´úÂë¿âÓÃ»§ĞÅÏ¢")
+	@ApiOperation("æ›´æ–°ä»£ç åº“ç”¨æˆ·ä¿¡æ¯")
 	@PUT
 	@Path("/git/repository/user/info/update")
 	fun updateRepositoryUserInfo(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam("ÏîÄ¿±àÂë", required = true)
-			@QueryParam("projectCode")
-			projectCode: String,
-			@ApiParam("´úÂë¿âHashId", required = true)
-			@QueryParam("repositoryHashId")
-			repositoryHashId: String
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam("é¡¹ç›®ç¼–ç ", required = true)
+		@QueryParam("projectCode")
+		projectCode: String,
+		@ApiParam("ä»£ç åº“HashId", required = true)
+		@QueryParam("repositoryHashId")
+		repositoryHashId: String
 	): Result<Boolean>
 
-	@ApiOperation("°ÑÏîÄ¿Ç¨ÒÆµ½Ö¸¶¨ÏîÄ¿×éÏÂ")
+	@ApiOperation("æŠŠé¡¹ç›®è¿ç§»åˆ°æŒ‡å®šé¡¹ç›®ç»„ä¸‹")
 	@GET
 	@Path("/git/move/repository/group")
 	fun moveGitProjectToGroup(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam(value = "ÏîÄ¿×é´úÂë", required = false)
-			@QueryParam("groupCode")
-			groupCode: String?,
-			@ApiParam(value = "²Ö¿âid", required = true)
-			@QueryParam("repoId")
-			repoId: String,
-			@ApiParam(value = "tokenÀàĞÍ 1£ºoauth 2:privateKey", required = true)
-			@QueryParam("tokenType")
-			tokenType: TokenTypeEnum
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam(value = "é¡¹ç›®ç»„ä»£ç ", required = false)
+		@QueryParam("groupCode")
+		groupCode: String?,
+		@ApiParam(value = "ä»“åº“id", required = true)
+		@QueryParam("repoId")
+		repoId: String,
+		@ApiParam(value = "tokenç±»å‹ 1ï¼šoauth 2:privateKey", required = true)
+		@QueryParam("tokenType")
+		tokenType: TokenTypeEnum
 	): Result<GitProjectInfo?>
 
-	@ApiOperation("»ñÈ¡´úÂë²Ö¿âµ¥¸öÎÄ¼şÄÚÈİ")
+	@ApiOperation("è·å–ä»£ç ä»“åº“å•ä¸ªæ–‡ä»¶å†…å®¹")
 	@GET
 	@Path("/{repoId}/getFileContent")
 	fun getFileContent(
-			@ApiParam(value = "²Ö¿âid")
-			@PathParam("repoId")
-			repoId: String,
-			@ApiParam(value = "ÎÄ¼şÂ·¾¶")
-			@QueryParam("filePath")
-			filePath: String,
-			@ApiParam(value = "°æ±¾ºÅ£¨svn£©")
-			@QueryParam("reversion")
-			reversion: String?,
-			@ApiParam(value = "·ÖÖ§£¨git£©")
-			@QueryParam("branch")
-			branch: String?,
-			@ApiParam("´úÂë¿âÇëÇóÀàĞÍ", required = true)
-			@QueryParam("repositoryType")
-			repositoryType: RepositoryType?
+		@ApiParam(value = "ä»“åº“id")
+		@PathParam("repoId")
+		repoId: String,
+		@ApiParam(value = "æ–‡ä»¶è·¯å¾„")
+		@QueryParam("filePath")
+		filePath: String,
+		@ApiParam(value = "ç‰ˆæœ¬å·ï¼ˆsvnï¼‰")
+		@QueryParam("reversion")
+		reversion: String?,
+		@ApiParam(value = "åˆ†æ”¯ï¼ˆgitï¼‰")
+		@QueryParam("branch")
+		branch: String?,
+		@ApiParam("ä»£ç åº“è¯·æ±‚ç±»å‹", required = true)
+		@QueryParam("repositoryType")
+		repositoryType: RepositoryType?
 	): Result<String>
 
-	@ApiOperation("É¾³ı´úÂë¿â")
+	@ApiOperation("åˆ é™¤ä»£ç åº“")
 	@DELETE
 	@Path("/{projectId}/{repositoryHashId}")
 	fun delete(
-			@ApiParam(value = "ÓÃ»§ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-			@HeaderParam(AUTH_HEADER_USER_ID)
-			userId: String,
-			@ApiParam("ÏîÄ¿ID", required = true)
-			@PathParam("projectId")
-			projectId: String,
-			@ApiParam("´úÂë¿â¹şÏ£ID", required = true)
-			@PathParam("repositoryHashId")
-			repositoryHashId: String
+		@ApiParam(value = "ç”¨æˆ·ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+		@HeaderParam(AUTH_HEADER_USER_ID)
+		userId: String,
+		@ApiParam("é¡¹ç›®ID", required = true)
+		@PathParam("projectId")
+		projectId: String,
+		@ApiParam("ä»£ç åº“å“ˆå¸ŒID", required = true)
+		@PathParam("repositoryHashId")
+		repositoryHashId: String
 	): Result<Boolean>
 }

@@ -75,6 +75,9 @@ class ProjectLocalService @Autowired constructor(
     @Value("\${paas_cc.url}")
     private lateinit var ccUrl: String
 
+    /**
+     * åˆ›å»ºé¡¹ç›®ä¿¡æ¯
+     */
     fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): String {
         validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
@@ -82,13 +85,13 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // Ëæ»úÉú³ÉÍ¼Æ¬
+            // éšæœºç”Ÿæˆå›¾ç‰‡
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
             try {
-                // ·¢ËÍ·şÎñÆ÷
+                // å‘é€æœåŠ¡å™¨
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
 
-                // ´´½¨AUTHÏîÄ¿
+                // åˆ›å»ºAUTHé¡¹ç›®
                 val authUrl = "$authUrl?access_token=$accessToken"
                 val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.englishName)
                 val mediaType = MediaType.parse("application/json; charset=utf-8")
@@ -112,7 +115,7 @@ class ProjectLocalService @Autowired constructor(
                     logger.warn("Fail to get the project id from response $responseContent")
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // »ñÈ¡ÓÃ»§»ú¹¹ĞÅÏ¢
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ?????????????
                 try {
                     projectDao.create(
                             dslContext = dslContext,
@@ -197,16 +200,16 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // Ëæ»úÉú³ÉÍ¼Æ¬
+            // éšæœºç”Ÿæˆå›¾ç‰‡
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
             try {
-                // ·¢ËÍ·şÎñÆ÷
+                // å‘é€æœåŠ¡å™¨
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
 
                 var projectId = getProjectIdInAuth(projectCode, accessToken)
 
                 if (null == projectId) {
-                    // ´´½¨AUTHÏîÄ¿
+                    // åˆ›å»ºAUTHé¡¹ç›®
                     val authUrl = "$authUrl?access_token=$accessToken"
                     val param: MutableMap<String, String> =
                             mutableMapOf("project_code" to projectCreateInfo.englishName)
@@ -232,7 +235,7 @@ class ProjectLocalService @Autowired constructor(
                         throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
                     }
                 }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // »ñÈ¡ÓÃ»§»ú¹¹ĞÅÏ¢
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // ?????????????
                 try {
                     projectDao.create(
                             dslContext = dslContext,
@@ -305,7 +308,7 @@ class ProjectLocalService @Autowired constructor(
             ) {
                 val updateCnt = projectDao.updateUsableStatus(dslContext, userId, projectId, enabled)
                 if (updateCnt != 1) {
-                    logger.warn("¸üĞÂÊı¾İ¿â³ö´í£¬±ä¸üĞĞÊıÎª:$updateCnt")
+                    logger.warn("æ›´æ–°æ•°æ®åº“å‡ºé”™ï¼Œå˜æ›´è¡Œæ•°ä¸º:$updateCnt")
                 }
             } else {
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
@@ -334,7 +337,7 @@ class ProjectLocalService @Autowired constructor(
 
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
         logger.info("getProjectUsers accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode")
-        // ¼ì²éÓÃ»§ÊÇ·ñÓĞ²éÑ¯ÏîÄ¿ÏÂÓÃ»§ÁĞ±íµÄÈ¨ÏŞ
+        // æ£€æŸ¥ç”¨æˆ·æ˜¯å¦æœ‰æŸ¥è¯¢é¡¹ç›®ä¸‹ç”¨æˆ·åˆ—è¡¨çš„æƒé™
         val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateResult")
         val validateFlag = validateResult.data
@@ -448,11 +451,11 @@ class ProjectLocalService @Autowired constructor(
         val backgroundIndex = random.nextInt(max) % (max - min + 1) + min
         val width = 128
         val height = 128
-        // ´´½¨BufferedImage¶ÔÏó
+        // åˆ›å»ºBufferedImageå¯¹è±¡
         val bi = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        // »ñÈ¡Graphics2D
+        // è·å–Graphics2D
         val g2d = bi.createGraphics()
-        // ÉèÖÃÍ¸Ã÷¶È
+        // è®¾ç½®é€æ˜åº¦
         g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1.0f)
 
         when (backgroundIndex) {
@@ -472,7 +475,7 @@ class ProjectLocalService @Autowired constructor(
         g2d.clearRect(0, 0, width, height)
         g2d.color = Color.WHITE
         g2d.stroke = BasicStroke(1.0f)
-        val font = Font("ËÎÌå", Font.PLAIN, 64)
+        val font = Font("å®‹ä½“", Font.PLAIN, 64)
         g2d.font = font
         val fontMetrics = g2d.fontMetrics
         val heightAscent = fontMetrics.ascent
@@ -486,11 +489,11 @@ class ProjectLocalService @Autowired constructor(
                 (width / 2 - fontWidth / 2),
                 (height / 2 + heightAscent / 2).toFloat()
         )
-        // Í¸Ã÷¶ÈÉèÖÃ ½áÊø
+        // é€æ˜åº¦è®¾ç½® ç»“æŸ
         g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
-        // ÊÍ·Å¶ÔÏó
+        // é‡Šæ”¾å¯¹è±¡
         g2d.dispose()
-        // ±£´æÎÄ¼ş
+        // ä¿å­˜æ–‡ä»¶
         val logo = Files.createTempFile("default_", ".png").toFile()
         ImageIO.write(bi, "png", logo)
         return logo
@@ -513,7 +516,7 @@ class ProjectLocalService @Autowired constructor(
     private fun getAuthProjectIds(accessToken: String): List<String/*projectId*/> {
         val url = "$authUrl?access_token=$accessToken"
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, "´ÓÈ¨ÏŞÖĞĞÄ»ñÈ¡ÓÃ»§µÄÏîÄ¿ĞÅÏ¢Ê§°Ü")
+        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
@@ -643,7 +646,7 @@ class ProjectLocalService @Autowired constructor(
                 }
             }
             ProjectValidateType.english_name -> {
-                // 2 ~ 32 ¸ö×Ö·û+Êı×Ö£¬ÒÔĞ¡Ğ´×ÖÄ¸¿ªÍ·
+                // 2 ~ 32 ä¸ªå­—ç¬¦+æ•°å­—ï¼Œä»¥å°å†™å­—æ¯å¼€å¤´
                 if (name.length < 2) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
                 }

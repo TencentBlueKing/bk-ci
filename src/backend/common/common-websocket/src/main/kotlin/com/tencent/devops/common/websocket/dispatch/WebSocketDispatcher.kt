@@ -3,6 +3,7 @@ package com.tencent.devops.common.websocket.dispatch
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
+import com.tencent.devops.common.websocket.utils.RedisUtlis
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
@@ -30,7 +31,8 @@ class WebSocketDispatcher(
                         message
                     }
                 } else {
-                    logger.info("page:${event.page} have new message,bug nobody load page, notifyPost:${event.notifyPost}")
+                    val sessionList = RedisUtlis.getSessionListFormPageSessionByPage(event.redisOperation, event.page?: "")
+                    logger.info("page:${event.page},sessionList:$sessionList, have new message,bug nobody load page, notifyPost:${event.notifyPost}")
                 }
             }
         } catch (e: Exception) {
