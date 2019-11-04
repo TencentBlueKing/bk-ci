@@ -271,8 +271,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     labelCode = null,
                     score = null,
                     rdType = null,
-                    sortType = MarketTemplateSortTypeEnum.NAME,
-                    desc = false,
+                    sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
+                    desc = true,
                     page = page,
                     pageSize = pageSize
                 )
