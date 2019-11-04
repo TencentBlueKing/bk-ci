@@ -2,6 +2,7 @@ package com.tencent.devops.common.pipeline.type.pcg
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 
@@ -33,4 +34,6 @@ data class PCGDispatchType(@JsonProperty("value") var image: String)
     override fun replaceField(variables: Map<String, String>) {
         image = EnvUtils.parseEnv(image, variables)
     }
+
+    override fun buildType() = BuildType.THIRD_PARTY_PCG
 }
