@@ -105,4 +105,19 @@ interface ServiceTxProjectResource {
         @ApiParam(value = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<String>
+
+    @GET
+    @Path("/{projectCode}/users/{userId}/verifyWithToken")
+    @ApiOperation(" 校验用户是否项目成员")
+    fun verifyUserProjectPermission(
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<Boolean>
 }

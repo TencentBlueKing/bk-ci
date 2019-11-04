@@ -33,7 +33,7 @@ dependencies {
     compile project(":common:common-service")
     compile project(":common:common-api")
     compile project(":common:common-devcloud")
-    compile project(":common:common-notify")
+    compile project(":common:common-notify:common-notify-api")
     compile project(":prebuild:api-prebuild-tencent")
     compile project(":dispatch:api-dispatch-docker")
     compile project(":process:api-process")

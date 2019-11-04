@@ -34,7 +34,7 @@ dependencies {
     compile project(":common:common-db")
     compile project(":common:common-auth:common-auth-api")
     compile project(":common:common-auth:common-auth-blueking")
-    compile project(":common:common-notify")
+    compile project(":common:common-notify:common-notify-api")
     compile project(":artifactory:api-artifactory-jfrog")
     compile project(":artifactory:api-artifactory")
     compile project(":artifactory:biz-artifactory")

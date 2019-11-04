@@ -35,8 +35,6 @@ interface ProjectPermissionService {
      */
     fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean
 
-    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean
-
     fun createResources(userId: String, projectList: List<ResourceRegisterInfo>)
 
     fun deleteResource(projectCode: String)
