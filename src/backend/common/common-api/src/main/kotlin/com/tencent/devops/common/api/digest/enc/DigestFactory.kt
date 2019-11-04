@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.common.digest.enc
+package com.tencent.devops.common.api.digest.enc
 
 import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
@@ -48,7 +48,7 @@ object DigestFactory {
         return digestMap[name] ?: throw ClassNotFoundException("Digest for $name is not found")
     }
 
-    fun init() {
+    private fun init() {
 
         if (!load.compareAndSet(false, true)) {
             return
