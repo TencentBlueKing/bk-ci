@@ -57,7 +57,6 @@ class DebugRunner @Autowired constructor(
         }
     }
 
-//    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 10 * 1000)
     fun endBuild() {
         try {
             val dockerEndDebugInfo = try {

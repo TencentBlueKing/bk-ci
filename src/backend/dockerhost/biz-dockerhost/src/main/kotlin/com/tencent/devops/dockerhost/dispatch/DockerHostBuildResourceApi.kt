@@ -97,7 +97,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun getHost(hostTag: String): Result<DockerHostInfo>? {
-        val path = "/dispatch/api/dockerhost/host?hostTag=$hostTag"
+        val path = "/$urlPrefix/api/dockerhost/host?hostTag=$hostTag"
         val request = buildGet(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -111,7 +111,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun postLog(buildId: String, red: Boolean, message: String, tag: String? = ""): Result<Boolean>? {
-        val path = "/dispatch/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag"
+        val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag"
         val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -125,7 +125,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun getDockerJarLength(): Long? {
-        val path = "/dispatch/gw/build/docker.jar"
+        val path = "/$urlPrefix/gw/build/docker.jar"
         val request = buildHeader(path)
 
         OkhttpUtils.doHttp(request).use { response ->

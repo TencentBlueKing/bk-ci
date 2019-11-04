@@ -44,7 +44,7 @@ abstract class AbstractBuildResourceApi {
 
     companion object {
         private val gateway: String by lazy {
-            DockerEnv.getGatway()
+            DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
         }
 
         private val buildArgs: Map<String, String> by lazy {

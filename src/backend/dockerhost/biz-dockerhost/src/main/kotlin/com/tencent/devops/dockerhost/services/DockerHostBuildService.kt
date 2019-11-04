@@ -50,7 +50,6 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
-import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
@@ -92,11 +91,7 @@ class DockerHostBuildService(
         .withDockerHost(dockerHostConfig.dockerHost)
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
-//            .withRegistryUrl(dockerHostConfig.registryUrl)
-//            .withRegistryUsername(dockerHostConfig.registryUsername)
-//            .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
         .build()
-
     private val dockerCli = DockerClientBuilder.getInstance(config).build()
 
     fun startBuild(): DockerHostBuildInfo? {
@@ -123,7 +118,7 @@ class DockerHostBuildService(
         val result = dockerHostBuildApi.reportContainerId(buildId, vmSeqId, containerId)
         if (result != null) {
             if (result.isNotOk()) {
-                logger.info("reportContainerId return msg: ${result.message}")
+                logger.info("[$buildId]|reportContainerId return msg: ${result.message}")
                 return false
             }
         }
@@ -136,7 +131,7 @@ class DockerHostBuildService(
         val result = dockerHostBuildApi.rollbackBuild(buildId, vmSeqId, shutdown)
         if (result != null) {
             if (result.isNotOk()) {
-                logger.info("rollbackBuild return msg: ${result.message}")
+                logger.info("[$buildId]|rollbackBuild return msg: ${result.message}")
                 return false
             }
         }
@@ -203,11 +198,11 @@ class DockerHostBuildService(
             try {
                 LocalImageCache.saveOrUpdate(imageName)
                 pullImage(
-                    dockerBuildInfo.imageType,
-                    dockerBuildInfo.imageName,
-                    dockerBuildInfo.registryUser,
-                    dockerBuildInfo.registryPwd,
-                    dockerBuildInfo.buildId
+                    imageType = dockerBuildInfo.imageType,
+                    imageName = dockerBuildInfo.imageName,
+                    registryUser = dockerBuildInfo.registryUser,
+                    registryPwd = dockerBuildInfo.registryPwd,
+                    buildId = dockerBuildInfo.buildId
                 )
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
@@ -274,7 +269,9 @@ class DockerHostBuildService(
                         "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
                         "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                         "$COMMON_DOCKER_SIGN=docker",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}"
+                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
+                        // codecc构建机日志落到本地
+                        "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
                     )
                 )
                 .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeInit)
@@ -295,7 +292,7 @@ class DockerHostBuildService(
             } else {
                 alertApi.alert(
                     AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                    "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
+                        "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
                 )
                 throw ContainerException("Create container failed")
             }

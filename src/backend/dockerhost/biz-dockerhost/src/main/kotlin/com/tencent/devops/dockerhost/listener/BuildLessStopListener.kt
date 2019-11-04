@@ -24,40 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.utils
+package com.tencent.devops.dockerhost.listener
 
-const val BUILD_ID_DEFAULT = "0000000000000000000000000000000"
-const val VM_SEQ_ID_DEFAULT = "1"
-const val VM_NAME_DEFAULT = "vmName"
+import com.tencent.devops.dockerhost.services.DockerHostBuildLessService
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
+import org.slf4j.LoggerFactory
 
-const val SLAVE_MODEL = "devops.slave.model"
-const val SLAVE_MODEL_WORKER = "worker"
-const val SLAVE_MODEL_AGENT = "agent"
-const val SLAVE_MODEL_PLUGIN_AGENT = "pluginAgent"
+/**
+ * 无构建环境的容器停止消息
+ * @version 1.0
+ */
+class BuildLessStopListener(
+    private val dockerHostBuildLessService: DockerHostBuildLessService
+) {
 
-const val SLAVE_AGENT_ROLE = "devops.slave.agent.role"
-const val SLAVE_AGENT_ROLE_MASTER = "devops.slave.agent.role.master"
-const val SLAVE_AGENT_ROLE_SLAVE = "devops.slave.agent.role.slave"
-const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
+    private val logger = LoggerFactory.getLogger(BuildLessStopListener::class.java)
 
-const val SLAVE_BUILD_TYPE = "build.type"
-
-const val WORKSPACE_ENV = "WORKSPACE"
-
-const val ENV_KEY_DISTCC = "DISTCC_HOSTS"
-const val ENV_KEY_PROJECT_ID = "devops_project_id"
-const val ENV_KEY_AGENT_ID = "devops_agent_id"
-const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
-const val ENV_KEY_GATEWAY = "devops_gateway"
-const val ENV_DOCKER_HOST_IP = "docker_host_ip"
-const val ENV_DOCKER_HOST_PORT = "docker_host_port"
-const val ENV_LOG_SAVE_MODE = "devops_log_save_mode"
-const val COMMON_DOCKER_SIGN = "devops_slave_model"
-const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"
-
-const val ENV_BK_CI_DOCKER_HOST_IP = "BK_CI_DOCKER_HOST_IP" // docker母机IP
-const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // docker母机工作空间地址
-
-const val ENTRY_POINT_CMD = "/data/init.sh"
-
-const val MAX_CONTAINER_NUM = 100
+    fun handleMessage(event: PipelineBuildLessDockerShutdownEvent) {
+        logger.info("[${event.buildId}]| Stop container(${event.dockerContainerId})")
+        dockerHostBuildLessService.stopContainer(event.buildId, event.dockerContainerId)
+    }
+}

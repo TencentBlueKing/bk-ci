@@ -1,6 +1,6 @@
 package com.tencent.devops.dockerhost.init
 
-import com.tencent.devops.dockerhost.config.TXDockerHostConfig
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.cron.DebugRunner
 import com.tencent.devops.dockerhost.cron.UpdateAgentRunner
 import com.tencent.devops.dockerhost.service.DockerHostDebugService
@@ -59,7 +59,7 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun updateAgentRunner(dockerHostConfig: TXDockerHostConfig): UpdateAgentRunner {
+    fun updateAgentRunner(dockerHostConfig: DockerHostConfig): UpdateAgentRunner {
         return UpdateAgentRunner(dockerHostConfig)
     }
 }

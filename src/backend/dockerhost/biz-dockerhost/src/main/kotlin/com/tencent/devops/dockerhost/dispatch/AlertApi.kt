@@ -15,11 +15,11 @@ class AlertApi constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("BuildDockerResourceApi $path fail. $responseContent")
+                    logger.warn("BuildDockerResourceApi $path fail. $responseContent")
                 }
             }
         } catch (e: Throwable) {
-            logger.error("Alert failed.")
+            logger.warn("Alert failed.")
         }
     }
 }
