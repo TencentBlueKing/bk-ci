@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-REPO Х⌠²И╡╦Е┬╤Е⌠│Е╨⌠ available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI Х⌠²И╡╦Ф▄│Г╩╜И⌡├Ф┬░Е╧ЁЕ▐╟ is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.project.dao.GrayTestDao
@@ -38,7 +64,7 @@ class GrayTestServiceImpl @Autowired constructor(
         return grayTestDao.listByUser(dslContext, userId)
     }
 
-    // ртоба╫╦Жй╣ожё╛ж╩спфСр╣╟Ф╡еспё╛дз╡©╟Фц╩сп║ё
+    // О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫й╣О©╫жёО©╫ж╩О©╫О©╫О©╫О©╫р╣О©╫О©╫О©╫О©╫пёО©╫О©╫з╡О©╫О©╫О©╫ц╩О©╫п║О©╫
     override fun listByCondition(userNameList: List<String>, serviceIdList: List<String>, statusList: List<String>, pageSize: Int, pageNum: Int): List<GrayTestListInfo> {
         val notNullUsers = userNameList.filterNot { it == "" }
         val notNullIds = serviceIdList.filterNot { it == "" }
