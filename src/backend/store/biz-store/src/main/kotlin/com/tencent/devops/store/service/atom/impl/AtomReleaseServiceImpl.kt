@@ -101,7 +101,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
-@RefreshScope
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
 
     @Autowired
