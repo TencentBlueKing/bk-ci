@@ -21,6 +21,7 @@
 import request from '@/utils/request'
 import {
     FETCH_ERROR,
+    BACKEND_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     QUALITY_API_URL_PREFIX,
     ARTIFACTORY_API_URL_PREFIX,
@@ -30,6 +31,8 @@ import {
 
 import {
     REPOSITORY_MUTATION,
+    GCLOUD_TEMPLATE_MUTATION,
+    JOBEXECUTE_TASK_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
     PIPELINE_TEMPLATE_MUTATION,
     STORE_TEMPLATE_MUTATION,
@@ -55,12 +58,15 @@ export const state = {
     storeTemplate: null,
     template: null,
     reposList: null,
+    gcloudTempList: null,
+    jobTaskList: null,
     appNodes: {},
     pipelineSetting: {},
     ruleList: [],
     templateRuleList: [],
     qualityAtom: [],
-    projectGroupAndUsers: []
+    projectGroupAndUsers: [],
+    dockerWhiteList: []
 }
 
 export const mutations = {
@@ -126,6 +132,20 @@ export const mutations = {
     [REPOSITORY_MUTATION]: (state, { records }) => {
         Object.assign(state, {
             reposList: records
+        })
+        return state
+    },
+    [GCLOUD_TEMPLATE_MUTATION]: (state, records) => {
+        const gcloudTempList = records
+        Object.assign(state, {
+            gcloudTempList
+        })
+        return state
+    },
+    [JOBEXECUTE_TASK_MUTATION]: (state, records) => {
+        const jobTaskList = records
+        Object.assign(state, {
+            jobTaskList
         })
         return state
     },
@@ -296,6 +316,36 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    startDebugDocker: async ({ commit }, data) => {
+        return request.post(`dispatch/api/user/dockerhost/startDebug/`, data).then(response => {
+            return response.data
+        })
+    },
+    stopDebugDocker: async ({ commit }, { projectId, pipelineId, vmSeqId }) => {
+        return request.post(`dispatch/api/user/dockerhost/stopDebug/${projectId}/${pipelineId}/${vmSeqId}`).then(response => {
+            return response.data
+        })
+    },
+    getContainerInfoByBuildId: ({ commit }, { projectId, pipelineId, buildId, vmSeqId }) => {
+        return request.get(`dispatch/api/user/dockerhost/getContainerInfo/${projectId}/${pipelineId}/${buildId}/${vmSeqId}`).then(response => {
+            return response.data
+        })
+    },
+    getContainerInfo: ({ commit }, { projectId, pipelineId, vmSeqId }) => {
+        return request.get(`dispatch/api/user/dockerhost/getDebugStatus/${projectId}/${pipelineId}/${vmSeqId}`).then(response => {
+            return response.data
+        })
+    },
+    getDockerExecId: async ({ commit }, { containerId, projectId, pipelineId, cmd, targetIp }) => {
+        return request.post(`http://${PROXY_URL_PREFIX}/docker-console-create?pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${targetIp}`, { container_id: containerId, cmd }).then(response => {
+            return response && response.Id
+        })
+    },
+    resizeTerm: async ({ commit }, { resizeUrl, params }) => {
+        return request.post(`http://${PROXY_URL_PREFIX}/${resizeUrl}`, params).then(response => {
+            return response && response.Id
+        })
+    },
     requestPartFile: async ({ commit }, { projectId, params }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/search`, params).then(response => {
             return response.data
@@ -304,6 +354,14 @@ export const actions = {
     requestExternalUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/externalUrl?path=${path}`).then(response => {
             return response.data
+        })
+    },
+    requestDevnetGateway: async ({ commit }) => {
+        const baseUrl = CHECK_ENV_URL
+        return request.get(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/checkDevnetGateway`, { baseURL: baseUrl }).then(response => {
+            return response.data
+        }).catch(e => {
+            return false
         })
     },
     requestDownloadUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
@@ -336,6 +394,14 @@ export const actions = {
             return response.data
         })
     },
+    /**
+     * wetest测试报告
+     */
+    requestWetestReport: async ({ commit }, { projectId, pipelineId, buildId }) => {
+        return request.get(`wetest/api/user/wetest/taskInst/${projectId}/listByBuildId?pipelineId=${pipelineId}&buildId=${buildId}`).then(response => {
+            return response.data
+        })
+    },
     requestRepository: async ({ commit }, payload) => {
         try {
             const { data } = await request.get(`/${REPOSITORY_API_URL_PREFIX}/user/repositories/${payload.projectId}?repositoryType=${payload.repoType}`)
@@ -343,6 +409,47 @@ export const actions = {
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         }
+    },
+    requestGcloudTempList: async ({ commit }, payload) => {
+        try {
+            const { data } = await request.get(`${BACKEND_API_URL_PREFIX}/api/ci/pipeline/gcloud/templates/${payload.projectId}/`)
+            const finalData = data
+            await Promise.all(data.map(function (item, index) {
+                return request.get(`${BACKEND_API_URL_PREFIX}/api/ci/pipeline/gcloud/templates/${payload.projectId}/${item.id}/`)
+            })).then((array) => {
+                data.map((item, index) => {
+                    item = Object.assign(item, { 'param': array[index].data })
+                    data.splice(index, 1, item)
+                })
+            })
+            commit(GCLOUD_TEMPLATE_MUTATION, finalData)
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+
+    requestJobTaskList: async ({ commit }, payload) => {
+        try {
+            const { data } = await request.get(`${BACKEND_API_URL_PREFIX}/api/ci/pipeline/job/templates/${payload.projectId}/`)
+            const finalData = data
+            await Promise.all(data.map(function (item, index) {
+                return request.get(`${BACKEND_API_URL_PREFIX}/api/ci/pipeline/job/templates/${payload.projectId}/${item.id}/`)
+            })).then((array) => {
+                data.map((item, index) => {
+                    item = Object.assign(item, { 'param': array[index].data })
+                    data.splice(index, 1, item)
+                })
+            })
+            commit(JOBEXECUTE_TASK_MUTATION, finalData)
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+
+    requestJobTaskParam: async ({ commit }, { projectId, taskId }) => {
+        return request.get(`${BACKEND_API_URL_PREFIX}/api/ci/pipeline/job/templates/${projectId}/${taskId}/`).then(response => {
+            return response.data
+        })
     },
     reviewExcudeAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {

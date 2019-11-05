@@ -35,7 +35,7 @@
 </template>
 
 <script>
-    import { mapActions, mapMutations } from 'vuex'
+    import { mapGetters, mapActions, mapMutations } from 'vuex'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import createViewDialog from '@/components/createViewDialog'
     import { navConfirm } from '@/utils/util'
@@ -47,7 +47,6 @@
         },
         data () {
             return {
-                isManagerUser: true,
                 showContent: false,
                 viewList: [],
                 loading: {
@@ -69,8 +68,16 @@
             }
         },
         computed: {
+            ...mapGetters({
+                'userInfo': 'pipelines/getUserInfo'
+            }),
             projectId () {
                 return this.$route.params.projectId
+            },
+            isManagerUser () {
+                return this.userInfo.find(val => {
+                    return val.roleName === 'manager'
+                })
             }
         },
         async mounted () {
@@ -87,6 +94,7 @@
              *  初始化页面数据
              */
             async init () {
+                await this.requestUserInfo()
                 await this.requestGrouptLists()
                 await this.requestViewList()
             },
@@ -100,6 +108,20 @@
                         projectId: this.projectId
                     })
                     $store.commit('pipelines/updateGroupLists', res)
+                } catch (err) {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
+            },
+            async requestUserInfo () {
+                const { $store } = this
+                try {
+                    const res = await $store.dispatch('pipelines/requestUserInfo', {
+                        projectId: this.projectId
+                    })
+                    this.$store.commit('pipelines/setUserInfo', res)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,

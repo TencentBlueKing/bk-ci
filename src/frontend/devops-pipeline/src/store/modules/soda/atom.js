@@ -35,7 +35,7 @@ const actions = {
      */
     requestProjectDetail: async ({ commit }, { projectId }) => {
         return request.get(`backend/api/projects/${projectId}/`).then(response => {
-            Object.assign(response.data, { cc_app_name: response.cc_app_name })
+            Object.assign(response.data, { ccAppName: response.ccAppName })
             return response.data
         })
     },

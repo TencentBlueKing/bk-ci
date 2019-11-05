@@ -138,6 +138,12 @@
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
             }),
+            hasCodeccAtom () {
+                if (this.execDetail && this.execDetail.model) {
+                    return this.getAllElements(this.execDetail.model.stages).some(element => element['@type'] === 'linuxPaasCodeCCScript')
+                }
+                return false
+            },
             templateFormConfig () {
                 return [{
                     name: 'templateName',
@@ -183,7 +189,7 @@
                 return this.saveStatus || this.executeStatus
             },
             saveBtnDisabled () {
-                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0
+                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0 || Object.keys(this.pipelineAuthority).length === 0
             },
             canManualStartup () {
                 return this.curPipeline ? this.curPipeline.canManualStartup : false

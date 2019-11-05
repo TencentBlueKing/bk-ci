@@ -23,6 +23,7 @@
                 <span @click.stop v-if="showCheckedToatal && canSkipElement">
                     <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
                 </span>
+                <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
             </h3>
         </show-tooltip>
         <atom-list :container="container" :editable="editable" :is-preview="isPreview" :can-skip-element="canSkipElement" :stage-index="stageIndex" :container-index="containerIndex" :container-status="container.status">
@@ -99,6 +100,12 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            isDocker () {
+                return this.isDockerBuildResource(this.container)
+            },
+            showDebugBtn () {
+                return this.container.baseOS === 'LINUX' && this.isDocker && (this.container.status === 'FAILED' && this.$route.name === 'pipelinesDetail' && this.execDetail && this.execDetail.buildNum === this.execDetail.latestBuildNum && this.execDetail.curVersion === this.execDetail.latestVersion)
+            },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false)
             },
@@ -108,6 +115,11 @@
                     case this.isTriggerContainer(this.container):
                         name = 'build_trigger'
                         content = this.$t('editPage.triggerTooltips')
+                        break
+                    case this.container && this.container.baseOS === 'LINUX' && !window.showLinuxTipYet:
+                        window.showLinuxTipYet = true
+                        name = 'linux_login_debugg'
+                        content = this.$t('editPage.docker.consoleEnterTips')
                         break
                 }
                 return !this.isPreview && name ? {
@@ -149,6 +161,9 @@
             this.updateCruveConnectHeight()
         },
         methods: {
+            ...mapActions('soda', [
+                'startDebugDocker'
+            ]),
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'addAtom',
@@ -191,6 +206,55 @@
                         containerIndex
                     }
                 })
+            },
+            async debugDocker () {
+                const vmSeqId = this.getRealSeqId()
+                const projectId = this.$route.params.projectId
+                const pipelineId = this.$route.params.pipelineId
+                let url = ''
+                const tab = window.open('about:blank')
+                try {
+                    const res = await this.startDebugDocker({
+                        projectId: projectId,
+                        pipelineId: pipelineId,
+                        vmSeqId,
+                        imageName: this.container.dispatchType && this.container.dispatchType.value ? this.container.dispatchType.value : this.container.dockerBuildVersion,
+                        buildEnv: this.container.buildEnv
+                    })
+                    if (res === true) {
+                        url = `${WEB_URL_PIRFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&vmSeqId=${vmSeqId}`
+                    }
+                    tab.location = url
+                } catch (err) {
+                    tab.close()
+                    if (err.code === 403) {
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                resource: this.$t('pipeline'),
+                                option: this.$t('edit')
+                            }],
+                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&role_manager=pipeline:${pipelineId}`
+                        })
+                    } else {
+                        this.$showTips({
+                            theme: 'error',
+                            message: err.message || err
+                        })
+                    }
+                }
+            },
+            getRealSeqId () {
+                let i = 0
+                let seqId = 0
+                this.execDetail && this.execDetail.model.stages && this.execDetail.model.stages.map((stage, sIndex) => {
+                    stage.containers.map((container, cIndex) => {
+                        if (sIndex === this.stageIndex && cIndex === this.containerIndex) {
+                            seqId = i
+                        }
+                        i++
+                    })
+                })
+                return seqId
             },
             copyContainer () {
                 try {

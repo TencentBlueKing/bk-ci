@@ -18,6 +18,7 @@
  */
 
 import { mapActions, mapGetters, mapState } from 'vuex'
+import cookie from 'cookie'
 import {
     navConfirm
 } from '@/utils/util'
@@ -49,7 +50,7 @@ export default {
             return this.$route.params.pipelineId
         },
         longProjectId () {
-            return this.$store.state.curProject.project_id || ''
+            return this.$store.state.curProject.projectId || ''
         },
         isTemplatePipeline () {
             return this.curPipeline && this.curPipeline.instanceFromTemplate
@@ -319,12 +320,56 @@ export default {
             }
             return this.$ajax.put(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, pipeline)
         },
+        // 补全wechatGroup末尾分号
+        wechatGroupCompletion (setting) {
+            try {
+                let successWechatGroup = setting.successSubscription.wechatGroup
+                let failWechatGroup = setting.failSubscription.wechatGroup
+                if (successWechatGroup && !/\;$/.test(successWechatGroup)) {
+                    successWechatGroup = `${successWechatGroup};`
+                }
+                if (failWechatGroup && !/\;$/.test(failWechatGroup)) {
+                    failWechatGroup = `${failWechatGroup};`
+                }
+                return {
+                    ...setting,
+                    successSubscription: {
+                        ...setting.successSubscription,
+                        wechatGroup: successWechatGroup
+                    },
+                    failSubscription: {
+                        ...setting.failSubscription,
+                        wechatGroup: failWechatGroup
+                    }
+                }
+            } catch (e) {
+                console.warn(e)
+                return setting
+            }
+        },
+        savePipelineAuthority () {
+            const { role, policy } = this.pipelineAuthority
+            const data = {
+                project_id: this.longProjectId,
+                resource_type_code: 'pipeline',
+                resource_code: this.pipelineId,
+                role: role.map(item => {
+                    item.group_list = item.selected
+                    return item
+                }),
+                policy: policy.map(item => {
+                    item.group_list = item.selected
+                    return item
+                })
+            }
+            return this.$ajax.put(`/backend/api/perm/service/pipeline/mgr_resource/permission/`, data, { headers: { 'X-CSRFToken': cookie.parse(document.cookie).backend_csrftoken } })
+        },
         getPipelineSetting () {
             const { pipelineSetting, projectId } = this
-            return {
+            return this.wechatGroupCompletion({
                 ...pipelineSetting,
                 projectId
-            }
+            })
         },
         savePipelineSetting () {
             const { $route } = this
@@ -388,10 +433,10 @@ export default {
             }
             // 清除流水线参数渲染过程中添加的key
             this.formatParams(pipeline)
-            const finalSetting = {
+            const finalSetting = this.wechatGroupCompletion({
                 ...pipelineSetting,
                 projectId: $route.params.projectId
-            }
+            })
             // 请求执行构建
             return this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${$route.params.projectId}/${$route.params.pipelineId}/saveAll`, {
                 model: {
@@ -407,7 +452,8 @@ export default {
                 this.setSaveStatus(true)
                 const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
                 const responses = await Promise.all([
-                    saveAction()
+                    saveAction(),
+                    ...(this.authSettingEditing ? [this.savePipelineAuthority()] : [])
                 ])
 
                 if (responses.some(res => res.code === 403)) {
