@@ -203,8 +203,8 @@ export const actions = {
     /**
      * 上架/升级流水线插件
      */
-    editAtom ({ commit }, { projectId, params }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectId=${projectId}`, params)
+    editAtom ({ commit }, { projectCode, params }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectCode=${projectCode}`, params)
     },
 
     /**
@@ -289,6 +289,13 @@ export const actions = {
      */
     requestDeleteMember ({ commit }, { atomCode, id }) {
         return vue.$ajax.delete(`${prefix}/user/market/desk/atom/member/delete?atomCode=${atomCode}&id=${id}`)
+    },
+
+    /**
+     * 根据机构类型和机构ID查看机构列表
+     */
+    requestOrganizations ({ commit }, { type, id }) {
+        return vue.$ajax.get(`${projectPrefix}/user/organizations/types/${type}/ids/${id}`)
     },
 
     /**
