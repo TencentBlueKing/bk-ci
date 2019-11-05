@@ -195,8 +195,8 @@ export const actions = {
     /**
      * 上架/升级流水线插件
      */
-    editAtom ({ commit }, { projectId, params }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectId=${projectId}`, params)
+    editAtom ({ commit }, { projectCode, params }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectCode=${projectCode}`, params)
     },
 
     /**

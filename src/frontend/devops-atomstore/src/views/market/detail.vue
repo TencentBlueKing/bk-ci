@@ -87,14 +87,14 @@
 
         filters: {
             typeFilter (val) {
-                const bkLocale = window.devops.bkLocale || {}
+                const bkLocale = window.devops || {}
                 let res = ''
                 switch (val) {
                     case 'template':
-                        res = bkLocale.i18n('流水线模板')
+                        res = bkLocale.$t('流水线模板')
                         break
                     default:
-                        res = bkLocale.i18n('流水线插件')
+                        res = bkLocale.$t('流水线插件')
                         break
                 }
                 return res

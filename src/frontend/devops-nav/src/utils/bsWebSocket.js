@@ -47,6 +47,9 @@ class BlueShieldWebSocket {
     handleMessage (res) {
         const data = JSON.parse(res.body) || {}
         const type = data.webSocketType
+        const page = data.page
+        if (!location.href.includes(page)) return
+
         switch (type) {
             case 'NAV':
                 this.handleNotify(data)

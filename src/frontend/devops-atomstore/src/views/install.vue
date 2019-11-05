@@ -18,7 +18,7 @@
             <div class="sub-view-port" v-if="!isINstallSuccess">
                 <div class="atom-name">{{ name }}</div>
                 <div class="title"> {{ $t('请选择项目：') }} </div>
-                <big-select v-model="project" :loading="projectListLoading" :searchable="true" :multiple="true" :show-select-all="true" :options="projectList" setting-key="project_code" display-key="project_name" @selected="selectProject" :placeholder="$t('请选择')">
+                <big-select v-model="project" :loading="projectListLoading" :searchable="true" :multiple="true" :show-select-all="true" :options="projectList" setting-key="projectCode" display-key="projectName" @selected="selectProject" :placeholder="$t('请选择')">
                     <div slot="extension" style="cursor: pointer;">
                         <a href="/console/pm" target="_blank"><i class="bk-icon icon-plus-circle" /> {{ $t('新建项目') }} </a>
                     </div>
@@ -60,14 +60,14 @@
     export default {
         filters: {
             typeFilter (val) {
-                const bkLocale = window.devops.bkLocale || {}
+                const bkLocale = window.devops || {}
                 let res = ''
                 switch (val) {
                     case 'atom':
-                        res = bkLocale.i18n('流水线插件')
+                        res = bkLocale.$t('流水线插件')
                         break
                     case 'template':
-                        res = bkLocale.i18n('流水线模板')
+                        res = bkLocale.$t('流水线模板')
                         break
                 }
                 return res
@@ -158,7 +158,7 @@
                 this.projectListLoading = true
                 this.$store.dispatch('store/requestProjectList').then((res) => {
                     res.forEach((item) => {
-                        const isInstalled = this.installedProject.some(project => project.projectCode === item.project_code)
+                        const isInstalled = this.installedProject.some(project => project.projectCode === item.projectCode)
                         if (!isInstalled) this.projectList.push(item)
                     })
                 }).catch((err) => {

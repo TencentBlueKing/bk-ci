@@ -738,6 +738,14 @@
             .multi-item {
                 margin-top: 0;
             }
+            .markdown-editor-show.info-value {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
+                    background: #FAFBFD;
+                }
+            }
         }
         .atom-logo-box {
             position: absolute;
