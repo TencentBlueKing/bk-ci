@@ -348,11 +348,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
 
     private fun getTemplateDetail(templateRecord: TTemplateRecord, userId: String): Result<TemplateDetail?> {
         val templateCode = templateRecord.templateCode
-        // 判断用户是否有查询权限
-        val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
-        if (!queryFlag) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
-        }
         val templateClassifyRecord = classifyDao.getClassify(dslContext, templateRecord.classifyId)
         val templateStatisticRecord = storeStatisticDao.getStatisticByStoreCode(
             dslContext = dslContext,
