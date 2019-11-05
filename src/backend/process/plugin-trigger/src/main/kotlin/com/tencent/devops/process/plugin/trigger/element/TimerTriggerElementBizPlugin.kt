@@ -59,6 +59,7 @@ class TimerTriggerElementBizPlugin constructor(
         channelCode: ChannelCode
     ) {
         if (element.isElementEnable()) {
+            logger.info("[$projectId|$pipelineId|$pipelineName|$userId|${element.name}] Timer trigger element after create")
             val crontabExpressions = mutableSetOf<String>()
             val eConvertExpressions = element.convertExpressions()
             if (eConvertExpressions.isEmpty()) {

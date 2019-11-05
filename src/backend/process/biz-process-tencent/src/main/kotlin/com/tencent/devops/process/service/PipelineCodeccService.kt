@@ -115,10 +115,6 @@ class PipelineCodeccService @Autowired constructor(
                 webSocketType = WebSocketType.changWebType(WebSocketType.CODECC),
                 page = ""
             )
-//
-//            websocketDispatcher.dispatch(
-//                pipelineErrorNotifyEvent(pipelineId, userId, projectId, post, WebSocketType.CODECC)
-//            )
             logger.warn("[$pipelineId]调用codecc add返回异常。webSocket推送异常信息[$post]")
             throw e
         }
@@ -151,48 +147,8 @@ class PipelineCodeccService @Autowired constructor(
             logger.info("[${element.pipelineId}],update task end]")
         } catch (e: Exception) {
             logger.error("update codecc task fail: ${e.message}", e)
-//            val post = NotifyPost(
-//                module = "process",
-//                message = e.message!!,
-//                level = NotityLevel.HIGH_LEVEL.getLevel(),
-//                dealUrl = EditPageBuild().buildPage(
-//                    BuildPageInfo(
-//                        projectId = element.projectId,
-//                        pipelineId = element.pipelineId,
-//                        buildId = null,
-//                        atomId = null
-//                    )
-//                ),
-//                code = WebsocketCode.CODECC_UPDATE_ERROR,
-//                webSocketType = WebSocketType.changWebType(WebSocketType.CODECC)
-//            )
-//            websocketDispatcher.dispatch(
-//                pipelineErrorNotifyEvent(element.pipelineId, userId, element.projectId, post, WebSocketType.CODECC)
-//            )
-//            logger.warn("[${element.pipelineId}]调用codecc update返回异常。webSocket推送异常信息[$post]")
         }
     }
-
-//    private fun pipelineErrorNotifyEvent(
-//        pipelineId: String,
-//        userId: String,
-//        projectId: String,
-//        notifypost: NotifyPost,
-//        websocketType: WebSocketType,
-//        buildId: String? = null
-//    ): IWebsocketPush {
-//        return NotifyWebsocketPush(
-//            buildId = buildId,
-//            projectId = projectId,
-//            pipelineId = pipelineId,
-//            userId = userId,
-//            pushType = websocketType,
-//            pathClass = HistoryPageBuild(),
-//            page = notifypost.dealUrl,
-//            redisOperation = redisOperation,
-//            notifyPost = notifypost
-//        )
-//    }
 
     private fun genToolSet(taskParams: Map<String, Any>): Map<String, String> {
         val map = mutableMapOf<String, String>()
