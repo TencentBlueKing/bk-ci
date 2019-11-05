@@ -1,6 +1,6 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl">
+        <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 {{detail.name}}
@@ -103,6 +103,7 @@
 
         data () {
             return {
+                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314',
                 showCooperDialog: false,
                 user: JSON.parse(localStorage.getItem('_cache_userInfo')).username,
                 cooperData: {

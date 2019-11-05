@@ -43,8 +43,8 @@
             return {
                 currentTab: 'atom',
                 docLink: {
-                    atom: { name: this.$t('插件指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008942' },
-                    template: { name: this.$t('模版指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008944' }
+                    atom: { name: this.$t('插件指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
+                    template: { name: this.$t('模版指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' }
                 }
             }
         },

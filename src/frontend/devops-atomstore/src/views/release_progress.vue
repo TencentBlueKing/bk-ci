@@ -20,7 +20,7 @@
             </div>
             <div class="sub_header_right">
                 <a class="develop-guide-link" target="_blank"
-                    :href="docsLink">插件指引</a>
+                    :href="docsLink"> {{ $t('插件指引') }} </a>
             </div>
         </div>
         <div class="release-progress-content" v-show="showContent">
@@ -212,7 +212,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
+                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
