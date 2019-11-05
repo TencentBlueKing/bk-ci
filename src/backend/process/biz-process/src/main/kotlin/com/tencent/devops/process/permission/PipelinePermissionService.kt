@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.permission
 
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 
 interface PipelinePermissionService {
@@ -37,7 +37,7 @@ interface PipelinePermissionService {
      * @param permission 权限
      * @return 有权限返回true
      */
-    fun checkPipelinePermission(userId: String, projectId: String, permission: BkAuthPermission): Boolean
+    fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean
 
     /**
      * 校验pipeline是否有指定权限
@@ -51,7 +51,7 @@ interface PipelinePermissionService {
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: BkAuthPermission
+        permission: AuthPermission
     ): Boolean
 
     /**
@@ -64,7 +64,7 @@ interface PipelinePermissionService {
     fun getResourceByPermission(
         userId: String,
         projectId: String,
-        permission: BkAuthPermission
+        permission: AuthPermission
     ): List<String>
 
     /**

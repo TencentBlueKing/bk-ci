@@ -26,10 +26,15 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.artifactory.api.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.dao.ReportDao
+import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -41,7 +46,8 @@ import java.nio.file.Paths
 class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
-    private val client: Client
+    private val client: Client,
+    private val pipelineService: PipelineService
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
 
@@ -52,7 +58,8 @@ class ReportService @Autowired constructor(
         taskId: String,
         indexFile: String,
         name: String,
-        reportType: ReportTypeEnum
+        reportType: ReportTypeEnum,
+        reportEmail: ReportEmail? = null
     ) {
         val indexFilePath = if (reportType == ReportTypeEnum.INTERNAL) {
             Paths.get(indexFile).normalize().toString()
@@ -64,6 +71,10 @@ class ReportService @Autowired constructor(
                 "|indexFile=$indexFile|name=$name|reportType=$reportType|indexFilePath=$indexFilePath"
         )
         reportDao.create(dslContext, projectId, pipelineId, buildId, taskId, indexFilePath, name, reportType.name)
+
+        if (reportEmail != null) {
+            sendEmail(reportEmail.receivers, reportEmail.title, reportEmail.html)
+        }
     }
 
     fun list(userId: String, projectId: String, pipelineId: String, buildId: String): List<Report> {
@@ -72,14 +83,29 @@ class ReportService @Autowired constructor(
         return reportRecordList.map {
             if (it.type == ReportTypeEnum.INTERNAL.name) {
                 val indexFile = Paths.get(it.indexFile).normalize().toString()
-                val result = client.get(ServiceArtifactoryResource::class).getReportRootUrl(
-                    projectCode = projectId, pipelineId = pipelineId, buildId = buildId, taskId = it.elementId
-                )
-                val urlPrefix = "${result.data}/$indexFile"
-                Report(it.name, urlPrefix, it.type)
+                val urlPrefix = getRootUrl(projectId, pipelineId, buildId, it.elementId)
+                Report(it.name, "$urlPrefix$indexFile", it.type)
             } else {
                 Report(it.name, it.indexFile, it.type)
             }
         }
+    }
+
+    fun getRootUrl(buildId: String, taskId: String): String {
+        val (pipelineId, projectId) = pipelineService.getPipelineIdAndProjectIdByBuildId(buildId)
+        return getRootUrl(projectId, pipelineId, buildId, taskId)
+    }
+
+    private fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
+        return "${HomeHostUtil.innerApiHost()}/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
+    }
+
+    private fun sendEmail(receivers: Set<String>, title: String, html: String) {
+        val emailNotifyMessage = EmailNotifyMessage()
+        emailNotifyMessage.addAllReceivers(receivers)
+        emailNotifyMessage.format = EnumEmailFormat.HTML
+        emailNotifyMessage.title = title
+        emailNotifyMessage.body = html
+        client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 }

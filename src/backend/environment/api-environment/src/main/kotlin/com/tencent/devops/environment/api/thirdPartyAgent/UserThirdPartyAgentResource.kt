@@ -58,6 +58,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserThirdPartyAgentResource {
+
     @ApiOperation("是否启动第三方构建机接入")
     @GET
     @Path("/projects/{projectId}/enable")
@@ -165,7 +166,7 @@ interface UserThirdPartyAgentResource {
 
     @ApiOperation("删除该第三方构建机")
     @DELETE
-    @Path("/projects/{projectId}/nodes/{nodeId}/delete")
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/delete")
     fun deleteAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -174,8 +175,8 @@ interface UserThirdPartyAgentResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("Node Hash ID", required = true)
-        @PathParam("nodeId")
-        nodeId: String
+        @PathParam("nodeHashId")
+        nodeHashId: String
     ): Result<Boolean>
 
     @ApiOperation("保存agent环境变量")

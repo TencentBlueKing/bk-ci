@@ -112,4 +112,15 @@ class ThirdPartyAgentPipelineDao {
                 .execute()
         }
     }
+
+    fun delete(
+        dslContext: DSLContext,
+        id: Long
+    ) {
+        with(TEnvironmentAgentPipeline.T_ENVIRONMENT_AGENT_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }

@@ -26,23 +26,47 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceNodeResourceImpl @Autowired constructor(
-    private val nodeService: NodeService
+    private val nodeService: NodeService,
+    private val envService: EnvService
 ) : ServiceNodeResource {
-    override fun listByHashIds(
-        userId: String,
-        projectId: String,
-        nodeHashIds: List<String>
-    ): Result<List<NodeWithPermission>> {
+    override fun listNodeByNodeType(projectId: String, nodeType: NodeType): Result<List<NodeBaseInfo>> {
+        return Result(nodeService.listByNodeType("", projectId, nodeType))
+    }
+
+    override fun listRawByHashIds(userId: String, projectId: String, nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
+        if (nodeHashIds.isEmpty()) {
+            throw ParamBlankException("Invalid nodeHashIds")
+        }
+
+        return Result(nodeService.listRawServerNodeByIds(userId, projectId, nodeHashIds))
+    }
+
+    override fun listRawByEnvHashIds(userId: String, projectId: String, envHashIds: List<String>): Result<Map<String, List<NodeBaseInfo>>> {
+        if (envHashIds.isEmpty()) {
+            throw ParamBlankException("Invalid envHashIds")
+        }
+
+        return Result(envService.listRawServerNodeByEnvHashIds(userId, projectId, envHashIds))
+    }
+
+    override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
+        return Result(nodeService.listUsableServerNodes(userId, projectId))
+    }
+
+    override fun listByHashIds(userId: String, projectId: String, nodeHashIds: List<String>): Result<List<NodeWithPermission>> {
         return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
     }
 

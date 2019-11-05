@@ -50,7 +50,7 @@ object CredentialUtils {
 
     fun getCredentialWithType(credentialId: String, showErrorLog: Boolean = true): Pair<List<String>, CredentialType> {
         if (credentialId.trim().isEmpty()) {
-            throw ExecuteException("The credential Id is empty")
+            throw RuntimeException("The credential Id is empty")
         }
         try {
             val pair = DHUtil.initKey()

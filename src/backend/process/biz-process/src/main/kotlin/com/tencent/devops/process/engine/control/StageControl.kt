@@ -29,8 +29,6 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -49,116 +47,78 @@ import java.time.LocalDateTime
  */
 @Service
 class StageControl @Autowired constructor(
-    private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(StageControl::class.java)!!
-        private const val ExpiredTimeInSeconds: Long = 60
-    }
+    private val logger = LoggerFactory.getLogger(javaClass)!!
 
-    fun handle(event: PipelineBuildStageEvent) {
+    fun handle(event: PipelineBuildStageEvent): Boolean {
         with(event) {
 
-            val redisLock = RedisLock(redisOperation, "lock.build.$buildId.s_$stageId", ExpiredTimeInSeconds)
-            try {
-                redisLock.lock()
-                execute()
-            } finally {
-                redisLock.unlock()
+            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+                ?: run {
+                    logger.info("[$buildId]|STAGE_$actionType| have not build detail!")
+                    return true
+                }
+
+            // 当前构建整体的状态，可能是运行中，也可能已经失败
+            // 已经结束的构建，不再受理，抛弃消息
+            if (BuildStatus.isFinish(buildInfo.status)) {
+                logger.info("[$buildId]|[${buildInfo.status}]|STAGE_REPEAT_EVENT|event=$event")
+                return true
             }
-        }
-    }
 
-    private fun PipelineBuildStageEvent.execute() {
+            val stages = pipelineRuntimeService.listStages(buildId)
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-        // 当前构建整体的状态，可能是运行中，也可能已经失败
-        // 已经结束的构建，不再受理，抛弃消息
-        if (buildInfo == null || BuildStatus.isFinish(buildInfo.status)) {
-            logger.info("[$buildId]|STAGE_REPEAT_EVENT|event=$this")
-            return
-        }
+            val allContainers = pipelineRuntimeService.listContainers(buildId)
 
-        val stages = pipelineRuntimeService.listStages(buildId)
+            var buildStatus: BuildStatus = BuildStatus.SUCCEED
 
-        val allContainers = pipelineRuntimeService.listContainers(buildId)
-
-        // 终止命令 不需要判断各个Stage的状态，可直接停止
-        if (ActionType.isTerminate(actionType)) {
-            terminate(stages, allContainers)
-        } else {
-            val stageStatus = dispatchStage(stages, allContainers)
-            if (BuildStatus.isFinish(stageStatus)) { // 构建状态结束了
-                logger.info("[$buildId]|STAGE_FINALLY|stageId=$stageId|status=$stageStatus|action=$actionType")
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildFinishEvent(
-                        source = "FINALLY",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildId = buildId,
-                        status = stageStatus
-                    )
-                )
+            // 终止命令 不需要判断各个Stage的状态，可直接停止
+            if (ActionType.isTerminate(actionType)) {
+                logger.info("[$buildId]|[${buildInfo.status}]|STAGE_TERMINATE|stageId=$stageId")
+                stages.forEach { stage ->
+                    pipelineRuntimeService.updateStageStatus(buildId, stage.stageId, BuildStatus.TERMINATE)
+                }
+                allContainers.forEach { c ->
+                    if (BuildStatus.isRunning(c.status))
+                        pipelineRuntimeService.updateContainerStatus(
+                            buildId = buildId,
+                            stageId = c.stageId,
+                            containerId = c.containerId,
+                            endTime = LocalDateTime.now(),
+                            buildStatus = BuildStatus.TERMINATE
+                        )
+                }
+                return sendTerminateEvent(BuildStatus.FAILED)
             }
-        }
-    }
 
-    private fun PipelineBuildStageEvent.dispatchStage(
-        stages: List<PipelineBuildStage>,
-        allContainers: List<PipelineBuildContainer>
-    ): BuildStatus {
-        var stageStatus = BuildStatus.SUCCEED
-        var nextStage = false
-        stages.forEach { stage ->
-            if (stageId == stage.stageId || nextStage) {
-                // 执行成功则结束本次事件处理，否则要尝试下一stage
-                stageStatus = stage.judgeStageContainer(allContainers, actionType, userId)
+            var nextStage = false
+//            var send = false
+            run outer@{
+                stages.forEach { stage ->
+                    if (stageId == stage.stageId || nextStage) {
+                        // 执行成功则结束本次事件处理，否则要尝试下一stage
+                        buildStatus = stage.judgeStageContainer(allContainers, actionType, userId)
 
-                logger.info("[$buildId]|STAGE_DONE|stageId=${stage.stageId}|status=$stageStatus|action=$actionType")
+                        logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${stage.stageId}|status=$buildStatus|action=$actionType")
 
-                // 如果当前Stage[还未结束]或者[执行失败]，则不尝试下一Stage
-                if (BuildStatus.isRunning(stageStatus) || BuildStatus.isFailure(stageStatus)) {
-                    return stageStatus // 不尝试下一Stage, 直接返回当前状态
-                } else {
-                    nextStage = true // 表示要执行下一个Stage
+                        // 如果当前Stage[还未结束]或者[执行失败]，则不尝试下一Stage
+                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus)) {
+                            return@outer // 不尝试下一Stage
+                        } else {
+                            nextStage = true // 表示要执行下一个Stage
+                        }
+                    }
                 }
             }
+            if (BuildStatus.isFinish(buildStatus)) { // 构建状态结束了
+                logger.info("[$buildId]|[${buildInfo.status}]|STAGE_FINALLY|stageId=$stageId|status=$buildStatus|action=$actionType")
+                sendFinishEvent("FINALLY", buildStatus)
+            }
         }
-        return stageStatus
-    }
-
-    private fun PipelineBuildStageEvent.terminate(
-        stages: List<PipelineBuildStage>,
-        allContainers: List<PipelineBuildContainer>
-    ) {
-        logger.info("[$buildId]|STAGE_TERMINATE|stageId=$stageId")
-        stages.forEach { stage ->
-            pipelineRuntimeService.updateStageStatus(buildId, stage.stageId, BuildStatus.TERMINATE)
-        }
-        allContainers.forEach { c ->
-            if (BuildStatus.isRunning(c.status))
-                pipelineRuntimeService.updateContainerStatus(
-                    buildId = buildId,
-                    stageId = c.stageId,
-                    containerId = c.containerId,
-                    endTime = LocalDateTime.now(),
-                    buildStatus = BuildStatus.TERMINATE
-                )
-        }
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildCancelEvent(
-                source = javaClass.simpleName,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                status = BuildStatus.FAILED
-            )
-        )
+        return true
     }
 
     /**
@@ -174,7 +134,7 @@ class StageControl @Autowired constructor(
         userId: String
     ): BuildStatus {
 
-        var stageStatus = status
+        var buildStatus = status
         var newActionType = actionType
         // 针对刚启动的Stage
         if (BuildStatus.isReadyToRun(status)) {
@@ -183,57 +143,26 @@ class StageControl @Autowired constructor(
             }
             // 要启动Stage，初始化状态
             if (ActionType.isStart(newActionType)) {
-                stageStatus = BuildStatus.RUNNING
-                pipelineRuntimeService.updateStageStatus(buildId, stageId, stageStatus)
+                buildStatus = BuildStatus.RUNNING
+                pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
                 logger.info("[$buildId]|STAGE_INIT|stageId=$stageId|action=$newActionType")
             }
             // 要终止或者跳过的Stage，直接设置为取消
             else if (ActionType.isEnd(newActionType) || actionType == ActionType.SKIP) {
-                stageStatus = BuildStatus.CANCELED
+                buildStatus = BuildStatus.CANCELED
                 val now = LocalDateTime.now()
                 pipelineRuntimeService.updateStage(
                     buildId = buildId,
                     stageId = stageId,
                     startTime = now,
                     endTime = now,
-                    buildStatus = stageStatus
+                    buildStatus = buildStatus
                 )
                 logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
-                return stageStatus
+                return buildStatus
             }
         }
 
-        return judgeContainer(allContainers, newActionType, userId, stageStatus)
-    }
-
-    private fun PipelineBuildStage.judgeContainer(
-        allContainers: Collection<PipelineBuildContainer>,
-        newActionType: ActionType,
-        userId: String,
-        buildStatus: BuildStatus
-    ): BuildStatus {
-        var stageStatus = buildStatus
-        val stageContainersInfo = stageContainersInfo(allContainers, stageId)
-        val finishContainers = stageContainersInfo.first
-        val failureContainers = stageContainersInfo.second
-        val containers = stageContainersInfo.third
-
-        if (finishContainers < containers.size) { // 还有未执行完的任务,继续下发其他构建容器
-            sendContainerEvent(containers, newActionType, userId)
-        } else if (finishContainers == containers.size) { // 全部执行完的
-            stageStatus = if (failureContainers == 0) {
-                BuildStatus.SUCCEED
-            } else {
-                BuildStatus.FAILED
-            }
-            pipelineRuntimeService.updateStageStatus(buildId, stageId, stageStatus)
-            logger.info("[$buildId]|STAGE_CONTAINER_FINISH|stageId=$stageId|status=$stageStatus|action=$newActionType")
-        }
-        return stageStatus
-    }
-
-    private fun stageContainersInfo(allContainers: Collection<PipelineBuildContainer>, stageId: String):
-        Triple<Int, Int, MutableList<PipelineBuildContainer>> {
         var finishContainers = 0
         var failureContainers = 0
         val containers = mutableListOf<PipelineBuildContainer>()
@@ -248,7 +177,46 @@ class StageControl @Autowired constructor(
                 }
             }
         }
-        return Triple(finishContainers, failureContainers, containers)
+
+        if (finishContainers < containers.size) { // 还有未执行完的任务,继续下发其他构建容器
+            sendContainerEvent(containers, newActionType, userId)
+        } else if (finishContainers == containers.size) { // 全部执行完的
+            buildStatus = if (failureContainers == 0) {
+                BuildStatus.SUCCEED
+            } else {
+                BuildStatus.FAILED
+            }
+            pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+            logger.info("[$buildId]|STAGE_CONTAINER_FINISH|stageId=$stageId|status=$buildStatus|action=$actionType")
+        }
+        return buildStatus
+    }
+
+    private fun PipelineBuildStageEvent.sendTerminateEvent(buildStatus: BuildStatus): Boolean {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildCancelEvent(
+                source = javaClass.simpleName,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                status = buildStatus
+            )
+        )
+        return true
+    }
+
+    private fun PipelineBuildStageEvent.sendFinishEvent(source: String, buildStatus: BuildStatus) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildFinishEvent(
+                source = source,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                status = buildStatus
+            )
+        )
     }
 
     /**
@@ -269,15 +237,15 @@ class StageControl @Autowired constructor(
             val containerId = container.containerId
             logger.info("[$buildId]|stage=$stageId|container=$containerId|status=$containerStatus")
             if (BuildStatus.isFinish(containerStatus)) {
-                // 已经执行完毕的直接跳过
+                return@nextContainer // 已经执行完毕的直接跳过
             } else if (BuildStatus.isReadyToRun(containerStatus) && !ActionType.isStart(actionType)) {
-                // 失败或可重试的容器，如果不是重试动作，则跳过
+                return@nextContainer // 失败或可重试的容器，如果不是重试动作，则跳过
             } else if (BuildStatus.isRunning(containerStatus) && !ActionType.isTerminate(actionType)) {
-                // 已经在运行中的, 只接受强制终止
-            } else {
-                container.sendBuildContainerEvent(actionType, userId)
-                logger.info("[$buildId]|STAGE_CONTAINER_$actionType|stage=$stageId|container=$containerId")
+                return@nextContainer // 已经在运行中的, 只接受强制终止
             }
+
+            container.sendBuildContainerEvent(actionType, userId)
+            logger.info("[$buildId]|STAGE_CONTAINER_$actionType|stage=$stageId|container=$containerId")
         }
     }
 

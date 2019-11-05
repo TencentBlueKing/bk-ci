@@ -44,7 +44,7 @@ interface ProjectService {
     /**
      * 创建项目信息
      */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo)
+    fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -58,7 +58,7 @@ interface ProjectService {
      */
     fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean
 
-    /**
+        /**
      * 更新Logo
      */
     fun updateLogo(
@@ -74,6 +74,11 @@ interface ProjectService {
     fun list(userId: String): List<ProjectVO>
 
     fun list(projectCodes: Set<String>): List<ProjectVO>
+
+    fun list(projectCodes: List<String>): List<ProjectVO>
+
+    fun getAllProject(): List<ProjectVO>
+
     /**
      * 获取用户已的可访问项目列表=
      */
@@ -81,5 +86,9 @@ interface ProjectService {
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
     fun grayProjectSet(): Set<String>
-    fun updateEnabled(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean>
+
+    fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+
+    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO
+
 }

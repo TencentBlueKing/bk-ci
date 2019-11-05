@@ -61,6 +61,10 @@ data class OPPServiceVO(
     val grayJsUrl: String?,
     @ApiModelProperty("projectIdType")
     val projectIdType: String?,
+    @ApiModelProperty("logo地址")
+    val logoUrl: String?,
+    @ApiModelProperty("支持webSocket的页面")
+    val webSocket: String?,
     @ApiModelProperty("创建人")
     val createdUser: String,
     @ApiModelProperty("创建时间")

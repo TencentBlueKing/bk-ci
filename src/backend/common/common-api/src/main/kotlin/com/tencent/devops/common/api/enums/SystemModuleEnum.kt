@@ -47,7 +47,7 @@ enum class SystemModuleEnum(val code: String) {
     SUPPORT("17"), // 支撑服务
     TICKET("18"), // 证书凭据
     PROJECT("19"), // 项目管理
-    ATOM("20"); // 商店
+    STORE("20"); // 商店
 
     companion object {
         fun getSystemModule(code: String): String {
@@ -72,7 +72,7 @@ enum class SystemModuleEnum(val code: String) {
                 "17" -> SUPPORT.name
                 "18" -> TICKET.name
                 "19" -> PROJECT.name
-                "20" -> ATOM.name
+                "20" -> STORE.name
                 else -> COMMON.name
             }
         }

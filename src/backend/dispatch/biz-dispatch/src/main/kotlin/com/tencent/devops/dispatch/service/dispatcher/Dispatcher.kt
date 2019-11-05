@@ -30,7 +30,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -66,7 +66,8 @@ interface Dispatcher {
         event: PipelineAgentStartupEvent,
         errorMessage: String
     ) {
-        LogUtils.addRedLine(rabbitTemplate, event.buildId, errorMessage, "", event.executeCount ?: 1)
+        LogUtils.addRedLine(rabbitTemplate, event.buildId, errorMessage,
+            "", event.containerHashId, event.executeCount ?: 1)
         client.get(ServiceBuildResource::class).setVMStatus(
             projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
             vmSeqId = event.vmSeqId, status = BuildStatus.FAILED

@@ -64,5 +64,9 @@ data class ServiceCreateInfo(
     @ApiModelProperty("projectIdType")
     val projectIdType: String?,
     @ApiModelProperty("权重")
-    val weight: Int
+    val weight: Int,
+    @ApiModelProperty("logo地址")
+    val logoUrl: String?,
+    @ApiModelProperty("支持webSocket的页面")
+    val webSocket: String?
 )

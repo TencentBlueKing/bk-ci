@@ -29,6 +29,7 @@ dependencies {
     compile project(":process:api-process")
     compile project(":dispatch:api-dispatch")
     compile project(":dispatch:model-dispatch")
+    compile project(":notify:api-notify")
     compile project(":common:common-service")
     compile project(":common:common-web")
     compile project(":common:common-client")
@@ -36,6 +37,7 @@ dependencies {
     compile project(":common:common-log")
     compile project(":common:common-db")
     compile project(":common:common-auth:common-auth-api")
+    compile "com.vmware:vijava"
     compile "org.json:json"
     compile "org.apache.commons:commons-exec"
 }

@@ -27,6 +27,8 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoReq
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
 
@@ -45,4 +47,46 @@ interface StoreLogoService {
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?>
+
+    /**
+     * 获取logo列表
+     */
+    fun list(
+        userId: String,
+        type: String
+    ): Result<List<Logo>?>
+
+    /**
+     * 获取logo
+     */
+    fun get(
+        userId: String,
+        id: String
+    ): Result<Logo?>
+
+    /**
+     * 新增logo
+     */
+    fun add(
+        userId: String,
+        type: String,
+        storeLogoReq: StoreLogoReq
+    ): Result<Boolean>
+
+    /**
+     * 更新logo
+     */
+    fun update(
+        userId: String,
+        id: String,
+        storeLogoReq: StoreLogoReq
+    ): Result<Boolean>
+
+    /**
+     * 删除logo
+     */
+    fun delete(
+        userId: String,
+        id: String
+    ): Result<Boolean>
 }

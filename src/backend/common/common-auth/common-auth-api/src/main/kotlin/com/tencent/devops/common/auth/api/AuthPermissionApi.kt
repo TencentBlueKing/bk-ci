@@ -41,9 +41,9 @@ interface AuthPermissionApi {
     fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
-        permission: BkAuthPermission
+        permission: AuthPermission
     ): Boolean
 
     /**
@@ -59,10 +59,10 @@ interface AuthPermissionApi {
     fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        permission: BkAuthPermission
+        permission: AuthPermission
     ): Boolean
 
     /**
@@ -78,9 +78,9 @@ interface AuthPermissionApi {
     fun getUserResourceByPermission(
         user: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
-        permission: BkAuthPermission,
+        permission: AuthPermission,
         supplier: (() -> List<String>)?
     ): List<String>
 
@@ -97,19 +97,19 @@ interface AuthPermissionApi {
     fun getUserResourcesByPermissions(
         user: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
-        permissions: Set<BkAuthPermission>,
+        permissions: Set<AuthPermission>,
         supplier: (() -> List<String>)?
-    ): Map<BkAuthPermission, List<String>>
+    ): Map<AuthPermission, List<String>>
 
     fun getUserResourcesByPermissions(
         userId: String,
         scopeType: String,
         scopeId: String,
-        resourceType: BkAuthResourceType,
-        permissions: Set<BkAuthPermission>,
+        resourceType: AuthResourceType,
+        permissions: Set<AuthPermission>,
         systemId: AuthServiceCode,
         supplier: (() -> List<String>)? = null
-    ): Map<BkAuthPermission, List<String>>
+    ): Map<AuthPermission, List<String>>
 }

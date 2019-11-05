@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,93 +34,97 @@ data class ProjectVO(
     @ApiModelProperty("主键ID")
     val id: Long,
     @ApiModelProperty("项目ID")
-    @JsonProperty("project_id")
+    // @JsonProperty("project_id")
     val projectId: String,
     @ApiModelProperty("项目名称")
-    @JsonProperty("project_name")
+    // @JsonProperty("project_name")
     val projectName: String,
     @ApiModelProperty("项目代码")
-    @JsonProperty("project_code")
+    // @JsonProperty("project_code")
     val projectCode: String,
     @ApiModelProperty("项目类型")
-    @JsonProperty("project_type")
+    // @JsonProperty("project_type")
     val projectType: Int?,
     @ApiModelProperty("审批状态")
-    @JsonProperty("approval_status")
+    // @JsonProperty("approval_status")
     val approvalStatus: Int?,
     @ApiModelProperty("审批时间")
-    @JsonProperty("approval_time")
+    // @JsonProperty("approval_time")
     val approvalTime: String?,
     @ApiModelProperty("审批人")
     val approver: String?,
     @ApiModelProperty("cc业务ID")
-    @JsonProperty("cc_app_id")
+    // @JsonProperty("cc_app_id")
     val ccAppId: Long?,
     @ApiModelProperty("cc业务名称")
-    @JsonProperty("cc_app_name")
+    // @JsonProperty("cc_app_name")
     val ccAppName: String?,
     @ApiModelProperty("创建时间")
-    @JsonProperty("created_at")
+    // @JsonProperty("created_at")
     val createdAt: String?,
     @ApiModelProperty("创建人")
     val creator: String?,
     @ApiModelProperty("数据ID")
-    @JsonProperty("data_id")
+    // @JsonProperty("data_id")
     val dataId: Long?,
     @ApiModelProperty("部署类型")
-    @JsonProperty("deploy_type")
+    // @JsonProperty("deploy_type")
     val deployType: String?,
     @ApiModelProperty("事业群ID")
-    @JsonProperty("bg_id")
-    val bgId: Long?,
+    // @JsonProperty("bg_id")
+    val bgId: String?,
     @ApiModelProperty("事业群名字")
-    @JsonProperty("bg_name")
+    // @JsonProperty("bg_name")
     val bgName: String?,
     @ApiModelProperty("中心ID")
-    @JsonProperty("center_id")
-    val centerId: Long?,
+    // @JsonProperty("center_id")
+    val centerId: String?,
     @ApiModelProperty("中心名称")
-    @JsonProperty("center_name")
+    // @JsonProperty("center_name")
     val centerName: String?,
     @ApiModelProperty("部门ID")
-    @JsonProperty("dept_id")
-    val deptId: Long?,
+    // @JsonProperty("dept_id")
+    val deptId: String?,
     @ApiModelProperty("部门名称")
-    @JsonProperty("dept_name")
+    // @JsonProperty("dept_name")
     val deptName: String?,
     @ApiModelProperty("描述")
     val description: String?,
     @ApiModelProperty("英文缩写")
-    @JsonProperty("english_name")
+    // @JsonProperty("english_name")
     val englishName: String,
     @ApiModelProperty("extra")
     val extra: String?,
     @ApiModelProperty("是否离线")
-    @get:JsonProperty("is_offlined")
-    val isOfflined: Boolean?,
+//    @get:JsonProperty("is_offlined")
+    val offlined: Boolean?,
     @ApiModelProperty("是否保密")
-    @get:JsonProperty("is_secrecy")
-    val isSecrecy: Boolean?,
+//    @get:JsonProperty("is_secrecy")
+    val secrecy: Boolean?,
     @ApiModelProperty("是否启用图表激活")
-    @get:JsonProperty("is_helm_chart_enabled")
-    val isHelmChartEnabled: Boolean?,
+//    @get:JsonProperty("is_helm_chart_enabled")
+    val helmChartEnabled: Boolean?,
     @ApiModelProperty("kind")
     val kind: Int?,
     @ApiModelProperty("logo地址")
-    @JsonProperty("logo_addr")
+    // @JsonProperty("logo_addr")
     val logoAddr: String?,
     @ApiModelProperty("评论")
     val remark: String?,
     @ApiModelProperty("修改时间")
-    @JsonProperty("updated_at")
+    // @JsonProperty("updated_at")
     val updatedAt: String?,
     @ApiModelProperty("useBK")
-    @JsonProperty("use_bk")
+    // @JsonProperty("use_bk")
     val useBk: Boolean?,
     @ApiModelProperty("启用")
     val enabled: Boolean?,
     @ApiModelProperty("是否灰度")
     val gray: Boolean,
+    @ApiModelProperty("混合云CC业务ID")
+    val hybridCcAppId: Long?,
     @ApiModelProperty("支持构建机访问外网")
-    val enableExternal: Boolean?
+    val enableExternal: Boolean?,
+    @ApiModelProperty("支持IDC构建机")
+    val enableIdc: Boolean? = false
 )

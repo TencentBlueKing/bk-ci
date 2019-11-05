@@ -74,6 +74,17 @@ class PipelineUserDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): TPipelineUserRecord? {
+        with(TPipelineUser.T_PIPELINE_USER) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetchOne()
+        }
+    }
+
     fun list(
         dslContext: DSLContext,
         pipelineIds: Set<String>

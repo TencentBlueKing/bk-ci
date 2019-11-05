@@ -36,6 +36,7 @@ data class LogMessage(
     val message: String,
     val timestamp: Long,
     val tag: String = "",
+    val jobId: String = "",
     val logType: LogType = LogType.LOG,
     val executeCount: Int? = null
 ) {

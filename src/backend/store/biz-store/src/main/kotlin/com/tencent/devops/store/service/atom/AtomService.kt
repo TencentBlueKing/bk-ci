@@ -26,28 +26,28 @@
 
 package com.tencent.devops.store.service.atom
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.Atom
+import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.atom.VersionInfo
-import org.springframework.stereotype.Service
+import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.UnInstallReq
 
 /**
  * 插件业务逻辑类
  *
  * since: 2018-12-20
  */
-@Service
 interface AtomService {
 
     /**
      * 获取插件列表
      */
-    @Suppress("UNCHECKED_CAST")
     fun getPipelineAtoms(
         accessToken: String,
         userId: String,
@@ -61,9 +61,22 @@ interface AtomService {
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
-     * 根据id获取插件信息
+     * 获取插件列表
      */
-    fun getPipelineAtom(id: String): Result<Atom?>
+    fun serviceGetPipelineAtoms(
+        serviceScope: String?,
+        os: String?,
+        projectCode: String,
+        category: String?,
+        classifyId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<AtomResp<AtomRespItem>?>
+
+    /**
+     * 获取项目下插件相关的信息
+     */
+    fun getProjectElements(projectCode: String): Result<Map<String, String>>
 
     /**
      * 根据插件代码和版本号获取插件信息
@@ -81,11 +94,6 @@ interface AtomService {
      */
     @Suppress("UNCHECKED_CAST")
     fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>>
-
-    /**
-     * 根据插件代码和版本号获取插件信息
-     */
-    fun getPipelineAtom(atomCode: String, version: String): Result<Atom?>
 
     /**
      * 添加插件信息
@@ -113,7 +121,44 @@ interface AtomService {
     fun judgeAtomIsCreateByUserId(userId: String, atomCode: String): Result<Boolean>
 
     /**
-     * 获取插件的中文名
+     * 是否有管理插件权限
      */
-    fun getProjectAtomNames(projectCode: String): Result<Map<String, String>>
+    fun hasManagerPermission(projectCode: String, userId: String): Boolean
+
+    /**
+     * 获取已安装的插件列表
+     */
+    fun getInstalledAtoms(
+        userId: String,
+        projectCode: String,
+        classifyCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<InstalledAtom>
+
+    /**
+     * 获取已安装的插件列表
+     */
+    fun listInstalledAtomByProject(
+        projectCode: String
+    ): List<InstalledAtom>
+
+    /**
+     * 卸载插件
+     */
+    fun uninstallAtom(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        unInstallReq: UnInstallReq
+    ): Result<Boolean>
+
+    /**
+     * 更新插件基本信息
+     */
+    fun updateAtomBaseInfo(
+        userId: String,
+        atomCode: String,
+        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
+    ): Result<Boolean>
 }

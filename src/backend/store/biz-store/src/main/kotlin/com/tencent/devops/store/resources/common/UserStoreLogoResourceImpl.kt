@@ -29,6 +29,8 @@ package com.tencent.devops.store.resources.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreLogoResource
+import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
 import com.tencent.devops.store.service.common.StoreLogoService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,5 +47,9 @@ class UserStoreLogoResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition
     ): Result<String?> {
         return storeLogoService.uploadStoreLogo(userId, inputStream, disposition)
+    }
+
+    override fun list(userId: String, logoType: LogoTypeEnum): Result<List<Logo>?> {
+        return storeLogoService.list(userId, logoType.name)
     }
 }

@@ -28,13 +28,12 @@ package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
-import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import com.tencent.devops.store.pojo.template.MyTemplateItem
 import com.tencent.devops.store.pojo.template.TemplateDetail
-import com.tencent.devops.store.pojo.template.TemplateProcessInfo
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 
@@ -82,23 +81,6 @@ interface MarketTemplateService {
     ): Result<TemplateDetail?>
 
     /**
-     * 关联模版到商店
-     */
-    fun addMarketTemplate(
-        userId: String,
-        templateCode: String,
-        marketTemplateRelRequest: MarketTemplateRelRequest
-    ): Result<Boolean>
-
-    /**
-     * 更新商店模版信息
-     */
-    fun updateMarketTemplate(
-        userId: String,
-        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
-    ): Result<String?>
-
-    /**
      * 删除模版关联关系
      */
     fun delete(
@@ -107,20 +89,13 @@ interface MarketTemplateService {
     ): Result<Boolean>
 
     /**
-     * 获取发布进度
-     */
-    fun getProcessInfo(
-        TemplateId: String
-    ): Result<TemplateProcessInfo>
-
-    /**
      * 安装模板到项目
      */
     fun installTemplate(
         accessToken: String,
         userId: String,
-        projectCodeList: ArrayList<String>,
-        templateCode: String
+        channelCode: ChannelCode,
+        installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
 
     /**
@@ -132,24 +107,6 @@ interface MarketTemplateService {
         page: Int,
         pageSize: Int
     ): Result<Page<MyTemplateItem>?>
-
-    /**
-     * 取消发布
-     */
-    fun cancelRelease(
-        userId: String,
-        templateId: String
-    ): Result<Boolean>
-
-    /**
-     * 下架模板
-     */
-    fun offlineTemplate(
-        userId: String,
-        templateCode: String,
-        version: String?,
-        reason: String?
-    ): Result<Boolean>
 
     /**
      * 根据模板ID和模板代码判断模板是否存在

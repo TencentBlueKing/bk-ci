@@ -28,30 +28,70 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.api.BuildDockerHostResource
+import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.service.DockerHostBuildService
+import com.tencent.devops.dispatch.service.DockerHostDebugService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildDockerHostResourceImpl @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostDebugService: DockerHostDebugService
 ) : BuildDockerHostResource {
+
+    override fun getHost(hostTag: String): Result<DockerHostInfo>? {
+        return dockerHostBuildService.getHost(hostTag)
+    }
 
     override fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean?): Result<Boolean>? {
         return dockerHostBuildService.rollbackBuild(buildId, vmSeqId, shutdown)
+    }
+
+    override fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String, hostTag: String?): Result<Boolean>? {
+        return dockerHostBuildService.reportContainerId(buildId, vmSeqId, containerId, hostTag)
     }
 
     override fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
         return dockerHostBuildService.startBuild(hostTag)
     }
 
-    override fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean>? {
-        return dockerHostBuildService.reportContainerId(buildId, vmSeqId, containerId)
+    override fun endBuild(hostTag: String): Result<DockerHostBuildInfo>? {
+        return dockerHostBuildService.endBuild(hostTag)
     }
 
-    override fun log(buildId: String, red: Boolean, message: String): Result<Boolean>? {
-        dockerHostBuildService.log(buildId, red, message)
+    override fun startDebug(hostTag: String): Result<ContainerInfo>? {
+        return dockerHostDebugService.startDebug(hostTag)
+    }
+
+    override fun endDebug(hostTag: String): Result<ContainerInfo>? {
+        return dockerHostDebugService.endDebug(hostTag)
+    }
+
+    override fun reportDebugContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
+        return dockerHostDebugService.reportContainerId(pipelineId, vmSeqId, containerId)
+    }
+
+    override fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
+        return dockerHostDebugService.rollbackDebug(pipelineId, vmSeqId, shutdown, message)
+    }
+
+    override fun alert(level: AlertLevel, title: String, message: String): Result<Boolean>? {
+        AlertUtils.doAlert(level, title, message)
+        return Result(0, "success")
+    }
+
+    override fun log(buildId: String, red: Boolean, message: String, tag: String?): Result<Boolean>? {
+        dockerHostBuildService.log(buildId, red, message, tag)
+        return Result(0, "success")
+    }
+
+    override fun postLog(buildId: String, red: Boolean, message: String, tag: String?): Result<Boolean>? {
+        dockerHostBuildService.log(buildId, red, message, tag)
         return Result(0, "success")
     }
 }

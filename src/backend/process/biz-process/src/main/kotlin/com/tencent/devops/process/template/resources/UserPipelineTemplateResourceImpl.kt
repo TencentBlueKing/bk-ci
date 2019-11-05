@@ -28,7 +28,7 @@ package com.tencent.devops.process.template.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.UserPipelineTemplateResource
+import com.tencent.devops.process.api.user.UserPipelineTemplateResource
 import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.template.service.PipelineTemplateService
 import org.springframework.beans.factory.annotation.Autowired

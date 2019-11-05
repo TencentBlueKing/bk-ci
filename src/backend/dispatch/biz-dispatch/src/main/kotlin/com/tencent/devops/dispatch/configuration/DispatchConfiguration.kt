@@ -28,10 +28,12 @@ package com.tencent.devops.dispatch.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
+@EnableConfigurationProperties(DispatchProperties::class)
 class DispatchConfiguration {
 
     @Bean

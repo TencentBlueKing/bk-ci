@@ -32,7 +32,7 @@ import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisCluster
 import java.util.UUID
 
-class RedisLock(
+open class RedisLock(
     private val redisOperation: RedisOperation,
     private val lockKey: String,
     private val expiredTimeInSeconds: Long

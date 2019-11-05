@@ -28,6 +28,7 @@ package job
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
 	"pkg/api"
@@ -66,11 +67,19 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 func (b *buildManager) waitProcessDone(processId int) {
 	process, err := os.FindProcess(processId)
 	if err != nil {
-		logs.Warn("build process err, pid: ", processId, ", err: ", err.Error())
+		errMsg := fmt.Sprintf("build process err, pid: %d, err: %s", processId, err.Error())
+		logs.Warn(errMsg)
 		delete(b.instances, processId)
+		workerBuildFinish(&api.ThirdPartyBuildWithStatus{
+			*b.instances[processId],
+			false,
+			"errMsg"})
 		return
 	}
+
 	process.Wait()
 	logs.Info("build process finish: pid: ", processId)
+	buildInfo := b.instances[processId]
 	delete(b.instances, processId)
+	workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, true, "success"})
 }

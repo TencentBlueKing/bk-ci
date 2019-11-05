@@ -62,12 +62,12 @@ class CommonConfig {
     /**
      * DevOps 外部API地址
      */
-    @Value("\${devopsGateway.outerApi}")
+    @Value("\${devopsGateway.outerApi:#{null}}")
     val devopsOuteApiHostGateWay: String? = null
 
     /**
      * 微服务端口
      */
     @Value("\${server.port:80}")
-    val serverPort:Int = 80
+    val serverPort: Int = 80
 }

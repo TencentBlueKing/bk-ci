@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 data class PipelineInfo(
     val projectId: String,
     val pipelineId: String,
+    val templateId: String?,
     val pipelineName: String,
     val pipelineDesc: String,
     var version: Int = 1,

@@ -29,9 +29,11 @@ package com.tencent.devops.ticket.dao
 import com.tencent.devops.model.ticket.tables.TCredential
 import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.net.URLDecoder
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
@@ -118,12 +120,16 @@ class CredentialDao {
     ) {
         val now = LocalDateTime.now()
         with(TCredential.T_CREDENTIAL) {
-            val updateStep = dslContext.update(this)
-            if (credentialV1 != null) updateStep.set(CREDENTIAL_V1, credentialV1)
-            if (credentialV2 != null) updateStep.set(CREDENTIAL_V2, credentialV2)
-            if (credentialV3 != null) updateStep.set(CREDENTIAL_V3, credentialV3)
-            if (credentialV4 != null) updateStep.set(CREDENTIAL_V4, credentialV4)
-            updateStep.set(CREDENTIAL_REMARK, credentialRemark)
+            val updateFirstStep = dslContext.update(this)
+            val updateMoreStep1 =
+                if (credentialV1 == null) updateFirstStep else updateFirstStep.set(CREDENTIAL_V1, credentialV1)
+            val updateMoreStep2 =
+                if (credentialV2 == null) updateMoreStep1 else updateMoreStep1.set(CREDENTIAL_V2, credentialV2)
+            val updateMoreStep3 =
+                if (credentialV3 == null) updateMoreStep2 else updateMoreStep2.set(CREDENTIAL_V3, credentialV3)
+            val updateMoreStep4 =
+                if (credentialV4 == null) updateMoreStep3 else updateMoreStep3.set(CREDENTIAL_V4, credentialV4)
+            updateMoreStep4.set(CREDENTIAL_REMARK, credentialRemark)
                 .set(UPDATED_TIME, now)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CREDENTIAL_ID.eq(credentialId))
@@ -145,26 +151,46 @@ class CredentialDao {
         projectId: String,
         credentialTypes: Set<CredentialType>?,
         credentialIds: Set<String>,
-        offset: Int,
-        limit: Int
+        offset: Int?,
+        limit: Int?,
+        keyword: String?
     ): Result<TCredentialRecord> {
         val credentialTypeStrings = credentialTypes?.map {
             it.name
         }
-        return with(TCredential.T_CREDENTIAL) {
-            val query = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
 
+        with(TCredential.T_CREDENTIAL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(CREDENTIAL_ID.`in`(credentialIds))
+            if (keyword != null) {
+                conditions.add(
+                    CREDENTIAL_ID.like(
+                        "%" + URLDecoder.decode(
+                            keyword,
+                            "UTF-8"
+                        ) + "%"
+                    ).or(
+                        CREDENTIAL_REMARK.like(
+                            "%" + URLDecoder.decode(
+                                keyword,
+                                "UTF-8"
+                            ) + "%"
+                        )
+                    )
+                )
+            }
             if (credentialTypeStrings != null) {
-                query.and(CREDENTIAL_TYPE.`in`(credentialTypeStrings))
+                conditions.add(CREDENTIAL_TYPE.`in`(credentialTypeStrings))
             }
 
-            if (credentialIds.isNotEmpty()) {
-                query.and(CREDENTIAL_ID.`in`(credentialIds))
+            val baseStep = dslContext.selectFrom(this).where(conditions).orderBy(CREATED_TIME.desc())
+
+            return if (offset != null && limit != null) {
+                baseStep.limit(offset, limit).fetch()
+            } else {
+                baseStep.fetch()
             }
-            query.orderBy(CREATED_TIME.desc())
-                .limit(offset, limit)
-                .fetch()
         }
     }
 

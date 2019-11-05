@@ -26,9 +26,6 @@
 
 package com.tencent.devops.dockerhost.dispatch
 
-/**
- * Created by Aaron Sheng on 2018/6/22.
- */
 enum class BuildType {
     WORKER,
     AGENT,
@@ -39,7 +36,7 @@ enum class BuildType {
 
     companion object {
         fun contains(env: String): Boolean {
-            BuildType.values().forEach {
+            values().forEach {
                 if (it.name == env) {
                     return true
                 }

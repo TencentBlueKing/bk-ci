@@ -69,6 +69,10 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
     const val QUEUE_PIPELINE_BUILD_FINISH = "q.engine.pipeline.build.finish"
 
+    // 构建启动广播exchange
+    const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
+    const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
+
     // 构建结束后续广播exchange
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
     // 接收上述广播的队列
@@ -76,6 +80,16 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"
     const val QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK = "q.engine.pipeline.build.code.webhook"
     const val QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET = "q.engine.pipeline.build.atom.market"
+    const val QUEUE_PIPELINE_BUILD_FINISH_LAMBDA = "q.engine.pipeline.build.lambda"
+
+    const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"
+
+    // 插件结束后续广播exchange
+    const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "e.engine.pipeline.build.element.finish"
+    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
+    // 接收上述广播的队列
+    const val QUEUE_PIPELINE_BUILD_ELEMENT_FINISH_LAMBDA = "q.engine.pipeline.build.element.lambda"
+    const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
 
     // 定时变更广播exchange
     const val EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT = "e.engine.pipeline.timer.change"
@@ -125,6 +139,26 @@ object MQ {
     const val ROUTE_GITHUB_PR = "r.engine.github.pr"
     const val QUEUE_GITHUB_PR = "q.engine.github.pr"
 
+    // SVN代码仓库webhook请求回调
+    const val EXCHANGE_SVN_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.svn.event"
+    const val ROUTE_SVN_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.svn.event"
+    const val QUEUE_SVN_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.svn.event"
+
+    // CodeGit代码仓库webhook请求回调
+    const val EXCHANGE_GIT_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.git.event"
+    const val ROUTE_GIT_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.git.event"
+    const val QUEUE_GIT_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.git.event"
+
+    // Gitlab代码仓库webhook请求回调
+    const val EXCHANGE_GITLAB_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.gitlab.event"
+    const val ROUTE_GITLAB_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.gitlab.event"
+    const val QUEUE_GITLAB_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.gitlab.event"
+
+    // Github代码仓库webhook请求回调
+    const val EXCHANGE_GITHUB_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.github.event"
+    const val ROUTE_GITHUB_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.github.event"
+    const val QUEUE_GITHUB_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.github.event"
+
     // 广播清理文件
     const val EXCHANGE_BKJOB_CLEAR_JOB_TMP_FANOUT = "e.bkjob.clear.file.fanout"
     const val ROUTE_BKJOB_CLEAR_JOB_TMP_EVENT = "r.bkjob.clear.file"
@@ -144,4 +178,14 @@ object MQ {
     const val EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT = "e.engine.pipeline.setting.change.fanout"
     const val ROUTE_PIPELINE_SETTING_CHANGE = "r.engine.pipeline.setting.change"
     const val QUEUE_PIPELINE_SETTING_CHANGE = "q.engine.pipeline.setting.change"
+
+    // webSocket消息
+    const val EXCHANGE_WEBSOCKET_TMP_FANOUT = "e.websocket.fanout"
+    const val ROUTE_WEBSOCKET_TMP_EVENT = "r.websocket.file"
+    const val QUEUE_WEBSOCKET_TMP_EVENT = "q.websocket.file"
+
+    // 工蜂CI请求
+    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
+    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
+    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
 }

@@ -28,12 +28,12 @@ package com.tencent.devops.process.engine.atom
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.process.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 /**
  * 线程池只是做防止出现意外情况长时间运行，实际上并不能真正终止线程
@@ -47,26 +47,28 @@ class AtomTaskDaemon(
             SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, buildVariables)
         } catch (e: InterruptedException) {
             logger.error("AtomTaskDaemon InterruptedException", e)
-            AtomResponse(BuildStatus.EXEC_TIMEOUT)
-        }
-    }
-
-    fun run(): AtomResponse {
-        val timeout = task.additionalOptions?.timeout
-        return if (timeout == null) {
-            SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, buildVariables)
-        } else {
-            val taskDaemon = AtomTaskDaemon(task, buildVariables)
-            val executor = Executors.newCachedThreadPool()
-            val f1 = executor.submit(taskDaemon)
-            try {
-                f1.get(timeout, TimeUnit.MINUTES)
-            } catch (e: TimeoutException) {
-                logger.error("AtomTaskDaemon run timeout, timeout:$timeout", e)
-                throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
-            } finally {
-                executor.shutdownNow()
-            }
+            AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = ErrorType.SYSTEM,
+                errorCode = AtomErrorCode.SYSTEM_DAEMON_INTERRUPTED,
+                errorMsg = "守护进程启动出错"
+            )
+        } catch (e: BuildTaskException) {
+            logger.error("Backend BuildTaskException", e)
+            AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = "后台服务任务执行出错"
+            )
+        } catch (e: Throwable) {
+            logger.error("Backend RuntimeException", e)
+            AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = ErrorType.SYSTEM,
+                errorCode = AtomErrorCode.SYSTEM_DAEMON_INTERRUPTED,
+                errorMsg = "后台服务运行出错"
+            )
         }
     }
 

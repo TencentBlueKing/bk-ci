@@ -26,8 +26,10 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeGitlabRecord
+import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -92,6 +94,27 @@ class RepositoryCodeGitLabDao {
                 .set(UPDATED_TIME, now)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
+        }
+    }
+
+    fun updateRepositoryInfo(dslContext: DSLContext, repositoryId: Long, updateRepositoryInfoRequest: UpdateRepositoryInfoRequest) {
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            val baseStep = dslContext.update(this)
+            if (!updateRepositoryInfoRequest.projectName.isNullOrEmpty()) {
+                baseStep.set(PROJECT_NAME, updateRepositoryInfoRequest.projectName)
+            }
+            if (!updateRepositoryInfoRequest.userId.isNullOrEmpty()) {
+                baseStep.set(USER_NAME, updateRepositoryInfoRequest.userId)
+            }
+            if (!updateRepositoryInfoRequest.credentialId.isNullOrEmpty()) {
+                baseStep.set(CREDENTIAL_ID, updateRepositoryInfoRequest.credentialId)
+            }
+            if (null != updateRepositoryInfoRequest.authType) {
+                baseStep.set(AUTH_TYPE, updateRepositoryInfoRequest.authType!!.name)
+            }
+            baseStep.set(UPDATED_TIME, LocalDateTime.now())
+                    .where(REPOSITORY_ID.eq(repositoryId))
+                    .execute()
         }
     }
 }

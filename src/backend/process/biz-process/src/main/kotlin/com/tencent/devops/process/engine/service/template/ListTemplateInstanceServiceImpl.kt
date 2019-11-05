@@ -28,15 +28,15 @@ package com.tencent.devops.process.engine.service.template
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplatePipeline
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.template.dao.PTemplateDao
-import com.tencent.devops.process.template.dao.TemplatePipelineDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,14 +58,14 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
 
     override fun listTemplateInstances(projectId: String, userId: String, templateId: String): TemplateInstances {
         logger.info("[$projectId|$userId|$templateId] List the template instances")
-        val associatePipelines = templatePipelineDao.listPipeline(dslContext, templateId)
+        val associatePipelines = templatePipelineDao.listPipeline(dslContext, setOf(templateId))
 
         val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
         logger.info("Get the pipelineIds - $associatePipelines")
         val pipelineSettings = pipelineSettingDao.getSettings(dslContext, pipelineIds).groupBy { it.pipelineId }
         logger.info("Get the pipeline settings - $pipelineSettings")
         val hasPermissionList = pipelinePermissionService.getResourceByPermission(
-            userId = userId, projectId = projectId, permission = BkAuthPermission.EDIT
+            userId = userId, projectId = projectId, permission = AuthPermission.EDIT
         )
         val templatePipelines = associatePipelines.map {
             val pipelineSetting = pipelineSettings[it.pipelineId]

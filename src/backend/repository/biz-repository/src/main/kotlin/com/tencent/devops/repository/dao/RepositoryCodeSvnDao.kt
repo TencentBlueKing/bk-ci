@@ -28,7 +28,8 @@ package com.tencent.devops.repository.dao
 
 import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeSvnRecord
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -115,6 +116,27 @@ class RepositoryCodeSvnDao {
             return dslContext.selectFrom(this)
                 .where(REPOSITORY_ID.`in`(repositoryIds))
                 .fetch()
+        }
+    }
+
+    fun updateRepositoryInfo(dslContext: DSLContext, repositoryId: Long, updateRepositoryInfoRequest: UpdateRepositoryInfoRequest) {
+        with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
+            val baseStep = dslContext.update(this)
+            if (!updateRepositoryInfoRequest.projectName.isNullOrEmpty()) {
+                baseStep.set(PROJECT_NAME, updateRepositoryInfoRequest.projectName)
+            }
+            if (!updateRepositoryInfoRequest.userId.isNullOrEmpty()) {
+                baseStep.set(USER_NAME, updateRepositoryInfoRequest.userId)
+            }
+            if (!updateRepositoryInfoRequest.credentialId.isNullOrEmpty()) {
+                baseStep.set(CREDENTIAL_ID, updateRepositoryInfoRequest.credentialId)
+            }
+            if (!updateRepositoryInfoRequest.svnType.isNullOrEmpty()) {
+                baseStep.set(SVN_TYPE, updateRepositoryInfoRequest.svnType)
+            }
+            baseStep.set(UPDATED_TIME, LocalDateTime.now())
+                    .where(REPOSITORY_ID.eq(repositoryId))
+                    .execute()
         }
     }
 }

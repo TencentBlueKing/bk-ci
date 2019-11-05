@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.ErrorType
 
 data class BuildInfo(
     val projectId: String,
@@ -44,5 +45,8 @@ data class BuildInfo(
     val firstTaskId: String,
     val parentBuildId: String?,
     val parentTaskId: String?,
-    val channelCode: ChannelCode
+    val channelCode: ChannelCode,
+    var errorType: ErrorType?,
+    var errorCode: Int?,
+    var errorMsg: String?
 )

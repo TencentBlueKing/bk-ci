@@ -51,6 +51,8 @@ const val PIPELINE_WEBHOOK_REPO_TYPE = "BK_CI_HOOK_REPO_TYPE"
 const val PIPELINE_WEBHOOK_BLOCK = "BK_CI_HOOK_BLOCK"
 const val PIPELINE_WEBHOOK_TYPE = "BK_CI_HOOK_TYPE"
 const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE"
+const val PIPELINE_WEBHOOK_MR_ID = "bk_hookMergeRequestId"
+const val PIPELINE_WEBHOOK_MR_COMMITTER = "bk_hookMergeRequest_committer"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER"
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER"
@@ -80,6 +82,8 @@ const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
 
+const val REPO_NAME = "repoName"
+
 const val PIPELINE_MATERIAL_URL = "BK_CI_PIEPLEINE_MATERIAL_URL"
 const val PIPELINE_MATERIAL_BRANCHNAME = "BK_CI_PIPELINE_MATERIAL_BRANCHNAME"
 const val PIPELINE_MATERIAL_ALIASNAME = "BK_CI_PIPELINE_MATERIAL_ALIASNAME"
@@ -91,6 +95,13 @@ const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // majorVersion
 const val MINORVERSION = "BK_CI_MINOR_VERSION" // minorVersion
 const val FIXVERSION = "BK_CI_FIX_VERSION" // fixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
+
+/**
+ * 后续新增的变量统一用“BK_CI_大写的变量名称”命名，历史的变量名称统一整改
+ */
+const val PIPELINE_CREATE_USER = "BK_CI_PIPELINE_CREATE_USER" // "流水线创建用户"
+const val PIPELINE_UPDATE_USER = "BK_CI_PIPELINE_UPDATE_USER" // "流水线最后更新用户"
+const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注"
 
 /**
  * 流水线设置-最大排队数量-默认值
@@ -108,7 +119,7 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
-const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 120
+const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 1
 /**
  * 流水线设置-最大排队时间-最小值 单位:分钟
  */
@@ -117,3 +128,7 @@ const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
+
+const val PIPELINE_TIME_START = "pipeline.time.start"
+
+const val PIPELINE_TIME_END = "pipeline.time.end"

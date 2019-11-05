@@ -42,17 +42,23 @@ import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
 
 interface ArchiveFileService {
+
+    /**
+     * 获取真正的文件路径
+     */
+    fun getRealPath(filePath: String): String
+
     /**
      * 上传文件
      */
     fun uploadFile(
         userId: String,
         file: File,
-        projectCode: String? = null,
+        projectId: String? = null,
         filePath: String? = null,
         fileName: String? = null,
         fileType: FileTypeEnum? = null,
-        props: Map<String, String>? = null,
+        props: Map<String, String?>? = null,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?>
 
@@ -63,10 +69,10 @@ interface ArchiveFileService {
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
-        projectCode: String? = null,
+        projectId: String? = null,
         filePath: String? = null,
         fileType: FileTypeEnum? = null,
-        props: Map<String, String>? = null,
+        props: Map<String, String?>? = null,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?>
 
@@ -75,7 +81,7 @@ interface ArchiveFileService {
      */
     fun archiveFile(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
@@ -100,7 +106,7 @@ interface ArchiveFileService {
      */
     fun downloadArchiveFile(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
@@ -113,10 +119,10 @@ interface ArchiveFileService {
      */
     fun getFileDownloadUrls(
         userId: String,
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
-        fileType: FileTypeEnum,
+        artifactoryType: ArtifactoryType,
         customFilePath: String?,
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?>
@@ -126,16 +132,16 @@ interface ArchiveFileService {
      */
     fun getFileDownloadUrls(
         filePath: String,
-        fileType: FileTypeEnum,
+        artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum
-    ): Result<GetFileDownloadUrlsResponse>
+    ): Result<GetFileDownloadUrlsResponse?>
 
     /**
      * 根据文件元数据查找文件列表
      */
     fun searchFileList(
         userId: String,
-        projectCode: String,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         searchProps: SearchProps
@@ -154,23 +160,24 @@ interface ArchiveFileService {
     /**
      * 根据用户自定义路径与 fileType 来生成真正存储文件的路径
      * @param fileType 文件存储的类型
-     * @param projectCode 项目id 英文名称
+     * @param projectId 项目id 英文名称
      * @param customFilePath 自定义路径
      * @param pipelineId 流水线id
      * @param buildId 构建id
      */
     fun generateDestPath(
         fileType: FileTypeEnum,
-        projectCode: String,
+        projectId: String?,
         customFilePath: String?,
-        pipelineId: String,
-        buildId: String
+        pipelineId: String?,
+        buildId: String?
     ): Result<String>
 
     /**
      * 根据文件路径生成下载连接
      */
     fun transformFileUrl(
+        fileType: FileTypeEnum,
         wildFlag: Boolean,
         pathPattern: String,
         fileChannelType: FileChannelTypeEnum,

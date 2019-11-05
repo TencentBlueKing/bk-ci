@@ -105,6 +105,24 @@ interface ServiceThirdPartyAgentResource {
 
     @ApiOperation("Agent是否能升级")
     @GET
+    @Path("/projects/{projectId}/agents/{agentId}/upgrade")
+    fun upgrade(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String,
+        @ApiParam("Agent secret key", required = true)
+        @QueryParam("secretKey")
+        secretKey: String,
+        @ApiParam("agent.jar的MD5", required = true)
+        @QueryParam("tag")
+        tag: String
+    ): AgentResult<Boolean>
+
+    @ApiOperation("Agent是否能升级")
+    @GET
     @Path("/projects/{projectId}/agents/{agentId}/upgradeByVersion")
     fun upgradeByVersion(
         @ApiParam("项目ID", required = true)
@@ -126,13 +144,13 @@ interface ServiceThirdPartyAgentResource {
 
     @ApiOperation("执行第三方构建机管道")
     @POST
-    @Path("/agents/{nodeId}/pipelines")
+    @Path("/projects/{projectId}/agents/{nodeId}/pipelines")
     fun scheduleAgentPipeline(
         @ApiParam("user id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        @HeaderParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("node id", required = true)
         @PathParam("nodeId")
@@ -143,10 +161,10 @@ interface ServiceThirdPartyAgentResource {
 
     @ApiOperation("获取第三方构建机管道结果")
     @GET
-    @Path("/agents/{nodeId}/pipelines")
+    @Path("/projects/{projectId}/agents/{nodeId}/pipelines")
     fun getAgentPipelineResponse(
         @ApiParam("项目ID", required = true)
-        @HeaderParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("node id", required = true)
         @PathParam("nodeId")

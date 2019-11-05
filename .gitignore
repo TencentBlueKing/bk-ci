@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.gradle
 bin/
 docs/node_modules
 docs/_book
@@ -7,6 +8,8 @@ docs/package-lock.json
 docs/.DS_Store
 gateway/make_link.sh
 
+
+src/backend/.project
 
 frontend/*/.DS_Store
 frontend/*/node_modules/
@@ -18,3 +21,5 @@ frontend/*/yarn-error.log*
 
 frontend/*/package-lock.json
 node_modules/
+
+src/backend/.project

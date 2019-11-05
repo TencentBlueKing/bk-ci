@@ -44,7 +44,7 @@ abstract class AbstractBuildResourceApi {
 
     companion object {
         private val gateway: String by lazy {
-            DockerEnv.getGatway()
+            DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
         }
 
         private val buildArgs: Map<String, String> by lazy {
@@ -83,6 +83,11 @@ abstract class AbstractBuildResourceApi {
     fun buildGet(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
+    }
+
+    fun buildHeader(path: String, headers: Map<String, String> = emptyMap()): Request {
+        val url = buildUrl(path)
+        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).head().build()
     }
 
     fun buildPost(path: String, headers: Map<String, String> = emptyMap()): Request {

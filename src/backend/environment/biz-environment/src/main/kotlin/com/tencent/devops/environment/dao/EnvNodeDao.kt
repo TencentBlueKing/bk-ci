@@ -65,11 +65,24 @@ class EnvNodeDao {
         }
     }
 
-    fun batchStoreEnvNode(dslContext: DSLContext, envNodeList: List<TEnvNodeRecord>) {
-        if (envNodeList.isEmpty()) {
+    fun batchStoreEnvNode(dslContext: DSLContext, nodeIds: List<Long>, envId: Long, projectId: String) {
+        if (nodeIds.isEmpty()) {
             return
         }
-        dslContext.batchStore(envNodeList).execute()
+        dslContext.batch(nodeIds.map {
+            with(TEnvNode.T_ENV_NODE) {
+                dslContext.insertInto(
+                    this,
+                    ENV_ID,
+                    NODE_ID,
+                    PROJECT_ID
+                ).values(
+                    envId,
+                    it,
+                    projectId
+                )
+            }
+        }).execute()
     }
 
     fun batchDeleteEnvNode(dslContext: DSLContext, projectId: String, envId: Long, nodeIds: List<Long>) {

@@ -107,11 +107,11 @@ object SvnUtil {
     ): SvnCredential {
         return if (repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
             val svnCredential = getSvnHttpCredential(credentialType, credentials, repository)
-            SSHAgentUtils(svnCredential.password, svnCredential.passphrase).addIdentity()
+            CommonEnv.addSvnHttpCredential(svnCredential.username, svnCredential.password)
             svnCredential
         } else {
             val svnCredential = getSshCredential(repository, credentials)
-            CommonEnv.addSvnHttpCredential(svnCredential.username, svnCredential.password)
+            SSHAgentUtils(svnCredential.password, svnCredential.passphrase).addIdentity()
             svnCredential
         }
     }

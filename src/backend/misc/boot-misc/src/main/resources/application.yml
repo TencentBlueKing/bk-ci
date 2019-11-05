@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: misc
+    desc: Landun misc Service
+    version: 4.0
+    packageName: com.tencent.devops.misc
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_environment?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
+  redis:
+    database: 2
+    host: 10.125.48.80
+    password: itdev@db
+  rabbitmq:
+    virtual-host: soda4
+    username: soda
+    password: soda
+    addresses: 10.125.48.80:5672
+  cloud:
+    consul:
+      discovery:
+        tags: local
+
+agent:
+  gateWay: local.gw.devops.oa.com
+
+server:
+  port: 8092
+
+env:
+  alert:
+    receiver: necrohuang,zanyzhao
+  tstack:
+    username: bkuser
+    password: bkuser@123
+    tokenServer: http://tstack-token.open.oa.com
+    computeServer: http://tstack-compute.open.oa.com
+    volumeServer: http://tstack-volume.open.oa.com
+    defaultVolumeSize: 10
+
+registry:
+  host: dev.artifactory.oa.com:8443
+  userName: devops_pipeline_backend_api
+  password: N91Z8Xji1nxrg7h8
+
+devCloud:
+  appId: 10001
+  token: asQPl34g*sdf82U3&
+  url: http://idc.esb.oa.com/bkdevops/test_tencentcloud
+
+email:
+  url:
+    logo: http://dev.gw.open.oa.com/email/logo.png
+    title: http://dev.gw.open.oa.com/email/title.png
+
+influxdb:
+  server: http://localhost:8086/
+  userName: admin
+  password: admin

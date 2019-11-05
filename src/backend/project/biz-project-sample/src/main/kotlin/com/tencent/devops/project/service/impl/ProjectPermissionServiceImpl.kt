@@ -28,7 +28,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -47,6 +47,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
 
+    override fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean {
+        return true
+    }
+
     private val supplierForPermission = {
         val fakeList = mutableListOf<String>()
         projectDao.listProjectCodes(dslContext).forEach {
@@ -55,13 +59,18 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         fakeList
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+//    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+////
+//////        return bkAuthProjectApi.getUserProjectsAvailable(
+//////            serviceCode = projectAuthServiceCode,
+//////            userId = userId,
+//////            supplier = supplierForPermission
+//////        )
+////        return emptyMap()
+////    }
 
-        return bkAuthProjectApi.getUserProjectsAvailable(
-            serviceCode = projectAuthServiceCode,
-            userId = userId,
-            supplier = supplierForPermission
-        )
+    override fun getUserProjectsAvailable(userId: String): List<String> {
+        return emptyList()
     }
 
     override fun getUserProjects(userId: String): List<String> {
@@ -75,7 +84,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     override fun modifyResource(projectCode: String, projectName: String) {
         bkAuthResourceApi.modifyResource(
             serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
             resourceCode = projectCode,
             resourceName = projectName
@@ -86,7 +95,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
 
         bkAuthResourceApi.deleteResource(
             serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
             resourceCode = projectCode
         )
@@ -95,7 +104,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     override fun createResources(userId: String, projectList: List<ResourceRegisterInfo>) {
         bkAuthResourceApi.batchCreateResource(
             serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             resourceList = projectList,
             projectCode = BK_DEVOPS_SCOPE,
             user = userId

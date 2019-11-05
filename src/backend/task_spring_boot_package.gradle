@@ -25,7 +25,7 @@
  */
 
 // 设置为release包不带版本号
-version = null
+version = null                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 
 apply plugin: "kotlin"
 apply plugin: "kotlin-spring"
@@ -38,7 +38,9 @@ dependencies {
 }
 bootRun {
     jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS",
-               "-Dfile.encoding=UTF-8"]
+               "-Dfile.encoding=UTF-8"] 
+//               "-Dspring.config.name=application,devops",
+//               "-Dspring.profiles.active=dev,dev-gray"]
 }
 
 task copyVersionInfo() {
