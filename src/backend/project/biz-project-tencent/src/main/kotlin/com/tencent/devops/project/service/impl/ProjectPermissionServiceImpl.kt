@@ -62,17 +62,13 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        //内部版用不到
-        return emptyList()
-    }
-
-//    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-//        return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
-////        return authProjectApi.getUserProjectsAvailable(bsProjectAuthServiceCode, userId, null)
-//    }
-    override fun getUserProjectsAvailable(userId: String): List<String> {
         return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
     }
+
+    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+        return authProjectApi.getUserProjectsAvailable(bsProjectAuthServiceCode, userId, null)
+    }
+
 
     private fun request(request: Request, errorMessage: String): String {
 //        val httpClient = okHttpClient.newBuilder().build()
