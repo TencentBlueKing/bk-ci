@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.pojo.PipelineTimer
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerDao
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -52,6 +53,10 @@ open class PipelineTimerService @Autowired constructor(
     private val pipelineTimerDao: PipelineTimerDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTimerService::class.java)
+    }
 
     open fun saveTimer(
         projectId: String,
@@ -104,7 +109,7 @@ open class PipelineTimerService @Autowired constructor(
         return convert(timerRecord)
     }
 
-    private fun convert(timerRecord: TPipelineTimerRecord): PipelineTimer {
+    private fun convert(timerRecord: TPipelineTimerRecord): PipelineTimer? {
         return PipelineTimer(
             timerRecord.projectId,
             timerRecord.pipelineId,
@@ -114,7 +119,13 @@ open class PipelineTimerService @Autowired constructor(
             } catch (ignored: Throwable) {
                 listOf(timerRecord.crontab)
             },
-            ChannelCode.valueOf(timerRecord.channel)
+            try {
+                ChannelCode.valueOf(timerRecord.channel)
+            } catch (e: IllegalArgumentException) {
+                logger.warn("Unkown channel code", e)
+                return null
+            }
+
         )
     }
 
@@ -125,7 +136,7 @@ open class PipelineTimerService @Autowired constructor(
         val list = pipelineTimerDao.list(dslContext, start, limit)
         val timerList = mutableListOf<PipelineTimer>()
         list.forEach { record ->
-            timerList.add(convert(record))
+            timerList.add(convert(record) ?: return@forEach)
         }
         return Result(timerList)
     }
