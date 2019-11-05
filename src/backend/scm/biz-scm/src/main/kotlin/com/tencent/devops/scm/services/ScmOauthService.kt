@@ -191,11 +191,11 @@ class ScmOauthService @Autowired constructor(
                     gitConfig.gitlabHookUrl
                 }
                 ScmType.CODE_SVN -> {
-                    if (svnConfig.webhookApiUrl.isBlank()) {
+                    if (svnConfig.svnHookUrl.isBlank()) {
                         logger.warn("The svn webhook url is not settle")
                         throw RuntimeException("The svn webhook url is not settle")
                     }
-                    svnConfig.webhookApiUrl
+                    svnConfig.svnHookUrl
                 }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")
