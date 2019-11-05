@@ -78,7 +78,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
     }
 
     private fun DockerHostBuildInfo.getLogsPath(): String {
-        return "${dockerHostConfig.hostPathLogs}/$pipelineId/$vmSeqId/"
+        return "${dockerHostConfig.hostPathLogs}/$buildId/$vmSeqId/"
     }
 
     private fun DockerHostBuildInfo.getCcachePath(): String {
