@@ -63,7 +63,14 @@ object RepoCommitUtil {
         gitType: ScmType = ScmType.CODE_GIT
     ): CommitMaterial {
         try {
-            return doSaveGitCommit(git, repo, pipelineId, buildId, repositoryConfig, gitType)
+            return doSaveGitCommit(
+                git = git,
+                repo = repo,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                repositoryConfig = repositoryConfig,
+                gitType = gitType
+            )
         } catch (e: Exception) {
             LoggerService.addRedLine("save commit fail: ${e.message}")
         }
@@ -79,7 +86,12 @@ object RepoCommitUtil {
         gitType: ScmType
     ): CommitMaterial {
         val logsCommand = git.log()
-        val latestCommit = getLastCommitId(pipelineId, repositoryConfig, repo, logsCommand)
+        val latestCommit = getLastCommitId(
+            pipelineId = pipelineId,
+            repositoryConfig = repositoryConfig,
+            repo = repo,
+            logsCommand = logsCommand
+        )
 
         val lastCommitId = latestCommit?.commit
         if (lastCommitId != null) {
@@ -92,16 +104,16 @@ object RepoCommitUtil {
         var newCommitId: String? = null
         val commits = logsCommand.call().map {
             CommitData(
-                ScmType.parse(gitType),
-                pipelineId,
-                buildId,
-                it.name,
-                it.committerIdent.name,
-                it.commitTime.toLong(), // 单位:秒
-                it.shortMessage,
-                repositoryConfig.repositoryHashId,
-                repositoryConfig.repositoryName,
-                LoggerService.elementId
+                type = ScmType.parse(gitType),
+                pipelineId = pipelineId,
+                buildId = buildId,
+                commit = it.name,
+                committer = it.committerIdent.name,
+                commitTime = it.commitTime.toLong(), // 单位:秒
+                comment = it.shortMessage,
+                repoId = repositoryConfig.repositoryHashId,
+                repoName = repositoryConfig.repositoryName,
+                elementId = LoggerService.elementId
             )
         }
 
@@ -109,16 +121,16 @@ object RepoCommitUtil {
             saveCommit(
                 listOf(
                     CommitData(
-                        ScmType.parse(gitType),
-                        pipelineId,
-                        buildId,
-                        "",
-                        "",
-                        0L,
-                        "",
-                        repositoryConfig.repositoryHashId,
-                        repositoryConfig.repositoryName,
-                        LoggerService.elementId
+                        type = ScmType.parse(gitType),
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        commit = "",
+                        committer = "",
+                        commitTime = 0L,
+                        comment = "",
+                        repoId = repositoryConfig.repositoryHashId,
+                        repoName = repositoryConfig.repositoryName,
+                        elementId = LoggerService.elementId
                     )
                 )
             )
@@ -129,11 +141,26 @@ object RepoCommitUtil {
             saveCommit(commits)
         }
 
-        return CommitMaterial(lastCommitId, newCommitId, latestCommit?.comment, commits.size)
+        return CommitMaterial(
+            lastCommitId = lastCommitId,
+            newCommitId = newCommitId,
+            newCommitComment = latestCommit?.comment,
+            commitTimes = commits.size
+        )
     }
 
-    private fun getLastCommitId(pipelineId: String, repositoryConfig: RepositoryConfig, repo: Repository, logsCommand: LogCommand): CommitData? {
-        val latestCommitList = commitResourceApi.getLatestCommit(pipelineId, LoggerService.elementId, repositoryConfig).data
+    private fun getLastCommitId(
+        pipelineId: String,
+        repositoryConfig: RepositoryConfig,
+        repo: Repository,
+        logsCommand: LogCommand
+    ): CommitData? {
+        val latestCommitList =
+            commitResourceApi.getLatestCommit(
+                pipelineId = pipelineId,
+                elementId = LoggerService.elementId,
+                repositoryConfig = repositoryConfig
+            ).data
         latestCommitList!!.forEach { latestCommit ->
             val lastCommitId = latestCommit.commit
             try {
@@ -147,6 +174,7 @@ object RepoCommitUtil {
         logsCommand.setMaxCount(1)
         return null
     }
+
     /**
      * 保存并返回revision信息
      * return (lastRevision, newRevision)
@@ -160,7 +188,14 @@ object RepoCommitUtil {
         lastCommit: Long
     ): CommitMaterial {
         try {
-            return doSaveSvnCommit(manager, url, pipelineId, buildId, repositoryConfig, lastCommit)
+            return doSaveSvnCommit(
+                manager = manager,
+                url = url,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                repositoryConfig = repositoryConfig,
+                lastCommit = lastCommit
+            )
         } catch (e: Exception) {
             LoggerService.addRedLine("save svn commit fail: ${e.message}")
         }
@@ -178,7 +213,12 @@ object RepoCommitUtil {
     ): CommitMaterial {
         val logs = manager.logClient.operationsFactory.createLog()
 
-        val commitData = commitResourceApi.getLatestCommit(pipelineId, LoggerService.elementId, repositoryConfig).data?.firstOrNull()
+        val commitData = commitResourceApi.getLatestCommit(
+            pipelineId = pipelineId,
+            elementId = LoggerService.elementId,
+            repositoryConfig = repositoryConfig
+        ).data?.firstOrNull()
+
         // 获取最后一次commit
         val latestCommit = commitData?.commit?.toLong()
 
@@ -196,46 +236,59 @@ object RepoCommitUtil {
             saveCommit(
                 listOf(
                     CommitData(
-                        ScmType.parse(ScmType.CODE_SVN),
-                        pipelineId,
-                        buildId,
-                        "",
-                        "",
-                        0L,
-                        "",
-                        repositoryConfig.repositoryHashId,
-                        repositoryConfig.repositoryName,
-                        LoggerService.elementId
+                        type = ScmType.parse(ScmType.CODE_SVN),
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        commit = "",
+                        committer = "",
+                        commitTime = 0L,
+                        comment = "",
+                        repoId = repositoryConfig.repositoryHashId,
+                        repoName = repositoryConfig.repositoryName,
+                        elementId = LoggerService.elementId
                     )
                 )
             )
-            return CommitMaterial(latestCommit.toString(), lastCommit.toString(), commitData.comment, 0)
+            return CommitMaterial(
+                lastCommitId = latestCommit.toString(),
+                newCommitId = lastCommit.toString(),
+                newCommitComment = commitData.comment,
+                commitTimes = 0
+            )
         }
 
         val commits = mutableListOf<CommitData>()
         LoggerService.addNormalLine("save svn commit range: [$latestCommit,$lastCommit]")
-        logs.receiver = ISvnObjectReceiver<SVNLogEntry> { target, info ->
+        logs.receiver = ISvnObjectReceiver<SVNLogEntry> { _, info ->
 
             commits.add(
                 CommitData(
-                    ScmType.parse(ScmType.CODE_SVN),
-                    pipelineId,
-                    buildId,
-                    info.revision.toString(),
-                    info.author,
-                    info.date.time / 1000,
-                    info.message,
-                    repositoryConfig.repositoryHashId,
-                    repositoryConfig.repositoryName,
-                    LoggerService.elementId
+                    type = ScmType.parse(ScmType.CODE_SVN),
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    commit = info.revision.toString(),
+                    committer = info.author,
+                    commitTime = info.date.time / 1000,
+                    comment = info.message,
+                    repoId = repositoryConfig.repositoryHashId,
+                    repoName = repositoryConfig.repositoryName,
+                    elementId = LoggerService.elementId
                 )
             )
         }
+
         logs.run()
+
         val commitsList = commits.filter { it.commit.toLong() != latestCommit }
+
         saveCommit(commitsList)
 
-        return CommitMaterial(latestCommit?.toString(), lastCommit.toString(), commitData?.comment, commitsList.size)
+        return CommitMaterial(
+            lastCommitId = latestCommit?.toString(),
+            newCommitId = lastCommit.toString(),
+            newCommitComment = commitData?.comment,
+            commitTimes = commitsList.size
+        )
     }
 
     private fun saveCommit(commits: List<CommitData>) {
