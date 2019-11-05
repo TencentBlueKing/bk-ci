@@ -69,10 +69,10 @@ class CodeGitScmOauthImpl constructor(
     }
 
     override fun getBranches() =
-        gitOauthApi.listBranches(gitConfig.gitUrl, token, projectName)
+        gitOauthApi.listBranches(gitConfig.gitApiUrl, token, projectName)
 
     override fun getTags() =
-        gitOauthApi.listTags(gitConfig.gitUrl, token, projectName)
+        gitOauthApi.listTags(gitConfig.gitApiUrl, token, projectName)
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
@@ -155,7 +155,7 @@ class CodeGitScmOauthImpl constructor(
             )
         }
         try {
-            gitOauthApi.addWebhook(gitConfig.gitUrl, token, projectName, hookUrl, event)
+            gitOauthApi.addWebhook(gitConfig.gitApiUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),

@@ -49,7 +49,8 @@ class GitConfig {
     @Value("\${scm.external.gitlab.gitlabHookUrl:}")
     val gitlabHookUrl: String = ""
 
-    /* 定制版的内部git config*/
+    /* git config*/
+    @Deprecated("use apiUrl")
     @Value("\${scm.git.url:}")
     val gitUrl: String = ""
 
