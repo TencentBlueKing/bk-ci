@@ -38,7 +38,7 @@ data class CodeGitRepository(
     override val url: String,
     @ApiModelProperty("凭据id", required = true)
     override val credentialId: String,
-    @ApiModelProperty("git项目名称", example = "soda/soda_ci_example_proj", required = true)
+    @ApiModelProperty("git项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,
     @ApiModelProperty("用户名", required = true)
     override var userName: String,
