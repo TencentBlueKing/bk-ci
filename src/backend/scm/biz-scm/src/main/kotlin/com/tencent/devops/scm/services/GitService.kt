@@ -29,6 +29,7 @@ package com.tencent.devops.scm.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -36,7 +37,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -53,7 +53,6 @@ import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
-import com.tencent.devops.scm.code.git.api.CODE_GIT_URL
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import okhttp3.MediaType
@@ -138,7 +137,7 @@ class GitService @Autowired constructor(
 
             val result = mutableListOf<Project>()
             while (true) {
-                val projectUrl = "$CODE_GIT_URL/projects?access_token=$accessToken&page=$page&per_page=100"
+                val projectUrl = "$gitUrl/projects?access_token=$accessToken&page=$page&per_page=100"
                 page++
 
                 val request = Request.Builder()
