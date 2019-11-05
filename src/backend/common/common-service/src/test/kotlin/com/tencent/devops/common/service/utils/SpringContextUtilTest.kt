@@ -24,26 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.common.service.utils
 
-import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerVolumeGenerator
-import com.tencent.devops.dockerhost.docker.annotation.VolumeGenerator
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.test.context.junit4.SpringRunner
 
-@VolumeGenerator(description = "默认Docker Volume生成器")
-@Component
-class SystemDockerVolumeGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
-    DockerVolumeGenerator {
+@RunWith(SpringRunner::class)
+@SpringBootTest(classes = [SpringContextUtilTest::class])
+class SpringContextUtilTest {
+    @Bean
+    fun springContextUtil() = SpringContextUtil()
 
-    override fun generateVolumes(dockerHostBuildInfo: DockerHostBuildInfo): List<Volume> {
-        return listOf(
-            Volume(dockerHostConfig.volumeWorkspace),
-            Volume(dockerHostConfig.volumeApps),
-            Volume(dockerHostConfig.volumeInit)
-        )
+    @Bean
+    fun df() = Dd()
+
+    @Bean
+    fun ff() = Ff()
+
+    interface Acc
+
+    class Dd : Acc
+
+    class Ff : Acc
+
+    @Test
+    fun setApplicationContext() {
+        val beansWithClass = SpringContextUtil.getBeansWithClass(Acc::class.java)
+        beansWithClass.forEach {
+            println(it.javaClass)
+        }
     }
 }
