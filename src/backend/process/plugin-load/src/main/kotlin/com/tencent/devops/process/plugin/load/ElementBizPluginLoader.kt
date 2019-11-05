@@ -51,8 +51,6 @@ class ElementBizPluginLoader : BeanPostProcessor {
             } else {
                 logger.warn("${bean::class.java} is not match for $elementBiz")
             }
-        } else {
-            logger.info("The element biz is null")
         }
         return bean
     }
