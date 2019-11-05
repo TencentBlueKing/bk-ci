@@ -198,7 +198,7 @@ class ScmService @Autowired constructor(
                     gitConfig.gitlabHookUrl
                 }
                 ScmType.CODE_SVN -> {
-                    svnConfig.webhookApiUrl
+                    svnConfig.svnHookUrl
                 }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")

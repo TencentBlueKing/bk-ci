@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.IosUtils
 import net.dongliu.apk.parser.ApkFile
@@ -49,6 +50,7 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
 
+@ApiPriority(priority = 9)
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun getFileDownloadUrls(

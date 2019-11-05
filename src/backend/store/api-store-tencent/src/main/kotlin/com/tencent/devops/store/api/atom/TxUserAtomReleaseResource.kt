@@ -54,7 +54,7 @@ interface TxUserAtomReleaseResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("userId", required = true)
+        @ApiParam("项目代码", required = true)
         @QueryParam("projectId")
         projectId: String,
         @ApiParam("atomId", required = true)

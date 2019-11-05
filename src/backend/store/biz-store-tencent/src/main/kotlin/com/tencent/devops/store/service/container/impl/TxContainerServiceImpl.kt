@@ -152,7 +152,8 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 tstackNodeList
             }
             BuildType.ESXi -> {
-                val l = listOf(MacOSNode("蓝盾公共构建资源", "蓝盾公共构建资源"))
+                val macPublicBuildResourceName = MessageCodeUtil.getCodeLanMessage("macPublicBuildResourceName")
+                val l = listOf(MacOSNode(macPublicBuildResourceName, macPublicBuildResourceName))
                 containerResourceValue = l.map {
                     it.name
                 }.toList()

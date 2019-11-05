@@ -30,7 +30,6 @@ import com.github.dockerjava.api.model.Volume
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.docker.DockerVolumeGenerator
-import com.tencent.devops.dockerhost.docker.annotation.BindGenerator
 import com.tencent.devops.dockerhost.docker.annotation.VolumeGenerator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -41,9 +40,10 @@ class SystemDockerVolumeGenerator @Autowired constructor(private val dockerHostC
     DockerVolumeGenerator {
 
     override fun generateVolumes(dockerHostBuildInfo: DockerHostBuildInfo): List<Volume> {
-        val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
-        val volumeApps = Volume(dockerHostConfig.volumeApps)
-        val volumeInit = Volume(dockerHostConfig.volumeInit)
-        return listOf(volumeWs, volumeApps, volumeInit)
+        return listOf(
+            Volume(dockerHostConfig.volumeWorkspace),
+            Volume(dockerHostConfig.volumeApps),
+            Volume(dockerHostConfig.volumeInit)
+        )
     }
 }

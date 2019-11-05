@@ -24,19 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.ticket
+package com.tencent.devops.store.service.common
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
+/**
+ * store组件可见范围逻辑类
+ * since: 2019-01-08
+ */
+interface StoreVisibleDeptService {
 
-    override fun get(credentialId: String, publicKey: String): Result<CredentialInfo> {
-        val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
-        val request = buildGet(path)
-        val responseContent = request(request, "获取凭据失败")
-        return objectMapper.readValue(responseContent)
-    }
+    /**
+     * 查看store组件可见范围
+     */
+    fun getVisibleDept(storeCode: String, storeType: StoreTypeEnum, deptStatus: DeptStatusEnum?): Result<StoreVisibleDeptResp?>
+
+    /**
+     * 批量获取已经审核通过的可见范围
+     */
+    fun batchGetVisibleDept(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<Int>>>
+
+    /**
+     * 设置store组件可见范围
+     */
+    fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 删除store组件可见范围
+     */
+    fun deleteVisibleDept(userId: String, storeCode: String, deptIds: String, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 审核可见范围
+     */
+    fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq, storeType: StoreTypeEnum): Result<Boolean>
 }
