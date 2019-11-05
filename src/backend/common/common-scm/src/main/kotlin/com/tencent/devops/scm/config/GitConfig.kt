@@ -53,9 +53,6 @@ class GitConfig {
     @Value("\${scm.git.url:}")
     val gitUrl: String = ""
 
-    @Value("\${scm.git.apiUrl:}")
-    val gitApiUrl: String = ""
-
     @Value("\${scm.git.clientId:}")
     val clientId: String = ""
 
