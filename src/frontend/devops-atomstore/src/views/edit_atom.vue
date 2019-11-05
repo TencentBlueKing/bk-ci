@@ -629,7 +629,7 @@
                             }
 
                             const res = await this.$store.dispatch('store/editAtom', {
-                                projectId: this.atomForm.projectCode,
+                                projectCode: this.atomForm.projectCode,
                                 params: params
                             })
 
