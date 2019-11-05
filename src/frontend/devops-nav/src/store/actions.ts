@@ -71,14 +71,10 @@ const actions: ActionTree<RootState, any> = {
         dispatch('setProjectList', projectList)
         window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
     },
-    checkProjectField (_, { field, value, projectId }) {
-        if (field === 'project_name') {
-            return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${field}/validate/?project_name=${value}${projectId ? `&project_id=${projectId}` : ''}`)
-        } else {
-            return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${field}/${value}/validate/`)
-        }
+    getDepartmentInfo (_, { type, id }) {
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/organizations/types/${type}/ids/${id}`)
     },
-    ajaxUpdatePM ({ commit }, { id, data }) {
+    ajaxUpdatePM (_, { id, data }) {
         return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${id}/`, data)
     },
     ajaxAddPM (_, data) {
@@ -86,6 +82,9 @@ const actions: ActionTree<RootState, any> = {
     },
     toggleProjectEnable (_, { projectId, enabled }) {
         return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/enable?enabled=${enabled}`)
+    },
+    getMyDepartmentInfo () {
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/users/detail/`)
     },
     selectDemoProject ({ commit }, { project }) {
         commit(SET_DEMO_PROJECT, {
@@ -104,6 +103,7 @@ const actions: ActionTree<RootState, any> = {
         commit(RESET_NEW_PROJECT, project)
     },
     toggleProjectDialog ({ commit }, payload) {
+        commit(RESET_NEW_PROJECT, payload.project || EMPTY_PROJECT)
         commit(TOGGLE_PROJECT_DIALOG, payload)
         if (payload.project) {
             commit(UPDATE_NEW_PROJECT, payload.project)

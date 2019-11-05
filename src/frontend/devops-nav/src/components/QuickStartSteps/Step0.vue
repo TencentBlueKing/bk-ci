@@ -1,8 +1,10 @@
 <template>
     <div>
         <header class="setting-title">
-            <span class="setting-title-main-text">选择配置选项</span>
-            <span class="devops-desc setting-title-desc">你可以在蓝盾DevOps平台上选择一个Demo代码库快速配置自己的交付流水线</span>
+            <span class="setting-title-main-text">{{ $t('quickStart.configurationTip') }}</span>
+            <span class="devops-desc setting-title-desc">
+                {{ $t("quickStart.settintTitleDesc") }}
+            </span>
         </header>
         <div class="setting-option selected disabled">
             <label class="bk-form-checkbox">
@@ -11,7 +13,7 @@
                     false-value="no"
                     :checked="true"
                 >
-                    是否启用白名单
+                    {{ $t("quickStart.isEnableWhiteList") }}
                 </bk-checkbox>
 
                 <h3>{{ settingOptions.title }}</h3>
@@ -26,11 +28,13 @@
     import { Component } from 'vue-property-decorator'
     @Component
     export default class Step0 extends Vue {
-        settingOptions: object = {
-          title: '快速配置属于自己的流水线',
-          desc: '说明：创建并管理你自己的流水线',
-          value: 'quick',
-          disabled: true
+        get settingOptions (): object {
+            return {
+                title: this.$t('quickStart.settingOptionsTitle'),
+                desc: this.$t('quickStart.settingOptionsDesc'),
+                value: 'quick',
+                disabled: true
+            }
         }
     }
 </script>
@@ -67,9 +71,11 @@
                 color: $fontBoldColor;
                 width: 240px;
                 font-size: 14px;
+                margin-left: 20px;
             }
             > p {
                 font-size: 12px;
+                margin-left: 20px;
             }
         }
     }

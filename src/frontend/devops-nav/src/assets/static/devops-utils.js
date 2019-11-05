@@ -96,7 +96,6 @@ const devopsUtil = {};
             [prop]: val
         })
     }
-
     
     /**
      * 同步父窗口URL

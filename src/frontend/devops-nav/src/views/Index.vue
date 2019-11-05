@@ -34,6 +34,13 @@
                         >
                             {{ $t('accessDeny.switchProject') }}
                         </bk-button>
+                        <a
+                            target="_blank"
+                            class="empty-btns-item"
+                            :href="`/console/perm/apply-join-project${$route.params.projectId ? `?project_code=${$route.params.projectId}` : ''}`"
+                        >
+                            <bk-button theme="success">申请加入</bk-button>
+                        </a>
                     </empty-tips>
 
                     <empty-tips
@@ -102,20 +109,20 @@
         }
 
         get hasProject (): boolean {
-            return this.projectList.some(project => project.project_code === this.$route.params.projectId)
+            return this.projectList.some(project => project.projectCode === this.$route.params.projectId)
         }
 
         get isDisableProject (): boolean {
-            const project = this.disableProjectList.find(project => project.project_code === this.$route.params.projectId)
+            const project = this.disableProjectList.find(project => project.projectCode === this.$route.params.projectId)
             return project ? !project.enabled : false
         }
 
         get isApprovalingProject (): boolean {
-            return !!this.approvalingProjectList.find(project => project.project_code === this.$route.params.projectId)
+            return !!this.approvalingProjectList.find(project => project.projectCode === this.$route.params.projectId)
         }
 
         get isOnlineProject (): boolean {
-            return !!this.enableProjectList.find(project => project.project_code === this.$route.params.projectId)
+            return !!this.enableProjectList.find(project => project.projectCode === this.$route.params.projectId)
         }
 
         get hasProjectList (): boolean {
@@ -143,7 +150,7 @@
 
         saveProjectId (): void {
             const { $route, projectList } = this
-            if (projectList.find(project => (project.project_code === $route.params.projectId && project.enabled && (project.approval_status === 2 || project.approval_status === 1)))) {
+            if (projectList.find(project => (project.projectCode === $route.params.projectId && project.enabled && (project.approvalStatus === 2 || project.approvalStatus === 1)))) {
                 localStorage.setItem('projectId', $route.params.projectId)
             }
         }

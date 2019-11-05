@@ -3,7 +3,25 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right" v-if="nodeList.length > 0">
-                <bk-button theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+                <bk-button theme="primary" class="create-node-btn"
+                    @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
+                <bk-dropdown-menu :align="'right'"
+                    @show="dropdownIsShow('show')"
+                    @hide="dropdownIsShow('hide')"
+                    ref="dropdown">
+                    <bk-button slot="dropdown-trigger">
+                        <span>{{ $t('environment.import') }}</span>
+                        <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                    </bk-button>
+                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                        <li>
+                            <a href="javascript:;" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</a>
+                        </li>
+                    </ul>
+                </bk-dropdown-menu>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -52,7 +70,23 @@
                 </bk-table-column>
                 <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
                     <template slot-scope="props">
-                        <div>
+                        <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
+                            <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
+                                <i class="bk-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
+                            </div>
+                            <div class="prompt-operator" v-else>
+                                <bk-popover placement="top">
+                                    <span><i class="bk-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
+                                    <template slot="content">
+                                        <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
+                                        <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
+                                        <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
+                                    </template>
+                                </bk-popover>
+                            </div>
+                        </div>
+                        <div v-else>
                             <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
                             <span>({{ props.row.createdUser }})</span>
                         </div>
@@ -61,7 +95,7 @@
                 <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
                     <template slot-scope="props">
                         <div class="table-node-item node-item-status"
-                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE'">
+                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
                             <span class="node-status-icon normal-stutus-icon"></span>
                             <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
                         </div>
@@ -84,13 +118,13 @@
                             </div>
                             <!-- 状态值 -->
                             <span class="install-agent"
-                                v-if="props.row.nodeStatus === 'RUNNING'"
+                                v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
                                 @click="installAgent(props.row)">
                                 {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
                             </span>
                             <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
                             <div class="install-agent"
-                                v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
+                                v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                 @click="installAgent(props.row)"
                             >{{ `（${$t('environment.install')}Agent）` }}</div>
                         </div>
@@ -111,13 +145,25 @@
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
                             <span class="node-handle delete-node-text"
-                                v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
+                                v-if="props.row.canDelete && !['TSTACK', 'DEVCLOUD'].includes(props.row.nodeType)"
                                 @click.stop="confirmDelete(props.row, index)"
                             >{{ $t('environment.delete') }}</span>
                             <span class="node-handle delete-node-text"
                                 v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
                                 @click.stop="toNodeApplyPerm(props.row)"
                             >{{ $t('environment.applyPermission') }}</span>
+                            <span id="moreHandler" class="node-handle more-handle"
+                                v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
+                                <bk-popover
+                                    placement="bottom-start"
+                                    size="samll"
+                                    theme="light">
+                                    <span>{{ $t('environment.more') }}</span>
+                                    <div slot="content" class="devcloud-menu-list">
+                                        <dropdown-list :is-show="showTooltip" @handleNode="handleNode" :node="props.row"></dropdown-list>
+                                    </div>
+                                </bk-popover>
+                            </span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -128,6 +174,15 @@
                 :empty-info="emptyInfo"
             ></empty-node>
         </section>
+
+        <!-- 导入CMDB -->
+        <config-manage-node :node-select-conf="cmdbNodeSelectConf"
+            :node-list="nodeList"
+            @confirm-fn="confirmCmdbFn"
+            @cancel-fn="cancelCmdbFn"
+        ></config-manage-node>
+
+        <!-- 导入第三方构建机 -->
         <third-construct :construct-tool-conf="constructToolConf"
             :construct-import-form="constructImportForm"
             :connect-node-detail="connectNodeDetail"
@@ -141,24 +196,38 @@
             :is-agent="isAgent"
             :node-ip="nodeIp"
         ></third-construct>
+
+        <make-mirror-dialog
+            :current-node="createImageNode"
+            :make-mirror-conf="makeMirrorConf"
+            @cancelMakeMirror="makeMirrorConf.isShow = false"
+            @submitMakeMirror="requestList"
+        ></make-mirror-dialog>
     </div>
 </template>
 
 <script>
     import emptyNode from './empty_node'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import configManageNode from '@/components/devops/environment/config-manage-node'
+    import dropdownList from '@/components/devops/environment/dropdown-list'
+    import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import { getQueryString } from '@/utils/util'
 
     export default {
         components: {
             emptyNode,
-            thirdConstruct
+            thirdConstruct,
+            configManageNode,
+            dropdownList,
+            makeMirrorDialog
         },
         data () {
             return {
                 timer: -1,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
+                createImageNode: '',
                 nodeIp: '',
                 isAgent: false,
                 isMultipleBtn: false,
@@ -207,6 +276,14 @@
                     hostname: '',
                     status: 'UN_IMPORT',
                     os: 'macOS 10.13.4'
+                },
+                // CMDB弹窗配置
+                cmdbNodeSelectConf: {
+                    isShow: false,
+                    quickClose: false,
+                    hasHeader: false,
+                    unselected: true,
+                    importText: '导入'
                 },
                 makeMirrorConf: {
                     isShow: false
@@ -307,7 +384,6 @@
 
                     res.map(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
-                        item.isMore = item.nodeHashId === this.lastCliCKNode.nodeHashId
                         this.nodeList.push(item)
                     })
 
@@ -354,6 +430,37 @@
                     this.isDropdownShow = true
                 } else {
                     this.isDropdownShow = false
+                }
+            },
+            async toCreateNode () {
+                try {
+                    const res = await this.$store.dispatch('environment/requestVmQuta', {
+                        projectId: this.projectId
+                    })
+
+                    if (res.devCloudVmEnabled) {
+                        this.$store.commit('environment/modifyProcessHead', {
+                            process: 'modelType',
+                            current: 0
+                        })
+                        this.$router.push({ name: 'createNode' })
+                    } else {
+                        const message = `${this.$t('environment.project')}${this.projectId}${this.$t('environment.nodeInfo.devCloudApply')}`
+                        const theme = 'warning'
+
+                        this.$bkMessage({
+                            message,
+                            theme
+                        })
+                    }
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
                 }
             },
             toNodeDetail (node) {
@@ -406,6 +513,50 @@
             /**
              * 构建机信息
              */
+            async changeCreatedUser (id) {
+                const h = this.$createElement
+                const content = h('p', {
+                    style: {
+                        textAlign: 'center'
+                    }
+                }, `${this.$t('environment.nodeInfo.modifyOperatorTips')}？`)
+
+                this.$bkInfo({
+                    title: this.$t('environment.nodeInfo.modifyImporter'),
+                    subHeader: content,
+                    confirmFn: async () => {
+                        let message, theme
+                        const params = {}
+                        try {
+                            await this.$store.dispatch('environment/changeCreatedUser', {
+                                projectId: this.projectId,
+                                nodeHashId: id,
+                                params
+                            })
+
+                            message = this.$t('environment.successfullyModified')
+                            theme = 'success'
+                        } catch (err) {
+                            const message = err.message ? err.message : err
+                            const theme = 'error'
+
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                        } finally {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                            this.requestList()
+                        }
+                    }
+                })
+            },
+            /**
+             * 构建机信息
+             */
             async requetConstructNode () {
                 this.dialogLoading.isLoading = true
 
@@ -443,8 +594,8 @@
                     if (res) {
                         this.constructToolConf.isShow = true
                         if (node) {
-                            const gateway = node.gateway
-                            this.constructImportForm.model = node.osName.toUpperCase()
+                            const gateway = node.nodeType === 'DEVCLOUD' ? 'shenzhen' : node.gateway
+                            this.constructImportForm.model = node.nodeType === 'DEVCLOUD' ? 'LINUX' : node.osName.toUpperCase()
                             this.requestGateway(gateway, node)
                         } else {
                             this.constructImportForm.model = 'MACOS'
@@ -494,7 +645,7 @@
                         this.constructImportForm.location = this.gatewayList[0].zoneName
                     }
 
-                    if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
+                    if (node && ['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
                         this.requestDevCommand()
@@ -573,15 +724,22 @@
                 }
             },
             installAgent (node) {
-                if (['THIRDPARTY'].includes(node.nodeType)) {
+                if (['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = this.$t('environment.comfirm')
                     this.switchConstruct(node)
+                } else if (['CC', 'CMDB'].includes(node.nodeType)) {
+                    const url = `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/installGseAgentGuide.html`
+                    window.open(url, '_blank')
                 }
             },
             async toImportNode (type) {
-                this.switchConstruct()
+                if (type === 'cmdb') {
+                    this.cmdbNodeSelectConf.isShow = true
+                } else {
+                    this.switchConstruct()
+                }
             },
             /**
              * 构建机导入节点
@@ -686,15 +844,77 @@
                     }
                 })
             },
+            async destoryNode (node) {
+                const h = this.$createElement
+                const content = h('p', {
+                    style: {
+                        textAlign: 'center'
+                    }
+                }, `${this.$t('environment.nodeInfo.destoryNode')}？`)
+
+                this.$bkInfo({
+                    title: this.$t('environment.comfirm'),
+                    subHeader: content,
+                    confirmFn: async () => {
+                        clearTimeout(this.timer)
+
+                        let message, theme
+                        try {
+                            await this.$store.dispatch('environment/toDestoryNode', {
+                                projectId: this.projectId,
+                                nodeHashId: node.nodeHashId
+                            })
+
+                            message = this.$t('environment.successfullySubmited')
+                            theme = 'success'
+                        } catch (err) {
+                            message = err.message ? err.message : err
+                            theme = 'error'
+                        } finally {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                            this.requestList()
+                        }
+                    }
+                })
+            },
+            makeImage (node) {
+                this.createImageNode = node
+                // this.showCreateImage = true
+                this.makeMirrorConf.isShow = true
+            },
+            handleNode (name, canUse, node) {
+                if (canUse) {
+                    switch (name) {
+                        case 'destory':
+                            this.destoryNode(node)
+                            break
+                        case 'makeImage':
+                            this.makeImage(node)
+                            break
+                        default:
+                            break
+                    }
+                }
+            },
             canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY'
+                return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
+            },
+            confirmCmdbFn (nodes) {
+                this.cmdbNodeSelectConf.isShow = false
+                this.requestList()
+            },
+            cancelCmdbFn () {
+                this.cmdbNodeSelectConf.isShow = false
             }
         }
     }
 </script>
 
 <style lang="scss">
-    @import './../scss/conf';
+@import './../scss/conf';
 
     %flex {
         display: flex;
@@ -705,10 +925,6 @@
         min-width: 1126px;
         height: 100%;
         overflow: hidden;
-
-        .import-vmbuild-btn {
-            width: 100px;
-        }
 
         .create-node-btn {
             margin-right: 6px;
@@ -827,7 +1043,6 @@
             .is-danger {
                 border-color: #ff5656;
                 background-color: #fff4f4;
-                
             }
         }
 

@@ -21,14 +21,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js" />
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js" />
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js" />
+    <link rel="preload" href="http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js" as="script" />
+    <link rel="preload" as='script' href="//pingjs.qq.com/h5/stats.js?v2.0.4">
     
+    <!-- devops:preload -->
+    <% for (key in htmlWebpackPlugin.files.js) { %>
+        <link href="<%= htmlWebpackPlugin.files.js[key] %>" as="script" rel="preload" />
+    <% } %>
+    <!-- end devops:preload -->
+
     <!-- devops:css -->
     <% for (key in htmlWebpackPlugin.files.css) { %>
         <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
@@ -64,13 +71,19 @@
     <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js"></script>
     <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js"></script>
     <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js"></script>
+    <script async src="http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js"></script>
     <!-- devops:assets -->
     <!-- end devops:assets -->
     
     <script>
         var WEBSITE_URL = '__HTTP_SCHEMA__://__BKCI_STATIC_FQDN__'
         var GW_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
+        var WS_URL_PREFIX= 'http://v2.dev.devops.oa.com'
         var DOCS_URL_PREFIX = 'https://bk.tencent.com/docs/ci'  // 文档中心域名
+        var LOGIN_SERVICE_URL = 'http://login.o.oa.com'  // 登录域名前缀
+        var DOCS_URL_PREFIX = 'http://docs.devops.oa.com'  // 文档中心域名
+        var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
+        var ENTERPRISE_VERSION = false
     </script>
     
     
@@ -102,7 +115,7 @@
         function isValidPid (projectList, pid) {
             for(var i = 0; i < projectList.length; i++) {
                 var proj = projectList[i]
-                if (proj.project_code === pid) {
+                if (proj.projectCode === pid) {
                     return true
                 }
             }
@@ -138,7 +151,7 @@
                     for(var i = 0; i < queryArr.length; i++) {
                         var item = queryArr[i].split('=')
                         var key = decodeURIComponent(item[0])
-                        if (key === 'project_code') {
+                        if (key === 'projectCode') {
                             return decodeURIComponent(item[1])
                         } 
                     }
@@ -195,7 +208,7 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
         }
 
-    
+
         function getServiceObject (serviceList) {
             var serviceMap = {}
             var iframeRoutes = []
@@ -212,7 +225,6 @@
                     }
 
                     serviceMap[mod] = children[j]
-                    
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
                             path: mod + (children[j].show_project_list ? '/:projectId?' : ''),
@@ -246,7 +258,7 @@
             var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
             var page = serviceMap[subServiceId] || null
 
-            var defaultPid = projectList[0] && projectList[0].project_code
+            var defaultPid = projectList[0] && projectList[0].projectCode
             var isPidOk = isValidPid(projectList, pathPid)
             if (!isPidOk && defaultPid) {
                 setProjectIdCookie(defaultPid)
@@ -281,11 +293,11 @@
                 if (key && typeof key === 'string') {
                     var cacheKey = CACHE_PREFIX + key
                     localStorage.setItem(cacheKey, JSON.stringify(value))
-                }    
+                }
             } catch (error) {
                 console.warn(error)
             }
-            
+
         }
 
         window.getLsCacheItem = function (key) {
@@ -365,6 +377,33 @@
                 }
             }
         }
+
+        // 接入mta统计
+        var _mtac = {};
+        (function() {
+            var mta = document.createElement("script");
+            mta.src = "//pingjs.qq.com/h5/stats.js?v2.0.4";
+            mta.setAttribute("name", "MTAH5");
+            mta.setAttribute("sid", "500630653");
+
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(mta, s);
+        })();
+
+        function JSONP (url, callback) {
+            console.log(url)
+            const cbId = 'jsonp_callback_' + Math.round(100000 * Math.random())
+
+            window[cbId] = function (data) {
+                delete window[cbId]
+                document.body.removeChild(scriptNode)
+                callback(data)
+            }
+
+            var scriptNode = document.createElement('script')
+            scriptNode.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cbId
+            document.body.appendChild(scriptNode)
+        }        
     </script>
 </body>
 </html>

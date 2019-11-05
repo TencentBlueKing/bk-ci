@@ -1,10 +1,14 @@
 <template>
     <div class="step-wrapper">
         <i class="bk-icon icon-check-circle quick-acess-success-icon" />
-        <p>你已在[{{ demo.projectName }}]下成功创建了一个交付流水线</p>
+        <p>
+            {{ $t('quickStart.completeTips', { projectName: demo.projectName }) }}
+        </p>
 
         <a :href="pipelineUrl">
-            <bk-button theme="primary">开启流水线之旅</bk-button>
+            <bk-button theme="primary">
+                {{ $t('quickStart.getStarted') }}
+            </bk-button>
         </a>
     </div>
 </template>
@@ -18,8 +22,8 @@
         @State demo!: ObjectMap
 
         get pipelineUrl (): string {
-          const { pipelineId, projectId } = this.demo
-          return `/console/pipeline/${projectId}/${pipelineId}/edit`
+            const { pipelineId, projectId } = this.demo
+            return `/console/pipeline/${projectId}/${pipelineId}/edit`
         }
     }
 </script>

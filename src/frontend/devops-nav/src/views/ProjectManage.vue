@@ -63,29 +63,29 @@
                                 <span
                                     v-else
                                     class="avatar"
-                                    :class="['project-avatar', `match-color-${matchForCode(props.row.project_code)}`]"
+                                    :class="['project-avatar', `match-color-${matchForCode(props.row.projectCode)}`]"
                                     @click="modifyLogo(props.row)"
                                 >
-                                    {{ props.row.project_name.substr(0, 1) }}
+                                    {{ props.row.projectName.substr(0, 1) }}
                                     <span class="bg-avatar">{{ $t('editLabel') }}</span>
                                 </span>
                                 <div class="info">
                                     <p class="title">
-                                        <template v-if="props.row.approval_status !== 2">
+                                        <template v-if="props.row.approvalStatus !== 2">
                                             <a
                                                 v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
                                                 href="javascript:void(0)"
                                                 class="bk-text-button is-disabled"
                                                 :title="$t('accessDeny.noOperateAccess')"
-                                            >{{ props.row.project_name }}</a>
+                                            >{{ props.row.projectName }}</a>
                                         </template>
                                         <template v-else>
                                             <a
                                                 href="javascript:void(0)"
                                                 :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
-                                                :title="props.row.project_name"
+                                                :title="props.row.projectName"
                                                 @click.stop.prevent="goProject(props.row)"
-                                            >{{ props.row.project_name }}</a>
+                                            >{{ props.row.projectName }}</a>
                                         </template>
                                     </p>
                                     <time class="time">{{ props.row.created_at }}</time>
@@ -93,12 +93,12 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <!-- <bk-table-column
+                    <bk-table-column
                         label="关联CC业务"
                         prop="ccAppName"
                     >
                         {{ ccAppName ? ccAppName : '--' }}
-                    </bk-table-column> -->
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('projectDesc')"
                         prop="description"
@@ -113,7 +113,7 @@
                     >
                         <template slot-scope="props">
                             <!-- 状态为待审批 -->
-                            <template v-if="props.row.approval_status === 1">
+                            <template v-if="props.row.approvalStatus === 1">
                                 <a
                                     v-bk-tooltips="{ content: $t('waitforReview') }"
                                     href="javascript:void(0)"
@@ -133,7 +133,7 @@
                                 >{{ $t('userManage') }}</a>
                             </template>
                             <!-- 状态为已驳回 -->
-                            <template v-else-if="props.row.approval_status === 3">
+                            <template v-else-if="props.row.approvalStatus === 3">
                                 <a
                                     href="javascript:void(0)"
                                     :class="['bk-text-button']"
@@ -275,9 +275,7 @@
 
         get formatPageData (): object[] {
             return this.curPageData.map(item => ({
-                ...item,
-                ccAppName: item['cc_app_name'],
-                projectCode: item['project_code']
+                ...item
             }))
         }
 
@@ -314,11 +312,11 @@
         filterProjectList (showOfflined) {
             if (showOfflined) {
                 this.curProjectList = this.projectList.filter(project => {
-                    return project['project_name'].indexOf(this.inputValue) !== -1 && project['approval_status'] !== 3
+                    return project['projectName'].indexOf(this.inputValue) !== -1 && project['approvalStatus'] !== 3
                 })
             } else {
                 this.curProjectList = this.projectList.filter(project => {
-                    return project.enabled && project['project_name'].indexOf(this.inputValue) !== -1 && project['approval_status'] !== 3
+                    return project.enabled && project['projectName'].indexOf(this.inputValue) !== -1 && project['approvalStatus'] !== 3
                 })
             }
             this.initPageConf()
@@ -383,7 +381,7 @@
         }
 
         toggleProject (project: any): void {
-            const { enabled, project_code: projectCode, project_name: projectName = '' } = project
+            const { enabled, project_coC: projectCode, projectName: projectName = '' } = project
             this.curProjectData = JSON.parse(JSON.stringify(project))
 
             const message = (enabled ? this.$t('disableProjectConfirm') : this.$t('disableProjectConfirm')) + projectName

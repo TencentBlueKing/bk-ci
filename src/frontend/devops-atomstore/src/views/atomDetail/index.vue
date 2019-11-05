@@ -61,6 +61,12 @@
                                         icon: ''
                                     },
                                     {
+                                        id: 'visible',
+                                        selectId: ['visible'],
+                                        name: this.$t('可见范围'),
+                                        icon: ''
+                                    },
+                                    {
                                         id: 'private',
                                         selectId: ['private'],
                                         name: this.$t('私有配置'),

@@ -6,11 +6,12 @@
                 <label class="bk-label">{{ $t('codelib.codelibMode') }}:</label>
                 <bk-radio-group v-model="codelib.authType" @change="authTypeChange(codelib)" class="bk-form-content form-radio">
                     <bk-radio value="OAUTH" v-if="isGit">OAUTH</bk-radio>
-                    <bk-radio value="SSH">SSH</bk-radio>
+                    <bk-radio value="SSH" v-if="!isTGit">SSH</bk-radio>
                     <bk-radio value="HTTP">HTTP</bk-radio>
+                    <bk-radio value="HTTPS" v-if="isTGit">HTTPS</bk-radio>
                 </bk-radio-group>
             </div>
-            <div class="bk-form-item" v-if="(isGit || isGithub) && codelib.authType === 'OAUTH'">
+            <div class="bk-form-item" v-if="((isGit || isGithub) && codelib.authType === 'OAUTH') || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
@@ -114,8 +115,8 @@
                             </bk-option>
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
+                        <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
                     </div>
-                    <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
                 <!-- 访问凭据 end -->
             </div>
@@ -125,7 +126,7 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import { getCodelibConfig, isSvn, isGit, isGithub } from '../../config/'
+    import { getCodelibConfig, isSvn, isGit, isGithub, isTGit } from '../../config/'
     import { parsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
@@ -193,15 +194,19 @@
             },
             hasPower () {
                 return (
-                    (this.isGit
-                        ? this.gitOAuth.status
-                        : this.githubOAuth.status) !== 403
+                    (this.isTGit
+                        ? this.tGitOAuth.status
+                        : this.isGit
+                            ? this.gitOAuth.status
+                            : this.githubOAuth.status) !== 403
                 )
             },
             oAuth () {
-                return this.isGit
-                    ? this.gitOAuth
-                    : this.githubOAuth
+                return this.isTGit
+                    ? this.tGitOAuth
+                    : this.isGit
+                        ? this.gitOAuth
+                        : this.githubOAuth
             },
             codelibTypeName () {
                 return this.codelib && this.codelib['@type']
@@ -227,6 +232,9 @@
             },
             isGit () {
                 return isGit(this.codelibTypeName)
+            },
+            isTGit () {
+                return isTGit(this.codelibTypeName)
             },
             isGithub () {
                 return isGithub(this.codelibTypeName)
@@ -327,6 +335,12 @@
             },
             'gitOAuth.status': function (newStatus) {
                 if (this.isGit) {
+                    this.hasValidate = true
+                    this.saving = false
+                }
+            },
+            'tGitOAuth.status': function (newStatus) {
+                if (this.isTGit) {
                     this.hasValidate = true
                     this.saving = false
                 }
@@ -483,7 +497,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .code-lib-credential {
         display: flex;
         align-items: center;
@@ -512,5 +526,8 @@
     .cre-icon {
         float: right;
         margin-top: 10px;
+    }
+    .bk-form-control {
+        display: block;
     }
 </style>

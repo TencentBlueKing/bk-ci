@@ -62,10 +62,11 @@ function iframeUtil (router: any) {
         tips.message = tips.message || tips.msg || ''
         eventBus.$bkMessage({
             offsetY: 20,
+            limit: 1,
             ...tips
         })
     }
-
+ 
 
     utilMap.syncLocale = function (target: object, locale: string) {
         send(target, 'syncLocale', locale)

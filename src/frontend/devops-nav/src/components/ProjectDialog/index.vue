@@ -21,36 +21,45 @@
             <devops-form-item
                 :label="$t('projectName')"
                 :required="true"
-                :is-error="errors.has('project_name')"
+                :is-error="errors.has('projectName')"
             >
                 <bk-input
-                    v-model="newProject.project_name"
-                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.project_id] }"
+                    v-model="newProject.projectName"
+                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.projectId] }"
                     maxlength="12"
-                    name="project_name"
+                    name="projectName"
                     :placeholder="$t('projectNamePlaceholder')"
                 />
                 <div
-                    v-if="errors.has('project_name')"
+                    v-if="errors.has('projectName')"
                     slot="error-tips"
                     class="project-dialog-error-tips"
                 >
-                    {{ errors.first('project_name') }}
+                    {{ errors.first('projectName') }}
+                    <span v-if="isErrorsRule(errors, 'projectNameUnique')">
+                        {{ $t('questionTips') }}
+                        <a
+                            class="text-link"
+                            href="wxwork://message/?username=DevOps"
+                        >
+                            {{ $t('quickStart.blueShieldAssistant') }}
+                        </a>
+                    </span>
                 </div>
             </devops-form-item>
             <devops-form-item
                 :label="$t('englishName')"
                 :required="true"
                 :rules="[]"
-                property="english_name"
-                :is-error="errors.has('english_name')"
-                :error-msg="errors.first('english_name')"
+                property="englishName"
+                :is-error="errors.has('englishName')"
+                :error-msg="errors.first('englishName')"
             >
                 <bk-input
-                    v-model="newProject.english_name"
+                    v-model="newProject.englishName"
                     v-validate="{ required: true, min: 2, max: 32, projectEnglishNameReg: true, projectEnglishNameUnique: isNew }"
                     :placeholder="$t('projectEnglishNamePlaceholder')"
-                    name="english_name"
+                    name="englishName"
                     maxlength="32"
                     :disabled="!isNew"
                 />
@@ -70,6 +79,81 @@
                     name="description"
                 />
             </devops-form-item>
+            <bk-form-item
+                :label="$t('centerInfo')"
+                :required="true"
+            >
+                <div class="bk-dropdown-box">
+                    <bk-select
+                        v-model="newProject.bgId"
+                        :placeholder="$t('BGLabel')"
+                        name="bg"
+                        :loading="deptLoading.bg"
+                        searchable
+                        @selected="setBgName"
+                    >
+                        <bk-option
+                            v-for="bg in curDepartmentInfo.bg"
+                            :id="bg.id"
+                            :key="bg.id"
+                            :name="bg.name"
+                        />
+                    </bk-select>
+                </div>
+                <div class="bk-dropdown-box">
+                    <bk-select
+                        v-model="newProject.deptId"
+                        :placeholder="$t('departmentLabel')"
+                        name="dept"
+                        :loading="deptLoading.dept"
+                        searchable
+                        @selected="setDeptName"
+                    >
+                        <bk-option
+                            v-for="bg in curDepartmentInfo.dept"
+                            :id="bg.id"
+                            :key="bg.id"
+                            :name="bg.name"
+                        />
+                    </bk-select>
+                </div>
+                <div class="bk-dropdown-box">
+                    <bk-select
+                        v-model="newProject.centerId"
+                        :placeholder="$t('centerLabel')"
+                        name="center"
+                        :loading="deptLoading.center"
+                        searchable
+                        @selected="setCenterName"
+                    >
+                        <bk-option
+                            v-for="center in curDepartmentInfo.center"
+                            :id="center.id"
+                            :key="center.id"
+                            :name="center.name"
+                        />
+                    </bk-select>
+                </div>
+            </bk-form-item>
+            <bk-form-item
+                :label="$t('projectTypeLabel')"
+                :required="true"
+                property="projectType"
+            >
+                <bk-select
+                    v-model="newProject.projectType"
+                    :placeholder="$t('selectProjectTypePlaceholder')"
+                    name="center"
+                    searchable
+                >
+                    <bk-option
+                        v-for="type in projectTypeList"
+                        :id="type.id"
+                        :key="type.id"
+                        :name="type.name"
+                    />
+                </bk-select>
+            </bk-form-item>
         </bk-form>
                         
         <template slot="footer">
@@ -111,7 +195,11 @@
 
         descriptionLength: number = 100
         validate: object = {}
-        title: any = ''
+        curDepartmentInfo: any = {
+            'bg': [],
+            'dept': [],
+            'center': []
+        }
         isNew: boolean = true
         isCreating: boolean = false
         deptLoading: any = {
@@ -124,12 +212,13 @@
         @State showProjectDialog
         @Getter isEmptyProject
         @Action updateNewProject
-        @Action checkProjectField
         @Action toggleProjectDialog
+        @Action getDepartmentInfo
         @Action ajaxUpdatePM
         @Action ajaxAddPM
         @Action getProjects
         @Action resetNewProject
+        @Action getMyDepartmentInfo
 
         handleProjectChange (e): void {
             const { name, value, type, checked } = e.target
@@ -138,6 +227,31 @@
             this.updateNewProject({
                 [name]: isCheckbox ? checked : value
             })
+        }
+
+        get projectTypeList (): object {
+            return [
+                {
+                    id: 1,
+                    name: this.$t('mobileGame')
+                },
+                {
+                    id: 2,
+                    name: this.$t('pcGame')
+                },
+                {
+                    id: 3,
+                    name: this.$t('webGame')
+                },
+                {
+                    id: 4,
+                    name: this.$t('platformProduct')
+                },
+                {
+                    id: 5,
+                    name: this.$t('supportProduct')
+                }
+            ]
         }
 
         get showDialog (): boolean {
@@ -150,17 +264,95 @@
             })
         }
 
+        get title () {
+            return this.isNew ? this.$t('newProject') : this.$t('editProject')
+        }
+
         @Watch('showDialog')
         async watchDialog (show: boolean) {
             if (show) {
                 this.$validator.reset()
-                if (this.newProject.project_name) {
+                if (this.newProject.projectName) {
                     this.isNew = false
                 } else {
                     this.isNew = true
                 }
+                this.getDepartment('bg', '0')
                 
-                this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
+                if (this.isEmptyProject(this.newProject)) {
+                    this.deptLoading['bg'] = true
+                    this.deptLoading['dept'] = true
+                    this.deptLoading['center'] = true
+                    const res = await this.getMyDepartmentInfo()
+                    console.log(this.newProject.bgId, res.bgId)
+                    if (res) {
+                        this.newProject.bgId = res.bgId
+                        this.newProject.bgName = res.bgName
+                        this.newProject.deptId = res.deptId
+                        this.newProject.deptName = res.deptName
+                        this.newProject.centerId = res.centerId
+                        this.newProject.centerName = res.centerName
+                    }
+                }
+            }
+        }
+
+        @Watch('newProject.bgId')
+        watchBg (bgId: string): void {
+            console.log('watch')
+            this.curDepartmentInfo['dept'] = []
+            this.curDepartmentInfo['center'] = []
+            bgId && this.getDepartment('dept', this.newProject.bgId)
+        }
+
+        @Watch('newProject.deptId')
+        watchDept (deptId: string): void {
+            this.curDepartmentInfo['center'] = []
+            deptId && this.getDepartment('center', this.newProject.deptId)
+        }
+
+        isErrorsRule (errors, rule): boolean {
+            try {
+                return errors.items.find(item => item.rule === rule)
+            } catch (e) {
+                console.error(e)
+                return false
+            }
+        }
+
+        async getDepartment (type: string, id: string) {
+            this.deptLoading[type] = true
+            try {
+                const res = await this.getDepartmentInfo({
+                    type,
+                    id
+                })
+                this.curDepartmentInfo[type] = [...res]
+                console.log(type, this.curDepartmentInfo[type])
+            } catch (e) {
+                this.curDepartmentInfo[type] = []
+            }
+            this.deptLoading[type] = false
+        }
+
+        setBgName (id) {
+            const data = this.curDepartmentInfo.bg.find(bg => bg.id === id)
+            if (data) {
+                this.newProject.bgName = data.name
+            }
+        }
+
+        setDeptName (id) {
+            const data = this.curDepartmentInfo.dept.find(dept => dept.id === id)
+            if (data) {
+                this.newProject.deptName = data.name
+            }
+        }
+
+        setCenterName (id) {
+            const data = this.curDepartmentInfo.center.find(center => center.id === id)
+            if (data) {
+                this.newProject.centerName = data.name
             }
         }
 
@@ -233,15 +425,45 @@
         }
 
         async saveProject () {
+            const data = this.newProject
+            // @ts-ignore
             const valid = await this.$validator.validate()
             if (!valid) {
                 return valid
+            }
+            if (data.bgId === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('noBGErrorTips')
+                })
+                return false
+            }
+            if (data.deptId === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('noDeptErrorTips')
+                })
+                return false
+            }
+            if (data.centerId === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('noCenterErrorTips')
+                })
+                return false
+            }
+            if (data.projectType === '') {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: this.$t('selectProjectTypePlaceholder')
+                })
+                return false
             }
             this.isCreating = true
             if (this.isNew) {
                 this.addProject()
             } else {
-                const id = this.newProject.project_id
+                const id = this.newProject.projectId
                 const params = {
                     id: id,
                     data: this.newProject
@@ -254,10 +476,6 @@
         cancelProject () {
             this.isCreating = false
             this.showDialog = false
-        }
-
-        async created () {
-            this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
         }
     }
 </script>

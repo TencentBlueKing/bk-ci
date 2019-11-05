@@ -1,6 +1,6 @@
 <template>
     <div class="devops-quickstart">
-        <h2>$t('quickstartTitle')新手接入蓝盾DevOps平台</h2>
+        <h2>{{ $t('quickStart.quickstartTitle') }}</h2>
         <quick-start-steps
             ref="step"
             v-bkloading="{ isLoading }"
@@ -10,28 +10,28 @@
         />
         <footer v-if="!done">
             <router-link to="/console/">
-                <bk-button>{{ $t('cancelText') }}</bk-button>
+                <bk-button>{{ $t('cancelLabel') }}</bk-button>
             </router-link>
             <bk-button
                 v-if="stepIndex > 0"
                 theme="primary"
                 @click="prev"
             >
-                {{$t('form.prev')}}
+                {{ $t('form.prev') }}
             </bk-button>
             <bk-button
                 v-if="stepIndex < stepList.length - 1"
                 theme="success"
                 @click="next"
             >
-                {{$t('form.next')}}
+                {{ $t('form.next') }}
             </bk-button>
             <bk-button
                 v-if="stepIndex === stepList.length - 1"
                 theme="success"
                 @click="doCreate"
             >
-                {{$t('form.submit')}}
+                {{ $t('form.submit') }}
             </bk-button>
         </footer>
     </div>
@@ -52,11 +52,6 @@
         stepIndex: number = 0
         done: boolean = false
         isLoading: boolean = false
-        stepList: string[] = [
-            this.$t('configProject'),
-            this.$t('configPipeline'),
-            this.$t('complete')
-        ]
         isError: boolean = false
 
         @Action createDemo
@@ -65,6 +60,14 @@
 
         $refs: {
             step: QuickStartSteps
+        }
+
+        get stepList () {
+            return [
+                this.$t('configProject'),
+                this.$t('configPipeline'),
+                this.$t('complete')
+            ]
         }
 
         next (): void {
@@ -88,7 +91,7 @@
         async doCreate () {
             try {
                 if (!this.demo) {
-                    throw new Error(this.$t('exception.noProject'))
+                    throw Error(this.$t('exception.noProject').toString())
                 }
                 const { projectId, projectName } = this.demo
                 this.isLoading = true

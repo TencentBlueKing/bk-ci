@@ -15,7 +15,7 @@ import DevopsFormItem from './components/DevopsFormItem/index.vue'
 import AsideNav from './components/AsideNav/index.vue'
 import ContentHeader from './components/ContentHeader/index.vue'
 import BigSelect from './components/Select/index.vue'
-import App from './views/App.vue'
+import App from '@/views/App.vue'
 
 import createLocale from '../../locale'
 
@@ -25,11 +25,14 @@ import validationCNMessages from 'vee-validate/dist/locale/zh_CN';
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import showAskPermissionDialog from './components/AskPermissionDialog'
+import bsWebSocket from './utils/bsWebSocket.js'
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 import './assets/scss/index.scss'
+
+import { judgementLsVersion } from './utils/util'
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -39,6 +42,7 @@ declare module 'vue/types/vue' {
         iframeUtil: any
     }
 }
+
 
 Vue.use(bkMagic)
 Vue.component('AsideNav', AsideNav)
@@ -67,11 +71,22 @@ VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
 const router = createRouter(store, dynamicLoadModule)
+router.afterEach((route) => {
+    bsWebSocket.changeRoute(route)
+})
+router.beforeEach((to, from, next) => {
+    bsWebSocket.loginOut(from)
+    next()
+})
 window.eventBus = eventBus
+window.vuexStore = store
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
+
+// 判断localStorage版本, 旧版本需要清空
+judgementLsVersion()
 
 window.devops = new Vue({
     el: '#devops-root',

@@ -112,6 +112,15 @@ export function isShallowEqual (obj1: object, obj2: object): boolean {
     return obj1Keys.every((key: string) => obj1[key] === obj2[key])
 }
 
+export function judgementLsVersion () {
+    console.log(DEVOPS_LS_VERSION, 'DEVOPS_LS_VERSION')
+    const curLsVersion = window.localStorage.getItem('lsVersion')
+    if (!curLsVersion || curLsVersion !== DEVOPS_LS_VERSION) {
+        window.localStorage.clear()
+        localStorage.setItem('lsVersion', DEVOPS_LS_VERSION)
+    }
+}
+
 // 动态加载js
 export function importScript (src, oHead) {
     return new Promise(resolve => {

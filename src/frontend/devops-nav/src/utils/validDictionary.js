@@ -24,9 +24,9 @@ const dictionary = {
       regex: (field, regex) => {
         return `字段不符合(${regex})正则表达式规则`
       },
-      aliasUnique: field => '代码库别名不能重复', // 较验代码库别名
-      projectNameUnique: field => '项目名称已存在', // 较验项目名称是否重复
-      projectEnglishNameUnique: field => '英文缩写已存在', // 较验项目英文名称是否重复
+      aliasUnique: field => '代码库别名不能重复。', // 较验代码库别名
+      projectNameUnique: field => '项目名称已存在。', // 较验项目名称是否重复
+      projectEnglishNameUnique: field => '英文缩写已存在。', // 较验项目英文名称是否重复
       projectEnglishNameReg: field => '英文缩写必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！', // 较验项目英文名称格式
     }
   },
@@ -36,9 +36,9 @@ const dictionary = {
       regex: (field, regex) => {
         return `字段不符合(${regex})正则表达式规则`
       },
-      aliasUnique: field => 'Codelib alias already exists', // 较验代码库别名
-      projectNameUnique: field => 'Project name already exists', // 较验项目名称是否重复
-      projectEnglishNameUnique: field => 'English Name already exists', // 较验项目英文名称是否重复
+      aliasUnique: field => 'Codelib alias already exists. ', // 较验代码库别名
+      projectNameUnique: field => 'Project name already exists. ', // 较验项目名称是否重复
+      projectEnglishNameUnique: field => 'English Name already exists. ', // 较验项目英文名称是否重复
       projectEnglishNameReg: field => 'English name must consist of lowercase letters + numbers + middle lines, starting with a lowercase letter and limiting the length to 32 characters', // 较验项目英文名称格式
     }
   }

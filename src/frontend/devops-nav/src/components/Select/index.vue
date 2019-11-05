@@ -128,6 +128,7 @@
     import DevopsOption from './Option.vue'
 
     @Component({
+        name: 'big-select',
         components: {
             DevopsOption
         }

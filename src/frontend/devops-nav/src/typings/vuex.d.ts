@@ -31,25 +31,25 @@ interface Demo {
 }
 
 interface Project {
-    project_code?: string
-    project_id?: string
-    project_name: string
-    english_name: string
+    projectCode?: string
+    projectId?: string
+    projectName: string
+    englishName: string
     description: string
-    project_type: string
-    use_bk?: boolean
-    cc_app_id?: number
-    deploy_type?: object[]
+    projectType: string
+    useBk?: boolean
+    ccAppId?: number
+    deployType?: object[]
     kind?: string
-    bg_id?: string
-    bg_name?: string
-    dept_id?: string
-    dept_name?: string
-    center_id?: string
-    center_name?: string
-    is_secrecy?: boolean
-    cc_app_name?: string
-    approval_status?: number
+    bgId?: string
+    bgName?: string
+    deptId?: string
+    deptName?: string
+    centerId?: string
+    centerName?: string
+    isSecrecy?: boolean
+    ccAppName?: string
+    approvalStatus?: number
     enabled?: boolean
     gray?: boolean
 }

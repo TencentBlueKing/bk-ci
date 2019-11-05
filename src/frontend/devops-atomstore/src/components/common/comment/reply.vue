@@ -46,11 +46,13 @@
                 funObj: {
                     expandReplys: {
                         atom: (id) => this.requestAtomReplyList(id),
-                        template: (id) => this.requestTemplateReplyList(id)
+                        template: (id) => this.requestTemplateReplyList(id),
+                        ide: (id) => this.requestIDEReplyList(id)
                     },
                     priase: {
                         atom: (id) => this.requestAtomPraiseComment(id),
-                        template: (id) => this.requestTemplatePraiseComment(id)
+                        template: (id) => this.requestTemplatePraiseComment(id),
+                        ide: (id) => this.requestIDEPraiseComment(id)
                     }
                 },
                 hadShowMore: false
@@ -63,7 +65,7 @@
             comment () {
                 const data = this.commentData || {}
                 if (this.isReply) {
-                    const preContent = data.replyToUser ? `${this.$t('回复@')}${data.replyToUser}：` : ''
+                    const preContent = data.replyToUser ? `${this.$t('回复')}@${data.replyToUser}：` : ''
                     data.commentContent = preContent + data.replyContent
                     data.commentId = data.replyId
                     data.commenter = data.replyer
@@ -81,6 +83,8 @@
                 'requestAtomPraiseComment',
                 'requestTemplatePraiseComment',
                 'requestTemplateReplyList',
+                'requestIDEPraiseComment',
+                'requestIDEReplyList',
                 'clearCommentReply'
             ]),
 

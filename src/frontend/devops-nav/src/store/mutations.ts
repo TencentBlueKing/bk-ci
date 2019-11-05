@@ -57,8 +57,8 @@ const mutations: MutationTree<RootState> = {
     },
     [SET_DEMO_PROJECT]: (state: RootState, { project }: any) => {
         Vue.set(state, 'demo', {
-            projectId: project.project_code,
-            projectName: project.project_name
+            projectId: project.projectCode,
+            projectName: project.projectName
         })
         return state
     },

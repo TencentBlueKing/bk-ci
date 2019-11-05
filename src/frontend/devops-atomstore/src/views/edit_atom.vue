@@ -59,17 +59,21 @@
                         <div v-if="formErrors.sortError" class="error-tips"> {{ $t('分类不能为空') }} </div>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
-                    <label class="bk-label env-label"> {{ $t('操作系统') }} </label>
+                <div class="bk-form-item is-required" ref="jobError">
+                    <label class="bk-label env-label"> {{ $t('适用Job类型') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-checkbox-group v-model="atomForm.os">
-                            <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
-                                <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
-                            </bk-checkbox>
-                        </bk-checkbox-group>
-                        <div v-if="formErrors.envError" class="error-tips env-error"> {{ $t('操作系统不能为空') }} </div>
+                        <bk-radio-group v-model="atomForm.jobType" class="radio-group">
+                            <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="formErrors.jobError = false">{{entry.label}}</bk-radio>
+                        </bk-radio-group>
+                        <div v-if="formErrors.jobError" class="error-tips"> {{ $t('字段有误，请重新选择') }} </div>
                     </div>
                 </div>
+                <bk-checkbox-group v-model="atomForm.os" v-if="atomForm.jobType === 'AGENT'" class="bk-form-content" ref="envError">
+                    <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
+                        <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
+                    </bk-checkbox>
+                </bk-checkbox-group>
+                <div v-if="formErrors.envError" class="error-tips env-error"> {{ $t('需要选择编译环境') }} </div>
                 <div class="bk-form-item">
                     <label class="bk-label"> {{ $t('功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
@@ -86,6 +90,15 @@
                                 :name="option.labelName">
                             </bk-option>
                         </bk-select>
+                    </div>
+                </div>
+                <div class="bk-form-item is-required is-open" ref="openSourceError" v-if="!atomForm.version">
+                    <label class="bk-label"> {{ $t('是否开源') }} </label>
+                    <div class="bk-form-content atom-item-content">
+                        <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
+                            <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="formErrors.openSourceError = false">{{entry.label}}</bk-radio>
+                        </bk-radio-group>
+                        <div v-if="formErrors.openSourceError" class="error-tips"> {{ $t('字段有误，请重新选择') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item introduction-form-item is-required">
@@ -188,20 +201,6 @@
                         </bk-popover>
                     </div>
                 </div>
-                <div class="bk-form-item release-package-form-item is-required" style="margin-top: 10px">
-                    <label class="bk-label"> {{ $t('发布包') }} </label>
-                    <div class="bk-form-content atom-item-content">
-                        <bk-file-upload
-                            :post-url="releasePackageUrl"
-                            :os="atomForm.os"
-                            :tip="$t('只允许上传 zip 格式的文件')"
-                            accept="application/zip"
-                            @uploadSuccess="uploadPackageSuccess"
-                            @uploadFail="uploadPackageErr"
-                        ></bk-file-upload>
-                        <div v-if="formErrors.releasePackageError" class="error-tips"> {{ $t('发布包不能为空') }} </div>
-                    </div>
-                </div>
                 <div class="bk-form-item versionlog-form-item is-required">
                     <label class="bk-label"> {{ $t('版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
@@ -229,17 +228,16 @@
 <script>
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import bkFileUpload from '@/components/common/file-upload'
 
     export default {
         components: {
-            selectLogo,
-            bkFileUpload
+            selectLogo
         },
         data () {
             return {
                 curVersion: '',
                 atomName: 'landun-atom-codecc',
+                initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
                 docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
@@ -250,10 +248,18 @@
                     { label: this.$t('流水线插件'), value: 'TASK' }
                     // { label: '流水线触发器', value: 'TRIGGER' }
                 ],
+                jobTypeList: [
+                    { label: this.$t('编译环境'), value: 'AGENT' },
+                    { label: this.$t('无编译环境'), value: 'AGENT_LESS' }
+                ],
                 envList: [
                     { label: 'Linux', value: 'LINUX', icon: 'linux-view' },
                     { label: 'Windows', value: 'WINDOWS', icon: 'windows' },
                     { label: 'macOS', value: 'MACOS', icon: 'macos' }
+                ],
+                isOpenSource: [
+                    { label: this.$t('是'), value: 'LOGIN_PUBLIC' },
+                    { label: this.$t('否'), value: 'PRIVATE' }
                 ],
                 publishShelf: [
                     { label: this.$t('新上架'), value: 'NEW' }
@@ -288,6 +294,7 @@
                     category: 'TASK',
                     classifyCode: '',
                     classifyName: '',
+                    jobType: 'AGENT',
                     os: [],
                     labelIdList: [],
                     summary: '',
@@ -295,16 +302,17 @@
                     publisher: '',
                     version: '1.0.0',
                     releaseType: 'NEW',
-                    versionContent: ''
+                    versionContent: '',
+                    visibilityLevel: 'LOGIN_PUBLIC'
                 },
                 formErrors: {
                     categoryError: false,
                     jobError: false,
+                    openSourceError: false,
                     logoUrlError: false,
                     sortError: false,
                     envError: false,
-                    releaseTypeError: false,
-                    releasePackageError: false
+                    releaseTypeError: false
                 }
             }
         },
@@ -317,18 +325,28 @@
             },
             toolbarOptions () {
                 return toolbars
-            },
-            releasePackageUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             }
         },
         watch: {
+            'atomForm.jobType' (val) {
+                if (this.$route.name === 'upgradeAtom' && this.atomForm.releaseType !== 'CANCEL_RE_RELEASE') {
+                    const isEqualType = val === this.initJobType
+                    const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
+                    if (this.initJobType === 'AGENT') {
+                        this.atomForm.releaseType = isEqualType && isEqualOs ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
+                    } else {
+                        this.atomForm.releaseType = isEqualType ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
+                    }
+                }
+            },
+
             'atomForm.os' (val) {
-                if (this.$route.name === 'upgradeAtom') {
+                if (this.$route.name === 'upgradeAtom' && this.initJobType === 'AGENT' && this.atomForm.releaseType !== 'CANCEL_RE_RELEASE') {
                     const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
                     this.atomForm.releaseType = isEqualOs ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
                 }
             },
+
             'atomForm.releaseType' (val) {
                 const tpl = ['INCOMPATIBILITY_UPGRADE', 'COMPATIBILITY_UPGRADE', 'COMPATIBILITY_FIX']
                 let temp = this.atomForm.version.split('.')
@@ -517,21 +535,7 @@
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
             },
-            uploadPackageSuccess (data) {
-                if (data.atomEnvRequest) {
-                    this.atomForm.packageShaContent = data.atomEnvRequest.shaContent
-                    this.atomForm.pkgName = data.atomEnvRequest.pkgName
-                    this.formErrors.releasePackageError = false
-                }
-            },
-            uploadPackageErr (message) {
-                if (message) {
-                    this.$bkMessage({
-                        message: message,
-                        theme: 'error'
-                    })
-                }
-            },
+
             checkValid () {
                 let errorCount = 0
                 let ref = ''
@@ -554,20 +558,27 @@
                     errorCount++
                 }
 
-                if (!this.atomForm.os.length) {
+                if (this.jobTypeList.find(x => x.value === this.atomForm.jobType) < 0) {
+                    this.formErrors.jobError = true
+                    ref = ref || 'jobError'
+                    errorCount++
+                }
+
+                if (this.atomForm.jobType === 'AGENT' && !this.atomForm.os.length) {
                     this.formErrors.envError = true
                     ref = ref || 'envError'
+                    errorCount++
+                }
+
+                if (this.isOpenSource.find(x => x.value === this.atomForm.visibilityLevel) < 0) {
+                    this.formErrors.openSourceError = true
+                    ref = ref || 'openSourceError'
                     errorCount++
                 }
 
                 if (!this.atomForm.releaseType) {
                     this.formErrors.releaseTypeError = true
                     ref = ref || 'releaseTypeError'
-                    errorCount++
-                }
-
-                if (!this.atomForm.packageShaContent) {
-                    this.formErrors.releasePackageError = true
                     errorCount++
                 }
 
@@ -587,7 +598,13 @@
                     const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
 
                     try {
-                        if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.$route.name === 'upgradeAtom' && !isEqualOs) {
+                        if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE'
+                            && this.atomForm.jobType !== this.initJobType && this.$route.name === 'upgradeAtom') {
+                            message = this.$t('适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
+                            theme = 'error'
+                        } else if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE'
+                            && this.$route.name === 'upgradeAtom'
+                            && this.atomForm.jobType === 'AGENT' && this.initJobType === 'AGENT' && !isEqualOs) {
                             message = this.$t('操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
                             theme = 'error'
                         } else {
@@ -600,6 +617,7 @@
                                 classifyCode: this.atomForm.classifyCode,
                                 version: this.curVersion,
                                 releaseType: this.atomForm.releaseType,
+                                jobType: this.atomForm.jobType,
                                 os: this.atomForm.jobType === 'AGENT' ? this.atomForm.os : [],
                                 labelIdList: this.atomForm.labelIdList,
                                 publisher: this.atomForm.publisher,
@@ -607,8 +625,7 @@
                                 logoUrl: this.atomForm.logoUrl || undefined,
                                 summary: this.atomForm.summary || undefined,
                                 description: this.atomForm.description || undefined,
-                                packageShaContent: this.atomForm.packageShaContent,
-                                pkgName: this.atomForm.pkgName
+                                visibilityLevel: this.atomForm.visibilityLevel
                             }
 
                             const res = await this.$store.dispatch('store/editAtom', {
@@ -736,11 +753,14 @@
             .bk-form-content {
                 margin-left: 0;
                 .bk-form-checkbox {
-                    margin: 6px 21px 6px 0;
+                    margin: 10px 21px 20px 0;
+                    &:first-child {
+                        margin-left: 110px;
+                    }
                 }
             }
             .env-error {
-               margin: -4px 0 0;
+                margin: -10px 0 20px 110px;
             }
             .introduction-form-item {
                 display: block;

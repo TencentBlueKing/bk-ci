@@ -62,6 +62,18 @@
                     :key="index"
                     :style="{ left: item.left }"
                 >{{ item.label }}</span>
+                <div class="bkdevops-button">
+                    <router-link
+                        :to="{ name: &quot;quickstart&quot; }"
+                    >
+                        <bk-button
+                            theme="primary"
+                            icon-right="angle-double-right"
+                        >
+                            {{ $t('accessGuide') }}
+                        </bk-button>
+                    </router-link>
+                </div>
             </div>
 
             <div class="devops-news">
@@ -69,6 +81,11 @@
                     <p class="title">
                         {{ $t("latestNews") }}
                     </p>
+                    <a
+                        href="http://x.code.oa.com/bkdevops/devops/notice"
+                        class="more"
+                        target="_blank"
+                    >{{ $t('moreDetail') }}</a>
                 </header>
 
                 <div class="devops-news-content">
@@ -126,6 +143,7 @@
                 </div>
             </article>
         </aside>
+        <consult-tools />
     </div>
 </template>
 
@@ -136,6 +154,7 @@
     import NavBox from '../components/NavBox/index.vue'
     import Logo from '../components/Logo/index.vue'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
+    import ConsultTools from '../components/ConsultTools'
     
     import { urlJoin } from '../utils/util'
 
@@ -144,7 +163,8 @@
             NavBox,
             Accordion,
             AccordionItem,
-            Logo
+            Logo,
+            ConsultTools
         }
     })
     export default class Home extends Vue {
@@ -316,7 +336,9 @@
                 .bkdevops-button {
                     position: absolute;
                     bottom: 30px;
-                    left: 342px;
+                    left: 0;
+                    width: 100%;
+                    text-align: center;
                     .bk-icon {
                         font-size: 12px;
                     }
