@@ -95,7 +95,7 @@
             },
             appIdPropsKey () {
                 try {
-                    const { appIdKey = 'cc_app_id' } = this.appIdProps
+                    const { appIdKey = 'ccAppId' } = this.appIdProps
                     return appIdKey
                 } catch (error) {
                     return ''

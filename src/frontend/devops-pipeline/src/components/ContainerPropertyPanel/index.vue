@@ -2,6 +2,9 @@
     <bk-sideslider class="sodaci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
         <header class="container-panel-header" slot="header">
             {{ title }}
+            <div v-if="showDebugDockerBtn" :class="!editable ? 'control-bar' : 'debug-btn'">
+                <bk-button theme="warning" @click="startDebug('docker')">{{ $t('editPage.docker.debugConsole') }}</bk-button>
+            </div>
         </header>
         <section v-if="container" slot="content" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
             <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
@@ -35,8 +38,13 @@
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
                                 </span></div>
+                            <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
+                                <i class="bk-icon icon-plus-circle"></i>
+                                <span class="text">{{ $t('editPage.addImage') }}</span>
+                            </div>
                         </template>
                     </selector>
+                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}<a target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/流水线/用户指南/publicBuild.html`">{{ $t('editPage.seeMore') }}</a></span>
                 </form-field>
 
                 <form-field :label="$t('editPage.imageType')" v-if="buildResourceType === 'DOCKER'">
@@ -303,6 +311,9 @@
                 const selectedApps = Object.keys(buildEnv)
                 return Object.keys(apps).filter(app => !selectedApps.includes(app))
             },
+            showDebugDockerBtn () {
+                return this.routeName !== 'templateEdit' && this.container.baseOS === 'LINUX' && this.isDocker && this.buildResource && (this.routeName === 'pipelinesEdit' || this.container.status === 'RUNNING' || (this.routeName === 'pipelinesDetail' && this.execDetail && this.execDetail.buildNum === this.execDetail.latestBuildNum && this.execDetail.curVersion === this.execDetail.latestVersion))
+            },
             imageCredentialOption () {
                 return {
                     paramId: 'credentialId',
@@ -349,6 +360,11 @@
             ...mapActions('atom', [
                 'updateContainer',
                 'togglePropertyPanel'
+            ]),
+            ...mapActions('soda', [
+                'startDebugDocker',
+                'getContainerInfoByBuildId',
+                'startDebugTstack'
             ]),
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
@@ -412,6 +428,70 @@
                     ...buildEnv
                 })
             },
+            async startDebug (type) {
+                const vmSeqId = this.getRealSeqId()
+                let url = ''
+                const tab = window.open('about:blank')
+                try {
+                    if (type === 'docker') {
+                        // docker 分根据buildId获取容器信息和新启动一个容器
+                        if (this.routeName === 'pipelinesDetail' && this.container.status === 'RUNNING') {
+                            const res = await this.getContainerInfoByBuildId({
+                                projectId: this.projectId,
+                                pipelineId: this.pipelineId,
+                                buildId: this.buildId,
+                                vmSeqId
+                            })
+                            if (res.containerId && res.address) {
+                                url = `${WEB_URL_PIRFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&containerId=${res.containerId}&targetIp=${res.address}`
+                            }
+                        } else {
+                            const res = await this.startDebugDocker({
+                                projectId: this.projectId,
+                                pipelineId: this.pipelineId,
+                                vmSeqId,
+                                imageName: this.buildResource,
+                                buildEnv: this.container.buildEnv,
+                                imageType: this.buildImageType,
+                                credentialId: this.buildImageCreId
+                            })
+                            if (res === true) {
+                                url = `${WEB_URL_PIRFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&vmSeqId=${vmSeqId}`
+                            }
+                        }
+                    }
+                    tab.location = url
+                } catch (err) {
+                    tab.close()
+                    if (err.code === 403) {
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                resource: this.$t('pipeline'),
+                                option: this.$t('edit')
+                            }],
+                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
+                        })
+                    } else {
+                        this.$showTips({
+                            theme: 'error',
+                            message: err.message || err
+                        })
+                    }
+                }
+            },
+            getRealSeqId () {
+                let i = 0
+                let seqId = 0
+                this.stages && this.stages.map((stage, sIndex) => {
+                    stage.containers.map((container, cIndex) => {
+                        if (sIndex === this.stageIndex && cIndex === this.containerIndex) {
+                            seqId = i
+                        }
+                        i++
+                    })
+                })
+                return seqId
+            },
             appBinPath (value, key) {
                 const { container: { baseOS }, apps } = this
                 const app = apps[key]
@@ -457,6 +537,11 @@
             }
         }
         .control-bar {
+            position: absolute;
+            right: 34px;
+            top: 12px;
+        }
+        .debug-btn {
             position: absolute;
             right: 34px;
             top: 12px;

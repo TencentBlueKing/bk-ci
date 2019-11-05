@@ -15,7 +15,7 @@
         </div>
 
         <bk-dialog v-model="isStageShow"
-            width="620"
+            width="720"
             :title="$t('editPage.selectJob')"
             :show-footer="false"
             :esc-close="true"

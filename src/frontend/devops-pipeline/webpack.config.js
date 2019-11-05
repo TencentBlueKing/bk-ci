@@ -23,13 +23,16 @@ const ReplacePlugin = require('../webpackPlugin/replace-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
+const getConfig = require('./constConfig.js')
 
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
     const urlPrefix = env && env.name ? `${env.name}` : ''
     const envDist = env && env.dist ? env.dist : 'frontend'
+    const version = env && env.version ? env.version : 'tencent'
     const extUrlPrefix = env && env.name ? `${env.name}-` : ''
     const dist = path.join(__dirname, `../${envDist}/pipeline`)
+    const constConfig = getConfig(version)
     const config = webpackBaseConfig({
         env,
         argv,
@@ -47,6 +50,7 @@ module.exports = (env, argv) => {
         new webpack.ContextReplacementPlugin(/brace\/mode$/, /^\.\/(json|python|sh|text|powershell|batchfile)$/),
         // brace 优化，只提取需要的 theme
         new webpack.ContextReplacementPlugin(/brace\/theme$/, /^\.\/(monokai)$/),
+        new webpack.DefinePlugin(constConfig),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
