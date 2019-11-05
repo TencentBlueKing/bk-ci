@@ -24,19 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.service.utils
 
-dependencies {
-    compile project(":common:common-api")
-    compile project(":common:common-redis")
-    compile "org.springframework.boot:spring-boot-starter-actuator"
-    compile "org.springframework.boot:spring-boot-starter-log4j2"
-    compile "org.springframework.cloud:spring-cloud-starter-consul-discovery"
-    compile "io.github.openfeign:feign-okhttp"
-    compile "org.jolokia:jolokia-core"
-    compile "javax.servlet:javax.servlet-api"
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.test.context.junit4.SpringRunner
 
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+@RunWith(SpringRunner::class)
+@SpringBootTest(classes = [SpringContextUtilTest::class])
+class SpringContextUtilTest {
+    @Bean
+    fun springContextUtil() = SpringContextUtil()
+
+    @Bean
+    fun df() = Dd()
+
+    @Bean
+    fun ff() = Ff()
+
+    interface Acc
+
+    class Dd : Acc
+
+    class Ff : Acc
+
+    @Test
+    fun setApplicationContext() {
+        val beansWithClass = SpringContextUtil.getBeansWithClass(Acc::class.java)
+        beansWithClass.forEach {
+            println(it.javaClass)
+        }
+    }
 }
-
-

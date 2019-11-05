@@ -95,7 +95,7 @@ class SpringContextUtil : ApplicationContextAware {
          * @throws BeansException 异常
          */
         @Throws(BeansException::class)
-        fun <T : Annotation> getBeansWithClass(clazz: Class<T>): List<Any> {
+        fun <T: Any> getBeansWithClass(clazz: Class<T>): List<Any> {
             return applicationContext!!.getBeansOfType(clazz).values.toList()
         }
     }
