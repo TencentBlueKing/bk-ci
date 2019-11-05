@@ -30,6 +30,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
+import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
 import com.tencent.devops.dockerhost.docker.annotation.EnvGenerator
 import com.tencent.devops.dockerhost.pojo.Env
@@ -68,7 +69,7 @@ class SystemDockerEnvGenerator @Autowired constructor(
          */
 
         val hostIp = CommonUtils.getInnerIP()
-        val gateway = System.getProperty("devops.gateway", commonConfig.devopsBuildGateway!!)
+        val gateway = DockerEnv.getGatway()
         return listOf(
             Env(key = ENV_KEY_PROJECT_ID, value = dockerHostBuildInfo.projectId),
             Env(key = ENV_KEY_AGENT_ID, value = dockerHostBuildInfo.agentId),
