@@ -48,4 +48,8 @@ class SVNConfig {
 
     @Value("\${scm.svn.webhookApiUrl:}")
     val webhookApiUrl: String = ""
+
+    @Value("\${scm.svn.svnHookUrl:}")
+    val svnHookUrl: String = ""
+
 }
