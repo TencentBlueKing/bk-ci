@@ -31,11 +31,11 @@ import com.tencent.devops.store.api.image.user.UserMarketImageVisibleDeptResourc
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.request.ImageVisibleDeptReq
-import com.tencent.devops.store.service.common.impl.StoreVisibleDeptServiceImpl
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserMarketImageVisibleDeptResourceImpl @Autowired constructor(private val storeVisibleDeptService: StoreVisibleDeptServiceImpl) :
+class UserMarketImageVisibleDeptResourceImpl @Autowired constructor(private val storeVisibleDeptService: StoreVisibleDeptService) :
     UserMarketImageVisibleDeptResource {
 
     override fun deleteVisibleDept(userId: String, imageCode: String, deptIds: String): Result<Boolean> {

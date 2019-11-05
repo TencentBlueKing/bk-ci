@@ -103,6 +103,7 @@ open class GitApi {
     }
 
     fun addWebhook(host: String, token: String, projectName: String, hookUrl: String, event: String?) {
+        logger.info("[$host|$token|$projectName|$hookUrl|$event] Start add the web hook")
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
             existHooks.forEach {

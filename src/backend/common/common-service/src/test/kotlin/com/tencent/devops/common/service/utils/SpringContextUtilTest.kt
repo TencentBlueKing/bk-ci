@@ -24,25 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.log
+package com.tencent.devops.common.service.utils
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import okhttp3.MediaType
-import okhttp3.RequestBody
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Bean
+import org.springframework.test.context.junit4.SpringRunner
 
-class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
+@RunWith(SpringRunner::class)
+@SpringBootTest(classes = [SpringContextUtilTest::class])
+class SpringContextUtilTest {
+    @Bean
+    fun springContextUtil() = SpringContextUtil()
 
-    override fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean> {
-        val path = "/ms/log/api/build/logs/multi"
-        val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
-            objectMapper.writeValueAsString(logMessages)
-        )
-        val request = buildPost(path, requestBody)
-        val responseContent = request(request, "上报日志失败")
-        return objectMapper.readValue(responseContent)
+    @Bean
+    fun df() = Dd()
+
+    @Bean
+    fun ff() = Ff()
+
+    interface Acc
+
+    class Dd : Acc
+
+    class Ff : Acc
+
+    @Test
+    fun setApplicationContext() {
+        val beansWithClass = SpringContextUtil.getBeansWithClass(Acc::class.java)
+        beansWithClass.forEach {
+            println(it.javaClass)
+        }
     }
 }

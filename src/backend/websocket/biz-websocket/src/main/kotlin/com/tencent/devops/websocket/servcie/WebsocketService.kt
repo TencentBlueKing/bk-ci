@@ -30,7 +30,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.websocket.utils.PageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -58,18 +58,19 @@ class WebsocketService @Autowired constructor(
                 return
             }
 
-            logger.info("WebsocketService-changePage:user:$userId,sessionId:$sessionId,newPage:$newPage")
+            val normalPage = PageUtils.buildNormalPage(newPage)
+            logger.info("WebsocketService-changePage:user:$userId,sessionId:$sessionId,newPage:$newPage,normalPage:$normalPage")
             val existsSessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
             if (existsSessionId == null) {
                 RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
             }
 
             val oldPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-            RedisUtlis.refreshSessionPage(redisOperation, sessionId, newPage)
+            RedisUtlis.refreshSessionPage(redisOperation, sessionId, normalPage)
             if (oldPage != null) {
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
             }
-            RedisUtlis.refreshPageSession(redisOperation, sessionId, newPage)
+            RedisUtlis.refreshPageSession(redisOperation, sessionId, normalPage)
             logger.info(
                 "userSession[user:$userId,sessionId:${RedisUtlis.getSessionIdByUserId(
                     redisOperation,
@@ -79,10 +80,10 @@ class WebsocketService @Autowired constructor(
             logger.info(
                 "pageSession[page:$newPage,sessionId:${RedisUtlis.getSessionListFormPageSessionByPage(
                     redisOperation,
-                    newPage
+                    normalPage
                 )}]"
             )
-            logger.info("sessionPage[session:$sessionId,page:$newPage]")
+            logger.info("sessionPage[session:$sessionId,page:$normalPage]")
         } finally {
             redisLock.unlock()
         }

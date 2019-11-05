@@ -28,26 +28,23 @@ package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.ScmOauthFactory
+import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.request.CommitCheckRequest
 import com.tencent.devops.scm.utils.QualityUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class ScmOauthService {
-
-    @Value("\${git.webhook.callback.url:#{null}}")
-    private val gitHookUrl: String? = null
-
-    @Value("\${gitlab.webhook.callback.url:#{null}}")
-    private val gitlabHookUrl: String? = null
-
-    @Value("\${svn.webhook.callback.url:#{null}}")
-    private val svnHookUrl: String? = null
+class ScmOauthService @Autowired constructor(
+    private val gitConfig: GitConfig,
+    private val svnConfig: SVNConfig
+) {
 
     fun getLatestRevision(
         projectName: String,
@@ -180,25 +177,25 @@ class ScmOauthService {
         try {
             val hookUrl = when (type) {
                 ScmType.CODE_GIT -> {
-                    if (gitHookUrl.isNullOrEmpty()) {
+                    if (gitConfig.gitHookUrl.isBlank()) {
                         logger.warn("The git webhook url is not settle")
                         throw RuntimeException("The git hook url is not settle")
                     }
-                    gitHookUrl!!
+                    gitConfig.gitHookUrl
                 }
                 ScmType.CODE_GITLAB -> {
-                    if (gitlabHookUrl.isNullOrEmpty()) {
+                    if (gitConfig.gitlabHookUrl.isBlank()) {
                         logger.warn("The gitlab webhook url is not settle")
                         throw RuntimeException("The gitlab webhook url is not settle")
                     }
-                    gitlabHookUrl!!
+                    gitConfig.gitlabHookUrl
                 }
                 ScmType.CODE_SVN -> {
-                    if (svnHookUrl.isNullOrEmpty()) {
+                    if (svnConfig.svnHookUrl.isBlank()) {
                         logger.warn("The svn webhook url is not settle")
                         throw RuntimeException("The svn webhook url is not settle")
                     }
-                    svnHookUrl!!
+                    svnConfig.svnHookUrl
                 }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")

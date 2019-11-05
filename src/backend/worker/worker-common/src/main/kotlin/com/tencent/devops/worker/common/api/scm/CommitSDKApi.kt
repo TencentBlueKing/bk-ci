@@ -34,5 +34,9 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface CommitSDKApi : WorkerRestApiSDK {
     fun addCommit(commits: List<CommitData>): Result<CertIOS>
-    fun getLatestCommit(pipelineId: String, elementId: String, repositoryConfig: RepositoryConfig): Result<CommitData>
+    fun getLatestCommit(
+        pipelineId: String,
+        elementId: String,
+        repositoryConfig: RepositoryConfig
+    ): Result<List<CommitData>>
 }

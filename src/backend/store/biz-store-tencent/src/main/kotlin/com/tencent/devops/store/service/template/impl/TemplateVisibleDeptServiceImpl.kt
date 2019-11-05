@@ -45,7 +45,7 @@ import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreUserService
-import com.tencent.devops.store.service.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

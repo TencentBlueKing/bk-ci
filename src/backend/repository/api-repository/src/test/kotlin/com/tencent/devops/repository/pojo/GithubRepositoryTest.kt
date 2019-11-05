@@ -24,23 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.repository.pojo
 
-import org.slf4j.LoggerFactory
-import java.io.File
+import com.tencent.devops.common.api.util.JsonUtil
+import org.junit.Test
 
-object CommonScriptUtils {
+class GithubRepositoryTest {
 
-    private val logger = LoggerFactory.getLogger(CommonScriptUtils::class.java)
+    @Test
+    fun testJson() {
+        val githubRepository = GithubRepository(
+            aliasName = "test/goroutine",
+            url = "https://github.com/test/goroutine.git",
+            userName = "test",
+            projectName = "test/goroutine",
+            projectId = "test",
+            repoHashId = "8ykq"
+        )
 
-    fun execute(
-        script: String,
-        dir: File? = null,
-        runtimeVariables: Map<String, String> = mapOf()
-    ): String {
-        logger.info("execute script: ${SensitiveLineParser.onParseLine(script)}")
-        val isWindows = System.getProperty("os.name").startsWith("Windows", true)
-        return if (isWindows) BatScriptUtil.executeEnhance(script, runtimeVariables, dir)
-        else ShellUtil.executeEnhance(script, runtimeVariables, dir)
+        println(JsonUtil.toJson(githubRepository))
     }
 }

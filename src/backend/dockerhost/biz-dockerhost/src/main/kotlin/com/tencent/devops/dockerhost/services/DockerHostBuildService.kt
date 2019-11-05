@@ -410,10 +410,8 @@ class DockerHostBuildService(
             // docker run
             val env = mutableListOf<String>()
             env.addAll(DockerEnvLoader.loadEnv(dockerBuildInfo))
-            if (dockerRunParam.env != null && dockerRunParam.env!!.isNotEmpty()) {
-                dockerRunParam.env!!.forEach {
-                    env.add(it.key + "=" + (it.value ?: ""))
-                }
+            dockerRunParam.env?.forEach {
+                env.add("${it.key}=${it.value ?: ""}")
             }
             logger.info("env is $env")
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
@@ -436,8 +434,8 @@ class DockerHostBuildService(
             logger.error(errorLog, er)
             log(buildId, true, errorLog)
             alertApi.alert(
-                AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                    "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
+                level = AlertLevel.HIGH.name, title = "Docker构建机创建容器失败",
+                message = "Docker构建机创建容器失败, 母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
             )
             throw ContainerException("启动容器失败，错误信息:${er.message}")
         } finally {
@@ -594,18 +592,6 @@ class DockerHostBuildService(
 
     private fun getWorkspace(pipelineId: String, vmSeqId: Int): String {
         return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
-    }
-
-    private fun getProjectShareDir(projectCode: String): String {
-        return "${dockerHostConfig.hostPathProjectShare}/$projectCode/"
-    }
-
-    private fun enableProjectShare(projectCode: String): Boolean {
-        if (dockerHostConfig.shareProjectCodeWhiteList.isNullOrBlank()) {
-            return false
-        }
-        val whiteList = dockerHostConfig.shareProjectCodeWhiteList!!.split(",").map { it.trim() }
-        return whiteList.contains(projectCode)
     }
 
     inner class MyBuildImageResultCallback internal constructor(

@@ -38,6 +38,7 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.PageUtils
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.store.service.atom.AtomReleaseService
+import com.tencent.devops.store.service.atom.impl.AtomReleaseServiceImpl
 import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
@@ -53,7 +54,7 @@ data class StoreWebsocketPush(
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java)
+        private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
     }
 
     override fun findSession(page: String): List<String>? {
@@ -69,6 +70,7 @@ data class StoreWebsocketPush(
                 val pageSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
                 if (pageSession != null) {
                     sessionList.addAll(pageSession)
+                    notifyPost.page = it
                 }
             }
         }

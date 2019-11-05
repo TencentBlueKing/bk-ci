@@ -212,7 +212,10 @@ class PipelineRepositoryService constructor(
                 e.id = modelTaskIdGenerator.getNextId()
             }
 
-            if (e is CodeGitWebHookTriggerElement || e is CodeGitlabWebHookTriggerElement || e is CodeSVNWebHookTriggerElement || e is CodeGithubWebHookTriggerElement) {
+            if (e is CodeGitWebHookTriggerElement ||
+                e is CodeGitlabWebHookTriggerElement ||
+                e is CodeSVNWebHookTriggerElement ||
+                e is CodeGithubWebHookTriggerElement) {
                 logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
                 pipelineEventDispatcher.dispatch(
                         PipelineCreateEvent(

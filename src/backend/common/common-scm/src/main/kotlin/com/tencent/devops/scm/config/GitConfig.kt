@@ -74,7 +74,7 @@ class GitConfig {
     @Value("\${scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
 
-    @Value("\${scm.git.callbackUrl}")
+    @Value("\${scm.git.callbackUrl:}")
     val callbackUrl: String = ""
 
     /* github config */

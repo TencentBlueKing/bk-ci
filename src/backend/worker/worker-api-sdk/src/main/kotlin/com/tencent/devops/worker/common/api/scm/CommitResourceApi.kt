@@ -46,7 +46,7 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         pipelineId: String,
         elementId: String,
         repositoryConfig: RepositoryConfig
-    ): Result<CommitData> {
+    ): Result<List<CommitData>> {
         val repositoryId = repositoryConfig.getRepositoryId()
         val name = repositoryConfig.repositoryType.name
         val path = "/ms/repository/api/build/commit/getLatestCommit?pipelineId=$pipelineId" +
