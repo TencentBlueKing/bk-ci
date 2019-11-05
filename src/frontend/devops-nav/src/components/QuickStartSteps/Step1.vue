@@ -77,7 +77,7 @@
             // if (this.selectedProjectId === '') {
             //     this.errorTip = 1
             //     return false
-            // } else if(this.projectList.filter(item => item.approval_status === 1).find(item => item.projectCode === this.selectedProjectId)) {
+            // } else if(this.projectList.filter(item => item.approvalStatus === 1).find(item => item.projectCode === this.selectedProjectId)) {
             //     this.errorTip = 2
             //     return false
             // } else {

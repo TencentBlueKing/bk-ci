@@ -25,7 +25,7 @@
             >
                 <bk-input
                     v-model="newProject.projectName"
-                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.projectId] }"
+                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.projectCode] }"
                     maxlength="12"
                     name="projectName"
                     :placeholder="$t('projectNamePlaceholder')"
@@ -90,7 +90,7 @@
                         name="bg"
                         :loading="deptLoading.bg"
                         searchable
-                        @selected="setBgName"
+                        @selected="id => setOrgName('bg', id)"
                     >
                         <bk-option
                             v-for="bg in curDepartmentInfo.bg"
@@ -107,7 +107,7 @@
                         name="dept"
                         :loading="deptLoading.dept"
                         searchable
-                        @selected="setDeptName"
+                        @selected="id => setOrgName('dept', id)"
                     >
                         <bk-option
                             v-for="bg in curDepartmentInfo.dept"
@@ -124,7 +124,7 @@
                         name="center"
                         :loading="deptLoading.center"
                         searchable
-                        @selected="setCenterName"
+                        @selected="id => setOrgName('center', id)"
                     >
                         <bk-option
                             v-for="center in curDepartmentInfo.center"
@@ -194,6 +194,7 @@
         width: number | string
 
         descriptionLength: number = 100
+        defaultProjectInfo: any = {}
         validate: object = {}
         curDepartmentInfo: any = {
             'bg': [],
@@ -284,14 +285,14 @@
                     this.deptLoading['dept'] = true
                     this.deptLoading['center'] = true
                     const res = await this.getMyDepartmentInfo()
-                    console.log(this.newProject.bgId, res.bgId)
                     if (res) {
-                        this.newProject.bgId = res.bgId
-                        this.newProject.bgName = res.bgName
-                        this.newProject.deptId = res.deptId
-                        this.newProject.deptName = res.deptName
-                        this.newProject.centerId = res.centerId
-                        this.newProject.centerName = res.centerName
+                        this.setOrganizationValue({
+                            bgId: res.bgId,
+                            bgName: res.bgName
+                        })
+                        this.defaultProjectInfo = {
+                            ...res
+                        }
                     }
                 }
             }
@@ -308,6 +309,7 @@
         @Watch('newProject.deptId')
         watchDept (deptId: string): void {
             this.curDepartmentInfo['center'] = []
+            
             deptId && this.getDepartment('center', this.newProject.deptId)
         }
 
@@ -328,31 +330,31 @@
                     id
                 })
                 this.curDepartmentInfo[type] = [...res]
-                console.log(type, this.curDepartmentInfo[type])
+                
+                // 选中默认值
+                const typeIdKey = `${type}Id`
+                const typeId = this.newProject[typeIdKey] || this.defaultProjectInfo[typeIdKey]
+                const info = res.find(info => info.id === typeId)
+                this.setOrganizationValue({
+                    [typeIdKey]: info ? info.id : '',
+                    [`${type}Name`]: info ? info.name : ''
+                })
             } catch (e) {
                 this.curDepartmentInfo[type] = []
             }
             this.deptLoading[type] = false
         }
 
-        setBgName (id) {
-            const data = this.curDepartmentInfo.bg.find(bg => bg.id === id)
-            if (data) {
-                this.newProject.bgName = data.name
-            }
+        setOrganizationValue (value) {
+            this.newProject = Object.assign(this.newProject, {
+                ...value
+            })
         }
 
-        setDeptName (id) {
-            const data = this.curDepartmentInfo.dept.find(dept => dept.id === id)
-            if (data) {
-                this.newProject.deptName = data.name
-            }
-        }
-
-        setCenterName (id) {
-            const data = this.curDepartmentInfo.center.find(center => center.id === id)
-            if (data) {
-                this.newProject.centerName = data.name
+        setOrgName (field, id) {
+            const item = this.curDepartmentInfo[field].find(item => item.id === id)
+            if (item) {
+                this.newProject[`${field}Name`] = item.name
             }
         }
 
@@ -463,9 +465,9 @@
             if (this.isNew) {
                 this.addProject()
             } else {
-                const id = this.newProject.projectId
+                const { projectCode } = this.newProject
                 const params = {
-                    id: id,
+                    projectCode,
                     data: this.newProject
                 }
                 this.updateProject(params)

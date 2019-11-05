@@ -74,14 +74,14 @@ const actions: ActionTree<RootState, any> = {
     getDepartmentInfo (_, { type, id }) {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/organizations/types/${type}/ids/${id}`)
     },
-    ajaxUpdatePM (_, { id, data }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${id}/`, data)
+    ajaxUpdatePM (_, { projectCode, data }) {
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`, data)
     },
     ajaxAddPM (_, data) {
         return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/`, data)
     },
-    toggleProjectEnable (_, { projectId, enabled }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/enable?enabled=${enabled}`)
+    toggleProjectEnable (_, { projectCode, enabled }) {
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`)
     },
     getMyDepartmentInfo () {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/users/detail/`)
@@ -115,8 +115,8 @@ const actions: ActionTree<RootState, any> = {
     getDocList () {
         return Request.get(`${BACKEND_API_URL_PREFIX}/ci/docs/?format=json`)
     },
-    changeProjectLogo (_, { projectId, formData }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/logo/`, formData)
+    changeProjectLogo (_, { projectCode, formData }) {
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/logo/`, formData)
     },
     closePreviewTips ({ commit }) {
         commit(CLOSE_PREVIEW_TIPS)

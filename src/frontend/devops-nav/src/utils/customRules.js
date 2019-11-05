@@ -45,10 +45,10 @@ const customeRules = {
         }
     },
     projectNameUnique: { // 较验项目名称是否重复
-        validate: function (value, [projectId]) {
+        validate: function (value, [ projectCode ]) {
             return new Promise(async (resolve, reject) => {
                 try {
-                    const response = await eventBus.$ajax.put(`${PROJECT_API_URL_PREFIX}/user/projects/project_name/names/${value}/validate/${projectId ? `?project_id=${projectId}` : ''}`)
+                    const response = await eventBus.$ajax.put(`${PROJECT_API_URL_PREFIX}/user/projects/project_name/names/${value}/validate/${projectCode ? `?english_name=${projectCode}` : ''}`)
                     resolve({
                         valid: response
                     })
