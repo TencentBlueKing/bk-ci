@@ -35,7 +35,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreUserService
-import com.tencent.devops.store.service.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

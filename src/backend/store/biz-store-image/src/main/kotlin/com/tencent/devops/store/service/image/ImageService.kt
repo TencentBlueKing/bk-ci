@@ -98,7 +98,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreUserService
-import com.tencent.devops.store.service.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.exception.image.ClassifyNotExistException
 import com.tencent.devops.store.exception.image.ImageNotExistException
 import org.jooq.DSLContext
