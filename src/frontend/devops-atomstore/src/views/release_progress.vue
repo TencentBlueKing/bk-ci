@@ -47,7 +47,7 @@
                                         @click.stop="rebuild"
                                     > {{ $t('重新构建') }} <i class="col-line"></i></span>
                                     <span class="log-btn"
-                                        v-if="entry.code === 'check' && entry.status !== 'undo'"
+                                        v-if="entry.code === 'build' && entry.status !== 'undo'"
                                         @click.stop="readLog"
                                     > {{ $t('日志') }} </span>
                                 </div>
