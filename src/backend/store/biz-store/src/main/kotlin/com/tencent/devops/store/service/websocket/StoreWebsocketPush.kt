@@ -53,7 +53,7 @@ data class StoreWebsocketPush(
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java)
+        private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
     }
 
     override fun findSession(page: String): List<String>? {
