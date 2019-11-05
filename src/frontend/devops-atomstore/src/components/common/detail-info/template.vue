@@ -1,6 +1,6 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
+        <img class="detail-pic atom-logo" :src="detail.logoUrl">
         <hgroup class="detail-info-group">
             <h3>{{detail.name}}</h3>
             <h5 class="detail-info">
@@ -61,12 +61,6 @@
 
         props: {
             detail: Object
-        },
-
-        data () {
-            return {
-                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314'
-            }
         },
 
         computed: {
