@@ -15,7 +15,7 @@
                 <i class="right-arrow"></i>
                 <div class="title third-level">
                     <span class="">{{ curTitle }}</span>
-                    <span> {{ $t('（') }} {{ versionDetail.atomCode }} {{ $t('）') }} </span>
+                    <span>（{{ versionDetail.atomCode }}）</span>
                 </div>
             </div>
             <div class="sub_header_right">
@@ -746,6 +746,14 @@
             }
             .multi-item {
                 margin-top: 0;
+            }
+            .markdown-editor-show.info-value {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
+                    background: #FAFBFD;
+                }
             }
         }
         .atom-logo-box {

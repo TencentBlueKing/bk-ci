@@ -269,7 +269,10 @@
             display: flex;
             justify-content: space-between;
             .detail-form-item .markdown-editor-show.info-value {
-                .v-show-content {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
                     background: #FAFBFD;
                 }
             }
