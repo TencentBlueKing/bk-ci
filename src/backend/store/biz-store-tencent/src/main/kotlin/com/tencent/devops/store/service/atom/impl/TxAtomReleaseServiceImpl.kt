@@ -66,9 +66,11 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 
 @Service
+@RefreshScope
 class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() {
 
     @Value("\${git.plugin.nameSpaceId}")
