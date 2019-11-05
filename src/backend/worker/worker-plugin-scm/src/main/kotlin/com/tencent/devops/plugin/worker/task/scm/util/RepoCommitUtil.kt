@@ -34,6 +34,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.CommitSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.LogCommand
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
@@ -78,7 +79,7 @@ object RepoCommitUtil {
         gitType: ScmType
     ): CommitMaterial {
         val logsCommand = git.log()
-        val latestCommit = commitResourceApi.getLatestCommit(pipelineId, LoggerService.elementId, repositoryConfig).data
+        val latestCommit = getLastCommitId(pipelineId, repositoryConfig, repo, logsCommand)
 
         val lastCommitId = latestCommit?.commit
         if (lastCommitId != null) {
@@ -131,6 +132,21 @@ object RepoCommitUtil {
         return CommitMaterial(lastCommitId, newCommitId, latestCommit?.comment, commits.size)
     }
 
+    private fun getLastCommitId(pipelineId: String, repositoryConfig: RepositoryConfig, repo: Repository, logsCommand: LogCommand): CommitData? {
+        val latestCommitList = commitResourceApi.getLatestCommit(pipelineId, LoggerService.elementId, repositoryConfig).data
+        latestCommitList!!.forEach { latestCommit ->
+            val lastCommitId = latestCommit.commit
+            try {
+                logsCommand.not(resolveRev(repo, lastCommitId))
+                LoggerService.addNormalLine("last commit: $lastCommitId")
+                return latestCommit
+            } catch (e: Exception) {
+                LoggerService.addRedLine("resolve commit fail($lastCommitId): ${e.message} ")
+            }
+        }
+        logsCommand.setMaxCount(1)
+        return null
+    }
     /**
      * 保存并返回revision信息
      * return (lastRevision, newRevision)
@@ -162,7 +178,7 @@ object RepoCommitUtil {
     ): CommitMaterial {
         val logs = manager.logClient.operationsFactory.createLog()
 
-        val commitData = commitResourceApi.getLatestCommit(pipelineId, LoggerService.elementId, repositoryConfig).data
+        val commitData = commitResourceApi.getLatestCommit(pipelineId, LoggerService.elementId, repositoryConfig).data?.firstOrNull()
         // 获取最后一次commit
         val latestCommit = commitData?.commit?.toLong()
 
