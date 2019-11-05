@@ -129,7 +129,7 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun addWebHook(hookUrl: String) {
-        logger.info("Start to add the webhook for the repo $projectName")
+        logger.info("[${svnConfig.apiKey}|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}] Start to add the webhook for the repo $projectName")
         try {
             val hooks = SVNApi.getWebhooks(svnConfig, url)
             val addHooks = if (hooks.isEmpty()) {
