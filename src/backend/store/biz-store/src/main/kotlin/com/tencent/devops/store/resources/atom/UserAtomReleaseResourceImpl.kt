@@ -41,8 +41,8 @@ class UserAtomReleaseResourceImpl @Autowired constructor(
     private val atomReleaseService: AtomReleaseService
 ) : UserAtomReleaseResource {
 
-    override fun updateMarketAtom(userId: String, projectId: String, marketAtomUpdateRequest: MarketAtomUpdateRequest): Result<String?> {
-        return atomReleaseService.updateMarketAtom(userId, projectId, marketAtomUpdateRequest)
+    override fun updateMarketAtom(userId: String, projectCode: String, marketAtomUpdateRequest: MarketAtomUpdateRequest): Result<String?> {
+        return atomReleaseService.updateMarketAtom(userId, projectCode, marketAtomUpdateRequest)
     }
 
     override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<Boolean> {

@@ -167,5 +167,5 @@ data class ImageDetail(
     val updateTime: Long?,
 
     @ApiModelProperty("是否已安装", required = true)
-    var isInstalled: Boolean?=null
+    var isInstalled: Boolean? = null
 )
