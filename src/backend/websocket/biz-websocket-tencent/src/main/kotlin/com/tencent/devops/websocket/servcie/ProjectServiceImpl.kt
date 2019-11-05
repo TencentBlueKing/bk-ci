@@ -38,7 +38,7 @@ class ProjectServiceImpl @Autowired constructor(
 ):ProjectService {
 	override fun checkProject(projectId: String, userId: String): Boolean {
 		try {
-			val projectList = client.get(ServiceProjectResource::class).getProjectByUser(userId).data
+			val projectList = client.get(ServiceProjectResource::class).list(userId).data
 			val privilegeProjectCodeList = mutableListOf<String>()
 			projectList?.map {
 				privilegeProjectCodeList.add(it.projectCode)
