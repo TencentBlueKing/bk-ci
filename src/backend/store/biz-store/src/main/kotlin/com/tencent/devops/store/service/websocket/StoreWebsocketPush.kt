@@ -69,6 +69,7 @@ data class StoreWebsocketPush(
                 val pageSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
                 if (pageSession != null) {
                     sessionList.addAll(pageSession)
+                    notifyPost.page = it
                 }
             }
         }
