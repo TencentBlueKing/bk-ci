@@ -63,7 +63,7 @@
                     <span class="schedule-btn"
                         v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
                             || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING'"
-                        @click="routerProgress(props.row.atomId)"> {{ $t('进度') }} </span>
+                        @click="routerProgress(props.row)"> {{ $t('进度') }} </span>
                     <span class="delete-btn" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.atomStatus) && !props.row.version" @click="deleteAtom(props.row)"> {{ $t('删除') }} </span>
                 </template>
             </bk-table-column>
@@ -565,12 +565,15 @@
                 })
             },
 
-            routerProgress (id) {
+            routerProgress (row) {
+                let releaseType = 'upgrade'
+                if (row.version === '1.0.0') releaseType = 'shelf'
+
                 this.$router.push({
                     name: 'releaseProgress',
                     params: {
-                        releaseType: 'shelf',
-                        atomId: id
+                        releaseType,
+                        atomId: row.atomId
                     }
                 })
             },
