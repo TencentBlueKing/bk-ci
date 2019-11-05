@@ -50,62 +50,54 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
     private val whiteListLocker = ReentrantLock()
 
     override fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind> {
-        val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
-        val volumeProjectShare = Volume(dockerHostConfig.volumeProjectShare)
-        val volumeMavenRepo = Volume(dockerHostConfig.volumeMavenRepo)
-        val volumeNpmPrefix = Volume(dockerHostConfig.volumeNpmPrefix)
-        val volumeNpmCache = Volume(dockerHostConfig.volumeNpmCache)
-        val volumeCcache = Volume(dockerHostConfig.volumeCcache)
-        val volumeApps = Volume(dockerHostConfig.volumeApps)
-        val volumeInit = Volume(dockerHostConfig.volumeInit)
-        val volumeLogs = Volume(dockerHostConfig.volumeLogs)
-        val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
-        val volumeHosts = Volume(etcHosts)
+        with(dockerHostBuildInfo) {
 
-        val binds = mutableListOf(
-            Bind(getMavenRepoPath(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId), volumeMavenRepo),
-            Bind(getNpmPrefixPath(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId), volumeNpmPrefix),
-            Bind(getNpmCachePath(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId), volumeNpmCache),
-            Bind(getCcachePath(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId), volumeCcache),
-            Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
-            Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
-            Bind(etcHosts, volumeHosts, AccessMode.ro),
-            Bind(getLogsPath(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId), volumeLogs),
-            Bind(getGradlePath(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId), volumeGradleCache),
-            Bind(getWorkspace(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId), volumeWs)
-        )
+            val binds = mutableListOf(
+                Bind(getMavenRepoPath(), Volume(dockerHostConfig.volumeMavenRepo)),
+                Bind(getNpmPrefixPath(), Volume(dockerHostConfig.volumeNpmPrefix)),
+                Bind(getNpmCachePath(), Volume(dockerHostConfig.volumeNpmCache)),
+                Bind(getCcachePath(), Volume(dockerHostConfig.volumeCcache)),
+                Bind(dockerHostConfig.hostPathApps, Volume(dockerHostConfig.volumeApps), AccessMode.ro),
+                Bind(dockerHostConfig.hostPathInit, Volume(dockerHostConfig.volumeInit), AccessMode.ro),
+                Bind(etcHosts, Volume(etcHosts), AccessMode.ro),
+                Bind(getLogsPath(), Volume(dockerHostConfig.volumeLogs)),
+                Bind(getGradlePath(), Volume(dockerHostConfig.volumeGradleCache)),
+                Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace))
+            )
 
-        if (enableProjectShare(dockerHostBuildInfo.projectId)) {
-            binds.add(Bind(getProjectShareDir(dockerHostBuildInfo.projectId), volumeProjectShare))
+            if (enableProjectShare(projectId)) {
+                binds.add(Bind(getProjectShareDir(projectId), Volume(dockerHostConfig.volumeProjectShare)))
+            }
+
+            return binds
         }
-        return binds
     }
 
-    private fun getGradlePath(pipelineId: String, vmSeqId: Int): String {
+    private fun DockerHostBuildInfo.getGradlePath(): String {
         return "${dockerHostConfig.hostPathGradleCache}/$pipelineId/$vmSeqId/"
     }
 
-    private fun getLogsPath(pipelineId: String, vmSeqId: Int): String {
+    private fun DockerHostBuildInfo.getLogsPath(): String {
         return "${dockerHostConfig.hostPathLogs}/$pipelineId/$vmSeqId/"
     }
 
-    private fun getCcachePath(pipelineId: String, vmSeqId: Int): String {
+    private fun DockerHostBuildInfo.getCcachePath(): String {
         return "${dockerHostConfig.hostPathCcache}/$pipelineId/$vmSeqId/"
     }
 
-    private fun getNpmCachePath(pipelineId: String, vmSeqId: Int): String {
+    private fun DockerHostBuildInfo.getNpmCachePath(): String {
         return "${dockerHostConfig.hostPathNpmCache}/$pipelineId/$vmSeqId/"
     }
 
-    private fun getNpmPrefixPath(pipelineId: String, vmSeqId: Int): String {
+    private fun DockerHostBuildInfo.getNpmPrefixPath(): String {
         return "${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/$vmSeqId/"
     }
 
-    private fun getMavenRepoPath(pipelineId: String, vmSeqId: Int): String {
+    private fun DockerHostBuildInfo.getMavenRepoPath(): String {
         return "${dockerHostConfig.hostPathMavenRepo}/$pipelineId/$vmSeqId/"
     }
 
-    private fun getWorkspace(pipelineId: String, vmSeqId: Int): String {
+    private fun DockerHostBuildInfo.getWorkspace(): String {
         return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
     }
 

@@ -87,5 +87,16 @@ class SpringContextUtil : ApplicationContextAware {
         fun <T : Annotation> getBeansWithAnnotation(clazz: Class<T>): List<Any> {
             return applicationContext!!.getBeansWithAnnotation(clazz).values.toList()
         }
+        /**
+         * 获取指定类型的实现对象列表
+         * @param clazz 类名
+         * @param <T: Class> 类型
+         * @return 实例列表
+         * @throws BeansException 异常
+         */
+        @Throws(BeansException::class)
+        fun <T : Annotation> getBeansWithClass(clazz: Class<T>): List<Any> {
+            return applicationContext!!.getBeansOfType(clazz).values.toList()
+        }
     }
 }
