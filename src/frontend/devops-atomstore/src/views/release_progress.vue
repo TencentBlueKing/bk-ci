@@ -120,6 +120,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="versionDetail.description"
                                 >
                                 </mavon-editor>
@@ -475,7 +476,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
     @import '@/assets/scss/markdown-body.scss';
 

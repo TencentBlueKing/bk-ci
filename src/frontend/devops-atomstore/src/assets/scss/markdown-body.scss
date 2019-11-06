@@ -25,9 +25,8 @@
      min-height: 0 !important;
      &.v-note-wrapper {
          z-index: 1;
-        .v-note-panel .v-note-show .v-show-content {
-            background: #ffffff;
-        }
+         border: none;
+         border-radius: 0;
      }
      &.v-note-wrapper .v-note-op {
          z-index: 2;

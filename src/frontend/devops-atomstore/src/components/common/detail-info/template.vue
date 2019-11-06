@@ -113,7 +113,7 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
 
     .detail-title {

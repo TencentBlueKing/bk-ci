@@ -74,7 +74,7 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss" scoped>
     @import '../../scss/conf';
     .search-title {
         line-height:16px;
