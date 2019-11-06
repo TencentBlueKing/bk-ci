@@ -68,6 +68,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="atomDetail.description"
                                 />
                             </div>

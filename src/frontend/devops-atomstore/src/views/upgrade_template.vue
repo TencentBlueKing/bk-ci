@@ -81,8 +81,10 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="templateDetail.description"
-                                />
+                                >
+                                </mavon-editor>
                             </div>
                         </div>
                         <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('收起') : $t('展开') }}
@@ -115,12 +117,6 @@
 </template>
 
 <script>
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
-
-    const Vue = window.Vue
-    Vue.use(mavonEditor)
-
     export default {
         data () {
             return {
