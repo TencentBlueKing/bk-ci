@@ -107,7 +107,7 @@
                             @toggle="refreshTicket"
                         >
                             <bk-option v-for="(option, index) in credentialList"
-                                :key="index"
+                                :key="option.credentialId"
                                 :id="option.credentialId"
                                 :name="option.credentialId">
                                 <span>{{option.credentialId}}</span>

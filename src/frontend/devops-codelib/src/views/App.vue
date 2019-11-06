@@ -20,7 +20,8 @@
                 return this.$route.meta.logo
             },
             title () {
-                return this.$route.meta.title
+                // return this.$route.meta.title
+                return this.$t('codelib.codelib')
             }
         },
 
