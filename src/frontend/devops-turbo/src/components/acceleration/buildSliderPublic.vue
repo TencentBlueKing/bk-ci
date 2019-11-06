@@ -279,8 +279,8 @@
                     }
                     let projectName = ''
                     this.enableProjectList.forEach(project => {
-                        if (project.project_code === this.projectId) {
-                            projectName = project.project_name
+                        if (project.projectCode === this.projectId) {
+                            projectName = project.projectName
                         }
                     })
                     const { taskId, taskName, ccacheEnabled, banDistcc, bsPipelineId, bsPipelineName, bsVmSeqId, bsElementId, gccVersion, machineNum, cpuNum, cacheSize } = this.taskParam

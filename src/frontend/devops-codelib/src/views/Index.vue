@@ -78,8 +78,8 @@
                 const projectId = this.$route.params.projectId
                 const filterArr = this.projectList.find(item => {
                     return (
-                        item.center_name === '蓝鲸产品中心'
-                        && item.project_code === projectId
+                        item.centerName === '蓝鲸产品中心'
+                        && item.projectCode === projectId
                     )
                 })
                 return filterArr
