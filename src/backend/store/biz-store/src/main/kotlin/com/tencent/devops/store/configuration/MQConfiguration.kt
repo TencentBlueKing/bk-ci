@@ -1,5 +1,6 @@
 package com.tencent.devops.store.configuration
 
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.store.listener.StorePipelineBuildFinishListener
@@ -20,8 +21,16 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class MQConfiguration {
 
+    @Bean
+    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
+
     @Value("\${queueConcurrency.market:3}")
     private val marketConcurrency: Int? = null
+
+    @Bean
+    fun pipelineBuildAtomMarketQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET)
 
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
