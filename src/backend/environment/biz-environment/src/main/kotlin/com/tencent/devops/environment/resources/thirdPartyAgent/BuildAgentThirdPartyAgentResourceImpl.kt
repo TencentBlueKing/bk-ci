@@ -26,26 +26,33 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
+import com.google.common.cache.Cache
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.BuildAgentThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentHeartbeatInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 @RestResource
 class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
-    private val thirdPartyAgentMgrService: ThirdPartyAgentMgrService,
-    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService
+    private val thirdPartyAgentService: ThirdPartyAgentMgrService,
+    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
+    private val redisOperation: RedisOperation
 ) : BuildAgentThirdPartyAgentResource {
-
 
     override fun agentStartup(
         projectId: String,
@@ -54,7 +61,17 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         startInfo: ThirdPartyAgentStartInfo
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
-        return Result(thirdPartyAgentMgrService.agentStartup(projectId, agentId, secretKey, startInfo))
+        return Result(thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo))
+    }
+
+    override fun agentShutdown(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        shutdownNormal: Boolean
+    ): Result<AgentStatus> {
+        checkParam(projectId, agentId, secretKey)
+        return Result(thirdPartyAgentService.agentShutdown(projectId, agentId, secretKey, shutdownNormal))
     }
 
     override fun getAgentStatus(
@@ -63,16 +80,95 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         secretKey: String
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
-        return Result(thirdPartyAgentMgrService.getAgentStatus(projectId, agentId, secretKey))
+
+        val requestAgentId = agentStatusRequestCache.getIfPresent(agentId)
+        if (requestAgentId != null) {
+            logger.warn("request too frequently")
+            return Result(1, "request too frequently")
+        } else {
+            val lockKey = "environment:thirdPartyAgent:agentStatusRequestLock_$agentId"
+            val redisLock = RedisLock(redisOperation, lockKey, 1)
+            if (redisLock.tryLock()) {
+                agentStatusRequestCache.put(agentId, agentId)
+            } else {
+                logger.warn("get lock failed, skip")
+                return Result(1, "request too frequently")
+            }
+        }
+
+        return Result(thirdPartyAgentService.getAgentStatus(projectId, agentId, secretKey))
     }
 
-    override fun heartbeat(projectId: String, agentId: String, secretKey: String, heartbeatInfo: HeartbeatInfo): Result<HeartbeatResponse> {
+    override fun agentHeartbeat(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        heartbeatInfo: ThirdPartyAgentHeartbeatInfo?
+    ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
-        return Result(thirdPartyAgentMgrService.heartbeat(projectId, agentId, secretKey, heartbeatInfo))
+
+        val requestAgentId = agentHeartbeatRequestCache.getIfPresent(agentId)
+        if (requestAgentId != null) {
+            logger.warn("request too frequently")
+            return Result(1, "request too frequently")
+        } else {
+            val lockKey = "environment:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
+            val redisLock = RedisLock(redisOperation, lockKey, 1)
+            if (redisLock.tryLock()) {
+                agentHeartbeatRequestCache.put(agentId, agentId)
+            } else {
+                logger.warn("get lock failed, skip")
+                return Result(1, "request too frequently")
+            }
+        }
+
+        return Result(thirdPartyAgentService.heartBeat(projectId, agentId, secretKey, heartbeatInfo))
+    }
+
+    override fun newHeartbeat(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        heartbeatInfo: NewHeartbeatInfo
+    ): Result<HeartbeatResponse> {
+        checkParam(projectId, agentId, secretKey)
+
+        val requestAgentId = agentHeartbeatRequestCache.getIfPresent(agentId)
+        if (requestAgentId != null) {
+            logger.warn("request too frequently")
+            return Result(1, "request too frequently")
+        } else {
+            val lockKey = "environment:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
+            val redisLock = RedisLock(redisOperation, lockKey, 1)
+            if (redisLock.tryLock()) {
+                agentHeartbeatRequestCache.put(agentId, agentId)
+            } else {
+                logger.warn("get lock failed, skip")
+                return Result(1, "request too frequently")
+            }
+        }
+
+        return Result(thirdPartyAgentService.newHeartbeat(projectId, agentId, secretKey, heartbeatInfo))
     }
 
     override fun getPipelines(projectId: String, agentId: String, secretKey: String): Result<ThirdPartyAgentPipeline?> {
         checkParam(projectId, agentId, secretKey)
+
+        val requestAgentId = agentPipelineRequestCache.getIfPresent(agentId)
+        if (requestAgentId != null) {
+            logger.warn("request too frequently")
+            return Result(1, "request too frequently")
+        } else {
+            val lockKey = "environment:thirdPartyAgent:agentPipelineRequestLock_$agentId"
+            val redisLock = RedisLock(redisOperation, lockKey, 1)
+            if (redisLock.tryLock()) {
+                agentPipelineRequestCache.put(agentId, agentId)
+            } else {
+                logger.warn("get lock failed, skip")
+                return Result(1, "request too frequently")
+            }
+        }
+
         return Result(thirdPartyAgentPipelineService.getPipelines(projectId, agentId, secretKey))
     }
 
@@ -100,5 +196,18 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         if (secretKey.isBlank()) {
             throw ParamBlankException("无效的Secret Key")
         }
+    }
+
+    private val agentHeartbeatRequestCache: Cache<String, String> = CacheBuilder.newBuilder().maximumSize(10000)
+        .expireAfterWrite(4, TimeUnit.SECONDS).build()
+
+    private val agentStatusRequestCache: Cache<String, String> = CacheBuilder.newBuilder().maximumSize(10000)
+        .expireAfterWrite(3, TimeUnit.SECONDS).build()
+
+    private val agentPipelineRequestCache: Cache<String, String> = CacheBuilder.newBuilder().maximumSize(10000)
+        .expireAfterWrite(10, TimeUnit.SECONDS).build()
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildAgentThirdPartyAgentResourceImpl::class.java)
     }
 }

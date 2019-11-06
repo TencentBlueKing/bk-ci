@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.code.svn.api
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -37,11 +38,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
-/**
- *
- * curl -XGET --header "apiKey: 2a3423424e" "http://svn.com/rest/webhooks?event=1&apiKey=802c80e122304505be073e1f29b8bf2c&svnUrl=http://svn.xx.com/project/svn_single_external_proj"
- * curl -XPOST --header "apiKey: 3afafsfsf" "http://svn.com/rest/webhooks?event=1&apiKey=802c80e122304505be073e1f29b8bf2c&svnUrl=http://svn.xx.com/project/svn_single_external_proj&url=http://xx.com/ms/repository/api/codesvn/commit,http://xx.com/ms/repository/api/codesvn/commit&userName=yy"
- */
+
 object SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)
@@ -82,6 +79,48 @@ object SVNApi {
         if (hookResponse.status != "200") {
             logger.info("Fail to add the hook. ${hookResponse.message}")
             throw ScmException("添加Svn Webhook失败，原因：${hookResponse.message}", ScmType.CODE_SVN.name)
+        }
+    }
+
+    fun lock(repname: String, applicant: String, subpath: String, svnConfig: SVNConfig) {
+        val url = composeSvnLockPostUrl(svnConfig)
+        val requestData = mapOf("repname" to repname,
+            "applicant" to applicant,
+            "subpath" to listOf(subpath))
+        val requestBody = ObjectMapper().writeValueAsString(requestData)
+        logger.info("lock the svn repo, url:$url")
+        logger.info("lock the svn repo, body:$requestBody")
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("ApiKey", svnConfig.apiKey).addHeader("Content-type", "application/json")
+            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .build()
+        val body = getBody(request)
+        logger.info("lock the svn repo response $body")
+        val response: Boolean = JsonUtil.getObjectMapper().readValue(body)
+        if (!response) {
+            throw RuntimeException("Fail to lock the svn repo")
+        }
+    }
+
+    fun unlock(repname: String, applicant: String, subpath: String, svnConfig: SVNConfig) {
+        val url = composeSvnUnLockPostUrl(svnConfig)
+        val requestData = mapOf("repname" to repname,
+            "applicant" to applicant,
+            "subpath" to listOf(subpath))
+        val requestBody = ObjectMapper().writeValueAsString(requestData)
+        logger.info("unlock the svn repo, url:$url")
+        logger.info("unlock the svn repo, body:$requestBody")
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("ApiKey", svnConfig.apiKey).addHeader("Content-type", "application/json")
+            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .build()
+        val body = getBody(request)
+        logger.info("unlock the svn repo response $body")
+        val response: Boolean = JsonUtil.getObjectMapper().readValue(body)
+        if (!response) {
+            throw RuntimeException("Fail to unlock the svn repo")
         }
     }
 

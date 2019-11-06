@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceCertResource
 import com.tencent.devops.ticket.pojo.Cert
@@ -64,7 +64,7 @@ class ServiceCertResourceImpl @Autowired constructor(
             userId,
             projectId,
             CertType.ANDROID.value,
-            BkAuthPermission.USE,
+            AuthPermission.USE,
             limit.offset,
             limit.limit
         )

@@ -26,28 +26,27 @@
 
 package com.tencent.devops.project.pojo.user
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 /**
  * 用户机构信息
  *
  * since: 2018-12-09
  */
 data class UserDeptDetail(
-    @JsonProperty("bg_name")
+        // TODO 给别名会报错。不给别名成功
+//    @JsonProperty("bg_name")
     val bgName: String,
-    @JsonProperty("bg_id")
-    val bgId: Int,
-    @JsonProperty("dept_name")
+//    @JsonProperty("bg_id")
+    val bgId: String,
+//    @JsonProperty("dept_name")
     val deptName: String,
-    @JsonProperty("bg_id")
-    val deptId: Int,
-    @JsonProperty("center_name")
+//    @JsonProperty("bg_id")
+    val deptId: String,
+//    @JsonProperty("center_name")
     val centerName: String,
-    @JsonProperty("center_id")
-    val centerId: Int,
-    @JsonProperty("group_id")
-    val groupId: Int,
-    @JsonProperty("group_name")
+//    @JsonProperty("center_id")
+    val centerId: String,
+//    @JsonProperty("group_id")
+    val groupId: String,
+//    @JsonProperty("group_name")
     val groupName: String
 )

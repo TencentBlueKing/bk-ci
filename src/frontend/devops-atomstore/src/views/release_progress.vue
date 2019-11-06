@@ -15,7 +15,7 @@
                 <i class="right-arrow"></i>
                 <div class="title third-level">
                     <span class="">{{ curTitle }}</span>
-                    <span> {{ $t('（') }} {{ versionDetail.atomCode }} {{ $t('）') }} </span>
+                    <span>（{{ versionDetail.atomCode }}）</span>
                 </div>
             </div>
             <div class="sub_header_right">
@@ -47,7 +47,7 @@
                                         @click.stop="rebuild"
                                     > {{ $t('重新构建') }} <i class="col-line"></i></span>
                                     <span class="log-btn"
-                                        v-if="entry.code === 'check' && entry.status !== 'undo'"
+                                        v-if="entry.code === 'build' && entry.status !== 'undo'"
                                         @click.stop="readLog"
                                     > {{ $t('日志') }} </span>
                                 </div>
@@ -132,6 +132,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="versionDetail.description"
                                 >
                                 </mavon-editor>
@@ -202,6 +203,13 @@
     export default {
         components: {
             BuildLog
+        },
+
+        filters: {
+            levelFilter (val) {
+                if (val === 'LOGIN_PUBLIC') return '是'
+                else return '否'
+            }
         },
 
         data () {
@@ -484,7 +492,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
     @import '@/assets/scss/markdown-body.scss';
 
@@ -747,6 +755,14 @@
             .multi-item {
                 margin-top: 0;
             }
+            .markdown-editor-show.info-value {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
+                    background: #FAFBFD;
+                }
+            }
         }
         .atom-logo-box {
             position: absolute;
@@ -800,10 +816,10 @@
                 margin-top: 40px;
             }
         }
-        .bk-sideslider-wrapper {
+        /deep/ .bk-sideslider-wrapper {
             top: 0;
             padding-bottom: 0;
-             .bk-sideslider-content {
+            /deep/ .bk-sideslider-content {
                 height: calc(100% - 50px);
             }
         }

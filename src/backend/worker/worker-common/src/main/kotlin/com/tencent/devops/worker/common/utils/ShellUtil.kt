@@ -77,6 +77,7 @@ object ShellUtil {
 
     private val specialKey = listOf(".", "-")
     private val specialValue = listOf("|", "&", "(", ")")
+    private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
     fun execute(script: String, continueNoneZero: Boolean = false): String {
         return execute(buildId, script, dir, buildEnvs, emptyMap(), null, continueNoneZero)
@@ -89,7 +90,8 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         outerCommandFunc: ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?,
-        continueNoneZero: Boolean = false
+        continueNoneZero: Boolean = false,
+        prefix: String = ""
     ): String {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -108,8 +110,8 @@ object ShellUtil {
             }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                // 防止出现可执行的命令
-                val clean = value.replace("'", "\'").replace("`", "")
+                // --bug=75509999 Agent环境变量中替换掉破坏性字符
+                val clean = value.replace(specialCharToReplace, "")
                 command.append("export $name='$clean'\n")
             }
         }
@@ -165,15 +167,15 @@ object ShellUtil {
         file.writeText(command.toString())
         executeUnixCommand("chmod +x ${file.absolutePath}", dir)
         return if (outerCommandFunc == null) {
-            executeUnixCommand(file.absolutePath, dir)
+            executeUnixCommand(file.absolutePath, dir, prefix)
         } else {
             outerCommandFunc(BuildScriptType.SHELL, buildId, file, dir)
         }
     }
 
-    private fun executeUnixCommand(command: String, sourceDir: File): String {
+    private fun executeUnixCommand(command: String, sourceDir: File, prefix: String = ""): String {
         try {
-            return CommandLineUtils.execute(command, sourceDir, true)
+            return CommandLineUtils.execute(command, sourceDir, true, prefix)
         } catch (ignored: Throwable) {
             LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
             throw ignored

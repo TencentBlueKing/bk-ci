@@ -64,7 +64,7 @@
                     <bk-input v-model="user" :disabled="true"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('调试项目')" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
-                    <big-select class="big-select" v-model="cooperData.testProjectCode" :searchable="true" :options="projectList" setting-key="project_code" display-key="project_name" :loading="isLoading"></big-select>
+                    <big-select class="big-select" v-model="cooperData.testProjectCode" :searchable="true" :options="projectList" setting-key="projectCode" display-key="projectName" :loading="isLoading"></big-select>
                 </bk-form-item>
                 <bk-form-item :label="$t('申请原因')" :required="true" :rules="rules" property="applyReason">
                     <bk-input type="textarea" v-model="cooperData.applyReason" :placeholder="$t('请输入申请原因')"></bk-input>
@@ -87,12 +87,12 @@
 
         filters: {
             atomJobType (val) {
-                const local = window.devops.bkLocale || {}
+                const local = window.devops || {}
                 switch (val) {
                     case 'AGENT':
-                        return local.i18n('编译环境')
+                        return local.$t('编译环境')
                     case 'AGENT_LESS':
-                        return local.i18n('无编译环境')
+                        return local.$t('无编译环境')
                 }
             }
         },
@@ -235,7 +235,7 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
 
     .detail-title {

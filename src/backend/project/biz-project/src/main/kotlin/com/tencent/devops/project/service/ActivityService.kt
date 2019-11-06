@@ -26,9 +26,11 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ActivityDao
-import com.tencent.devops.project.pojo.ActivityInfo
-import com.tencent.devops.project.pojo.ActivityStatus
+import com.tencent.devops.project.pojo.*
 import com.tencent.devops.project.pojo.enums.ActivityType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,5 +50,51 @@ class ActivityService @Autowired constructor(
 
     fun create(userId: String, activityInfo: ActivityInfo, type: ActivityType) {
         activityDao.create(dslContext, userId, activityInfo, type)
+    }
+
+
+    fun delete(userId: String, activityId: Long) {
+        activityDao.delete(dslContext, activityId)
+    }
+
+    fun get(userId: String, activityId: Long): Result<OPActivityVO> {
+        val tActivityRecord = activityDao.get(dslContext, activityId)
+
+        if (tActivityRecord != null) {
+            return Result(tActivityRecord.let {
+                OPActivityVO(
+                        it.id,
+                        it.name,
+                        it.link,
+                        it.type,
+                        it.status,
+                        it.creator, DateTimeUtil.toDateTime(it.createTime)
+                )
+            })
+        }
+        return Result(405, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID))
+    }
+
+    fun listOPActivity(userId: String): List<OPActivityVO> {
+        return activityDao.listOPActivity(dslContext)
+    }
+
+    fun upDateActivity(activityId: Long, opActivityUpdate: OPActivityUpdate): Boolean {
+        return activityDao.upDate(dslContext, activityId, opActivityUpdate)
+    }
+
+    fun getField(fieldName: String): List<String> {
+        val fieldDate = ArrayList<String>()
+        if (fieldName.equals("TYPE")) {
+            ActivityType.values().forEach {
+                fieldDate.add(it.name)
+            }
+        }
+        if (fieldName.equals("STATUS")) {
+            ActivityStatus.values().forEach {
+                fieldDate.add(it.name)
+            }
+        }
+        return fieldDate
     }
 }

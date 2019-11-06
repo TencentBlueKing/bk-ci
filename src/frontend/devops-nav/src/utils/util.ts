@@ -113,7 +113,6 @@ export function isShallowEqual (obj1: object, obj2: object): boolean {
 }
 
 export function judgementLsVersion () {
-    console.log(DEVOPS_LS_VERSION, 'DEVOPS_LS_VERSION')
     const curLsVersion = window.localStorage.getItem('lsVersion')
     if (!curLsVersion || curLsVersion !== DEVOPS_LS_VERSION) {
         window.localStorage.clear()

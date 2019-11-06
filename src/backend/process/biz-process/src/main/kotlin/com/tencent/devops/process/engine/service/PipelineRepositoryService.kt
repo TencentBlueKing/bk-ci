@@ -40,7 +40,11 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.pipeline.pojo.element.service.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -50,6 +54,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
@@ -86,7 +91,8 @@ class PipelineRepositoryService constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val templatePipelineDao: TemplatePipelineDao
 ) {
 
     fun deployPipeline(
@@ -196,10 +202,31 @@ class PipelineRepositoryService constructor(
             c.containerId = modelContainerIdGenerator.getNextId()
         }
 
+        val variables = c.params.map {
+            it.id to it.defaultValue.toString()
+        }.toMap()
+
         var taskSeq = 0
         c.elements.forEach { e ->
             if (e.id.isNullOrBlank()) {
                 e.id = modelTaskIdGenerator.getNextId()
+            }
+
+            if (e is CodeGitWebHookTriggerElement || e is CodeGitlabWebHookTriggerElement || e is CodeSVNWebHookTriggerElement || e is CodeGithubWebHookTriggerElement) {
+                logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
+                pipelineEventDispatcher.dispatch(
+                        PipelineCreateEvent(
+                                "createWebhook",
+                                projectId,
+                                pipelineId,
+                                userId,
+                                null,
+                                model.name,
+                                e,
+                                null,
+                                variables
+                        )
+                )
             }
 
             ElementBizRegistrar.getPlugin(e)?.afterCreate(e, projectId, pipelineId, model.name, userId, channelCode)
@@ -403,7 +430,9 @@ class PipelineRepositoryService constructor(
     }
 
     fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
-        return pipelineInfoDao.convert(pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode))
+        val template = templatePipelineDao.get(dslContext, pipelineId)
+        val templateId = template?.templateId
+        return pipelineInfoDao.convert(pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode), templateId)
     }
 
     fun getPipelineInfo(pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
@@ -496,13 +525,28 @@ class PipelineRepositoryService constructor(
         return pipelineInfoDao.countByProjectIds(dslContext, projectIds, channelCode)
     }
 
-    fun listPipelineNameByIds(projectId: String, pipelineIds: Set<String>): MutableMap<String, String> {
-        val listInfoByPipelineIds = pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, pipelineIds)
-        val map = mutableMapOf<String, String>()
-        listInfoByPipelineIds.forEach {
-            map[it.pipelineId] = it.pipelineName
-        }
-        return map
+    fun listPipelineNameByIds(
+        projectId: String,
+        pipelineIds: Set<String>,
+        filterDelete: Boolean = true
+    ): Map<String, String> {
+        val listInfoByPipelineIds =
+            pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, pipelineIds, filterDelete)
+        return listInfoByPipelineIds.map {
+            it.pipelineId to it.pipelineName
+        }.toMap()
+    }
+
+    fun listPipelineIdByName(
+        projectId: String,
+        pipelineNames: Set<String>,
+        filterDelete: Boolean = true
+    ): Map<String, String> {
+        val listInfoByPipelineName =
+            pipelineInfoDao.listInfoByPipelineName(dslContext, projectId, pipelineNames, filterDelete)
+        return listInfoByPipelineName.map {
+            it.pipelineName to it.pipelineId
+        }.toMap()
     }
 
     private fun checkSubpipeline(projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
@@ -583,7 +627,7 @@ class PipelineRepositoryService constructor(
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null)
-                list.add(pipelineInfoDao.convert(it)!!)
+                list.add(pipelineInfoDao.convert(it, null)!!)
         }
         return list
     }
@@ -605,6 +649,10 @@ class PipelineRepositoryService constructor(
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
         return existModel
+    }
+
+    fun countByPipelineIds(projectId: String, channelCode: ChannelCode, pipelineIds: List<String>): Int {
+        return pipelineInfoDao.countByPipelineIds(dslContext, projectId, channelCode, pipelineIds)
     }
 
     companion object {

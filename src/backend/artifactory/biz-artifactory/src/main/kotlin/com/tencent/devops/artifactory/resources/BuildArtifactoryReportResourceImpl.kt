@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.BuildArtifactoryReportResource
+import com.tencent.devops.artifactory.api.builds.BuildArtifactoryReportResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -39,10 +39,10 @@ class BuildArtifactoryReportResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) :
     BuildArtifactoryReportResource {
-    override fun getRootUrl(projectCode: String, pipelineId: String, buildId: String, taskId: String): Result<String> {
+    override fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): Result<String> {
         val result = archiveFileService.generateDestPath(
             fileType = FileTypeEnum.BK_REPORT,
-            projectCode = projectCode,
+            projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             customFilePath = taskId
@@ -53,6 +53,7 @@ class BuildArtifactoryReportResourceImpl @Autowired constructor(
         }
         val filePath = result.data!!
         val url = archiveFileService.transformFileUrl(
+            fileType = FileTypeEnum.BK_REPORT,
             wildFlag = false,
             pathPattern = filePath,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW,

@@ -115,8 +115,8 @@
                 this.isBtnDisabled = true
                 let projectName = ''
                 this.enableProjectList.forEach(project => {
-                    if (project.project_code === this.projectId) {
-                        projectName = project.project_name
+                    if (project.projectCode === this.projectId) {
+                        projectName = project.projectName
                     }
                 })
                 try {

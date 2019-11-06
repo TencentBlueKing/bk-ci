@@ -366,7 +366,7 @@
                     return status
                 }
             },
-            
+
             // 提交配置
             async configCommit () { //  machineId
                 const validate = await this.$validator.validateAll()
@@ -377,8 +377,8 @@
                 try {
                     let projectName = ''
                     this.enableProjectList.forEach(project => {
-                        if (project.project_code === this.projectId) {
-                            projectName = project.project_name
+                        if (project.projectCode === this.projectId) {
+                            projectName = project.projectName
                         }
                     })
                     if (!this.taskParam.bsPipelineName) {

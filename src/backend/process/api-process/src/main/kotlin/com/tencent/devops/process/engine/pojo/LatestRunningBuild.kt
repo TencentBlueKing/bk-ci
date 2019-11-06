@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
  * 最后一次运行中的构建信息
  */
 data class LatestRunningBuild(
-    val projectId: String,
     val pipelineId: String,
     val buildId: String,
     val buildNum: Int,

@@ -26,12 +26,9 @@
 
 package com.tencent.devops.store.pojo.container
 
-/**
- * deng
- * 2019-04-09
- */
 data class ContainerBuildType(
     val type: String,
     val name: String,
-    val enableApp: Boolean /*是否支持选择对应的构建依赖*/
+    val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
+    val disabled: Boolean /*是否可点击*/
 )

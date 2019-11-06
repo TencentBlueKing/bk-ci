@@ -28,4 +28,4 @@ package com.tencent.devops.worker.common.task
 
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class TaskClassType(val classTypes: Array<String>)
+annotation class TaskClassType(val classTypes: Array<String>, val priority: Int = 0)

@@ -44,19 +44,19 @@
                 >
                     <bk-table-column
                         :label="$t('projectName')"
-                        prop="logo_addr"
+                        prop="logoAddr"
                         width="300"
                     >
                         <template slot-scope="props">
                             <div class="project-name-cell">
                                 <span
-                                    v-if="props.row.logo_addr"
+                                    v-if="props.row.logoAddr"
                                     class="avatar"
                                     @click="modifyLogo(props.row)"
                                 >
                                     <img
                                         class="avatar-addr"
-                                        :src="props.row.logo_addr"
+                                        :src="props.row.logoAddr"
                                     >
                                     <span class="bg-avatar">{{ $t('editLabel') }}</span>
                                 </span>
@@ -381,10 +381,10 @@
         }
 
         toggleProject (project: any): void {
-            const { enabled, project_coC: projectCode, projectName: projectName = '' } = project
+            const { enabled, projectCode, projectName = '' } = project
             this.curProjectData = JSON.parse(JSON.stringify(project))
 
-            const message = (enabled ? this.$t('disableProjectConfirm') : this.$t('disableProjectConfirm')) + projectName
+            const message = (enabled ? this.$t('disableProjectConfirm') : this.$t('enableProjectConfirm')) + projectName
 
             this.$bkInfo({
                 title: message,
@@ -393,7 +393,7 @@
                     let theme = 'error'
                     try {
                         const params = {
-                            projectId: projectCode,
+                            projectCode,
                             enabled: !enabled
                         }
                         await this.toggleProjectEnable(params)
@@ -421,14 +421,14 @@
         }
 
         modifyLogo (project) {
-            if (project.logo_addr) {
-                this.selectedUrl = project.logo_addr
+            if (project.logoAddr) {
+                this.selectedUrl = project.logoAddr
             } else {
                 this.selectedUrl = ''
             }
             this.showlogoDialog = true
             this.isUploading = false
-            this.curSelectProject = project.project_id
+            this.curSelectProject = project.projectCode
         }
 
         async toConfirmLogo () {
@@ -440,7 +440,7 @@
 
                 try {
                     const res = await this.changeProjectLogo({
-                        projectId: this.curSelectProject,
+                        projectCode: this.curSelectProject,
                         formData
                     })
 
@@ -452,8 +452,8 @@
 
                         this.showlogoDialog = false
                         this.projectList.forEach(item => {
-                            if (item.project_id === this.curSelectProject) {
-                                item.logo_addr = res.logo_addr
+                            if (item.projectCode === this.curSelectProject) {
+                                item.logoAddr = res.logoAddr
                             }
                         })
                     }
@@ -516,24 +516,6 @@
                 const inputElement: any = document.getElementById('inputfile')
                 inputElement.value = ''
             })
-        }
-
-        async updateProject (project: any) {
-            try {
-                await this.ajaxUpdatePM(project)
-
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('updateProjectSuccuess')
-                })
-                this.togglePMDialog(false)
-                this.getProjects(true)
-            } catch (e) {
-                this.$bkMessage({
-                    message: e.message,
-                    theme: 'error'
-                })
-            }
         }
     }
 </script>

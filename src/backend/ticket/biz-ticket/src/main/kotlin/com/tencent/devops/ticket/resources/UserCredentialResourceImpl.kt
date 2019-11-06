@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
@@ -49,7 +49,7 @@ class UserCredentialResourceImpl @Autowired constructor(
     private val credentialPermissionService: CredentialPermissionService
 ) : UserCredentialResource {
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(credentialPermissionService.validatePermission(userId, projectId, BkAuthPermission.CREATE))
+        return Result(credentialPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
@@ -65,7 +65,12 @@ class UserCredentialResourceImpl @Autowired constructor(
         if (credential.v1.isBlank()) {
             throw ParamBlankException("Invalid credential")
         }
-        credentialService.userCreate(userId, projectId, credential)
+        credentialService.userCreate(
+            userId = userId,
+            projectId = projectId,
+            credential = credential,
+            authGroupList = null
+        )
         return Result(true)
     }
 
@@ -88,7 +93,8 @@ class UserCredentialResourceImpl @Autowired constructor(
         projectId: String,
         credentialTypesString: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        keyword: String?
     ): Result<Page<CredentialWithPermission>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -102,7 +108,14 @@ class UserCredentialResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = credentialService.userList(userId, projectId, credentialTypes, limit.offset, limit.limit)
+        val result = credentialService.userList(
+            userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            offset = limit.offset,
+            limit = limit.limit,
+            keyword = keyword
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
@@ -112,7 +125,8 @@ class UserCredentialResourceImpl @Autowired constructor(
         credentialTypesString: String?,
         permission: Permission,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        keyword: String?
     ): Result<Page<Credential>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -123,26 +137,64 @@ class UserCredentialResourceImpl @Autowired constructor(
         val credentialTypes = credentialTypesString?.split(",")?.map {
             CredentialType.valueOf(it)
         }
-        val bkAuthPermission = when (permission) {
-            Permission.CREATE -> BkAuthPermission.CREATE
-            Permission.DELETE -> BkAuthPermission.DELETE
-            Permission.LIST -> BkAuthPermission.LIST
-            Permission.VIEW -> BkAuthPermission.VIEW
-            Permission.EDIT -> BkAuthPermission.EDIT
-            Permission.USE -> BkAuthPermission.USE
+        val authPermission = when (permission) {
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
         }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = credentialService.hasPermissionList(
-            userId,
-            projectId,
-            credentialTypes,
-            bkAuthPermission,
-            limit.offset,
-            limit.limit
+            userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            authPermission = authPermission,
+            offset = limit.offset,
+            limit = limit.limit,
+            keyword = keyword
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun getHasPermissionList(
+        userId: String,
+        projectId: String,
+        credentialTypesString: String?,
+        permission: Permission,
+        keyword: String?
+    ): Result<List<Credential>> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        val credentialTypes = credentialTypesString?.split(",")?.map {
+            CredentialType.valueOf(it)
+        }
+        val authPermission = when (permission) {
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
+        }
+
+        val result = credentialService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            authPermission = authPermission,
+            offset = null,
+            limit = null,
+            keyword = keyword
+        )
+        return Result(result.records)
     }
 
     override fun show(userId: String, projectId: String, credentialId: String): Result<CredentialWithPermission> {

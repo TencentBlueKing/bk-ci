@@ -29,7 +29,10 @@ package com.tencent.devops.worker.common
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.ProcessService
@@ -46,10 +49,12 @@ object Runner {
             logger.info("Start the worker ...")
             // 启动成功了，报告process我已经启动了
             val buildVariables = ProcessService.setStarted()
+
             // 启动日志服务
             LoggerService.start()
             val retryCount = buildVariables.variables[PIPELINE_RETRY_COUNT] ?: "0"
             LoggerService.executeCount = retryCount.toInt() + 1
+            LoggerService.jobId = buildVariables.containerId
 
             Heartbeat.start()
             // 开始轮询
@@ -82,20 +87,65 @@ object Runner {
                                 LoggerService.addNormalLine("")
                                 LoggerService.addFoldStartLine("${buildTask.elementName}-[${buildTask.elementId}]")
                                 LoggerService.addNormalLine(Ansi().bold().a("Start Element").reset().toString())
+
+                                // 开始Task执行
                                 taskDaemon.run()
+
+                                // 获取执行结果
                                 val env = taskDaemon.getAllEnv()
+
+                                // 上报Task执行结果
                                 logger.info("Complete the task ($buildTask)")
-                                ProcessService.completeTask(taskId, buildTask.elementId!!, env, buildTask.type)
+                                ProcessService.completeTask(
+                                    taskId = taskId,
+                                    elementId = buildTask.elementId!!,
+                                    elementName = buildTask.elementName ?: "",
+                                    containerId = buildVariables.containerId,
+                                    isSuccess = true,
+                                    buildResult = env,
+                                    type = buildTask.type
+                                )
                                 logger.info("Finish completing the task ($buildTask)")
-                            } catch (ie: Throwable) {
-                                logger.warn("Fail to execute the task($buildTask)", ie)
+                            } catch (e: Throwable) {
+                                var message: String
+                                var errorType: String
+                                var errorCode: Int
+
+                                val trueException = when {
+                                    e is TaskExecuteException -> e
+                                    e.cause is TaskExecuteException -> e.cause as TaskExecuteException
+                                    else -> null
+                                }
+                                if (trueException != null) {
+                                    // Worker内插件执行出错处理
+                                    logger.warn("[Task Error] Fail to execute the task($buildTask) with task error", e)
+                                    message = trueException.errorMsg
+                                    errorType = trueException.errorType.name
+                                    errorCode = trueException.errorCode
+                                } else {
+                                    // Worker执行的错误处理
+                                    logger.warn("[Worker Error] Fail to execute the task($buildTask) with system error", e)
+                                    message = e.message ?: "Unknown system error has occurred"
+                                    errorType = ErrorType.SYSTEM.name
+                                    errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                                }
+
                                 val env = taskDaemon.getAllEnv()
-                                val message = ie.message ?: "Unknown error has occurred"
                                 LoggerService.addNormalLine(Ansi().fgRed().a(message).reset().toString())
-                                LoggerService.addFoldEndLine("${buildTask.elementName}-[${buildTask.elementId}]")
-                                ProcessService.completeTask(taskId, buildTask.elementId!!, env, buildTask.type, message)
+
+                                ProcessService.completeTask(
+                                    taskId = taskId,
+                                    elementId = buildTask.elementId!!,
+                                    elementName = buildTask.elementName ?: "",
+                                    containerId = buildVariables.containerId,
+                                    isSuccess = false,
+                                    buildResult = env,
+                                    type = buildTask.type,
+                                    message = message,
+                                    errorType = errorType,
+                                    errorCode = errorCode
+                                )
                             } finally {
-                                LoggerService.addFoldEndLine("${buildTask.elementName}-[${buildTask.elementId}]")
                                 LoggerService.elementId = ""
                             }
                         }
@@ -107,9 +157,9 @@ object Runner {
                         }
                     }
                 }
-            } catch (ignored: Throwable) {
-                logger.error("Other unknown error has occurred:", ignored)
-                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + ignored.message).reset().toString())
+            } catch (e: Exception) {
+                logger.error("Other unknown error has occurred:", e)
+                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + e.message).reset().toString())
             } finally {
                 LoggerService.stop()
                 Heartbeat.stop()

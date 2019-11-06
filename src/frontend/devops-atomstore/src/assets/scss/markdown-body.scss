@@ -23,12 +23,10 @@
  .markdown-body {
      font-size: 14px !important;
      min-height: 0 !important;
-     &.v-note-wrapper, .v-note-panel {
-         border: none;
+     &.v-note-wrapper {
          z-index: 1;
-         .v-show-content {
-             background: #ffffff !important;
-         }
+         border: none;
+         border-radius: 0;
      }
      &.v-note-wrapper .v-note-op {
          z-index: 2;

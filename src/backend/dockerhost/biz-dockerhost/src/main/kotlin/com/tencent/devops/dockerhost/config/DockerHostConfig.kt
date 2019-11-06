@@ -41,13 +41,13 @@ class DockerHostConfig {
     @Value("\${dockerCli.apiVersion:1.23}")
     var apiVersion: String? = null
 
-    @Value("\${dockerCli.registryUrl}")
+    @Value("\${dockerCli.registryUrl:#{null}}")
     var registryUrl: String? = null
 
-    @Value("\${dockerCli.registryUsername}")
+    @Value("\${dockerCli.registryUsername:#{null}}")
     var registryUsername: String? = null
 
-    @Value("\${dockerCli.registryPassword}")
+    @Value("\${dockerCli.registryPassword:#{null}}")
     var registryPassword: String? = null
 
     @Value("\${dockerCli.volumeWorkspace:/data/devops/workspace}")
@@ -74,7 +74,7 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeApps:/data/devops/apps/}")
     var volumeApps: String? = null
 
-    @Value("\${dockerCli.volumeCodecc}")
+    @Value("\${dockerCli.volumeCodecc:#{null}}")
     var volumeCodecc: String? = null
 
     @Value("\${dockerCli.volumeInit:/data/init.sh}")
@@ -89,46 +89,52 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeGradleCache:/root/.gradle/caches}")
     var volumeGradleCache: String? = null
 
-    @Value("\${dockerCli.hostPathWorkspace}")
+    @Value("\${dockerCli.hostPathWorkspace:#{null}}")
     var hostPathWorkspace: String? = null
 
-    @Value("\${dockerCli.hostPathProjectShare}")
+    @Value("\${dockerCli.hostPathProjectShare:#{null}}")
     var hostPathProjectShare: String? = null
 
-    @Value("\${dockerCli.hostPathMavenRepo}")
+    @Value("\${dockerCli.hostPathMavenRepo:#{null}}")
     var hostPathMavenRepo: String? = null
 
-    @Value("\${dockerCli.hostPathNpmPrefix}")
+    @Value("\${dockerCli.hostPathNpmPrefix:#{null}}")
     var hostPathNpmPrefix: String? = null
 
-    @Value("\${dockerCli.hostPathNpmCache}")
+    @Value("\${dockerCli.hostPathNpmCache:#{null}}")
     var hostPathNpmCache: String? = null
 
-    @Value("\${dockerCli.hostPathNpmRc}")
+    @Value("\${dockerCli.hostPathNpmRc:#{null}}")
     var hostPathNpmRc: String? = null
 
-    @Value("\${dockerCli.hostPathCcache}")
+    @Value("\${dockerCli.hostPathCcache:#{null}}")
     var hostPathCcache: String? = null
 
-    @Value("\${dockerCli.hostPathApps}")
+    @Value("\${dockerCli.hostPathApps:#{null}}")
     var hostPathApps: String? = null
 
-    @Value("\${dockerCli.hostPathCodecc}")
+    @Value("\${dockerCli.hostPathCodecc:#{null}}")
     var hostPathCodecc: String? = null
 
-    @Value("\${dockerCli.hostPathInit}")
+    @Value("\${dockerCli.hostPathInit:#{null}}")
     var hostPathInit: String? = null
 
-    @Value("\${dockerCli.hostPathSleep}")
+    @Value("\${dockerCli.hostPathSleep:#{null}}")
     var hostPathSleep: String? = null
 
-    @Value("\${dockerCli.hostPathLogs}")
+    @Value("\${dockerCli.hostPathLogs:#{null}}")
     var hostPathLogs: String? = null
 
-    @Value("\${dockerCli.hostPathGradleCache}")
+    @Value("\${dockerCli.hostPathGradleCache:#{null}}")
     var hostPathGradleCache: String? = null
 
-    @Value("\${dockerCli.shareProjectCodeWhiteList:}")
+    @Value("\${dockerCli.hostPathLinkDir}")
+    var hostPathLinkDir: String = "/tmp/bkci"
+
+    @Value("\${dockerCli.hostPathHosts}")
+    var hostPathHosts: String? = null
+
+    @Value("\${dockerCli.shareProjectCodeWhiteList}")
     var shareProjectCodeWhiteList: String? = null
 
     @Value("\${dockerCli.memoryLimitBytes:2147483648}")
@@ -139,4 +145,19 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.cpuQuota:50000}")
     var cpuQuota: Int = 50000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${dockerCli.dockerAgentPath}")
+    var dockerAgentPath: String? = null
+
+    @Value("\${dockerCli.downloadDockerAgentUrl}")
+    var downloadDockerAgentUrl: String? = null
+
+    @Value("\${dockerCli.landunEnv}")
+    var landunEnv: String? = null
+
+    @Value("\${dockerCli.localImageCacheDays}")
+    var localImageCacheDays: Int = 7
+
+    @Value("\${run.mode:#{null}}")
+    var runMode: String? = null
 }

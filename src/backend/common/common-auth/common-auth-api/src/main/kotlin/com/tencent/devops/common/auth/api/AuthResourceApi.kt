@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
@@ -42,11 +43,32 @@ interface AuthResourceApi {
     fun createResource(
         user: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
         resourceName: String
     )
+
+    /**
+     * 创建资源并授权给相关组人员
+     * @param user user
+     * @param serviceCode 服务模块
+     * @param resourceType 资源类型
+     * @param projectCode 项目英文id
+     * @param resourceCode 资源Code唯一标识
+     * @param resourceName 资源在权限中心的名称
+     * @param authGroupList 用户组，可为空
+     */
+    fun createGrantResource(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String,
+        authGroupList: List<BkAuthGroup>? = null
+    )
+
 
     /**
      * 修改资源名称
@@ -58,7 +80,7 @@ interface AuthResourceApi {
      */
     fun modifyResource(
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
         resourceName: String
@@ -73,7 +95,7 @@ interface AuthResourceApi {
      */
     fun deleteResource(
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String
     )
@@ -87,7 +109,7 @@ interface AuthResourceApi {
      */
     fun batchCreateResource(
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         user: String,
         resourceList: List<ResourceRegisterInfo>
@@ -97,7 +119,7 @@ interface AuthResourceApi {
         principalId: String,
         scopeType: String,
         scopeId: String,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         resourceList: List<ResourceRegisterInfo>,
         systemId: AuthServiceCode
     ): Boolean
@@ -105,7 +127,7 @@ interface AuthResourceApi {
     fun deleteResource(
         scopeType: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String
     )
@@ -113,7 +135,7 @@ interface AuthResourceApi {
     fun modifyResource(
         scopeType: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
         resourceName: String
@@ -123,7 +145,7 @@ interface AuthResourceApi {
         scopeType: String,
         user: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
         resourceName: String

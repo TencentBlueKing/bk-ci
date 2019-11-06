@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -40,10 +41,12 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -102,6 +105,10 @@ class ThirdPartyAgentService @Autowired constructor(
                 it.createdTime.timestamp()
             )
         }
+    }
+
+    fun getRunningBuilds(agentId: String): Int {
+        return thirdPartyAgentBuildDao.getRunningAndQueueBuilds(dslContext, agentId).size
     }
 
     fun startBuild(
@@ -183,10 +190,15 @@ class ThirdPartyAgentService @Autowired constructor(
         logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
         return try {
             val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
-                .upgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
-            upgrade(projectId, agentId, agentUpgradeResult)
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to check if agent can upgrade", ignored)
+                    .upgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
+            return if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
+                agentUpgradeResult
+            } else {
+                redisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
+                AgentResult(AgentStatus.IMPORT_OK, true)
+            }
+        } catch (t: Throwable) {
+            logger.warn("Fail to check if agent can upgrade", t)
             AgentResult(AgentStatus.IMPORT_EXCEPTION, false)
         }
     }
@@ -255,42 +267,6 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    private fun upgrade(projectId: String, agentId: String, agentUpgradeResult: AgentResult<Boolean>)
-        : AgentResult<Boolean> {
-        try {
-            if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
-                return agentUpgradeResult
-            }
-
-            if (agentUpgradeResult.agentStatus != AgentStatus.IMPORT_OK) {
-                return agentUpgradeResult
-            }
-
-            logger.info("The agent can upgrade, check if there are running task of the agent")
-            val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
-            try {
-                redisLock.lock()
-                val runningBuildRecord =
-                    thirdPartyAgentBuildDao.getRunningBuilds(dslContext, agentId)
-                if (runningBuildRecord.isNotEmpty()) {
-                    logger.info(
-                        ("The agent is running the build " +
-                            "${runningBuildRecord.joinToString(",") { it.buildId }}, can't upgrade")
-                    )
-                    return AgentResult(AgentStatus.IMPORT_OK, false)
-                }
-                logger.info("The agent($agentId) of project($projectId) can upgrade")
-                redisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
-                return AgentResult(AgentStatus.IMPORT_OK, true)
-            } finally {
-                redisLock.unlock()
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to check if agent can upgrade", ignored)
-            return AgentResult(AgentStatus.IMPORT_EXCEPTION, false)
-        }
-    }
-
     fun listAgentBuilds(agentId: String, page: Int?, pageSize: Int?): Page<AgentBuildInfo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 100
@@ -319,7 +295,6 @@ class ThirdPartyAgentService @Autowired constructor(
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
 
-
     private fun finishBuild(
         record: TDispatchThirdpartyAgentBuildRecord,
         success: Boolean
@@ -343,6 +318,31 @@ class ThirdPartyAgentService @Autowired constructor(
         thirdPartyAgentBuildDao.updateStatus(
             dslContext, record.id,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+        )
+    }
+
+    fun workerBuildFinish(projectId: String, agentId: String, secretKey: String, buildInfo: ThirdPartyBuildWithStatus) {
+        val agentResult = client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId)
+        if (agentResult.isNotOk()) {
+            logger.warn("Fail to get the third party agent($agentId) because of ${agentResult.message}")
+            throw NotFoundException("Fail to get the agent")
+        }
+        if (agentResult.data == null) {
+            logger.warn("Get the null third party agent($agentId)")
+            throw NotFoundException("Fail to get the agent")
+        }
+
+        if (agentResult.data!!.secretKey != secretKey) {
+            logger.warn("The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} of project($projectId) and agent($agentId)")
+            throw NotFoundException("Fail to get the agent")
+        }
+
+        client.get(ServiceBuildResource::class).workerBuildFinish(
+            projectId,
+            buildInfo.pipelineId ?: "dummyPipelineId",
+            buildInfo.buildId,
+            buildInfo.vmSeqId,
+            SimpleResult(buildInfo.success, buildInfo.message)
         )
     }
 

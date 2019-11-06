@@ -46,4 +46,6 @@ dependencies {
     compile "commons-codec:commons-codec:1.9"
     compile "org.springframework.boot:spring-boot-starter-data-redis"
     compile "org.apache.commons:commons-compress:$compressVersion"
+    compile "org.apache.commons:commons-exec"
+    compile "javax.servlet:javax.servlet-api"
 }

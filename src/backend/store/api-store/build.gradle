@@ -27,9 +27,10 @@
 dependencies {
     compile project(":common:common-api")
     compile project(":common:common-web")
-    compile project(":common:common-pipeline")
+    compile project(":common:common-pipeline:common-pipeline-api")
     compile project(":environment:api-environment")
     compile project(":repository:api-repository")
+    compile project(":log:api-log")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

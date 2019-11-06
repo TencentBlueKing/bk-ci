@@ -68,6 +68,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="atomDetail.description"
                                 />
                             </div>
@@ -115,6 +116,14 @@
     import { mapGetters } from 'vuex'
 
     export default {
+        filters: {
+            levelFilter (val) {
+                const bkLocale = window.devops || {}
+                if (val === 'LOGIN_PUBLIC') return bkLocale.$t('是')
+                else return bkLocale.$t('否')
+            }
+        },
+
         data () {
             return {
                 defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314',
@@ -269,7 +278,10 @@
             display: flex;
             justify-content: space-between;
             .detail-form-item .markdown-editor-show.info-value {
-                .v-show-content {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
                     background: #FAFBFD;
                 }
             }

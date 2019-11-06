@@ -27,26 +27,22 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreProjectRelDao {
 
-    fun addStoreProjectRel(
-        dslContext: DSLContext,
-        userId: String,
-        storeCode: String,
-        projectCode: String,
-        type: Byte,
-        storeType: Byte
-    ) {
+    fun addStoreProjectRel(dslContext: DSLContext, userId: String, storeCode: String, projectCode: String, type: Byte, storeType: Byte) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            dslContext.insertInto(
-                this,
+            dslContext.insertInto(this,
                 ID,
                 STORE_CODE,
                 PROJECT_CODE,
@@ -71,7 +67,10 @@ class StoreProjectRelDao {
     fun getInitProjectCodeByStoreCode(dslContext: DSLContext, storeCode: String, storeType: Byte): String? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.select(PROJECT_CODE).from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(TYPE.eq(0)))
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                )
                 .fetchOne(0, String::class.java)
         }
     }
@@ -79,10 +78,9 @@ class StoreProjectRelDao {
     fun countInstalledProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectCount().from(this)
-                .where(
-                    PROJECT_CODE.eq(projectCode)
-                        .and(STORE_CODE.eq(storeCode))
-                        .and(STORE_TYPE.eq(storeType))
+                .where(PROJECT_CODE.eq(projectCode)
+                    .and(STORE_CODE.eq(storeCode))
+                    .and(STORE_TYPE.eq(storeType))
                 )
                 .fetchOne(0, Int::class.java)
         }
@@ -91,10 +89,9 @@ class StoreProjectRelDao {
     fun countInstalledProject(dslContext: DSLContext, storeCode: String, storeType: Byte): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectCount().from(this)
-                .where(
-                    STORE_CODE.eq(storeCode)
-                        .and(STORE_TYPE.eq(storeType))
-                        .and(TYPE.eq(1))
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(TYPE.eq(1))
                 )
                 .fetchOne(0, Int::class.java)
         }
@@ -103,16 +100,12 @@ class StoreProjectRelDao {
     /**
      * 根据商城组件标识和用户已授权的项目列表，查询已安装商城组件的项目列表
      */
-    fun getInstalledProject(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte,
-        authorizedProjectCodeList: Set<String>
-    ): Result<TStoreProjectRelRecord>? {
+    fun getInstalledProject(dslContext: DSLContext, storeCode: String, storeType: Byte, authorizedProjectCodeList: Set<String>): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .and(PROJECT_CODE.`in`(authorizedProjectCodeList))
+                .groupBy(PROJECT_CODE)
                 .fetch()
         }
     }
@@ -123,32 +116,187 @@ class StoreProjectRelDao {
     fun getInstalledComponent(
         dslContext: DSLContext,
         projectCode: String,
-        storeType: Byte
+        storeType: Byte,
+        offset: Int? = 0,
+        limit: Int? = -1
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.selectFrom(this)
+            val baseQuery = dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(STORE_TYPE.eq(storeType))
-                .fetch()
+            if (offset != null && offset >= 0) {
+                baseQuery.offset(offset)
+            }
+            if (limit != null && limit > 0) {
+                baseQuery.limit(limit)
+            }
+            return baseQuery.fetch()
         }
     }
 
     /**
      * 卸载时删除关联关系
      */
-    fun deleteRel(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+    fun deleteRel(dslContext: DSLContext, storeCode: String, storeType: Byte, projectCode: String) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            dslContext.deleteFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).and(TYPE.eq(1))
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode)
+                    .and(PROJECT_CODE.eq(projectCode))
+                    .and(STORE_TYPE.eq(storeType))
+                )
+                .and(TYPE.eq(1))
                 .execute()
         }
     }
 
     /**
-     * 删除组件时删除关联关系
+     * 删除关联关系
      */
     fun deleteAllRel(dslContext: DSLContext, storeCode: String, storeType: Byte) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             dslContext.deleteFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).execute()
+        }
+    }
+
+    /**
+     * 判断用户是否为安装人
+     */
+    fun isInstaller(dslContext: DSLContext, userId: String, storeCode: String, storeType: Byte): Boolean {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(CREATOR.eq(userId))
+                .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
+                .and(STORE_TYPE.eq(storeType))
+                .fetchOne(0, Long::class.java) != 0L
+        }
+    }
+
+    /**
+     * 判断组件是否被项目安装
+     * 无论初始化项目、调试项目还是协作项目，均视为已安装
+     */
+    fun isInstalledByProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Boolean {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .fetchOne(0, Long::class.java) != 0L
+        }
+    }
+
+    /**
+     * 判断用户是否为store组件创建人
+     */
+    fun isStoreCreator(dslContext: DSLContext, userId: String, storeCode: String, storeType: Byte): Boolean {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(CREATOR.eq(userId))
+                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                .and(STORE_TYPE.eq(storeType))
+                .fetchOne(0, Long::class.java) != 0L
+        }
+    }
+
+    /**
+     * 判断项目是否为原生初始化项目有或者申请插件协作者指定的调试项目
+     */
+    fun isInitTestProjectCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        projectCode: String
+    ): Boolean {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(PROJECT_CODE.eq(projectCode))
+                .and(TYPE.`in`(listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())))
+                .fetchOne(0, Long::class.java) != 0L
+        }
+    }
+
+    /**
+     * 获取用户的组件设定的调试项目
+     */
+    fun getUserStoreTestProjectCode(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): String? {
+        val a = TStoreMember.T_STORE_MEMBER.`as`("a")
+        val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
+        return dslContext.select(b.PROJECT_CODE)
+            .from(a)
+            .join(b)
+            .on(a.STORE_CODE.eq(b.STORE_CODE).and(a.STORE_TYPE.eq(b.STORE_TYPE)))
+            .and(a.USERNAME.eq(userId))
+            .and(b.STORE_CODE.eq(storeCode))
+            .and(b.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            .and(b.CREATOR.eq(userId))
+            .and(a.STORE_TYPE.eq(storeType.type.toByte()))
+            .fetchOne(0, String::class.java)
+    }
+
+    /**
+     * 更新用户的组件设定的调试项目
+     */
+    fun updateUserStoreTestProject(
+        dslContext: DSLContext,
+        userId: String,
+        projectCode: String,
+        storeProjectType: StoreProjectTypeEnum,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val record = dslContext.selectFrom(this)
+                .where(CREATOR.eq(userId))
+                .and(TYPE.eq(storeProjectType.type.toByte()))
+                .and(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchOne()
+            if (null == record) {
+                addStoreProjectRel(dslContext, userId, storeCode, projectCode, storeProjectType.type.toByte(), storeType.type.toByte())
+            } else {
+                dslContext.update(this)
+                    .set(PROJECT_CODE, projectCode)
+                    .set(MODIFIER, userId)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(CREATOR.eq(userId))
+                    .and(TYPE.eq(storeProjectType.type.toByte()))
+                    .and(STORE_CODE.eq(storeCode))
+                    .and(STORE_TYPE.eq(storeType.type.toByte()))
+                    .execute()
+            }
+        }
+    }
+
+    /**
+     * 删除用户的组件设定的调试项目
+     */
+    fun deleteUserStoreTestProject(
+        dslContext: DSLContext,
+        userId: String,
+        storeProjectType: StoreProjectTypeEnum,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            dslContext.deleteFrom(this)
+                .where(CREATOR.eq(userId))
+                .and(TYPE.eq(storeProjectType.type.toByte()))
+                .and(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .execute()
         }
     }
 }

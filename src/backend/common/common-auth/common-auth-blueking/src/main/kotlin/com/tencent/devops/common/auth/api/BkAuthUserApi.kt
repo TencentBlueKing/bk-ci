@@ -47,14 +47,14 @@ class BkAuthUserApi @Autowired constructor(
      * 根据资源查询用户
      */
     fun getUserByResources(
-        scopeType: String,
-        scopeId: String,
-        actionId: BkAuthPermission,
-        resourceType: BkAuthResourceType,
-        resourceIds: Set<String>,
-        systemId: String,
-        projectCode: String,
-        projectSecret: String
+            scopeType: String,
+            scopeId: String,
+            actionId: AuthPermission,
+            resourceType: AuthResourceType,
+            resourceIds: Set<String>,
+            systemId: String,
+            projectCode: String,
+            projectSecret: String
     ): List<String> {
         val uri = "/bkiam/api/v1/perm/systems/$systemId/resources-perms-principals/search"
 

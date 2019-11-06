@@ -52,13 +52,14 @@ object LoggerService {
     private var future: Future<Boolean>? = null
     // 当前执行的插件id
     var elementId = ""
+    var jobId = ""
     var executeCount = 1
 
     private val lock = ReentrantLock()
 
     private val logMessages = ArrayList<LogMessage>()
 
-    private val loggerThread = Callable<Boolean> {
+    private val loggerThread = Callable {
         try {
             var lastSaveTime: Long = 0
             while (running.get()) {
@@ -151,6 +152,7 @@ object LoggerService {
             message,
             System.currentTimeMillis(),
             elementId,
+            jobId,
             LogType.LOG,
             executeCount
         )
@@ -173,6 +175,7 @@ object LoggerService {
             "soda_fold:start:$tagName",
             System.currentTimeMillis(),
             elementId,
+            jobId,
             LogType.START,
             executeCount
         )
@@ -184,6 +187,7 @@ object LoggerService {
             "soda_fold:end:$tagName",
             System.currentTimeMillis(),
             elementId,
+            jobId,
             LogType.END,
             executeCount
         )

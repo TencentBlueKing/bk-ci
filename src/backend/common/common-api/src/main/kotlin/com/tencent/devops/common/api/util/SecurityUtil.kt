@@ -26,87 +26,32 @@
 
 package com.tencent.devops.common.api.util
 
-import com.tencent.devops.common.api.exception.EncryptException
-import java.security.SecureRandom
-import java.util.Base64
-import javax.crypto.Cipher
-import javax.crypto.Cipher.DECRYPT_MODE
-import javax.crypto.Cipher.ENCRYPT_MODE
-import javax.crypto.KeyGenerator
-import javax.crypto.spec.SecretKeySpec
+import com.tencent.devops.common.api.digest.enc.DigestFactory
 
 object SecurityUtil {
-    private const val UTF8 = "UTF-8"
-    private const val AES = "AES"
-    private const val ALGORITHM_PATTERN_COMPLEMENT = "AES/ECB/PKCS5Padding" // 算法/模式/补码方式
-    private val secretKeySpec: SecretKeySpec
-    private const val AES_KEY = "b*nK#3%t"
-    private const val SEED = 128
-
-    init {
-        secretKeySpec = generateSecretKeySpec(AES_KEY)
-    }
-
-    private fun generateSecretKeySpec(key: String): SecretKeySpec {
-        val keyGenerator: KeyGenerator
-        val secureRandom: SecureRandom
-        try {
-            keyGenerator = KeyGenerator.getInstance(AES)
-            secureRandom = SecureRandom.getInstance("SHA1PRNG")
-            secureRandom.setSeed(key.toByteArray(charset(UTF8)))
-        } catch (ignored: Exception) {
-            throw EncryptException(ignored.message, ignored)
-        }
-
-        keyGenerator.init(SEED, secureRandom)
-        val secretKey = keyGenerator.generateKey()
-        val encoded = secretKey.encoded
-        return SecretKeySpec(encoded, AES)
-    }
+    private val digest = DigestFactory.getDigest("SecurityUtil")
 
     fun encrypt(content: String): String {
-        val cipher = Cipher.getInstance(ALGORITHM_PATTERN_COMPLEMENT)
-        cipher.init(ENCRYPT_MODE, secretKeySpec)
-        val bytes = cipher.doFinal(content.toByteArray(charset(UTF8)))
-        return Base64.getEncoder().encodeToString(bytes)
+        return digest.encrypt(content = content)
     }
 
     fun decrypt(content: String): String {
-        val cipher = Cipher.getInstance(ALGORITHM_PATTERN_COMPLEMENT)
-        cipher.init(DECRYPT_MODE, secretKeySpec)
-        val decode = Base64.getDecoder().decode(content)
-        val original = cipher.doFinal(decode)
-        return original.toString(charset(UTF8))
+        return digest.decrypt(encryptString = content)
     }
 
     fun encrypt(key: String, content: String): String {
-        val secretKeySpec = generateSecretKeySpec(key)
-        val cipher = Cipher.getInstance(ALGORITHM_PATTERN_COMPLEMENT)
-        cipher.init(ENCRYPT_MODE, secretKeySpec)
-        val bytes = cipher.doFinal(content.toByteArray(charset(UTF8)))
-        return Base64.getEncoder().encodeToString(bytes)
+        return digest.encrypt(key = key, content = content)
     }
 
     fun decrypt(key: String, content: String): String {
-        val secretKeySpec = generateSecretKeySpec(key)
-        val cipher = Cipher.getInstance(ALGORITHM_PATTERN_COMPLEMENT)
-        cipher.init(DECRYPT_MODE, secretKeySpec)
-        val decode = Base64.getDecoder().decode(content)
-        val original = cipher.doFinal(decode)
-        return original.toString(charset(UTF8))
+        return digest.decrypt(key = key, encryptString = content)
     }
 
     fun encrypt(key: String, content: ByteArray): ByteArray {
-        val secretKeySpec = generateSecretKeySpec(key)
-        val cipher = Cipher.getInstance(ALGORITHM_PATTERN_COMPLEMENT)
-        cipher.init(ENCRYPT_MODE, secretKeySpec)
-        return cipher.doFinal(content)
+        return digest.encrypt(key = key, bytes = content)
     }
 
     fun decrypt(key: String, content: ByteArray): ByteArray {
-        val secretKeySpec = generateSecretKeySpec(key)
-        val cipher = Cipher.getInstance(ALGORITHM_PATTERN_COMPLEMENT)
-        cipher.init(DECRYPT_MODE, secretKeySpec)
-        return cipher.doFinal(content)
+        return digest.decrypt(key = key, encryptBytes = content)
     }
 }

@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.ServiceFileResource
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
@@ -44,14 +44,14 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
-        projectCode: String?,
+        projectId: String?,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
         return archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            projectCode = projectCode,
+            projectId = projectId,
             fileChannelType = fileChannelType
         )
     }

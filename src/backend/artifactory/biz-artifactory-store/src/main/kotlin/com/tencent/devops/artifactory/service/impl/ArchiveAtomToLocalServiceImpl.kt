@@ -44,7 +44,7 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
 
     private val logger = LoggerFactory.getLogger(ArchiveAtomToLocalServiceImpl::class.java)
 
-    @Value("\${artifactory.archiveLocalBasePath}")
+    @Value("\${artifactory.archiveLocalBasePath:#{null}}")
     private lateinit var atomArchiveLocalBasePath: String
 
     override fun getAtomFileContent(filePath: String): Result<String> {

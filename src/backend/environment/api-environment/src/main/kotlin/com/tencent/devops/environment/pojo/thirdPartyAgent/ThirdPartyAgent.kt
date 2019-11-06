@@ -51,5 +51,7 @@ data class ThirdPartyAgent(
     @ApiModelProperty("创建用户", required = true)
     val createUser: String,
     @ApiModelProperty("创建时间", required = true)
-    val createTime: Long
+    val createTime: Long,
+    @ApiModelProperty("并行执行的个数", required = false)
+    val parallelTaskCount: Int? = 4
 )

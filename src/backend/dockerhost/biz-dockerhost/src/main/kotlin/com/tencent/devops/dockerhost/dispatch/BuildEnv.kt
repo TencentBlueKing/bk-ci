@@ -28,9 +28,6 @@ package com.tencent.devops.dockerhost.dispatch
 
 import com.tencent.devops.dockerhost.utils.SLAVE_BUILD_TYPE
 
-/**
- * Created by Aaron Sheng on 2018/6/22.
- */
 object BuildEnv {
     private var buildType: String? = null
 

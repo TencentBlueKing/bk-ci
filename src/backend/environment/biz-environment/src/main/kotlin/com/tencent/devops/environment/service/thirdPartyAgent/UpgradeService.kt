@@ -30,8 +30,8 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.utils.FileMD5CacheUtils
 import org.jooq.DSLContext
@@ -49,29 +49,19 @@ class UpgradeService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val redisOperation: RedisOperation,
     private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val gray: Gray
+    private val agentGrayUtils: AgentGrayUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UpgradeService::class.java)
-        private const val CURRENT_AGENT_MASTER_VERSION = "environment.thirdparty.agent.master.version"
-        private const val GRAY_CURRENT_AGENT_MASTERT_VERSION = "environment.thirdparty.agent.gray.master.version"
-
-        private const val CURRENT_AGENT_VERSION = "environment.thirdparty.agent.verison"
-        private const val GRAY_CURRENT_AGENT_VERSION = "environment.thirdparty.agent.gray.version"
-
-        private const val PARALLEL_UPGRADE_COUNT = "environment.thirdparty.agent.parallel.upgrade.count"
-        private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
     }
 
-    fun setWorkerVersion(agentVersion: String) =
-        redisOperation.set(getAgentVersionKey(), agentVersion, TimeUnit.DAYS.toSeconds(120))
+    fun setUpgrade(agentVersion: String) = redisOperation.set(agentGrayUtils.getAgentVersionKey(), agentVersion, TimeUnit.DAYS.toSeconds(120))
 
-    fun setMasterVersion(masterVersion: String) =
-        redisOperation.set(getAgentMasterVersionKey(), masterVersion, TimeUnit.DAYS.toSeconds(120))
+    fun setMasterVersion(masterVersion: String) = redisOperation.set(agentGrayUtils.getAgentMasterVersionKey(), masterVersion, TimeUnit.DAYS.toSeconds(120))
 
-    fun getAgentVersion() = redisOperation.get(getAgentVersionKey()) ?: "null"
+    fun getAgentVersion() = redisOperation.get(agentGrayUtils.getAgentVersionKey())
 
-    fun getAgentMasterVersion() = redisOperation.get(getAgentMasterVersionKey()) ?: "null"
+    fun getAgentMasterVersion() = redisOperation.get(agentGrayUtils.getAgentMasterVersionKey())
 
     fun checkUpgrade(
         projectId: String,
@@ -80,10 +70,7 @@ class UpgradeService @Autowired constructor(
         agentVersion: String?,
         masterVersion: String?
     ): AgentResult<Boolean> {
-        logger.info(
-            "Checking if the agent($agentId) of masterVersion($masterVersion) |" +
-                " version($agentVersion) of project($projectId) can upgrade"
-        )
+        logger.info("Checking if the agent($agentId) of masterVersion($masterVersion) | version($agentVersion) of project($projectId) can upgrade")
 
         val status = checkAgent(projectId, agentId, secretKey)
 
@@ -92,14 +79,14 @@ class UpgradeService @Autowired constructor(
             return AgentResult(status, false)
         }
 
-        val currentVersion = redisOperation.get(getAgentVersionKey())
+        val currentVersion = redisOperation.get(agentGrayUtils.getAgentVersionKey())
         if (currentVersion.isNullOrBlank()) {
-            logger.warn("The current agent($agentId) version is not exist in redis")
+            logger.warn("The current agent version is not exist in redis")
             return AgentResult(AgentStatus.IMPORT_OK, false)
         }
-        val currentMasterVersion = redisOperation.get(getAgentMasterVersionKey())
+        val currentMasterVersion = redisOperation.get(agentGrayUtils.getAgentMasterVersionKey())
         if (currentMasterVersion.isNullOrBlank()) {
-            logger.warn("The current agent($agentId) master version is not exist in redis")
+            logger.warn("The current agent master version is not exist in redis")
             return AgentResult(AgentStatus.IMPORT_OK, false)
         }
 
@@ -108,14 +95,17 @@ class UpgradeService @Autowired constructor(
             masterVersion.isNullOrBlank() -> (currentVersion != agentVersion)
             else -> (currentVersion != agentVersion) || (currentMasterVersion != masterVersion)
         }
-        // 此处未控制并发
-        if (agentNeedUpgrade) {
-            logger.info(
-                "The agent($agentId) can upgrade from $masterVersion|$agentVersion " +
-                    "to $currentMasterVersion|$currentVersion"
-            )
+
+        val upgrade = when {
+            agentGrayUtils.checkLockUpgrade(agentId) -> false
+            agentGrayUtils.checkForceUpgrade(agentId) -> true
+            else -> agentNeedUpgrade && agentGrayUtils.getCanUpgradeAgents().contains(HashUtil.decodeIdToLong(agentId))
         }
-        return AgentResult(AgentStatus.IMPORT_OK, agentNeedUpgrade)
+
+        if (upgrade) {
+            logger.info("The agent($agentId) can upgrade from $masterVersion|$agentVersion to $currentMasterVersion|$currentVersion")
+        }
+        return AgentResult(AgentStatus.IMPORT_OK, upgrade)
     }
 
     fun downloadUpgradeFile(
@@ -163,14 +153,6 @@ class UpgradeService @Autowired constructor(
         }
     }
 
-    fun setMaxParallelUpgradeCount(count: Int) {
-        redisOperation.set(PARALLEL_UPGRADE_COUNT, count.toString())
-    }
-
-    fun getMaxParallelUpgradeCount(): Int {
-        return redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
-    }
-
     private fun checkAgent(
         projectId: String,
         agentId: String,
@@ -190,19 +172,4 @@ class UpgradeService @Autowired constructor(
     }
 
     private fun getUpgradeFile(file: String) = downloadAgentInstallService.getUpgradeFile(file)
-
-    private fun getAgentMasterVersionKey(): String {
-        return if (gray.isGray()) {
-            GRAY_CURRENT_AGENT_MASTERT_VERSION
-        } else {
-            CURRENT_AGENT_MASTER_VERSION
-        }
-    }
-
-    private fun getAgentVersionKey() =
-        if (gray.isGray()) {
-            GRAY_CURRENT_AGENT_VERSION
-        } else {
-            CURRENT_AGENT_VERSION
-        }
 }

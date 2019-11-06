@@ -30,10 +30,6 @@ import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import java.util.concurrent.atomic.AtomicLong
 
-/**
- * deng
- * 2019-02-27
- */
 @ManagedResource
 class SVNBean {
 

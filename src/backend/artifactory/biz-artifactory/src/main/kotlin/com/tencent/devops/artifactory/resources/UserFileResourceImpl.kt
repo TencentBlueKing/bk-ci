@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.UserFileResource
+import com.tencent.devops.artifactory.api.user.UserFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
@@ -44,7 +44,7 @@ class UserFileResourceImpl @Autowired constructor(private val archiveFileService
 
     override fun uploadFile(
         userId: String,
-        projectCode: String?,
+        projectId: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
@@ -52,7 +52,7 @@ class UserFileResourceImpl @Autowired constructor(private val archiveFileService
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            projectCode = projectCode,
+            projectId = projectId,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
     }

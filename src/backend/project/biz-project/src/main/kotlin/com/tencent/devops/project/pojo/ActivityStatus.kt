@@ -27,7 +27,6 @@
 package com.tencent.devops.project.pojo
 
 /**
- * deng
  * 2018-12-05
  */
 enum class ActivityStatus {

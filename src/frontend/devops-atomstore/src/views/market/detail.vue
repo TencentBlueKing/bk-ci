@@ -25,6 +25,7 @@
                         :toolbars-flag="false"
                         :box-shadow="false"
                         :external-link="false"
+                        preview-background="#fff"
                         v-model="detail.description"
                         v-if="detail.description"
                     >
@@ -90,17 +91,17 @@
 
         filters: {
             typeFilter (val) {
-                const bkLocale = window.devops.bkLocale || {}
+                const bkLocale = window.devops || {}
                 let res = ''
                 switch (val) {
                     case 'template':
-                        res = bkLocale.i18n('流水线模板')
+                        res = bkLocale.$t('流水线模板')
                         break
                     case 'ide':
-                        res = bkLocale.i18n('IDE插件')
+                        res = bkLocale.$t('IDE插件')
                         break
                     default:
-                        res = bkLocale.i18n('流水线插件')
+                        res = bkLocale.$t('流水线插件')
                         break
                 }
                 return res

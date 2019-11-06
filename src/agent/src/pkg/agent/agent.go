@@ -44,16 +44,16 @@ func Run() {
 		logs.Warn("agent startup failed: ", err.Error())
 	}
 
-	//数据采集
+	// 数据采集
 	go collector.DoAgentCollect()
 
-	//心跳
+	// 心跳
 	go heartbeat.DoAgentHeartbeat()
 
-	//检查升级
+	// 检查升级
 	go upgrade.DoPollAndUpgradeAgent()
 
-	//启动pipeline
+	// 启动pipeline
 	go pipeline.Start()
 
 	job.DoPollAndBuild()

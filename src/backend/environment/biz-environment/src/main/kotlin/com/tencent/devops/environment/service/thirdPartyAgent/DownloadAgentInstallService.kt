@@ -207,9 +207,6 @@ class DownloadAgentInstallService @Autowired constructor(
         return agentFile
     }
 
-    private fun getAgentPackageFiles(os: String) =
-        File(agentPackage, "packages/${os.toLowerCase()}/").listFiles()
-
     private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String/*Name*/, String> {
         val file = File(agentPackage, "script/${agentRecord.os.toLowerCase()}")
         val scripts = file.listFiles()
@@ -265,7 +262,7 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getAgentReplaceProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
-        val gw = slaveGatewayService.getGateway(agentRecord)
+        val gw = slaveGatewayService.fixGateway(agentRecord.gateway)
         return mapOf(
             "agent_url" to "$gw/ms/environment/api/external/thirdPartyAgent/$agentId/agent",
             "projectId" to agentRecord.projectId,

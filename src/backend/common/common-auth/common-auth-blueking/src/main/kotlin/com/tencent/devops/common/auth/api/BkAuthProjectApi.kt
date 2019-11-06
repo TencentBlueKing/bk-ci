@@ -26,20 +26,53 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.BkProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
+import okhttp3.Request
+import org.slf4j.LoggerFactory
 
 class BkAuthProjectApi constructor(
-    private val bkAuthPermissionApi: BkAuthPermissionApi,
-    private val projectAuthServiceCode: BkProjectAuthServiceCode
+        private val bkAuthPermissionApi: BkAuthPermissionApi,
+        private val bkAuthProperties: BkAuthProperties,
+        private val objectMapper: ObjectMapper,
+        private val projectAuthServiceCode: BkProjectAuthServiceCode,
+        private val bkAuthTokenApi: BkAuthTokenApi
 ) : AuthProjectApi {
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
-        return emptyList()
+//        return emptyList()
+        val accessToken = bkAuthTokenApi.getAccessToken(serviceCode)
+        val url = if (group == null) {
+            "${bkAuthProperties.url}/projects/$projectCode/users?access_token=$accessToken"
+        } else {
+            "${bkAuthProperties.url}/projects/$projectCode/users?access_token=$accessToken&group_code=${group.value}"
+        }
+        val request = Request.Builder().url(url).get().build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("Fail to get project users. $responseContent")
+                throw RuntimeException("Fail to get project users")
+            }
+
+            val responseObject = objectMapper.readValue<BkAuthResponse<List<String>>>(responseContent)
+            if (responseObject.code != 0) {
+                if (responseObject.code == 403) {
+                    bkAuthTokenApi.refreshAccessToken(serviceCode)
+                }
+                logger.error("Fail to get project users. $responseContent")
+                throw RuntimeException("Fail to get project users")
+            }
+            return responseObject.data ?: emptyList()
+        }
     }
 
     override fun isProjectUser(
@@ -50,13 +83,13 @@ class BkAuthProjectApi constructor(
     ): Boolean {
 
         val authPermission = when (group) {
-            BkAuthGroup.MANAGER -> BkAuthPermission.MANAGE
-            else -> BkAuthPermission.VIEW
+            BkAuthGroup.MANAGER -> AuthPermission.MANAGE
+            else -> AuthPermission.VIEW
         }
         val userResourcesByPermissions = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = user,
             serviceCode = projectAuthServiceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             projectCode = projectCode,
             permissions = setOf(authPermission)
         ) { emptyList() }
@@ -80,9 +113,9 @@ class BkAuthProjectApi constructor(
             userId = userId,
             scopeType = GLOBAL_SCOPE_TYPE,
             systemId = serviceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             scopeId = BK_DEVOPS_SCOPE,
-            permissions = setOf(BkAuthPermission.MANAGE),
+            permissions = setOf(AuthPermission.MANAGE),
             supplier = supplier
         )
         val sets = mutableSetOf<String>()
@@ -99,8 +132,8 @@ class BkAuthProjectApi constructor(
             userId = userId,
             scopeType = GLOBAL_SCOPE_TYPE,
             scopeId = BK_DEVOPS_SCOPE,
-            resourceType = BkAuthResourceType.PROJECT,
-            permissions = setOf(BkAuthPermission.VIEW, BkAuthPermission.MANAGE),
+            resourceType = AuthResourceType.PROJECT,
+            permissions = setOf(AuthPermission.VIEW, AuthPermission.MANAGE),
             systemId = serviceCode,
             supplier = supplier
         )
@@ -114,5 +147,9 @@ class BkAuthProjectApi constructor(
             projectCode2Code[it] = it
         }
         return projectCode2Code
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

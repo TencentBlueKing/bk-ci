@@ -63,5 +63,5 @@ class ClientAutoConfiguration {
         commonConfig: CommonConfig,
         objectMapper: ObjectMapper,
         @Autowired(required = false) consulDiscoveryClient: ConsulDiscoveryClient?
-    ) = Client(consulDiscoveryClient, clientErrorDecoder, objectMapper)
+    ) = Client(consulDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper)
 }

@@ -23,7 +23,6 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package com.tencent.devops.dispatch.utils.redis
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -49,8 +48,8 @@ class RedisUtils @Autowired constructor(
         val build = redisOperation.get(ip) ?: return null
         try {
             return objectMapper.readValue(build, RedisBuild::class.java)
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to covert the redis build to object($build)", ignored)
+        } catch (t: Throwable) {
+            logger.warn("Fail to covert the redis build to object($build)", t)
         }
         return null
     }
@@ -59,10 +58,7 @@ class RedisUtils @Autowired constructor(
         redisOperation.delete(ip)
 
     fun setThirdPartyBuild(secretKey: String, redisBuild: ThirdPartyRedisBuild) {
-        redisOperation.set(
-            thirdPartyBuildKey(secretKey, redisBuild.agentId, redisBuild.buildId, redisBuild.vmSeqId),
-            objectMapper.writeValueAsString(redisBuild)
-        )
+        redisOperation.set(thirdPartyBuildKey(secretKey, redisBuild.agentId, redisBuild.buildId, redisBuild.vmSeqId), objectMapper.writeValueAsString(redisBuild))
     }
 
     fun setDockerBuild(id: Long, secretKey: String, redisBuild: RedisBuild) =
@@ -70,10 +66,8 @@ class RedisUtils @Autowired constructor(
 
     fun setDockerBuildLastHost(pipelineId: String, vmSeqId: String, hostIp: String) =
         redisOperation.set(dockerBuildLastHostKey(pipelineId, vmSeqId), hostIp)
-
     fun getDockerBuildLastHost(pipelineId: String, vmSeqId: String) =
         redisOperation.get(dockerBuildLastHostKey(pipelineId, vmSeqId))
-
     fun deleteDockerBuildLastHost(pipelineId: String, vmSeqId: String) =
         redisOperation.delete(dockerBuildLastHostKey(pipelineId, vmSeqId))
 
@@ -89,7 +83,7 @@ class RedisUtils @Autowired constructor(
     fun isThirdPartyAgentUpgrading(projectId: String, agentId: String): Boolean {
         return try {
             redisOperation.get(thirdPartyUpgradeKey(projectId, agentId)) == "true"
-        } catch (ignored: Throwable) {
+        } catch (t: Throwable) {
             false
         }
     }
@@ -113,6 +107,14 @@ class RedisUtils @Autowired constructor(
 
     private fun thirdPartyUpgradeKey(projectId: String, agentId: String) =
         "third_party_agent_upgrade_${projectId}_$agentId"
+
+    fun setRedisDebugMsg(pipelineId: String, vmSeqId: String, msg: String) {
+        redisOperation.set("docker_debug_msg_key_${pipelineId}_$vmSeqId", msg, 3600L)
+    }
+
+    fun getRedisDebugMsg(pipelineId: String, vmSeqId: String): String? {
+        return redisOperation.get("docker_debug_msg_key_${pipelineId}_$vmSeqId")
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(RedisUtils::class.java)

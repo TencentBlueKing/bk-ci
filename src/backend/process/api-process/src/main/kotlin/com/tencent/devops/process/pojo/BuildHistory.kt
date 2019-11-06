@@ -74,5 +74,11 @@ data class BuildHistory(
     @ApiModelProperty("启动类型(新)", required = false)
     val startType: String?,
     @ApiModelProperty("推荐版本号", required = false)
-    val recommendVersion: String?
+    val recommendVersion: String?,
+    @ApiModelProperty("任务执行错误类型", required = false)
+    val errorType: String?,
+    @ApiModelProperty("任务执行错误码", required = false)
+    val errorCode: Int?,
+    @ApiModelProperty("任务执行错误描述", required = false)
+    val errorMsg: String?
 )

@@ -26,5 +26,4 @@
 
 package com.tencent.devops.plugin
 
-class Demo {
-}
+class Demo

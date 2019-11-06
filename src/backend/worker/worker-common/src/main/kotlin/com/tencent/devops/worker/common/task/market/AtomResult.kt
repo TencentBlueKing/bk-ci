@@ -56,5 +56,7 @@ data class AtomResult(
     val status: String,
     val message: String?,
     val type: String,
-    val data: Map<String, Map<String, Any>>?
+    val data: Map<String, Map<String, Any>>?,
+    val qualityData: Map<String, Map<String, Any>>?,
+    val errorCode: Int?
 )

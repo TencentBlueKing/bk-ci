@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.Date
 
-data class CheckVo (
+data class CheckVo(
     val status: Boolean = false,
     val message: String? = null,
     val result: Int = 0,

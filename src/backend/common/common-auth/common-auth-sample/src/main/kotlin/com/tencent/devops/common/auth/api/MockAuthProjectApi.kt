@@ -64,9 +64,9 @@ class MockAuthProjectApi constructor(
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = serviceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
-            permissions = setOf(BkAuthPermission.MANAGE),
+            permissions = setOf(AuthPermission.MANAGE),
             supplier = supplier
         )
         val sets = mutableSetOf<String>()
@@ -82,9 +82,9 @@ class MockAuthProjectApi constructor(
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = serviceCode,
-            resourceType = BkAuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
-            permissions = setOf(BkAuthPermission.VIEW, BkAuthPermission.MANAGE),
+            permissions = setOf(AuthPermission.VIEW, AuthPermission.MANAGE),
             supplier = supplier
         )
         val sets = mutableSetOf<String>()

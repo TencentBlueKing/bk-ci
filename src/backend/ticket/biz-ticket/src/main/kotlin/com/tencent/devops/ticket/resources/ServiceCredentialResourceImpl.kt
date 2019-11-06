@@ -30,11 +30,15 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialUpdate
+import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.ticket.pojo.enums.Permission
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -55,7 +59,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         if (credential.v1.isBlank()) {
             throw ParamBlankException("Invalid credential")
         }
-        credentialService.userCreate(userId, projectId, credential)
+        credentialService.userCreate(userId, projectId, credential, null)
         return Result(true)
     }
 
@@ -80,6 +84,20 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
+    override fun edit(projectId: String, credentialId: String, credential: CredentialUpdate): Result<Boolean> {
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        if (credential.v1.isBlank()) {
+            throw ParamBlankException("Invalid credential")
+        }
+        credentialService.serviceEdit(projectId, credentialId, credential)
+        return Result(true)
+    }
+
     override fun check(projectId: String, credentialId: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -88,5 +106,46 @@ class ServiceCredentialResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid credentialId")
         }
         credentialService.serviceCheck(projectId, credentialId)
+    }
+
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        credentialTypesString: String?,
+        permission: Permission,
+        page: Int?,
+        pageSize: Int?,
+        keyword: String?
+    ): Result<Page<Credential>> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        val credentialTypes = credentialTypesString?.split(",")?.map {
+            CredentialType.valueOf(it)
+        }
+        val bkAuthPermission = when (permission) {
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
+        }
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val result = credentialService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            authPermission = bkAuthPermission,
+            offset = limit.offset,
+            limit = limit.limit,
+            keyword = keyword
+        )
+        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 }

@@ -26,32 +26,63 @@
 
 package com.tencent.devops.repository.service
 
-import com.tencent.devops.common.auth.api.BkAuthPermission
+import com.tencent.devops.common.auth.api.AuthPermission
 
 interface RepositoryPermissionService {
     fun validatePermission(
-        userId: String,
-        projectId: String,
-        bkAuthPermission: BkAuthPermission,
-        repositoryId: Long? = null,
-        message: String
+            userId: String,
+            projectId: String,
+            authPermission: AuthPermission,
+            repositoryId: Long? = null,
+            message: String
     )
 
-    fun filterRepository(userId: String, projectId: String, bkAuthPermission: BkAuthPermission): List<Long>
+    fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long>
     fun filterRepositories(
-        userId: String,
-        projectId: String,
-        bkAuthPermissions: Set<BkAuthPermission>
-    ): Map<BkAuthPermission, List<Long>>
+            userId: String,
+            projectId: String,
+            authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>>
 
     fun hasPermission(
-        userId: String,
-        projectId: String,
-        bkAuthPermission: BkAuthPermission,
-        repositoryId: Long? = null
+            userId: String,
+            projectId: String,
+            authPermission: AuthPermission,
+            repositoryId: Long? = null
     ): Boolean
 
     fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String)
     fun editResource(projectId: String, repositoryId: Long, repositoryName: String)
     fun deleteResource(projectId: String, repositoryId: Long)
+
+    fun getUserResourcesByPermissions(
+            user: String,
+            projectCode: String,
+            permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>>
+
+    fun getUserResourceByPermission(
+            user: String,
+            projectCode: String,
+            permission: AuthPermission
+    ): List<String>
+
+    fun validateUserResourcePermission(
+            user: String,
+            projectCode: String,
+            permission: AuthPermission
+    ): Boolean
+
+    fun validateUserResourcePermission(
+            user: String,
+            projectCode: String,
+            resourceCode: String,
+            permission: AuthPermission
+    ): Boolean
+
+    fun modifyResource(
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
+    )
 }
