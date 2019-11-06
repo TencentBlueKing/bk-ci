@@ -10,9 +10,22 @@ const localeLabelMap = {
     'zh-CN': '中文',
     'en-US': 'English'
 }
+const localeAliasMap = {
+    'zh-cn': 'zh-CN',
+    'cn': 'zh-CN',
+    'en-us': 'en-US',
+    'en': 'en-US',
+    'us': 'en-US'
+}
+
 
 function getLsLocale () {
-    return cookies.get('blueking_language') ||  DEFAULT_LOCALE
+    try {
+        const cookieLcale = cookies.get('blueking_language') ||  DEFAULT_LOCALE
+        return localeAliasMap[cookieLcale.toLowerCase()] || DEFAULT_LOCALE
+    } catch (error) {
+        return DEFAULT_LOCALE
+    }
 }
 
 function setLsLocale (locale) {
