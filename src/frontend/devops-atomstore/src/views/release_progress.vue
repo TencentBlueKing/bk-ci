@@ -205,6 +205,13 @@
             BuildLog
         },
 
+        filters: {
+            levelFilter (val) {
+                if (val === 'LOGIN_PUBLIC') return '是'
+                else return '否'
+            }
+        },
+
         data () {
             return {
                 permission: true,
@@ -809,10 +816,10 @@
                 margin-top: 40px;
             }
         }
-        .bk-sideslider-wrapper {
+        /deep/ .bk-sideslider-wrapper {
             top: 0;
             padding-bottom: 0;
-             .bk-sideslider-content {
+            /deep/ .bk-sideslider-content {
                 height: calc(100% - 50px);
             }
         }
