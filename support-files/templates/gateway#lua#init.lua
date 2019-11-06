@@ -87,6 +87,7 @@ config = {
     password = "__INFLUXDB_PASSWORD__"
   },
   service_ip_whitelist = {
+    __BKCI_IP_WHITELIST__
   }
 }
   
