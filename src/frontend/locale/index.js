@@ -2,8 +2,9 @@ import VueI18n from 'vue-i18n'
 import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
+import cookies from 'js-cookie'
 const DEFAULT_LOCALE = 'zh-CN'
-const LS_KEY = 'devops_i18n_locale'
+const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
@@ -11,13 +12,12 @@ const localeLabelMap = {
 }
 
 function getLsLocale () {
-    if (!localStorage) return DEFAULT_LOCALE
-    return localStorage.getItem(LS_KEY) || DEFAULT_LOCALE
+    return cookies.get('blueking_language') ||  DEFAULT_LOCALE
 }
 
 function setLsLocale (locale) {
-    if (localStorage) {
-        localStorage.setItem(LS_KEY, locale)
+    if (typeof cookies.set === 'function') {
+        cookies.set(LS_KEY, locale)
     }
 }
 
@@ -63,6 +63,7 @@ export default (r) => {
                 dynamicLoadModule(module, localeLang)
             }
         })
+        setLsLocale(localeLang)
         i18n.locale = localeLang
         setLsLocale(localeLang)
         locale.use(lang[localeLang.replace('-', '')])
