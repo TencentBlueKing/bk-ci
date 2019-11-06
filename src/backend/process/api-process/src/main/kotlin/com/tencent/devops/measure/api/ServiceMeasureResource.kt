@@ -24,26 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.measure
+package com.tencent.devops.measure.api
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.measure.pojo.ElementMeasureData
+import com.tencent.devops.measure.pojo.PipelineBuildData
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
 /**
- * deng
- * 2019-05-15
+ * Powered By Tencent
  */
-@Event(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, MQ.ROUTE_MEASURE_REQUEST_EVENT)
-data class MeasureRequest(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val type: MeasureType,
-    val request: String
-) {
+@Api(tags = ["SERVICE_MEASURE"], description = "服务-度量资源")
+@Path("/service")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceMeasureResource {
 
-    enum class MeasureType {
-        PIPELINE,
-        TASK
-    }
+    @ApiOperation("添加pipeline度量数据")
+    @POST
+    @Path("/pipelines/addData")
+    fun addPipelineData(
+        @ApiParam(value = "pipeline度量信息", required = true)
+        data: PipelineBuildData
+    ): Result<Boolean>
+
+    @ApiOperation("添加原子数据")
+    @POST
+    @Path("/elements/addData")
+    fun addElementData(
+        @ApiParam(value = "Element度量信息", required = true)
+        data: ElementMeasureData
+    ): Result<Boolean>
 }

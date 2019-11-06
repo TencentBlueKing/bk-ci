@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
@@ -69,10 +70,11 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
 @Service
-class PipelineVMBuildService @Autowired constructor(
+class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildDetailService: PipelineBuildDetailService,
-    private val measureService: MeasureService,
+    @Autowired(required = false)
+    private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -561,7 +563,7 @@ class PipelineVMBuildService @Autowired constructor(
             val task = pipelineRuntimeService.getBuildTask(buildId, taskId)!!
             val buildStatus = if (success) BuildStatus.SUCCEED else BuildStatus.FAILED
             val atomCode = task.taskParams["atomCode"] as String? ?: ""
-            measureService.postElementDataNew(
+            measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 taskId = taskId,

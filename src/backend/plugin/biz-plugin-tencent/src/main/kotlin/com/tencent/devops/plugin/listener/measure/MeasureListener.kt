@@ -26,45 +26,50 @@
 
 package com.tencent.devops.plugin.listener.measure
 
-import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.measure.MeasureRequest
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
+import com.tencent.devops.measure.api.ServiceMeasureResource
+import com.tencent.devops.measure.pojo.ElementMeasureData
+import com.tencent.devops.measure.pojo.PipelineBuildData
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-/**
- * deng
- * 2019-05-15
- */
 @Component
-class MeasureListener : Listener<MeasureRequest> {
+class MeasureListener @Autowired constructor(
+    private val client: Client
+) : Listener<MeasureRequest> {
 
     override fun execute(event: MeasureRequest) {
         val startEpoch = System.currentTimeMillis()
         try {
+            val serviceMeasureResource = client.get(ServiceMeasureResource::class)
             logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start to send the measure listener")
-            val request = Request.Builder()
-                .url(event.url)
-                .post(RequestBody.create(JSON, event.request))
-                .build()
 
-            OkhttpUtils.doHttp(request).use { response ->
-                    val body = response.body()?.string()
-                    if (!response.isSuccessful) {
-                        logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
-                            "Fail to send the measure data - (${event.url}|${response.code()}|${response.message()}|$body)")
-                    }
-                }
+            val result = if (event.type == MeasureRequest.MeasureType.PIPELINE) {
+                val pipelineData = JsonUtil.to(event.request, PipelineBuildData::class.java)
+                serviceMeasureResource.addPipelineData(pipelineData)
+            } else {
+                val elementMeasureData = JsonUtil.to(event.request, ElementMeasureData::class.java)
+                serviceMeasureResource.addElementData(elementMeasureData)
+            }
+
+            if (result.isNotOk()) {
+                logger.warn(
+                    "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
+                        "Fail to send the measure data - (${result.status}|${result.message})"
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.info("[WARN] Measure fail: ${ignored.message}")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to send the measure data")
         }
     }
 
     companion object {
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
         private val logger = LoggerFactory.getLogger(MeasureListener::class.java)
     }
 }

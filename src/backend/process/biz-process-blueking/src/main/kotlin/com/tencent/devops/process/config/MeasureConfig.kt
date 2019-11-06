@@ -24,26 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.measure
+package com.tencent.devops.process.config
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
+import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-/**
- * deng
- * 2019-05-15
- */
-@Event(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, MQ.ROUTE_MEASURE_REQUEST_EVENT)
-data class MeasureRequest(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val type: MeasureType,
-    val request: String
-) {
+@Configuration
+class MeasureConfig {
 
-    enum class MeasureType {
-        PIPELINE,
-        TASK
-    }
+    @Bean
+    fun measureService(
+        @Autowired pipelineRuntimeService: PipelineRuntimeService,
+        @Autowired pipelineBuildVarDao: PipelineBuildVarDao,
+        @Autowired dslContext: DSLContext,
+        @Autowired objectMapper: ObjectMapper,
+        @Autowired templateService: TemplateService,
+        @Autowired measureEventDispatcher: MeasureEventDispatcher
+    ) = MeasureServiceImpl(
+        pipelineRuntimeService = pipelineRuntimeService,
+        pipelineBuildVarDao = pipelineBuildVarDao,
+        dslContext = dslContext,
+        objectMapper = objectMapper,
+        measureEventDispatcher = measureEventDispatcher,
+        templateService = templateService
+    )
 }

@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.engine.service.measure
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
@@ -33,34 +33,27 @@ import com.tencent.devops.common.event.pojo.measure.MeasureRequest
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.measure.pojo.ElementMeasureData
+import com.tencent.devops.measure.pojo.PipelineBuildData
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.template.TemplateService
-import com.tencent.devops.process.pojo.measure.ElementMeasureData
-import com.tencent.devops.process.pojo.measure.PipelineBuildData
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
-@Service
-class MeasureService @Autowired constructor(
+class MeasureServiceImpl constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val templateService: TemplateService,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
+    private val templateService: TemplateService,
     private val measureEventDispatcher: MeasureEventDispatcher
-) {
+) : MeasureService {
 
-    @Value("\${gateway.service:#{null}}")
-    private val serviceGateway: String? = null
-
-    fun postPipelineData(
+    override fun postPipelineData(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -70,9 +63,9 @@ class MeasureService @Autowired constructor(
         buildStatus: BuildStatus,
         buildNum: Int,
         model: Model?,
-        errorType: String? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
+        errorType: String?,
+        errorCode: Int?,
+        errorMsg: String?
     ) {
         try {
             if (model == null) {
@@ -88,11 +81,10 @@ class MeasureService @Autowired constructor(
                 "parentBuildId" to (variable[PIPELINE_START_PARENT_BUILD_ID] ?: "")
             )
 
-            val templateId = getTemplateId(pipelineId)
             val data = PipelineBuildData(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                templateId = templateId,
+                templateId = templateService.listPipelineTemplate(setOf(pipelineId))?.firstOrNull()?.templateId ?: "",
                 buildId = buildId,
                 beginTime = startTime,
                 endTime = System.currentTimeMillis(),
@@ -103,22 +95,29 @@ class MeasureService @Autowired constructor(
                 pipeline = json,
                 buildNum = buildNum,
                 metaInfo = metaInfo,
-                errorType = errorType,
                 errorCode = errorCode,
+                errorType = errorType,
                 errorMsg = errorMsg
             )
-            val url = "http://$serviceGateway/measure/api/service/pipelines/addData"
 
             val requestBody = objectMapper.writeValueAsString(data)
-            measureEventDispatcher.dispatch(MeasureRequest(projectId, pipelineId, buildId, url, requestBody))
+            measureEventDispatcher.dispatch(
+                MeasureRequest(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    type = MeasureRequest.MeasureType.PIPELINE,
+                    request = requestBody
+                )
+            )
         } catch (t: Throwable) {
             logger.warn("Fail to post the pipeline measure data of build($buildId)", t)
         }
     }
 
-    fun onCancelNew(event: PipelineBuildCancelEvent) {
+    override fun postCancelData(projectId: String, pipelineId: String, buildId: String) {
         try {
-            val tasks = pipelineRuntimeService.getAllBuildTask(event.buildId)
+            val tasks = pipelineRuntimeService.getAllBuildTask(buildId)
             if (tasks.isEmpty()) {
                 return
             }
@@ -127,13 +126,13 @@ class MeasureService @Autowired constructor(
                     if (BuildStatus.isRunning(status)) {
                         val tStartTime = startTime?.timestampmilli() ?: 0
                         val atomCode = task.taskParams["atomCode"] as String? ?: ""
-                        postElementDataNew(
-                            projectId = event.projectId,
+                        postTaskData(
+                            projectId = projectId,
                             pipelineId = pipelineId,
                             taskId = taskId,
                             atomCode = atomCode,
                             name = taskName,
-                            buildId = event.buildId,
+                            buildId = buildId,
                             startTime = tStartTime,
                             status = BuildStatus.CANCELED,
                             type = taskType,
@@ -143,11 +142,11 @@ class MeasureService @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.warn("Fail to post the cancel event elements of ${event.buildId}", e)
+            logger.warn("[$buildId]| Fail to post the cancel measure event", e)
         }
     }
 
-    fun postElementDataNew(
+    override fun postTaskData(
         projectId: String,
         pipelineId: String,
         taskId: String,
@@ -158,13 +157,12 @@ class MeasureService @Autowired constructor(
         status: BuildStatus,
         type: String,
         executeCount: Int?,
-        extraInfo: Map<String, Any>? = null,
-        errorType: String? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
+        extraInfo: Map<String, Any>?,
+        errorType: String?,
+        errorCode: Int?,
+        errorMsg: String?
     ) {
         try {
-            val url = "http://$serviceGateway/measure/api/service/elements/addData"
 
             val elementMeasureData = ElementMeasureData(
                 id = taskId,
@@ -176,27 +174,30 @@ class MeasureService @Autowired constructor(
                 status = status,
                 beginTime = startTime,
                 endTime = System.currentTimeMillis(),
-                type = type
+                type = type,
+                extraInfo = if (extraInfo != null && extraInfo.isNotEmpty()) {
+                    val extraInfoStr = ObjectMapper().writeValueAsString(extraInfo)
+                    extraInfoStr
+                } else null,
+                errorCode = errorCode,
+                errorType = errorType,
+                errorMsg = errorMsg
             )
-            if (extraInfo != null && extraInfo.isNotEmpty()) {
-                val extraInfoStr = ObjectMapper().writeValueAsString(extraInfo)
-                elementMeasureData.extraInfo = extraInfoStr
-            }
-            if (errorType != null) {
-                elementMeasureData.errorType = errorType
-                elementMeasureData.errorCode = errorCode
-                elementMeasureData.errorMsg = errorMsg
-            }
+
             val requestBody = ObjectMapper().writeValueAsString(elementMeasureData)
-            logger.info("add the element data, request data: $elementMeasureData")
-            measureEventDispatcher.dispatch(MeasureRequest(projectId, pipelineId, buildId, url, requestBody))
+            logger.info("[$buildId]| add the element data, request data: $elementMeasureData")
+            measureEventDispatcher.dispatch(
+                MeasureRequest(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    type = MeasureRequest.MeasureType.TASK,
+                    request = requestBody
+                )
+            )
         } catch (e: Throwable) {
             logger.error("Fail to add the element data, $e")
         }
-    }
-
-    private fun getTemplateId(pipelineId: String): String {
-        return templateService.listPipelineTemplate(setOf(pipelineId))?.firstOrNull()?.templateId ?: ""
     }
 
     companion object {

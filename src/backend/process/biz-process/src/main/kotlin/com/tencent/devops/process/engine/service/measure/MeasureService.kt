@@ -24,26 +24,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.measure
+package com.tencent.devops.process.engine.service.measure
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
-/**
- * deng
- * 2019-05-15
- */
-@Event(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, MQ.ROUTE_MEASURE_REQUEST_EVENT)
-data class MeasureRequest(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val type: MeasureType,
-    val request: String
-) {
+interface MeasureService {
 
-    enum class MeasureType {
-        PIPELINE,
-        TASK
-    }
+    fun postPipelineData(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        startTime: Long,
+        startType: String,
+        username: String,
+        buildStatus: BuildStatus,
+        buildNum: Int,
+        model: Model?,
+        errorType: String? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
+    )
+
+    fun postCancelData(projectId: String, pipelineId: String, buildId: String)
+
+    fun postTaskData(
+        projectId: String,
+        pipelineId: String,
+        taskId: String,
+        atomCode: String,
+        name: String,
+        buildId: String,
+        startTime: Long,
+        status: BuildStatus,
+        type: String,
+        executeCount: Int?,
+        extraInfo: Map<String, Any>? = null,
+        errorType: String? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
+    )
 }
