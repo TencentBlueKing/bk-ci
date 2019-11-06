@@ -119,7 +119,11 @@ class RepositoryCodeSvnDao {
         }
     }
 
-    fun updateRepositoryInfo(dslContext: DSLContext, repositoryId: Long, updateRepositoryInfoRequest: UpdateRepositoryInfoRequest) {
+    fun updateRepositoryInfo(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        updateRepositoryInfoRequest: UpdateRepositoryInfoRequest
+    ) {
         with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
             val baseStep = dslContext.update(this)
             if (!updateRepositoryInfoRequest.projectName.isNullOrEmpty()) {
@@ -135,8 +139,8 @@ class RepositoryCodeSvnDao {
                 baseStep.set(SVN_TYPE, updateRepositoryInfoRequest.svnType)
             }
             baseStep.set(UPDATED_TIME, LocalDateTime.now())
-                    .where(REPOSITORY_ID.eq(repositoryId))
-                    .execute()
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
         }
     }
 }
