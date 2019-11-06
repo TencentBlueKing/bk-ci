@@ -387,7 +387,7 @@
             isMof () {
                 const projectId = this.$route.params.projectId
                 return this.projectList.find(item => {
-                    return (item.dept_name === '魔方工作室群' && item.project_code === projectId)
+                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
                 })
             },
             breadcrumbs () {

@@ -171,6 +171,7 @@
 
             <empty-node v-if="showContent && !nodeList.length"
                 :to-import-node="toImportNode"
+                :to-create-node="toCreateNode"
                 :empty-info="emptyInfo"
             ></empty-node>
         </section>
