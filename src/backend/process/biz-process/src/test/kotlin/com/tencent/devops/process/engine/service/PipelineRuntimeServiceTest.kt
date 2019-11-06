@@ -28,12 +28,6 @@ package com.tencent.devops.process.engine.service
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_ALIASNAME
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_BRANCHNAME
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_NEW_COMMIT_ID
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_URL
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
@@ -47,6 +41,12 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildStartupParamService
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_ALIASNAME
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_BRANCHNAME
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import org.jooq.DSLContext
 import org.junit.Assert
 import org.junit.Test

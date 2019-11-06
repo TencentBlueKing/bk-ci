@@ -127,6 +127,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -309,12 +310,38 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getVariable(buildId: String, varName: String): String? {
-        val vars = pipelineBuildVarDao.getVars(dslContext, buildId, varName)
+        val vars = getAllVariable(buildId)
         return if (vars.isNotEmpty()) vars[varName] else null
     }
 
     fun getAllVariable(buildId: String): Map<String, String> {
-        return pipelineBuildVarDao.getVars(dslContext, buildId)
+        val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
+        PipelineVarUtil.fillOldVar(vars)
+        return vars
+    }
+
+    fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
+        val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
+        pipelineBuildVarDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            name = realVarName,
+            value = varValue
+        )
+    }
+
+    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
+        val vars = variables.map { it -> it.key to it.value.toString() }.toMap().toMutableMap()
+        PipelineVarUtil.fillNewVar(vars)
+        pipelineBuildVarDao.batchSave(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variables = vars
+        )
     }
 
     fun getRunningTask(projectId: String, buildId: String): List<Map<String, String>> {
@@ -1452,27 +1479,6 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             }
         }
-    }
-
-    fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
-        pipelineBuildVarDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            name = varName,
-            value = varValue
-        )
-    }
-
-    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
-        pipelineBuildVarDao.batchSave(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variables = variables
-        )
     }
 
     fun updateBuildNo(pipelineId: String, buildNo: Int) {

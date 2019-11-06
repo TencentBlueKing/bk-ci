@@ -67,47 +67,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         logger.info("save the buildVariable=$name $value, result=$count")
     }
 
-    @Suppress("unused")
-    fun getVarRecords(
-        dslContext: DSLContext,
-        buildId: String,
-        key: String? = null
-    ): MutableMap<String, TPipelineBuildVarRecord> {
-        val result = with(T_PIPELINE_BUILD_VAR) {
-            val where = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-            if (key != null) {
-                where.and(KEY.eq(key))
-            }
-            where.fetch()
-        }
-        val map = mutableMapOf<String, TPipelineBuildVarRecord>()
-        result.forEach {
-            map[it.key] = it
-        }
-        return map
-    }
-
-    @Suppress("unused")
-    fun getVarRecordsByKeyPrefix(
-        dslContext: DSLContext,
-        buildId: String,
-        key: String
-    ): MutableMap<String, TPipelineBuildVarRecord> {
-        val result = with(T_PIPELINE_BUILD_VAR) {
-            val where = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .and(KEY.like("$key%"))
-            where.fetch()
-        }
-        val map = mutableMapOf<String, TPipelineBuildVarRecord>()
-        result.forEach {
-            map[it.key] = it
-        }
-        return map
-    }
-
-    fun getVars(dslContext: DSLContext, buildId: String, key: String? = null): Map<String, String> {
+    fun getVars(dslContext: DSLContext, buildId: String, key: String? = null): MutableMap<String, String> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
