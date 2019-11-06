@@ -37,6 +37,6 @@ fun getEnvironmentPathPrefix(): String {
     return ENVIRONMENT_LINUX_PATH_PREFIX
 }
 
-private const val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/devops/apps/"
+private const val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
 
-private const val ENVIRONMENT_MAC_PATH_PREFIX = "/data/devops/apps/"
+private const val ENVIRONMENT_MAC_PATH_PREFIX = "/data/bkdevops/apps/"
