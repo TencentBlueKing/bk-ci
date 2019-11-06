@@ -132,6 +132,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="versionDetail.description"
                                 >
                                 </mavon-editor>
@@ -202,6 +203,13 @@
     export default {
         components: {
             BuildLog
+        },
+
+        filters: {
+            levelFilter (val) {
+                if (val === 'LOGIN_PUBLIC') return '是'
+                else return '否'
+            }
         },
 
         data () {
@@ -484,7 +492,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
     @import '@/assets/scss/markdown-body.scss';
 
@@ -808,10 +816,10 @@
                 margin-top: 40px;
             }
         }
-        .bk-sideslider-wrapper {
+        /deep/ .bk-sideslider-wrapper {
             top: 0;
             padding-bottom: 0;
-             .bk-sideslider-content {
+            /deep/ .bk-sideslider-content {
                 height: calc(100% - 50px);
             }
         }

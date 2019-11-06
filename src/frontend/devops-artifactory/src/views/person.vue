@@ -220,12 +220,6 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            onlineProjectList () {
-                return this.$store.state.sideMenu.onlineProjectList
-            },
-            curProjectName () {
-                return this.getCurProjectById(this.projectId).project_name || ''
-            },
             searchKeysLen () {
                 return Object.keys(this.searchKeys).length || 0
             },
@@ -235,7 +229,7 @@
             isMof () {
                 const projectId = this.$route.params.projectId
                 return this.projectList.find(item => {
-                    return (item.dept_name === '魔方工作室群' && item.project_code === projectId)
+                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
                 })
             }
         },
@@ -263,9 +257,6 @@
             this.$refs.scrollBox.removeEventListener('scroll', this.handleScroll)
         },
         methods: {
-            getCurProjectById (id) {
-                return this.onlineProjectList.find(item => (item.project_id_classic === id || item.project_code === id))
-            },
             /**
              * 跳转
              */
