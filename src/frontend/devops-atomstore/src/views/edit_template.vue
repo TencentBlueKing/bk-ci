@@ -110,6 +110,7 @@
                             :toolbars="toolbarOptions"
                             :external-link="false"
                             :box-shadow="false"
+                            preview-background="#fff"
                             @imgAdd="addImage"
                             @imgDel="delImage"
                             @change="changeData" />
@@ -614,6 +615,7 @@
             .template-introduction-input,
             .template-remark-input {
                 min-width: 100%;
+                border: 1px solid #c4c6cc;
             }
             .version-num-form-item {
                 .version-num-content {
