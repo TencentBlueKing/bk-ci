@@ -394,7 +394,7 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss" scoped>
     @import './../../assets/scss/conf';
     .edit-detail {
         .inner-header {

@@ -118,6 +118,8 @@
                             v-model="atomForm.description"
                             :toolbars="toolbarOptions"
                             :external-link="false"
+                            :box-shadow="false"
+                            preview-background="#fff"
                             @imgAdd="addImage"
                             @imgDel="delImage"
                             @change="changeData"
@@ -660,7 +662,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
 
     .edit-atom-wrapper {
@@ -789,6 +791,7 @@
             .atom-introduction-input,
             .atom-remark-input {
                 min-width: 100%;
+                border: 1px solid #c4c6cc;
             }
             .version-num-form-item {
                 .version-num-content {
