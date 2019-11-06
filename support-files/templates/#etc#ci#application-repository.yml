@@ -10,15 +10,6 @@ server:
   port: __BKCI_REPOSITORY_API_PORT__
 
 scm:
-  # github repository
-  github:
-    clientId: __GITHUB_CLIENT_ID__
-    clientSecret: __GITHUB_CLIENT_SECRET__
-    webhookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/external/api/external/github/oauth/callback
-    redirectUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/console/codelib
-    appUrl: https://github.com/apps/__GITHUB_APP__
-    signSecret: __GITHUB_SIGN_SECRET__
-
   #svn open api url
   svn:
     apiKey: __SVN_API_KEY__
@@ -38,8 +29,3 @@ scm:
       redirectUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
       appUrl: https://github.com/apps/__GITHUB_APP__
       signSecret: __GITHUB_SIGN_SECRET__
-
-svn:
-  apiUrl: http://__SVN_URL__
-  apiKey: __SVN_API_KEY__
-  webhookApiUrl: http://__SVN_URL__/webhooks
