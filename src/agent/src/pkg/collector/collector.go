@@ -183,7 +183,7 @@ func DoAgentCollect() {
 
 	tAgent, err := telegraf.GetTelegrafAgent(
 		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
-		fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetExecutableDir()),
+		fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir()),
 	)
 	if err != nil {
 		logs.Error("init telegraf agent failed: %v", err)
@@ -211,7 +211,7 @@ func writeTelegrafConfig() {
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 1)
 	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
 	ioutil.WriteFile(
-		systemutil.GetExecutableDir()+"/telegraf.conf",
+		systemutil.GetWorkDir()+"/telegraf.conf",
 		[]byte(configContent),
 		0666)
 }

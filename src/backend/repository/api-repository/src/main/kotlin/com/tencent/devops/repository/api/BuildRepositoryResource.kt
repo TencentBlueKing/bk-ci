@@ -95,4 +95,24 @@ interface BuildRepositoryResource {
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<Repository>
+
+    @Deprecated("这个接口要丢弃，当前兼容老的agent的接口")
+    @ApiOperation("构建机获取代码库详情")
+//    @Path("/{repositoryHashId}/")
+    @Path("/repositoryHashId/{repositoryHashId}/")
+    @GET
+    fun getV2(
+            @ApiParam(value = "构建ID", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+            buildId: String,
+            @ApiParam(value = "构建环境ID", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+            vmSeqId: String,
+            @ApiParam(value = "构建机名称", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+            vmName: String,
+            @ApiParam("代码库哈希ID", required = true)
+            @PathParam("repositoryHashId")
+            repositoryHashId: String
+    ): Result<Repository>
 }

@@ -29,7 +29,6 @@ package com.tencent.devops.environment.service.slave
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,8 +45,14 @@ class SlaveGatewayService @Autowired constructor(
     private val cache = ArrayList<SlaveGateway>()
     private var lastUpdate: Long = 0
 
-    fun getGateway(agentRecord: TEnvironmentThirdpartyAgentRecord) =
-        if (agentRecord.gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else agentRecord.gateway
+    fun fixGateway(gateway: String?): String {
+        val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else gateway
+        return if (gw!!.startsWith("http")) {
+            gw.removeSuffix("/")
+        } else {
+            "http://$gw"
+        }
+    }
 
     fun getShowName(gateway: String): String {
         val gatewayList = if (cache.isEmpty()) {

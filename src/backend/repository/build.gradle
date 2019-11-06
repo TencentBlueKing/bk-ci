@@ -34,3 +34,15 @@ subprojects {
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
+group 'com.tencent.bk.devops'
+version '0.1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}

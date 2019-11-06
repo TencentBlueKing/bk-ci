@@ -31,19 +31,19 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import okhttp3.MediaType
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
-class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
+class DockerHostBuildResourceApi constructor(
+    private val urlPrefix: String = "ms/dispatch"
+) : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 
-
-    // 定时任务使用，现在停用
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        val path = "/ms/dispatch/api/dockerhost/startBuild?hostTag=$hostTag"
+        val path = "/$urlPrefix/api/dockerhost/startBuild?hostTag=$hostTag"
         val request = buildPost(path)
-//        val httpClient = okHttpClient.newBuilder().build()
 
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -54,13 +54,10 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
         }
     }
 
-    // 定时任务和dispatch触发都用到，启动成功后上报到dispatch
     fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean>? {
-        val path = "/ms/dispatch/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
+        val path = "/$urlPrefix/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
         val request = buildPost(path)
-//        val httpClient = okHttpClient.newBuilder().build()
 
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -71,13 +68,10 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
         }
     }
 
-    // 定时任务使用，现在停用
     fun endBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        val path = "/ms/dispatch/api/dockerhost/endBuild?hostTag=$hostTag"
+        val path = "/$urlPrefix/api/dockerhost/endBuild?hostTag=$hostTag"
         val request = buildPost(path)
-//        val httpClient = okHttpClient.newBuilder().build()
 
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -88,14 +82,10 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
         }
     }
 
-
-    // 不再rollback,，现在停用
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Result<Boolean>? {
-        val path = "/ms/dispatch/api/dockerhost/rollbackBuild?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
+        val path = "/$urlPrefix/api/dockerhost/rollbackBuild?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
         val request = buildPost(path)
-//        val httpClient = okHttpClient.newBuilder().build()
 
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -106,13 +96,10 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
         }
     }
 
-    // 上报日志
-    fun log(buildId: String, red: Boolean, message: String): Result<Boolean>? {
-        val path = "/ms/dispatch/api/dockerhost/log?buildId=$buildId&red=$red&message=$message"
-        val request = buildPost(path)
-//        val httpClient = okHttpClient.newBuilder().build()
+    fun getHost(hostTag: String): Result<DockerHostInfo>? {
+        val path = "/$urlPrefix/api/dockerhost/host?hostTag=$hostTag"
+        val request = buildGet(path)
 
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -120,6 +107,34 @@ class DockerHostBuildResourceApi : AbstractBuildResourceApi() {
                 throw RuntimeException("DockerHostBuildResourceApi $path fail")
             }
             return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun postLog(buildId: String, red: Boolean, message: String, tag: String? = ""): Result<Boolean>? {
+        val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag"
+        val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
+                throw RuntimeException("DockerHostBuildResourceApi $path fail")
+            }
+            return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun getDockerJarLength(): Long? {
+        val path = "/$urlPrefix/gw/build/docker.jar"
+        val request = buildHeader(path)
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val contentLength = response.header("Content-Length")?.toLong()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. ${response.code()}")
+                throw RuntimeException("DockerHostBuildResourceApi $path fail")
+            }
+            return contentLength
         }
     }
 }

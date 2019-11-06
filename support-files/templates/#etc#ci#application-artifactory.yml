@@ -13,4 +13,13 @@ server:
 # 如果微服务是部署多机节点，则以下目录需要做成分布式高可用的，比如NFS，CephFS挂载
 # 保证多节点都能读取到
 artifactory:
-  archiveLocalBasePath: __INSTALL_PATH__/public/artifactory
+  archiveLocalBasePath: __INSTALL_PATH__/public/__MODULE__/artifactory
+  archiveJFrogBasePath: /tmp
+
+# 自已有部署Jfrog的可以对接
+jfrog:
+  url: __JFROG_URL__
+  docker_url: __DOCKER_URL__
+  docker_port: __DOCKER_PORT__
+  username: __JFROG_USERNAME__
+  password: __JFROG_PASSWORD__

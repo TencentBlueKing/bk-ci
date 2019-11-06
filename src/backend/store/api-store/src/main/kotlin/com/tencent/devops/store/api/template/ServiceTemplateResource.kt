@@ -40,14 +40,14 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_MARKET_TEMPLATE"], description = "服务端-模板")
-@Path("/service/market")
+@Path("/service/market/template")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTemplateResource {
 
     @ApiOperation("模版市场搜索模版")
     @GET
-    @Path("/template/list/")
+    @Path("/list/")
     fun list(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

@@ -36,5 +36,7 @@ data class BkAuthGroupAndUserList(
     @JsonProperty("role_name")
     val roleName: String,
     @JsonProperty("user_id_list")
-    val userIdList: List<String>
+    val userIdList: List<String>,
+    @JsonProperty("type")
+    val type: String
 )

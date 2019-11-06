@@ -34,13 +34,13 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.scm.config.GitConfig
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
@@ -48,32 +48,18 @@ import javax.ws.rs.core.UriBuilder
 @Service
 class GithubOAuthService @Autowired constructor(
     private val objectMapper: ObjectMapper,
+    private val gitConfig: GitConfig,
     private val githubTokenService: GithubTokenService
 ) {
-
-    @Value("\${github.clientId}")
-    private lateinit var clientId: String
-
-    @Value("\${github.clientSecret}")
-    private lateinit var clientSecret: String
-
-    @Value("\${github.callbackUrl}")
-    private lateinit var callbackUrl: String
-
-    @Value("\${github.redirectUrl}")
-    private lateinit var redirectUrl: String
-
-    @Value("\${github.appUrl}")
-    private lateinit var appUrl: String
 
     fun getGithubOauth(projectId: String, userId: String, repoHashId: String?): GithubOauth {
         val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId!!).toString() else ""
         val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}"
-        val redirectUrl = "$GITHUB_URL/login/oauth/authorize?client_id=$clientId&redirect_uri=$callbackUrl&state=$state"
+        val redirectUrl = "$GITHUB_URL/login/oauth/authorize?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
         return GithubOauth(redirectUrl)
     }
 
-    fun getGithubAppUrl() = appUrl
+    fun getGithubAppUrl() = gitConfig.githubAppUrl
 
     fun githubCallback(code: String, state: String): Response {
         if (!state.contains(",BK_DEVOPS__")) {
@@ -87,12 +73,12 @@ class GithubOAuthService @Autowired constructor(
         val githubToken = getAccessTokenImpl(code)
 
         githubTokenService.createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
-        return Response.temporaryRedirect(UriBuilder.fromUri("$redirectUrl/$projectId#popupGithub$repoHashId").build())
-            .build()
+        return Response.temporaryRedirect(UriBuilder.fromUri("${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId").build())
+                .build()
     }
 
     private fun getAccessTokenImpl(code: String): GithubToken {
-        val url = "$GITHUB_URL/login/oauth/access_token?client_id=$clientId&client_secret=$clientSecret&code=$code"
+        val url = "$GITHUB_URL/login/oauth/access_token?client_id=${gitConfig.githubClientId}&client_secret=${gitConfig.githubClientSecret}&code=$code"
 
         val request = Request.Builder()
             .url(url)

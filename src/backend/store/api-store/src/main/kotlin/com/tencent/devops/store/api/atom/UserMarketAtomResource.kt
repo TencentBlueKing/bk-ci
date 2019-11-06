@@ -27,16 +27,14 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomOfflineReq
-import com.tencent.devops.store.pojo.atom.AtomProcessInfo
+import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
-import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.MarketMainItem
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -46,10 +44,10 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -131,31 +129,6 @@ interface UserMarketAtomResource {
         pageSize: Int?
     ): Result<MyAtomResp?>
 
-    @ApiOperation("插件工作台-新增插件")
-    @POST
-    @Path("/desk/atom/")
-    fun addMarketAtom(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("插件市场工作台-新增插件请求报文体", required = true)
-        marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean>
-
-    @ApiOperation("插件工作台-升级插件")
-    @PUT
-    @Path("/desk/atom/")
-    fun updateMarketAtom(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目编码", required = true)
-        @QueryParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件市场工作台-新增插件请求报文体", required = true)
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
-    ): Result<String?>
-
     @ApiOperation("根据插件版本ID获取插件详情")
     @GET
     @Path("/desk/atom/{atomId}")
@@ -175,6 +148,9 @@ interface UserMarketAtomResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("bk ticket", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
+        bk_ticket: String,
         @ApiParam("atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
@@ -221,50 +197,20 @@ interface UserMarketAtomResource {
         atomCode: String
     ): Result<List<InstalledProjRespItem?>>
 
-    @ApiOperation("根据插件版本ID获取插件版本进度")
+    @ApiOperation("获取插件支持的语言列表")
     @GET
-    @Path("/desk/atom/release/process/{atomId}")
-    fun getProcessInfo(
-        @ApiParam("atomId", required = true)
-        @PathParam("atomId")
-        atomId: String
-    ): Result<AtomProcessInfo>
+    @Path("/desk/atom/language")
+    fun listLanguage(): Result<List<AtomDevLanguage?>>
 
-    @ApiOperation("取消发布")
-    @PUT
-    @Path("/desk/atom/release/cancel/{atomId}")
-    fun cancelRelease(
+    @ApiOperation("删除工作台插件")
+    @DELETE
+    @Path("/desk/atoms/{atomCode}")
+    fun deleteAtom(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("atomId", required = true)
-        @PathParam("atomId")
-        atomId: String
-    ): Result<Boolean>
-
-    @ApiOperation("确认通过测试")
-    @PUT
-    @Path("/desk/atom/release/passTest/{atomId}")
-    fun passTest(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("atomId", required = true)
-        @PathParam("atomId")
-        atomId: String
-    ): Result<Boolean>
-
-    @ApiOperation("下架插件")
-    @PUT
-    @Path("/desk/atom/offline/{atomCode}")
-    fun offlineAtom(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("atomCode", required = true)
+        @ApiParam("插件代码", required = true)
         @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("下架请求报文")
-        atomOfflineReq: AtomOfflineReq
+        atomCode: String
     ): Result<Boolean>
 }

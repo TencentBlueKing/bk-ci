@@ -50,21 +50,22 @@ class CredentialHelper {
 
     fun isValid(credentialCreate: CredentialCreate): Boolean {
         return isValid(
-            credentialCreate.credentialType,
-            credentialCreate.v1,
-            credentialCreate.v2
+            credentialType = credentialCreate.credentialType,
+            v1 = credentialCreate.v1,
+            v2 = credentialCreate.v2
         )
     }
 
     fun isValid(credentialUpdate: CredentialUpdate): Boolean {
-        return isValidUpdate(
-            credentialUpdate.credentialType,
-            credentialUpdate.v1,
-            credentialUpdate.v2
+        return isValid(
+            credentialType = credentialUpdate.credentialType,
+            v1 = credentialUpdate.v1,
+            v2 = credentialUpdate.v2,
+            update = true
         )
     }
 
-    private fun isValid(credentialType: CredentialType, v1: String, v2: String?): Boolean {
+    private fun isValid(credentialType: CredentialType, v1: String, v2: String?, update: Boolean = false): Boolean {
         return when (credentialType) {
             CredentialType.PASSWORD -> {
                 true
@@ -83,23 +84,19 @@ class CredentialHelper {
                 true
             }
             CredentialType.SSH_PRIVATEKEY -> {
-                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(
-                        SSH_PRIVATE_SUFFIX
-                    ))
-                ) {
-                    return false
+                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(SSH_PRIVATE_SUFFIX))) {
+                    update && v1 == credentialMixer
+                } else {
+                    true
                 }
-                true
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
                 v2 ?: return false
-                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(
-                        SSH_PRIVATE_SUFFIX
-                    ))
-                ) {
-                    return false
+                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(SSH_PRIVATE_SUFFIX))) {
+                    update && v2 == credentialMixer
+                } else {
+                    true
                 }
-                true
             }
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
                 true
@@ -110,51 +107,45 @@ class CredentialHelper {
         }
     }
 
-    private fun isValidUpdate(credentialType: CredentialType, v1: String, v2: String?): Boolean {
-        return when (credentialType) {
-            CredentialType.PASSWORD -> {
-                true
-            }
-            CredentialType.ACCESSTOKEN -> {
-                true
-            }
-            CredentialType.USERNAME_PASSWORD -> {
-                true
-            }
-            CredentialType.SECRETKEY -> {
-                true
-            }
-            CredentialType.APPID_SECRETKEY -> {
-                v2 ?: return false
-                true
-            }
-            CredentialType.SSH_PRIVATEKEY -> {
-                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(
-                        SSH_PRIVATE_SUFFIX
-                    )) && v1 != credentialMixer
-                ) {
-                    return false
-                }
-                true
-            }
-            CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-                v2 ?: return false
-                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(
-                        SSH_PRIVATE_SUFFIX
-                    )) && v2 != credentialMixer
-                ) {
-                    return false
-                }
-                true
-            }
-            CredentialType.TOKEN_USERNAME_PASSWORD -> {
-                true
-            }
-            CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
-                true
-            }
-        }
-    }
+//    private fun isValidUpdate(credentialType: CredentialType, v1: String, v2: String?): Boolean {
+//        return when (credentialType) {
+//            CredentialType.PASSWORD -> {
+//                true
+//            }
+//            CredentialType.ACCESSTOKEN -> {
+//                true
+//            }
+//            CredentialType.USERNAME_PASSWORD -> {
+//                true
+//            }
+//            CredentialType.SECRETKEY -> {
+//                true
+//            }
+//            CredentialType.APPID_SECRETKEY -> {
+//                v2 ?: return false
+//                true
+//            }
+//            CredentialType.SSH_PRIVATEKEY -> {
+//                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(SSH_PRIVATE_SUFFIX)) && v1 != credentialMixer) {
+//                    return false
+//                }
+//                true
+//            }
+//            CredentialType.TOKEN_SSH_PRIVATEKEY -> {
+//                v2 ?: return false
+//                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(SSH_PRIVATE_SUFFIX)) && v2 != credentialMixer) {
+//                    return false
+//                }
+//                true
+//            }
+//            CredentialType.TOKEN_USERNAME_PASSWORD -> {
+//                true
+//            }
+//            CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
+//                true
+//            }
+//        }
+//    }
 
     fun encryptCredential(
         aesEncryptedCredential: String?,

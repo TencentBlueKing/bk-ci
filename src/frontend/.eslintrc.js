@@ -51,7 +51,14 @@ module.exports = {
         'PROXY_URL_PREFIX': true,
         'GW_URL_PREFIX': true,
         'WS_URL_PREFIX': true,
-        'BADGE_URL_PREFIX': true
+        'BADGE_URL_PREFIX': true,
+        "CHECK_ENV_URL": true,
+        'USER_IMG_URL': true,
+        'OPEN_URL': true,
+        'OIED_URL': true,
+        'ZHIYUN_URL': true,
+        "CODECC_SOFWARE_URL": true,
+        "JOB_URL": true
     },
     // add your custom rules hered
     rules: {

@@ -30,7 +30,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.AgentResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -38,6 +40,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -102,4 +105,21 @@ interface BuildAgentBuildResource {
         @QueryParam("success")
         success: Boolean
     ): AgentResult<Boolean>
+
+    @ApiOperation("worker构建结束")
+    @POST
+    @Path("/workerBuildFinish")
+    fun workerBuildFinish(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @ApiParam("构建信息", required = true)
+        buildInfo: ThirdPartyBuildWithStatus
+    ): Result<Boolean>
 }

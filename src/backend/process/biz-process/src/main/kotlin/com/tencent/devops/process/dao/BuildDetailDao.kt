@@ -41,6 +41,14 @@ class BuildDetailDao {
     fun create(
         dslContext: DSLContext,
         buildId: String,
+        model: String
+    ) {
+        create(dslContext, buildId, null, null, model)
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        buildId: String,
         startType: StartType?,
         buildNum: Int?,
         model: String,
@@ -58,6 +66,24 @@ class BuildDetailDao {
                 STATUS
             )
                 .values(buildId, startType?.name, buildNum ?: 0, model, LocalDateTime.now(), buildStatus.name)
+                .execute()
+        }
+    }
+
+    fun updateBuildNum(
+        dslContext: DSLContext,
+        buildId: String,
+        buildNum: Int,
+        userId: String,
+        trigger: String
+    ) {
+        logger.info("Update the build num of buildId $buildId")
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            dslContext.update(this)
+                .set(BUILD_NUM, buildNum)
+                .set(START_USER, userId)
+                .set(TRIGGER, trigger)
+                .where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
@@ -127,6 +153,17 @@ class BuildDetailDao {
                 execute.set(END_TIME, endTime)
             }
             execute.where(BUILD_ID.eq(buildId)).execute()
+        }
+    }
+
+    fun updateModel(
+        dslContext: DSLContext,
+        buildId: String,
+        model: String
+    ) {
+        logger.info("Update build detail model of build $buildId")
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            dslContext.update(this).set(MODEL, model).where(BUILD_ID.eq(buildId)).execute()
         }
     }
 

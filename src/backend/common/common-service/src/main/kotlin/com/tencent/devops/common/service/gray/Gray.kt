@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.service.gray
 
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -48,6 +49,17 @@ class Gray {
         }
         return gray!!
     }
+
+    fun isGrayMatchProject(projectId: String, redisOperation: RedisOperation): Boolean {
+        return isGrayMatchProject(projectId, grayProjectSet(redisOperation))
+    }
+
+    fun isGrayMatchProject(projectId: String, grayProjectSet: Set<String>): Boolean {
+        return isGray() == grayProjectSet.contains(projectId)
+    }
+
+    fun grayProjectSet(redisOperation: RedisOperation) =
+        (redisOperation.getSetMembers(getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
 
     fun getGrayRedisKey() = redisKey
 }

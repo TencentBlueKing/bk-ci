@@ -264,6 +264,10 @@
 
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
+            this.$store.dispatch('soda/requestInterceptAtom', {
+                projectId: this.routerParams.projectId,
+                pipelineId: this.routerParams.pipelineId
+            })
             webSocketMessage.installWsMessage(this.setPipelineDetail)
             // this.initWebSocket()
         },
@@ -283,6 +287,9 @@
                 'togglePropertyPanel',
                 'requestPipelineExecDetail',
                 'setPipelineDetail'
+            ]),
+            ...mapActions('soda', [
+                'requestInterceptAtom'
             ]),
             convertMStoStringByRule,
             switchTab (tabType = 'executeDetail') {

@@ -38,14 +38,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class StoreMemberDao {
 
-    fun addStoreMember(
-        dslContext: DSLContext,
-        userId: String,
-        storeCode: String,
-        userName: String,
-        type: Byte,
-        storeType: Byte
-    ) {
+    fun addStoreMember(dslContext: DSLContext, userId: String, storeCode: String, userName: String, type: Byte, storeType: Byte) {
         with(TStoreMember.T_STORE_MEMBER) {
             dslContext.insertInto(
                 this,
@@ -83,6 +76,34 @@ class StoreMemberDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()
+        }
+    }
+
+    /**
+     * 获取store组件管理员列表
+     */
+    fun getAdmins(dslContext: DSLContext, storeCode: String, storeType: Byte): Result<TStoreMemberRecord> {
+        with(TStoreMember.T_STORE_MEMBER) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(TYPE.eq(StoreMemberTypeEnum.ADMIN.type.toByte()))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
+    /**
+     * 获取store组件成员信息
+     */
+    fun getMemberInfo(dslContext: DSLContext, userId: String, storeCode: String, storeType: Byte): TStoreMemberRecord? {
+        with(TStoreMember.T_STORE_MEMBER) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(USERNAME.eq(userId))
+                .and(STORE_TYPE.eq(storeType))
+                .fetchOne()
         }
     }
 

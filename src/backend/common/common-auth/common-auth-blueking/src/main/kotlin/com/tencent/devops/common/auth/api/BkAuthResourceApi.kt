@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkDeleteResourceAuthRequest
 import com.tencent.devops.common.auth.api.pojo.BkDeleteResourceAuthResponse
 import com.tencent.devops.common.auth.api.pojo.BkRegisterResourcesRequest
@@ -49,13 +50,14 @@ class BkAuthResourceApi constructor(
     private val authUtils: AuthUtils
 ) : AuthResourceApi {
 
-    override fun createResource(
+    override fun createGrantResource(
         user: String,
         serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
+        resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        authGroupList: List<BkAuthGroup>?
     ) {
         batchCreateResource(
             serviceCode, resourceType, projectCode, user,
@@ -64,13 +66,27 @@ class BkAuthResourceApi constructor(
     }
 
     override fun createResource(
-        scopeType: String,
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
+    ) {
+        batchCreateResource(
+            serviceCode, resourceType, projectCode, user,
+            listOf(ResourceRegisterInfo(resourceCode, resourceName))
+        )
+    }
+
+    override fun createResource(
+            scopeType: String,
+            user: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
         batchCreateResource(
             principalId = user,
@@ -86,12 +102,12 @@ class BkAuthResourceApi constructor(
      * 新版批量注册资源
      */
     override fun batchCreateResource(
-        principalId: String,
-        scopeType: String, // "project"
-        scopeId: String,
-        resourceType: BkAuthResourceType,
-        resourceList: List<ResourceRegisterInfo>,
-        systemId: AuthServiceCode // 旧版本的serviceCode
+            principalId: String,
+            scopeType: String, // "project"
+            scopeId: String,
+            resourceType: AuthResourceType,
+            resourceList: List<ResourceRegisterInfo>,
+            systemId: AuthServiceCode // 旧版本的serviceCode
     ): Boolean {
         val principalType = bkAuthProperties.principalType!!
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/resources/batch-register"
@@ -134,11 +150,11 @@ class BkAuthResourceApi constructor(
     }
 
     override fun modifyResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
         modifyResource(
             scopeType = PROJECT_SCOPE_TYPE,
@@ -149,12 +165,12 @@ class BkAuthResourceApi constructor(
     }
 
     override fun modifyResource(
-        scopeType: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String,
-        resourceName: String
+            scopeType: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String,
+            resourceName: String
     ) {
         modifyResource(
             scopeType,
@@ -164,12 +180,12 @@ class BkAuthResourceApi constructor(
     }
 
     private fun modifyResource(
-        scopeType: String,
-        scopeId: String,
-        resourceType: BkAuthResourceType,
-        resourceId: String,
-        resourceName: String,
-        systemId: AuthServiceCode
+            scopeType: String,
+            scopeId: String,
+            resourceType: AuthResourceType,
+            resourceId: String,
+            resourceName: String,
+            systemId: AuthServiceCode
     ) {
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/resources"
 
@@ -208,10 +224,10 @@ class BkAuthResourceApi constructor(
     }
 
     override fun deleteResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String
     ) {
         deleteResource(
             scopeType = PROJECT_SCOPE_TYPE,
@@ -223,11 +239,11 @@ class BkAuthResourceApi constructor(
     }
 
     override fun deleteResource(
-        scopeType: String,
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        resourceCode: String
+            scopeType: String,
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            resourceCode: String
     ) {
         batchDeleteResource(
             scopeType = scopeType,
@@ -286,11 +302,11 @@ class BkAuthResourceApi constructor(
     }
 
     override fun batchCreateResource(
-        serviceCode: AuthServiceCode,
-        resourceType: BkAuthResourceType,
-        projectCode: String,
-        user: String,
-        resourceList: List<ResourceRegisterInfo>
+            serviceCode: AuthServiceCode,
+            resourceType: AuthResourceType,
+            projectCode: String,
+            user: String,
+            resourceList: List<ResourceRegisterInfo>
     ) {
         batchCreateResource(
             principalId = user,

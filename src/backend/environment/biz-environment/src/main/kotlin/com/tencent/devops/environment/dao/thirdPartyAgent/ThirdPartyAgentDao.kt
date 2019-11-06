@@ -74,6 +74,42 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun createAgent(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        os: OS,
+        secretKey: String,
+        gateway: String?,
+        ip: String?
+    ): Long {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                OS,
+                STATUS,
+                SECRET_KEY,
+                CREATED_USER,
+                CREATED_TIME,
+                GATEWAY,
+                IP
+            )
+                .values(
+                    projectId,
+                    os.name,
+                    AgentStatus.IMPORT_EXCEPTION.status,
+                    secretKey,
+                    userId,
+                    LocalDateTime.now(),
+                    gateway ?: "",
+                    ip ?: ""
+                )
+                .returning(ID)
+                .fetchOne().id
+        }
+    }
+
     fun updateGateway(dslContext: DSLContext, agentId: Long, gateway: String) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
@@ -344,16 +380,18 @@ class ThirdPartyAgentDao {
         action: String
     ) {
         with(TEnvironmentThirdpartyAgentAction.T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 PROJECT_ID,
                 AGENT_ID,
                 ACTION,
-                ACTION_TIME)
+                ACTION_TIME
+            )
                 .values(
                     projectId,
                     agentId,
                     action,
-                    java.time.LocalDateTime.now()
+                    LocalDateTime.now()
                 ).execute()
         }
     }
@@ -380,7 +418,21 @@ class ThirdPartyAgentDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
-                .fetchOne(0, kotlin.Long::class.java)
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun listPreBuildAgent(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        os: OS
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(OS.eq(os.name))
+                .fetch()
         }
     }
 }

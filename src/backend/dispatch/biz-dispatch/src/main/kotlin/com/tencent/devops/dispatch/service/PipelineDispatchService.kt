@@ -31,11 +31,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
+import com.tencent.devops.dispatch.dao.PipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.process.api.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
@@ -50,7 +50,8 @@ import javax.ws.rs.NotFoundException
 class PipelineDispatchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val dispatchPipelineBuildDao: DispatchPipelineBuildDao,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val logService: LogService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val rabbitTemplate: RabbitTemplate
 ) {
@@ -101,6 +102,7 @@ class PipelineDispatchService @Autowired constructor(
                 buildId = pipelineAgentStartupEvent.buildId,
                 message = "构建环境准备中...",
                 tag = "",
+                jobId = pipelineAgentStartupEvent.containerHashId,
                 executeCount = pipelineAgentStartupEvent.executeCount ?: 1
             )
         }
@@ -123,7 +125,7 @@ class PipelineDispatchService @Autowired constructor(
                 it.shutdown(pipelineAgentShutdownEvent)
             }
         } finally {
-            LogUtils.stopLog(rabbitTemplate, pipelineAgentShutdownEvent.buildId, "", null)
+            logService.stopLog(pipelineAgentShutdownEvent.buildId)
         }
     }
 
@@ -137,11 +139,11 @@ class PipelineDispatchService @Autowired constructor(
     }
 
     fun queryPipelineByBuildAndSeqId(buildId: String, vmSeqId: String): PipelineBuild {
-        val list = dispatchPipelineBuildDao.getPipelineByBuildIdOrNull(dslContext, buildId, vmSeqId)
+        val list = pipelineBuildDao.getPipelineByBuildIdOrNull(dslContext, buildId, vmSeqId)
         if (list.isEmpty()) {
             throw throw NotFoundException("VM pipeline[$buildId,$vmSeqId] is not exist")
         }
-        return dispatchPipelineBuildDao.convert(list[0])
+        return pipelineBuildDao.convert(list[0])
     }
 
     companion object {

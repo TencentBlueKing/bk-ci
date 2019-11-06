@@ -92,7 +92,7 @@ object CommandLineUtils {
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
-                throw ExecuteException("$prefix Script command execution failed with exit code($exitCode)")
+                throw RuntimeException("$prefix Script command execution failed with exit code($exitCode)")
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to execute the command($command)", ignored)
@@ -107,7 +107,7 @@ object CommandLineUtils {
     fun execute(file: File, workspace: File?, print2Logger: Boolean, prefix: String = ""): String {
         if (!file.exists()) {
             logger.warn("The file(${file.absolutePath}) is not exist")
-            throw ExecuteException("The file(${file.absolutePath}) is not exist")
+            throw RuntimeException("The file(${file.absolutePath}) is not exist")
         }
         val command = if (getOS() == OSType.WINDOWS) {
             file.name

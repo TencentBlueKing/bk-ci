@@ -44,5 +44,7 @@ data class EnvCreateInfo(
     @ApiModelProperty("节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
     val source: NodeSource,
     @ApiModelProperty("节点 HashId 列表，节点来源为“已有节点”时必填", required = false)
-    val nodeHashIds: List<String>?
+    val nodeHashIds: List<String>?,
+    @ApiModelProperty("BCS VM 参数，节点来源为“快速生成”时必填", required = false)
+    val bcsVmParam: BcsVmParam? = null
 )

@@ -240,7 +240,6 @@
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
                 const instance = this.getRemarkPopupInstance(row.index)
-                console.log(instance, 11)
                 if (instance) {
                     instance.show()
                     this.$nextTick(() => {
@@ -363,12 +362,14 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
+                    const isDevnet = await this.$store.dispatch('soda/requestDevnetGateway')
                     const res = await this.$store.dispatch('soda/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
-                    window.open(res.url, '_self')
+                    const url = isDevnet ? res.url : res.url2
+                    window.open(url, '_self')
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'

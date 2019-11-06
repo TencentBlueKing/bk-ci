@@ -183,7 +183,7 @@ object SCM {
         val svnDepth = taskParams[CodeSvnElement.svnDepth]
 
         return if (svnDepth.isNullOrBlank()) {
-            SvnDepth.Infinity
+            SvnDepth.infinity
         } else {
             SvnDepth.valueOf(svnDepth!!)
         }

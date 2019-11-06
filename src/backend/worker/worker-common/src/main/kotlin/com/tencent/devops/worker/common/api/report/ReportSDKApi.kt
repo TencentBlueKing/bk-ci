@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.api.report
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
@@ -37,7 +38,7 @@ interface ReportSDKApi : WorkerRestApiSDK {
     /**
      * 获取报告跟路径
      * @param taskId 创建这个报告的任务插件id
-     * @return  链接地址
+     * @return 链接地址
      */
     fun getRootUrl(taskId: String): Result<String>
 
@@ -48,14 +49,15 @@ interface ReportSDKApi : WorkerRestApiSDK {
         taskId: String,
         indexFile: String,
         name: String,
-        reportType: String? = ReportTypeEnum.INTERNAL.name
+        reportType: String? = ReportTypeEnum.INTERNAL.name,
+        reportEmail: ReportEmail? = null
     ): Result<Boolean>
 
     /**
      * 归档报告
-     * @param file  报告首页文件
+     * @param file 报告首页文件
      * @param taskId 当前插件任务id
-     * @param relativePath  报告首页所在的本地文件相对路径
+     * @param relativePath 报告首页所在的本地文件相对路径
      * @param buildVariables 构建变量
      */
     fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables)

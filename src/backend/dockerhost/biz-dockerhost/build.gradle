@@ -39,6 +39,7 @@ dependencies {
     compile group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.25.1'
     compile "org.slf4j:slf4j-api"
     compile "com.squareup.okhttp3:okhttp"
+    compile "org.fusesource:sigar"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

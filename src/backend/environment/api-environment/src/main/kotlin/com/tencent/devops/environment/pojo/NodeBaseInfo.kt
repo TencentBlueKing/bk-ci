@@ -56,5 +56,7 @@ data class NodeBaseInfo(
     @ApiModelProperty("网关地域", required = false)
     val gateway: String?,
     @ApiModelProperty("显示名称", required = false)
-    val displayName: String?
+    val displayName: String?,
+    @ApiModelProperty("所属业务, 默认-1表示没有绑定业务")
+    val bizId: Long? = -1
 )

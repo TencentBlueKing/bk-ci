@@ -29,8 +29,8 @@ package com.tencent.devops.process.permission.impl
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.BkAuthPermission
-import com.tencent.devops.common.auth.api.BkAuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -52,7 +52,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : PipelinePermissionService {
 
-    private val resourceType = BkAuthResourceType.PIPELINE_DEFAULT
+    private val resourceType = AuthResourceType.PIPELINE_DEFAULT
 
     /**
      * 校验是否有任意流水线存在指定的权限
@@ -61,7 +61,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
      * @param permission 权限
      * @return 有权限返回true
      */
-    override fun checkPipelinePermission(userId: String, projectId: String, permission: BkAuthPermission): Boolean {
+    override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -82,7 +82,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: BkAuthPermission
+        permission: AuthPermission
     ): Boolean {
 
         return authPermissionApi.validateUserResourcePermission(
@@ -105,7 +105,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
     override fun getResourceByPermission(
         userId: String,
         projectId: String,
-        permission: BkAuthPermission
+        permission: AuthPermission
     ): List<String> =
         authPermissionApi.getUserResourceByPermission(
             user = userId,

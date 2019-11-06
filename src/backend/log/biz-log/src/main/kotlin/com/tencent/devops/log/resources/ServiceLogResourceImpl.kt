@@ -30,8 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.service.IndexService
-import com.tencent.devops.log.service.PipelineLogService
+import com.tencent.devops.log.service.LogServiceDispatcher
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -41,8 +40,7 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class ServiceLogResourceImpl @Autowired constructor(
-    private val logService: PipelineLogService,
-    private val indexService: IndexService
+    private val logDispatcher: LogServiceDispatcher
 ) : ServiceLogResource {
 
     override fun getInitLogs(
@@ -52,15 +50,10 @@ class ServiceLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        val indexAndType = indexService.parseIndexAndType(buildId)
-        return Result(
-            logService.queryInitLogs(
-                buildId, indexAndType.left, indexAndType.right, isAnalysis ?: false,
-                queryKeywords, tag, executeCount
-            )
-        )
+        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, jobId, executeCount)
     }
 
     override fun getMoreLogs(
@@ -72,16 +65,10 @@ class ServiceLogResourceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-            logService.queryMoreLogsBetweenLines(
-                buildId, indexAndType.left, indexAndType.right, num ?: 100,
-                fromStart ?: true, start, end, tag, executeCount
-            )
-        )
+        return logDispatcher.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, jobId, executeCount)
     }
 
     override fun getAfterLogs(
@@ -92,15 +79,19 @@ class ServiceLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-            logService.queryMoreLogsAfterLine(
-                buildId, indexAndType.left, indexAndType.right, start,
-                isAnalysis ?: false, queryKeywords, tag, executeCount
-            )
+        return logDispatcher.getAfterLogs(
+                projectId,
+                pipelineId,
+                buildId,
+                start,
+                isAnalysis,
+                queryKeywords,
+                tag,
+                jobId,
+                executeCount
         )
     }
 
@@ -109,6 +100,9 @@ class ServiceLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        jobId: String?,
         executeCount: Int?
-    ): Response = logService.downloadLogs(pipelineId, buildId, tag ?: "", executeCount)
+    ): Response {
+        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount)
+    }
 }

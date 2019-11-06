@@ -68,5 +68,7 @@ data class NodeWithPermission(
     @ApiModelProperty("最后修改时间", required = false)
     val lastModifyTime: String?,
     @ApiModelProperty("最后修改人", required = false)
-    val lastModifyUser: String?
+    val lastModifyUser: String?,
+    @ApiModelProperty("所属业务, 默认-1表示没有绑定业务")
+    val bizId: Long? = -1
 )

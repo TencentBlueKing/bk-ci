@@ -40,13 +40,14 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.process.websocket.ChangeType
-import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -60,6 +61,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val webSocketDispatcher: WebSocketDispatcher,
+    private val websocketService: WebsocketService,
     private val pipelineBuildDao: PipelineBuildDao
 ) {
 
@@ -127,19 +130,22 @@ class PipelineBuildDetailService @Autowired constructor(
         pipelineDetailChangeEvent(buildId)
     }
 
-    private fun pipelineDetailChangeEvent(buildId: String) {
+    fun pipelineDetailChangeEvent(buildId: String) {
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         logger.info("dispatch pipelineDetailChangeEvent, buildId: $buildId")
-        pipelineEventDispatcher.dispatch(
-            PipelineStatusChangeEvent(
-                source = "pipelineDetailChangeEvent",
-                pipelineId = pipelineBuildInfo.pipelineId,
-                changeType = ChangeType.DETAIL,
-                buildId = pipelineBuildInfo.buildId,
-                projectId = pipelineBuildInfo.projectId,
-                userId = pipelineBuildInfo.startUser
-            )
+        webSocketDispatcher.dispatch(
+                websocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
         )
+//        pipelineEventDispatcher.dispatch(
+//            PipelineStatusChangeEvent(
+//                source = "pipelineDetailChangeEvent",
+//                pipelineId = pipelineBuildInfo.pipelineId,
+//                changeType = ChangeType.DETAIL,
+//                buildId = pipelineBuildInfo.buildId,
+//                projectId = pipelineBuildInfo.projectId,
+//                userId = pipelineBuildInfo.startUser
+//            )
+//        )
     }
 
     fun updateModel(buildId: String, model: Model) {
@@ -205,7 +211,15 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
-    fun taskEnd(buildId: String, taskId: String, buildStatus: BuildStatus, canRetry: Boolean? = false) {
+    fun taskEnd(
+        buildId: String,
+        taskId: String,
+        buildStatus: BuildStatus,
+        canRetry: Boolean? = false,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
+    ) {
         logger.info("The build task $taskId end of build $buildId with status $buildStatus")
         update(buildId, object : ModelInterface {
 
@@ -225,6 +239,11 @@ class PipelineBuildDetailService @Autowired constructor(
                         e.elapsed = System.currentTimeMillis() - e.startEpoch!!
                     }
                     c.canRetry = canRetry ?: false
+                    if (errorType != null) {
+                        e.errorType = errorType.name
+                        e.errorCode = errorCode
+                        e.errorMsg = errorMsg
+                    }
 
                     var elementElapsed = 0L
                     run lit@{
@@ -256,8 +275,15 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
-    fun pipelineTaskEnd(buildId: String, elementId: String, buildStatus: BuildStatus) {
-        taskEnd(buildId, elementId, buildStatus, BuildStatus.isFailure(buildStatus))
+    fun pipelineTaskEnd(
+        buildId: String,
+        elementId: String,
+        buildStatus: BuildStatus,
+        errorType: ErrorType?,
+        errorCode: Int?,
+        errorMsg: String?
+    ) {
+        taskEnd(buildId, elementId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
     }
 
     fun normalContainerSkip(buildId: String, containerId: String) {
@@ -345,34 +371,82 @@ class PipelineBuildDetailService @Autowired constructor(
         }, buildStatus)
     }
 
-    fun buildEnd(buildId: String, buildStatus: BuildStatus) {
+    fun buildEnd(
+        buildId: String,
+        buildStatus: BuildStatus,
+        cancelUser: String? = null,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
+    ) {
         logger.info("Build end $buildId")
 
-        val record = buildDetailDao.get(dslContext, buildId)
-        if (record == null) {
-            logger.warn("The build detail of build $buildId is not exist, ignore")
-            return
-        }
-
-        // 获取状态
-        val finalStatus = takeBuildStatus(record, buildStatus)
-
-        try {
-            val model: Model = JsonUtil.to(record.model, Model::class.java)
-
-            model.stages.forEach { stage ->
-                stage.containers.forEach { c ->
-                    reassignStatusWhenRunning(c, finalStatus)
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val record = buildDetailDao.get(context, buildId)
+            if (record == null) {
+                logger.warn("The build detail of build $buildId is not exist, ignore")
+                return@transaction
+            }
+            val status = record.status
+            val oldStatus = if (status.isNullOrBlank()) {
+                null
+            } else {
+                BuildStatus.valueOf(status)
+            }
+            val finalStatus = if (oldStatus == null) {
+                buildStatus
+            } else {
+                if (BuildStatus.isFinish(oldStatus)) {
+                    logger.info("The build $buildId is already finished by status $oldStatus, not replace with the sta†us $buildStatus")
+                    oldStatus
+                } else {
+                    logger.info("Update the build $buildId to status $buildStatus from $oldStatus")
+                    buildStatus
                 }
             }
 
-            buildDetailDao.update(dslContext, buildId, JsonUtil.toJson(model), finalStatus)
-            pipelineDetailChangeEvent(buildId)
-        } catch (ignored: Throwable) {
-            logger.warn(
-                "Fail to update the build end status of model ${record.model} with status $buildStatus of build $buildId",
-                ignored
-            )
+            logger.info("[ERRORCODE] buildEnd <$buildId>[$errorType][$errorCode][$errorMsg]")
+            try {
+                val model: Model = JsonUtil.to(record.model, Model::class.java)
+                model.stages.forEach { stage ->
+                    stage.containers.forEach { c ->
+                        if (!c.status.isNullOrBlank()) {
+                            val s = BuildStatus.valueOf(c.status!!)
+                            if (BuildStatus.isRunning(s)) {
+                                c.status = finalStatus.name
+                            }
+                        }
+                        c.elements.forEach { e ->
+                            if (!e.status.isNullOrBlank()) {
+                                val s = BuildStatus.valueOf(e.status!!)
+                                if (BuildStatus.isRunning(s)) {
+                                    e.status = finalStatus.name
+                                }
+                            }
+                        }
+                    }
+                }
+                if (errorType != null) {
+                    model.errorType = errorType.name
+                    model.errorCode = errorCode
+                    model.errorMsg = errorMsg
+                }
+
+                buildDetailDao.update(
+                    context,
+                    buildId,
+                    JsonUtil.toJson(model),
+                    finalStatus,
+                    cancelUser
+                )
+                pipelineDetailChangeEvent(buildId)
+            } catch (t: Throwable) {
+                logger.warn(
+                    "Fail to update the build end status of model ${record.model} with status $buildStatus of build $buildId",
+                    t
+                )
+            }
         }
     }
 

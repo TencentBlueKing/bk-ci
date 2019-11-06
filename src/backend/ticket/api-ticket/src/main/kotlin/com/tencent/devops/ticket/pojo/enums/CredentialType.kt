@@ -35,5 +35,45 @@ enum class CredentialType {
     SSH_PRIVATEKEY,                         // v1 = privateKey, v2=passphrase?
     TOKEN_SSH_PRIVATEKEY,                   // v1 = token, v2 = privateKey, v3=passphrase?
     TOKEN_USERNAME_PASSWORD,                // v1 = token, v2 = username, v3=password
-    COS_APPID_SECRETID_SECRETKEY_REGION     // v1 = cosappId, v2 = secretId, v3 = secretKey, v4 = region
+    COS_APPID_SECRETID_SECRETKEY_REGION; // v1 = cosappId, v2 = secretId, v3 = secretKey, v4 = region
+
+    companion object {
+        fun getKeyMap(credentialType: String): Map<String, String> {
+            val keyMap = mutableMapOf<String, String>()
+            when (credentialType) {
+                PASSWORD.name -> keyMap["v1"] = "password"
+                ACCESSTOKEN.name -> keyMap["v1"] = "access_token"
+                USERNAME_PASSWORD.name -> {
+                    keyMap["v1"] = "username"
+                    keyMap["v2"] = "password"
+                }
+                SECRETKEY.name -> keyMap["v1"] = "secretKey"
+                APPID_SECRETKEY.name -> {
+                    keyMap["v1"] = "appId"
+                    keyMap["v2"] = "secretKey"
+                }
+                SSH_PRIVATEKEY.name -> {
+                    keyMap["v1"] = "privateKey"
+                    keyMap["v2"] = "passphrase"
+                }
+                TOKEN_SSH_PRIVATEKEY.name -> {
+                    keyMap["v1"] = "token"
+                    keyMap["v2"] = "privateKey"
+                    keyMap["v3"] = "passphrase"
+                }
+                TOKEN_USERNAME_PASSWORD.name -> {
+                    keyMap["v1"] = "token"
+                    keyMap["v2"] = "username"
+                    keyMap["v3"] = "password"
+                }
+                COS_APPID_SECRETID_SECRETKEY_REGION.name -> {
+                    keyMap["v1"] = "cosappId"
+                    keyMap["v2"] = "secretId"
+                    keyMap["v3"] = "secretKey"
+                    keyMap["v4"] = "region"
+                }
+            }
+            return keyMap
+        }
+    }
 }

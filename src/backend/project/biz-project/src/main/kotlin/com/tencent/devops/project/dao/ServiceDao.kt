@@ -28,7 +28,9 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
+import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
+import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -42,7 +44,6 @@ class ServiceDao {
         with(TService.T_SERVICE) {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
-                .orderBy(WEIGHT.asc())
                 .fetch()
         }
     }
@@ -114,11 +115,12 @@ class ServiceDao {
                 SHOW_PROJECT_LIST,
                 SHOW_NAV,
                 PROJECT_ID_TYPE,
-                WEIGHT,
                 STATUS,
                 CREATED_USER,
                 CREATED_TIME,
-                DELETED
+                DELETED,
+                LOGO_URL,
+                WEB_SOCKET
             ).values(
                 serviceCreateInfo.name,
                 serviceCreateInfo.serviceTypeId,
@@ -133,11 +135,12 @@ class ServiceDao {
                 serviceCreateInfo.showProjectList,
                 serviceCreateInfo.showNav,
                 serviceCreateInfo.projectIdType,
-                serviceCreateInfo.weight,
                 serviceCreateInfo.status,
                 userId,
                 LocalDateTime.now(),
-                false
+                false,
+                serviceCreateInfo.logoUrl,
+                serviceCreateInfo.webSocket
             ).returning().fetchOne()
         }
     }
@@ -170,12 +173,25 @@ class ServiceDao {
                 .set(SHOW_NAV, serviceCreateInfo.showNav)
                 .set(PROJECT_ID_TYPE, serviceCreateInfo.projectIdType)
                 .set(STATUS, serviceCreateInfo.status)
-                .set(WEIGHT, serviceCreateInfo.weight)
+                .set(LOGO_URL, serviceCreateInfo.logoUrl)
+                .set(WEB_SOCKET, serviceCreateInfo.webSocket)
                 .set(UPDATED_USER, userId)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(ID.eq(serviceId))
                 .and(DELETED.eq(false))
                 .execute()
+            return execute > 0
+        }
+    }
+
+    fun updateUrlByName(dslContext: DSLContext, serviceUrlUpdateInfo: ServiceUrlUpdateInfo): Boolean {
+        with(TService.T_SERVICE) {
+            val execute = dslContext.update(this)
+                    .set(JS_URL, serviceUrlUpdateInfo.jsUrl)
+                    .set(CSS_URL, serviceUrlUpdateInfo.cssUrl)
+                    .where(NAME.eq(serviceUrlUpdateInfo.name))
+                    .and(DELETED.eq(false))
+                    .execute()
             return execute > 0
         }
     }
@@ -186,6 +202,35 @@ class ServiceDao {
                 .where(ID.eq(serviceId))
                 .and(DELETED.eq(false))
                 .fetchOne()
+        }
+    }
+
+    fun updateUrls(
+        dslContext: DSLContext,
+        userId: String,
+        name: String,
+        serviceUpdateUrls: ServiceUpdateUrls
+    ): Boolean {
+        with(TService.T_SERVICE) {
+            val step = dslContext.update(this)
+            if (!serviceUpdateUrls.cssUrl.isNullOrBlank()) {
+                step.set(CSS_URL, serviceUpdateUrls.cssUrl)
+            }
+            if (!serviceUpdateUrls.jsUrl.isNullOrBlank()) {
+                step.set(JS_URL, serviceUpdateUrls.jsUrl)
+            }
+            if (!serviceUpdateUrls.grayCssUrl.isNullOrBlank()) {
+                step.set(GRAY_CSS_URL, serviceUpdateUrls.grayCssUrl)
+            }
+            if (!serviceUpdateUrls.grayJsUrl.isNullOrBlank()) {
+                step.set(GRAY_JS_URL, serviceUpdateUrls.grayJsUrl)
+            }
+            val execute = step.set(UPDATED_USER, userId)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(NAME.eq(name))
+                .and(DELETED.eq(false))
+                .execute()
+            return execute > 0
         }
     }
 }

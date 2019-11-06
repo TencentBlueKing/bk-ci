@@ -26,7 +26,10 @@
 
 package com.tencent.devops.store.service.atom
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 
 interface MarketAtomStatisticService {
@@ -43,4 +46,25 @@ interface MarketAtomStatisticService {
         atomCodeList: List<String>,
         statFiledList: List<String>
     ): Result<HashMap<String, AtomStatistic>>
+
+    /**
+     * 根据插件标识获取插件关联的所有流水线列表（包括其他项目下）
+     */
+    fun getAtomPipelinesByCode(
+        atomCode: String,
+        username: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AtomPipeline>>
+
+    /**
+     * 根据插件标识获取插件关联的流水线信息（当前项目下）
+     */
+    fun getAtomPipelinesByProject(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AtomPipelineExecInfo>>
 }

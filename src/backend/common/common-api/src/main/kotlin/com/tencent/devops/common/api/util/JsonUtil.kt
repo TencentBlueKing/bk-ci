@@ -115,7 +115,7 @@ object JsonUtil {
      * @param json json字符串
      * @return 指定对象
      */
-    private fun <T> to(json: String): T {
+    fun <T> to(json: String): T {
         return getObjectMapper().readValue<T>(json, object : TypeReference<T>() {})
     }
 

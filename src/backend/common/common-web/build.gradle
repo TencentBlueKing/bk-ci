@@ -35,4 +35,5 @@ dependencies {
     compile "io.swagger:swagger-jersey2-jaxrs"
     compile "com.github.ulisesbocchio:jasypt-spring-boot-starter"
     compile "org.springframework.boot:spring-boot-starter-amqp"
+    compile('org.springframework.cloud:spring-cloud-starter-config')
 }

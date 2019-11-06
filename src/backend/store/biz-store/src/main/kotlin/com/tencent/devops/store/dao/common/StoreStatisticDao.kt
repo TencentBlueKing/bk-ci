@@ -38,6 +38,22 @@ import java.math.BigDecimal
 @Repository
 class StoreStatisticDao {
     /**
+     * 根据storeId与storeType获取组件统计数据
+     */
+    fun getStatisticByStoreId(dslContext: DSLContext, storeId: String, storeType: Byte): Record4<BigDecimal, BigDecimal, BigDecimal, String>? {
+        with(TStoreStatistics.T_STORE_STATISTICS) {
+            return dslContext.select(
+                DOWNLOADS.sum(),
+                COMMITS.sum(),
+                SCORE.sum(),
+                STORE_CODE)
+                .from(this)
+                .where(STORE_ID.eq(storeId).and(STORE_TYPE.eq(storeType)))
+                .fetchOne()
+        }
+    }
+
+    /**
      * 根据storeCode获取组件统计数据
      */
     fun getStatisticByStoreCode(

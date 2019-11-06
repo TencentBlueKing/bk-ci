@@ -33,9 +33,11 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.EnvUtils.parseEnv
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -50,6 +52,7 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
@@ -65,14 +68,11 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
-/**
- * deng
- * 17/01/2018
- */
 @Service
 class PipelineVMBuildService @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildDetailService: PipelineBuildDetailService,
+    private val measureService: MeasureService,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -152,7 +152,7 @@ class PipelineVMBuildService @Autowired constructor(
                     )
                     return BuildVariables(
                         buildId, vmSeqId, vmName,
-                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs
+                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: ""
                     )
                 }
                 vmId++
@@ -459,19 +459,65 @@ class PipelineVMBuildService @Autowired constructor(
         if (result.buildResult.isNotEmpty()) {
             logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
             try {
-                pipelineRuntimeService.batchSetVariable(buildId, result.buildResult)
+                pipelineRuntimeService.batchSetVariable(
+                    projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    variables = result.buildResult)
             } catch (ignored: Exception) {
                 // 防止因为变量字符过长而失败。做下拦截
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
             }
         }
+        logger.info("[ERRORCODE] completeClaimBuildTask <$buildId>[${result.errorType}][${result.errorCode}][${result.message}] ")
+        val errorType = if (!result.errorType.isNullOrBlank()) {
+            ErrorType.valueOf(result.errorType!!)
+        } else null
 
         val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
-        buildDetailService.pipelineTaskEnd(buildId, result.elementId, buildStatus)
+        buildDetailService.pipelineTaskEnd(
+            buildId = buildId,
+            elementId = result.elementId,
+            buildStatus = buildStatus,
+            errorType = errorType,
+            errorCode = result.errorCode,
+            errorMsg = result.message
+        )
 
+        // 发送度量数据
+        sendElementData(
+            buildId = buildId,
+            taskId = result.taskId,
+            success = result.success,
+            type = result.type,
+            errorType = result.errorType,
+            errorCode = result.errorCode,
+            errorMsg = result.message
+        )
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
-        pipelineRuntimeService.completeClaimBuildTask(buildId, result.taskId, buildInfo.startUser, buildStatus)
-        LogUtils.stopLog(rabbitTemplate, buildId, result.elementId)
+        pipelineRuntimeService.completeClaimBuildTask(
+            buildId = buildId,
+            taskId = result.taskId,
+            userId = buildInfo.startUser,
+            buildStatus = buildStatus,
+            errorType = errorType,
+            errorCode = result.errorCode,
+            errorMsg = result.message
+        )
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildElementFinishBroadCastEvent(
+                source = "build-element-${result.taskId}",
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId,
+                userId = buildInfo.startUser,
+                buildId = buildInfo.buildId,
+                elementId = result.taskId,
+                errorType = errorType?.name,
+                errorCode = result.errorCode,
+                errorMsg = result.message
+            )
+        )
+        LogUtils.stopLog(rabbitTemplate, buildId, result.elementId, result.containerId ?: "")
     }
 
     /**
@@ -500,6 +546,39 @@ class PipelineVMBuildService @Autowired constructor(
         logger.info("[$buildId]|Do the heart ($vmSeqId$vmName)")
         addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
         return true
+    }
+
+    private fun sendElementData(
+        buildId: String,
+        taskId: String,
+        success: Boolean,
+        type: String?,
+        errorType: String?,
+        errorCode: Int?,
+        errorMsg: String?
+    ) {
+        try {
+            val task = pipelineRuntimeService.getBuildTask(buildId, taskId)!!
+            val buildStatus = if (success) BuildStatus.SUCCEED else BuildStatus.FAILED
+            val atomCode = task.taskParams["atomCode"] as String? ?: ""
+            measureService.postElementDataNew(
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                taskId = taskId,
+                atomCode = atomCode,
+                name = task.taskName,
+                buildId = buildId,
+                startTime = task.startTime?.timestampmilli() ?: 0L,
+                status = buildStatus,
+                type = type!!,
+                executeCount = task.executeCount,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
+            )
+        } catch (t: Throwable) {
+            logger.warn("Fail to send the element data", t)
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

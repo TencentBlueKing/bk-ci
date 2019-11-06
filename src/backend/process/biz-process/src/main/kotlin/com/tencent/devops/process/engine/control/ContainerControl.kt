@@ -33,17 +33,19 @@ import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils.continueWhenFailure
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -69,29 +71,34 @@ class ContainerControl @Autowired constructor(
 
     fun handle(event: PipelineBuildContainerEvent) {
         with(event) {
-            val redisLock = RedisLock(redisOperation, "lock.build.$buildId.c_$containerId", 60)
+            val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
-                redisLock.lock()
-                return execute()
+                containerIdLock.lock()
+                execute()
             } finally {
-                redisLock.unlock()
+                containerIdLock.unlock()
             }
         }
     }
 
     private fun PipelineBuildContainerEvent.execute() {
-        val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId)
+        val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+            logger.warn("[$buildId]|bad container|stage=$stageId|container=$containerId")
+            return
+        }
 
         // 当build的状态是结束的时候，直接返回
-        if (container == null || BuildStatus.isFinish(container.status)) {
-            logger.warn("[$buildId]|bad container|stage=$stageId|container=$containerId")
+        if (BuildStatus.isFinish(container.status)) {
             return
         }
 
         // Container互斥组的判断
         // 并初始化互斥组的值
-        val mutexGroup = mutexControl.initMutexGroup(container.controlOption?.mutexGroup)
         val variables = pipelineRuntimeService.getAllVariable(buildId)
+        val mutexGroup = mutexControl.initMutexGroup(
+            mutexGroup = container.controlOption?.mutexGroup,
+            variables = variables
+        )
         val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
 
         if (checkIfAllSkip(buildId, stageId, container, containerTaskList, variables)) {
@@ -106,14 +113,27 @@ class ContainerControl @Autowired constructor(
             logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
             pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
             // 返回stage的时候，需要解锁
-            mutexControl.releaseContainerMutex(projectId, buildId, stageId, containerId, mutexGroup)
+            mutexControl.releaseContainerMutex(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                mutexGroup = mutexGroup
+            )
             return sendBackStage("container_skip")
         }
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
         if (!ActionType.isEnd(actionType) && container.controlOption?.jobControlOption?.enable != false) {
             val mutexResult =
-                mutexControl.checkContainerMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
+                mutexControl.checkContainerMutex(
+                    projectId = projectId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    mutexGroup = mutexGroup,
+                    container = container
+                )
             logger.info("[$buildId]|MUTEX_START|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
             when (mutexResult) {
                 ContainerMutexStatus.CANCELED -> {
@@ -159,7 +179,13 @@ class ContainerControl @Autowired constructor(
                 else -> { // 未规定的类型，打回上一级处理
                     logger.warn("[$buildId]|CONTAINER_UNKNOWN_ACTION|stage=$stageId|container=$containerId|actionType=$actionType")
                     // 返回stage的时候，需要解锁
-                    mutexControl.releaseContainerMutex(projectId, buildId, stageId, containerId, mutexGroup)
+                    mutexControl.releaseContainerMutex(
+                        projectId = projectId,
+                        buildId = buildId,
+                        stageId = stageId,
+                        containerId = containerId,
+                        mutexGroup = mutexGroup
+                    )
                     return sendBackStage("CONTAINER_UNKNOWN_ACTION")
                 }
             }
@@ -232,11 +258,17 @@ class ContainerControl @Autowired constructor(
             pipelineBuildDetailService.updateContainerStatus(buildId, containerId, containerFinalStatus)
             logger.info("[$buildId]|CONTAINER_END|stage=$stageId|container=$containerId|action=$actionType|status=$containerFinalStatus")
             // 返回stage的时候，需要解锁
-            mutexControl.releaseContainerMutex(projectId, buildId, stageId, containerId, mutexGroup)
-            return sendBackStage("CONTAINER_END_$containerFinalStatus")
+            mutexControl.releaseContainerMutex(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                mutexGroup = mutexGroup
+            )
+            sendBackStage("CONTAINER_END_$containerFinalStatus")
+        } else {
+            sendTask(waitToDoTask, actionType)
         }
-
-        return sendTask(waitToDoTask, actionType)
     }
 
     private fun taskNeedRunWhenOtherTaskFail(task: PipelineBuildTask): Boolean {
@@ -268,8 +300,19 @@ class ContainerControl @Autowired constructor(
                     LogUtils.addRedLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = task.buildId, message = "终止执行插件[${task.taskName}]!",
-                        tag = task.taskId, executeCount = task.executeCount ?: 1
+                        tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                     )
+
+                    pipelineBuildDetailService.taskEnd(
+                        buildId = task.buildId,
+                        taskId = task.taskId,
+                        buildStatus = task.status,
+                        canRetry = true,
+                        errorType = ErrorType.SYSTEM,
+                        errorCode = AtomErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                        errorMsg = "启动构建机失败"
+                    )
+
                     startVMFail = startVMFail || task.taskSeq == 0
                 }
                 BuildStatus.isFailure(task.status) -> {
@@ -367,7 +410,7 @@ class ContainerControl @Autowired constructor(
                 }
             } else if (BuildStatus.isFailure(task.status) && !continueWhenFailure(task.additionalOptions)) {
                 // 如果在待执行插件之前前面还有失败的插件，则整个设置状态失败，因为即使重试也是失败了。
-                containerFinalStatus = BuildStatus.FAILED
+                containerFinalStatus = task.status
                 if (waitToDoTask == null) {
                     startVMFail = task.taskSeq == 0
                     return Triple(waitToDoTask, containerFinalStatus, startVMFail)
@@ -488,17 +531,17 @@ class ContainerControl @Autowired constructor(
         LogUtils.addFoldStartLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId, tagName = tagName,
-            tag = task.taskId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId, message = message,
-            tag = task.taskId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         LogUtils.addFoldEndLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId, tagName = tagName,
-            tag = task.taskId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
     }
 }

@@ -48,7 +48,7 @@ object AgentEnv {
     private const val AGENT_SECRET_KEY = "devops.agent.secret.key"
     private const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
     private const val AGENT_GATEWAY = "landun.gateway"
-    private const val DOCKER_GATEWAY = "devops.gateway"
+    private const val DOCKER_GATEWAY = "devops_gateway"
     private const val AGENT_ENV = "landun.env"
 
     private var projectId: String? = null

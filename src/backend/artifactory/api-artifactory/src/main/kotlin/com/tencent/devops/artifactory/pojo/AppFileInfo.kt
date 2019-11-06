@@ -51,5 +51,7 @@ data class AppFileInfo(
     @ApiModelProperty("是否显示", required = true)
     val show: Boolean,
     @ApiModelProperty("是否可下载", required = true)
-    val canDownload: Boolean
+    val canDownload: Boolean,
+    @ApiModelProperty("版本信息", required = true)
+    val version: String? = null
 )

@@ -27,6 +27,7 @@
 package com.tencent.devops.common.api.constant
 
 const val BCI_CODE_PREFIX = "BCI_CODE_"
+const val DEVOPS = "DevOps"
 const val NUM_ONE = 1
 const val NUM_TWO = 2
 const val NUM_THREE = 3
@@ -36,12 +37,23 @@ const val NUM_SIX = 6
 const val NUM_SEVEN = 7
 const val NUM_EIGHT = 8
 const val NUM_NINE = 9
+const val INIT_VERSION = "1.0.0"
 const val BEGIN = "begin"
 const val COMMIT = "commit"
+const val BUILD = "build"
+const val CHECK = "check"
 const val TEST = "test"
+const val APPROVE = "approve"
 const val END = "end"
 const val SUCCESS = "success"
 const val UNDO = "undo"
 const val DOING = "doing"
 const val FAIL = "fail"
 const val ING = "ing"
+const val LATEST = "latest"
+const val DEVELOP = "develop"
+const val DEPLOY = "deploy"
+const val SECURITY = "security"
+const val NORMAL = "normal"
+const val EXCEPTION = "exception"
+const val NUM_UNIT = "numUnit"

@@ -27,11 +27,15 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -53,6 +57,15 @@ interface BuildDockerHostResource {
         hostTag: String
     ): Result<DockerHostBuildInfo>?
 
+    @ApiOperation("轮询结束任务")
+    @POST
+    @Path("/endBuild")
+    fun endBuild(
+        @ApiParam("dockerHost标识", required = true)
+        @QueryParam("hostTag")
+        hostTag: String
+    ): Result<DockerHostBuildInfo>?
+
     @ApiOperation("上报containerId")
     @POST
     @Path("/containerId")
@@ -65,7 +78,10 @@ interface BuildDockerHostResource {
         vmSeqId: Int,
         @ApiParam("containerId", required = true)
         @QueryParam("containerId")
-        containerId: String
+        containerId: String,
+        @ApiParam("hostTag", required = true)
+        @QueryParam("hostTag")
+        hostTag: String? = null
     ): Result<Boolean>?
 
     @ApiOperation("回滚任务到队列里面")
@@ -83,6 +99,80 @@ interface BuildDockerHostResource {
         shutdown: Boolean?
     ): Result<Boolean>?
 
+    @ApiOperation("轮询debug开始任务")
+    @POST
+    @Path("/startDebug")
+    fun startDebug(
+        @ApiParam("dockerHost标识", required = true)
+        @QueryParam("hostTag")
+        hostTag: String
+    ): Result<ContainerInfo>?
+
+    @ApiOperation("轮询debug结束任务")
+    @POST
+    @Path("/endDebug")
+    fun endDebug(
+        @ApiParam("dockerHost标识", required = true)
+        @QueryParam("hostTag")
+        hostTag: String
+    ): Result<ContainerInfo>?
+
+    @ApiOperation("上报containerId")
+    @POST
+    @Path("/reportDebugContainerId")
+    fun reportDebugContainerId(
+        @ApiParam("pipelineId", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("vmSeqId", required = true)
+        @QueryParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("containerId", required = true)
+        @QueryParam("containerId")
+        containerId: String
+    ): Result<Boolean>?
+
+    @ApiOperation("回滚debug任务到队列里面")
+    @POST
+    @Path("/rollbackDebug")
+    fun rollbackDebug(
+        @ApiParam("pipelineId", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("vmSeqId", required = true)
+        @QueryParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("shutdown", required = true)
+        @QueryParam("shutdown")
+        shutdown: Boolean? = false,
+        @ApiParam("message", required = true)
+        message: String?
+    ): Result<Boolean>?
+
+    @ApiOperation("系统监控告警")
+    @POST
+    @Path("/alert")
+    fun alert(
+        @ApiParam("级别", required = true)
+        @QueryParam("level")
+        level: AlertLevel,
+        @ApiParam("标题", required = true)
+        @QueryParam("title")
+        title: String,
+        @ApiParam("消息", required = true)
+        @QueryParam("message")
+        message: String
+    ): Result<Boolean>?
+
+    @ApiOperation("获取主机信息")
+    @GET
+    @Path("/host")
+    fun getHost(
+        @ApiParam("dockerHost标识", required = true)
+        @QueryParam("hostTag")
+        hostTag: String
+    ): Result<DockerHostInfo>?
+
     @ApiOperation("上报日志信息")
     @POST
     @Path("/log")
@@ -95,6 +185,26 @@ interface BuildDockerHostResource {
         red: Boolean,
         @ApiParam("message", required = true)
         @QueryParam("message")
-        message: String
+        message: String,
+        @ApiParam("tag", required = false)
+        @QueryParam("tag")
+        tag: String?
+    ): Result<Boolean>?
+
+    @ApiOperation("上报日志信息")
+    @POST
+    @Path("/postlog")
+    fun postLog(
+        @ApiParam("buildId", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @ApiParam("red", required = false)
+        @QueryParam("red")
+        red: Boolean,
+        @ApiParam("message", required = true)
+        message: String,
+        @ApiParam("tag", required = false)
+        @QueryParam("tag")
+        tag: String?
     ): Result<Boolean>?
 }

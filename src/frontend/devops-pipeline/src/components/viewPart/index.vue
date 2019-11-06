@@ -29,9 +29,14 @@
                         <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <!-- <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" title="到版本仓库查看"></i> -->
+                        <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" :title="$t('editPage.toArtifactory')"></i>
                         <i class="bk-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
                             @click="requestUrl(row, 'download')"></i>
+                        <i class="bk-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('editPage.mofDownload')"
+                            @click="requestUrl(row, 'download', null, 'MoF')"></i>
+                        <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('editPage.saveToCustom')" @click="copyToCustom(row)">
+                            <Logo class="icon-copy" name="copy" size="15"></Logo>
+                        </span>
                         <span class="handler-btn-tool qrcode"
                             v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
                             <i class="bk-icon icon-qrcode handler-btn"
@@ -127,11 +132,13 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     import qrcode from '@/components/devops/qrcode'
     import { convertFileSize, convertTime } from '@/utils/util'
 
     export default {
         components: {
+            Logo,
             qrcode
         },
         data () {
@@ -182,6 +189,12 @@
             },
             artifactoryUrl () {
                 return `${WEB_URL_PIRFIX}/artifactory/${this.projectId}/?pipelineId=${this.pipelineId}&buildId=${this.buildNo}`
+            },
+            isMof () {
+                return this.$store.state.curProject.deptName === '魔方工作室群'
+            },
+            isWindows () {
+                return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
             }
         },
         watch: {
@@ -255,12 +268,14 @@
 
                         this.curIndexItemUrl = res.url
                     } else {
+                        const isDevnet = await this.$store.dispatch('soda/requestDevnetGateway')
                         const res = await this.$store.dispatch('soda/requestDownloadUrl', {
                             projectId: this.projectId,
                             artifactoryType: row.artifactoryType,
                             path: row.path
                         })
-                        window.location.href = res.url
+                        const url = isDevnet ? res.url : res.url2
+                        window.location.href = type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -381,6 +396,10 @@
                 } else {
                     return value
                 }
+            },
+            isApkOrIpa (row) {
+                const type = row.name.toUpperCase().substring(row.name.lastIndexOf('.') + 1)
+                return type === 'APK' || type === 'IPA'
             },
             async copyToCustom (artifactory) {
                 let message, theme

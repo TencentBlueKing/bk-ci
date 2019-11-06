@@ -507,6 +507,14 @@
                 margin-top: 18px;
                 width: 100%;
             }
+            .markdown-editor-show.info-value {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
+                    background: #FAFBFD;
+                }
+            }
             .info-label {
                 width: 100px;
                 min-width: 100px;

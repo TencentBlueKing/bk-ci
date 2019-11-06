@@ -34,8 +34,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.api.ServiceEnvironmentResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.store.tables.records.TContainerRecord
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.dao.container.ContainerDao
@@ -47,7 +45,6 @@ import com.tencent.devops.store.pojo.container.ContainerRequest
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
-import com.tencent.devops.store.pojo.container.agent.AgentResponse
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
@@ -55,7 +52,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
 import org.springframework.util.StringUtils
 
@@ -64,22 +60,27 @@ import org.springframework.util.StringUtils
  *
  * since: 2018-12-20
  */
-@Service
-class ContainerServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val containerDao: ContainerDao,
-    private val containerResourceRelDao: ContainerResourceRelDao,
-    private val buildResourceDao: BuildResourceDao,
-    private val containerAppService: ContainerAppService,
-    private val client: Client
-) : ContainerService {
+abstract class ContainerServiceImpl @Autowired constructor() : ContainerService {
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var containerDao: ContainerDao
+    @Autowired
+    lateinit var containerResourceRelDao: ContainerResourceRelDao
+    @Autowired
+    lateinit var buildResourceDao: BuildResourceDao
+    @Autowired
+    lateinit var containerAppService: ContainerAppService
+    @Autowired
+    lateinit var client: Client
 
     private val logger = LoggerFactory.getLogger(ContainerServiceImpl::class.java)
 
     private val OSDefaultBuildType = mapOf(
+        OS.LINUX to BuildType.DOCKER,
         OS.WINDOWS to BuildType.THIRD_PARTY_AGENT_ID,
-        OS.LINUX to BuildType.THIRD_PARTY_AGENT_ID,
-        OS.MACOS to BuildType.THIRD_PARTY_AGENT_ID
+        OS.MACOS to BuildType.ESXi
     )
 
     /**
@@ -131,14 +132,13 @@ class ContainerServiceImpl @Autowired constructor(
             }
 
             logger.info("Get the os - (${it.os})")
+            val queryAllFlag = type == null && os == null // 是否查所有容器信息标识
             val typeList = mutableListOf<ContainerBuildType>()
             BuildType.values().forEach { type ->
-                if (containerOS == null || type.osList.contains(containerOS)) {
-                    if (buildTypeEnable(type, projectCode)) {
-                        typeList.add(ContainerBuildType(type.name, type.value, type.enableApp))
-                    }
+                if ((containerOS == null || type.osList.contains(containerOS)) && buildTypeEnable(type, projectCode)) {
+                        typeList.add(ContainerBuildType(type.name, type.value, type.enableApp, !clickable(type, projectCode)))
                 }
-                if (containerOS != null) {
+                if (!queryAllFlag && containerOS != null) {
                     val resource = try {
                         getResource(userId, projectCode, containerId, containerOS, type).first
                     } catch (e: Exception) {
@@ -174,66 +174,17 @@ class ContainerServiceImpl @Autowired constructor(
         return Result(dataList)
     }
 
-    /**
-     * For the pcg image, only for the enable projects
-     */
-    private fun buildTypeEnable(buildType: BuildType, projectId: String): Boolean {
-        logger.info("buildTypeEnable buildType is :$buildType,projectId is :$projectId")
-        return true
-    }
+    abstract fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean
 
-    private fun getResource(
+    abstract fun clickable(buildType: BuildType, projectCode: String): Boolean
+
+    abstract fun getResource(
         userId: String,
         projectCode: String,
         containerId: String?,
         containerOS: OS,
         buildType: BuildType
-    ): Pair<ContainerResource, ContainerResourceValue> {
-        logger.info("getResource userId is :$userId,projectCode is :$projectCode,containerId is :$containerId")
-        logger.info("getResource containerOS is :$containerOS,buildType is :$buildType")
-        val containerResourceValue: List<String>?
-        val resource = when (buildType) {
-            BuildType.THIRD_PARTY_AGENT_ENV -> {
-                val envNodeList =
-                    client.get(ServiceEnvironmentResource::class).listBuildEnvs(userId, projectCode, containerOS)
-                        .data // 第三方环境节点
-                logger.info("the envNodeList is :$envNodeList")
-
-                containerResourceValue = envNodeList?.map {
-                    it.name
-                }?.toList()
-
-                envNodeList?.map {
-                    AgentResponse(
-                        it.envHashId,
-                        it.name,
-                        "（正常: ${it.normalNodeCount}个，异常: ${it.abnormalNodeCount}个）"
-                    )
-                }?.toList()
-            }
-            BuildType.THIRD_PARTY_AGENT_ID -> {
-                val agentNodeList =
-                    client.get(ServiceThirdPartyAgentResource::class).listAgents(userId, projectCode, containerOS)
-                        .data // 第三方构建机
-                logger.info("the agentNodeList is :$agentNodeList")
-                containerResourceValue = agentNodeList?.map {
-                    it.displayName
-                }?.toList()
-                agentNodeList?.map {
-                    AgentResponse(
-                        it.agentId,
-                        it.displayName,
-                        "/${it.ip}（${it.status}）"
-                    )
-                }
-            }
-            else -> {
-                containerResourceValue = emptyList()
-                emptyList<String>()
-            }
-        }
-        return ContainerResource(resource) to ContainerResourceValue(containerResourceValue)
-    }
+    ): Pair<ContainerResource, ContainerResourceValue>
 
     /**
      * 获取容器构建资源信息

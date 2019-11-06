@@ -33,7 +33,7 @@ import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.artifactory.service.ArchiveAtomService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.pojo.atom.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream

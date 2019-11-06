@@ -44,7 +44,6 @@ function _M:get_ticket(bk_token)
     --- 发送请求
     -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
     local url = config.oauth.url
-    ngx.log(ngx.ERR, "get_ticket url: ", url)
     local res, err = httpc:request({
         path = url,
         method = "POST",

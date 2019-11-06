@@ -29,20 +29,34 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
+import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
+import com.tencent.devops.repository.service.RepositoryUserService
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
 
 @RestResource
 class ServiceRepositoryResourceImpl @Autowired constructor(
-    private val repositoryService: RepositoryService
+        private val repoFileService: RepoFileService,
+        private val repositoryService: RepositoryService,
+        private val repositoryUserService: RepositoryUserService
 ) : ServiceRepositoryResource {
 
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
@@ -94,5 +108,24 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     ): Result<Long> {
         val data = repositoryService.serviceCount(projectId, repositoryHashId ?: "", repositoryType, aliasName ?: "")
         return Result(data)
+    }
+
+    override fun hasPermissionList(userId: String, projectId: String, repositoryType: ScmType?, permission: Permission): Result<Page<RepositoryInfo>> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        val bkAuthPermission = when (permission) {
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.LIST -> AuthPermission.LIST
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.USE -> AuthPermission.USE
+        }
+        val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
+        val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
+        return Result(Page(0, 9999, result.count, result.records))
     }
 }

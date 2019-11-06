@@ -30,13 +30,13 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.ClassifyDao
-import com.tencent.devops.store.dao.template.TemplateDao
 import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.pojo.common.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.AbstractClassifyService
 import com.tencent.devops.store.service.common.ClassifyService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -51,16 +51,14 @@ import org.springframework.stereotype.Service
 @Service
 class ClassifyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val classifyDao: ClassifyDao,
-    private val atomDao: AtomDao,
-    private val templateDao: TemplateDao
+    private val classifyDao: ClassifyDao
 ) : ClassifyService {
 
     private val logger = LoggerFactory.getLogger(ClassifyServiceImpl::class.java)
 
     /**
      * 获取所有分类信息
-     * @param type 0:插件 1：模板
+     * @param type
      */
     override fun getAllClassify(type: Byte): Result<List<Classify>> {
         val classifyList = classifyDao.getAllClassify(dslContext, type).map { classifyDao.convert(it) }
@@ -162,29 +160,8 @@ class ClassifyServiceImpl @Autowired constructor(
         var flag = false
         if (null != classifyRecord) {
             val classifyType = classifyRecord.type
-            if (classifyType == StoreTypeEnum.ATOM.type.toByte()) {
-                // 允许删除分类是条件：1、该分类下的插件插件都不处于上架状态 2、该分类下的插件插件如果处于下架中或者已下架状态但已经没人在用
-                val releaseAtomNum = atomDao.countReleaseAtomNumByClassifyId(dslContext, id)
-                logger.info("the releaseAtomNum is :$releaseAtomNum")
-                if (releaseAtomNum == 0) {
-                    val undercarriageAtomNum = atomDao.countUndercarriageAtomNumByClassifyId(dslContext, id)
-                    logger.info("the undercarriageAtomNum is :$undercarriageAtomNum")
-                    if (undercarriageAtomNum == 0) {
-                        flag = true
-                    }
-                }
-            } else if (classifyType == StoreTypeEnum.TEMPLATE.type.toByte()) {
-                // 允许删除分类是条件：1、该分类下的模板都不处于上架状态 2、该分类下的模板如果处于已下架状态但已经没人在用
-                val releaseTemplateNum = templateDao.countReleaseTemplateNumByClassifyId(dslContext, id)
-                logger.info("the releaseTemplateNum is :$releaseTemplateNum")
-                if (releaseTemplateNum == 0) {
-                    val undercarriageTemplateNum = templateDao.countShelvesTemplateNumByClassifyId(dslContext, id)
-                    logger.info("the undercarriageTemplateNum is :$undercarriageTemplateNum")
-                    if (undercarriageTemplateNum == 0) {
-                        flag = true
-                    }
-                }
-            }
+            val classifyService = getStoreClassifyService(StoreTypeEnum.getStoreType(classifyType.toInt()))
+            flag = classifyService.getDeleteClassifyFlag(id)
         }
         if (flag) {
             classifyDao.delete(dslContext, id)
@@ -192,5 +169,9 @@ class ClassifyServiceImpl @Autowired constructor(
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CLASSIFY_IS_NOT_ALLOW_DELETE, false)
         }
         return Result(true)
+    }
+
+    private fun getStoreClassifyService(storeType: String): AbstractClassifyService {
+        return SpringContextUtil.getBean(AbstractClassifyService::class.java, "${storeType}_CLASSIFY_SERVICE")
     }
 }

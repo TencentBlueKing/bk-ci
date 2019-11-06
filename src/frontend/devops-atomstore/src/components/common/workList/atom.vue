@@ -63,7 +63,7 @@
                     <span class="schedule-btn"
                         v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
                             || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING'"
-                        @click="routerProgress(props.row.atomId)"> {{ $t('进度') }} </span>
+                        @click="routerProgress(props.row)"> {{ $t('进度') }} </span>
                     <span class="delete-btn" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.atomStatus) && !props.row.version" @click="deleteAtom(props.row)"> {{ $t('删除') }} </span>
                 </template>
             </bk-table-column>
@@ -124,7 +124,7 @@
                             <label class="bk-label"> {{ $t('调试项目') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%">
-                                    <big-select v-model="createAtomForm.projectCode" @selected="selectedProject" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="project_code" display-key="project_name" :placeholder="$t('请选择调试项目')">
+                                    <big-select v-model="createAtomForm.projectCode" @selected="selectedProject" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="projectCode" display-key="projectName" :placeholder="$t('请选择调试项目')">
                                         <div slot="extension" style="cursor: pointer;">
                                             <a :href="itemUrl" target="_blank">
                                                 <i class="bk-icon icon-plus-circle" />
@@ -565,12 +565,15 @@
                 })
             },
 
-            routerProgress (id) {
+            routerProgress (row) {
+                let releaseType = 'upgrade'
+                if (row.version === '1.0.0') releaseType = 'shelf'
+
                 this.$router.push({
                     name: 'releaseProgress',
                     params: {
-                        releaseType: 'shelf',
-                        atomId: id
+                        releaseType,
+                        atomId: row.atomId
                     }
                 })
             },

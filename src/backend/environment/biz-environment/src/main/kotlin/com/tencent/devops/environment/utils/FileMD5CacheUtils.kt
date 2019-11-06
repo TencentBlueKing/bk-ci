@@ -35,18 +35,47 @@ import java.io.File
 
 object FileMD5CacheUtils {
 
-    private val cache: LoadingCache<String, FileMD5> =
+    private val cache: LoadingCache<String/**File Name**/, FileMD5> =
         CacheBuilder.newBuilder().maximumSize(100).build(object : CacheLoader<String, FileMD5>() {
             override fun load(fileName: String): FileMD5 {
                 return fileMD5(fileName)
             }
         })
 
-    private fun fileMD5(fileName: String): FileMD5 {
-        val file = File(fileName)
-        val m = FileUtil.getMD5(file)
-        logger.info("Add the file(${file.absolutePath}) md5($m) to cache")
-        return FileMD5(file.lastModified(), m)
+    fun getUninstallScriptFile(os: String): File {
+        val scriptFile = File("/data1/work/thirdPartyAgent/scripts/${os.toLowerCase()}/agent_uninstall.sh")
+        if (!scriptFile.exists()) {
+            logger.warn("The uninstall script file(${scriptFile.absolutePath}) is not exist")
+            throw RuntimeException("The uninstall script file is not exist")
+        }
+        return scriptFile
+    }
+
+    fun getAgentJarFile(): File {
+        val file = File("/data1/work/thirdPartyAgent/jar/agent.jar")
+        if (!file.exists()) {
+            logger.warn("The agent file(${file.absolutePath}) is not exist")
+            throw RuntimeException("The agent file is not exist")
+        }
+        return file
+    }
+
+    fun getAgentUpgraderFile(): File {
+        val file = File("/data1/work/thirdPartyAgent/jar/upgrader.jar")
+        if (!file.exists()) {
+            logger.warn("The agent file(${file.absolutePath}) is not exist")
+            throw RuntimeException("The agent file is not exist")
+        }
+        return file
+    }
+
+    fun getJreFile(os: String): File {
+        val file = File("/data1/work/thirdPartyAgent/jre/${os.toLowerCase()}/jre.tar.gz")
+        if (!file.exists()) {
+            logger.warn("The jre file(${file.absolutePath}) is not exist")
+            throw RuntimeException("The jre file is not exist")
+        }
+        return file
     }
 
     fun getFileMD5(file: File): String {
@@ -65,6 +94,13 @@ object FileMD5CacheUtils {
         } catch (ignored: Exception) {
             fileMD5(file.absolutePath).md5
         }
+    }
+
+    private fun fileMD5(fileName: String): FileMD5 {
+        val file = File(fileName)
+        val m = FileUtil.getMD5(file)
+        logger.info("Add the file(${file.absolutePath}) md5($m) to cache")
+        return FileMD5(file.lastModified(), m)
     }
 
     data class FileMD5(

@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.ServiceImageManageResource
+import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import net.coobird.thumbnailator.Thumbnails

@@ -51,5 +51,6 @@ interface Project {
     ccAppName?: string
     approvalStatus?: number
     enabled?: boolean
+    logoAddr?: string
     gray?: boolean
 }

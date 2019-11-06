@@ -28,14 +28,17 @@ package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.process.pojo.ErrorType
 import java.time.LocalDateTime
 
 data class PipelineBuildTask(
     val projectId: String,
     val pipelineId: String,
+    val templateId: String? = null,
     val buildId: String,
     val stageId: String,
     val containerId: String,
+    val containerHashId: String?,
     val containerType: String,
     val taskSeq: Int,
     val taskId: String,
@@ -50,7 +53,10 @@ data class PipelineBuildTask(
     val approver: String?,
     var subBuildId: String?,
     val startTime: LocalDateTime? = null,
-    val endTime: LocalDateTime? = null
+    val endTime: LocalDateTime? = null,
+    var errorType: ErrorType? = null,
+    var errorCode: Int? = null,
+    var errorMsg: String? = null
 ) {
     fun getTaskParam(paramName: String): String {
         return if (taskParams[paramName] != null) {

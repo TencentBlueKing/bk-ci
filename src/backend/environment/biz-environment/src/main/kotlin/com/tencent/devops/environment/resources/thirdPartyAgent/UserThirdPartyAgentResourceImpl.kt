@@ -46,10 +46,12 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserThirdPartyAgentResourceImpl @Autowired constructor(
-    private val thirdPartyAgentMgrService: ThirdPartyAgentMgrService,
+    private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val slaveGatewayService: SlaveGatewayService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
+        checkUserId(userId)
+        checkProjectId(projectId)
         return Result(true)
     }
 
@@ -61,7 +63,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<ThirdPartyAgentLink> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentMgrService.generateAgent(userId, projectId, os, zoneName))
+        return Result(thirdPartyAgentService.generateAgent(userId, projectId, os, zoneName))
     }
 
     override fun getGateway(userId: String, projectId: String, os: OS): Result<List<SlaveGateway>> {
@@ -74,13 +76,13 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkAgentId(nodeId)
-        return Result(thirdPartyAgentMgrService.getAgentLink(userId, projectId, nodeId))
+        return Result(thirdPartyAgentService.getAgentLink(userId, projectId, nodeId))
     }
 
     override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentMgrService.listAgents(userId, projectId, os))
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
     }
 
     override fun getAgentStatus(
@@ -91,30 +93,35 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkAgentId(agentId)
-        return Result(thirdPartyAgentMgrService.getAgentStatusWithInfo(userId, projectId, agentId))
+        return Result(thirdPartyAgentService.getAgentStatusWithInfo(userId, projectId, agentId))
     }
 
     override fun importAgent(userId: String, projectId: String, agentId: String): Result<Boolean> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkAgentId(agentId)
-        thirdPartyAgentMgrService.importAgent(userId, projectId, agentId)
+        thirdPartyAgentService.importAgent(userId, projectId, agentId)
         return Result(true)
     }
 
-    override fun deleteAgent(userId: String, projectId: String, nodeId: String): Result<Boolean> {
-        checkUserId(userId)
-        checkProjectId(projectId)
-        checkAgentId(nodeId)
-        thirdPartyAgentMgrService.deleteAgent(userId, projectId, nodeId)
-        return Result(true)
-    }
-
-    override fun saveAgentEnvs(userId: String, projectId: String, nodeHashId: String, envs: List<EnvVar>): Result<Boolean> {
+    override fun deleteAgent(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        thirdPartyAgentMgrService.saveAgentEnv(userId, projectId, nodeHashId, envs)
+        thirdPartyAgentService.deleteAgent(userId, projectId, nodeHashId)
+        return Result(true)
+    }
+
+    override fun saveAgentEnvs(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        envs: List<EnvVar>
+    ): Result<Boolean> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        thirdPartyAgentService.saveAgentEnv(userId, projectId, nodeHashId, envs)
         return Result(true)
     }
 
@@ -122,60 +129,101 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentMgrService.getAgentEnv(projectId, nodeHashId))
+        return Result(thirdPartyAgentService.getAgentEnv(projectId, nodeHashId))
     }
 
-    override fun setAgentParallelTaskCount(userId: String, projectId: String, nodeHashId: String, parallelTaskCount: Int): Result<Boolean> {
+    override fun setAgentParallelTaskCount(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        parallelTaskCount: Int
+    ): Result<Boolean> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        thirdPartyAgentMgrService.setParallelTaskCount(userId, projectId, nodeHashId, parallelTaskCount)
+        thirdPartyAgentService.setParallelTaskCount(userId, projectId, nodeHashId, parallelTaskCount)
         return Result(true)
     }
 
-    override fun getThirdPartyAgentDetail(userId: String, projectId: String, nodeHashId: String): Result<ThirdPartyAgentDetail?> {
+    override fun getThirdPartyAgentDetail(
+        userId: String,
+        projectId: String,
+        nodeHashId: String
+    ): Result<ThirdPartyAgentDetail?> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentMgrService.getAgentDetail(userId, projectId, nodeHashId))
+        return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, nodeHashId))
     }
 
-    override fun listAgentBuilds(userId: String, projectId: String, nodeHashId: String, page: Int?, pageSize: Int?): Result<Page<AgentBuildDetail>> {
+    override fun listAgentBuilds(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentMgrService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+        return Result(thirdPartyAgentService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
     }
 
-    override fun listAgentActions(userId: String, projectId: String, nodeHashId: String, page: Int?, pageSize: Int?): Result<Page<ThirdPartyAgentAction>> {
+    override fun listAgentActions(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<ThirdPartyAgentAction>> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentMgrService.listAgentActions(userId, projectId, nodeHashId, page, pageSize))
+        return Result(thirdPartyAgentService.listAgentActions(userId, projectId, nodeHashId, page, pageSize))
     }
 
-    override fun queryCpuUsageMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+    override fun queryCpuUsageMetrix(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentMgrService.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(thirdPartyAgentService.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
-    override fun queryMemoryUsageMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+    override fun queryMemoryUsageMetrix(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentMgrService.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(thirdPartyAgentService.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
-    override fun queryDiskioMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+    override fun queryDiskioMetrix(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentMgrService.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(thirdPartyAgentService.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
-    override fun queryNetMetrix(userId: String, projectId: String, nodeHashId: String, timeRange: String): Result<Map<String, List<Map<String, Any>>>> {
+    override fun queryNetMetrix(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        timeRange: String
+    ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentMgrService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(thirdPartyAgentService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     private fun checkUserId(userId: String) {

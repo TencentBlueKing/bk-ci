@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.BuildCommitResource
 import com.tencent.devops.repository.pojo.commit.CommitData
+import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.service.CommitService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -44,11 +45,17 @@ class BuildCommitResourceImpl @Autowired constructor(
     }
 
     override fun getLatestCommit(
-        pipelineId: String,
-        elementId: String,
-        repositoryId: String,
-        repositoryType: RepositoryType?
-    ): Result<CommitData?> {
-        return Result(commitService.getLatestCommit(pipelineId, elementId, repositoryId, repositoryType))
+            pipelineId: String,
+            elementId: String,
+            repositoryId: String,
+            repositoryType: RepositoryType?,
+            page: Int?,
+            pageSize: Int?
+    ): Result<List<CommitData>> {
+        return Result(commitService.getLatestCommit(pipelineId, elementId, repositoryId, repositoryType, page, pageSize))
+    }
+
+    override fun getCommitsByBuildId(buildId: String, agentId: String): Result<List<CommitResponse>> {
+        return Result(commitService.getCommit(buildId))
     }
 }

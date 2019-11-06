@@ -39,7 +39,7 @@ data class Category(
     val categoryName: String,
     @ApiModelProperty("icon地址", required = false)
     val iconUrl: String?,
-    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板", required = true)
+    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val categoryType: String,
     @ApiModelProperty("创建日期")
     val createTime: Long = 0,
