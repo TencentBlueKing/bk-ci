@@ -223,21 +223,20 @@ class TaskAtomService @Autowired constructor(
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
                 )
-            }
-
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildElementFinishBroadCastEvent(
-                    source = "build-element-${task.taskId}",
-                    projectId = task.projectId,
-                    pipelineId = task.pipelineId,
-                    userId = "",
-                    buildId = task.buildId,
-                    elementId = task.taskId,
-                    errorType = if (task.errorType == null) null else task.errorType!!.name,
-                    errorCode = task.errorCode,
-                    errorMsg = task.errorMsg
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildElementFinishBroadCastEvent(
+                        source = "build-element-${task.taskId}",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        userId = "",
+                        buildId = task.buildId,
+                        elementId = task.taskId,
+                        errorType = if (task.errorType == null) null else task.errorType!!.name,
+                        errorCode = task.errorCode,
+                        errorMsg = task.errorMsg
+                    )
                 )
-            )
+            }
             return atomResponse
         }
     }
