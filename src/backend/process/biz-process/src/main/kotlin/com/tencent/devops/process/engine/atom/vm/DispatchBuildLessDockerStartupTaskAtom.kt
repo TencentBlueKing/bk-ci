@@ -50,7 +50,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
-import com.tencent.devops.process.engine.pojo.event.monitor.PipelineContainerStartupEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.AtomErrorCode
@@ -187,13 +186,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 executeCount = task.executeCount
             ),
             PipelineContainerAgentHeartBeatEvent(
-                source, projectId, pipelineId, task.starter, buildId, task.containerId
-            ),
-            PipelineContainerStartupEvent(
-                source, projectId, pipelineId,
-                task.starter, buildId, task.containerId, osType, dispatchType.buildType(),
-                checkStartup = true,
-                checkExecute = false
+                source = source,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = task.starter,
+                buildId = buildId,
+                containerId = task.containerId
             )
         )
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
