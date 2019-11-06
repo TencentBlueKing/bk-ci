@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.store.service.atom.impl.BkAtomCooperationServiceImpl
 import com.tencent.devops.store.service.atom.impl.BkAtomMemberServiceImpl
 import com.tencent.devops.store.service.atom.impl.BkAtomNotifyServiceImpl
@@ -39,7 +38,6 @@ import com.tencent.devops.store.service.container.impl.BkContainerServiceImpl
 import com.tencent.devops.store.service.template.impl.BkMarketTemplateServiceImpl
 import com.tencent.devops.store.service.template.impl.BkTemplateNotifyServiceImpl
 import com.tencent.devops.store.service.template.impl.BkTemplateReleaseServiceImpl
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -81,7 +79,4 @@ class BkServiceConfig {
 
     @Bean
     fun templateReleaseService() = BkTemplateReleaseServiceImpl()
-
-    @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 }
