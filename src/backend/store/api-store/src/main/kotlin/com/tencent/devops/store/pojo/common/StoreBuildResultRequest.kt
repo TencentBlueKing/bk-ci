@@ -36,6 +36,6 @@ data class StoreBuildResultRequest(
     val userId: String,
     @ApiModelProperty("流水线构建状态", required = true)
     val buildStatus: BuildStatus,
-    @ApiModelProperty("构建参数", required = true)
-    val buildParams: Map<String, String>
+    @ApiModelProperty("组件ID", required = true)
+    val storeId: String
 )

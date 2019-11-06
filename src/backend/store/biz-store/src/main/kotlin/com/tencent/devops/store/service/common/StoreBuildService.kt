@@ -27,13 +27,27 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 
 interface StoreBuildService {
 
+    /**
+     * 处理构建结果
+     */
     fun handleStoreBuildResult(
         pipelineId: String,
         buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean>
+
+    /**
+     * 处理构建状态
+     */
+    fun handleStoreBuildStatus(
+        userId: String,
+        buildId: String,
+        pipelineId: String,
+        status: BuildStatus
     ): Result<Boolean>
 }
