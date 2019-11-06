@@ -65,13 +65,13 @@ class LunaService @Autowired constructor(
             val files = jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
             if (files.isEmpty()) {
                 logger.error("No file matches the regex: $fileParams")
-                LogUtils.addLine(rabbitTemplate, fileParams.buildId, "没有匹配到文件", fileParams.elementId, fileParams.executeCount)
+                LogUtils.addLine(rabbitTemplate, fileParams.buildId, "没有匹配到文件", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                 throw RuntimeException("上传到LUNA失败，没有匹配到文件")
             }
             files.forEach { zipFile ->
                 logger.info("zipFile name:${zipFile.name}, decompress to ${zipFile.parent}/temp/}")
                 LogUtils.addLine(rabbitTemplate, fileParams.buildId, "匹配到文件：${zipFile.name}，将自动解压后上传LUNA",
-                    fileParams.elementId, fileParams.executeCount)
+                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                 val zipFileDecompressPath = "${zipFile.parent}/temp/"
                 try {
                     FileUtil.unzipFile(zipFile.canonicalPath, zipFileDecompressPath)
@@ -89,7 +89,7 @@ class LunaService @Autowired constructor(
                             .forEachIndexed { index, file ->
                                 logger.info("Upload file to luna, fileName: ${file.name}")
                                 LogUtils.addLine(rabbitTemplate, fileParams.buildId, "准备上传第${index + 1}个文件，文件名称: ${file.name}",
-                                    fileParams.elementId, fileParams.executeCount)
+                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                                 val request = with(lunaUploadParam) {
                                     val mediaType = MediaType.parse("application/octet-stream")
                                     val requestBody = object : RequestBody() {
@@ -134,7 +134,7 @@ class LunaService @Autowired constructor(
                                     }
                                 }
                                 LogUtils.addLine(rabbitTemplate, fileParams.buildId, "第${index + 1}个文件上传成功",
-                                    fileParams.elementId, fileParams.executeCount)
+                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                             }
                 } finally {
                     zipFile.deleteRecursively()
@@ -144,7 +144,7 @@ class LunaService @Autowired constructor(
         } catch (e: Exception) {
             logger.info("Upload file to luna failed, exception:", e)
             LogUtils.addLine(rabbitTemplate, fileParams.buildId, "上传到LUNA失败，异常信息：${e.message}",
-                fileParams.elementId, fileParams.executeCount)
+                fileParams.elementId, fileParams.containerId, fileParams.executeCount)
             throw RuntimeException("上传到LUNA失败，错误信息：${e.message}")
         } finally {
             tmpFolder.deleteRecursively()

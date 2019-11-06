@@ -33,5 +33,6 @@ data class ArtifactorySearchParam(
     val regexPath: String,
     val custom: Boolean,
     val executeCount: Int = 1, // 打印日志用到
-    val elementId: String = "" // 打印日志用到
+    val elementId: String = "", // 打印日志用到
+    val containerId: String = "" // 打印日志用到
 )
