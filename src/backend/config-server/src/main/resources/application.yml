@@ -7,18 +7,20 @@ spring:
     config:
       server:
         git:
-          uri: file:///data1/work/config/devops-config
-          search-paths: config
-          default-label: develop
+          uri: file:///Users/rdeng/work/codes/devops-config
+          search-paths:
+            - config-server
+            - "config-server/{application}"
+          default-label: dev-gray
     consul:
       discovery:
         tags: dev
-#  cloud:
-#    config:
-#      server:
-#        git:
-#          uri: http://git.code.oa.com/bkdevops/devops-config.git     # 配置git仓库的地址
-#          search-paths: config                             # git仓库地址下的相对地址，可以配置多个，用,分割。
-#          username: devops                                             # git仓库的账号
-#          password: V2K-H56-ug4-WUT                                              # git仓库的密码
-#          default-label: develop
+
+---
+spring:
+  profiles: dev-gray
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///data1/work/config/devops-config
