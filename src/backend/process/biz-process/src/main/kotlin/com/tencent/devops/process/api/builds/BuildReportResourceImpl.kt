@@ -28,6 +28,7 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +47,8 @@ class BuildReportResourceImpl @Autowired constructor(
         taskId: String,
         indexFile: String,
         name: String,
-        reportType: ReportTypeEnum
+        reportType: ReportTypeEnum,
+        reportEmail: ReportEmail?
     ): Result<Boolean> {
         reportService.create(
             projectId = projectId,
@@ -55,7 +57,8 @@ class BuildReportResourceImpl @Autowired constructor(
             taskId = taskId,
             indexFile = indexFile,
             name = name,
-            reportType = reportType
+            reportType = reportType,
+            reportEmail = reportEmail
         )
         return Result(true)
     }
