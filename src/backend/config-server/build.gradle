@@ -29,3 +29,5 @@ dependencies {
     compile ("org.springframework.cloud:spring-cloud-config-server")
     compile project(":common:common-web")
 }
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

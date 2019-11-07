@@ -245,6 +245,7 @@ subprojects {
                 entry "spring-cloud-starter-consul-discovery"
                 entry "spring-cloud-starter-consul-core"
                 entry "spring-cloud-starter-config"
+                entry "spring-cloud-config-server"
             }
             dependencySet(group: "io.swagger", version: "$swaggerVersion") {
                 entry "swagger-annotations"
