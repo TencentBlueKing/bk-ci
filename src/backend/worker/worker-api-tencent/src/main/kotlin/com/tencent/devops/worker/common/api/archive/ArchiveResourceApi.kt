@@ -26,13 +26,8 @@
 
 package com.tencent.devops.worker.common.api.archive
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
@@ -49,9 +44,13 @@ import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Paths
 
 @ApiPriority(priority = 9)
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
+
+    private val jfrogResourceApi = JfrogResourceApi()
 
     override fun getFileDownloadUrls(
         pipelineId: String,
@@ -59,32 +58,18 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         fileType: FileTypeEnum,
         customFilePath: String?
     ): List<String> {
-        val purePath = if (customFilePath != null) {
-            purePath(customFilePath).toString()
-        } else {
-            customFilePath
-        }
+        val result = mutableListOf<String>()
+        val data = jfrogResourceApi.getAllFiles(buildId, pipelineId, buildId)
 
-        val artifactoryType = when (fileType) {
-            FileTypeEnum.BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            FileTypeEnum.BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
+        LoggerService.addNormalLine("scan file($customFilePath) in repo...")
+        val matcher = FileSystems.getDefault()
+            .getPathMatcher("glob:" + customFilePath)
+        data.files.forEach { jfrogFile ->
+            if (matcher.matches(Paths.get(jfrogFile.uri.removePrefix("/")))) {
+                result.add(jfrogFile.uri)
+            }
         }
-        val url =
-            "/ms/artifactory/api/build/artifactories/pipeline/$pipelineId/build/$buildId/file/download/urls/get?fileType=$fileType&customFilePath=$purePath"
-        val request = buildGet(url)
-        val response = request(request, "获取下载链接请求出错")
-        val result = try {
-            objectMapper.readValue<Result<GetFileDownloadUrlsResponse?>>(response)
-        } catch (ignored: Exception) {
-            LoggerService.addNormalLine(ignored.message ?: "")
-            throw RemoteServiceException("archive fail: $response")
-        }
-        if (result.isNotOk()) {
-            throw RemoteServiceException(result.message ?: "获取下载链接请求出错，${result.status.toLong()}")
-        }
-
-        return result.data?.fileUrlList ?: emptyList()
+        return result
     }
 
     override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
@@ -143,21 +128,13 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     }
 
     override fun downloadCustomizeFile(uri: String, destPath: File) {
-        val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
-            uri
-        } else {
-            "/ms/artifactory/api/build/artifactories/file/archive/download?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$uri"
-        }
+        val url = "/jfrog/storage/build/custom$uri"
         val request = buildGet(url)
         download(request, destPath)
     }
 
     override fun downloadPipelineFile(pipelineId: String, buildId: String, uri: String, destPath: File) {
-        val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
-            uri
-        } else {
-            "/ms/artifactory/api/build/artifactories/file/archive/download?fileType=${FileTypeEnum.BK_ARCHIVE}&customFilePath=$uri"
-        }
+        val url = "/jfrog/storage/build/archive/$pipelineId/$buildId$uri"
         val request = buildGet(url)
         download(request, destPath)
     }
