@@ -174,7 +174,7 @@ class CodeTGitScmImpl constructor(
         }
         try {
             gitApi.addCommitCheck(
-                host = CODE_TGIT_URL,
+                host = gitConfig.tGitApiUrl,
                 token = token,
                 projectName = projectName,
                 commitId = commitId,
