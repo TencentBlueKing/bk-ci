@@ -24,3 +24,28 @@ spring:
       server:
         git:
           uri: file:///data1/work/config/devops-config
+
+---
+spring:
+  profiles: prod
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///data/bkci/config/devops-config
+          default-label: prod
+    consul:
+      discovery:
+        tags: prod
+
+server:
+  port: 21937
+
+---
+spring:
+  profiles: prod-gray
+  cloud:
+    config:
+      server:
+        git:
+          default-label: prod-gray
