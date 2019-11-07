@@ -48,7 +48,7 @@ class RepostioryScmServiceImpl @Autowired constructor(
     private val client: Client
 ):RepostioryScmService{
     override fun getProject(accessToken: String, userId: String):List<Project> {
-        return client.get(ServiceGitResource::class).getProject(accessToken, userId).data ?: listOf()
+        return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: listOf()
     }
 
     override fun getAuthUrl(authParamJsonStr: String): String {
@@ -56,16 +56,16 @@ class RepostioryScmServiceImpl @Autowired constructor(
     }
 
     override fun getToken(userId: String, code: String): GitToken {
-        return client.get(ServiceGitResource::class).getToken(userId, code).data
+        return client.getScm(ServiceGitResource::class).getToken(userId, code).data
                 ?: throw RuntimeException("get token fail")
     }
 
     override fun getRedirectUrl(redirectUrlType: String): String {
-        return client.get(ServiceGitResource::class).getRedirectUrl(redirectUrlType).data ?: ""
+        return client.getScm(ServiceGitResource::class).getRedirectUrl(redirectUrlType).data ?: ""
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): GitToken {
-        return client.get(ServiceGitResource::class).refreshToken(userId, accessToken).data!!
+        return client.getScm(ServiceGitResource::class).refreshToken(userId, accessToken).data!!
     }
 
     override fun getSvnFileContent(url: String, userId: String, svnType: String, filePath: String, reversion: Long, credential1: String, credential2: String?): String {

@@ -47,7 +47,7 @@ class WebSocketListener @Autowired constructor(
     }
 
     override fun execute(event: SendMessage) {
-        logger.info("WebSocketListener: user:${event.userId},page:${event.page},notifyPost:${event.notifyPost},sessionList:${event.sessionList}")
+        logger.info("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
         try {
             val sessionList = event.sessionList
             if (sessionList != null && sessionList.isNotEmpty()) {
@@ -56,6 +56,8 @@ class WebSocketListener @Autowired constructor(
                             "/topic/bk/notify/$session",
                             objectMapper.writeValueAsString(event.notifyPost))
                 }
+            } else{
+                logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
         } catch (ex: Exception) {
             logger.error("webSocketListener error", ex)
