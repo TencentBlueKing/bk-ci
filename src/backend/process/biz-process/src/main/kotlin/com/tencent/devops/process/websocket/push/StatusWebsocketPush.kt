@@ -117,7 +117,7 @@ data class StatusWebsocketPush(
 
             if (notifyPost != null) {
                 notifyPost.message = objectMapper.writeValueAsString(result)
-                logger.info("StatusWebsocketPush message: $notifyPost")
+//                logger.info("StatusWebsocketPush message: $notifyPost")
             }
         }
     }

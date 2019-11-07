@@ -49,7 +49,7 @@ class WebSocketDispatcher(
                 val mqMessage = event.buildMqMessage()
                 if (mqMessage?.sessionList != null && mqMessage.sessionList!!.isNotEmpty()) {
                     event.buildNotifyMessage(mqMessage)
-                    logger.info("[WebsocketDispatcher]:mqMessageType:${mqMessage.javaClass},mqMessage:$mqMessage")
+                    logger.info("[WebsocketDispatcher]:mqMessageType:${mqMessage.javaClass},page:${mqMessage.page}, sessionList:${mqMessage.sessionList}")
                     rabbitTemplate.convertAndSend(eventType.exchange, routeKey, mqMessage) { message ->
                         if (eventType.delayMills > 0) { // 事件类型固化默认值
                             message.messageProperties.setHeader("x-delay", eventType.delayMills)
@@ -58,7 +58,7 @@ class WebSocketDispatcher(
                     }
                 } else {
                     val sessionList = RedisUtlis.getSessionListFormPageSessionByPage(event.redisOperation, event.page?: "")
-                    logger.info("page:${event.page},sessionList:$sessionList, have new message,bug nobody load page, notifyPost:${event.notifyPost}")
+                    logger.debug("page:${event.page},sessionList:$sessionList,bug nobody load page")
                 }
             }
         } catch (e: Exception) {

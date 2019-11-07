@@ -81,7 +81,7 @@ data class HistoryWebsocketPush(
             if (notifyPost != null) {
                 message.put("pipelineId", pipelineId!!)
                 notifyPost.message = objectMapper.writeValueAsString(message)
-                logger.info("HistoryWebsocketPush message: $notifyPost")
+//                logger.info("HistoryWebsocketPush message: $notifyPost")
             }
         } catch (e: Exception) {
             logger.error("HistoryWebSocketMessage:buildMessage error. message:${e.message}")
