@@ -83,7 +83,8 @@
     "atomDebug": {
         "title": "研发商店插件前端task.json在线调试",
         "inputTips": "请在此输入正确的task.json内容...",
-        "outputErrTips": "task.json格式错误"
+        "outputErrTips": "task.json格式错误",
+        "taskJsonEmpty": "task.json内容为空"
     },
     "group": {
         "labelInputTips": "请输入标签名称,按Enter键确定",
@@ -357,7 +358,7 @@
         "executeDetail": "执行详情",
         "partView": "查看构件",
         "codeRecords": "代码变更记录",
-        "outputReport": "产出物报告",
+        "outputReport": "产出物报告"
         "canceller": "取消人",
         "executor": "执行人",
         "executionTime": "执行耗时",
@@ -394,6 +395,8 @@
         }
     },
     "editPage": {
+        "devopsImg": "蓝盾自有镜像",
+        "thirdImg": "第三方镜像",
         "baseSetting": "基础设置",
         "saving": "正在保存",
         "selectJob": "请选择Job类型",
@@ -428,7 +431,7 @@
         "assignResource": "指定构建资源",
         "imageTicket": "镜像对应凭证",
         "workspace": "指定工作空间",
-        "worpspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/",
+        "workspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/",
         "envDependency": "依赖编译环境",
         "envDependencyTips": "在选择了上述依赖环境后，我们将执行如下操作",
         "abnormal": "异常",

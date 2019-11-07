@@ -179,11 +179,11 @@
                 DOCS_URL_PREFIX,
                 imageTypeList: [
                     {
-                        label: '蓝盾自有镜像',
+                        label: this.$t('editPage.devopsImg'),
                         value: 'BKDEVOPS'
                     },
                     {
-                        label: '第三方镜像',
+                        label: this.$t('editPage.thirdImg'),
                         value: 'THIRD'
                     }
                 ]

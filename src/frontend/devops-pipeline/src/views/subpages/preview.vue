@@ -172,12 +172,17 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+            this.setPipeline()
+            this.setPipelineEditing(false)
+
             bus.$off('start-execute', this.getExecuteParams)
         },
         methods: {
             ...mapActions('atom', [
                 'togglePropertyPanel',
-                'requestPipeline'
+                'requestPipeline',
+                'setPipeline',
+                'setPipelineEditing'
             ]),
             getStageByIndex (stageIndex) {
                 const { getStage, pipeline } = this
@@ -318,6 +323,9 @@
             }
             .global-params {
                 margin-bottom: 30px;
+                .bk-form-content {
+                    position: relative;
+                }
                 .bk-form-help {
                     position: absolute;
                     top: 36px;
