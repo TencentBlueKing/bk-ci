@@ -33,7 +33,7 @@ spring:
       server:
         git:
           uri: file:///data/bkci/config/devops-config
-          default-label: prod
+          default-label: master
     consul:
       discovery:
         tags: prod
