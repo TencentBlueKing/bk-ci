@@ -89,7 +89,7 @@ data class StoreWebsocketPush(
     override fun buildNotifyMessage(message: SendMessage) {
         val notifyPost = message.notifyPost
         try {
-            val modelDetail = atomReleaseService.getProcessInfo(userId, atomId)
+            val modelDetail = atomReleaseService.getProcessInfo(userId, atomId).data
             if (notifyPost != null) {
                 notifyPost.message = objectMapper.writeValueAsString(modelDetail)
                 logger.info("StoreWebsocketPush message: $notifyPost")
