@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
     ApiFactory.init()
     TaskFactory.init()
     val buildType = System.getProperty(BUILD_TYPE)
-    when(buildType) {
+    when (buildType) {
         BuildType.DOCKER.name ->
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
@@ -83,4 +83,3 @@ fun main(args: Array<String>) {
         }
     }
 }
-
