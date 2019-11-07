@@ -51,7 +51,7 @@ class CodeGitScmImpl constructor(
     private val event: String? = null
 ) : IScm {
 
-    private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitUrl, repoUrl = url)
+    private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitApiUrl, repoUrl = url)
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
