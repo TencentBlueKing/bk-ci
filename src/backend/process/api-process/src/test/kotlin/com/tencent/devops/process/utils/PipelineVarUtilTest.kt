@@ -55,7 +55,7 @@ class PipelineVarUtilTest {
     fun oldVarToNewVar() {
         assertEquals(PIPELINE_START_USER_NAME, PipelineVarUtil.oldVarToNewVar("pipeline.start.user.name"))
         assertEquals(PIPELINE_START_TYPE, PipelineVarUtil.oldVarToNewVar("pipeline.start.type"))
-        assertEquals(PIPELINE_BUILD_NUM, PipelineVarUtil.oldVarToNewVar("pipeline.start.num"))
+        assertEquals(PIPELINE_BUILD_NUM, PipelineVarUtil.oldVarToNewVar("pipeline.build.num"))
         assertEquals(PIPELINE_WEBHOOK_REVISION, PipelineVarUtil.oldVarToNewVar("hookRevision"))
         assertEquals(PIPELINE_WEBHOOK_BRANCH, PipelineVarUtil.oldVarToNewVar("hookBranch"))
         assertEquals(PIPELINE_WEBHOOK_SOURCE_BRANCH, PipelineVarUtil.oldVarToNewVar("hookSourceBranch"))
@@ -77,7 +77,7 @@ class PipelineVarUtilTest {
     fun newVarToOldVar() {
         assertEquals("pipeline.start.user.name", PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_NAME))
         assertEquals("pipeline.start.type", PipelineVarUtil.newVarToOldVar(PIPELINE_START_TYPE))
-        assertEquals("pipeline.start.num", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_NUM))
+        assertEquals("pipeline.build.num", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_NUM))
         assertEquals("hookRevision", PipelineVarUtil.newVarToOldVar(PIPELINE_WEBHOOK_REVISION))
         assertEquals("hookBranch", PipelineVarUtil.newVarToOldVar(PIPELINE_WEBHOOK_BRANCH))
         assertEquals("hookSourceBranch", PipelineVarUtil.newVarToOldVar(PIPELINE_WEBHOOK_SOURCE_BRANCH))
