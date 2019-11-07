@@ -358,4 +358,5 @@ include ":openapi:boot-openapi"
 include ":openapi:boot-openapi-tencent"
 include ":openapi:model-openapi"
 include ":openapi:model-openapi-tencent"
+include ":config-server"
 
