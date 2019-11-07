@@ -108,13 +108,6 @@ class Client @Autowired constructor(
     @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
     private val assemblyServiceName: String? = null
 
-    @Value("\${scm.ip:#{null}}")
-    private val scmIp: String? = null
-
-    private val scmIpList = ArrayList<String>()
-
-    private var hasParseScmIp = false
-
     @Value("\${service-suffix:#{null}}")
     private val serviceSuffix: String? = null
 
@@ -173,42 +166,6 @@ class Client @Autowired constructor(
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
         return getGateway(clz, GatewayType.IDC_PROXY)
-    }
-
-    private fun chooseScm(): String {
-        parseScmIp()
-        if (scmIpList.isEmpty()) {
-            throw RuntimeException("The scm ip($scmIp) is not config")
-        }
-
-        val copy = ArrayList(scmIpList)
-        copy.shuffle()
-        return copy[0]
-    }
-
-    private fun parseScmIp() {
-        if (hasParseScmIp) {
-            return
-        }
-        synchronized(scmIpList) {
-            if (hasParseScmIp) {
-                return
-            }
-            if (scmIp.isNullOrEmpty()) {
-                logger.warn("The scm ip is empty")
-            } else {
-                scmIp!!.split(",").forEach {
-                    val ip = it.trim()
-                    if (ip.isEmpty()) {
-                        logger.warn("Contain blank scm ip in configuration")
-                        return@forEach
-                    }
-                    logger.info("Adding the scm ip($ip)")
-                    scmIpList.add(ip)
-                }
-            }
-            hasParseScmIp = true
-        }
     }
 
     fun <T : Any> getImpl(clz: KClass<T>): T {
