@@ -17,47 +17,8 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local _M = {}
-
---[[获取客户端的IP地址]]
-function _M:clientIp()
-  local headers=ngx.req.get_headers()
-  local ip=headers["X-DEVOPS-REAL-IP"] or headers["X-REAL-IP"] or headers["X_FORWARDED_FOR"] or ngx.var.remote_addr or "0.0.0.0"
-  return ip
+if ngx.var.http_x_devops_real_ip == nil then
+  return ngx.var.remote_addr
+else
+  return ngx.var.http_x_devops_real_ip
 end
-
---[[判断IP是否在名名单中]]
-function _M:isInWhiteList(whiteList)
-  local headers=ngx.req.get_headers()
-  local result = false
-  local clientIp = ""
-  -- 将白名单转为table格式
-  if type(whiteList) == "string" then
-    whiteList = {whiteList}
-  end
-  -- 判断X-DEVOPS-REAL-IP是否在名单中（单IP）
-  clientIp = headers["X-DEVOPS-REAL-IP"] or ""
-  if arrayUtil:isInArray(clientIp,whiteList) then
-    return true
-  end
-  -- 判断X-REAL-IP是否在名单中（单IP）
-  clientIp = headers["X-REAL-IP"] or ""
-  if arrayUtil:isInArray(clientIp,whiteList) then
-    return true
-  end
-  -- 判断remote_addr是否在名单中（单IP）
-  clientIp = ngx.var.remote_addr or ""
-  if arrayUtil:isInArray(clientIp,whiteList) then
-    return true
-  end
-  -- 判断X_FORWARDED_FOR是否在名单中（多IP，逗号分隔）
-  clientIp = stringUtil:split(headers["X_FORWARDED_FOR"] or "",",")
-  for k,v in ipairs(clientIp) do
-    if arrayUtil:isInArray(v,whiteList) then
-      return true
-    end
-  end
-  return result
-end
-
-return _M
