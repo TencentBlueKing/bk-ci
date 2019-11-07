@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
-import com.tencent.devops.store.configuration.StoreDetailUrlConfig
 import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
 import com.tencent.devops.store.pojo.common.STORE_COMMENT_REPLY_NOTIFY_TEMPLATE
@@ -73,8 +72,6 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var storeNotifyService: StoreNotifyService
-    @Autowired
-    lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
     @Autowired
     lateinit var client: Client
 

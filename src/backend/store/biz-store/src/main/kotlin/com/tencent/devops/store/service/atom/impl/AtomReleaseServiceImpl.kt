@@ -890,7 +890,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         latestUpgradeTime = pubTime
                     )
                 )
-                marketAtomDao.updateAtomInfo(
+                marketAtomDao.updateAtomInfoById(
                     context,
                     userId,
                     atomId,

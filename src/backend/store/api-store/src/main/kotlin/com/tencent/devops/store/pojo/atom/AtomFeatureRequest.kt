@@ -34,5 +34,7 @@ data class AtomFeatureRequest(
     @ApiModelProperty("插件插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
-    val recommendFlag: Boolean? = null
+    val recommendFlag: Boolean? = null,
+    @ApiModelProperty("删除标识", required = false)
+    val deleteFlag: Boolean? = null
 )

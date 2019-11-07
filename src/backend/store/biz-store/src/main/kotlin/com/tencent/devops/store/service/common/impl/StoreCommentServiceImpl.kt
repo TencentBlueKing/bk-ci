@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -38,12 +39,16 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentPraiseDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
+import com.tencent.devops.store.pojo.common.STORE_COMMENT_NOTIFY_TEMPLATE
 import com.tencent.devops.store.pojo.common.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommentService
+import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreNotifyService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
@@ -64,8 +69,11 @@ class StoreCommentServiceImpl @Autowired constructor(
     private val storeCommentDao: StoreCommentDao,
     private val storeCommentReplyDao: StoreCommentReplyDao,
     private val storeCommentPraiseDao: StoreCommentPraiseDao,
+    private val storeMemberDao: StoreMemberDao,
     private val storeStatisticDao: StoreStatisticDao,
     private val storeUserService: StoreUserService,
+    private val storeNotifyService: StoreNotifyService,
+    private val storeCommonService: StoreCommonService,
     private val storeTotalStatisticService: StoreTotalStatisticService
 ) : StoreCommentService {
 
@@ -73,6 +81,9 @@ class StoreCommentServiceImpl @Autowired constructor(
 
     @Value("\${store.profileUrlPrefix}")
     private lateinit var profileUrlPrefix: String
+
+    @Value("\${store.commentNotifyAdmin}")
+    private lateinit var commentNotifyAdmin: String
 
     override fun getStoreComment(userId: String, commentId: String): Result<StoreCommentInfo?> {
         logger.info("userId is :$userId, commentId is :$commentId")
@@ -157,7 +168,8 @@ class StoreCommentServiceImpl @Autowired constructor(
         storeCommentRequest: StoreCommentRequest,
         storeType: StoreTypeEnum
     ): Result<StoreCommentInfo?> {
-        logger.info("userId is :$userId,storeId is :$storeId,  storeCode is :$storeCode, storeCommentRequest is :$storeCommentRequest, storeType is :$storeType")
+        logger.info("addStoreComment userId is :$userId,storeId is :$storeId,  storeCode is :$storeCode")
+        logger.info("storeCommentRequest is :$storeCommentRequest, storeType is :$storeType")
         val score = storeCommentRequest.score
         // 校验评分是否合法
         if (!validateScore(score)) return MessageCodeUtil.generateResponseDataObject(
@@ -196,7 +208,47 @@ class StoreCommentServiceImpl @Autowired constructor(
             storeStatisticDao.updateCommentInfo(context, userId, storeId, storeCode, storeType.type.toByte(), 1, score)
             storeTotalStatisticService.updateStoreTotalStatisticByCode(storeCode, storeType.type.toByte())
         }
+        sendNotifyMessage(storeCode, storeType, storeId, userId, storeCommentRequest)
         return getStoreComment(userId, commentId)
+    }
+
+    private fun sendNotifyMessage(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        storeId: String,
+        userId: String,
+        storeCommentRequest: StoreCommentRequest
+    ) {
+        // 通知插件管理员和开发人员、平台管理员
+        val memberRecordList = storeMemberDao.list(dslContext, storeCode, null, storeType.type.toByte())
+        val memberList = mutableSetOf<String>()
+        memberRecordList?.forEach {
+            memberList.add(it.username)
+        }
+        val receivers = if (memberList.isEmpty()) {
+            commentNotifyAdmin.split(";").toSet()
+        } else {
+            commentNotifyAdmin.split(";").toSet().plus(memberList)
+        }
+        if (receivers.contains("system")) {
+            receivers.toMutableSet().remove("system")
+        }
+        logger.info("the receivers is:$receivers")
+        val url = storeCommonService.getStoreDetailUrl(storeType, storeCode)
+        val storeName = storeCommonService.getStoreNameById(storeId, storeType)
+        val bodyParams = mapOf(
+            "userId" to userId,
+            "storeName" to storeName,
+            "score" to storeCommentRequest.score.toString(),
+            "commentContent" to storeCommentRequest.commentContent,
+            "url" to url
+        )
+        storeNotifyService.sendNotifyMessage(
+            templateCode = STORE_COMMENT_NOTIFY_TEMPLATE,
+            sender = DEVOPS,
+            receivers = receivers.toMutableSet(),
+            bodyParams = bodyParams
+        )
     }
 
     private fun validateScore(score: Int): Boolean {
@@ -255,6 +307,8 @@ class StoreCommentServiceImpl @Autowired constructor(
                 storeCommentRecord.storeType
             )
         }
+        val storeType = StoreTypeEnum.getStoreTypeObj(storeCommentRecord.storeType.toInt())
+        sendNotifyMessage(storeCommentRecord.storeCode, storeType!!, storeCommentRecord.storeId, userId, storeCommentRequest)
         return Result(true)
     }
 

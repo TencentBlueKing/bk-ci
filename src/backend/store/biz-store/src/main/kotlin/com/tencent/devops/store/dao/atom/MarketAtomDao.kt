@@ -49,6 +49,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -108,6 +109,7 @@ class MarketAtomDao : AtomBaseDao() {
         val ta = TAtom.T_ATOM.`as`("ta")
         val storeType = StoreTypeEnum.ATOM.type.toByte()
         val conditions = setAtomVisibleCondition(ta)
+        conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         if (!atomName.isNullOrEmpty()) {
             conditions.add(ta.NAME.contains(atomName))
         }
@@ -222,6 +224,7 @@ class MarketAtomDao : AtomBaseDao() {
 
     private fun generateGetMyAtomConditions(a: TAtom, userId: String, b: TStoreMember, atomName: String?): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
+        conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         conditions.add(b.USERNAME.eq(userId))
         conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         if (null != atomName) {
@@ -574,7 +577,14 @@ class MarketAtomDao : AtomBaseDao() {
     /**
      * 设置可用的原子版本状态为下架中、已下架
      */
-    fun setAtomStatusByCode(dslContext: DSLContext, atomCode: String, atomOldStatus: Byte, atomNewStatus: Byte, userId: String, msg: String?) {
+    fun setAtomStatusByCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        atomOldStatus: Byte,
+        atomNewStatus: Byte,
+        userId: String,
+        msg: String?
+    ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(ATOM_STATUS, atomNewStatus)
@@ -589,29 +599,48 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun updateAtomInfo(dslContext: DSLContext, userId: String, atomId: String, updateAtomInfo: UpdateAtomInfo) {
+    fun updateAtomInfoById(dslContext: DSLContext, userId: String, atomId: String, updateAtomInfo: UpdateAtomInfo) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
-            val atomStatus = updateAtomInfo.atomStatus
-            if (null != atomStatus) {
-                baseStep.set(ATOM_STATUS, atomStatus)
-            }
-            val msg = updateAtomInfo.atomStatusMsg
-            if (!msg.isNullOrEmpty()) {
-                baseStep.set(ATOM_STATUS_MSG, msg)
-            }
-            val latestFlag = updateAtomInfo.latestFlag
-            if (null != latestFlag) {
-                baseStep.set(LATEST_FLAG, latestFlag)
-            }
-            val pubTime = updateAtomInfo.pubTime
-            if (null != pubTime) {
-                baseStep.set(PUB_TIME, pubTime)
-            }
+            setUpdateAtomInfo(updateAtomInfo, baseStep)
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
                 .execute()
+        }
+    }
+
+    fun updateAtomInfoByCode(dslContext: DSLContext, userId: String, atomCode: String, updateAtomInfo: UpdateAtomInfo) {
+        with(TAtom.T_ATOM) {
+            val baseStep = dslContext.update(this)
+            setUpdateAtomInfo(updateAtomInfo, baseStep)
+            baseStep.set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ATOM_CODE.eq(atomCode))
+                .execute()
+        }
+    }
+
+    private fun TAtom.setUpdateAtomInfo(updateAtomInfo: UpdateAtomInfo, baseStep: UpdateSetFirstStep<TAtomRecord>) {
+        val atomStatus = updateAtomInfo.atomStatus
+        if (null != atomStatus) {
+            baseStep.set(ATOM_STATUS, atomStatus)
+        }
+        val msg = updateAtomInfo.atomStatusMsg
+        if (!msg.isNullOrEmpty()) {
+            baseStep.set(ATOM_STATUS_MSG, msg)
+        }
+        val latestFlag = updateAtomInfo.latestFlag
+        if (null != latestFlag) {
+            baseStep.set(LATEST_FLAG, latestFlag)
+        }
+        val pubTime = updateAtomInfo.pubTime
+        if (null != pubTime) {
+            baseStep.set(PUB_TIME, pubTime)
+        }
+        val deleteFlag = updateAtomInfo.deleteFlag
+        if (null != deleteFlag) {
+            baseStep.set(DELETE_FLAG, deleteFlag)
         }
     }
 
