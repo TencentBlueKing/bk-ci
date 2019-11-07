@@ -100,9 +100,6 @@ class ProjectLocalService @Autowired constructor(
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
-    @Value("\${paas_cc.url}")
-    private lateinit var ccUrl: String
-
     /**
      * 创建项目信息
      */
