@@ -27,7 +27,6 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
