@@ -44,8 +44,3 @@ server:
 ---
 spring:
   profiles: prod-gray
-  cloud:
-    config:
-      server:
-        git:
-          default-label: prod-gray
