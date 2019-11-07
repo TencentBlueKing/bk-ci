@@ -160,13 +160,15 @@ class WetestTaskAtom @Autowired constructor(
             // step 3
             val preTestApkIds = if (!preTestApkFilesStr.isBlank() && !preTestArchiveType.isNullOrBlank()) {
                 preTestApkFilesStr.split(",").map { it.trim() }.map {
-                    val preParam = ArtifactorySearchParam(projectId,
-                            pipelineId,
-                            buildId,
-                            preTestApkFiles!!,
-                            preTestArchiveType == "CUSTOMIZE",
-                            task.executeCount ?: 0,
-                            task.taskId)
+                    val preParam = ArtifactorySearchParam(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        regexPath = preTestApkFiles!!,
+                        custom = preTestArchiveType == "CUSTOMIZE",
+                        executeCount = task.executeCount ?: 0,
+                        elementId = task.taskId
+                    )
                     val preTestUploadResult = uploadRes(preParam, "apk")
                     preTestUploadResult["apkid"] as? Int ?: preTestUploadResult["ipaid"] as? Int
                     ?: throw RuntimeException("上传文件到wetest失败!")
@@ -178,47 +180,47 @@ class WetestTaskAtom @Autowired constructor(
             // step 4
             val accountMap = getAccountMap(testAccountFileStr, accountFileSourceType, task)
             val testId = autoTest(WetestAutoTestRequest(
-                    if (type == "apk") fileTaskId else null,
-                    if (type == "ipa") fileTaskId else null,
-                    scriptTaskId,
-                    if (isPrivateCloud) 0 else 1,
-                    if (isPrivateCloud) 0 else wetestTask.mobileCategory.removePrefix("TOP").trim().toInt(),
-                    testType,
-                    null,
-                    if (accountMap != null && accountMap.isNotEmpty()) "custom" else null,
-                    accountMap,
-                    scriptType,
-                    if (isPrivateCloud) wetestTask.mobileModelId.split(",") else null,
-                    null,
-                    if (NumberUtils.isDigits(weTestProjectIdStr)) weTestProjectIdStr.toInt() else null,
-                    "",
-                    "bk-devops",
-                    getExtraInfo(preTestApkIds)
+                apkid = if (type == "apk") fileTaskId else null,
+                ipaid = if (type == "ipa") fileTaskId else null,
+                scriptid = scriptTaskId,
+                toptype = if (isPrivateCloud) 0 else 1,
+                topnum = if (isPrivateCloud) 0 else wetestTask.mobileCategory.removePrefix("TOP").trim().toInt(),
+                testtype = testType,
+                runtime = null,
+                login = if (accountMap != null && accountMap.isNotEmpty()) "custom" else null,
+                custom_account = accountMap,
+                frametype = scriptType,
+                models = if (isPrivateCloud) wetestTask.mobileModelId.split(",") else null,
+                cloudid = null,
+                projectid = if (NumberUtils.isDigits(weTestProjectIdStr)) weTestProjectIdStr.toInt() else null,
+                comments = "",
+                test_from = "bk-devops",
+                extrainfo = getExtraInfo(preTestApkIds)
             ))
             val requestContent = objectMapper.writeValueAsString(WetestTaskInst(
-                    testId,
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    runVariables[PIPELINE_BUILD_NUM]!!.toInt(),
-                    wetestTask.name,
-                    uploadResult["meta.versionName"] as? String ?: "",
-                    "",
-                    wetestTask.id.toString(),
-                    testType,
-                    scriptType ?: "",
-                    if (synchronized == "SYNC") "1" else "0",
-                    sourcePathStr,
-                    scriptPathStr ?: "",
-                    testAccountFileStr ?: "",
-                    sourceType,
-                    scriptSourceType ?: "",
-                    accountFileSourceType ?: "",
-                    if (isPrivateCloud) "1" else "0",
-                    pipelineCreateUser,
-                    System.currentTimeMillis(),
-                    null,
-                    param.notifyType.toLong()
+                testId = testId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                buildNo = runVariables[PIPELINE_BUILD_NUM]!!.toInt(),
+                name = wetestTask.name,
+                version = uploadResult["meta.versionName"] as? String ?: "",
+                passingRate = "",
+                taskId = wetestTask.id.toString(),
+                testType = testType,
+                scriptType = scriptType ?: "",
+                synchronized = if (synchronized == "SYNC") "1" else "0",
+                sourcePath = sourcePathStr,
+                scriptPath = scriptPathStr ?: "",
+                accountFile = testAccountFileStr ?: "",
+                sourceType = sourceType,
+                scriptSourceType = scriptSourceType ?: "",
+                accountSourceType = accountFileSourceType ?: "",
+                privateCloud = if (isPrivateCloud) "1" else "0",
+                startUserId = pipelineCreateUser,
+                beginTime = System.currentTimeMillis(),
+                endTime = null,
+                emailGroupId = param.notifyType.toLong()
             ))
             val saveTaskRequest = Request.Builder()
                     .url("$apiHost/wetest/api/service/wetest/task/saveTask")
@@ -323,13 +325,13 @@ class WetestTaskAtom @Autowired constructor(
         return if (!testAccountFile.isNullOrBlank()) {
             LogUtils.addLine(rabbitTemplate, buildId, "正在获取用户的数据: $testAccountFile($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
             val excelFile = jfrogService.downloadFile(ArtifactorySearchParam(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    testAccountFile!!,
-                    sourceType == "CUSTOMIZE",
-                    task.executeCount ?: 0,
-                    task.taskId
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                regexPath = testAccountFile!!,
+                custom = sourceType == "CUSTOMIZE",
+                executeCount = task.executeCount ?: 0,
+                elementId = task.taskId
             ), accountExcelFile).firstOrNull()
                     ?: throw RuntimeException("account file can not be found: $accountExcelFile($sourceType)")
             excelFile.deleteOnExit()
@@ -345,13 +347,13 @@ class WetestTaskAtom @Autowired constructor(
         return if (!scriptPath.isNullOrBlank()) {
             LogUtils.addLine(rabbitTemplate, buildId, "上传相应的脚本到wetest: $scriptPath($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
             val param = ArtifactorySearchParam(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    scriptPath!!,
-                    sourceType == "CUSTOMIZE",
-                    task.executeCount ?: 0,
-                    task.taskId
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                regexPath = scriptPath!!,
+                custom = sourceType == "CUSTOMIZE",
+                executeCount = task.executeCount ?: 0,
+                elementId = task.taskId
             )
             val scriptUploadResult = uploadRes(param, "script")
             checkResult(scriptUploadResult, "上传脚本到wetest失败!")
@@ -365,13 +367,13 @@ class WetestTaskAtom @Autowired constructor(
     private fun uploadApp(sourcePath: String, sourceType: String, type: String, task: PipelineBuildTask): Map<String, Any> {
         LogUtils.addLine(rabbitTemplate, buildId, "上传相应的包到wetest: $sourcePath($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
         val param = ArtifactorySearchParam(
-                projectId,
-                pipelineId,
-                buildId,
-                sourcePath,
-                sourceType == "CUSTOMIZE",
-                task.executeCount ?: 1,
-                task.taskId
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            regexPath = sourcePath,
+            custom = sourceType == "CUSTOMIZE",
+            executeCount = task.executeCount ?: 1,
+            elementId = task.taskId
         )
         val uploadResult = uploadRes(param, type)
         checkResult(uploadResult, "上传app包失败")
@@ -403,27 +405,4 @@ class WetestTaskAtom @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
     }
-
-//    private fun sendEmail(isSuccess: Boolean, notifyType: Int) {
-//        val title = if (isSuccess) "wetest执行成功" else "wetest执行失败"
-//        val host = HomeHostUtil.innerServerHost()
-//        val url = "$host/console/pipeline/$projectId/$pipelineId/detail/$buildId"
-//        val content = "蓝盾流水线执行wetest扫描任务结束，具体可以点击：<br><br>" +
-//                "<a href=\"$url\">查看详情</a>"
-//        val templateParams = mapOf(
-//                "templateTitle" to title,
-//                "templateContent" to content,
-//                "projectName" to (projectOauthTokenService.getProjectName(projectId) ?: ""),
-//                "logoUrl" to logoUrl,
-//                "titleUrl" to titleUrl
-//        )
-//        val message = EmailNotifyMessage().apply {
-//            format = EnumEmailFormat.HTML
-//            body = NotifyUtils.parseMessageTemplate(NotifyTemplateUtils.EMAIL_BODY, templateParams)
-//            this.title = title
-//        }
-//        val receivers = client.get(ServiceWetestEmailGroupResource::class).get(projectId, notifyType).data!!.userInternal.split(",").toSet()
-//        message.addAllReceivers(receivers)
-//        client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-//    }
 }

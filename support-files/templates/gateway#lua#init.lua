@@ -85,10 +85,9 @@ config = {
     db = "__INFLUXDB_DB__",
     user = "__INFLUXDB_USERNAME__",
     password = "__INFLUXDB_PASSWORD__"
-  },
-  service_ip_whitelist = {
   }
 }
   
 require("init_common")
+require("ip_whitelist")
   

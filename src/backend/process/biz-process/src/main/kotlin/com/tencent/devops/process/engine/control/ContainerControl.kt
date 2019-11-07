@@ -101,26 +101,36 @@ class ContainerControl @Autowired constructor(
         )
         val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
 
-        if (checkIfAllSkip(buildId, stageId, container, containerTaskList, variables)) {
-            pipelineRuntimeService.updateContainerStatus(
-                buildId = buildId,
-                stageId = stageId,
-                containerId = containerId,
-                buildStatus = BuildStatus.SKIP,
-                startTime = LocalDateTime.now(),
-                endTime = LocalDateTime.now()
-            )
-            logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
-            pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
-            // 返回stage的时候，需要解锁
-            mutexControl.releaseContainerMutex(
-                projectId = projectId,
-                buildId = buildId,
-                stageId = stageId,
-                containerId = containerId,
-                mutexGroup = mutexGroup
-            )
-            return sendBackStage("container_skip")
+        // 仅在初次进入Container时进行跳过判断
+        if (BuildStatus.isReadyToRun(container.status)) {
+            if (checkIfAllSkip(
+                    buildId = buildId,
+                    stageId = stageId,
+                    container = container,
+                    containerTaskList = containerTaskList,
+                    variables = variables
+                )
+            ) {
+                pipelineRuntimeService.updateContainerStatus(
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    buildStatus = BuildStatus.SKIP,
+                    startTime = LocalDateTime.now(),
+                    endTime = LocalDateTime.now()
+                )
+                logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
+                pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
+                // 返回stage的时候，需要解锁
+                mutexControl.releaseContainerMutex(
+                    projectId = projectId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    mutexGroup = mutexGroup
+                )
+                return sendBackStage("container_skip")
+            }
         }
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断

@@ -28,9 +28,6 @@ package com.tencent.devops.worker.common.task.market
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.exception.ExecuteException
-import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
@@ -363,7 +360,6 @@ open class MarketAtomTask : ITask() {
     ) {
         val atomResult = readOutputFile(atomWorkspace)
         logger.info("the atomResult from Market is :\n$atomResult")
-
 
         deletePluginFile()
         val success: Boolean

@@ -53,9 +53,9 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.process.dao.PipelineSubscriptionDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.MeasureService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.SubscriptionType
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
@@ -85,7 +85,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 
 @Service
-class PipelineSubscriptionService @Autowired constructor(
+class PipelineSubscriptionService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
     private val pipelineSettingService: PipelineSettingService,
@@ -94,7 +94,8 @@ class PipelineSubscriptionService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectOauthTokenService: ProjectOauthTokenService,
     private val wechatWorkService: WechatWorkService,
-    private val measureService: MeasureService,
+    @Autowired(required = false)
+    private val measureService: MeasureService?,
     private val bsAuthProjectApi: BSAuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val shortUrlApi: ShortUrlApi,
@@ -114,15 +115,19 @@ class PipelineSubscriptionService @Autowired constructor(
             val record = pipelineSubscriptionDao.get(context, pipelineId, userId)
             if (record == null) {
                 // Add the subscription
-                pipelineSubscriptionDao.insert(context, pipelineId, userId, listOf(
+                pipelineSubscriptionDao.insert(
+                    dslContext = context, pipelineId = pipelineId, username = userId, subscriptionTypes = listOf(
                         PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX
-                ), type ?: SubscriptionType.ALL)
+                    ), type = type ?: SubscriptionType.ALL
+                )
             } else {
-                pipelineSubscriptionDao.update(context, record.id,
-                        listOf(
-                                PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX
-                        ),
-                        type ?: SubscriptionType.ALL)
+                pipelineSubscriptionDao.update(
+                    dslContext = context, id = record.id,
+                    subscriptionTypes = listOf(
+                        PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX
+                    ),
+                    type = type ?: SubscriptionType.ALL
+                )
             }
             true
         }
@@ -134,9 +139,18 @@ class PipelineSubscriptionService @Autowired constructor(
     }
 
     fun deleteSubscriptions(userId: String, pipelineId: String) =
-            pipelineSubscriptionDao.delete(dslContext, pipelineId, userId)
+        pipelineSubscriptionDao.delete(dslContext, pipelineId, userId)
 
-    fun onPipelineShutdown(pipelineId: String, buildId: String, projectId: String, startTime: Long, buildStatus: BuildStatus) {
+    fun onPipelineShutdown(
+        pipelineId: String,
+        buildId: String,
+        projectId: String,
+        startTime: Long,
+        buildStatus: BuildStatus,
+        errorType: String?,
+        errorCode: Int?,
+        errorMsg: String?
+    ) {
         logger.info("onPipelineShutdown pipeline:$pipelineId")
         val endTime = System.currentTimeMillis()
         pipelineRuntimeService.setVariable(
@@ -174,7 +188,7 @@ class PipelineSubscriptionService @Autowired constructor(
         val executionVar = getExecutionVariables(pipelineId, vars)
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
         if (executionVar.originTriggerType == StartType.PIPELINE.name) {
-            checkPipelineCall(buildInfo, buildStatus) // 通知父流水线状态
+            checkPipelineCall(buildInfo) // 通知父流水线状态
         }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return
@@ -187,7 +201,20 @@ class PipelineSubscriptionService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(pipelineId)
         setBuildNo(pipelineId, model, shutdownType)
         // Add the measure data
-        measureService.postPipelineData(projectId, pipelineId, buildId, startTime, originTriggerType, user, buildStatus, buildNum, model)
+        measureService?.postPipelineData(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            startTime = startTime,
+            startType = originTriggerType,
+            username = user,
+            buildStatus = buildStatus,
+            buildNum = buildNum,
+            model = model,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        )
 
         logger.info("onPipelineShutdown pipelineNameReal:$pipelineName")
         val replaceWithEmpty = true
@@ -222,21 +249,21 @@ class PipelineSubscriptionService @Autowired constructor(
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
 
             val mapData = mapOf(
-                    "pipelineName" to pipelineName,
-                    "buildNum" to buildNum.toString(),
-                    "projectName" to projectName,
-                    "detailUrl" to detailUrl,
-                    "detailOuterUrl" to detailOuterUrl,
-                    "detailShortOuterUrl" to detailShortOuterUrl,
-                    "startTime" to getFormatTime(startTime),
-                    "duration" to DateTimeUtil.formatMillSecond(duration.toLong() * 1000).removeSuffix("秒"),
-                    "trigger" to trigger,
-                    "username" to user,
-                    "detailUrl" to detailUrl,
-                    "successContent" to setting.successContent,
-                    "failContent" to setting.failContent,
-                    "emailSuccessContent" to emailSuccessContent,
-                    "emailFailContent" to emailFailContent
+                "pipelineName" to pipelineName,
+                "buildNum" to buildNum.toString(),
+                "projectName" to projectName,
+                "detailUrl" to detailUrl,
+                "detailOuterUrl" to detailOuterUrl,
+                "detailShortOuterUrl" to detailShortOuterUrl,
+                "startTime" to getFormatTime(startTime),
+                "duration" to DateTimeUtil.formatMillSecond(duration.toLong() * 1000).removeSuffix("秒"),
+                "trigger" to trigger,
+                "username" to user,
+                "detailUrl" to detailUrl,
+                "successContent" to setting.successContent,
+                "failContent" to setting.failContent,
+                "emailSuccessContent" to emailSuccessContent,
+                "emailFailContent" to emailFailContent
             )
 
             if (shutdownType == TYPE_SHUTDOWN_SUCCESS) {
@@ -244,46 +271,54 @@ class PipelineSubscriptionService @Autowired constructor(
                 val successUsers = mutableSetOf<String>()
                 val successGroup = setting.successGroup?.split(",") ?: listOf()
                 projectGroup.filter { it.roleName in successGroup }
-                        .forEach { successUsers.addAll(it.userIdList) }
+                    .forEach { successUsers.addAll(it.userIdList) }
                 successUsers.addAll(setting.successReceiver.split(","))
                 val typeList = setting.successType.split(",")
                 successUsers.forEach {
                     typeList.forEach { type ->
                         when (type) {
                             PipelineSubscriptionType.EMAIL.name -> sendEmail(it, pipelineId, shutdownType, mapData)
-                            PipelineSubscriptionType.RTX.name -> sendRTX(it, pipelineId, shutdownType, mapData, settingDetailFlag)
-                            PipelineSubscriptionType.SMS.name -> sendSMS(it, pipelineId, shutdownType, mapData, settingDetailFlag)
-                            PipelineSubscriptionType.WECHAT.name -> sendWechat(it, pipelineId, shutdownType, mapData, settingDetailFlag)
+                            PipelineSubscriptionType.RTX.name -> sendRTX(
+                                username = it,
+                                pipelineId = pipelineId,
+                                type = shutdownType,
+                                mapData = mapData,
+                                detailFlag = settingDetailFlag
+                            )
+                            PipelineSubscriptionType.SMS.name -> sendSMS(
+                                username = it,
+                                pipelineId = pipelineId,
+                                type = shutdownType,
+                                mapData = mapData,
+                                detailFlag = settingDetailFlag
+                            )
+                            PipelineSubscriptionType.WECHAT.name -> sendWechat(
+                                username = it,
+                                pipelineId = pipelineId,
+                                type = shutdownType,
+                                mapData = mapData,
+                                detailFlag = settingDetailFlag
+                            )
                         }
                     }
                 }
                 // 发送企业微信群信息
                 if (setting.successWechatGroupFlag) {
                     val successWechatGroups = mutableSetOf<String>()
-                    successWechatGroups.addAll(setting.successWechatGroup.split(",|;".toRegex()))
+                    successWechatGroups.addAll(setting.successWechatGroup.split("[,;]".toRegex()))
                     successWechatGroups.forEach {
 
                         val receiver = Receiver(ReceiverType.group, it)
                         val richtextContentList = mutableListOf<RichtextContent>()
                         richtextContentList.add(
-                            RichtextText(
-                            RichtextTextText(
-                                "蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"
+                            RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"))
                         )
-                        )
-                        )
-                        richtextContentList.add(RichtextText(RichtextTextText(
-                                "✔️${setting.successContent}\n"
-                        )))
+                        richtextContentList.add(RichtextText(RichtextTextText("✔️${setting.successContent}\n")))
 
                         if (settingDetailFlag) {
                             richtextContentList.add(
                                 RichtextView(
-                                    RichtextViewLink(
-                                        "查看详情",
-                                        detailUrl,
-                                        1
-                                    )
+                                    RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1)
                                 )
                             )
                         }
@@ -297,38 +332,56 @@ class PipelineSubscriptionService @Autowired constructor(
                 val failUsers = mutableSetOf<String>()
                 val failGroup = setting.failGroup?.split(",") ?: listOf()
                 projectGroup.filter { it.roleName in failGroup }
-                        .forEach { failUsers.addAll(it.userIdList) }
+                    .forEach { failUsers.addAll(it.userIdList) }
                 failUsers.addAll(setting.failReceiver.split(","))
                 val typeList = setting.failType.split(",")
                 failUsers.forEach {
                     typeList.forEach { type ->
                         when (type) {
                             PipelineSubscriptionType.EMAIL.name -> sendEmail(it, pipelineId, shutdownType, mapData)
-                            PipelineSubscriptionType.RTX.name -> sendRTX(it, pipelineId, shutdownType, mapData, settingDetailFlag)
-                            PipelineSubscriptionType.SMS.name -> sendSMS(it, pipelineId, shutdownType, mapData, settingDetailFlag)
-                            PipelineSubscriptionType.WECHAT.name -> sendWechat(it, pipelineId, shutdownType, mapData, settingDetailFlag)
+                            PipelineSubscriptionType.RTX.name -> sendRTX(
+                                username = it,
+                                pipelineId = pipelineId,
+                                type = shutdownType,
+                                mapData = mapData,
+                                detailFlag = settingDetailFlag
+                            )
+                            PipelineSubscriptionType.SMS.name -> sendSMS(
+                                username = it,
+                                pipelineId = pipelineId,
+                                type = shutdownType,
+                                mapData = mapData,
+                                detailFlag = settingDetailFlag
+                            )
+                            PipelineSubscriptionType.WECHAT.name -> sendWechat(
+                                username = it,
+                                pipelineId = pipelineId,
+                                type = shutdownType,
+                                mapData = mapData,
+                                detailFlag = settingDetailFlag
+                            )
                         }
                     }
                 }
                 // 发送企业微信群信息
                 if (setting.failWechatGroupFlag) {
                     val failWechatGroups = mutableSetOf<String>()
-                    failWechatGroups.addAll(setting.failWechatGroup.split(",|;".toRegex()))
+                    failWechatGroups.addAll(setting.failWechatGroup.split("[,;]".toRegex()))
                     failWechatGroups.forEach {
                         val receiver = Receiver(ReceiverType.group, it)
                         val richtextContentList = mutableListOf<RichtextContent>()
-                        richtextContentList.add(RichtextText(RichtextTextText(
-                                "蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n"
-                        )))
-                        richtextContentList.add(RichtextText(RichtextTextText(
-                                "❌${setting.failContent}\n"
-                        )))
+                        richtextContentList.add(
+                            RichtextText(
+                                RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n")
+                            )
+                        )
+                        richtextContentList.add(
+                            RichtextText(RichtextTextText("❌${setting.failContent}\n"))
+                        )
                         if (settingDetailFlag) {
-                            richtextContentList.add(RichtextView(RichtextViewLink(
-                                    "查看详情",
-                                    detailUrl,
-                                    1
-                            )))
+                            richtextContentList.add(
+                                RichtextView(RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1))
+                            )
                         }
                         val richtextMessage = RichtextMessage(receiver, richtextContentList)
                         wechatWorkService.sendRichText(richtextMessage)
@@ -415,12 +468,11 @@ class PipelineSubscriptionService @Autowired constructor(
 
             if (needUpdateBuildNoDB) {
                 pipelineRuntimeService.updateBuildNo(pipelineId, buildNo)
-//                buildNoService.updateBuildNo(pipelineId, buildNo)
             }
         }
     }
 
-    private fun checkPipelineCall(buildInfo: BuildInfo, buildStatus: BuildStatus) {
+    private fun checkPipelineCall(buildInfo: BuildInfo) {
 
         val superCallElementId = buildInfo.parentTaskId ?: return
 
@@ -429,76 +481,82 @@ class PipelineSubscriptionService @Autowired constructor(
             logger.error("The parent build(${buildInfo.parentBuildId}) task(${buildInfo.parentTaskId}) not exist ")
             return
         }
-//        val superCallElementName = parentBuildTask.taskName
 
         logger.info("Finish the root pipeline(${buildInfo.pipelineId}) of build(${buildInfo.buildId}) with elementId($superCallElementId)")
-//
-//        val message = if (BuildStatus.isFailure(buildStatus)) {
-//            "子流水线执行失败，请到对应的子流水线查看详情"
-//        } else {
-//            "子流水线执行成功"
-//        }
-//        LogUtils.addRedLine(client, buildInfo.parentBuildId, message, superCallElementId)
-
-        // LogUtils.addFoldEndLine(client, buildInfo.parentBuildId, "$superCallElementName-[$superCallElementId]", superCallElementId)
         pipelineEventDispatcher.dispatch(
-                PipelineBuildAtomTaskEvent("sub_pipeline_build_${buildInfo.buildId}", // 来源
-                        parentBuildTask.projectId,
-                        parentBuildTask.pipelineId,
-                        parentBuildTask.starter,
-                        parentBuildTask.buildId,
-                        parentBuildTask.stageId,
-                        parentBuildTask.containerId,
-                        parentBuildTask.containerType,
-                        parentBuildTask.taskId,
-                        parentBuildTask.taskParams,
-                        ActionType.REFRESH)
+            PipelineBuildAtomTaskEvent(
+                source = "sub_pipeline_build_${buildInfo.buildId}", // 来源
+                projectId = parentBuildTask.projectId,
+                pipelineId = parentBuildTask.pipelineId,
+                userId = parentBuildTask.starter,
+                buildId = parentBuildTask.buildId,
+                stageId = parentBuildTask.stageId,
+                containerId = parentBuildTask.containerId,
+                containerType = parentBuildTask.containerType,
+                taskId = parentBuildTask.taskId,
+                taskParam = parentBuildTask.taskParams,
+                actionType = ActionType.REFRESH
+            )
         )
     }
 
-    private fun sendWechat(username: String, pipelineId: String, type: Int, mapData: Map<String, String>, detailFlag: Boolean) {
-        NotifyUtils.sendWechat(client,
-                setOf(username),
-                pipelineId,
-                getWechatBody(type, detailFlag),
-                mapData
+    private fun sendWechat(
+        username: String,
+        pipelineId: String,
+        type: Int,
+        mapData: Map<String, String>,
+        detailFlag: Boolean
+    ) {
+        NotifyUtils.sendWechat(
+            client = client,
+            users = setOf(username),
+            pipelineId = pipelineId,
+            wechatBody = getWechatBody(type, detailFlag),
+            mapData = mapData
         )
     }
 
-    private fun sendWechatWorkGroup(wechatGropId: String, pipelineId: String, type: Int, mapData: Map<String, String>, detailFlag: Boolean) {
-        NotifyUtils.sendWechatWorkGroup(client,
-                wechatGropId,
-                pipelineId,
-                getWechatGropyBody(type, detailFlag),
-                mapData
-        )
-    }
-
-    private fun sendSMS(username: String, pipelineId: String, type: Int, mapData: Map<String, String>, detailFlag: Boolean) {
-        NotifyUtils.sendSMS(client,
-                setOf(username),
-                pipelineId,
-                getSmsBody(type, detailFlag),
-                mapData
+    private fun sendSMS(
+        username: String,
+        pipelineId: String,
+        type: Int,
+        mapData: Map<String, String>,
+        detailFlag: Boolean
+    ) {
+        NotifyUtils.sendSMS(
+            client = client,
+            users = setOf(username),
+            pipelineId = pipelineId,
+            smsBody = getSmsBody(type, detailFlag),
+            mapData = mapData
         )
     }
 
     private fun sendEmail(username: String, pipelineId: String, type: Int, mapData: Map<String, String>) {
-        NotifyUtils.sendEmail(client,
-                setOf(username),
-                pipelineId,
-                getEmailBody(type, mapData["projectName"] ?: ""),
-                getEmailTitle(type),
-                mapData)
+        NotifyUtils.sendEmail(
+            client = client,
+            users = setOf(username),
+            pipelineId = pipelineId,
+            emailBody = getEmailBody(type, mapData["projectName"] ?: ""),
+            emailTitle = getEmailTitle(type),
+            mapData = mapData
+        )
     }
 
-    private fun sendRTX(username: String, pipelineId: String, type: Int, mapData: Map<String, String>, detailFlag: Boolean) {
-        NotifyUtils.sendRTX(client,
-                setOf(username),
-                pipelineId,
-                getRtxBody(type, detailFlag),
-                getRTXTitle(type),
-                mapData
+    private fun sendRTX(
+        username: String,
+        pipelineId: String,
+        type: Int,
+        mapData: Map<String, String>,
+        detailFlag: Boolean
+    ) {
+        NotifyUtils.sendRTX(
+            client = client,
+            users = setOf(username),
+            pipelineId = pipelineId,
+            rtxBody = getRtxBody(type, detailFlag),
+            rtxTitle = getRTXTitle(type),
+            mapData = mapData
         )
     }
 
@@ -512,10 +570,10 @@ class PipelineSubscriptionService @Autowired constructor(
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-            "${server()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
+        "${server()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
 
     private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
+        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
 
     private fun getEmailBody(type: Int, projectName: String): String {
         val title = getEmailTitle(type)
@@ -528,94 +586,94 @@ class PipelineSubscriptionService @Autowired constructor(
         }
 
         val templateParams = mapOf(
-                "templateTitle" to title,
-                "templateContent" to body,
-                "projectName" to projectName,
-                "logoUrl" to logoUrl,
-                "titleUrl" to titleUrl
+            "templateTitle" to title,
+            "templateContent" to body,
+            "projectName" to projectName,
+            "logoUrl" to logoUrl,
+            "titleUrl" to titleUrl
         )
 
         return parseMessageTemplate(NotifyTemplateUtils.EMAIL_BODY, templateParams)
     }
 
     private fun getRTXTitle(type: Int) =
-            when (type) {
-                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_TITLE
-                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.RTX_SHUTDOWN_SUCCESS_TITLE
-                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.RTX_SHUTDOWN_FAILURE_TITLE
-                else -> throw RuntimeException("Unknown title type($type) of RTX")
-            }
+        when (type) {
+            TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_TITLE
+            TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.RTX_SHUTDOWN_SUCCESS_TITLE
+            TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.RTX_SHUTDOWN_FAILURE_TITLE
+            else -> throw RuntimeException("Unknown title type($type) of RTX")
+        }
 
     private fun getWechatBody(type: Int, detailFlag: Boolean) =
-            if (detailFlag) {
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_SHUTDOWN_SUCCESS_BODY_DETAIL
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_SHUTDOWN_FAILURE_BODY_DETAIL
-                    else -> throw RuntimeException("Unknown body type($type) of RTX")
-                }
-            } else {
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_SHUTDOWN_SUCCESS_BODY
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_SHUTDOWN_FAILURE_BODY
-                    else -> throw RuntimeException("Unknown body type($type) of RTX")
-                }
+        if (detailFlag) {
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_SHUTDOWN_SUCCESS_BODY_DETAIL
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_SHUTDOWN_FAILURE_BODY_DETAIL
+                else -> throw RuntimeException("Unknown body type($type) of RTX")
             }
+        } else {
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_SHUTDOWN_SUCCESS_BODY
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_SHUTDOWN_FAILURE_BODY
+                else -> throw RuntimeException("Unknown body type($type) of RTX")
+            }
+        }
 
     private fun getWechatGropyBody(type: Int, detailFlag: Boolean) =
-            if (detailFlag) {
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_SUCCESS_BODY_DETAIL
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_FAILURE_BODY_DETAIL
-                    else -> throw RuntimeException("Unknown body type($type) of Wechat Group")
-                }
-            } else {
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_SUCCESS_BODY
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_FAILURE_BODY
-                    else -> throw RuntimeException("Unknown body type($type) of Wechat Group")
-                }
+        if (detailFlag) {
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_SUCCESS_BODY_DETAIL
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_FAILURE_BODY_DETAIL
+                else -> throw RuntimeException("Unknown body type($type) of Wechat Group")
             }
+        } else {
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_SUCCESS_BODY
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.WECHAT_GROUP_SHUTDOWN_FAILURE_BODY
+                else -> throw RuntimeException("Unknown body type($type) of Wechat Group")
+            }
+        }
 
     private fun getSmsBody(type: Int, detailFlag: Boolean) =
-            if (detailFlag) {
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.SMS_SHUTDOWN_SUCCESS_BODY_DETAIL
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.SMS_SHUTDOWN_FAILURE_BODY_DETAIL
-                    else -> throw RuntimeException("Unknown body type($type) of RTX")
-                }
-            } else {
-
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.SMS_SHUTDOWN_SUCCESS_BODY
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.SMS_SHUTDOWN_FAILURE_BODY
-                    else -> throw RuntimeException("Unknown body type($type) of RTX")
-                }
+        if (detailFlag) {
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.SMS_SHUTDOWN_SUCCESS_BODY_DETAIL
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.SMS_SHUTDOWN_FAILURE_BODY_DETAIL
+                else -> throw RuntimeException("Unknown body type($type) of RTX")
             }
+        } else {
+
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.SMS_SHUTDOWN_SUCCESS_BODY
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.SMS_SHUTDOWN_FAILURE_BODY
+                else -> throw RuntimeException("Unknown body type($type) of RTX")
+            }
+        }
 
     private fun getRtxBody(type: Int, detailFlag: Boolean) =
-            if (detailFlag) {
+        if (detailFlag) {
 
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.RTX_SHUTDOWN_SUCCESS_BODY_DETAIL
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.RTX_SHUTDOWN_FAILURE_BODY_DETAIL
-                    else -> throw RuntimeException("Unknown body type($type) of RTX")
-                }
-            } else {
-
-                when (type) {
-                    TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
-                    TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.RTX_SHUTDOWN_SUCCESS_BODY
-                    TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.RTX_SHUTDOWN_FAILURE_BODY
-                    else -> throw RuntimeException("Unknown body type($type) of RTX")
-                }
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY_DETAIL
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.RTX_SHUTDOWN_SUCCESS_BODY_DETAIL
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.RTX_SHUTDOWN_FAILURE_BODY_DETAIL
+                else -> throw RuntimeException("Unknown body type($type) of RTX")
             }
+        } else {
+
+            when (type) {
+                TYPE_STARTUP -> NotifyTemplateUtils.RTX_STARTUP_BODY
+                TYPE_SHUTDOWN_SUCCESS -> NotifyTemplateUtils.RTX_SHUTDOWN_SUCCESS_BODY
+                TYPE_SHUTDOWN_FAILURE -> NotifyTemplateUtils.RTX_SHUTDOWN_FAILURE_BODY
+                else -> throw RuntimeException("Unknown body type($type) of RTX")
+            }
+        }
 
     private fun getFormatTime(time: Long): String {
         val current = LocalDateTime.ofInstant(Date(time).toInstant(), ZoneId.systemDefault())
@@ -631,6 +689,7 @@ class PipelineSubscriptionService @Autowired constructor(
         const val TYPE_SHUTDOWN_FAILURE = 3
         const val TYPE_SHUTDOWN_CANCEL = 4
     }
+
     data class ExecutionVariables(
         val pipelineVersion: Int?,
         val buildNum: Int?,

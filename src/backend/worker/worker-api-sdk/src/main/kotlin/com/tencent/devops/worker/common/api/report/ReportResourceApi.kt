@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -85,7 +86,12 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val nameEncode = encode(name)
         val path =
             "/ms/process/api/build/reports/$taskId?indexFile=$indexFileEncode&name=$nameEncode&reportType=$reportType"
-        val request = buildPost(path)
+        val request = if (reportEmail == null) {
+            buildPost(path)
+        } else {
+            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
+            buildPost(path, requestBody)
+        }
         val responseContent = request(request, "创建报告失败")
         return objectMapper.readValue(responseContent)
     }

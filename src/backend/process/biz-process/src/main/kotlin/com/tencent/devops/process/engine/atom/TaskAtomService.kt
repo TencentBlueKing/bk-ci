@@ -36,9 +36,9 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.MeasureService
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.ErrorType
 import org.slf4j.LoggerFactory
@@ -47,12 +47,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TaskAtomService @Autowired constructor(
-    val rabbitTemplate: RabbitTemplate,
-    val pipelineRuntimeService: PipelineRuntimeService,
-    val pipelineBuildDetailService: PipelineBuildDetailService,
-    val jmxElements: JmxElements,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+class TaskAtomService @Autowired(required = false) constructor(
+    private val rabbitTemplate: RabbitTemplate,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val jmxElements: JmxElements,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    @Autowired(required = false)
+    private val measureService: MeasureService?
 ) {
 
     fun start(task: PipelineBuildTask): AtomResponse {
@@ -148,12 +150,11 @@ class TaskAtomService @Autowired constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
-            val atomCode = task.taskParams["atomCode"] as String? ?: ""
-            SpringContextUtil.getBean(MeasureService::class.java).postElementDataNew(
+            measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 taskId = task.taskId,
-                atomCode = atomCode,
+                atomCode = task.taskParams["atomCode"] as String? ?: "",
                 name = task.taskName,
                 buildId = task.buildId,
                 startTime = task.startTime?.timestampmilli() ?: startTime,
@@ -223,21 +224,20 @@ class TaskAtomService @Autowired constructor(
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
                 )
-            }
-
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildElementFinishBroadCastEvent(
-                    source = "build-element-${task.taskId}",
-                    projectId = task.projectId,
-                    pipelineId = task.pipelineId,
-                    userId = "",
-                    buildId = task.buildId,
-                    elementId = task.taskId,
-                    errorType = if (task.errorType == null) null else task.errorType!!.name,
-                    errorCode = task.errorCode,
-                    errorMsg = task.errorMsg
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildElementFinishBroadCastEvent(
+                        source = "build-element-${task.taskId}",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        userId = "",
+                        buildId = task.buildId,
+                        elementId = task.taskId,
+                        errorType = if (task.errorType == null) null else task.errorType!!.name,
+                        errorCode = task.errorCode,
+                        errorMsg = task.errorMsg
+                    )
                 )
-            )
+            }
             return atomResponse
         }
     }

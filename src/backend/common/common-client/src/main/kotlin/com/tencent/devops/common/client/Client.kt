@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Feign
@@ -156,7 +157,7 @@ class Client @Autowired constructor(
      * 通过网关访问微服务接口
      *
      */
-    fun <T : Any> getGateway(clz: KClass<T>): T {
+    fun <T : Any> getGateway(clz: KClass<T>, gatewayType: GatewayType = GatewayType.IDC): T {
         val serviceName = findServiceName(clz)
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()
@@ -166,21 +167,12 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
-            .target(clz.java, buildGatewayUrl(path = "/$serviceName/api"))
+            .target(clz.java, buildGatewayUrl(path = "/$serviceName/api", gatewayType = gatewayType))
     }
 
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
-        val ip = chooseScm()
-        val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
-        return Feign.builder()
-            .client(feignClient)
-            .errorDecoder(clientErrorDecoder)
-            .encoder(jacksonEncoder)
-            .decoder(jacksonDecoder)
-            .contract(jaxRsContract)
-            .requestInterceptor(requestInterceptor)
-            .target(clz.java, "http://$ip/api")
+        return getGateway(clz, GatewayType.IDC_PROXY)
     }
 
     private fun chooseScm(): String {
@@ -264,11 +256,21 @@ class Client @Autowired constructor(
         }
     }
 
-    private fun buildGatewayUrl(path: String): String {
+    private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
+
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
         } else {
-            val gateway = commonConfig.devopsApiGateway!!
+
+            val gateway = when (gatewayType) {
+                GatewayType.DEVNET_PROXY -> commonConfig.devopsDevnetProxyGateway!!
+                GatewayType.DEVNET -> commonConfig.devopsDevnetGateway!!
+                GatewayType.IDC -> commonConfig.devopsIdcGateway!!
+                GatewayType.IDC_PROXY -> commonConfig.devopsIdcProxyGateway!!
+                GatewayType.OSS -> commonConfig.devopsOssGateway!!
+                GatewayType.OSS_PROXY -> commonConfig.devopsOssProxyGateway!!
+                else -> commonConfig.devopsIdcGateway!!
+            }
             if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
                 "$gateway/${path.removePrefix("/")}"
             } else {

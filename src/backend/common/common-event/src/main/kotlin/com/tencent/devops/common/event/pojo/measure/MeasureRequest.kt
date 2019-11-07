@@ -38,6 +38,12 @@ data class MeasureRequest(
     val projectId: String,
     val pipelineId: String,
     val buildId: String,
-    val url: String,
+    val type: MeasureType,
     val request: String
-)
+) {
+
+    enum class MeasureType {
+        PIPELINE,
+        TASK
+    }
+}

@@ -26,29 +26,11 @@
 
 package com.tencent.devops.process.utils
 
+import org.junit.Assert.assertEquals
 import org.junit.Test
-
-import org.junit.Assert.*
 
 class PipelineVarUtilTest {
 
-    /*
-        "pipeline.start.user.name" to PIPELINE_START_USER_NAME,
-        "pipeline.start.type" to PIPELINE_START_TYPE,
-        "pipeline.start.num" to PIPELINE_BUILD_NUM,
-        "hookRevision" to PIPELINE_WEBHOOK_REVISION,
-        "hookBranch" to PIPELINE_WEBHOOK_BRANCH,
-        "hookSourceBranch" to PIPELINE_WEBHOOK_SOURCE_BRANCH,
-        "hookTargetBranch" to PIPELINE_WEBHOOK_TARGET_BRANCH,
-        "git_mr_number" to GIT_MR_NUMBER,
-        "github_pr_number" to GITHUB_PR_NUMBER,
-        "project.name" to PROJECT_NAME,
-        "pipeline.build.id" to PIPELINE_BUILD_ID,
-        "pipeline.job.id" to PIPELINE_VMSEQ_ID,
-        "pipeline.task.id" to PIPELINE_ELEMENT_ID,
-        "turbo.task.id" to PIPELINE_TURBO_TASK_ID,
-        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL
-     */
     @Test
     fun fillOldVar() {
         val vars = mutableMapOf<String, String>(
@@ -73,7 +55,7 @@ class PipelineVarUtilTest {
     fun oldVarToNewVar() {
         assertEquals(PIPELINE_START_USER_NAME, PipelineVarUtil.oldVarToNewVar("pipeline.start.user.name"))
         assertEquals(PIPELINE_START_TYPE, PipelineVarUtil.oldVarToNewVar("pipeline.start.type"))
-        assertEquals(PIPELINE_BUILD_NUM, PipelineVarUtil.oldVarToNewVar("pipeline.start.num"))
+        assertEquals(PIPELINE_BUILD_NUM, PipelineVarUtil.oldVarToNewVar("pipeline.build.num"))
         assertEquals(PIPELINE_WEBHOOK_REVISION, PipelineVarUtil.oldVarToNewVar("hookRevision"))
         assertEquals(PIPELINE_WEBHOOK_BRANCH, PipelineVarUtil.oldVarToNewVar("hookBranch"))
         assertEquals(PIPELINE_WEBHOOK_SOURCE_BRANCH, PipelineVarUtil.oldVarToNewVar("hookSourceBranch"))
@@ -86,13 +68,16 @@ class PipelineVarUtilTest {
         assertEquals(PIPELINE_ELEMENT_ID, PipelineVarUtil.oldVarToNewVar("pipeline.task.id"))
         assertEquals(PIPELINE_TURBO_TASK_ID, PipelineVarUtil.oldVarToNewVar("turbo.task.id"))
         assertEquals(REPORT_DYNAMIC_ROOT_URL, PipelineVarUtil.oldVarToNewVar("report.dynamic.root.url"))
+        assertEquals(PIPELINE_TIME_DURATION, PipelineVarUtil.oldVarToNewVar("pipeline.time.duration"))
+        assertEquals(PROJECT_NAME_CHINESE, PipelineVarUtil.oldVarToNewVar("project.name.chinese"))
+        assertEquals(PIPELINE_NAME, PipelineVarUtil.oldVarToNewVar("pipeline.name"))
     }
 
     @Test
     fun newVarToOldVar() {
         assertEquals("pipeline.start.user.name", PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_NAME))
         assertEquals("pipeline.start.type", PipelineVarUtil.newVarToOldVar(PIPELINE_START_TYPE))
-        assertEquals("pipeline.start.num", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_NUM))
+        assertEquals("pipeline.build.num", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_NUM))
         assertEquals("hookRevision", PipelineVarUtil.newVarToOldVar(PIPELINE_WEBHOOK_REVISION))
         assertEquals("hookBranch", PipelineVarUtil.newVarToOldVar(PIPELINE_WEBHOOK_BRANCH))
         assertEquals("hookSourceBranch", PipelineVarUtil.newVarToOldVar(PIPELINE_WEBHOOK_SOURCE_BRANCH))
@@ -105,5 +90,8 @@ class PipelineVarUtilTest {
         assertEquals("pipeline.task.id", PipelineVarUtil.newVarToOldVar(PIPELINE_ELEMENT_ID))
         assertEquals("turbo.task.id", PipelineVarUtil.newVarToOldVar(PIPELINE_TURBO_TASK_ID))
         assertEquals("report.dynamic.root.url", PipelineVarUtil.newVarToOldVar(REPORT_DYNAMIC_ROOT_URL))
+        assertEquals("pipeline.time.duration", PipelineVarUtil.newVarToOldVar(PIPELINE_TIME_DURATION))
+        assertEquals("project.name.chinese", PipelineVarUtil.newVarToOldVar(PROJECT_NAME_CHINESE))
+        assertEquals("pipeline.name", PipelineVarUtil.newVarToOldVar(PIPELINE_NAME))
     }
 }

@@ -23,14 +23,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
 
-@MicroService
-@ComponentScan("com.tencent.devops.notify")
-class Application
+package com.tencent.devops.worker.common.api.archive
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.task.archive.pojo.JfrogFilesData
+
+class JfrogResourceApi : AbstractBuildResourceApi() {
+
+    private val cusListFilesUrl = "/jfrog/api/build/custom/?list&deep=1&listFolders=1"
+    private val listFilesUrl = "/jfrog/api/build/archive"
+
+    // 获取所有的文件和文件夹
+    fun getAllFiles(runningBuildId: String, pipelineId: String, buildId: String): JfrogFilesData {
+
+        val listFilesUrl =
+            if (pipelineId.isNotEmpty() && buildId.isNotEmpty()) "$listFilesUrl/$pipelineId/$buildId?list&deep=1&listFolders=1"
+            else cusListFilesUrl
+
+        val request = buildGet(listFilesUrl)
+
+        val responseContent = request(request, "获取仓库文件失败")
+        return try {
+            JsonUtil.getObjectMapper().readValue(responseContent, JfrogFilesData::class.java)
+        } catch (e: Exception) {
+            LoggerService.addNormalLine("get archive files fail :\n$responseContent")
+            JfrogFilesData("", "", listOf())
+        }
+    }
 }

@@ -104,12 +104,12 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<String>> {
         val param = ArtifactorySearchParam(
-            projectId,
-            pipelineId,
-            buildId,
-            path,
-            artifactoryType == ArtifactoryType.CUSTOM_DIR,
-            1
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            regexPath = path,
+            custom = artifactoryType == ArtifactoryType.CUSTOM_DIR,
+            executeCount = 1
         )
         return Result(jfrogService.getFileDownloadUrl(param))
     }

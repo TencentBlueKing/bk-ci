@@ -167,7 +167,7 @@ class GitService @Autowired constructor(
         logger.info("Start to refresh the token of user $userId by token $accessToken")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "${gitConfig.gitApiUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
+            val url = "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
                 "&grant_type=refresh_token&refresh_token=${accessToken.refreshToken}&redirect_uri=$callbackUrl"
             val request = Request.Builder()
                 .url(url)
@@ -184,7 +184,7 @@ class GitService @Autowired constructor(
     }
 
     fun getAuthUrl(authParamJsonStr: String): String {
-        return "${gitConfig.gitApiUrl}/oauth/authorize?client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
+        return "${gitConfig.gitUrl}/oauth/authorize?client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
     }
 
     fun getToken(userId: String, code: String): GitToken {
@@ -192,7 +192,7 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val tokenUrl =
-                "${gitConfig.gitApiUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret&code=$code&grant_type=authorization_code&redirect_uri=$redirectUrl"
+                "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret&code=$code&grant_type=authorization_code&redirect_uri=$redirectUrl"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)

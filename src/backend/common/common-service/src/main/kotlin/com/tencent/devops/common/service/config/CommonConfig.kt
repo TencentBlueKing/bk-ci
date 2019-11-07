@@ -54,6 +54,42 @@ class CommonConfig {
     val devopsApiGateway: String? = null
 
     /**
+     * DevOps IDC网关地址
+     */
+    @Value("\${devopsGateway.idc:#{null}}")
+    val devopsIdcGateway: String? = null
+
+    /**
+     * DevOps IDC PROXY网关地址
+     */
+    @Value("\${devopsGateway.idcProxy:#{null}}")
+    val devopsIdcProxyGateway: String? = null
+
+    /**
+     * DevOps devnet PROXY网关地址
+     */
+    @Value("\${devopsGateway.devnetProxy:#{null}}")
+    val devopsDevnetProxyGateway: String? = null
+
+    /**
+     * DevOps devnet 网关地址
+     */
+    @Value("\${devopsGateway.devnet:#{null}}")
+    val devopsDevnetGateway: String? = null
+
+    /**
+     * DevOps OSS 网关地址
+     */
+    @Value("\${devopsGateway.oss:#{null}}")
+    val devopsOssGateway: String? = null
+
+    /**
+     * DevOps OSS Proxy网关地址
+     */
+    @Value("\${devopsGateway.ossProxy:#{null}}")
+    val devopsOssProxyGateway: String? = null
+
+    /**
      * DevOps 外部地址
      */
     @Value("\${devopsGateway.outer:#{null}}")

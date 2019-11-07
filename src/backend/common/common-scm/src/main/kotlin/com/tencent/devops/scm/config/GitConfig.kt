@@ -50,7 +50,6 @@ class GitConfig {
     val gitlabHookUrl: String = ""
 
     /* git config*/
-    @Deprecated("use apiUrl")
     @Value("\${scm.git.url:}")
     val gitUrl: String = ""
 

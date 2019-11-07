@@ -22,28 +22,23 @@ local _M = {}
 --[[获取客户端的IP地址]]
 function _M:clientIp()
   local headers=ngx.req.get_headers()
-  -- ngx.log(ngx.ERR, "X-REAL-IP:", headers["X-REAL-IP"])
-  -- ngx.log(ngx.ERR, "X_FORWARDED_FOR:", headers["X_FORWARDED_FOR"])
-  -- ngx.log(ngx.ERR, "remote_addr:", ngx.var.remote_addr)
-  local ip=headers["X-REAL-IP"] or headers["X_FORWARDED_FOR"] or ngx.var.remote_addr or "0.0.0.0"
+  local ip=headers["X-DEVOPS-REAL-IP"] or headers["X-REAL-IP"] or headers["X_FORWARDED_FOR"] or ngx.var.remote_addr or "0.0.0.0"
   return ip
 end
 
 --[[判断IP是否在名名单中]]
 function _M:isInWhiteList(whiteList)
   local headers=ngx.req.get_headers()
-  
-  -- 打印相关IP
-  -- ngx.log(ngx.ERR, "X-REAL-IP:", headers["X-REAL-IP"])
-  -- ngx.log(ngx.ERR, "X_FORWARDED_FOR:", headers["X_FORWARDED_FOR"])
-  -- ngx.log(ngx.ERR, "remote_addr:", ngx.var.remote_addr)
-
-
   local result = false
   local clientIp = ""
   -- 将白名单转为table格式
   if type(whiteList) == "string" then
     whiteList = {whiteList}
+  end
+  -- 判断X-DEVOPS-REAL-IP是否在名单中（单IP）
+  clientIp = headers["X-DEVOPS-REAL-IP"] or ""
+  if arrayUtil:isInArray(clientIp,whiteList) then
+    return true
   end
   -- 判断X-REAL-IP是否在名单中（单IP）
   clientIp = headers["X-REAL-IP"] or ""

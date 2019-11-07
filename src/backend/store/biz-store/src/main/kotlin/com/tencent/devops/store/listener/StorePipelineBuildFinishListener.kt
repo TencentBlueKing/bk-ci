@@ -15,7 +15,7 @@ class StorePipelineBuildFinishListener @Autowired constructor(
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        logger.info("the atomMarket event is:$event")
+        logger.info("store event is:$event")
         val result = storeBuildService.handleStoreBuildStatus(
             event.userId,
             event.buildId,

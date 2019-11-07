@@ -144,9 +144,12 @@ object PipelineVarUtil {
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
+        "pipeline.time.duration" to PIPELINE_TIME_DURATION,
+        "project.name.chinese" to PROJECT_NAME_CHINESE,
+        "pipeline.name" to PIPELINE_NAME,
+        "pipeline.build.num" to PIPELINE_BUILD_NUM,
         "pipeline.start.user.name" to PIPELINE_START_USER_NAME,
         "pipeline.start.type" to PIPELINE_START_TYPE,
-        "pipeline.start.num" to PIPELINE_BUILD_NUM,
         "hookRevision" to PIPELINE_WEBHOOK_REVISION,
         "hookBranch" to PIPELINE_WEBHOOK_BRANCH,
         "hookSourceBranch" to PIPELINE_WEBHOOK_SOURCE_BRANCH,
