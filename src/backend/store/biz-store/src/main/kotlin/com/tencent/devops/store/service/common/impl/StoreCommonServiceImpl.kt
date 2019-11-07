@@ -174,6 +174,7 @@ class StoreCommonServiceImpl @Autowired constructor(
         val url = when (storeType) {
             StoreTypeEnum.ATOM -> "${storeDetailUrlConfig.atomDetailBaseUrl}$storeCode"
             StoreTypeEnum.TEMPLATE -> "${storeDetailUrlConfig.templateDetailBaseUrl}$storeCode"
+            StoreTypeEnum.IMAGE -> "${storeDetailUrlConfig.imageDetailBaseUrl}$storeCode"
             StoreTypeEnum.IDE_ATOM -> "${storeDetailUrlConfig.ideAtomDetailBaseUrl}$storeCode"
             else -> ""
         }
