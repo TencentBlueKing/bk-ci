@@ -140,10 +140,28 @@ const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 object PipelineVarUtil {
+
+    /**
+     * 前置拼接
+     */
+    private val oldPrefixMappingNew = mapOf(
+        "pipeline.material.url" to PIPELINE_MATERIAL_URL,
+        "pipeline.material.branchName" to PIPELINE_MATERIAL_BRANCHNAME,
+        "pipeline.material.aliasName" to PIPELINE_MATERIAL_ALIASNAME,
+        "pipeline.material.new.commit.id" to PIPELINE_MATERIAL_NEW_COMMIT_ID,
+        "pipeline.material.new.commit.times" to PIPELINE_MATERIAL_NEW_COMMIT_TIMES,
+        "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
+    )
+
+
+    private val newPrefixMappingOld = oldPrefixMappingNew.map { kv -> kv.value to kv.key }.toMap()
+
     /**
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
+        "pipeline.time.start" to PIPELINE_TIME_START,
+        "pipeline.time.end" to PIPELINE_TIME_END,
         "pipeline.time.duration" to PIPELINE_TIME_DURATION,
         "project.name.chinese" to PROJECT_NAME_CHINESE,
         "pipeline.name" to PIPELINE_NAME,
@@ -171,6 +189,7 @@ object PipelineVarUtil {
      */
     fun fillOldVar(vars: MutableMap<String, String>) {
         turning(newVarMappingOldVar, vars)
+        prefixTurning(newPrefixMappingOld, vars)
     }
 
     /**
@@ -178,12 +197,25 @@ object PipelineVarUtil {
      */
     fun fillNewVar(vars: MutableMap<String, String>) {
         turning(oldVarMappingNewVar, vars)
+        prefixTurning(oldPrefixMappingNew, vars)
     }
 
     private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>) {
         mapping.forEach {
             if (vars[it.key] != null) {
                 vars[it.value] = vars[it.key]!!
+            }
+        }
+    }
+
+    private fun prefixTurning(mapping: Map<String, String>, vars: MutableMap<String, String>) {
+        val keys = HashSet(vars.keys)
+        keys.forEach v@{
+            mapping.forEach m@{ (key, value) ->
+                if (it.startsWith(key)) {
+                    vars["$value${it.substring(key.length)}"] = vars[it]!!
+                    return@v
+                }
             }
         }
     }

@@ -35,7 +35,8 @@ class PipelineVarUtilTest {
     fun fillOldVar() {
         val vars = mutableMapOf<String, String>(
             PIPELINE_START_USER_NAME to "admin",
-            "userName" to "hello"
+            "userName" to "hello",
+            "${PIPELINE_MATERIAL_URL}.rep/a1" to "http://git.xxx.com/group/repo.git"
         )
         PipelineVarUtil.fillOldVar(vars)
         println(vars)
@@ -45,7 +46,8 @@ class PipelineVarUtilTest {
     fun fillNewVar() {
         val vars = mutableMapOf<String, String>(
             "pipeline.start.user.name" to "admin",
-            "userName" to "hello"
+            "userName" to "hello",
+            "pipeline.material.url.rep/a1" to "http://git.xxx.com/group/repo.git"
         )
         PipelineVarUtil.fillNewVar(vars)
         println(vars)
