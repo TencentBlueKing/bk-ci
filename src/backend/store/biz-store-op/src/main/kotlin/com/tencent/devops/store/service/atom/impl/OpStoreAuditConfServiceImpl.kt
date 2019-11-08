@@ -32,10 +32,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
-import com.tencent.devops.store.dao.common.StoreAudtConfDao
+import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.dao.common.StoreAuditConfDao
 import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.OpStoreAuditConfService
 import org.jooq.DSLContext
@@ -44,7 +47,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpStoreAuditConfServiceImpl @Autowired constructor(
-    private val storeAuditConfDao: StoreAudtConfDao,
+    private val storeAuditConfDao: StoreAuditConfDao,
     private val dslContext: DSLContext
 ) : OpStoreAuditConfService {
     /**
@@ -57,19 +60,45 @@ class OpStoreAuditConfServiceImpl @Autowired constructor(
      */
     override fun getAllAuditConf(
         storeName: String?,
-        storeType: Byte?,
-        status: Byte?,
+        storeType: StoreTypeEnum?,
+        status: DeptStatusEnum?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<VisibleAuditInfo>> {
-        val res = storeAuditConfDao.getDeptRel(dslContext, storeName, storeType, status)
+        var storeCodeList: List<String>? = null
+        if (!storeName.isNullOrBlank()) {
+            if (null == storeType) {
+                val storeTypeList = StoreTypeEnum.values()
+                storeTypeList.forEach {
+                    storeCodeList = getStoreCodeListByName(it, storeName)
+                }
+            } else {
+                storeCodeList = getStoreCodeListByName(storeType, storeName)
+            }
+        }
+        val res = storeAuditConfDao.getDeptRel(dslContext, storeCodeList, storeType, status)
         val auditList = mutableListOf<VisibleAuditInfo>()
         res?.forEach {
             auditList.add(generateAuditConf(it))
         }
         val count = auditList.size.toLong()
         val totalPages = PageUtil.calTotalPage(pageSize, count)
-        return Result(Page(count = count, page = page ?: 1, pageSize = pageSize ?: 10, totalPages = totalPages, records = auditList))
+        return Result(Page(count = count, page = page ?: 1, pageSize = pageSize
+            ?: 10, totalPages = totalPages, records = auditList))
+    }
+
+    private fun getStoreCodeListByName(storeType: StoreTypeEnum, storeName: String?): List<String> {
+        val storeCodeList = mutableListOf<String>()
+        val storeCommonDao = getStoreCommonDao(storeType.name)
+        val storeCodeRecords = storeCommonDao.getStoreCodeListByName(dslContext, storeName!!)
+        storeCodeRecords?.forEach { record ->
+            storeCodeList.add(record["storeCode"] as String)
+        }
+        return storeCodeList
+    }
+
+    private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
+        return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
     }
 
     /**
@@ -77,22 +106,18 @@ class OpStoreAuditConfServiceImpl @Autowired constructor(
      * @param storeDeptRel 审核记录对象
      */
     private fun generateAuditConf(storeDeptRel: TStoreDeptRelRecord): VisibleAuditInfo {
-        val storeName: String? = when {
-            storeDeptRel.storeType == StoreTypeEnum.ATOM.type.toByte() -> storeAuditConfDao.getAtomName(dslContext, storeDeptRel.storeCode)
-            storeDeptRel.storeType == StoreTypeEnum.TEMPLATE.type.toByte() -> storeAuditConfDao.getTemplateName(dslContext, storeDeptRel.storeCode)
-            storeDeptRel.storeType == StoreTypeEnum.IMAGE.type.toByte() -> storeAuditConfDao.getImageName(dslContext, storeDeptRel.storeCode)
-            else -> "Unknown StoreName"
-        }
+        val storeType = StoreTypeEnum.getStoreType(storeDeptRel.storeType.toInt())
+        val storeCommonDao = getStoreCommonDao(storeType)
         return VisibleAuditInfo(
-                id = storeDeptRel.id,
-                storeName = storeName ?: "",
-                deptName = storeDeptRel.deptName,
-                deptId = storeDeptRel.deptId,
-                status = storeDeptRel.status,
-                comment = storeDeptRel.comment,
-                modifier = storeDeptRel.modifier,
-                storeType = storeDeptRel.storeType,
-                modifierTime = storeDeptRel.updateTime.timestampmilli()
+            id = storeDeptRel.id,
+            storeName = storeCommonDao.getNewestStoreNameByCode(dslContext, storeDeptRel.storeCode) ?: "",
+            deptName = storeDeptRel.deptName,
+            deptId = storeDeptRel.deptId,
+            status = storeDeptRel.status,
+            comment = storeDeptRel.comment,
+            modifier = storeDeptRel.modifier,
+            storeType = storeDeptRel.storeType,
+            modifierTime = storeDeptRel.updateTime.timestampmilli()
         )
     }
 
@@ -105,7 +130,7 @@ class OpStoreAuditConfServiceImpl @Autowired constructor(
     override fun approveVisibleDept(userId: String, id: String, storeApproveRequest: StoreApproveRequest): Result<Boolean> {
         val isExists = storeAuditConfDao.countDeptRel(dslContext, id)
         if (isExists == 0)
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("记录ID"), false)
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id), false)
 
         storeAuditConfDao.approveVisibleDept(dslContext, userId, id, storeApproveRequest)
         return Result(true)

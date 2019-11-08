@@ -29,6 +29,8 @@ package com.tencent.devops.store.dao.atom
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository(value = "ATOM_COMMON_DAO")
@@ -37,6 +39,25 @@ class AtomCommonDao : AbstractStoreCommonDao() {
     override fun getStoreNameById(dslContext: DSLContext, storeId: String): String? {
         return with(TAtom.T_ATOM) {
             dslContext.select(NAME).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
+        }
+    }
+
+    override fun getNewestStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(NAME).from(this)
+                .where(ATOM_CODE.eq(storeCode))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(ATOM_CODE.`as`("storeCode")).from(this)
+                .where(NAME.contains(storeName))
+                .groupBy(ATOM_CODE)
+                .fetch()
         }
     }
 }
