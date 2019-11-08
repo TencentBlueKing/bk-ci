@@ -27,7 +27,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import { BOOLEAN_LIST, isMultipleParam, isEnumParam, isSvnParam, isCodelibParam, ParamComponentMap, STRING, BOOLEAN, MULTIPLE, ENUM, SVN_TAG, CODE_LIB, CONTAINER_TYPE, ARTIFACTORY, SUB_PIPELINE } from '@/store/modules/atom/paramsConfig'
+    import { BOOLEAN_LIST, isMultipleParam, isEnumParam, isSvnParam, isGitParam, isCodelibParam, ParamComponentMap, STRING, BOOLEAN, MULTIPLE, ENUM, SVN_TAG, GIT_REF, CODE_LIB, CONTAINER_TYPE, ARTIFACTORY, SUB_PIPELINE } from '@/store/modules/atom/paramsConfig'
 
     export default {
 
@@ -81,7 +81,7 @@
                         if (this.paramValues[param.id] !== mdvStr) {
                             this.handleParamChange(param.id, mdvStr)
                         }
-                    } else if (isEnumParam(param.type) || isSvnParam(param.type) || isCodelibParam(param.type)) { // 若默认值不在选项里，清除对应的默认值
+                    } else if (isEnumParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isCodelibParam(param.type)) { // 若默认值不在选项里，清除对应的默认值
                         if (this.paramValues[param.id] && !param.options.find(opt => opt.key === this.paramValues[param.id])) {
                             this.handleParamChange(param.id, '')
                             Object.assign(restParam, {
@@ -93,7 +93,7 @@
                         ...param,
                         component: ParamComponentMap[param.type],
                         name: param.id,
-                        required: param.type === SVN_TAG,
+                        required: param.type === SVN_TAG || param.type === GIT_REF,
                         value: this.paramValues[param.id],
                         ...restParam
                     }
@@ -109,6 +109,7 @@
                     case param.type === ENUM:
                     case param.type === MULTIPLE:
                     case param.type === SVN_TAG:
+                    case param.type === GIT_REF:
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
                     case param.type === ARTIFACTORY:

@@ -70,7 +70,7 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isArtifactoryParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
@@ -82,11 +82,15 @@
                                     </bk-form-item>
 
                                     <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
-                                        <request-selector v-bind="svnPathOption" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="&quot;required&quot;"></request-selector>
+                                        <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="&quot;required&quot;"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="relativePath" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.relativePathTips')" :value="param.relativePath"></vuex-input>
+                                    </bk-form-item>
+
+                                    <bk-form-item v-if="isGitParam(param.type)" :label="$t('editPage.gitRepo')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
+                                        <request-selector v-bind="getRepoOption('CODE_GIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="&quot;required&quot;"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item v-if="isCodelibParam(param.type)" :label="$t('editPage.codelibParams')" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
@@ -150,12 +154,13 @@
         isMultipleParam,
         isCodelibParam,
         isSvnParam,
+        isGitParam,
         isArtifactoryParam,
         isSubPipelineParam,
+        getRepoOption,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING,
-        SVN_PATH_OPTION,
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
         SUB_PIPELINE_OPTION
@@ -256,9 +261,6 @@
             boolList () {
                 return BOOLEAN
             },
-            svnPathOption () {
-                return SVN_PATH_OPTION
-            },
             codelibOption () {
                 return CODE_LIB_OPTION
             },
@@ -318,12 +320,16 @@
             isBooleanParam,
             isMultipleParam,
             isSvnParam,
+            isGitParam,
             isCodelibParam,
             isArtifactoryParam,
             isBuildResourceParam,
             isSubPipelineParam,
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
+            },
+            getRepoOption (type) {
+                return getRepoOption(type)
             },
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)

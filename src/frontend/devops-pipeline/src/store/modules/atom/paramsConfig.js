@@ -22,6 +22,7 @@ export const BOOLEAN = 'BOOLEAN'
 export const ENUM = 'ENUM'
 export const MULTIPLE = 'MULTIPLE'
 export const SVN_TAG = 'SVN_TAG'
+export const GIT_REF = 'GIT_REF'
 export const CODE_LIB = 'CODE_LIB'
 export const CONTAINER_TYPE = 'CONTAINER_TYPE'
 export const ARTIFACTORY = 'ARTIFACTORY'
@@ -75,6 +76,16 @@ export const DEFAULT_PARAM = {
         options: [],
         type: SVN_TAG,
         typeDesc: 'svntag',
+        required: true
+    },
+    [GIT_REF]: {
+        id: 'gitref',
+        defaultValue: '',
+        repoHashId: '',
+        desc: '',
+        options: [],
+        type: GIT_REF,
+        typeDesc: 'gitref',
         required: true
     },
     [CODE_LIB]: {
@@ -133,6 +144,7 @@ export const ParamComponentMap = {
     [ENUM]: 'Selector',
     [MULTIPLE]: 'Selector',
     [SVN_TAG]: 'Selector',
+    [GIT_REF]: 'Selector',
     [CODE_LIB]: 'Selector',
     [CONTAINER_TYPE]: 'Selector',
     [ARTIFACTORY]: 'Selector',
@@ -150,12 +162,14 @@ export const BOOLEAN_LIST = [
     }
 ]
 
-export const SVN_PATH_OPTION = {
-    url: '/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=CODE_SVN&page=1&pageSize=500',
-    paramId: 'repositoryHashId',
-    paramName: 'aliasName',
-    searchable: true,
-    hasAddItem: true
+export function getRepoOption (type = 'CODE_SVN') {
+    return {
+        url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=500`,
+        paramId: 'repositoryHashId',
+        paramName: 'aliasName',
+        searchable: true,
+        hasAddItem: true
+    }
 }
 
 export const CODE_LIB_OPTION = {
@@ -192,6 +206,7 @@ export const isBooleanParam = paramType(BOOLEAN)
 export const isEnumParam = paramType(ENUM)
 export const isMultipleParam = paramType(MULTIPLE)
 export const isSvnParam = paramType(SVN_TAG)
+export const isGitParam = paramType(GIT_REF)
 export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)
