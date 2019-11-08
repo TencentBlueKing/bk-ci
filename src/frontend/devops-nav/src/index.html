@@ -218,8 +218,8 @@
                     var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, '$1')
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     if (children[j].inject_type === 'amd') {
-                        children[j].js_url = children[j].js_url.replace('http://static.devops.oa.com', WEBSITE_URL)
-                        children[j].css_url = children[j].css_url.replace('http://static.devops.oa.com', WEBSITE_URL)
+                        children[j].js_url = children[j].js_url.replace('http://static.devops.oa.com', WEBSITE_URL).replace(/^(http:\/\/\S+?\/\S+?\/\S+?\.)(\S+?)(css|js)$/i, '$1$3')
+                        children[j].css_url = children[j].css_url.replace('http://static.devops.oa.com', WEBSITE_URL).replace(/^(http:\/\/\S+?\/\S+?\/\S+?\.)(\S+?)(css|js)$/i, '$1$3')
                     } else {
                         children[j].iframe_url = children[j].iframe_url.replace('http://static.devops.oa.com', WEBSITE_URL)
                     }
