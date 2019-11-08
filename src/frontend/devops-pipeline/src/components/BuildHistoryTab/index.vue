@@ -12,7 +12,7 @@
             <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
         </bk-dialog>
         <template v-if="currentBuildNo">
-            <pipeline-log :title="`$t('history.viewLog')${currentBuildNum ? `（#${currentBuildNum}）` : ''}`" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
+            <pipeline-log :title="`${$t('history.viewLog')}${currentBuildNum ? `（#${currentBuildNum}）` : ''}`" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
         </template>
     </div>
 </template>
