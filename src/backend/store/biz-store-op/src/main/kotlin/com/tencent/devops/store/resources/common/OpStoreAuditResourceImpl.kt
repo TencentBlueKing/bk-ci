@@ -31,6 +31,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreAuditResource
 import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.OpStoreAuditConfService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,8 +48,8 @@ class OpStoreAuditResourceImpl @Autowired constructor(
     override fun getAllAuditConf(
         userId: String,
         storeName: String?,
-        storeType: Byte?,
-        status: Byte?,
+        storeType: StoreTypeEnum?,
+        status: DeptStatusEnum?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<VisibleAuditInfo>> {
