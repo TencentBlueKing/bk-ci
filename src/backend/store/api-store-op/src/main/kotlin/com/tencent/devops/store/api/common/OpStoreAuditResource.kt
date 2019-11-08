@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -62,10 +64,10 @@ interface OpStoreAuditResource {
         storeName: String?,
         @ApiParam("商城组件类型")
         @QueryParam("storeType")
-        storeType: Byte?,
+        storeType: StoreTypeEnum?,
         @ApiParam("审核状态")
         @QueryParam("status")
-        status: Byte?,
+        status: DeptStatusEnum?,
         @ApiParam("分页总页数")
         @QueryParam("page")
         page: Int?,

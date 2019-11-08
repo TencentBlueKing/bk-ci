@@ -27,6 +27,8 @@
 package com.tencent.devops.store.dao.common
 
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 
 abstract class AbstractStoreCommonDao {
 
@@ -34,4 +36,14 @@ abstract class AbstractStoreCommonDao {
         dslContext: DSLContext,
         storeId: String
     ): String?
+
+    abstract fun getNewestStoreNameByCode(
+        dslContext: DSLContext,
+        storeCode: String
+    ): String?
+
+    abstract fun getStoreCodeListByName(
+        dslContext: DSLContext,
+        storeName: String
+    ): Result<out Record>?
 }
