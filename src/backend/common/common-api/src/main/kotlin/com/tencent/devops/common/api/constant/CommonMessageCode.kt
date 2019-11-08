@@ -53,4 +53,6 @@ object CommonMessageCode {
     const val ERROR_SERVICE_NO_FOUND = "2100007" // "找不到任何有效的{0}服务提供者"
     const val ERROR_SERVICE_INVOKE_FAILURE = "2100008" // "服务调用失败：{0},uniqueId={1}"
     const val ERROR_INVALID_CONFIG = "2100009" // "配置不可用：{0},uniqueId={1}"
+    const val ERROR_REST_EXCEPTION_COMMON_TIP = "2100010" // 接口访问出现异常，请联系助手或稍后再重试
+    const val ERROR_CLIENT_REST_ERROR = "2100011" // 用户请求不合法，参数或方法错误，请咨询助手
 }
