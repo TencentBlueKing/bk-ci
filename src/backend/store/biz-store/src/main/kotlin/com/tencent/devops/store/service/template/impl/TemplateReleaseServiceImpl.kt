@@ -116,7 +116,6 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
             // 默认给关联模板的人赋予管理员权限
-            storeMemberDao.addStoreMember(context, userId, templateCode, userId, 0, StoreTypeEnum.TEMPLATE.type.toByte())
             storeMemberDao.addStoreMember(
                 dslContext = context,
                 userId = userId,
