@@ -33,6 +33,7 @@ data class UploadCosCdnParam(
     var pipelineId: String,
     var buildId: String,
     var elementId: String,
+    var containerId: String,
     var regexPaths: String,
     var customize: Boolean,
     var bucket: String,

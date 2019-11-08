@@ -41,12 +41,13 @@ import com.tencent.devops.external.pojo.GithubCheckRuns
 import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
-import com.tencent.devops.repository.config.GitConfig
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.service.IGithubService
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import okhttp3.MediaType
 import okhttp3.Request
@@ -63,6 +64,7 @@ import java.util.concurrent.TimeUnit
 class GithubService @Autowired constructor(
         private val githubTokenService: GithubTokenService,
         private val githubOAuthService: GithubOAuthService,
+        private val IGithubService: IGithubService,
         private val objectMapper: ObjectMapper,
         private val gitConfig: GitConfig,
         private val client: Client
@@ -127,52 +129,56 @@ class GithubService @Autowired constructor(
     fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult {
         val accessToken = githubTokenService.getAccessToken(userId)
         if (accessToken == null) {
-            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
+//            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
+            val url = IGithubService.getGithubOauth(projectId, userId, repoHashId)
             return AuthorizeResult(HTTP_403, url)
         }
 
         return try {
-            val repos = getRepositories(accessToken.accessToken)
-            val fmt = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault())
-            val projects = repos.map {
-                Project(
-                        id = it.id.toString(),
-                        name = it.name,
-                        nameWithNameSpace = it.fullName,
-                        sshUrl = it.sshUrl,
-                        httpUrl = it.httpUrl,
-                        lastActivity = TimeUnit.SECONDS.toMillis(ZonedDateTime.parse(it.updateAt, fmt).toEpochSecond())
-                )
-            }.toMutableList()
+////            val repos = getRepositories(accessToken.accessToken)
+//            val repos = IGithubService.getProject(accessToken.accessToken, userId)
+//            val fmt = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault())
+//            val projects = repos.map {
+//                Project(
+//                        id = it.id.toString(),
+//                        name = it.name,
+//                        nameWithNameSpace = it.fullName,
+//                        sshUrl = it.sshUrl,
+//                        httpUrl = it.httpUrl,
+//                        lastActivity = TimeUnit.SECONDS.toMillis(ZonedDateTime.parse(it.updateAt, fmt).toEpochSecond())
+//                )
+//            }.toMutableList()
+            val projects = IGithubService.getProject(accessToken.accessToken, userId).toMutableList()
 
             AuthorizeResult(HTTP_200, "", projects)
         } catch (ignored: Throwable) {
             logger.warn("Github get project fail", ignored)
-            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
+//            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
+            val url = IGithubService.getGithubOauth(projectId, userId, repoHashId)
             AuthorizeResult(HTTP_403, url)
         }
     }
 
-    fun getRepositories(token: String): List<GithubRepo> {
-        val githubRepos = mutableListOf<GithubRepo>()
-        var page = 0
-        run outside@{
-            while (page < PAGE_SIZE) {
-                page++
-                val request = buildGet(token, "user/repos?page=$page&per_page=$PAGE_SIZE")
-                val body = getBody(OPERATION_GET_REPOS, request)
-                val repos = objectMapper.readValue<List<GithubRepo>>(body)
-                githubRepos.addAll(repos)
-
-                if (repos.size < PAGE_SIZE) {
-                    return@outside
-                }
-            }
-        }
-        logger.info("GitHub get repos($githubRepos)")
-
-        return githubRepos
-    }
+//    fun getRepositories(token: String): List<GithubRepo> {
+//        val githubRepos = mutableListOf<GithubRepo>()
+//        var page = 0
+//        run outside@{
+//            while (page < PAGE_SIZE) {
+//                page++
+//                val request = buildGet(token, "user/repos?page=$page&per_page=$PAGE_SIZE")
+//                val body = getBody(OPERATION_GET_REPOS, request)
+//                val repos = objectMapper.readValue<List<GithubRepo>>(body)
+//                githubRepos.addAll(repos)
+//
+//                if (repos.size < PAGE_SIZE) {
+//                    return@outside
+//                }
+//            }
+//        }
+//        logger.info("GitHub get repos($githubRepos)")
+//
+//        return githubRepos
+//    }
 
     fun getBranch(token: String, projectName: String, branch: String?): GithubBranch? {
         logger.info("getBranch| $projectName - $branch")

@@ -50,7 +50,7 @@ interface ServiceTimerBuildResource {
 
     @ApiOperation("定时器触发启动流水线")
     @POST
-    @Path("/project/{projectId}/pipeline/{pipelineId}/timerTrigger")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/timer/trigger")
     fun timerTrigger(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

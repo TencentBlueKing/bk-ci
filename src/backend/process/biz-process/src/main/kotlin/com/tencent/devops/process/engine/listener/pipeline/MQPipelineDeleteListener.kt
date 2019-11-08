@@ -35,6 +35,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.jooq.DSLContext
@@ -54,6 +55,7 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineUserService: PipelineUserService,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -81,11 +83,14 @@ class MQPipelineDeleteListener @Autowired constructor(
             }
         }
 
+        pipelineRuntimeService.cancelPendingTask(projectId, pipelineId, userId)
+
         if (event.clearUpModel) {
             pipelineGroupService.deleteAllUserFavorByPipeline(userId, pipelineId) // 删除收藏该流水线上所有记录
             pipelineGroupService.deletePipelineLabel(userId, pipelineId)
             pipelineUserService.delete(pipelineId)
             pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId, userId)
         }
+        pipelineWebhookService.deleteWebhook(pipelineId, userId)
     }
 }

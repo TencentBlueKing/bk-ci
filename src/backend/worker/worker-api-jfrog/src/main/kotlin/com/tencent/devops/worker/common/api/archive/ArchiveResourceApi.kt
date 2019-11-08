@@ -37,6 +37,12 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENT
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_SOURCE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.process.pojo.BuildVariables
@@ -96,28 +102,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
         val url = StringBuilder("/artifactory/custom/upload/build/$jfrogPath")
         with(buildVariables) {
-            url.append(
-                ";${com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID}=${encodeProperty(
-                    projectId
-                )}"
-            )
-            url.append(
-                ";${com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID}=${encodeProperty(
-                    pipelineId
-                )}"
-            )
-            url.append(";${com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID}=${encodeProperty(buildId)}")
-            url.append(
-                ";${com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID}=${encodeProperty(
-                    variables[PIPELINE_START_USER_ID] ?: ""
-                )}"
-            )
-            url.append(
-                ";${com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO}=${encodeProperty(
-                    variables[PIPELINE_BUILD_NUM] ?: ""
-                )}"
-            )
-            url.append(";${com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_SOURCE}=pipeline")
+            url.append(";${ARCHIVE_PROPS_PROJECT_ID}=${encodeProperty(projectId)}")
+            url.append(";${ARCHIVE_PROPS_PIPELINE_ID}=${encodeProperty(pipelineId)}")
+            url.append(";${ARCHIVE_PROPS_BUILD_ID}=${encodeProperty(buildId)}")
+            url.append(";${ARCHIVE_PROPS_USER_ID}=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
+            url.append(";${ARCHIVE_PROPS_BUILD_NO}=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
+            url.append(";${ARCHIVE_PROPS_SOURCE}=pipeline")
             setProps(file, url)
         }
 

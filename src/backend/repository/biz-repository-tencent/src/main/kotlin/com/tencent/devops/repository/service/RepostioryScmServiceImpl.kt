@@ -29,8 +29,6 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.enums.*
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
@@ -39,6 +37,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.api.ServiceSvnResource
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,7 +48,7 @@ class RepostioryScmServiceImpl @Autowired constructor(
     private val client: Client
 ):RepostioryScmService{
     override fun getProject(accessToken: String, userId: String):List<Project> {
-        return client.get(ServiceGitResource::class).getProject(accessToken, userId).data ?: listOf()
+        return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: listOf()
     }
 
     override fun getAuthUrl(authParamJsonStr: String): String {
@@ -57,16 +56,16 @@ class RepostioryScmServiceImpl @Autowired constructor(
     }
 
     override fun getToken(userId: String, code: String): GitToken {
-        return client.get(ServiceGitResource::class).getToken(userId, code).data
+        return client.getScm(ServiceGitResource::class).getToken(userId, code).data
                 ?: throw RuntimeException("get token fail")
     }
 
     override fun getRedirectUrl(redirectUrlType: String): String {
-        return client.get(ServiceGitResource::class).getRedirectUrl(redirectUrlType).data ?: ""
+        return client.getScm(ServiceGitResource::class).getRedirectUrl(redirectUrlType).data ?: ""
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): GitToken {
-        return client.get(ServiceGitResource::class).refreshToken(userId, accessToken).data!!
+        return client.getScm(ServiceGitResource::class).refreshToken(userId, accessToken).data!!
     }
 
     override fun getSvnFileContent(url: String, userId: String, svnType: String, filePath: String, reversion: Long, credential1: String, credential2: String?): String {

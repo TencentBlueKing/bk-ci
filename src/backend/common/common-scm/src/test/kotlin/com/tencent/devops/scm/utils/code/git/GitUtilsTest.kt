@@ -45,6 +45,16 @@ class GitUtilsTest {
     }
 
     @Test
+    fun getGitApiUrl() {
+        val apiUrl = "http://aaa.com/api/v3"
+        val repoApiUrl = "http://github.com/api/v3"
+        var actual = GitUtils.getGitApiUrl(apiUrl, "http://github.com/Tencent/bk-ci.git")
+        assertEquals(repoApiUrl, actual)
+        actual = GitUtils.getGitApiUrl(apiUrl, "http://aaa.com/Tencent/bk-ci.git")
+        assertEquals(apiUrl, actual)
+    }
+
+    @Test
     fun getDomainAndRepoName4SSH() {
         val domainAndRepoName = GitUtils.getDomainAndRepoName("git@github.com:Tencent/bk-ci.git")
         assertEquals(domain, domainAndRepoName.first)

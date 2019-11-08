@@ -137,16 +137,17 @@ class AtomDao : AtomBaseDao() {
     }
 
     /**
-     * 统计分类下处于已发布状态的原子插件个数
+     * 统计分类下处于已发布状态的插件个数
      */
     fun countReleaseAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
+                .and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)
         }
     }
 
     /**
-     * 统计还在使用处于下架中或者已下架状态的原子插件的项目的个数
+     * 统计还在使用处于下架中或者已下架状态的插件的项目的个数
      */
     fun countUndercarriageAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         val a = TAtom.T_ATOM.`as`("a")
@@ -307,10 +308,10 @@ class AtomDao : AtomBaseDao() {
         val b = TClassify.T_CLASSIFY.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
         val d = TAtomFeature.T_ATOM_FEATURE.`as`("d")
-        val defaultAtomCondition = queryDefaultAtomCondition(a, serviceScope, os, category, classifyId) // 默认原子查询条件组装
-        val normalAtomConditions = queryNormalAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 普通原子查询条件组装
-        val initTestAtomCondition = queryInitTestAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 开发者测试原子查询条件组装
-        // 默认原子和普通原子需排除初始化项目下面有处于测试中或者审核中的原子
+        val defaultAtomCondition = queryDefaultAtomCondition(a, serviceScope, os, category, classifyId) // 默认插件查询条件组装
+        val normalAtomConditions = queryNormalAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 普通插件查询条件组装
+        val initTestAtomCondition = queryInitTestAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 开发者测试插件查询条件组装
+        // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
         defaultAtomCondition.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
         normalAtomConditions.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
         val t = dslContext.select(
@@ -442,10 +443,10 @@ class AtomDao : AtomBaseDao() {
     ): Long {
         val a = TAtom.T_ATOM.`as`("a")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
-        val defaultAtomCondition = queryDefaultAtomCondition(a, serviceScope, os, category, classifyId) // 默认原子查询条件组装
-        val normalAtomConditions = queryNormalAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 普通原子查询条件组装
-        val initTestAtomCondition = queryInitTestAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 开发者测试原子查询条件组装
-        // 默认原子和普通原子需排除初始化项目下面有处于测试中或者审核中的原子
+        val defaultAtomCondition = queryDefaultAtomCondition(a, serviceScope, os, category, classifyId) // 默认插件查询条件组装
+        val normalAtomConditions = queryNormalAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 普通插件查询条件组装
+        val initTestAtomCondition = queryInitTestAtomCondition(a, c, serviceScope, os, projectCode, category, classifyId) // 开发者测试插件查询条件组装
+        // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
         defaultAtomCondition.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
         normalAtomConditions.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE).from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
         val defaultAtomCount = dslContext.selectCount().from(a).where(defaultAtomCondition).fetchOne(0, Long::class.java)
@@ -467,8 +468,8 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(serviceScope, a, os, category, classifyId)
         conditions.add(a.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
-        conditions.add(a.DEFAULT_FLAG.eq(true)) // 查默认原子（所有项目都可用）
-        conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的原子
+        conditions.add(a.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
+        conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的插件
         return conditions
     }
 
@@ -481,9 +482,11 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!StringUtils.isEmpty(serviceScope) && !"all".equals(serviceScope, true)) conditions.add(a.SERVICE_SCOPE.contains(serviceScope))
-        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true))) // 当筛选有构建环境的原子时也需加上那些无构建环境原子可以在有构建环境运行的原子
+        // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
+        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
         if (null != category) conditions.add(a.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
         if (!StringUtils.isEmpty(classifyId)) conditions.add(a.CLASSIFY_ID.eq(classifyId))
+        conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         return conditions
     }
 
@@ -498,8 +501,8 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(serviceScope, a, os, category, classifyId)
         conditions.add(a.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
-        conditions.add(a.DEFAULT_FLAG.eq(false)) // 查普通原子
-        conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的原子
+        conditions.add(a.DEFAULT_FLAG.eq(false)) // 查普通插件
+        conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的插件
         conditions.add(c.PROJECT_CODE.eq(projectCode))
         conditions.add(c.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return conditions
@@ -632,7 +635,8 @@ class AtomDao : AtomBaseDao() {
 
         val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
         val tc = TClassify.T_CLASSIFY.`as`("tc")
-        val t = dslContext.select(ta.ATOM_CODE.`as`("atomCode"), ta.CREATE_TIME.max().`as`("createTime")).from(ta).groupBy(ta.ATOM_CODE) // 查找每组atomCode最新的记录
+        // 查找每组atomCode最新的记录
+        val t = dslContext.select(ta.ATOM_CODE.`as`("atomCode"), ta.CREATE_TIME.max().`as`("createTime")).from(ta).groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
             ta.ID.`as`("atomId"),

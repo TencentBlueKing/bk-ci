@@ -560,8 +560,6 @@ class LogServiceV2 @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("more logs params: $buildId, $index, $type, $start, $wholeQuery, $keywords, $tag, $jobId, $executeCount")
-
         val logs = ArrayList<LogLine>()
         val moreLogs = QueryLogs(buildId, getLogStatus(buildId, tag, jobId, executeCount))
         logger.info("more logs status: $moreLogs")
@@ -591,7 +589,7 @@ class LogServiceV2 @Autowired constructor(
                 multiSearchRequestBuilder.add(srbFoldStart).add(srbFoldStop)
             }
 
-            val tempKeywords = if (!keywords.isEmpty()) {
+            val tempKeywords = if (keywords.isNotEmpty()) {
                 keywords
             } else {
                 defaultKeywords

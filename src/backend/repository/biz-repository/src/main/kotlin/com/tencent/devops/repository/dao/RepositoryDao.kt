@@ -88,20 +88,20 @@ class RepositoryDao {
     }
 
     fun countByProject(
-            dslContext: DSLContext,
-            projectId: String,
-            repositoryType: ScmType?,
-            aliasName: String?,
-            repositoryIds: Set<Long>
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryType: ScmType?,
+        aliasName: String?,
+        repositoryIds: Set<Long>
     ): Long {
         with(TRepository.T_REPOSITORY) {
             return when (repositoryType) {
                 null -> {
                     val step = dslContext.selectCount()
-                            .from(this)
-                            .where(PROJECT_ID.eq(projectId))
-                            .and(IS_DELETED.eq(false))
-                            .and(REPOSITORY_ID.`in`(repositoryIds))
+                        .from(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(IS_DELETED.eq(false))
+                        .and(REPOSITORY_ID.`in`(repositoryIds))
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
                     }
@@ -109,10 +109,10 @@ class RepositoryDao {
                 }
                 else -> {
                     val step = dslContext.selectCount()
-                            .from(this)
-                            .where(PROJECT_ID.eq(projectId))
-                            .and(TYPE.eq(repositoryType.name))
-                            .and(IS_DELETED.eq(false))
+                        .from(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(TYPE.eq(repositoryType.name))
+                        .and(IS_DELETED.eq(false))
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
                     }
@@ -215,43 +215,43 @@ class RepositoryDao {
     }
 
     fun listByProject(
-            dslContext: DSLContext,
-            projectId: String,
-            repositoryType: ScmType?,
-            aliasName: String?,
-            repositoryIds: Set<Long>,
-            offset: Int,
-            limit: Int
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryType: ScmType?,
+        aliasName: String?,
+        repositoryIds: Set<Long>,
+        offset: Int,
+        limit: Int
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             return when (repositoryType) {
                 null -> {
                     val step = dslContext.selectFrom(this)
-                            .where(PROJECT_ID.eq(projectId))
-                            .and(IS_DELETED.eq(false))
-                            .and(REPOSITORY_ID.`in`(repositoryIds))
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(IS_DELETED.eq(false))
+                        .and(REPOSITORY_ID.`in`(repositoryIds))
 
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
                     }
                     step.orderBy(REPOSITORY_ID.desc())
-                            .offset(offset)
-                            .limit(limit)
-                            .fetch()
+                        .offset(offset)
+                        .limit(limit)
+                        .fetch()
                 }
                 else -> {
                     val step = dslContext.selectFrom(this)
-                            .where(PROJECT_ID.eq(projectId))
-                            .and(TYPE.eq(repositoryType.name))
-                            .and(REPOSITORY_ID.`in`(repositoryIds))
-                            .and(IS_DELETED.eq(false))
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(TYPE.eq(repositoryType.name))
+                        .and(REPOSITORY_ID.`in`(repositoryIds))
+                        .and(IS_DELETED.eq(false))
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
                     }
                     step.orderBy(REPOSITORY_ID.desc())
-                            .offset(offset)
-                            .limit(limit)
-                            .fetch()
+                        .offset(offset)
+                        .limit(limit)
+                        .fetch()
                 }
             }
         }

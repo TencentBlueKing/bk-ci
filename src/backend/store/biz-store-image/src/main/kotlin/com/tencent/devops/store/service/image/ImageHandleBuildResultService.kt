@@ -25,17 +25,23 @@
  */
 package com.tencent.devops.store.service.image
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.service.common.AbstractStoreHandleBuildResultService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("IMAGE_HANDLE_BUILD_RESULT")
 class ImageHandleBuildResultService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val imageDao: ImageDao,
     private val marketImageService: MarketImageService
 ) : AbstractStoreHandleBuildResultService() {
 
@@ -43,14 +49,19 @@ class ImageHandleBuildResultService @Autowired constructor(
 
     override fun handleStoreBuildResult(storeBuildResultRequest: StoreBuildResultRequest): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
-        val buildParams = storeBuildResultRequest.buildParams
+        val imageId = storeBuildResultRequest.storeId
+        val imageRecord = imageDao.getImage(dslContext, imageId)
+        logger.info("handleStoreBuildResult imageRecord is:$imageRecord")
+        if (null == imageRecord) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageId))
+        }
         var imageStatus = ImageStatusEnum.TESTING // 验证成功将镜像状态置位测试状态
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             imageStatus = ImageStatusEnum.CHECK_FAIL // 验证失败
         }
         marketImageService.setImageBuildStatusByImageCode(
-            imageCode = buildParams["imageCode"] as String,
-            version = buildParams["version"] as String,
+            imageCode = imageRecord.imageCode,
+            version = imageRecord.version,
             userId = storeBuildResultRequest.userId,
             imageStatus = imageStatus,
             msg = null

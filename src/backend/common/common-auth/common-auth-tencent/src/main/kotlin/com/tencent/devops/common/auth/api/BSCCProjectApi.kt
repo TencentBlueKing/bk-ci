@@ -81,6 +81,7 @@ class BSCCProjectApi @Autowired constructor(
         }
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         val url = "${bkCCProperties.url}/project_list/?access_token=$accessToken"
+        logger.info("BSCCProjectApi getProjectList url:$url")
         val requestContent = objectMapper.writeValueAsString(mapOf("project_codes" to projectCodes))
         val request = Request.Builder()
             .url(url)

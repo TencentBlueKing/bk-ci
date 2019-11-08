@@ -76,11 +76,12 @@ object BatScriptUtil {
                 .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
                 .append("\r\n")
 
+            // FIXME: 需要处理 |和= 号可能造成的问题
             runtimeVariables.plus(CommonEnv.getCommonEnv())
                 .forEach { (name, value) ->
                     val clean = value.replace("\"", "\\\"") // 转义
                     command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
-                    command.append("set $name=%$name:~1,-1%\r\n") // 去除又引号，防止被程序读到有双引号的变量值
+                    command.append("set $name=%$name:~1,-1%\r\n") // 去除双引号，防止被程序读到有双引号的变量值
                 }
 
             command.append(script.replace("\n", "\r\n"))

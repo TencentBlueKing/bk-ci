@@ -73,6 +73,6 @@ data class WebHookWebsocketPush(
 
     override fun buildNotifyMessage(message: SendMessage) {
         val webhookMessage = message.notifyPost.message
-        logger.info("WebHookWebsocketPush message: $notifyPost")
+//        logger.info("WebHookWebsocketPush message: $notifyPost")
     }
 }

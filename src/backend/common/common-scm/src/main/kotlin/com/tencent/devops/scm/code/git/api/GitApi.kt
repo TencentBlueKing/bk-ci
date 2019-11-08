@@ -103,6 +103,7 @@ open class GitApi {
     }
 
     fun addWebhook(host: String, token: String, projectName: String, hookUrl: String, event: String?) {
+        logger.info("[$host|$token|$projectName|$hookUrl|$event] Start add the web hook")
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
             existHooks.forEach {
@@ -320,9 +321,19 @@ open class GitApi {
         throw GitApiException(code, msg)
     }
 
-    fun listCommits(host: String, branch: String?, token: String, projectName: String, all: Boolean, page: Int, size: Int): List<GitCommit> {
-        val request = get(host, token, "projects/${urlEncode(projectName)}/repository/commits?page=$page&per_page=$size"
-            .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), "")
+    fun listCommits(
+        host: String,
+        branch: String?,
+        token: String,
+        projectName: String,
+        all: Boolean,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        val request = get(
+            host, token, "projects/${urlEncode(projectName)}/repository/commits?page=$page&per_page=$size"
+                .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
+        )
         val result: List<GitCommit> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_COMMIT, request))
         logger.info(
             "The url to listCommits is($host/projects/${urlEncode(projectName)}/repository/commits)"

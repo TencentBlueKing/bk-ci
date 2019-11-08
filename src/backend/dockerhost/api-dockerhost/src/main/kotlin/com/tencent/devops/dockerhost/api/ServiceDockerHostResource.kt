@@ -89,7 +89,7 @@ interface ServiceDockerHostResource {
         @PathParam("buildId")
         buildId: String,
         @Context request: HttpServletRequest
-    ): Result<Pair<Status, String?>>
+    ): Result<Pair<Status, String>>
 
     @ApiOperation("验证镜像是否合法")
     @POST

@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Feign
@@ -107,13 +108,6 @@ class Client @Autowired constructor(
     @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
     private val assemblyServiceName: String? = null
 
-    @Value("\${scm.ip:#{null}}")
-    private val scmIp: String? = null
-
-    private val scmIpList = ArrayList<String>()
-
-    private var hasParseScmIp = false
-
     @Value("\${service-suffix:#{null}}")
     private val serviceSuffix: String? = null
 
@@ -156,7 +150,7 @@ class Client @Autowired constructor(
      * 通过网关访问微服务接口
      *
      */
-    fun <T : Any> getGateway(clz: KClass<T>): T {
+    fun <T : Any> getGateway(clz: KClass<T>, gatewayType: GatewayType = GatewayType.IDC): T {
         val serviceName = findServiceName(clz)
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()
@@ -166,57 +160,12 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
-            .target(clz.java, buildGatewayUrl(path = "/$serviceName/api"))
+            .target(clz.java, buildGatewayUrl(path = "/$serviceName/api", gatewayType = gatewayType))
     }
 
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
-        val ip = chooseScm()
-        val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
-        return Feign.builder()
-            .client(feignClient)
-            .errorDecoder(clientErrorDecoder)
-            .encoder(jacksonEncoder)
-            .decoder(jacksonDecoder)
-            .contract(jaxRsContract)
-            .requestInterceptor(requestInterceptor)
-            .target(clz.java, "http://$ip/api")
-    }
-
-    private fun chooseScm(): String {
-        parseScmIp()
-        if (scmIpList.isEmpty()) {
-            throw RuntimeException("The scm ip($scmIp) is not config")
-        }
-
-        val copy = ArrayList(scmIpList)
-        copy.shuffle()
-        return copy[0]
-    }
-
-    private fun parseScmIp() {
-        if (hasParseScmIp) {
-            return
-        }
-        synchronized(scmIpList) {
-            if (hasParseScmIp) {
-                return
-            }
-            if (scmIp.isNullOrEmpty()) {
-                logger.warn("The scm ip is empty")
-            } else {
-                scmIp!!.split(",").forEach {
-                    val ip = it.trim()
-                    if (ip.isEmpty()) {
-                        logger.warn("Contain blank scm ip in configuration")
-                        return@forEach
-                    }
-                    logger.info("Adding the scm ip($ip)")
-                    scmIpList.add(ip)
-                }
-            }
-            hasParseScmIp = true
-        }
+        return getGateway(clz, GatewayType.IDC_PROXY)
     }
 
     fun <T : Any> getImpl(clz: KClass<T>): T {
@@ -264,11 +213,21 @@ class Client @Autowired constructor(
         }
     }
 
-    private fun buildGatewayUrl(path: String): String {
+    private fun buildGatewayUrl(path: String, gatewayType: GatewayType = GatewayType.IDC): String {
+
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
         } else {
-            val gateway = commonConfig.devopsApiGateway!!
+
+            val gateway = when (gatewayType) {
+                GatewayType.DEVNET_PROXY -> commonConfig.devopsDevnetProxyGateway!!
+                GatewayType.DEVNET -> commonConfig.devopsDevnetGateway!!
+                GatewayType.IDC -> commonConfig.devopsIdcGateway!!
+                GatewayType.IDC_PROXY -> commonConfig.devopsIdcProxyGateway!!
+                GatewayType.OSS -> commonConfig.devopsOssGateway!!
+                GatewayType.OSS_PROXY -> commonConfig.devopsOssProxyGateway!!
+                else -> commonConfig.devopsIdcGateway!!
+            }
             if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
                 "$gateway/${path.removePrefix("/")}"
             } else {

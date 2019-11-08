@@ -34,8 +34,8 @@ import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.utils.GITHUB_PR_NUMBER
+import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.github.GithubRepository
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 

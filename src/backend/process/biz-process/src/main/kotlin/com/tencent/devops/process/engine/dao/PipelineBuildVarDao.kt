@@ -67,47 +67,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         logger.info("save the buildVariable=$name $value, result=$count")
     }
 
-    @Suppress("unused")
-    fun getVarRecords(
-        dslContext: DSLContext,
-        buildId: String,
-        key: String? = null
-    ): MutableMap<String, TPipelineBuildVarRecord> {
-        val result = with(T_PIPELINE_BUILD_VAR) {
-            val where = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-            if (key != null) {
-                where.and(KEY.eq(key))
-            }
-            where.fetch()
-        }
-        val map = mutableMapOf<String, TPipelineBuildVarRecord>()
-        result.forEach {
-            map[it.key] = it
-        }
-        return map
-    }
-
-    @Suppress("unused")
-    fun getVarRecordsByKeyPrefix(
-        dslContext: DSLContext,
-        buildId: String,
-        key: String
-    ): MutableMap<String, TPipelineBuildVarRecord> {
-        val result = with(T_PIPELINE_BUILD_VAR) {
-            val where = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .and(KEY.like("$key%"))
-            where.fetch()
-        }
-        val map = mutableMapOf<String, TPipelineBuildVarRecord>()
-        result.forEach {
-            map[it.key] = it
-        }
-        return map
-    }
-
-    fun getVars(dslContext: DSLContext, buildId: String, key: String? = null): Map<String, String> {
+    fun getVars(dslContext: DSLContext, buildId: String, key: String? = null): MutableMap<String, String> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
@@ -145,15 +105,21 @@ class PipelineBuildVarDao @Autowired constructor() {
         val sets =
             mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
         with(T_PIPELINE_BUILD_VAR) {
+            val maxLength = VALUE.dataType.length()
             variables.forEach { (key, value) ->
+                val valueString = value.toString()
+                if (valueString.length > maxLength) {
+                    logger.warn("[$buildId]|[$pipelineId]|ABANDON_DATA|len[$key]=${valueString.length}(max=$maxLength)")
+                    return@forEach
+                }
                 val set = dslContext.insertInto(this)
                     .set(PROJECT_ID, projectId)
                     .set(PIPELINE_ID, pipelineId)
                     .set(BUILD_ID, buildId)
                     .set(KEY, key)
-                    .set(VALUE, value.toString())
+                    .set(VALUE, valueString)
                     .onDuplicateKeyUpdate()
-                    .set(VALUE, value.toString())
+                    .set(VALUE, valueString)
                 sets.add(set)
             }
         }

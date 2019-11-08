@@ -55,7 +55,7 @@ class WebhookEventListener constructor(
         try {
             when (event.commitEventType) {
                 CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
-                CommitEventType.GIT -> pipelineBuildService.externalCodeGitBuild("", event.requestContent)
+                CommitEventType.GIT -> pipelineBuildService.externalCodeGitBuild(event.requestContent)
                 CommitEventType.GITLAB -> pipelineBuildService.externalGitlabBuild(event.requestContent)
             }
             result = true
@@ -93,7 +93,7 @@ class WebhookEventListener constructor(
     }
 
     fun handleGithubCommitEvent(event: GithubWebhookEvent) {
-        logger.info("Receive Github from MQ [GIHUB|${event.githubWebhook.event}]")
+        logger.info("Receive Github from MQ [GITHUB|${event.githubWebhook.event}]")
         val thisGithubWebhook = event.githubWebhook
         var result = false
         try {

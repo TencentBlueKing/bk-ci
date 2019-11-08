@@ -674,7 +674,7 @@ class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMap
      * )
      *
      * JFrog接口：
-     *  curl -X POST 'http://test.artifactory.oa.com/api/search/aql' -H 'Content-Type:text/plain' -d 'items.find(
+     *  curl -X POST 'http://test.artifactory.com/api/search/aql' -H 'Content-Type:text/plain' -d 'items.find(
      *      {
      *         "modified" : {"$gt" : "2019-07-12T19:20:30.45+01:00"},
      *         "modified" : {"$lt" : "2019-07-19T19:20:30.45+01:00"}})

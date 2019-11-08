@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_URL
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
@@ -38,6 +37,7 @@ import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunUploadParam
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import org.apache.poi.util.StringUtil
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -57,7 +57,11 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, ZhiyunPushFileElement::class.java)
     }
 
-    override fun execute(task: PipelineBuildTask, param: ZhiyunPushFileElement, runVariables: Map<String, String>): AtomResponse {
+    override fun execute(
+        task: PipelineBuildTask,
+        param: ZhiyunPushFileElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
         val product = parseVariable(param.product, runVariables)
         val packageName = parseVariable(param.packageName, runVariables)
         val description = parseVariable(param.description, runVariables)
@@ -72,32 +76,57 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
         val codeRepoUrl = getCodeRepoUrl(runVariables)
         logger.info("codeRepoUrl is $codeRepoUrl")
         val uploadParams = ZhiyunUploadParam(
-                userId,
-                ZhiyunUploadParam.CommonParam(
-                        product,
-                        packageName,
-                        userId,
-                        description,
-                        clean.toString(),
-                        buildId,
-                        codeRepoUrl
-                ),
-                ArtifactorySearchParam(
-                        projectId,
-                        pipelineId,
-                        buildId,
-                        filePath,
-                        fileSource == "CUSTOMIZE",
-                        task.executeCount ?: 1,
-                        task.taskId
-                )
+            userId,
+            ZhiyunUploadParam.CommonParam(
+                product = product,
+                name = packageName,
+                author = userId,
+                description = description,
+                clean = clean.toString(),
+                buildId = buildId,
+                codeUrl = codeRepoUrl
+            ),
+            ArtifactorySearchParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                regexPath = filePath,
+                custom = fileSource == "CUSTOMIZE",
+                executeCount = task.executeCount ?: 1,
+                elementId = task.taskId
+            )
         )
 
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传对应文件到织云...【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode("http://yun.ccc.oa.com/index.php/package/versions?product=$product&package=$packageName","UTF-8")}'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
-        LogUtils.addLine(rabbitTemplate, buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)", task.taskId, task.containerHashId, task.executeCount ?: 1)
-        val versions = client.getWithoutRetry(ServiceZhiyunResource::class).pushFile(uploadParams).data ?: throw RuntimeException("0 file send to zhiyun")
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "开始上传对应文件到织云...【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode(
+                "http://yun.ccc.oa.com/index.php/package/versions?product=$product&package=$packageName",
+                "UTF-8"
+            )}'>查看详情</a>】",
+            tag = task.taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)",
+            tag = task.taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        val versions = client.getWithoutRetry(ServiceZhiyunResource::class).pushFile(uploadParams).data
+            ?: throw RuntimeException("0 file send to zhiyun")
         val ver = versions.lastOrNull() ?: throw RuntimeException("0 file send to zhiyun")
-        LogUtils.addLine(rabbitTemplate, buildId, "上传对应文件到织云成功!", task.taskId, task.containerHashId, task.executeCount ?: 1)
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "上传对应文件到织云成功!",
+            tag = task.taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
         return AtomResponse(BuildStatus.SUCCEED, mapOf("bk_zhiyun_version_$packageName" to ver))
     }
 

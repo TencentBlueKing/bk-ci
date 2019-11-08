@@ -39,7 +39,7 @@ import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
 import com.tencent.devops.store.pojo.image.request.ImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageDetail
-import com.tencent.devops.store.service.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.image.ImageReleaseService
 import com.tencent.devops.store.service.image.ImageRepoService
 import com.tencent.devops.store.service.image.ImageService

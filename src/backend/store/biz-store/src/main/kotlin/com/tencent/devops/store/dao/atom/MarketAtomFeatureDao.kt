@@ -84,6 +84,10 @@ class MarketAtomFeatureDao {
                 if (null != recommendFlag) {
                     baseStep.set(RECOMMEND_FLAG, recommendFlag)
                 }
+                val deleteFlag = atomFeatureRequest.deleteFlag
+                if (null != deleteFlag) {
+                    baseStep.set(DELETE_FLAG, deleteFlag)
+                }
                 baseStep.set(MODIFIER, userId)
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .where(ATOM_CODE.eq(atomFeatureRequest.atomCode))

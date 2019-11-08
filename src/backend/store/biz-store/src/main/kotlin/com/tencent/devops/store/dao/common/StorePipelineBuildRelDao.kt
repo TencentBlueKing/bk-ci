@@ -61,4 +61,12 @@ class StorePipelineBuildRelDao {
                 .fetchOne()
         }
     }
+
+    fun getStorePipelineBuildRelByBuildId(dslContext: DSLContext, buildId: String): TStorePipelineBuildRelRecord? {
+        with(TStorePipelineBuildRel.T_STORE_PIPELINE_BUILD_REL) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne()
+        }
+    }
 }

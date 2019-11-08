@@ -37,7 +37,3 @@ const val GITHUB_CHECK_RUNS_STATUS_COMPLETED = "completed"
 
 const val GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS = "success"
 const val GITHUB_CHECK_RUNS_CONCLUSION_FAILURE = "failure"
-
-const val CODE_GIT_URL = "http://git.code.oa.com/api/v3"
-const val GITLAB_URL = "http://gitlab-paas.open.oa.com/api/v4"
-const val CODE_TGIT_URL = "http://git.tencent.com/api/v3"

@@ -27,7 +27,6 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.exception.ClientException
-import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -50,7 +49,7 @@ object CredentialUtils {
 
     fun getCredentialWithType(credentialId: String, showErrorLog: Boolean = true): Pair<List<String>, CredentialType> {
         if (credentialId.trim().isEmpty()) {
-            throw ExecuteException("The credential Id is empty")
+            throw RuntimeException("The credential Id is empty")
         }
         try {
             val pair = DHUtil.initKey()

@@ -30,6 +30,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface OpStoreAuditConfService {
     /**
@@ -42,8 +44,8 @@ interface OpStoreAuditConfService {
      */
     fun getAllAuditConf(
         storeName: String?,
-        storeType: Byte?,
-        status: Byte?,
+        storeType: StoreTypeEnum?,
+        status: DeptStatusEnum?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<VisibleAuditInfo>>

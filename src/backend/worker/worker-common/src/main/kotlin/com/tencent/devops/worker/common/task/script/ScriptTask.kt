@@ -26,14 +26,15 @@
 
 package com.tencent.devops.worker.common.task.script
 
-import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
@@ -52,15 +53,20 @@ open class ScriptTask : ITask() {
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val scriptType =
-            taskParams["scriptType"] ?: throw ParamBlankException("Unknown script type of build script task")
+        val scriptType = taskParams["scriptType"] ?: throw TaskExecuteException(
+            errorMsg = "Unknown script type of build script task",
+            errorType = ErrorType.USER,
+            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+        )
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
-        val script = URLDecoder.decode(
-            taskParams["script"]
-                ?: throw ParamBlankException("Empty build script content"), "UTF-8"
-        ).replace("\r", "")
+        val script = URLDecoder.decode(taskParams["script"]
+                ?: throw TaskExecuteException(
+                    errorMsg = "Empty build script content",
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                ), "UTF-8").replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
@@ -94,7 +100,11 @@ open class ScriptTask : ITask() {
                     LoggerService.addYellowLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
             }
-            throw t
+            throw TaskExecuteException(
+                errorMsg = "脚本执行失败",
+                errorType = ErrorType.USER,
+                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+            )
         } finally {
             // 成功失败都写入环境变量
             ENV_FILES.forEach {
@@ -111,8 +121,16 @@ open class ScriptTask : ITask() {
             val gatewayFile = File(workspace, ShellUtil.GATEWAY_FILE)
             if (!gatewayFile.exists()) return
             val data = gatewayFile.readLines().map {
-                val key = it.split("=").getOrNull(0) ?: throw InvalidParamException("Illegal gateway key set: $it")
-                val value = it.split("=").getOrNull(1) ?: throw InvalidParamException("Illegal gateway key set: $it")
+                val key = it.split("=").getOrNull(0) ?: throw TaskExecuteException(
+                    errorMsg = "Illegal gateway key set: $it",
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                )
+                val value = it.split("=").getOrNull(1) ?: throw TaskExecuteException(
+                    errorMsg = "Illegal gateway key set: $it",
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                )
                 key to value.trim()
             }.toMap()
             val elementType = if (this is WindowsScriptTask) {

@@ -34,9 +34,9 @@ import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.github.GithubRepository
 import com.tencent.devops.repository.service.github.GithubService
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
@@ -50,12 +50,12 @@ import java.util.Base64
 
 @Service
 class RepoFileService @Autowired constructor(
-        private val repositoryService: RepositoryService,
-        private val gitTokenDao: GitTokenDao,
-        private val dslContext: DSLContext,
-        private val client: Client,
-        private val githubService: GithubService,
-        private val repositoryScmService: RepostioryScmService
+    private val repositoryService: RepositoryService,
+    private val gitTokenDao: GitTokenDao,
+    private val dslContext: DSLContext,
+    private val client: Client,
+    private val githubService: GithubService,
+    private val repositoryScmService: RepostioryScmService
 ) {
 
     companion object {
@@ -65,7 +65,13 @@ class RepoFileService @Autowired constructor(
     @Value("\${aes.git:#{null}}")
     private val aesKey: String = ""
 
-    fun getFileContent(repositoryConfig: RepositoryConfig, filePath: String, reversion: String?, branch: String?, subModule: String? = null): String {
+    fun getFileContent(
+        repositoryConfig: RepositoryConfig,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        subModule: String? = null
+    ): String {
         val repo = repositoryService.serviceGet("", repositoryConfig)
         logger.info("get repo($repositoryConfig) file content in: $filePath (reversion:$reversion, branch:$branch)")
         return when (repo) {
@@ -73,26 +79,26 @@ class RepoFileService @Autowired constructor(
                 logger.info("get file content of svn repo:\n$repo")
                 if (reversion.isNullOrBlank()) throw RuntimeException("Illegal reversion: $reversion")
                 getSvnSingleFile(
-                        repo,
-                        filePath.removePrefix("/"),
-                        reversion!!.toLong()
+                    repo = repo,
+                    filePath = filePath.removePrefix("/"),
+                    reversion = reversion!!.toLong()
                 )
             }
             is CodeGitRepository -> {
                 logger.info("get file content of git repo:\n$repo")
                 if (!reversion.isNullOrBlank()) {
                     getGitSingleFile(
-                            repo,
-                            filePath,
-                            reversion ?: "",
-                            subModule
+                        repo = repo,
+                        filePath = filePath,
+                        ref = reversion ?: "",
+                        subModule = subModule
                     )
                 } else {
                     getGitSingleFile(
-                            repo,
-                            filePath,
-                            branch ?: "master",
-                            subModule
+                        repo = repo,
+                        filePath = filePath,
+                        ref = branch ?: "master",
+                        subModule = subModule
                     )
                 }
             }
@@ -100,17 +106,17 @@ class RepoFileService @Autowired constructor(
                 logger.info("get file content of gitlab repo:\n$repo")
                 if (!reversion.isNullOrBlank()) {
                     getGitlabSingleFile(
-                            repo,
-                            filePath,
-                            reversion ?: "",
-                            subModule
+                        repo = repo,
+                        filePath = filePath,
+                        ref = reversion ?: "",
+                        subModule = subModule
                     )
                 } else {
                     getGitlabSingleFile(
-                            repo,
-                            filePath,
-                            branch ?: "master",
-                            subModule
+                        repo = repo,
+                        filePath = filePath,
+                        ref = branch ?: "master",
+                        subModule = subModule
                     )
                 }
             }
@@ -118,17 +124,17 @@ class RepoFileService @Autowired constructor(
                 logger.info("get file content of github repo:\n$repo")
                 if (!reversion.isNullOrBlank()) {
                     getGithubFile(
-                            repo,
-                            filePath,
-                            reversion!!,
-                            subModule
+                        repo = repo,
+                        filePath = filePath,
+                        ref = reversion!!,
+                        subModule = subModule
                     )
                 } else {
                     getGithubFile(
-                            repo,
-                            filePath,
-                            branch ?: "master",
-                            subModule
+                        repo = repo,
+                        filePath = filePath,
+                        ref = branch ?: "master",
+                        subModule = subModule
                     )
                 }
             }
@@ -142,48 +148,61 @@ class RepoFileService @Autowired constructor(
         val credInfo = getCredential(repo.projectId ?: "", repo)
         val svnType = repo.svnType?.toUpperCase() ?: "SSH"
         return if (svnType == "HTTP") {
-//            client.getScm(ServiceSvnResource::class).getFileContent(repo.url, repo.userName, svnType, filePath, reversion,
-//                    credInfo.username, credInfo.privateKey).data ?: ""
-            repositoryScmService.getSvnFileContent(repo.url, repo.userName, svnType, filePath, reversion,
-                   credInfo.username, credInfo.privateKey)
+            repositoryScmService.getSvnFileContent(
+                url = repo.url, userId = repo.userName, svnType = svnType, filePath = filePath, reversion = reversion,
+                credential1 = credInfo.username, credential2 = credInfo.privateKey
+            )
         } else {
-//            client.getScm(ServiceSvnResource::class).getSvnFileContent(repo.url, repo.userName, if (svnType.isBlank()) "SSH" else svnType, filePath, reversion,
-//                    credInfo.privateKey, credInfo.passPhrase).data ?: ""
-            repositoryScmService.getSvnFileContent(repo.url, repo.userName, if (svnType.isBlank()) "SSH" else svnType, filePath, reversion,
-                   credInfo.privateKey, credInfo.passPhrase)
+            repositoryScmService.getSvnFileContent(
+                url = repo.url,
+                userId = repo.userName,
+                svnType = if (svnType.isBlank()) "SSH" else svnType,
+                filePath = filePath,
+                reversion = reversion,
+                credential1 = credInfo.privateKey,
+                credential2 = credInfo.passPhrase
+            )
         }
     }
 
     private fun getGitSingleFile(repo: CodeGitRepository, filePath: String, ref: String, subModule: String?): String {
         val token = if (repo.authType == RepoAuthType.OAUTH) {
-            AESUtil.decrypt(aesKey, gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken ?: throw RuntimeException("get access token for user(${repo.userName}) fail"))
+            AESUtil.decrypt(
+                key = aesKey,
+                content = gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
+                    ?: throw RuntimeException("get access token for user(${repo.userName}) fail")
+            )
         } else {
             getCredential(repo.projectId ?: "", repo).privateKey
         }
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGitSingleFile for projectName: $projectName")
-        return repositoryScmService.getGitFileContent(projectName!!, filePath.removePrefix("/"), repo.authType, token, ref)
+        return repositoryScmService.getGitFileContent(
+            repoName = projectName!!,
+            filePath = filePath.removePrefix("/"),
+            authType = repo.authType,
+            token = token,
+            ref = ref
+        )
 //        return client.getScm(ServiceGitResource::class).getGitFileContent(projectName!!, filePath.removePrefix("/"), repo.authType, token, ref).data ?: ""
     }
 
-    private fun getGitlabSingleFile(repo: CodeGitlabRepository, filePath: String, ref: String, subModule: String?): String {
+    private fun getGitlabSingleFile(
+        repo: CodeGitlabRepository,
+        filePath: String,
+        ref: String,
+        subModule: String?
+    ): String {
         logger.info("getGitlabSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
         val token = getCredential(repo.projectId ?: "", repo).privateKey
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         return repositoryScmService.getGitlabFileContent(
-                repoUrl = repo.url,
-                repoName = projectName ?: "",
-                filePath = filePath,
-                ref = ref,
-                accessToken = token
+            repoUrl = repo.url,
+            repoName = projectName ?: "",
+            filePath = filePath,
+            ref = ref,
+            accessToken = token
         )
-//        return client.getScm(ServiceGitResource::class).getGitlabFileContent(
-//                repoUrl = repo.url,
-//                repoName = projectName ?: "",
-//                filePath = filePath,
-//                ref = ref,
-//                accessToken = token
-//        ).data ?: ""
     }
 
     private fun getGithubFile(repo: GithubRepository, filePath: String, ref: String, subModule: String?): String {
@@ -198,8 +217,10 @@ class RepoFileService @Autowired constructor(
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
-        val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-                encoder.encodeToString(pair.publicKey))
+        val credentialResult = client.get(ServiceCredentialResource::class).get(
+            projectId = projectId, credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey)
+        )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
@@ -207,15 +228,21 @@ class RepoFileService @Autowired constructor(
 
         val credential = credentialResult.data!!
 
-        val privateKey = String(DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+        val privateKey = String(
+            DHUtil.decrypt(
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
+            )
+        )
 
-        val passPhrase = if (credential.v2.isNullOrBlank()) "" else String(DHUtil.decrypt(
-                decoder.decode(credential.v2),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+        val passPhrase = if (credential.v2.isNullOrBlank()) "" else String(
+            DHUtil.decrypt(
+                data = decoder.decode(credential.v2),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
+            )
+        )
 
         val list = if (passPhrase.isBlank()) {
             listOf(privateKey)

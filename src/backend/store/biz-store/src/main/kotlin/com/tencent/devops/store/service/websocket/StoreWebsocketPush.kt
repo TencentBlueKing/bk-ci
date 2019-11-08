@@ -53,7 +53,7 @@ data class StoreWebsocketPush(
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java)
+        private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
     }
 
     override fun findSession(page: String): List<String>? {
@@ -69,6 +69,7 @@ data class StoreWebsocketPush(
                 val pageSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
                 if (pageSession != null) {
                     sessionList.addAll(pageSession)
+                    notifyPost.page = it
                 }
             }
         }
@@ -88,7 +89,7 @@ data class StoreWebsocketPush(
     override fun buildNotifyMessage(message: SendMessage) {
         val notifyPost = message.notifyPost
         try {
-            val modelDetail = atomReleaseService.getProcessInfo(userId, atomId)
+            val modelDetail = atomReleaseService.getProcessInfo(userId, atomId).data
             if (notifyPost != null) {
                 notifyPost.message = objectMapper.writeValueAsString(modelDetail)
                 logger.info("StoreWebsocketPush message: $notifyPost")

@@ -87,8 +87,14 @@ object Runner {
                                 LoggerService.addNormalLine("")
                                 LoggerService.addFoldStartLine("${buildTask.elementName}-[${buildTask.elementId}]")
                                 LoggerService.addNormalLine(Ansi().bold().a("Start Element").reset().toString())
+
+                                // 开始Task执行
                                 taskDaemon.run()
+
+                                // 获取执行结果
                                 val env = taskDaemon.getAllEnv()
+
+                                // 上报Task执行结果
                                 logger.info("Complete the task ($buildTask)")
                                 ProcessService.completeTask(
                                     taskId = taskId,
@@ -126,6 +132,7 @@ object Runner {
 
                                 val env = taskDaemon.getAllEnv()
                                 LoggerService.addNormalLine(Ansi().fgRed().a(message).reset().toString())
+
                                 ProcessService.completeTask(
                                     taskId = taskId,
                                     elementId = buildTask.elementId!!,
@@ -150,9 +157,9 @@ object Runner {
                         }
                     }
                 }
-            } catch (ignored: Throwable) {
-                logger.error("Other unknown error has occurred:", ignored)
-                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + ignored.message).reset().toString())
+            } catch (e: Exception) {
+                logger.error("Other unknown error has occurred:", e)
+                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + e.message).reset().toString())
             } finally {
                 LoggerService.stop()
                 Heartbeat.stop()

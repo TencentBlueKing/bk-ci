@@ -32,7 +32,7 @@ import com.tencent.devops.store.api.template.TxOpTemplateResource
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TxOpTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 

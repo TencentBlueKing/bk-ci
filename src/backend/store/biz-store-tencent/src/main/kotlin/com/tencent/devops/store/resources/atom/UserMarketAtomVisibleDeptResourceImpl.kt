@@ -32,7 +32,7 @@ import com.tencent.devops.store.api.atom.UserMarketAtomVisibleDeptResource
 import com.tencent.devops.store.pojo.atom.AtomVisibleDeptReq
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

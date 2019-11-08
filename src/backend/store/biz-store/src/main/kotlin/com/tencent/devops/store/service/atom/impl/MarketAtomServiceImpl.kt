@@ -49,6 +49,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
@@ -58,6 +59,7 @@ import com.tencent.devops.store.pojo.atom.MarketMainItem
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomRespItem
+import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -437,11 +439,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             Result(data = null)
         } else {
             val atomCode = record["atomCode"] as String
-            // 判断用户是否有查询权限
-            val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
-            if (!queryFlag) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
-            }
             val defaultFlag = record["defaultFlag"] as Boolean
             val htmlTemplateVersion = record["htmlTemplateVersion"] as String
             val projectCode =
@@ -557,7 +554,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("installAtom channelCode is: $channelCode, installAtomReq is: $installAtomReq")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
         logger.info("the atom is: $atom")
-        if (null == atom) {
+        if (null == atom || atom.deleteFlag == true) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
         }
         return storeProjectService.installStoreComponent(
@@ -659,7 +656,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 arrayOf(atomCode)
             )
         }
-        // 如果已经被安装到其他项目下使用，不能删除关联
+        // 如果已经被安装到其他项目下使用，不能删除
         val installedCount = storeProjectRelDao.countInstalledProject(dslContext, atomCode, type)
         if (installedCount > 0) {
             return MessageCodeUtil.generateResponseDataObject(
@@ -667,21 +664,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 arrayOf(atomCode)
             )
         }
-        val projectCode =
-            storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        logger.info("projectCode: $projectCode")
-        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-        logger.info("atomRecord: $atomRecord")
-        val repositoryHashId = atomRecord!!.repositoryHashId
-        val delGitRepositoryResult = deleteAtomRepository(userId, projectCode, repositoryHashId)
-        if (delGitRepositoryResult.isNotOk()) {
-            return delGitRepositoryResult
-        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            storeMemberDao.deleteAll(context, atomCode, type)
-            storeProjectRelDao.deleteAllRel(context, atomCode, type)
-            marketAtomDao.deleteByAtomCode(context, atomCode)
+            marketAtomDao.updateAtomInfoByCode(context, userId, atomCode, UpdateAtomInfo(deleteFlag = true))
+            marketAtomFeatureDao.updateAtomFeature(context, userId, AtomFeatureRequest(atomCode = atomCode, deleteFlag = true))
         }
         return Result(true)
     }

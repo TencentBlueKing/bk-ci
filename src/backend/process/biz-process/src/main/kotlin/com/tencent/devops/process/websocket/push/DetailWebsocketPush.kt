@@ -83,7 +83,7 @@ data class DetailWebsocketPush(
             val modelDetail = pipelineBuildService.getBuildDetail(projectId, pipelineId, buildId!!, ChannelCode.BS, ChannelCode.isNeedAuth(ChannelCode.BS))
             if (notifyPost != null) {
                 notifyPost.message = objectMapper.writeValueAsString(modelDetail)
-                logger.info("DetailWebsocketPush message: $notifyPost")
+//                logger.info("DetailWebsocketPush message: $notifyPost")
             }
         } catch (e: Exception) {
             logger.error("DetailWebSocketMessage:getBuildDetail error. message:${e.message}")

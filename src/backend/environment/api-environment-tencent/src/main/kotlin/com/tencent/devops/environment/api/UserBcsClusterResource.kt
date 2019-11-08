@@ -47,7 +47,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_CLUSTER"], description = "用户-BCS集群信息")
-@Path("/user/bcs")
+@Path("/user/cluster")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserBcsClusterResource {

@@ -28,8 +28,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -43,7 +45,8 @@ import org.springframework.stereotype.Service
 @Service
 class StoreBuildServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storePipelineRelDao: StorePipelineRelDao
+    private val storePipelineRelDao: StorePipelineRelDao,
+    private val storePipelineBuildRelDao: StorePipelineBuildRelDao
 ) : StoreBuildService {
 
     private val logger = LoggerFactory.getLogger(StoreBuildServiceImpl::class.java)
@@ -67,6 +70,32 @@ class StoreBuildServiceImpl @Autowired constructor(
         if (result.isNotOk() || result.data != true) {
             return result
         }
+        return Result(true)
+    }
+
+    override fun handleStoreBuildStatus(
+        userId: String,
+        buildId: String,
+        pipelineId: String,
+        status: BuildStatus
+    ): Result<Boolean> {
+        val buildInfo = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
+        if (buildInfo == null) {
+            logger.warn("[$pipelineId] build ($buildId) is not exist")
+            return Result(true)
+        }
+        logger.info("[$pipelineId]| store- the build[$buildId] event ($status)")
+        // 渠道为研发商店才回调研发商店处理构建结果的接口
+        val result = handleStoreBuildResult(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            storeBuildResultRequest = StoreBuildResultRequest(
+                userId = userId,
+                buildStatus = status,
+                storeId = buildInfo.storeId
+            )
+        )
+        logger.info("handleStoreBuildResult result is:$result")
         return Result(true)
     }
 

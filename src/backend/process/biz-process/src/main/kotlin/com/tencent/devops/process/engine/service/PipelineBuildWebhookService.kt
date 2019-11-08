@@ -166,7 +166,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         return startProcessByWebhook(CodeSVNWebHookTriggerElement.classType, svnWebHookMatcher)
     }
 
-    fun externalCodeGitBuild(token: String, e: String): Boolean {
+    fun externalCodeGitBuild(e: String): Boolean {
         logger.info("Trigger code git build($e)")
 
         val event = try {

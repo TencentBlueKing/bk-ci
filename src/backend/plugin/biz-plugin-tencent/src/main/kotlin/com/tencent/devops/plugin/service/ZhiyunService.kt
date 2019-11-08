@@ -74,10 +74,10 @@ class ZhiyunService @Autowired constructor(
             matchFiles.forEach { file ->
                         try {
                             LogUtils.addLine(rabbitTemplate, fileParams.buildId, "start to upload file to zhi yun: ${file.canonicalPath}",
-                                fileParams.elementId, fileParams.executeCount)
+                                fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                             val request = with(zhiyunUploadParam) {
                                 LogUtils.addLine(rabbitTemplate, fileParams.buildId, "zhi yun upload file params: $para",
-                                    fileParams.elementId, fileParams.executeCount)
+                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                                 val body = MultipartBody.Builder()
                                         .setType(MultipartBody.FORM)
                                         .addFormDataPart("tarball", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
@@ -108,7 +108,7 @@ class ZhiyunService @Autowired constructor(
                                     throw OperationException("fail to upload \" ${file.canonicalPath} \":\n$msg")
                                 }
                                 LogUtils.addLine(rabbitTemplate, fileParams.buildId, "successfully upload: ${file.name}:\n$msg",
-                                    fileParams.elementId, fileParams.executeCount)
+                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                                 resultList.add(msg.trim().removeSuffix(":succ"))
                             }
                         } finally {

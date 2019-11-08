@@ -91,7 +91,7 @@ class MigCDNService @Autowired constructor(
                 if (fileNameType.first.isBlank()) {
                     logger.info("File type invalid, file:$fileIter, skipped")
                     LogUtils.addLine(rabbitTemplate, fileParams.buildId, "该文件不允许上传，文件:$fileIter，将跳过",
-                        fileParams.elementId, fileParams.executeCount)
+                        fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                     return@inside
                 }
 
@@ -111,21 +111,21 @@ class MigCDNService @Autowired constructor(
                     if (retCode != 200) {
                         val msg = jsonMap["err_msg"] as String
                         LogUtils.addLine(rabbitTemplate, fileParams.buildId, "上传CDN失败，文件：$path\n错误码：$retCode\n错误信息：$msg",
-                            fileParams.elementId, fileParams.executeCount)
+                            fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                         throw RuntimeException("上传到CDN失败")
                     }
                     val cdnUrl = if (null == jsonMap["cdn_url"]) "" else jsonMap["cdn_url"] as String
                     val fileMd5 = if (null == jsonMap["file_md5"]) "" else jsonMap["file_md5"] as String
 
                     LogUtils.addLine(rabbitTemplate, fileParams.buildId, "上传CDN成功，文件:$path:\ncdn_url:$cdnUrl\nfileMd5:$fileMd5",
-                        fileParams.elementId, fileParams.executeCount)
+                        fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                 }
             }
         }
         if (!hasMatchedFile) {
             logger.info("File matched nothing")
             LogUtils.addLine(rabbitTemplate, fileParams.buildId, "没有匹配到任何文件，请检查版本仓库以及源文件设置",
-                fileParams.elementId, fileParams.executeCount)
+                fileParams.elementId, fileParams.containerId, fileParams.executeCount)
             throw RuntimeException("上传到CDN失败")
         }
 

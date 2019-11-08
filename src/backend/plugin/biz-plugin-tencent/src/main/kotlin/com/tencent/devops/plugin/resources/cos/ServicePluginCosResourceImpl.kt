@@ -84,6 +84,7 @@ class ServicePluginCosResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
+        containerId: String,
         executeCount: Int,
         cdnUploadFileInfo: CdnUploadFileInfo
     ): Result<SpmFile> {
@@ -108,14 +109,14 @@ class ServicePluginCosResourceImpl @Autowired constructor(
 
         val uploadTaskKey = "upload_cdn_task_${projectId}_${pipelineId}_${buildId}_$elementId"
         val uploadCosCdnParam = UploadCosCdnParam(
-            projectId, pipelineId, buildId, elementId, cdnUploadFileInfo.regexPaths,
+            projectId, pipelineId, buildId, elementId, containerId, cdnUploadFileInfo.regexPaths,
             cdnUploadFileInfo.customize, cosAppInfo.bucket, cdnPath, cosAppInfo.domain, cosClientConfig
         )
 
         val uploadCosCdnThread =
             UploadCosCdnThread(gatewayUrl!!, rabbitTemplate, cosService, redisOperation, uploadCosCdnParam)
         val uploadThread = Thread(uploadCosCdnThread, uploadTaskKey)
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传CDN...", elementId, executeCount)
+        LogUtils.addLine(rabbitTemplate, buildId, "开始上传CDN...", elementId, containerId, executeCount)
         uploadThread.start()
         cdnPath = cosAppInfo.domain + cdnPath
         val spmFile = SpmFile(uploadTaskKey, cdnPath)

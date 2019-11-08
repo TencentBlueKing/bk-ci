@@ -39,5 +39,7 @@ data class UpdateAtomInfo(
     @ApiModelProperty("是否为最新版本", required = false)
     val latestFlag: Boolean? = null,
     @ApiModelProperty("发布时间", required = false)
-    val pubTime: LocalDateTime? = null
+    val pubTime: LocalDateTime? = null,
+    @ApiModelProperty("删除标识", required = false)
+    val deleteFlag: Boolean? = null
 )

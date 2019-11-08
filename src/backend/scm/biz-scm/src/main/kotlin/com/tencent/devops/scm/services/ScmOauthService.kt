@@ -27,27 +27,24 @@
 package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.repository.pojo.enums.CodeSvnRegion
+import com.tencent.devops.scm.ScmOauthFactory
+import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.SVNConfig
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.request.CommitCheckRequest
 import com.tencent.devops.scm.utils.QualityUtils
-import com.tencent.devops.scm.utils.ScmOauthFactory
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class ScmOauthService {
-
-    @Value("\${git.webhook.callback.url:#{null}}")
-    private val gitHookUrl: String? = null
-
-    @Value("\${gitlab.webhook.callback.url:#{null}}")
-    private val gitlabHookUrl: String? = null
-
-    @Value("\${svn.webhook.callback.url:#{null}}")
-    private val svnHookUrl: String? = null
+class ScmOauthService @Autowired constructor(
+    private val gitConfig: GitConfig,
+    private val svnConfig: SVNConfig
+) {
 
     fun getLatestRevision(
         projectName: String,
@@ -64,16 +61,16 @@ class ScmOauthService {
         val startEpoch = System.currentTimeMillis()
         try {
             return ScmOauthFactory.getScm(
-                projectName,
-                url,
-                type,
-                branchName,
-                privateKey,
-                passPhrase,
-                token,
-                region,
-                userName,
-                null
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = branchName,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = null
             ).getLatestRevision()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the latest revision")
@@ -94,16 +91,16 @@ class ScmOauthService {
         val startEpoch = System.currentTimeMillis()
         try {
             return ScmOauthFactory.getScm(
-                projectName,
-                url,
-                type,
-                null,
-                privateKey,
-                passPhrase,
-                token,
-                region,
-                userName,
-                null
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = null
             ).getBranches()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
@@ -120,7 +117,18 @@ class ScmOauthService {
         logger.info("[$projectName|$url|$type|$token|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmOauthFactory.getScm(projectName, url, type, null, null, null, token, null, userName, null).getTags()
+            return ScmOauthFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = null,
+                passPhrase = null,
+                token = token,
+                region = null,
+                userName = userName,
+                event = null
+            ).getTags()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
@@ -139,9 +147,13 @@ class ScmOauthService {
         logger.info("[$projectName|$url|$type|$userName] Start to check private key and token")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, null).checkTokenAndPrivateKey()
+            ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, null)
+                .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
-            logger.warn("Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName", e)
+            logger.warn(
+                "Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName",
+                e
+            )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check private key and token")
@@ -165,33 +177,43 @@ class ScmOauthService {
         try {
             val hookUrl = when (type) {
                 ScmType.CODE_GIT -> {
-                    if (gitHookUrl.isNullOrEmpty()) {
+                    if (gitConfig.gitHookUrl.isBlank()) {
                         logger.warn("The git webhook url is not settle")
                         throw RuntimeException("The git hook url is not settle")
                     }
-                    gitHookUrl!!
+                    gitConfig.gitHookUrl
                 }
                 ScmType.CODE_GITLAB -> {
-                    if (gitlabHookUrl.isNullOrEmpty()) {
+                    if (gitConfig.gitlabHookUrl.isBlank()) {
                         logger.warn("The gitlab webhook url is not settle")
                         throw RuntimeException("The gitlab webhook url is not settle")
                     }
-                    gitlabHookUrl!!
+                    gitConfig.gitlabHookUrl
                 }
                 ScmType.CODE_SVN -> {
-                    if (svnHookUrl.isNullOrEmpty()) {
+                    if (svnConfig.svnHookUrl.isBlank()) {
                         logger.warn("The svn webhook url is not settle")
                         throw RuntimeException("The svn webhook url is not settle")
                     }
-                    svnHookUrl!!
+                    svnConfig.svnHookUrl
                 }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")
                     throw RuntimeException("Unknown repository type ($type) when add webhook")
                 }
             }
-            ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, event)
-                .addWebHook(hookUrl)
+            ScmOauthFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = event
+            ).addWebHook(hookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }
@@ -203,8 +225,26 @@ class ScmOauthService {
         val startEpoch = System.currentTimeMillis()
         try {
             with(request) {
-                val scm = ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, "", "")
-                scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
+                val scm = ScmOauthFactory.getScm(
+                    projectName = projectName,
+                    url = url,
+                    type = type,
+                    branchName = null,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = token,
+                    region = region,
+                    userName = "",
+                    event = ""
+                )
+                scm.addCommitCheck(
+                    commitId = commitId,
+                    state = state,
+                    targetUrl = targetUrl,
+                    context = context,
+                    description = description,
+                    block = block
+                )
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
                     val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)

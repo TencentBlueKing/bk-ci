@@ -112,7 +112,6 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
-//    //TODO: �ڲ������
 //
 //    override fun createGitCodeRepository(
 //            userId: String,

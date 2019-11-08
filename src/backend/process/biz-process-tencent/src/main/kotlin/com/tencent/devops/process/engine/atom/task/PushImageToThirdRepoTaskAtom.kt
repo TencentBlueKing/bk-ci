@@ -26,22 +26,22 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.common.api.constant.PIPELINE_MATERIAL_URL
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.element.PushImageToThirdRepoElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.image.api.ServiceTkePushImageResource
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.common.pipeline.element.PushImageToThirdRepoElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.util.CommonUtils
+import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.math.NumberUtils
 import org.apache.poi.util.StringUtil
@@ -99,36 +99,55 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
         val userId = task.starter
         val codeRepoUrl = getCodeRepoUrl(runVariables)
 
-        val ticketsMap = CommonUtils.getCredential(client, projectId, ticketId, CredentialType.USERNAME_PASSWORD)
+        val ticketsMap = CommonUtils.getCredential(
+            client = client,
+            projectId = projectId,
+            credentialId = ticketId,
+            type = CredentialType.USERNAME_PASSWORD
+        )
         val userName = ticketsMap["v1"] as String
         val password = ticketsMap["v2"] as String
 
         val tkePushParams = TkePushImageParam(
-            userId,
-            srcImageName,
-            srcImageTag,
-            repoAddress,
-            userName,
-            password,
-            targetImageName,
-            targetImageTag,
-            projectId,
-            buildId,
-            pipelineId,
-            task.taskId,
-            task.containerHashId ?: "",
-            codeRepoUrl,
-            task.executeCount,
-            cmdbId,
-            verifyByOa!!
+            userId = userId,
+            srcImageName = srcImageName,
+            srcImageTag = srcImageTag,
+            repoAddress = repoAddress,
+            userName = userName,
+            password = password,
+            targetImageName = targetImageName,
+            targetImageTag = targetImageTag,
+            projectId = projectId,
+            buildId = buildId,
+            pipelineId = pipelineId,
+            taskId = task.taskId,
+            containerId = task.containerHashId ?: "",
+            codeUrl = codeRepoUrl,
+            executeCount = task.executeCount,
+            cmdbId = cmdbId,
+            verifyOa = verifyByOa!!
         )
 
-        LogUtils.addLine(rabbitTemplate, buildId, "开始推送镜像", task.taskId, task.containerHashId, task.executeCount ?: 1)
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "开始推送镜像",
+            tag = task.taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
         var pushImageTaskResult = client.get(ServiceTkePushImageResource::class).pushImage(tkePushParams)
         loop@ while (true) {
             if (pushImageTaskResult.isNotOk() || pushImageTaskResult.data == null) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "推送镜像失败", task.taskId, task.containerHashId, task.executeCount ?: 1)
-                return return AtomResponse(
+                LogUtils.addRedLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "推送镜像失败",
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
+                return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
                     errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
@@ -138,16 +157,31 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
             val pushImageTask = pushImageTaskResult.data!!
             return when (pushImageTask.taskStatus) {
                 TaskStatus.SUCCESS.name -> {
-                    LogUtils.addLine(rabbitTemplate, buildId, "推送镜像成功，【<a target='_blank' href='http://csighub.oa.com/tencenthub/repo'>查看镜像</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                    LogUtils.addLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "推送镜像成功，【<a target='_blank' href='http://csighub.oa.com/tencenthub/repo'>查看镜像</a>】",
+                        tag = task.taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
                     defaultSuccessAtomResponse
                 }
                 TaskStatus.RUNNING.name -> {
                     Thread.sleep(5 * 1000)
-                    pushImageTaskResult = client.get(ServiceTkePushImageResource::class).queryUploadTask(userId, pushImageTask.taskId)
+                    pushImageTaskResult =
+                        client.get(ServiceTkePushImageResource::class).queryUploadTask(userId, pushImageTask.taskId)
                     continue@loop
                 }
                 else -> {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "推送镜像失败: ${pushImageTask.taskMessage}", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "推送镜像失败: ${pushImageTask.taskMessage}",
+                        tag = task.taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
                         errorType = ErrorType.USER,

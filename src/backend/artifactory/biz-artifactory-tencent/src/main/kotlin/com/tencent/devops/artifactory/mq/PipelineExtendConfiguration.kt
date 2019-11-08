@@ -50,6 +50,11 @@ import org.springframework.context.annotation.Configuration
 class PipelineExtendConfiguration {
 
     @Bean
+    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
+
+    @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 
     /**

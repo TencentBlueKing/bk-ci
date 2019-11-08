@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
@@ -57,6 +58,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import okhttp3.Request
@@ -69,10 +71,11 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
 @Service
-class PipelineVMBuildService @Autowired constructor(
+class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildDetailService: PipelineBuildDetailService,
-    private val measureService: MeasureService,
+    @Autowired(required = false)
+    private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -419,20 +422,25 @@ class PipelineVMBuildService @Autowired constructor(
         val buildVariable = allVariable
             .plus(PIPELINE_VMSEQ_ID to vmSeqId)
             .plus(PIPELINE_ELEMENT_ID to task.taskId)
-            .plus(PIPELINE_TURBO_TASK_ID to turboTaskId).toMap()
+            .plus(PIPELINE_TURBO_TASK_ID to turboTaskId)
+            .toMutableMap()
 
-        val buildTask = BuildTask(buildId,
-            vmSeqId,
-            BuildTaskStatus.DO,
-            task.taskId,
-            task.taskId,
-            task.taskName,
-            task.taskType,
-            task.taskParams.map {
+        PipelineVarUtil.fillOldVar(buildVariable)
+
+        val buildTask = BuildTask(
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            status = BuildTaskStatus.DO,
+            taskId = task.taskId,
+            elementId = task.taskId,
+            elementName = task.taskName,
+            type = task.taskType,
+            params = task.taskParams.map {
                 it.key to parseEnv(JsonUtil.toJson(it.value), buildVariable)
             }.filter {
                 !it.first.startsWith("@type")
-            }.toMap(), buildVariable
+            }.toMap(),
+            buildVariable = buildVariable
         )
 
         logger.info("[$buildId]|Claim the task - ($buildTask)")
@@ -463,7 +471,8 @@ class PipelineVMBuildService @Autowired constructor(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId,
                     buildId = buildId,
-                    variables = result.buildResult)
+                    variables = result.buildResult
+                )
             } catch (ignored: Exception) {
                 // 防止因为变量字符过长而失败。做下拦截
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
@@ -561,7 +570,7 @@ class PipelineVMBuildService @Autowired constructor(
             val task = pipelineRuntimeService.getBuildTask(buildId, taskId)!!
             val buildStatus = if (success) BuildStatus.SUCCEED else BuildStatus.FAILED
             val atomCode = task.taskParams["atomCode"] as String? ?: ""
-            measureService.postElementDataNew(
+            measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 taskId = taskId,

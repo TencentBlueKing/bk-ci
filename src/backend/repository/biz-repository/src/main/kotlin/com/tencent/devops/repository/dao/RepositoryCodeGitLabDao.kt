@@ -97,7 +97,11 @@ class RepositoryCodeGitLabDao {
         }
     }
 
-    fun updateRepositoryInfo(dslContext: DSLContext, repositoryId: Long, updateRepositoryInfoRequest: UpdateRepositoryInfoRequest) {
+    fun updateRepositoryInfo(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        updateRepositoryInfoRequest: UpdateRepositoryInfoRequest
+    ) {
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
             val baseStep = dslContext.update(this)
             if (!updateRepositoryInfoRequest.projectName.isNullOrEmpty()) {
@@ -113,8 +117,8 @@ class RepositoryCodeGitLabDao {
                 baseStep.set(AUTH_TYPE, updateRepositoryInfoRequest.authType!!.name)
             }
             baseStep.set(UPDATED_TIME, LocalDateTime.now())
-                    .where(REPOSITORY_ID.eq(repositoryId))
-                    .execute()
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
         }
     }
 }

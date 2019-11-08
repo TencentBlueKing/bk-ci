@@ -26,8 +26,10 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.jmx.exception.JmxExceptions
 import org.slf4j.LoggerFactory
@@ -48,7 +50,7 @@ class AllExceptionMapper : ExceptionMapper<Exception> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "访问后台数据失败，已通知产品、开发，请稍后重试"
+            MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_REST_EXCEPTION_COMMON_TIP).message
         }
 
         JmxExceptions.encounter(exception)
