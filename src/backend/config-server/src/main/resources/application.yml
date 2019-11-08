@@ -32,7 +32,7 @@ spring:
     config:
       server:
         git:
-          uri: file:///data/bkci/config/devops-config
+          uri: file:///data/bkci/config-server/devops-config
           default-label: master
     consul:
       discovery:
