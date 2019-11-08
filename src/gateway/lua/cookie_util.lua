@@ -30,7 +30,6 @@ function _M:get_cookie(cookie_name)
     --- 获取Cookie中cookie_name
     local cookie_value, err = cookie:get(cookie_name)
     if not cookie_value then
-        ngx.log(ngx.ERR, "failed to get request cookies ", cookie_name, "'s cookie_value:" , err)
         return nil
     end
     return cookie_value
