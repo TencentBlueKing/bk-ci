@@ -83,7 +83,7 @@
                 @click.stop="emitEventHandler('title-click', config.pipelineId)"
                 v-if="config.runningInfo.buildCount > 1"
             >
-                {{ $t('newlist.multipleBulids') }}
+                {{ $t('newlist.multipleBuilds') }}
             </div>
             <div class="task-card-running" @click.stop="cardContentClick" v-else>
                 <div class="running-detail clearfix">
