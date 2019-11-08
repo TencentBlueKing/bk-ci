@@ -58,6 +58,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import okhttp3.Request
@@ -421,20 +422,25 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         val buildVariable = allVariable
             .plus(PIPELINE_VMSEQ_ID to vmSeqId)
             .plus(PIPELINE_ELEMENT_ID to task.taskId)
-            .plus(PIPELINE_TURBO_TASK_ID to turboTaskId).toMap()
+            .plus(PIPELINE_TURBO_TASK_ID to turboTaskId)
+            .toMutableMap()
 
-        val buildTask = BuildTask(buildId,
-            vmSeqId,
-            BuildTaskStatus.DO,
-            task.taskId,
-            task.taskId,
-            task.taskName,
-            task.taskType,
-            task.taskParams.map {
+        PipelineVarUtil.fillOldVar(buildVariable)
+
+        val buildTask = BuildTask(
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            status = BuildTaskStatus.DO,
+            taskId = task.taskId,
+            elementId = task.taskId,
+            elementName = task.taskName,
+            type = task.taskType,
+            params = task.taskParams.map {
                 it.key to parseEnv(JsonUtil.toJson(it.value), buildVariable)
             }.filter {
                 !it.first.startsWith("@type")
-            }.toMap(), buildVariable
+            }.toMap(),
+            buildVariable = buildVariable
         )
 
         logger.info("[$buildId]|Claim the task - ($buildTask)")
@@ -465,7 +471,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId,
                     buildId = buildId,
-                    variables = result.buildResult)
+                    variables = result.buildResult
+                )
             } catch (ignored: Exception) {
                 // 防止因为变量字符过长而失败。做下拦截
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
