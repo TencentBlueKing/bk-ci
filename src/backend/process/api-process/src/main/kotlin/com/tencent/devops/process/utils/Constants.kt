@@ -153,13 +153,17 @@ object PipelineVarUtil {
         "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
     )
 
-
     private val newPrefixMappingOld = oldPrefixMappingNew.map { kv -> kv.value to kv.key }.toMap()
 
     /**
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
+        "repoName" to PIPELINE_REPO_NAME,
+        "pipeline.retry.start.task.id" to PIPELINE_RETRY_START_TASK_ID,
+        "pipeline.retry.build.id" to PIPELINE_RETRY_BUILD_ID,
+        "pipeline.id" to PIPELINE_ID,
+        "pipeline.retry.count" to PIPELINE_RETRY_COUNT,
         "pipeline.time.start" to PIPELINE_TIME_START,
         "pipeline.time.end" to PIPELINE_TIME_END,
         "pipeline.time.duration" to PIPELINE_TIME_DURATION,
