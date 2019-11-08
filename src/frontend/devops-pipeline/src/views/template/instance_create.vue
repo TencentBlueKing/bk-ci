@@ -26,9 +26,10 @@
                         <div class="select-row">
                             <bk-select
                                 v-model="instanceVersion"
+                                @change="changeVersion"
                                 style="width: 320px"
                             >
-                                <bk-option v-for="(option, oindex) in versionList" :key="oindex" :id="option.version" :name="option.versionName">
+                                <bk-option v-for="option in versionList" :key="option.version" :id="option.version" :name="option.versionName">
                                 </bk-option>
                             </bk-select>
                             <label class="bk-form-checkbox template-setting-checkbox" v-if="!hashVal">
@@ -153,7 +154,6 @@
         data () {
             return {
                 instanceVersion: '',
-                isInit: false,
                 showContent: false,
                 isTemplateSetting: false,
                 showInstanceCreate: false,
@@ -206,18 +206,9 @@
                 return ''
             }
         },
-        watch: {
-            instanceVersion (newVal) {
-                if (newVal && !this.isInit) {
-                    this.requestTemplateDatail(newVal)
-                    if (this.hashVal) {
-                        this.requestPipelineParams(this.hashVal, newVal)
-                    }
-                }
-            }
-        },
         async mounted () {
             this.requestTemplateDatail(this.curVersionId)
+            this.handlePipeLineName()
             if (this.hashVal) {
                 this.requestPipelineParams(this.hashVal, this.curVersionId)
             }
@@ -225,8 +216,6 @@
         methods: {
             async requestTemplateDatail (versionId) {
                 const { $store, loading } = this
-
-                this.isInit = true
                 loading.isLoading = true
 
                 try {
@@ -240,7 +229,6 @@
                     this.template.description = res.description
                     this.versionList = res.versions
                     this.handleParams(res.template.stages)
-                    this.handlePipeLineName()
 
                     const curVersion = this.versionList.filter(val => {
                         return val.version === parseInt(versionId)
@@ -350,8 +338,11 @@
             toInstanceManage () {
                 this.$router.back()
             },
-            changeVersion (data) {
-                this.isInit = false
+            changeVersion (newVal) {
+                this.requestTemplateDatail(newVal)
+                if (this.hashVal) {
+                    this.requestPipelineParams(this.hashVal, newVal)
+                }
             },
             addPipelineName () {
                 this.showInstanceCreate = true

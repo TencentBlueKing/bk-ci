@@ -115,10 +115,10 @@
                 const values = this.atomValue[this.name] || []
                 const defaultValues = this.param.default || []
 
-                this.parameters.forEach((param, index) => {
-                    const value = values[index] || {}
-                    const defaultValue = defaultValues[index] || {}
-                    param.key = value.key || defaultValue.key || param.key
+                this.parameters.forEach((param) => {
+                    const key = param.key
+                    const value = values.find(x => x.key === key) || {}
+                    const defaultValue = defaultValues.find(x => x.key === key) || {}
                     param.value = value.value || defaultValue.value || param.value
                 })
             },

@@ -24,15 +24,37 @@
                 </div>
             </accordion>
         </template>
-        <!-- <atom-output :element="element" :atom-props-model="atomPropsModel"></atom-output> -->
+
+        <accordion v-if="outputProps && Object.keys(outputProps).length > 0" show-checkbox show-content>
+            <header class="var-header" slot="header">
+                <span>{{ $t('editPage.atomOutput') }}</span>
+                <i class="bk-icon icon-angle-down" style="display: block"></i>
+            </header>
+            <div slot="content">
+                <form-field class="output-namespace" :desc="outputNamespaceDesc" label="输出字段命名空间" :is-error="errors.has(&quot;namespace&quot;)" :error-msg="errors.first(&quot;namespace&quot;)">
+                    <vuex-input name="namespace" v-validate.initial="{ varRule: true }" v-model="namespace" />
+                </form-field>
+                <div class="atom-output-var-list">
+                    <h4>{{ $t('editPage.outputItemList') }}：</h4>
+                    <p v-for="(output, key) in outputProps" :key="key">
+                        {{ namespace ? `${namespace}_` : '' }}{{ key }}
+                        <bk-popover placement="right">
+                            <i class="bk-icon icon-info-circle" />
+                            <div slot="content">
+                                {{ output.description }}
+                            </div>
+                        </bk-popover>
+                    </p>
+                </div>
+            </div>
+        </accordion>
     </section>
     <section v-else>
-        <div class="empty-tips">{{ $t('outputErrTips') }}</div>
+        <div class="empty-tips">{{ emptyTips }}</div>
     </section>
 </template>
 
 <script>
-    // import AtomOutput from './AtomOutput'
     import atomMixin from './atomMixin'
     import Selector from '../AtomFormComponent/Selector'
     import CcAppId from '@/components/AtomFormComponent/CcAppId'
@@ -46,7 +68,6 @@
     export default {
         name: 'preview-atom',
         components: {
-            // AtomOutput,
             Selector,
             Accordion,
             CcAppId,
@@ -61,6 +82,12 @@
             handleUpdatePreviewInput: Function,
             atomValue: Object
         },
+        data () {
+            return {
+                outputNamespaceDesc: this.$t('editPage.namespaceTips'),
+                namespace: ''
+            }
+        },
         computed: {
             inputProps () {
                 try {
@@ -68,6 +95,14 @@
                 } catch (e) {
                     console.warn('getAtomModalInput error', e)
                     return {}
+                }
+            },
+            outputProps () {
+                try {
+                    return this.atomPropsModel.output
+                } catch (e) {
+                    console.warn('getAtomModalOpt error', e)
+                    return null
                 }
             },
             paramsGroupMap () {
@@ -91,8 +126,10 @@
                 return groupMap
             },
             isCorrectFormat () {
-                console.log(this.atomPropsModel, 2)
                 return this.atomPropsModel && typeof this.atomPropsModel === 'object' && this.atomPropsModel.input
+            },
+            emptyTips () {
+                return JSON.stringify(this.atomPropsModel) === '{}' ? this.$t('atomDebug.taskJsonEmpty') : this.$t('atomDebug.outputErrTips')
             }
         }
     }

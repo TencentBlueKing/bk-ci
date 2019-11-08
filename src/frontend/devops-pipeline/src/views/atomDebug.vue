@@ -14,7 +14,6 @@
             <div class="preview-atom">
                 <preview-atom
                     :atom-value="atomInputValue"
-                    :output-value="outputValue"
                     :atom-props-model="initJson"
                     :handle-update-preview-input="handleChangePreviewInput"
                     class="atom-content">
@@ -28,7 +27,7 @@
     import Vue from 'vue'
     import JsonViewer from 'vue-json-viewer'
     import PreviewAtom from '@/components/AtomPropertyPanel/PreviewAtom'
-    import { getAtomOutputObj, getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
+    import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     Vue.use(JsonViewer)
 
     export default {
@@ -60,10 +59,12 @@
             }
         },
         watch: {
+            '$route.params.projectId' (val) {
+                this.atomInputValue = getAtomDefaultValue(this.initJson.input)
+            },
             initJson: {
                 handler (val) {
                     this.atomInputValue = getAtomDefaultValue(this.initJson.input)
-                    this.outputValue = getAtomOutputObj(this.initJson.outputValue)
                 },
                 immediate: true
             }
@@ -71,9 +72,6 @@
         methods: {
             handleChangePreviewInput (name, value) {
                 Vue.set(this.atomInputValue, name, value)
-            },
-            handleChangePreviewOutput () {
-
             }
         }
     }

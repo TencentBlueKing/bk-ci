@@ -83,7 +83,8 @@
     "atomDebug": {
         "title": "研发商店插件前端task.json在线调试",
         "inputTips": "请在此输入正确的task.json内容...",
-        "outputErrTips": "task.json格式错误"
+        "outputErrTips": "task.json格式错误",
+        "taskJsonEmpty": "task.json内容为空"
     },
     "group": {
         "labelInputTips": "请输入标签名称,按Enter键确定",
@@ -457,6 +458,8 @@
         }
     },
     "editPage": {
+        "devopsImg": "蓝盾自有镜像",
+        "thirdImg": "第三方镜像",
         "baseSetting": "基础设置",
         "saving": "正在保存",
         "selectJob": "请选择Job类型",
