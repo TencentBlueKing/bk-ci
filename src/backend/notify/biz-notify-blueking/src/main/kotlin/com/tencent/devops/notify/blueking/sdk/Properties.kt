@@ -35,9 +35,9 @@ import org.springframework.stereotype.Component
 @Component
 class Properties {
 
-    @Value("\${app.code:#{null}}")
+    @Value("\${esb.appCode:#{null}}")
     val appCode: String? = null
-    @Value("\${app.secret:#{null}}")
+    @Value("\${esb.appSecret:#{null}}")
     val appSecret: String? = null
 
     @Value("\${bk.paas.host:#{null}}")
