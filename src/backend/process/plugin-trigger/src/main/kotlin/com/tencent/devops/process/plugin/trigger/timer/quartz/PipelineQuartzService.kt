@@ -29,6 +29,7 @@ package com.tencent.devops.process.plugin.trigger.timer.quartz
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -111,7 +112,8 @@ class PipelineJobBean(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val schedulerManager: SchedulerManager,
     private val pipelineTimerService: PipelineTimerService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val gray: Gray
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -127,6 +129,20 @@ class PipelineJobBean(
             logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
             schedulerManager.deleteJob(comboKey)
             return
+        }
+
+        if (gray.isGray()) {
+            // 灰度环境只加载灰度项目的流水线
+            if (!gray.isGrayMatchProject(pipelineTimer.projectId, redisOperation)) {
+                logger.info("[$comboKey]|PIPELINE_TIMER_GRAY|${pipelineTimer.projectId} is prod, discard it from queue!")
+                return
+            }
+        } else {
+            // 生产环境只加载生产项目的流水线
+            if (gray.isGrayMatchProject(pipelineTimer.projectId, redisOperation)) {
+                logger.info("[$comboKey]|PIPELINE_TIMER_PROD|${pipelineTimer.projectId} is gray, discard it from queue!")
+                return
+            }
         }
 
         var find = false
