@@ -32,13 +32,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
-import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT
-import com.tencent.devops.process.engine.common.MANUAL_ACTION
-import com.tencent.devops.process.engine.common.MANUAL_ACTION_USERID
-import com.tencent.devops.process.engine.common.QUALITY_RESULT
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
+import com.tencent.devops.process.engine.common.BS_QUALITY_RESULT
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -85,8 +85,8 @@ class QualityGateOutTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
-        val success = task.getTaskParam(QUALITY_RESULT)
-        val actionUser = task.getTaskParam(MANUAL_ACTION_USERID)
+        val success = task.getTaskParam(BS_QUALITY_RESULT)
+        val actionUser = task.getTaskParam(BS_MANUAL_ACTION_USERID)
 
         return if (success.isNotEmpty()) {
             logger.info("[$buildId]|QUALITY_FINISH|taskName=$taskName|taskId=$taskId|success=$success")
@@ -97,7 +97,7 @@ class QualityGateOutTaskAtom @Autowired constructor(
                 AtomResponse(BuildStatus.QUALITY_CHECK_FAIL)
             }
         } else {
-            val manualAction = task.getTaskParam(MANUAL_ACTION)
+            val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
             logger.info("[$buildId]|QUALITY_FINISH|taskName=$taskName|taskId=${task.taskId}|action=$manualAction")
             if (manualAction.isNotEmpty()) {
                 when (ManualReviewAction.valueOf(manualAction)) {
@@ -166,7 +166,7 @@ class QualityGateOutTaskAtom @Autowired constructor(
             // 产生MQ消息，等待5秒时间
             logger.info("[$buildId]|QUALITY_OUT|taskId=$elementId|quality check success wait end")
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
-            task.taskParams[QUALITY_RESULT] = checkResult.success
+            task.taskParams[BS_QUALITY_RESULT] = checkResult.success
         } else {
             LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准出)检测被拦截", elementId, task.containerHashId, task.executeCount ?: 1)
 
@@ -189,7 +189,7 @@ class QualityGateOutTaskAtom @Autowired constructor(
             val auditUsers = pipelineBuildQualityService.getAuditUserList(client, projectId, pipelineId, buildId, interceptTask)
             LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准出)待审核!审核人：$auditUsers", elementId, task.containerHashId, task.executeCount ?: 1)
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 60000*5
-            task.taskParams[QUALITY_RESULT] = checkResult.success
+            task.taskParams[BS_QUALITY_RESULT] = checkResult.success
         }
         return AtomResponse(BuildStatus.RUNNING)
     }

@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.interceptor
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.process.engine.common.ERROR_PIPELINE_QUEUE_FULL
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService

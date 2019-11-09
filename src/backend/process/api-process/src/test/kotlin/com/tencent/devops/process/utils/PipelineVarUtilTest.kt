@@ -36,7 +36,7 @@ class PipelineVarUtilTest {
         val vars = mutableMapOf(
             PIPELINE_START_USER_NAME to "admin",
             "userName" to "hello",
-            "${PIPELINE_MATERIAL_URL}.rep/a1" to "http://git.xxx.com/group/repo.git"
+            "$PIPELINE_MATERIAL_URL.rep/a1" to "http://git.xxx.com/group/repo.git"
         )
         PipelineVarUtil.fillOldVar(vars)
         vars.forEach {

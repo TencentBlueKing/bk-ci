@@ -37,12 +37,12 @@ import com.tencent.devops.common.pipeline.element.ReportArchiveServiceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
-import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.ErrorType
