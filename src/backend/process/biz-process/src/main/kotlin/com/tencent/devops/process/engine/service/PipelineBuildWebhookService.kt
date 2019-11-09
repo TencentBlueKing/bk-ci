@@ -66,6 +66,7 @@ import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
@@ -81,7 +82,6 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
-import com.tencent.devops.process.utils.REPO_NAME
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
@@ -397,7 +397,12 @@ class PipelineBuildWebhookService @Autowired constructor(
         when (element) {
             is CodeSVNWebHookTriggerElement -> {
 
-                params = WebHookParams(RepositoryConfigUtils.replaceCodeProp(RepositoryConfigUtils.buildConfig(element), variables))
+                params = WebHookParams(
+                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
+                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+                        variables = variables
+                    )
+                )
                 params.relativePath = EnvUtils.parseEnv(element.relativePath ?: "", variables)
                 params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
                     ""
@@ -413,7 +418,12 @@ class PipelineBuildWebhookService @Autowired constructor(
                 params.codeType = CodeType.SVN
             }
             is CodeGitWebHookTriggerElement -> {
-                params = WebHookParams(RepositoryConfigUtils.replaceCodeProp(RepositoryConfigUtils.buildConfig(element), variables))
+                params = WebHookParams(
+                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
+                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+                        variables = variables
+                    )
+                )
                 params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
                     ""
                 } else {
@@ -431,7 +441,12 @@ class PipelineBuildWebhookService @Autowired constructor(
                 params.codeType = CodeType.GIT
             }
             is CodeGithubWebHookTriggerElement -> {
-                params = WebHookParams(RepositoryConfigUtils.replaceCodeProp(RepositoryConfigUtils.buildConfig(element), variables))
+                params = WebHookParams(
+                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
+                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+                        variables = variables
+                    )
+                )
                 params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
                     ""
                 } else {
@@ -446,7 +461,12 @@ class PipelineBuildWebhookService @Autowired constructor(
                 params.codeType = CodeType.GITHUB
             }
             is CodeGitlabWebHookTriggerElement -> {
-                params = WebHookParams(RepositoryConfigUtils.replaceCodeProp(RepositoryConfigUtils.buildConfig(element), variables))
+                params = WebHookParams(
+                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
+                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+                        variables = variables
+                    )
+                )
                 if (element.branchName == null) {
                     return null
                 }
@@ -471,7 +491,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         val mrRequestId = matcher.getMergeRequestId()
         val startParams = mutableMapOf<String, Any>()
         startParams[PIPELINE_WEBHOOK_REVISION] = matcher.getRevision()
-        startParams[REPO_NAME] = matcher.getRepoName()
+        startParams[PIPELINE_REPO_NAME] = matcher.getRepoName()
         startParams[PIPELINE_START_WEBHOOK_USER_ID] = matcher.getUsername()
         startParams[PIPELINE_START_TASK_ID] = element.id!! // 当前触发节点为启动节点
         startParams[PIPELINE_WEBHOOK_TYPE] = matcher.getCodeType().name
@@ -523,7 +543,8 @@ class PipelineBuildWebhookService @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS] = triggerElement.includePaths ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS] = triggerElement.excludePaths ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = triggerElement.excludeUsers?.joinToString(",") ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
+                matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[GitWebHookMatcher.MATCH_PATHS] ?: ""
 
             if (params.eventType == CodeEventType.MERGE_REQUEST || params.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
@@ -545,8 +566,10 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = mrInfo.sourceBranch ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo.createTime ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo.updateTime ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] = DateTimeUtils.zoneDateToTimestamp(mrInfo.createTime)
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] = DateTimeUtils.zoneDateToTimestamp(mrInfo.updateTime)
+                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
+                    DateTimeUtils.zoneDateToTimestamp(mrInfo.createTime)
+                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
+                    DateTimeUtils.zoneDateToTimestamp(mrInfo.updateTime)
                 startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo.mrId
                 startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo.mrNumber
                 startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo.description ?: ""
@@ -594,12 +617,16 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = githubEvent.number
                 startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = githubEvent.pull_request.comments_url ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = githubEvent.pull_request.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = githubEvent.pull_request.assignees.joinToString(",") { it.login ?: "" }
+                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] =
+                    githubEvent.pull_request.assignees.joinToString(",") { it.login ?: "" }
                 startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = githubEvent.pull_request.url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] = githubEvent.pull_request.requested_reviewers.joinToString(",") { it.login ?: "" }
+                startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
+                    githubEvent.pull_request.requested_reviewers.joinToString(",") { it.login ?: "" }
                 startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = githubEvent.pull_request.milestone?.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = githubEvent.pull_request.milestone?.due_on ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = githubEvent.pull_request.labels.joinToString(",") { it.name }
+                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] =
+                    githubEvent.pull_request.milestone?.due_on ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =
+                    githubEvent.pull_request.labels.joinToString(",") { it.name }
             }
 
             if (params.eventType == CodeEventType.CREATE) {

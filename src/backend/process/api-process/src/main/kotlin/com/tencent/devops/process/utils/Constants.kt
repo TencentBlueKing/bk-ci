@@ -86,8 +86,6 @@ const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
 
-const val REPO_NAME = "repoName"
-
 const val PIPELINE_MATERIAL_URL = "BK_CI_PIEPLEINE_MATERIAL_URL" // pipeline.material.url
 const val PIPELINE_MATERIAL_BRANCHNAME = "BK_CI_PIPELINE_MATERIAL_BRANCHNAME" // pipeline.material.branchName
 const val PIPELINE_MATERIAL_ALIASNAME = "BK_CI_PIPELINE_MATERIAL_ALIASNAME" // pipeline.material.aliasName
@@ -159,7 +157,16 @@ object PipelineVarUtil {
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
-        "repoName" to PIPELINE_REPO_NAME,
+        "majorVersion" to MAJORVERSION,
+        "minorVersion" to MINORVERSION,
+        "fixVersion" to FIXVERSION,
+        "BuildNo" to BUILD_NO,
+        "pipeline.start.channel" to PIPELINE_START_CHANNEL,
+        "pipeline.build.last.update" to PIPELINE_BUILD_LAST_UPDATE,
+        "pipeline.build.svn.revision" to PIPELINE_BUILD_SVN_REVISION,
+        "pipeline.start.parent.pipeline.id" to PIPELINE_START_PARENT_PIPELINE_ID,
+        "pipeline.start.user.id" to PIPELINE_START_USER_ID,
+        "pipeline.start.task.id" to PIPELINE_START_TASK_ID,
         "pipeline.retry.start.task.id" to PIPELINE_RETRY_START_TASK_ID,
         "pipeline.retry.build.id" to PIPELINE_RETRY_BUILD_ID,
         "pipeline.id" to PIPELINE_ID,
@@ -199,25 +206,35 @@ object PipelineVarUtil {
     /**
      * 旧变量转新变量
      */
-    fun fillNewVar(vars: MutableMap<String, String>) {
-        turning(oldVarMappingNewVar, vars)
-        prefixTurning(oldPrefixMappingNew, vars)
+    fun replaceOldByNewVar(vars: MutableMap<String, String>) {
+        turning(oldVarMappingNewVar, vars, true)
+        prefixTurning(oldPrefixMappingNew, vars, true)
     }
 
-    private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>) {
+    private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
         mapping.forEach {
             if (vars[it.key] != null) {
                 vars[it.value] = vars[it.key]!!
+                if (replace) {
+                    vars.remove(it.key)
+                }
             }
         }
     }
 
-    private fun prefixTurning(mapping: Map<String, String>, vars: MutableMap<String, String>) {
+    private fun prefixTurning(
+        mapping: Map<String, String>,
+        vars: MutableMap<String, String>,
+        replace: Boolean = false
+    ) {
         val keys = HashSet(vars.keys)
-        keys.forEach v@{
+        keys.forEach v@{ fullKey ->
             mapping.forEach m@{ (key, value) ->
-                if (it.startsWith(key)) {
-                    vars["$value${it.substring(key.length)}"] = vars[it]!!
+                if (fullKey.startsWith(key)) {
+                    vars["$value${fullKey.substring(key.length)}"] = vars[fullKey]!!
+                    if (replace) {
+                        vars.remove(fullKey)
+                    }
                     return@v
                 }
             }
