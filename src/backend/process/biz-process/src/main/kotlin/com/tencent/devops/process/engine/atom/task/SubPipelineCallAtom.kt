@@ -35,11 +35,11 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
-import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -139,7 +139,7 @@ class SubPipelineCallAtom @Autowired constructor(
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL,
-                errorMsg = "子流水线ID参数为空:$subPipelineId，请检查流水线重新保存后并重新执行",
+                errorMsg = "子流水线ID参数为空，请检查流水线重新保存后并重新执行",
                 pipelineId = task.pipelineId,
                 buildId = buildId,
                 taskId = taskId

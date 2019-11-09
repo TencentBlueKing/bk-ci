@@ -74,8 +74,8 @@ const val PROJECT_NAME_CHINESE = "BK_CI_PROJECT_NAME_CN" // "project.name.chines
 
 const val PIPELINE_START_MOBILE = "BK_CI_IS_MOBILE" // "pipeline.start.isMobile"
 
-const val SUB_PIPELINE_BUILD_STATUS = "BK_CI_SUB_PIPELINE_BUILD_STATUS"// "sub.pipeline.build.status"
-const val SUB_PIPELINE_BUILD_DELETE_REASON = "BK_CI_SUB_PIPELINE_DELETE_REASON"// "sub.pipeline.build.delete.reason"
+const val SUB_PIPELINE_BUILD_STATUS = "BK_CI_SUB_PIPELINE_BUILD_STATUS" // "sub.pipeline.build.status"
+const val SUB_PIPELINE_BUILD_DELETE_REASON = "BK_CI_SUB_PIPELINE_DELETE_REASON" // "sub.pipeline.build.delete.reason"
 
 const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task.id"
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"

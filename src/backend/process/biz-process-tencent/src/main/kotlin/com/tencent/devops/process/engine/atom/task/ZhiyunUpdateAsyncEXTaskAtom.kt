@@ -34,10 +34,10 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.ZhiyunUpdateAsyncEXElement
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
-import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.ErrorType
