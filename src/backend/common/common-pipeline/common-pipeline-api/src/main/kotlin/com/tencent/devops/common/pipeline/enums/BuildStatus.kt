@@ -28,6 +28,10 @@ package com.tencent.devops.common.pipeline.enums
 
 import com.tencent.devops.common.api.pojo.IdValue
 
+/**
+ * statusName: 状态中文名
+ * visiable: 是否对用户可见
+ */
 enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     SUCCEED("成功", true), // 0 成功
     FAILED("失败", true), // 1 失败
@@ -66,7 +70,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
 
         fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
 
-        fun isReadyToRun(status: BuildStatus) = status == QUEUE
+        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE
         /**
          * 是否处于循环中： 正在运行中或循环等待都属于循环
          */
