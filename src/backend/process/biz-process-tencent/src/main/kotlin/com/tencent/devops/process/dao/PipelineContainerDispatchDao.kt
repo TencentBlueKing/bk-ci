@@ -148,7 +148,7 @@ class PipelineContainerDispatchDao {
         conditions.add(a.DISPATCH_BUILD_TYPE.eq(dispatchBuildType))
         conditions.add(a.PIPELINE_VERSION.eq(b.VERSION))
         if (!dispatchValue.isNullOrBlank()) {
-            conditions.add(a.DISPATCH_VALUE.eq(dispatchValue))
+            conditions.add(a.DISPATCH_VALUE.startsWith(dispatchValue))
         }
         val groupQuery = baseQuery
                 .where(conditions)
