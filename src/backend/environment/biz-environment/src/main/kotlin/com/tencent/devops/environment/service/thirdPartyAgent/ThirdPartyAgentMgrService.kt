@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -47,6 +47,7 @@ import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -152,7 +153,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         checkEditPermmission(userId, projectId, nodeId)
 
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
-            ?: throw OperationException("agent不存在")
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
         thirdPartyAgentDao.saveAgentEnvs(
             dslContext = dslContext,
             agentId = agentRecord.id,
@@ -163,7 +167,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     fun getAgentEnv(projectId: String, nodeHashId: String): List<EnvVar> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
-            ?: throw OperationException("agent不存在")
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
 
         return if (agentRecord.agentEnvs.isNullOrBlank()) {
             listOf()
@@ -174,7 +181,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
-            throw OperationException("no permission")
+            throw ErrorCodeException(EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION)
         }
     }
 
@@ -185,7 +192,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val agentRecord = thirdPartyAgentDao.getAgentByNodeId(context, nodeId, projectId)
-                ?: throw OperationException("agent不存在")
+                ?: throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                    params = arrayOf(nodeHashId)
+                )
             agentRecord.parallelTaskCount = parallelTaskCount
             thirdPartyAgentDao.saveAgent(context, agentRecord)
         }
@@ -204,7 +214,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             nodeId = nodeId,
             projectId = projectId
         )
-            ?: throw OperationException("agent不存在")
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
         val agentBuildPage = client.get(ServiceAgentResource::class).listAgentBuild(
             agentId = agentHashId,
@@ -267,7 +280,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             nodeId = nodeId,
             projectId = projectId
         )
-            ?: throw OperationException("agent不存在")
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
 
         val agentActionCount = thirdPartyAgentDao.getAgentActionsCount(
@@ -736,7 +752,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             agentRecord.status == AgentStatus.UN_IMPORT.status
         ) {
             logger.warn("The agent status(${agentRecord.status}) is NOT OK")
-            throw OperationException("Agent状态异常")
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_STATUS_EXCEPTION)
         }
 
         val nodeInfo = nodeDao.listDevCloudNodesByIps(dslContext, projectId, listOf(agentRecord.ip))
@@ -803,7 +819,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val count = thirdPartyAgentDao.updateStatus(context, id, nodeId, projectId, AgentStatus.IMPORT_OK)
             if (count != 1) {
                 logger.warn("Fail to update the agent($id) to OK status")
-                throw OperationException("Agent不存在")
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                    params = arrayOf(id.toString())
+                )
             }
             environmentPermissionService.createNode(
                 userId = userId,

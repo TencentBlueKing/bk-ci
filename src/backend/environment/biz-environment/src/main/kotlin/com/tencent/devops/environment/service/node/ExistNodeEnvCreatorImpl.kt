@@ -27,9 +27,10 @@
 package com.tencent.devops.environment.service.node
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -68,8 +69,9 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
-            throw OperationException(
-                "节点权限不足 [${unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]"
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
         }
 
@@ -78,7 +80,10 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
         val existNodeIds = existNodes.map { it.nodeId }.toSet()
         val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
         if (notExistNodeIds.isNotEmpty()) {
-            throw OperationException("节点 [${notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}] 不存在")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+            )
         }
 
         var envId = 0L

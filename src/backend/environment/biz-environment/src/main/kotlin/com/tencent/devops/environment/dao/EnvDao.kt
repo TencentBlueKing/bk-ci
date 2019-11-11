@@ -26,18 +26,20 @@
 
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 class EnvDao {
     fun get(dslContext: DSLContext, projectId: String, envId: Long): TEnvRecord {
-        return getOrNull(dslContext, projectId, envId) ?: throw NotFoundException("环境不存在")
+        return getOrNull(dslContext, projectId, envId)
+            ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS)
     }
 
     fun getByEnvName(dslContext: DSLContext, projectId: String, envName: String): TEnvRecord? {

@@ -26,11 +26,12 @@
 
 package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -120,7 +121,7 @@ class CmdbNodeService @Autowired constructor(
         // 验证 CMDB 节点IP和责任人
         val cmdbNodeList = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes
         val cmdbIpToNodeMap = cmdbNodeList.associateBy { it.ip }
-        val invaliedIps = nodeIps.filter {
+        val invalidIps = nodeIps.filter {
             if (!cmdbIpToNodeMap.containsKey(it)) true
             else {
                 val isOperator = cmdbIpToNodeMap[it]!!.operator == userId
@@ -128,8 +129,11 @@ class CmdbNodeService @Autowired constructor(
                 !isOperator && !isBakOpertor
             }
         }
-        if (invaliedIps.isNotEmpty()) {
-            throw OperationException("非法 IP [${invaliedIps.joinToString(",")}], 请确认是否是服务器的责任人")
+        if (invalidIps.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
+                params = arrayOf(invalidIps.joinToString(","))
+            )
         }
 
         // 只添加不存在的节点
@@ -187,12 +191,15 @@ class CmdbNodeService @Autowired constructor(
         val ccNodeList = esbAgentClient.getCcNodeByIps(userId, nodeIps)
         val ccIpToNodeMap = ccNodeList.associateBy { it.ip }
         val invalidIps = nodeIps.filter {
-            var ccNode = ccIpToNodeMap[it]
+            val ccNode = ccIpToNodeMap[it]
             if (ccNode == null) true
             else userId != ccNode.operator && userId != ccNode.bakOperator
         }
         if (invalidIps.isNotEmpty()) {
-            throw OperationException("非法 IP [${invalidIps.joinToString(",")}], 请确认是否是服务器的责任人")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
+                params = arrayOf(invalidIps.joinToString(","))
+            )
         }
 
         // 只添加不存在的节点
