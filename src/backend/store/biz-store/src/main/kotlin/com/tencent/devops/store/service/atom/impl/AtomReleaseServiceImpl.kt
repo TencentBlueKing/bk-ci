@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
 import com.tencent.devops.common.api.constant.SECURITY
 import com.tencent.devops.common.api.constant.TEST
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -510,12 +511,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return if (!qualityJsonStr.isNullOrBlank()) {
                 val qualityDataMap = JsonUtil.toMap(qualityJsonStr!!)
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
-                val stage = when (qualityDataMap["stage"]) {
+                val stageCode = qualityDataMap["stage"] as String
+                val stage = when (stageCode) {
                     "DEVELOP" -> MessageCodeUtil.getCodeLanMessage(DEVELOP)
                     "TEST" -> MessageCodeUtil.getCodeLanMessage(TEST)
                     "DEPLOY" -> MessageCodeUtil.getCodeLanMessage(DEPLOY)
                     "SECURITY" -> MessageCodeUtil.getCodeLanMessage(SECURITY)
-                    else -> throw RuntimeException("unsupported stage type, only allow:DEVELOP, TEST, DEPLOY, SECURITY")
+                    else -> throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(stageCode))
                 }
 
                 // 先注册基础数据
