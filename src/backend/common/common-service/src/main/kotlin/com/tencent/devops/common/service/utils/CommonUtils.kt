@@ -33,14 +33,27 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
+import kotlin.collections.HashMap
+import kotlin.collections.Map
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.listOf
+import kotlin.collections.set
 
 object CommonUtils {
+
+    private val simpleCnLanList = listOf("ZH_CN", "ZH-CN")
+
+    private val twCnLanList = listOf("ZH_TW", "ZH-TW", "ZH_HK", "ZH-HK")
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
@@ -124,6 +137,32 @@ object CommonUtils {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
+        }
+    }
+
+    /**
+     * 获取语言信息
+     */
+    private fun getOriginLocale(): String {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        return if (null != attributes) {
+            val request = attributes.request
+            val cookieLan = CookieUtil.getCookieValue(request, "blueking_language")
+            cookieLan ?: LocaleContextHolder.getLocale().toString() // 获取字符集（与http请求头中的Accept-Language有关）
+        } else {
+            "ZH_CN" // 取不到语言信息默认为中文
+        }
+    }
+
+    /**
+     * 获取蓝盾能处理的语言信息
+     */
+    fun getBkLocale(): String {
+        val locale = getOriginLocale()
+        return when {
+            simpleCnLanList.contains(locale.toUpperCase()) -> "ZH_CN" // 简体中文
+            twCnLanList.contains(locale.toUpperCase()) -> "ZH_TW" // 繁体中文
+            else -> "EN" // 英文描述
         }
     }
 }
