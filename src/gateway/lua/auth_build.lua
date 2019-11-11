@@ -91,6 +91,16 @@ if build_type == "AGENT" then
                     return
                 end
 
+                -- atom替换projectId
+                if ngx.var.service_code == "atom" then
+                    if obj.atoms ~= nil then
+                        local atom_projectid = obj.atoms[ngx.var.atom_code]
+                        if atom_projectid ~= nil then
+                            obj.projectId = atom_projectid
+                        end
+                    end
+                end
+
                 if obj.pipelineId == nil then
                     ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(500)
@@ -202,6 +212,16 @@ elseif build_type == "DOCKER" then
                     return
                 end
 
+                -- atom替换projectId
+                if ngx.var.service_code == "atom" then
+                    if obj.atoms ~= nil then
+                        local atom_projectid = obj.atoms[ngx.var.atom_code]
+                        if atom_projectid ~= nil then
+                            obj.projectId = atom_projectid
+                        end
+                    end
+                end
+
                 if obj.buildId == nil then
                     ngx.log(ngx.ERR, "buildId is null: ")
                     ngx.exit(500)
@@ -295,6 +315,16 @@ elseif build_type == "PLUGIN_AGENT" then
                     return
                 end
 
+                -- atom替换projectId
+                if ngx.var.service_code == "atom" then
+                    if obj.atoms ~= nil then
+                        local atom_projectid = obj.atoms[ngx.var.atom_code]
+                        if atom_projectid ~= nil then
+                            obj.projectId = atom_projectid
+                        end
+                    end
+                end
+
                 if obj.pipelineId == nil then
                     ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(500)
@@ -383,6 +413,16 @@ else
                 -- parameter check
                 if obj.projectId == nil then
                     ngx.log(ngx.ERR, "projectId is null: ")
+                end
+
+                -- atom替换projectId
+                if ngx.var.service_code == "atom" then
+                    if obj.atoms ~= nil then
+                        local atom_projectid = obj.atoms[ngx.var.atom_code]
+                        if atom_projectid ~= nil then
+                            obj.projectId = atom_projectid
+                        end
+                    end
                 end
 
                 if obj.pipelineId == nil then
