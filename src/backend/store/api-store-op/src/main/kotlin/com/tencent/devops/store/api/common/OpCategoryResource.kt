@@ -86,7 +86,7 @@ interface OpCategoryResource {
 
     @ApiOperation("根据ID获取范畴信息")
     @GET
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun getCategoryById(
         @ApiParam("范畴ID", required = true)
         @QueryParam("id")
@@ -95,7 +95,7 @@ interface OpCategoryResource {
 
     @ApiOperation("根据ID删除范畴信息")
     @DELETE
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun deleteCategoryById(
         @ApiParam("范畴ID", required = true)
         @PathParam("id")
