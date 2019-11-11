@@ -86,7 +86,7 @@ interface OpLabelResource {
 
     @ApiOperation("根据ID获取标签信息")
     @GET
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun getLabelById(
         @ApiParam("标签ID", required = true)
         @QueryParam("id")
@@ -95,7 +95,7 @@ interface OpLabelResource {
 
     @ApiOperation("根据ID删除标签信息")
     @DELETE
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun deleteLabelById(
         @ApiParam("标签ID", required = true)
         @PathParam("id")
