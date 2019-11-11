@@ -26,11 +26,13 @@
 
 package com.tencent.devops.environment.resources
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
@@ -63,7 +65,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         envHashIds: List<String>
     ): Result<List<NodeBaseInfo>> {
         if (envHashIds.isEmpty()) {
-            throw OperationException("缺少参数 envHashIds")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
         return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
     }
@@ -74,7 +76,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         envNames: List<String>
     ): Result<List<EnvWithPermission>> {
         if (envNames.isEmpty()) {
-            throw OperationException("缺少参数 envNames")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envNames"))
         }
         return Result(envService.listRawEnvByEnvNames(userId, projectId, envNames))
     }

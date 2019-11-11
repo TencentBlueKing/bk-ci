@@ -26,10 +26,11 @@
 
 package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.environment.agent.client.BcsClient
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.BcsClusterDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
@@ -64,7 +65,7 @@ class BcsClusterService @Autowired constructor(
 
     fun addBcsVmNodes(userId: String, projectId: String, bcsVmParam: BcsVmParam) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
-            throw OperationException("没有创建节点的权限")
+            throw            ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
         }
 
         val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId)
@@ -162,32 +163,42 @@ class BcsClusterService @Autowired constructor(
         val devCloudQuota = projectConfig.devCloudQuota
         val devCloudUsedCount = nodeDao.countDevCloudVm(dslContext, projectId)
 
-        return ProjectInfo(bcsVmEnabled, bcsVmQuota, bcsVmUsedCount, bcsVmRestCount, importQuota, devCloudEnable, devCloudQuota, devCloudUsedCount)
+        return ProjectInfo(
+            bcsVmEnabled = bcsVmEnabled,
+            bcsVmQuota = bcsVmQuota,
+            bcsVmUsedCount = bcsVmUsedCount,
+            bcsVmRestCount = bcsVmRestCount,
+            importQuota = importQuota,
+            devCloudVmEnabled = devCloudEnable,
+            devCloudVmQuota = devCloudQuota,
+            devCloudVmUsedCount = devCloudUsedCount
+        )
     }
 
     fun saveProjectConfig(projectConfigParam: ProjectConfigParam) {
-        projectConfigDao.saveProjectConfig(dslContext,
-                projectConfigParam.projectId,
-                projectConfigParam.updatedUser,
-                projectConfigParam.bcsVmEnabled,
-                projectConfigParam.bcsVmQuota,
-                projectConfigParam.importQuota,
-                projectConfigParam.devCloudEnable,
-                projectConfigParam.devCloudQuota
-                )
+        projectConfigDao.saveProjectConfig(
+            dslContext = dslContext,
+            projectId = projectConfigParam.projectId,
+            userId = projectConfigParam.updatedUser,
+            bcsVmEnabled = projectConfigParam.bcsVmEnabled,
+            bcsVmQuota = projectConfigParam.bcsVmQuota,
+            importQuota = projectConfigParam.importQuota,
+            devCloudEnabled = projectConfigParam.devCloudEnable,
+            devCloudQuota = projectConfigParam.devCloudQuota
+        )
     }
 
     fun listProjectConfig(): List<ProjectConfig> {
         return projectConfigDao.listProjectConfig(dslContext).map {
             ProjectConfig(
-                    it.projectId,
-                    it.updatedUser,
-                    it.updatedTime.timestamp(),
-                    it.bcsvmEnalbed,
-                    it.bcsvmQuota,
-                    it.importQuota,
-                    it.devCloudEnalbed,
-                    it.devCloudQuota
+                projectId = it.projectId,
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                bcsVmEnabled = it.bcsvmEnalbed,
+                bcsVmQuota = it.bcsvmQuota,
+                importQuota = it.importQuota,
+                devCloudEnable = it.devCloudEnalbed,
+                devCloudQuota = it.devCloudQuota
             )
         }
     }
@@ -195,14 +206,14 @@ class BcsClusterService @Autowired constructor(
     fun list(page: Int, pageSize: Int, projectId: String?): List<ProjectConfig> {
         return projectConfigDao.list(dslContext, page, pageSize, projectId).map {
             ProjectConfig(
-                    it.projectId,
-                    it.updatedUser,
-                    it.updatedTime.timestamp(),
-                    it.bcsvmEnalbed,
-                    it.bcsvmQuota,
-                    it.importQuota,
-                    it.devCloudEnalbed,
-                    it.devCloudQuota
+                projectId = it.projectId,
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                bcsVmEnabled = it.bcsvmEnalbed,
+                bcsVmQuota = it.bcsvmQuota,
+                importQuota = it.importQuota,
+                devCloudEnable = it.devCloudEnalbed,
+                devCloudQuota = it.devCloudQuota
             )
         }
     }

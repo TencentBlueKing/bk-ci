@@ -28,8 +28,9 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.AgentStatus
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.redis.RedisLock
@@ -188,13 +189,13 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         secretKey: String
     ) {
         if (projectId.isBlank()) {
-            throw ParamBlankException("无效的项目ID")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
         }
         if (agentId.isBlank()) {
-            throw ParamBlankException("无效的Agent ID")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("Agent ID"))
         }
         if (secretKey.isBlank()) {
-            throw ParamBlankException("无效的Secret Key")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("Secret Key"))
         }
     }
 

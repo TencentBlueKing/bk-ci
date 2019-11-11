@@ -67,7 +67,6 @@ class BkCmdbEnvCreatorImpl @Autowired constructor(
             val nodeIdStr = unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_INSUFFICIENT_PERMISSIONS,
-                defaultMessage = "节点权限不足 [$nodeIdStr]",
                 params = arrayOf(nodeIdStr)
             )
         }
@@ -80,7 +79,6 @@ class BkCmdbEnvCreatorImpl @Autowired constructor(
             val nodeIdStr = notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                defaultMessage = "节点不存在 [$nodeIdStr]",
                 params = arrayOf(nodeIdStr)
             )
         }

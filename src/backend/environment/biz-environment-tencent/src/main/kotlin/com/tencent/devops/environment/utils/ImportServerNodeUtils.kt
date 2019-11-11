@@ -28,12 +28,13 @@ package com.tencent.devops.environment.utils
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCcNode
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import org.jooq.DSLContext
@@ -108,7 +109,10 @@ object ImportServerNodeUtils {
         val importQuata = projectConfig.importQuota
         val existImportNodeCount = nodeDao.countImportNode(dslContext, projectId)
         if (toAddNodeCount + existImportNodeCount > importQuata) {
-            throw OperationException("导入CC/CMDB节点数不能超过配额[$importQuata]，如有特别需求，请联系【蓝盾助手】")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED,
+                params = arrayOf(importQuata.toString())
+            )
         }
     }
 }

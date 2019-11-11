@@ -27,10 +27,13 @@
 package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
@@ -45,11 +48,9 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
-import javax.ws.rs.NotFoundException
 
 @Service
 class NodeService @Autowired constructor(
@@ -60,9 +61,6 @@ class NodeService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(NodeService::class.java)
-    }
 
     fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
@@ -301,13 +299,16 @@ class NodeService @Autowired constructor(
 
     fun changeCreatedUser(userId: String, projectId: String, nodeHashId: String) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        val node = nodeDao.get(dslContext, projectId, nodeId) ?: throw NotFoundException("node not found")
+        val node = nodeDao.get(dslContext, projectId, nodeId) ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NOT_EXISTS,
+            params = arrayOf(nodeHashId)
+        )
         when (node.nodeType) {
             NodeType.CC.name -> {
                 if (userId == node.operator || userId == node.bakOperator) {
                     nodeDao.updateCreatedUser(dslContext = dslContext, nodeId = nodeId, userId = userId)
                 } else {
-                    throw OperationException("没有操作权限")
+                    throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
                 }
             }
             NodeType.CMDB.name -> {
@@ -316,26 +317,32 @@ class NodeService @Autowired constructor(
                 if (isOperator || isBakOperator) {
                     nodeDao.updateCreatedUser(dslContext, nodeId, userId)
                 } else {
-                    throw OperationException("没有操作权限")
+                    throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
                 }
             }
             else -> {
-                throw OperationException("节点类型【${NodeType.getTypeName(node.nodeType)}】不支持修改导入人")
+                throw ErrorCodeException(
+                    errorCode = ERROR_NODE_CHANGE_USER_NOT_SUPPORT,
+                    params = arrayOf(NodeType.getTypeName(node.nodeType))
+                )
             }
         }
     }
 
     private fun checkDisplayName(projectId: String, nodeId: Long?, displayName: String) {
         if (nodeDao.isDisplayNameExist(dslContext, projectId, nodeId, displayName)) {
-            throw OperationException("节点名称【$displayName】已存在")
+            throw ErrorCodeException(errorCode = ERROR_NODE_NAME_DUPLICATE, params = arrayOf(displayName))
         }
     }
 
     fun updateDisplayName(userId: String, projectId: String, nodeHashId: String, displayName: String) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        val nodeInDb = nodeDao.get(dslContext, projectId, nodeId) ?: throw NotFoundException("node not found")
+        val nodeInDb = nodeDao.get(dslContext, projectId, nodeId) ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NOT_EXISTS,
+            params = arrayOf(nodeHashId)
+        )
         if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.EDIT)) {
-            throw OperationException("No Permission")
+            throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
         }
         checkDisplayName(projectId, nodeId, displayName)
         dslContext.transaction { configuration ->

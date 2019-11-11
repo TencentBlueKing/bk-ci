@@ -26,7 +26,8 @@
 
 package com.tencent.devops.environment.client
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.utils.NumberUtils
 import org.influxdb.InfluxDB
@@ -85,7 +86,10 @@ class InfluxdbClient {
             ?: return AgentHostInfo(nCpus, memTotal, diskTotal)
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_HOST_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         try {
@@ -157,7 +161,10 @@ class InfluxdbClient {
             )
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_CPU_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
@@ -181,7 +188,10 @@ class InfluxdbClient {
             )
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_CPU_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
@@ -201,7 +211,10 @@ class InfluxdbClient {
             ?: return mapOf("used_percent" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_MEM_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
@@ -219,7 +232,10 @@ class InfluxdbClient {
             ?: return mapOf("dev" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_DISK_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
@@ -254,7 +270,10 @@ class InfluxdbClient {
             ?: return mapOf("io" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_DISK_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
@@ -289,7 +308,10 @@ class InfluxdbClient {
             ?: return mapOf("eth0" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_NET_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
@@ -324,7 +346,10 @@ class InfluxdbClient {
             ?: return mapOf("net" to listOf(mapOf("time" to "0")))
         if (queryResult.hasError()) {
             logger.error("query influxdb error: ", queryResult.error)
-            throw OperationException("query influxdb failed")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_NET_INFO_FAIL,
+                params = arrayOf(queryResult.error)
+            )
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
