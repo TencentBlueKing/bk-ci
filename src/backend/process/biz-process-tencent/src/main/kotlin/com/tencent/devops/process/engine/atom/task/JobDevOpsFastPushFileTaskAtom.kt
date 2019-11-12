@@ -30,18 +30,18 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
+import com.tencent.devops.common.pipeline.element.JobDevOpsFastPushFileElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
-import com.tencent.devops.common.pipeline.element.JobDevOpsFastPushFileElement
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_ID_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS
@@ -84,7 +84,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, JobDevOpsFastPushFileElement::class.java)
     }
 
-    @Value("\${gateway.url:#{null}}")
+    @Value("\${devopsGateway.idc:#{null}}")
     private val gatewayUrl: String? = null
 
     override fun tryFinish(
@@ -192,8 +192,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             fileList.forEach { jfrogFile ->
                 LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${jfrogFile.uri})", taskId, containerId, executeCount)
                 count++
-                val url = if (isCustom) "http://$gatewayUrl/jfrog/storage/service/custom/$projectId${jfrogFile.uri}"
-                else "http://$gatewayUrl/jfrog/storage/service/archive/$projectId/$pipelineId/$buildId${jfrogFile.uri}"
+                val url = if (isCustom) "$gatewayUrl/jfrog/storage/service/custom/$projectId${jfrogFile.uri}"
+                else "$gatewayUrl/jfrog/storage/service/archive/$projectId/$pipelineId/$buildId${jfrogFile.uri}"
                 val destFile = File(destPath, File(jfrogFile.uri).name)
                 OkhttpUtils.downloadFile(url, destFile)
                 localFileList.add(destFile.absolutePath)
@@ -583,8 +583,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     // 获取所有的文件和文件夹
     private fun getAllFiles(projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): JfrogFilesData {
 
-        val cusListFilesUrl = "http://$gatewayUrl/jfrog/api/service/custom/$projectId?list&deep=1&listFolders=1"
-        val listFilesUrl = "http://$gatewayUrl/jfrog/api/service/archive"
+        val cusListFilesUrl = "$gatewayUrl/jfrog/api/service/custom/$projectId?list&deep=1&listFolders=1"
+        val listFilesUrl = "$gatewayUrl/jfrog/api/service/archive"
 
         val url = if (!isCustom) "$listFilesUrl/$projectId/$pipelineId/$buildId?list&deep=1&listFolders=1"
         else cusListFilesUrl
