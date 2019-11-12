@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":job:biz-job")
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

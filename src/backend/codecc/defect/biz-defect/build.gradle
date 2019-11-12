@@ -1,0 +1,21 @@
+apply plugin: "java"
+dependencies {
+    compile project(":common:common-service")
+    compile project(":common:common-web")
+    compile project(":common:common-client")
+    compile project(":common:common-redis")
+//    compile project(":common:common-external-auth")
+//    compile project(":common:common-db")
+    compile project(":defect:model-defect")
+    compile project(":defect:api-defect")
+    compile project(":task:api-task")
+    compile "org.springframework.boot:spring-boot-starter-websocket"
+    compile group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
+    compile "io.undertow:undertow-servlet"
+    compile "io.undertow:undertow-websockets-jsr"
+//    compile group: 'com.tencent.bk.devops', name: 'common-license', version: '0.0.2', changing: true
+}
+
+version = null
+
+// version "1.2.3"  // 这里可以设定版本号

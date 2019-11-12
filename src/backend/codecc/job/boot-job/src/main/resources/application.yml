@@ -1,0 +1,94 @@
+# 服务配置文件模板
+spring:
+  profiles: prod
+  application:
+    name: job
+    desc: Job Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.job
+  # consul config do not need to change
+  redis:
+    database: 1
+    host: 9.134.34.137
+    port: 6379
+    password: AfMHU!2578Sj
+    pool:
+      maxActive: 16
+      maxWait: -1
+      maxIdle: 16
+      minIdle: 0
+  rabbitmq:
+    virtual-host: codecc
+    username: codecc
+    password: AQjqA1S77UTp9Ba
+    addresses: 9.134.78.150:5672,9.134.75.109:5672
+    listener:
+      simple:
+        concurrency: 10
+        acknowledge-mode: auto
+  cloud:
+    consul:
+      discovery:
+        tags: prod
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  data:
+    mongodb:
+      uri: mongodb://codecc_ee:codecc1024@9.134.77.145:27017/db_defect
+
+server:
+  port: 8084
+  servlet-path: /
+  undertow:
+    worker-threads: 100
+
+# monitor path config
+management:
+  security:
+    enabled: false
+  context-path: /management
+
+
+auth:
+  envName: prod
+  url: http://authapi-test.open.oa.com
+  codeccCode: codecc
+  codeccSecret: a9c39e9e-6be4-409d-8992-fad59a414b7b
+  systemId: codecc
+  codeccResourceType: task
+  pipelineResourceType: pipeline
+  codeccServiceCode: codecc
+  pipelineServiceCode: pipeline
+
+bkAuth:
+  envName: prod
+  url: http://iam.service.consul
+  codeccCode: codecc
+  codeccSecret: a9c39e9e-6be4-409d-8992-fad59a414b7b
+  systemId: codecc
+  codeccResourceType: codecc-task
+  pipelineResourceType: pipeline
+  codeccServiceCode: codecc
+  pipelineServiceCode: pipeline
+
+devopsGateway:
+  host: test.gw.devops.oa.com
+
+
+codecc:
+  encryptor:
+    password: UhysaITerHB2MVLm
+  env: internal
+  privatetoken: USKzsIc-tSXHEixK8ENk
+  classurl: http://10.123.24.177:9994/downloadFile?fileName=
+  public:
+    account: codecc
+    password: CC20161024@tencent
