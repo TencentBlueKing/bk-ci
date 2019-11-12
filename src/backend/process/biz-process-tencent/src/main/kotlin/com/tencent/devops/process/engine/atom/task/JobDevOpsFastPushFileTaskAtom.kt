@@ -598,13 +598,13 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("get jfrog files fail:\n $responseBody")
+                logger.error("get jfrog files($url) fail:\n $responseBody")
                 throw RuntimeException("构建分发获取文件失败")
             }
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, JfrogFilesData::class.java)
             } catch (e: Exception) {
-                logger.error("get jfrog files fail\n$responseBody")
+                logger.error("get jfrog files($url) fail\n$responseBody")
                 throw RuntimeException("构建分发获取文件失败")
             }
         }
