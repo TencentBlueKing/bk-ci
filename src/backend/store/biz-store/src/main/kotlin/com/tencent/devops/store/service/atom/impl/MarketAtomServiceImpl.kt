@@ -29,6 +29,8 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEFAULT
+import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -695,6 +697,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return buf.toString()
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord): String {
         val sb = StringBuffer()
             .append("h2. ${atom.name}\r\n")
@@ -731,14 +734,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 } else {
                     false
                 }
+                val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
+                val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
                 if ((type == "selector" && multiple) || type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
                     sb.append("        $paramKey: ")
                     sb.append("\t\t# $description")
                     if (null != required && "true".equals(required.toString(), true)) {
-                        sb.append(", 必选")
+                        sb.append(", $requiredName")
                     }
                     if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
-                        sb.append(", 默认: ${defaultValue.toString().replace("\n", "")}")
+                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
                     }
                     sb.append("\r\n")
                     sb.append("        - string\r\n")
@@ -752,10 +757,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     }
                     sb.append("\t\t# ${description.toString().replace("\n", "")}")
                     if (null != required && "true".equals(required.toString(), true)) {
-                        sb.append(", 必选")
+                        sb.append(", $requiredName")
                     }
                     if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
-                        sb.append(", 默认: ${defaultValue.toString().replace("\n", "")}")
+                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
                     }
                     sb.append("\r\n")
                 }

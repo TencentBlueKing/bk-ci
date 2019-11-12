@@ -27,6 +27,7 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.store.pojo.common.Classify
@@ -123,10 +124,12 @@ class ClassifyDao {
 
     fun convert(record: TClassifyRecord): Classify {
         with(record) {
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(classifyCode)
             return Classify(
                 id = id,
                 classifyCode = classifyCode,
-                classifyName = classifyName,
+                // 分类信息名称没有配置国际化信息则取分类表里面的名称
+                classifyName = if (classifyLanName == classifyCode) classifyName else classifyLanName,
                 classifyType = StoreTypeEnum.getStoreType(type.toInt()),
                 weight = weight,
                 createTime = createTime.timestampmilli(),
