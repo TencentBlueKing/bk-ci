@@ -728,6 +728,7 @@
                         .validate-fail-border-effect {
                             position: absolute;
                             bottom: 0;
+                            left: 0;
                             content: '';
                             height:2px;
                             width: 100%;
