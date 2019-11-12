@@ -84,7 +84,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
-        val url = "${authProperties.url}/$projectCode/users/$userId/verfiy?access_token=$accessToken"
+        val url = "${authProperties.url}/$projectCode/users/$userId/verify?access_token=$accessToken"
         logger.info("the verifyUserProjectPermission url is:$url")
         val body = RequestBody.create(MediaType.parse(MessageProperties.CONTENT_TYPE_JSON), "{}")
         val request = Request.Builder().url(url).post(body).build()

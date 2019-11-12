@@ -106,7 +106,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @Autowired
     lateinit var client: Client
 
-    private val logger = LoggerFactory.getLogger(AtomService::class.java)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val cache = CacheBuilder.newBuilder().maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
