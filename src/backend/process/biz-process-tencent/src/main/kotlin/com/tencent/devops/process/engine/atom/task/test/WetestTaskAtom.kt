@@ -39,11 +39,7 @@ import com.tencent.devops.common.pipeline.element.WetestElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.plugin.pojo.wetest.WetestAutoTestRequest
-import com.tencent.devops.plugin.pojo.wetest.WetestEmailGroup
-import com.tencent.devops.plugin.pojo.wetest.WetestInstStatus
-import com.tencent.devops.plugin.pojo.wetest.WetestTask
-import com.tencent.devops.plugin.pojo.wetest.WetestTaskInst
+import com.tencent.devops.plugin.pojo.wetest.*
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -82,7 +78,7 @@ class WetestTaskAtom @Autowired constructor(
     private lateinit var accessId: String
     private lateinit var accessToken: String
 
-    @Value("\${gateway.service:#{null}}")
+    @Value("\${devopsGateway.idc:#{null}}")
     private lateinit var gatewayUrl: String
 
     override fun execute(task: PipelineBuildTask, param: WetestElement, runVariables: Map<String, String>): AtomResponse {
@@ -277,7 +273,7 @@ class WetestTaskAtom @Autowired constructor(
 
     private fun queryTestStatus(accessId: String, accessToken: String, testId: String): Map<String, Any> {
         val request = Request.Builder()
-                .url("http://$gatewayUrl/wetest/api/service/wetest/task/queryTestStatus" +
+                .url("$gatewayUrl/wetest/api/service/wetest/task/queryTestStatus" +
                         "?accessId=${URLEncoder.encode(accessId, "utf-8")}&accessToken=${URLEncoder.encode(accessToken, "utf-8")}" +
                         "&testId=${URLEncoder.encode(testId, "utf-8")}")
                 .get()
@@ -291,7 +287,7 @@ class WetestTaskAtom @Autowired constructor(
 
     private fun updateTaskInstStatus(testId: String, status: WetestInstStatus) {
         val request = Request.Builder()
-                .url("http://$gatewayUrl/wetest/api/service/wetest/task/updateTaskInstStatus?testId=${URLEncoder.encode(testId, "utf-8")}&status=${status.name}")
+                .url("$gatewayUrl/wetest/api/service/wetest/task/updateTaskInstStatus?testId=${URLEncoder.encode(testId, "utf-8")}&status=${status.name}")
                 .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -307,7 +303,7 @@ class WetestTaskAtom @Autowired constructor(
     private fun autoTest(wetestAutoTestRequest: WetestAutoTestRequest): String {
         val requestContent = objectMapper.writeValueAsString(wetestAutoTestRequest)
         val request = Request.Builder()
-                .url("http://$gatewayUrl/wetest/api/service/wetest/task/autoTest" +
+                .url("$gatewayUrl/wetest/api/service/wetest/task/autoTest" +
                         "?accessId=${URLEncoder.encode(accessId, "utf-8")}&accessToken=${URLEncoder.encode(accessToken, "utf-8")}")
                 .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent))
                 .build()
@@ -383,7 +379,7 @@ class WetestTaskAtom @Autowired constructor(
     private fun uploadRes(param: ArtifactorySearchParam, type: String): Map<String, Any> {
         val requestContent = objectMapper.writeValueAsString(param)
         val request = Request.Builder()
-                .url("http://$gatewayUrl/wetest/api/service/wetest/task/uploadRes?" +
+                .url("$gatewayUrl/wetest/api/service/wetest/task/uploadRes?" +
                         "accessId=${URLEncoder.encode(accessId, "utf-8")}&accessToken=${URLEncoder.encode(accessToken, "utf-8")}&type=$type ")
                 .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent))
                 .build()
