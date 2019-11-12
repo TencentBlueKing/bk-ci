@@ -60,7 +60,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(repositoryService.hasCreatePermission(userId, projectId))
+        return Result(repositoryPermissionService.hasPermission(userId, projectId, AuthPermission.CREATE))
     }
 
     override fun hasAliasName(

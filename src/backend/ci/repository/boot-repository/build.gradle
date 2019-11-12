@@ -24,34 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.service
+dependencies {
+    // 无对接权限中心，根据common.yml配置文件项auth.idProvider=samle启用，会忽略下面蓝鲸权限中心实现
+    compile project(":common:common-auth:common-auth-sample")
+    // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
+    compile project(":common:common-auth:common-auth-blueking")
 
-import com.tencent.devops.common.auth.api.AuthPermission
-
-interface RepositoryPermissionService {
-    fun validatePermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long? = null,
-            message: String
-    )
-
-    fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long>
-    fun filterRepositories(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>>
-
-    fun hasPermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long? = null
-    ): Boolean
-
-    fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String)
-    fun editResource(projectId: String, repositoryId: Long, repositoryName: String)
-    fun deleteResource(projectId: String, repositoryId: Long)
+    compile project(":repository:biz-repository")
 }
+
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

@@ -105,10 +105,6 @@ class RepositoryService @Autowired constructor(
     @Value("\${git.devopsGroupName}")
     private lateinit var devopsGroupName: String
 
-    fun hasCreatePermission(userId: String, projectId: String): Boolean {
-        return validatePermission(userId, projectId, AuthPermission.CREATE)
-    }
-
     fun hasAliasName(projectId: String, repositoryHashId: String?, aliasName: String): Boolean {
         val repositoryId = if (repositoryHashId != null) HashUtil.decodeOtherIdToLong(repositoryHashId) else 0L
         if (repositoryId != 0L) {
@@ -660,7 +656,6 @@ class RepositoryService @Autowired constructor(
                 RepositoryMessageCode.USER_EDIT_PEM_ERROR,
                 arrayOf(userId, projectId, repositoryHashId)
             ).message!!
-//            "用户($userId)在工程($projectId)下没有代码库($repositoryHashId)编辑权限"
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
@@ -835,10 +830,10 @@ class RepositoryService @Autowired constructor(
         limit: Int
     ): Pair<SQLPage<RepositoryInfoWithPermission>, Boolean> {
         val hasCreatePermission = validatePermission(userId, projectId, AuthPermission.CREATE)
-        val permissionToListMap = filterRepositories(
-            userId,
-            projectId,
-            setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE)
+        val permissionToListMap = repositoryPermissionService.filterRepositories(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE)
         )
         val hasListPermissionRepoList = permissionToListMap[AuthPermission.LIST]!!
         val hasEditPermissionRepoList = permissionToListMap[AuthPermission.EDIT]!!
@@ -898,9 +893,15 @@ class RepositoryService @Autowired constructor(
         offset: Int,
         limit: Int
     ): SQLPage<RepositoryInfo> {
-        val hasPermissionList = filterRepository(userId, projectId, authPermission)
+        val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
 
-        val count = repositoryDao.countByProject(dslContext, projectId, repositoryType, null, hasPermissionList.toSet())
+        val count = repositoryDao.countByProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryType = repositoryType,
+            aliasName = null,
+            repositoryIds = hasPermissionList.toSet()
+        )
         val repositoryRecordList =
             repositoryDao.listByProject(
                 dslContext = dslContext,
@@ -958,9 +959,13 @@ class RepositoryService @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        if (!validatePermission(user, projectId, repositoryId, authPermission)) {
-            throw PermissionForbiddenException(message)
-        }
+        repositoryPermissionService.validatePermission(
+            userId = user,
+            projectId = projectId,
+            authPermission = authPermission,
+            repositoryId = repositoryId,
+            message = message
+        )
     }
 
     fun userLock(userId: String, projectId: String, repositoryHashId: String) {
@@ -1030,49 +1035,11 @@ class RepositoryService @Autowired constructor(
         )
     }
 
-    private fun filterRepository(user: String, projectId: String, authPermission: AuthPermission): List<Long> {
-        val resourceCodeList = repositoryPermissionService.getUserResourceByPermission(
-            user,
-            projectId,
-            authPermission
-        )
-        return resourceCodeList.map { it.toLong() }
-    }
-
-    private fun filterRepositories(
-        user: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>> {
-        val permissionResourcesMap = repositoryPermissionService.getUserResourcesByPermissions(
-            user = user,
-            projectCode = projectId,
-            permissions = authPermissions
-        )
-        return permissionResourcesMap.mapValues {
-            it.value.map { it.toLong() }
-        }
-    }
-
     private fun validatePermission(user: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return repositoryPermissionService.validateUserResourcePermission(
-            user = user,
-            projectCode = projectId,
-            permission = authPermission
-        )
-    }
-
-    private fun validatePermission(
-        user: String,
-        projectId: String,
-        repositoryId: Long,
-        authPermission: AuthPermission
-    ): Boolean {
-        return repositoryPermissionService.validateUserResourcePermission(
-            user = user,
-            projectCode = projectId,
-            resourceCode = repositoryId.toString(),
-            permission = authPermission
+        return repositoryPermissionService.hasPermission(
+            userId = user,
+            projectId = projectId,
+            authPermission = authPermission
         )
     }
 
@@ -1086,10 +1053,10 @@ class RepositoryService @Autowired constructor(
     }
 
     private fun editResource(projectId: String, repositoryId: Long, repositoryName: String) {
-        repositoryPermissionService.modifyResource(
-            projectCode = projectId,
-            resourceCode = repositoryId.toString(),
-            resourceName = repositoryName
+        repositoryPermissionService.editResource(
+            projectId = projectId,
+            repositoryId = repositoryId,
+            repositoryName = repositoryName
         )
     }
 

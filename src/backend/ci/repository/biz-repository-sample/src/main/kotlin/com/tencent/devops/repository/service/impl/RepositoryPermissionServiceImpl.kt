@@ -27,18 +27,20 @@
 package com.tencent.devops.repository.service.impl
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnProperty
 class RepositoryPermissionServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryDao: RepositoryDao,
@@ -48,11 +50,11 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
 ) : RepositoryPermissionService {
 
     override fun validatePermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long?,
-            message: String
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long?,
+        message: String
     ) {
         if (!hasPermission(userId, projectId, authPermission, repositoryId)) {
             throw PermissionForbiddenException(message)
@@ -72,9 +74,9 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     }
 
     override fun filterRepositories(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
         val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
             user = userId,
@@ -104,10 +106,10 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     }
 
     override fun hasPermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long?
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long?
     ): Boolean {
         if (repositoryId == null)
             return authPermissionApi.validateUserResourcePermission(
@@ -156,25 +158,5 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             resourceCode = repositoryId.toString()
         )
-    }
-
-    override fun getUserResourcesByPermissions(user: String, projectCode: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun getUserResourceByPermission(user: String, projectCode: String, permission: AuthPermission): List<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun validateUserResourcePermission(user: String, projectCode: String, permission: AuthPermission): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun validateUserResourcePermission(user: String, projectCode: String, resourceCode: String, permission: AuthPermission): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun modifyResource(projectCode: String, resourceCode: String, resourceName: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

@@ -24,34 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.service
+package com.tencent.devops.repository.service.scm
 
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.repository.pojo.scm.SvnFileInfo
 
-interface RepositoryPermissionService {
-    fun validatePermission(
+interface ISvnService {
+    fun getFileContent(
+        url: String,
+        userId: String,
+        svnType: String,
+        filePath: String,
+        reversion: Long,
+        credential1: String,
+        credential2: String?
+    ): String
+
+    fun getDirectories(
+            url: String,
             userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long? = null,
-            message: String
-    )
-
-    fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long>
-    fun filterRepositories(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>>
-
-    fun hasPermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long? = null
-    ): Boolean
-
-    fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String)
-    fun editResource(projectId: String, repositoryId: Long, repositoryName: String)
-    fun deleteResource(projectId: String, repositoryId: Long)
+            svnType: String,
+            svnPath: String?,
+            revision: Long,
+            credential1: String,
+            credential2: String,
+            credential3: String?
+    ): List<SvnFileInfo>
 }

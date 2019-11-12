@@ -29,7 +29,6 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.repository.pojo.scm.SvnFileInfo
 import com.tencent.devops.repository.pojo.scm.enums.SvnFileType
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNProperties
 import org.tmatesoft.svn.core.SVNURL
@@ -39,14 +38,13 @@ import org.tmatesoft.svn.core.auth.SVNSSHAuthentication
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory
 import java.io.ByteArrayOutputStream
 
-@Service
-class SvnService {
+class SvnService : ISvnService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SvnService::class.java)
     }
 
-    fun getFileContent(
+    override fun getFileContent(
         url: String,
         userId: String,
         svnType: String,
@@ -89,7 +87,7 @@ class SvnService {
         }
     }
 
-    fun getDirectories(
+    override fun getDirectories(
             url: String,
             userId: String,
             svnType: String,

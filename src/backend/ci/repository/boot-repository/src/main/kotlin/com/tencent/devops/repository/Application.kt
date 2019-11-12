@@ -24,39 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-'use strict';
+package com.tencent.devops.repository
 
-module.exports = {
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
 
-    types: [
-        {
-            value: 'story',
-            name: '需求'
-        },
-        {
-            value: 'bugfix',
-            name: '缺陷'
-        },
-        {
-            value: 'task',
-            name: '任务'
-        }
-    ],
-    messages: {
-        type: "请选择此次提交类型",
-        scope: "请输入这个issue对应的模块",
-        customScope: "请输入这个issue对应的模块",
-        body: "请输入issue详情（用|来换行）：\n",
-        subject: "请输入对应的issue标题：",
-        breaking: "Tapd短链接：\n",
-        footer: "请填写对应的Tapd的issue ID 【例如：--story=63269071 版本仓库-镜像仓库优化-前后端】：\n",
-        confirmCommit: "是否确认提交上述commit信息"
-    },
-    scopes: [],
-    typePrefix: "标题：",
-    bodyPrefix: "body:",
-    footerPrefix: "源码提交关键字：",
-    allowBreakingChanges: ['story', 'bugfix', 'task'],
-    breakingPrefix: "Tapd短链接：",
-    allowCustomScopes: true
+@MicroService
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }
