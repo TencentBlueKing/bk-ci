@@ -68,9 +68,10 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
-import com.tencent.devops.repository.service.scm.GitOauthService
+import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.scm.IGitService
+import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.utils.CredentialUtils
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -91,9 +92,10 @@ class RepositoryService @Autowired constructor(
     private val repositoryCodeGitDao: RepositoryCodeGitDao,
     private val repositoryCodeGitLabDao: RepositoryCodeGitLabDao,
     private val repositoryGithubDao: RepositoryGithubDao,
-    private val repostioryScmService: RepostioryScmService,
     private val commitDao: CommitDao,
-    private val gitOauthService: GitOauthService,
+    private val gitOauthService: IGitOauthService,
+    private val gitService: IGitService,
+    private val scmService: IScmService,
     private val dslContext: DSLContext,
     private val client: Client,
     private val repositoryPermissionService: RepositoryPermissionService
@@ -138,7 +140,7 @@ class RepositoryService @Autowired constructor(
         val gitRepositoryRespResult: Result<GitRepositoryResp?>
         val gitRepositoryResp: GitRepositoryResp?
         try {
-            gitRepositoryRespResult = repostioryScmService.createGitCodeRepository(
+            gitRepositoryRespResult = gitService.createGitCodeRepository(
                 userId = userId,
                 token = token,
                 repositoryName = repositoryName,
@@ -240,10 +242,13 @@ class RepositoryService @Autowired constructor(
             return Result(status = getGitTokenResult.status, message = getGitTokenResult.message ?: "")
         }
         val token = getGitTokenResult.data!!
-        val gitRepositoryRespResult: Result<Boolean>
         return try {
-            gitRepositoryRespResult = client.getScm(ServiceGitResource::class)
-                .updateGitCodeRepository(token, projectName, updateGitProjectInfo, tokenType)
+            val gitRepositoryRespResult = gitService.updateGitProjectInfo(
+                projectName = projectName,
+                updateGitProjectInfo = updateGitProjectInfo,
+                token = token,
+                tokenType = tokenType
+            )
             logger.info("updateGitCodeRepository gitRepositoryRespResult is :$gitRepositoryRespResult")
             if (gitRepositoryRespResult.isOk()) {
                 Result(true)
@@ -274,8 +279,13 @@ class RepositoryService @Autowired constructor(
             return Result(status = getGitTokenResult.status, message = getGitTokenResult.message, data = false)
         }
         val token = getGitTokenResult.data!!
-        val addGitProjectMemberResult = repostioryScmService
-            .addGitProjectMember(userIdList, repo.projectName, gitAccessLevel, token, finalTokenType)
+        val addGitProjectMemberResult = gitService.addGitProjectMember(
+            userIdList = userIdList,
+            repoName = repo.projectName,
+            gitAccessLevel = gitAccessLevel,
+            token = token,
+            tokenType = finalTokenType
+        )
         logger.info("addGitProjectMemberResult is :$addGitProjectMemberResult")
         if (addGitProjectMemberResult.isNotOk()) {
             return Result(
@@ -303,13 +313,12 @@ class RepositoryService @Autowired constructor(
             return Result(status = getGitTokenResult.status, message = getGitTokenResult.message, data = false)
         }
         val token = getGitTokenResult.data!!
-        val deleteGitProjectMemberResult = repostioryScmService
-            .deleteGitProjectMember(
-                userIdList = userIdList,
-                repositorySpaceName = repo.projectName,
-                token = token,
-                tokenType = finalTokenType
-            )
+        val deleteGitProjectMemberResult = gitService.deleteGitProjectMember(
+            userIdList = userIdList,
+            repoName = repo.projectName,
+            token = token,
+            tokenType = finalTokenType
+        )
         logger.info("deleteGitProjectMemberResult is :$deleteGitProjectMemberResult")
         if (deleteGitProjectMemberResult.isNotOk()) {
             return Result(
@@ -338,9 +347,11 @@ class RepositoryService @Autowired constructor(
         val token = getGitTokenResult.data!!
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
-            moveProjectToGroupResult = repostioryScmService.moveProjectToGroup(
-                token, groupCode
-                    ?: devopsGroupName, repo.projectName, finalTokenType
+            moveProjectToGroupResult = gitService.moveProjectToGroup(
+                groupCode = token,
+                repoName = groupCode ?: devopsGroupName,
+                token = repo.projectName,
+                tokenType = finalTokenType
             )
             logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
             if (moveProjectToGroupResult.isOk()) {
@@ -993,7 +1004,7 @@ class RepositoryService @Autowired constructor(
             )
         }
 
-        repostioryScmService.lock(
+        scmService.lock(
             projectName = record.projectId,
             url = record.url,
             type = ScmType.CODE_SVN,
@@ -1026,7 +1037,7 @@ class RepositoryService @Autowired constructor(
                 ).message!!
             )
         }
-        repostioryScmService.unlock(
+        scmService.unlock(
             projectName = record.projectId,
             url = record.url,
             type = ScmType.CODE_SVN,
@@ -1092,9 +1103,15 @@ class RepositoryService @Autowired constructor(
         val checkResult = when (repo) {
             is CodeSvnRepository -> {
                 val svnCredential = CredentialUtils.getCredential(repo, list, result.data!!.credentialType)
-                repostioryScmService.checkPrivateKeyAndToken(
-                    repo.projectName, repo.getFormatURL(), ScmType.CODE_SVN,
-                    svnCredential.privateKey, svnCredential.passPhrase, null, repo.region, svnCredential.username
+                scmService.checkPrivateKeyAndToken(
+                    projectName = repo.projectName,
+                    url = repo.getFormatURL(),
+                    type = ScmType.CODE_SVN,
+                    privateKey = svnCredential.privateKey,
+                    passPhrase = svnCredential.passPhrase,
+                    token = null,
+                    region = repo.region,
+                    userName = svnCredential.username
                 )
             }
             is CodeGitRepository -> {
@@ -1118,9 +1135,15 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
-                        repostioryScmService.checkPrivateKeyAndToken(
-                            repo.projectName, repo.getFormatURL(), ScmType.CODE_GIT,
-                            privateKey, passPhrase, token, null, repo.userName
+                        scmService.checkPrivateKeyAndToken(
+                            projectName = repo.projectName,
+                            url = repo.getFormatURL(),
+                            type = ScmType.CODE_GIT,
+                            privateKey = privateKey,
+                            passPhrase = passPhrase,
+                            token = token,
+                            region = null,
+                            userName = repo.userName
                         )
                     }
                     RepoAuthType.HTTP -> {
@@ -1139,7 +1162,7 @@ class RepositoryService @Autowired constructor(
                         if (password.isEmpty()) {
                             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
                         }
-                        repostioryScmService.checkUsernameAndPassword(
+                        scmService.checkUsernameAndPassword(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
                             type = ScmType.CODE_GIT,
@@ -1181,7 +1204,7 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
-                        repostioryScmService.checkPrivateKeyAndToken(
+                        scmService.checkPrivateKeyAndToken(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
                             type = ScmType.CODE_GIT,
@@ -1208,7 +1231,7 @@ class RepositoryService @Autowired constructor(
                         if (password.isEmpty()) {
                             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
                         }
-                        repostioryScmService.checkUsernameAndPassword(
+                        scmService.checkUsernameAndPassword(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
                             type = ScmType.CODE_GIT,
@@ -1235,7 +1258,7 @@ class RepositoryService @Autowired constructor(
                         if (password.isEmpty()) {
                             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
                         }
-                        repostioryScmService.checkUsernameAndPassword(
+                        scmService.checkUsernameAndPassword(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
                             type = ScmType.CODE_TGIT,
@@ -1257,9 +1280,15 @@ class RepositoryService @Autowired constructor(
                 }
             }
             is CodeGitlabRepository -> {
-                repostioryScmService.checkPrivateKeyAndToken(
-                    repo.projectName, repo.getFormatURL(), ScmType.CODE_GITLAB,
-                    null, null, list[0], null, repo.userName
+                scmService.checkPrivateKeyAndToken(
+                    projectName = repo.projectName,
+                    url = repo.getFormatURL(),
+                    type = ScmType.CODE_GITLAB,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = list[0],
+                    region = null,
+                    userName = repo.userName
                 )
             }
             else -> {
@@ -1267,13 +1296,9 @@ class RepositoryService @Autowired constructor(
             }
         }
 
-        if (checkResult.isNotOk() || checkResult.data == null) {
-            logger.warn("Fail to check the repo because of ${checkResult.message}")
-            throw RuntimeException("Fail to check the repo")
-        }
-        if (!checkResult.data!!.result) {
-            logger.warn("Fail to check the repo token & private key because of ${checkResult.data!!.message}")
-            throw OperationException(checkResult.data!!.message)
+        if (!checkResult.result) {
+            logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+            throw OperationException(checkResult.message)
         }
     }
 

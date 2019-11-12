@@ -26,6 +26,8 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.scm.pojo.Project
+
 data class AuthorizeResult(
     val status: Int,
     val url: String = "",

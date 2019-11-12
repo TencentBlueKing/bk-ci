@@ -24,22 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.resources
+package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.api.ServiceScmOauthResource
+import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.scm.services.ScmOauthService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthService: ScmOauthService) :
+class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthService: IScmOauthService) :
     ServiceScmOauthResource {
 
     override fun getLatestRevision(
@@ -54,7 +54,7 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         region: CodeSvnRegion?,
         userName: String?
     ): Result<RevisionInfo> {
-        logger.info("Start to get the code latest version of (projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName)")
+        logger.info("getLatestRevision|(projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, region=$region, username=$userName)")
         return Result(
             scmOauthService.getLatestRevision(
                 projectName = projectName,
@@ -80,7 +80,7 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         region: CodeSvnRegion?,
         userName: String?
     ): Result<List<String>> {
-        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName)")
+        logger.info("listBranches|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(
             scmOauthService.listBranches(
                 projectName = projectName,
@@ -102,8 +102,16 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         token: String,
         userName: String
     ): Result<List<String>> {
-        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, token=$token, username=$userName)")
-        return Result(scmOauthService.listTags(projectName, url, type, token, userName))
+        logger.info("listTags|(projectName=$projectName, url=$url, type=$type, username=$userName)")
+        return Result(
+            scmOauthService.listTags(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                userName = userName
+            )
+        )
     }
 
     override fun checkPrivateKeyAndToken(
@@ -116,7 +124,7 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         region: CodeSvnRegion?,
         userName: String
     ): Result<TokenCheckResult> {
-        logger.info("Start to check the private key and token of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName)")
+        logger.info("checkPrivateKeyAndToken|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(
             scmOauthService.checkPrivateKeyAndToken(
                 projectName = projectName,
@@ -142,7 +150,7 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         userName: String,
         event: String?
     ): Result<Boolean> {
-        logger.info("Start to add the web hook of (projectName=$projectName, url=$url, type=$type, token=$token, username=$userName, event=$event)")
+        logger.info("addWebHook|(projectName=$projectName, url=$url, type=$type, username=$userName, event=$event)")
         scmOauthService.addWebHook(
             projectName = projectName,
             url = url,
@@ -157,9 +165,7 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         return Result(true)
     }
 
-    override fun addCommitCheck(
-        request: CommitCheckRequest
-    ): Result<Boolean> {
+    override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {
         logger.info("Start to add the commit check of request($request)")
         scmOauthService.addCommitCheck(request)
         return Result(true)

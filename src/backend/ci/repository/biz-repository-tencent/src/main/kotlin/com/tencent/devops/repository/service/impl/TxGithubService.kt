@@ -5,14 +5,14 @@ import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.external.api.ExternalGithubResource
 import com.tencent.devops.external.api.ServiceGithubResource
-import com.tencent.devops.external.pojo.GithubCheckRuns
-import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.Project
+import com.tencent.devops.repository.pojo.GithubCheckRuns
+import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
+import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

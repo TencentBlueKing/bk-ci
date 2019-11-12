@@ -38,6 +38,8 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.github.IGithubService
+import com.tencent.devops.repository.service.scm.IGitService
+import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -55,7 +57,8 @@ class RepoFileService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val githubService: IGithubService,
-    private val repositoryScmService: RepostioryScmService
+    private val gitService: IGitService,
+    private val svnService: ISvnService
 ) {
 
     companion object {
@@ -148,12 +151,17 @@ class RepoFileService @Autowired constructor(
         val credInfo = getCredential(repo.projectId ?: "", repo)
         val svnType = repo.svnType?.toUpperCase() ?: "SSH"
         return if (svnType == "HTTP") {
-            repositoryScmService.getSvnFileContent(
-                url = repo.url, userId = repo.userName, svnType = svnType, filePath = filePath, reversion = reversion,
-                credential1 = credInfo.username, credential2 = credInfo.privateKey
+            svnService.getFileContent(
+                url = repo.url,
+                userId = repo.userName,
+                svnType = svnType,
+                filePath = filePath,
+                reversion = reversion,
+                credential1 = credInfo.username,
+                credential2 = credInfo.privateKey
             )
         } else {
-            repositoryScmService.getSvnFileContent(
+            svnService.getFileContent(
                 url = repo.url,
                 userId = repo.userName,
                 svnType = if (svnType.isBlank()) "SSH" else svnType,
@@ -177,14 +185,13 @@ class RepoFileService @Autowired constructor(
         }
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGitSingleFile for projectName: $projectName")
-        return repositoryScmService.getGitFileContent(
+        return gitService.getGitFileContent(
             repoName = projectName!!,
             filePath = filePath.removePrefix("/"),
             authType = repo.authType,
             token = token,
             ref = ref
         )
-//        return client.getScm(ServiceGitResource::class).getGitFileContent(projectName!!, filePath.removePrefix("/"), repo.authType, token, ref).data ?: ""
     }
 
     private fun getGitlabSingleFile(
@@ -196,7 +203,7 @@ class RepoFileService @Autowired constructor(
         logger.info("getGitlabSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
         val token = getCredential(repo.projectId ?: "", repo).privateKey
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
-        return repositoryScmService.getGitlabFileContent(
+        return gitService.getGitlabFileContent(
             repoUrl = repo.url,
             repoName = projectName ?: "",
             filePath = filePath,

@@ -24,15 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.scm
+package com.tencent.devops.scm.code.svn
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.scm.pojo.SvnFileInfo
 
-@ApiModel("创建git仓库响应体")
-class GitRepositoryResp(
-        @ApiModelProperty("仓库名称", required = true)
-        val name: String,
-        @ApiModelProperty("仓库地址", required = true)
-        val repositoryUrl: String
-)
+interface ISvnService {
+    fun getFileContent(
+        url: String,
+        userId: String,
+        svnType: String,
+        filePath: String,
+        reversion: Long,
+        credential1: String,
+        credential2: String?
+    ): String
+
+    fun getDirectories(
+        url: String,
+        userId: String,
+        svnType: String,
+        svnPath: String?,
+        revision: Long,
+        credential1: String,
+        credential2: String,
+        credential3: String?
+    ): List<SvnFileInfo>
+}

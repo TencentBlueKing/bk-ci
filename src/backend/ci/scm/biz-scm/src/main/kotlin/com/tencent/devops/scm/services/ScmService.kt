@@ -34,12 +34,11 @@ import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.scm.pojo.request.CommitCheckRequest
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service

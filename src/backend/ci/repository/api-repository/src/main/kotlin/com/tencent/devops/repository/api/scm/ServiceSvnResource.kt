@@ -27,7 +27,7 @@
 package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.scm.SvnFileInfo
+import com.tencent.devops.scm.pojo.SvnFileInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

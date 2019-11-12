@@ -36,12 +36,11 @@ dependencies {
     compile project(":common:common-websocket")
 
     compile project(":log:api-log")
-    compile project(":scm:api-scm")
-    compile project(":external:api-external")
     compile project(":log:api-log")
     compile project(":store:api-store")
     compile project(":dispatch:api-dispatch")
     compile project(":project:api-project")
+    compile project(":repository:api-repository")
     compile project(":artifactory:api-artifactory")
     compile project(":process:api-process")
     compile project(":quality:api-quality")

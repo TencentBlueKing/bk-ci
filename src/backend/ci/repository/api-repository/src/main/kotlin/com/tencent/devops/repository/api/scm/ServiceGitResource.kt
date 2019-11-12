@@ -27,22 +27,31 @@
 package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.Project
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.repository.pojo.git.GitMrInfo
+import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_SCM_GIT"], description = "Service Code GIT resource")
@@ -181,71 +190,143 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
 
-//    @ApiOperation("创建git代码库")
-//    @POST
-//    @Path("/createGitCodeRepository")
-//    fun createGitCodeRepository(
-//            @ApiParam("用户id", required = true)
-//            @QueryParam("userId")
-//            userId: String,
-//            @ApiParam("token", required = true)
-//            @QueryParam("token")
-//            token: String,
-//            @ApiParam(value = "代码库名称", required = true)
-//            @QueryParam("repositoryName")
-//            repositoryName: String,
-//            @ApiParam("样例工程路径", required = true)
-//            @QueryParam("sampleProjectPath")
-//            sampleProjectPath: String,
-//            @ApiParam(value = "命名空间ID", required = false)
-//            @QueryParam("namespaceId")
-//            namespaceId: Int?,
-//            @ApiParam(value = "项目可视范围", required = false)
-//            @QueryParam("visibilityLevel")
-//            visibilityLevel: VisibilityLevelEnum?,
-//            @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
-//            @QueryParam("tokenType")
-//            tokenType: TokenTypeEnum
-//    ): Result<GitRepositoryResp?>
-//
-//    // TODO: 考虑是否放在内部版
-//    @ApiOperation("为项目成员赋予代码库权限")
-//    @POST
-//    @Path("/addGitProjectMember")
-//    fun addGitProjectMember(
-//            @ApiParam("增加的用户列表", required = true)
-//            @QueryParam("userIdList")
-//            userIdList: List<String>,
-//            @ApiParam(value = "代码库命名空间名称", required = true)
-//            @QueryParam("repositorySpaceName")
-//            repositorySpaceName: String,
-//            @ApiParam(value = "git访问权限", required = true)
-//            @QueryParam("gitAccessLevel")
-//            gitAccessLevel: GitAccessLevelEnum,
-//            @ApiParam("token", required = true)
-//            @QueryParam("token")
-//            token: String,
-//            @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
-//            @QueryParam("tokenType")
-//            tokenType: TokenTypeEnum
-//    ): Result<Boolean>
-//
-//    // TODO: 考虑是否放在内部版
-//    @ApiOperation("删除项目成员的代码库权限")
-//    @DELETE
-//    @Path("/deleteGitProjectMember")
-//    fun deleteGitProjectMember(
-//            @ApiParam("删除的用户列表", required = true)
-//            @QueryParam("userIdList")
-//            userIdList: List<String>,
-//            @ApiParam(value = "代码库命名空间名称", required = true)
-//            @QueryParam("repositorySpaceName")
-//            repositorySpaceName: String,
-//            @ApiParam("token", required = true)
-//            @QueryParam("token")
-//            token: String,
-//            @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
-//            @QueryParam("tokenType")
-//            tokenType: TokenTypeEnum
-//    ): Result<Boolean>
+    @ApiOperation("创建git代码库")
+    @POST
+    @Path("/createGitCodeRepository")
+    fun createGitCodeRepository(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "代码库名称", required = true)
+        @QueryParam("repositoryName")
+        repositoryName: String,
+        @ApiParam("样例工程路径", required = true)
+        @QueryParam("sampleProjectPath")
+        sampleProjectPath: String,
+        @ApiParam(value = "命名空间ID", required = false)
+        @QueryParam("namespaceId")
+        namespaceId: Int?,
+        @ApiParam(value = "项目可视范围", required = false)
+        @QueryParam("visibilityLevel")
+        visibilityLevel: VisibilityLevelEnum?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitRepositoryResp?>
+
+    @ApiOperation("为项目成员赋予代码库权限")
+    @POST
+    @Path("/addGitProjectMember")
+    fun addGitProjectMember(
+        @ApiParam("增加的用户列表", required = true)
+        @QueryParam("userIdList")
+        userIdList: List<String>,
+        @ApiParam(value = "代码库命名空间名称", required = true)
+        @QueryParam("repositorySpaceName")
+        repositorySpaceName: String,
+        @ApiParam(value = "git访问权限", required = true)
+        @QueryParam("gitAccessLevel")
+        gitAccessLevel: GitAccessLevelEnum,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @ApiOperation("删除项目成员的代码库权限")
+    @DELETE
+    @Path("/deleteGitProjectMember")
+    fun deleteGitProjectMember(
+        @ApiParam("删除的用户列表", required = true)
+        @QueryParam("userIdList")
+        userIdList: List<String>,
+        @ApiParam(value = "代码库命名空间名称", required = true)
+        @QueryParam("repositorySpaceName")
+        repositorySpaceName: String,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @ApiOperation("获取mr信息")
+    @GET
+    @Path("/getMergeRequestInfo")
+    fun getMergeRequestInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "合并请求的 id", required = true)
+        @QueryParam("mrId")
+        mrId: Long,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<GitMrInfo>
+
+    @ApiOperation("下载git仓库")
+    @GET
+    @Path("/downloadGitRepoFile")
+    fun downloadGitRepoFile(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam("commit hash值、分支名或tag", required = false)
+        @QueryParam("sha")
+        sha: String?,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @Context
+        response: HttpServletResponse
+    )
+
+    @ApiOperation("获取mr信息")
+    @GET
+    @Path("/getMergeRequestReviewersInfo")
+    fun getMergeRequestReviewersInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "合并请求的 id", required = true)
+        @QueryParam("mrId")
+        mrId: Long,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<GitMrReviewInfo>
+
+    @ApiOperation("获取mr信息")
+    @GET
+    @Path("/getMergeRequestChangeInfo")
+    fun getMergeRequestChangeInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "合并请求的 id", required = true)
+        @QueryParam("mrId")
+        mrId: Long,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<GitMrChangeInfo>
 }

@@ -24,22 +24,63 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.BuildOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.GitOauthService
+import com.tencent.devops.repository.api.scm.ServiceSvnResource
+import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.pojo.SvnFileInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildOauthResourceImpl @Autowired constructor(
-    private val gitService: GitOauthService
-) : BuildOauthResource {
+class ServiceSvnResourceImpl @Autowired constructor(
+    private val svnService: ISvnService
+) : ServiceSvnResource {
 
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitService.checkAndGetAccessToken(buildId, userId))
+    override fun getFileContent(
+        url: String,
+        userId: String,
+        svnType: String,
+        filePath: String,
+        reversion: Long,
+        credential1: String,
+        credential2: String?
+    ): Result<String> {
+        return Result(
+            svnService.getFileContent(
+                url = url,
+                userId = userId,
+                svnType = svnType,
+                filePath = filePath,
+                reversion = reversion,
+                credential1 = credential1,
+                credential2 = credential2
+            )
+        )
     }
 
+    override fun getDirectories(
+        url: String,
+        userId: String,
+        svnType: String,
+        svnPath: String?,
+        revision: Long,
+        credential1: String,
+        credential2: String,
+        credential3: String?
+    ): Result<List<SvnFileInfo>> {
+        return Result(
+            svnService.getDirectories(
+                url = url,
+                userId = userId,
+                svnType = svnType,
+                svnPath = svnPath,
+                revision = revision,
+                credential1 = credential1,
+                credential2 = credential2,
+                credential3 = credential3
+            )
+        )
+    }
 }

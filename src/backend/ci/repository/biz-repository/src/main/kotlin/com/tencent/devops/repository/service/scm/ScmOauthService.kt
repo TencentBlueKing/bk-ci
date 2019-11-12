@@ -27,56 +27,56 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.repository.pojo.scm.TokenCheckResult
-import com.tencent.devops.repository.pojo.scm.request.CommitCheckRequest
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ScmOauthService @Autowired constructor(
-        private val gitConfig: GitConfig,
-        private val svnConfig: SVNConfig
-) {
+    private val gitConfig: GitConfig,
+    private val svnConfig: SVNConfig
+) : IScmOauthService {
 
-    fun getLatestRevision(
-            projectName: String,
-            url: String,
-            type: ScmType,
-            branchName: String?,
-            privateKey: String?,
-            passPhrase: String?,
-            token: String?,
-            region: CodeSvnRegion?,
-            userName: String?
+    override fun getLatestRevision(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        branchName: String?,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String?
     ): RevisionInfo {
         logger.info("[$projectName|$url|$type|$branchName|$userName] Start to get the latest oauth revision")
         val startEpoch = System.currentTimeMillis()
         try {
             return ScmOauthFactory.getScm(
-                projectName,
-                url,
-                type,
-                branchName,
-                privateKey,
-                passPhrase,
-                token,
-                region,
-                userName,
-                null
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = branchName,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = null
             ).getLatestRevision()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the latest revision")
         }
     }
 
-    fun listBranches(
+    override fun listBranches(
         projectName: String,
         url: String,
         type: ScmType,
@@ -106,7 +106,7 @@ class ScmOauthService @Autowired constructor(
         }
     }
 
-    fun listTags(
+    override fun listTags(
         projectName: String,
         url: String,
         type: ScmType,
@@ -116,13 +116,14 @@ class ScmOauthService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$token|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmOauthFactory.getScm(projectName, url, type, null, null, null, token, null, userName, null).getTags()
+            return ScmOauthFactory.getScm(projectName, url, type, null, null, null, token, null, userName, null)
+                .getTags()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
     }
 
-    fun checkPrivateKeyAndToken(
+    override fun checkPrivateKeyAndToken(
         projectName: String,
         url: String,
         type: ScmType,
@@ -135,9 +136,13 @@ class ScmOauthService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$userName] Start to check private key and token")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, null).checkTokenAndPrivateKey()
+            ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, null)
+                .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
-            logger.warn("Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName", e)
+            logger.warn(
+                "Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName",
+                e
+            )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check private key and token")
@@ -145,7 +150,7 @@ class ScmOauthService @Autowired constructor(
         return TokenCheckResult(true, "OK")
     }
 
-    fun addWebHook(
+    override fun addWebHook(
         projectName: String,
         url: String,
         type: ScmType,
@@ -181,13 +186,14 @@ class ScmOauthService @Autowired constructor(
         }
     }
 
-    fun addCommitCheck(
-            request: CommitCheckRequest
+    override fun addCommitCheck(
+        request: CommitCheckRequest
     ) {
         val startEpoch = System.currentTimeMillis()
         try {
             with(request) {
-                val scm = ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, "", "")
+                val scm =
+                    ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, "", "")
                 scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return

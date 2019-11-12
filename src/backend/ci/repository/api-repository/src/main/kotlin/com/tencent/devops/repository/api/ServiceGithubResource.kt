@@ -27,8 +27,8 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.external.pojo.GithubCheckRuns
-import com.tencent.devops.external.pojo.GithubCheckRunsResponse
+import com.tencent.devops.repository.pojo.GithubCheckRuns
+import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken

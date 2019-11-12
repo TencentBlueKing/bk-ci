@@ -26,8 +26,9 @@
 
 package com.tencent.devops.repository.service.scm
 
-import com.tencent.devops.repository.pojo.scm.SvnFileInfo
-import com.tencent.devops.repository.pojo.scm.enums.SvnFileType
+import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.pojo.SvnFileInfo
+import com.tencent.devops.scm.pojo.enums.SvnFileType
 import org.slf4j.LoggerFactory
 import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNProperties
@@ -88,14 +89,14 @@ class SvnService : ISvnService {
     }
 
     override fun getDirectories(
-            url: String,
-            userId: String,
-            svnType: String,
-            svnPath: String?,
-            revision: Long,
-            credential1: String,
-            credential2: String,
-            credential3: String?
+        url: String,
+        userId: String,
+        svnType: String,
+        svnPath: String?,
+        revision: Long,
+        credential1: String,
+        credential2: String,
+        credential3: String?
     ): List<SvnFileInfo> {
         logger.info("get svn dir: [url=$url, userId=$userId, svnType=$svnType]")
         val startEpoch = System.currentTimeMillis()
@@ -112,7 +113,7 @@ class SvnService : ISvnService {
                 )
                 "SSH" -> SVNSSHAuthentication.newInstance(
                     credential1,
-                        credential2.toCharArray(),
+                    credential2.toCharArray(),
                     credential3?.toCharArray(),
                     22,
                     false,

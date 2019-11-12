@@ -28,15 +28,15 @@ package com.tencent.devops.external.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.external.pojo.GithubCheckRuns
-import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.external.pojo.GithubRepository
 import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
+import com.tencent.devops.repository.pojo.GithubCheckRuns
+import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag

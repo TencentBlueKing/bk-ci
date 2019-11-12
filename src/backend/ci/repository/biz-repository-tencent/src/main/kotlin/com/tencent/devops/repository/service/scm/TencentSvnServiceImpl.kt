@@ -26,10 +26,16 @@
 
 package com.tencent.devops.repository.service.scm
 
-import com.tencent.devops.repository.pojo.scm.SvnFileInfo
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.scm.api.ServiceSvnResource
+import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.pojo.SvnFileInfo
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-interface ISvnService {
-    fun getFileContent(
+@Service
+class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnService {
+    override fun getFileContent(
         url: String,
         userId: String,
         svnType: String,
@@ -37,16 +43,37 @@ interface ISvnService {
         reversion: Long,
         credential1: String,
         credential2: String?
-    ): String
+    ): String {
+        return client.get(ServiceSvnResource::class).getFileContent(
+            url = url,
+            userId = userId,
+            svnType = svnType,
+            filePath = filePath,
+            reversion = reversion,
+            credential1 = credential1,
+            credential2 = credential2
+        ).data ?: ""
+    }
 
-    fun getDirectories(
-            url: String,
-            userId: String,
-            svnType: String,
-            svnPath: String?,
-            revision: Long,
-            credential1: String,
-            credential2: String,
-            credential3: String?
-    ): List<SvnFileInfo>
+    override fun getDirectories(
+        url: String,
+        userId: String,
+        svnType: String,
+        svnPath: String?,
+        revision: Long,
+        credential1: String,
+        credential2: String,
+        credential3: String?
+    ): List<SvnFileInfo> {
+        return client.get(ServiceSvnResource::class).getDirectories(
+            url = url,
+            userId = userId,
+            svnType = svnType,
+            svnPath = svnPath,
+            revision = revision,
+            credential1 = credential1,
+            credential2 = credential2,
+            credential3 = credential3
+        ).data!!
+    }
 }

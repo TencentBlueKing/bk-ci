@@ -28,17 +28,14 @@ package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.scm.TokenCheckResult
-import com.tencent.devops.repository.pojo.scm.request.CommitCheckRequest
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -117,75 +114,6 @@ interface ServiceScmResource {
         @QueryParam("userName")
         userName: String?
     ): Result<List<String>>
-
-    @ApiOperation("添加Git分支")
-    @POST
-    @Path("createBranch")
-    fun createBranch(
-        @ApiParam("项目名称", required = true)
-        @QueryParam("projectName")
-        projectName: String,
-        @ApiParam("仓库地址", required = true)
-        @QueryParam("url")
-        url: String,
-        @ApiParam("仓库类型", required = true)
-        @QueryParam("type")
-        type: ScmType,
-        @ApiParam("新分支名称", required = true)
-        @QueryParam("branch")
-        branch: String,
-        @ApiParam("源分支名称", required = true)
-        @QueryParam("ref")
-        ref: String,
-        @ApiParam("privateKey", required = false)
-        @QueryParam("privateKey")
-        privateKey: String?,
-        @ApiParam("passPhrase", required = false)
-        @QueryParam("passPhrase")
-        passPhrase: String?,
-        @ApiParam("token", required = true)
-        @QueryParam("token")
-        token: String,
-        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-        @QueryParam("region")
-        region: CodeSvnRegion?,
-        @ApiParam("仓库对应的用户名", required = true)
-        @QueryParam("userName")
-        userName: String
-    ): Result<Boolean>
-
-    @ApiOperation("删除Git分支")
-    @DELETE
-    @Path("deleteBranch")
-    fun deleteBranch(
-        @ApiParam("项目名称", required = true)
-        @QueryParam("projectName")
-        projectName: String,
-        @ApiParam("仓库地址", required = true)
-        @QueryParam("url")
-        url: String,
-        @ApiParam("仓库类型", required = true)
-        @QueryParam("type")
-        type: ScmType,
-        @ApiParam("分支名", required = true)
-        @QueryParam("branch")
-        branch: String,
-        @ApiParam("privateKey", required = true)
-        @QueryParam("privateKey")
-        privateKey: String?,
-        @ApiParam("passPhrase", required = false)
-        @QueryParam("passPhrase")
-        passPhrase: String?,
-        @ApiParam("token", required = false)
-        @QueryParam("token")
-        token: String?,
-        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-        @QueryParam("region")
-        region: CodeSvnRegion?,
-        @ApiParam("仓库对应的用户名", required = true)
-        @QueryParam("userName")
-        userName: String
-    ): Result<Boolean>
 
     @ApiOperation("List all the tags of repo")
     @GET
@@ -349,79 +277,4 @@ interface ServiceScmResource {
         @QueryParam("userName")
         userName: String
     ): Result<Boolean>
-
-    @ApiOperation("List all the commits of repo")
-    @GET
-    @Path("/commits/detail")
-    fun listDetailCommits(
-        @ApiParam("项目名称", required = true)
-        @QueryParam("projectName")
-        projectName: String,
-        @ApiParam("仓库地址", required = true)
-        @QueryParam("url")
-        url: String,
-        @ApiParam("仓库类型", required = true)
-        @QueryParam("type")
-        type: ScmType,
-        @ApiParam("分支", required = false)
-        @QueryParam("branch")
-        branch: String?,
-        @ApiParam("privateKey", required = true)
-        @QueryParam("privateKey")
-        privateKey: String?,
-        @ApiParam("passPhrase", required = false)
-        @QueryParam("passPhrase")
-        passPhrase: String?,
-        @ApiParam("token", required = false)
-        @QueryParam("token")
-        token: String?,
-        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-        @QueryParam("region")
-        region: CodeSvnRegion?,
-        @ApiParam("仓库对应的用户名", required = true)
-        @QueryParam("userName")
-        userName: String,
-        @ApiParam("查询所有分支", required = false)
-        @QueryParam("all")
-        all: Boolean,
-        @ApiParam("当前页", required = true)
-        @QueryParam("page")
-        page: Int,
-        @ApiParam("分页大小", required = true)
-        @QueryParam("size")
-        size: Int
-    ): Result<List<GitCommit>>
-
-    @ApiOperation("List all the commits of repo")
-    @GET
-    @Path("/commit/diff")
-    fun getCommitDiff(
-        @ApiParam("项目名称", required = true)
-        @QueryParam("projectName")
-        projectName: String,
-        @ApiParam("仓库地址", required = true)
-        @QueryParam("url")
-        url: String,
-        @ApiParam("仓库类型", required = true)
-        @QueryParam("type")
-        type: ScmType,
-        @ApiParam("SHA", required = true)
-        @QueryParam("sha")
-        sha: String,
-        @ApiParam("privateKey", required = true)
-        @QueryParam("privateKey")
-        privateKey: String?,
-        @ApiParam("passPhrase", required = false)
-        @QueryParam("passPhrase")
-        passPhrase: String?,
-        @ApiParam("token", required = false)
-        @QueryParam("token")
-        token: String?,
-        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-        @QueryParam("region")
-        region: CodeSvnRegion?,
-        @ApiParam("仓库对应的用户名", required = true)
-        @QueryParam("userName")
-        userName: String
-    ): Result<List<GitDiff>>
 }

@@ -29,9 +29,9 @@ package com.tencent.devops.external.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.external.api.ServiceGithubResource
-import com.tencent.devops.external.pojo.GithubCheckRuns
-import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.external.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.GithubCheckRuns
+import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.external.service.github.GithubOauthService
 import com.tencent.devops.external.service.github.GithubService
 import com.tencent.devops.repository.pojo.github.GithubBranch

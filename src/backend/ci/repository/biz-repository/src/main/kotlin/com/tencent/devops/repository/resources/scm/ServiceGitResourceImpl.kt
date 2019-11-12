@@ -29,21 +29,25 @@ package com.tencent.devops.repository.resources.scm
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.repository.pojo.Project
+import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.repository.pojo.git.GitMrInfo
+import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.pojo.scm.GitRepositoryResp
-import com.tencent.devops.repository.service.scm.GitService
+import com.tencent.devops.repository.service.scm.IGitService
+import com.tencent.devops.scm.pojo.GitRepositoryResp
 import org.springframework.beans.factory.annotation.Autowired
+import javax.servlet.http.HttpServletResponse
 
 @RestResource
 class ServiceGitResourceImpl @Autowired constructor(
-    private val gitService: GitService
+    private val gitService: IGitService
 ) : ServiceGitResource {
 
     override fun moveProjectToGroup(
@@ -112,35 +116,71 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
-//
-//    override fun createGitCodeRepository(
-//            userId: String,
-//            token: String,
-//            repositoryName: String,
-//            sampleProjectPath: String,
-//            namespaceId: Int?,
-//            visibilityLevel: VisibilityLevelEnum?,
-//            tokenType: TokenTypeEnum
-//    ): Result<GitRepositoryResp?> {
-//        return gitService.createGitCodeRepository(userId, token, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
-//    }
-//
-//    override fun addGitProjectMember(
-//            userIdList: List<String>,
-//            repositorySpaceName: String,
-//            gitAccessLevel: GitAccessLevelEnum,
-//            token: String,
-//            tokenType: TokenTypeEnum
-//    ): Result<Boolean> {
-//        return gitService.addGitProjectMember(userIdList, repositorySpaceName, gitAccessLevel, token, tokenType)
-//    }
-//
-//    override fun deleteGitProjectMember(
-//            userIdList: List<String>,
-//            repositorySpaceName: String,
-//            token: String,
-//            tokenType: TokenTypeEnum
-//    ): Result<Boolean> {
-//        return gitService.deleteGitProjectMember(userIdList, repositorySpaceName, token, tokenType)
-//    }
+    override fun createGitCodeRepository(
+            userId: String,
+            token: String,
+            repositoryName: String,
+            sampleProjectPath: String,
+            namespaceId: Int?,
+            visibilityLevel: VisibilityLevelEnum?,
+            tokenType: TokenTypeEnum
+    ): Result<GitRepositoryResp?> {
+        return gitService.createGitCodeRepository(userId, token, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
+    }
+
+    override fun addGitProjectMember(
+            userIdList: List<String>,
+            repositorySpaceName: String,
+            gitAccessLevel: GitAccessLevelEnum,
+            token: String,
+            tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.addGitProjectMember(userIdList, repositorySpaceName, gitAccessLevel, token, tokenType)
+    }
+
+    override fun deleteGitProjectMember(
+            userIdList: List<String>,
+            repositorySpaceName: String,
+            token: String,
+            tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.deleteGitProjectMember(userIdList, repositorySpaceName, token, tokenType)
+    }
+
+    override fun getMergeRequestInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<GitMrInfo> {
+        return Result(gitService.getMrInfo(repoName, mrId, tokenType, token))
+    }
+
+    override fun downloadGitRepoFile(
+        repoName: String,
+        sha: String?,
+        token: String,
+        tokenType: TokenTypeEnum,
+        response: HttpServletResponse
+    ) {
+        return gitService.downloadGitRepoFile(repoName, sha, token, tokenType, response)
+    }
+
+    override fun getMergeRequestReviewersInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<GitMrReviewInfo> {
+        return Result(gitService.getMrReviewInfo(repoName, mrId, tokenType, token))
+    }
+
+    override fun getMergeRequestChangeInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<GitMrChangeInfo> {
+        return Result(gitService.getMrChangeInfo(repoName, mrId, tokenType, token))
+    }
 }

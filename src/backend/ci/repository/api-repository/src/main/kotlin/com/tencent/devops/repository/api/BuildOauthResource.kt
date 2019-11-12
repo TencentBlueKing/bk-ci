@@ -24,41 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.scm.request
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-data class CommitCheckRequest(
-        @ApiParam("项目名称", required = true)
-        val projectName: String,
-        @ApiParam("仓库地址", required = true)
-        val url: String,
-        @ApiParam("仓库类型", required = true)
-        val type: ScmType,
-        @ApiParam("privateKey", required = true)
-        val privateKey: String?,
-        @ApiParam("passPhrase", required = false)
-        val passPhrase: String?,
-        @ApiParam("token", required = true)
-        val token: String?,
-        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-        val region: CodeSvnRegion?,
-        @ApiParam("CommitId", required = false)
-        val commitId: String,
-        @ApiParam("详情链接", required = true)
-        val state: String,
-        @ApiParam("详情链接", required = true)
-        val targetUrl: String,
-        @ApiParam("区分标志", required = true)
-        val context: String,
-        @ApiParam("详情链接", required = true)
-        val description: String,
-        @ApiParam("详情链接", required = true)
-        val block: Boolean,
-        @ApiParam("mr对应的requestId", required = true)
-        val mrRequestId: Long?,
-        @ApiParam("报表数据", required = true)
-        val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
-)
+@Api(tags = ["BUILD_REPOSITORY_OAUTH"], description = "构建-oauth相关")
+@Path("/build/oauth")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildOauthResource {
+
+    @ApiOperation("获取git代码库accessToken信息")
+    @GET
+    @Path("/git/{userId}")
+    fun gitGet(
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<GitToken?>
+}

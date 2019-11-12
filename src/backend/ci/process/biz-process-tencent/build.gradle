@@ -42,6 +42,8 @@ dependencies {
     compile project(":process:model-process-tencent")
     compile project(":process:api-process-tencent")
     compile project(":process:api-process")
+    compile project(":external:api-external")
+    compile project(":scm:api-scm")
     compile project(":process:biz-process")
     compile project(":process:model-process-tencent")
     compile project(":process:plugin-trigger")

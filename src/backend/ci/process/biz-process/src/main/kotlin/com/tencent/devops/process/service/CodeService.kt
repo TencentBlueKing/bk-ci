@@ -35,9 +35,9 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.service.scm.ScmService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
-import com.tencent.devops.scm.api.ServiceSvnResource
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -57,7 +57,11 @@ class CodeService @Autowired constructor(
     fun getSvnDirectories(projectId: String, repoHashId: String?, relativePath: String?): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
 
-        val repository = (client.get(ServiceRepositoryResource::class).get(projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType).data
+        val repository = (client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+            repositoryType = repositoryConfig.repositoryType
+        ).data
             ?: throw NotFoundException("代码库($repoHashId)不存在")) as? CodeSvnRepository ?: throw RuntimeException("代码库($repoHashId)不是svn代码库")
 
         try {
@@ -66,14 +70,14 @@ class CodeService @Autowired constructor(
             val svnType = repository.svnType ?: "SSH"
 
             val svnFileInfoList = client.getScm(ServiceSvnResource::class).getDirectories(
-                repository.url,
-                username,
-                svnType,
-                relativePath,
-                SVNRevision.HEAD.number,
-                credential.first,
-                credential.second,
-                credential.third
+                url = repository.url,
+                userId = username,
+                svnType = svnType,
+                svnPath = relativePath,
+                revision = SVNRevision.HEAD.number,
+                credential1 = credential.first,
+                credential2 = credential.second,
+                credential3 = credential.third
             ).data!!
             logger.info("Code get svn directories($svnFileInfoList)")
 

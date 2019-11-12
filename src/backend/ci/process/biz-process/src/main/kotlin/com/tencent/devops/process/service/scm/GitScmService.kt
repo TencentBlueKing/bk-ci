@@ -36,7 +36,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
-import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,8 +62,18 @@ class GitScmService @Autowired constructor(
 
         return try {
             val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-            val token = getToken(projectId, repo.credentialId, repo.userName, tokenType)
-            client.getScm(ServiceGitResource::class).getMergeRequestReviewersInfo(repo.projectName, mrId, tokenType, token).data!!
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            client.getScm(ServiceGitResource::class).getMergeRequestReviewersInfo(
+                repoName = repo.projectName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token
+            ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr reviews info", e)
             null
@@ -80,8 +90,18 @@ class GitScmService @Autowired constructor(
 
         return try {
             val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-            val token = getToken(projectId, repo.credentialId, repo.userName, tokenType)
-            return client.getScm(ServiceGitResource::class).getMergeRequestInfo(repo.projectName, mrId, tokenType, token).data!!
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            return client.getScm(ServiceGitResource::class).getMergeRequestInfo(
+                repoName = repo.projectName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token
+            ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)
             null
@@ -98,8 +118,18 @@ class GitScmService @Autowired constructor(
 
         return try {
             val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-            val token = getToken(projectId, repo.credentialId, repo.userName, tokenType)
-            return client.getScm(ServiceGitResource::class).getMergeRequestChangeInfo(repo.projectName, mrId, tokenType, token).data!!
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            return client.getScm(ServiceGitResource::class).getMergeRequestChangeInfo(
+                repoName = repo.projectName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token
+            ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)
             null
@@ -113,8 +143,10 @@ class GitScmService @Autowired constructor(
             val pair = DHUtil.initKey()
             val encoder = Base64.getEncoder()
             val decoder = Base64.getDecoder()
-            val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-                encoder.encodeToString(pair.publicKey))
+            val credentialResult = client.get(ServiceCredentialResource::class).get(
+                projectId = projectId, credentialId = credentialId,
+                publicKey = encoder.encodeToString(pair.publicKey)
+            )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
                 logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
                 throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
@@ -123,9 +155,10 @@ class GitScmService @Autowired constructor(
             val credential = credentialResult.data!!
 
             String(DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
+            ))
         }
     }
 }

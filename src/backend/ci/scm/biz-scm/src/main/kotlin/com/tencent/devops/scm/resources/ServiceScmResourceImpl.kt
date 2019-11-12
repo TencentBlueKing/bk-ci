@@ -33,7 +33,7 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.scm.pojo.request.CommitCheckRequest
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.services.ScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

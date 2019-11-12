@@ -28,17 +28,17 @@ package com.tencent.devops.repository.service.scm
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.repository.pojo.scm.TokenCheckResult
-import com.tencent.devops.repository.pojo.scm.request.CommitCheckRequest
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,11 +46,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class ScmService @Autowired constructor(
-        private val svnConfig: SVNConfig,
-        private val gitConfig: GitConfig
-) {
+    private val svnConfig: SVNConfig,
+    private val gitConfig: GitConfig
+) : IScmService {
 
-    fun getLatestRevision(
+    override fun getLatestRevision(
         projectName: String,
         url: String,
         type: ScmType,
@@ -64,13 +64,23 @@ class ScmService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$userName] Start to get latest revision")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmFactory.getScm(projectName, url, type, branchName, privateKey, passPhrase, token, region, userName).getLatestRevision()
+            return ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = branchName,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            ).getLatestRevision()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the latest revision")
         }
     }
 
-    fun listBranches(
+    override fun listBranches(
         projectName: String,
         url: String,
         type: ScmType,
@@ -83,15 +93,24 @@ class ScmService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
+            return ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            )
                 .getBranches()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
     }
 
-    //TODO: 此处需解决内部版和企业版的冲突
-    fun deleteBranch(
+    override fun deleteBranch(
         projectName: String,
         url: String,
         type: ScmType,
@@ -105,7 +124,17 @@ class ScmService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            )
                 .deleteBranch(branch)
         } catch (ignored: MismatchedInputException) {
 
@@ -114,23 +143,33 @@ class ScmService @Autowired constructor(
         }
     }
 
-    fun listTags(
-            projectName: String,
-            url: String,
-            type: ScmType,
-            token: String,
-            userName: String
+    override fun listTags(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String,
+        userName: String
     ): List<String> {
         logger.info("[$projectName|$url|$type|$token|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmFactory.getScm(projectName, url, type, null, null, null, token, null, userName).getTags()
+            return ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = null,
+                passPhrase = null,
+                token = token,
+                region = null,
+                userName = userName
+            ).getTags()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
     }
 
-    fun checkPrivateKeyAndToken(
+    override fun checkPrivateKeyAndToken(
         projectName: String,
         url: String,
         type: ScmType,
@@ -143,9 +182,23 @@ class ScmService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$token|$userName] Start to check the private key and token")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName).checkTokenAndPrivateKey()
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName
+            )
+                .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
-            logger.warn("Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName", e)
+            logger.warn(
+                "Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName",
+                e
+            )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check the private key and token")
@@ -153,7 +206,7 @@ class ScmService @Autowired constructor(
         return TokenCheckResult(true, "OK")
     }
 
-    fun checkUsernameAndPassword(
+    override fun checkUsernameAndPassword(
         projectName: String,
         url: String,
         type: ScmType,
@@ -166,9 +219,23 @@ class ScmService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$username|$password|$token|$region|$repoUsername] Start to check the username and password")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmFactory.getScm(projectName, url, type, null, username, password, token, region, repoUsername).checkTokenAndUsername()
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = username,
+                passPhrase = password,
+                token = token,
+                region = region,
+                userName = repoUsername
+            )
+                .checkTokenAndUsername()
         } catch (e: Throwable) {
-            logger.warn("Fail to check the private key (projectName=$projectName, type=$type, username=$username, token=$token, region=$region, repoUsername=$repoUsername", e)
+            logger.warn(
+                "Fail to check the private key (projectName=$projectName, type=$type, username=$username, token=$token, region=$region, repoUsername=$repoUsername",
+                e
+            )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check username and password")
@@ -176,7 +243,7 @@ class ScmService @Autowired constructor(
         return TokenCheckResult(true, "OK")
     }
 
-    fun addWebHook(
+    override fun addWebHook(
         projectName: String,
         url: String,
         type: ScmType,
@@ -185,7 +252,7 @@ class ScmService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String,
-        event: String? = null
+        event: String?
     ) {
         logger.info("[$projectName|$url|$type|$token|$region|$userName|$event] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
@@ -205,32 +272,50 @@ class ScmService @Autowired constructor(
                     throw RuntimeException("Unknown repository type ($type) when add webhook")
                 }
             }
-            ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, event)
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = event
+            )
                 .addWebHook(hookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }
     }
 
-    fun addCommitCheck(
-            request: CommitCheckRequest
+    override fun addCommitCheck(
+        request: CommitCheckRequest
     ) {
         val startEpoch = System.currentTimeMillis()
         try {
             with(request) {
                 val scm = ScmFactory.getScm(
-                        projectName,
-                        url,
-                        type,
-                        null,
-                        privateKey,
-                        passPhrase,
-                        token,
-                        region,
-                        "",
-                        CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+                    projectName = projectName,
+                    url = url,
+                    type = type,
+                    branchName = null,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = token,
+                    region = region,
+                    userName = "",
+                    event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
                 )
-                scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
+                scm.addCommitCheck(
+                    commitId = commitId,
+                    state = state,
+                    targetUrl = targetUrl,
+                    context = context,
+                    description = description,
+                    block = block
+                )
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
                     val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
@@ -242,12 +327,12 @@ class ScmService @Autowired constructor(
         }
     }
 
-    fun lock(
-            projectName: String,
-            url: String,
-            type: ScmType,
-            region: CodeSvnRegion?,
-            userName: String
+    override fun lock(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        region: CodeSvnRegion?,
+        userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
             logger.warn("repository type ($type) can not lock")
@@ -257,15 +342,26 @@ class ScmService @Autowired constructor(
         val subPath = SvnUtils.getSvnSubPath(url)
         val svnRegion = region ?: CodeSvnRegion.getRegion(url)
 
-        ScmFactory.getScm(projectName, url, type, null, "", "", "", svnRegion, userName).lock(repName, userName, subPath)
+        ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = "",
+            passPhrase = "",
+            token = "",
+            region = svnRegion,
+            userName = userName
+        )
+            .lock(repoName = repName, applicant = userName, subpath = subPath)
     }
 
-    fun unlock(
-            projectName: String,
-            url: String,
-            type: ScmType,
-            region: CodeSvnRegion?,
-            userName: String
+    override fun unlock(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        region: CodeSvnRegion?,
+        userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
             logger.warn("repository type ($type) can not unlock")
@@ -275,11 +371,21 @@ class ScmService @Autowired constructor(
         val subPath = SvnUtils.getSvnSubPath(url)
         val svnRegion = region ?: CodeSvnRegion.getRegion(url)
 
-        ScmFactory.getScm(projectName, url, type, null, "", "", "", svnRegion, userName).unlock(repName, userName, subPath)
+        ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = "",
+            passPhrase = "",
+            token = "",
+            region = svnRegion,
+            userName = userName
+        )
+            .unlock(repoName = repName, applicant = userName, subpath = subPath)
     }
 
-    //TODO: 此处需解决内部版和企业版的冲突
-    fun createBranch(
+    override fun createBranch(
         projectName: String,
         url: String,
         type: ScmType,
@@ -291,11 +397,21 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String
     ) {
-        ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
-            .createBranch(branch, ref)
+        ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName
+        )
+            .createBranch(branch = branch, ref = ref)
     }
 
-    fun listCommits(
+    override fun listCommits(
         projectName: String,
         url: String,
         type: ScmType,
@@ -309,11 +425,21 @@ class ScmService @Autowired constructor(
         page: Int,
         size: Int
     ): List<GitCommit> {
-        return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
-            .getCommits(branch, all, page, size)
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName
+        )
+            .getCommits(branch = branch, all = all, page = page, size = size)
     }
 
-    fun getCommitDiff(
+    override fun getCommitDiff(
         projectName: String,
         url: String,
         type: ScmType,
@@ -324,7 +450,17 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String
     ): List<GitDiff> {
-        return ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName)
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName
+        )
             .getCommitDiff(sha)
     }
 

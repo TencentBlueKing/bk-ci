@@ -26,9 +26,9 @@
 
 package com.tencent.devops.repository.service.github
 
-import com.tencent.devops.external.pojo.GithubCheckRuns
-import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.GithubCheckRuns
+import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 
