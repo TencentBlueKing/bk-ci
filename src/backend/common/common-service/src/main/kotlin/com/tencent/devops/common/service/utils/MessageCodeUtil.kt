@@ -33,10 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.stereotype.Component
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import java.text.MessageFormat
 
 /**
@@ -48,9 +45,9 @@ import java.text.MessageFormat
 @Component
 class MessageCodeUtil @Autowired constructor() {
     companion object {
+
         private val logger = LoggerFactory.getLogger(MessageCodeUtil::class.java)
-        private val simpleCnLanList = listOf("ZH_CN", "ZH-CN")
-        private val twCnLanList = listOf("ZH_TW", "ZH-TW", "ZH_HK", "ZH-HK")
+
         /**
          * 生成请求响应对象
          * @param messageCode 状态码
@@ -123,17 +120,9 @@ class MessageCodeUtil @Autowired constructor() {
                 // 根据code从redis中获取该状态码对应的信息信息(BCI_CODE_PREFIX前缀保证code码在redis中的唯一性)
                 val messageCodeDetailStr = redisOperation.get(BCI_CODE_PREFIX + messageCode)
                     ?: return message
-                val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-                val locale = if (null != attributes) {
-                    val request = attributes.request
-                    val cookieLan = CookieUtil.getCookieValue(request, "blueking_language")
-                    cookieLan ?: LocaleContextHolder.getLocale().toString() // 获取字符集（与http请求头中的Accept-Language有关）
-                } else {
-                    "ZH_CN" // 取不到语言信息默认为中文
-                }
                 val messageCodeDetail =
                     JsonUtil.getObjectMapper().readValue(messageCodeDetailStr, MessageCodeDetail::class.java)
-                message = getMessageByLocale(messageCodeDetail, locale) // 根据字符集取出对应的状态码描述信息
+                message = getMessageByLocale(messageCodeDetail) // 根据字符集取出对应的状态码描述信息
                 if (null != params) {
                     val mf = MessageFormat(message)
                     message = mf.format(params) // 根据参数动态替换状态码描述里的占位符
@@ -144,10 +133,10 @@ class MessageCodeUtil @Autowired constructor() {
             return message
         }
 
-        private fun getMessageByLocale(messageCodeDetail: MessageCodeDetail, locale: String): String {
-            return when {
-                simpleCnLanList.contains(locale.toUpperCase()) -> messageCodeDetail.messageDetailZhCn // 简体中文描述
-                twCnLanList.contains(locale.toUpperCase()) -> messageCodeDetail.messageDetailZhTw ?: "" // 繁体中文描述
+        private fun getMessageByLocale(messageCodeDetail: MessageCodeDetail): String {
+            return when (CommonUtils.getBkLocale()) {
+                "ZH_CN" -> messageCodeDetail.messageDetailZhCn // 简体中文描述
+                "ZH_TW" -> messageCodeDetail.messageDetailZhTw ?: "" // 繁体中文描述
                 else -> messageCodeDetail.messageDetailEn ?: "" // 英文描述
             }
         }

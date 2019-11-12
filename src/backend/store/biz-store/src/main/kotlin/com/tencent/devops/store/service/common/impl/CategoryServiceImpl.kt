@@ -55,7 +55,7 @@ class CategoryServiceImpl @Autowired constructor(
 
     /**
      * 获取所有范畴信息
-     * @param type 0:插件 1：模板
+     * @param type
      */
     override fun getAllCategory(type: Byte): Result<List<Category>?> {
         val atomCategoryList = categoryDao.getAllCategory(dslContext, type)?.map { categoryDao.convert(it) }

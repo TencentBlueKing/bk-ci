@@ -24,15 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth
+package com.tencent.devops.common.web.handler
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_CLIENT_REST_ERROR
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import org.slf4j.LoggerFactory
+import javax.ws.rs.ClientErrorException
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
+import javax.ws.rs.ext.Provider
 
-@Component
-class CCProperties {
-    @Value("\${cc.testUrl:#{null}}")
-    val testUrl: String? = null
-    @Value("\${cc.prodUrl:#{null}}")
-    val prodUrl: String? = null
+/**
+ *
+ * Powered By Tencent
+ */
+@Provider
+class ClientErrorMapper : ExceptionMapper<ClientErrorException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(ClientErrorMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: ClientErrorException): Response {
+        logger.error("client exception", exception)
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+                ?: MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_CLIENT_REST_ERROR).message
+        } else {
+            MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_CLIENT_REST_ERROR).message
+        }
+        return Response.status(exception.response.status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result<Void>(exception.response.status, message)).build()
+    }
 }

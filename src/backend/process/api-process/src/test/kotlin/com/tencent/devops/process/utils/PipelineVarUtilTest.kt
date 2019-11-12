@@ -33,28 +33,45 @@ class PipelineVarUtilTest {
 
     @Test
     fun fillOldVar() {
-        val vars = mutableMapOf<String, String>(
+        val vars = mutableMapOf(
             PIPELINE_START_USER_NAME to "admin",
             "userName" to "hello",
-            "${PIPELINE_MATERIAL_URL}.rep/a1" to "http://git.xxx.com/group/repo.git"
+            "$PIPELINE_MATERIAL_URL.rep/a1" to "http://git.xxx.com/group/repo.git"
         )
         PipelineVarUtil.fillOldVar(vars)
-        println(vars)
+        vars.forEach {
+            println(it)
+        }
     }
 
     @Test
-    fun fillNewVar() {
-        val vars = mutableMapOf<String, String>(
+    fun replaceOldByNewVar() {
+        val vars = mutableMapOf(
             "pipeline.start.user.name" to "admin",
             "userName" to "hello",
             "pipeline.material.url.rep/a1" to "http://git.xxx.com/group/repo.git"
         )
-        PipelineVarUtil.fillNewVar(vars)
-        println(vars)
+        PipelineVarUtil.replaceOldByNewVar(vars)
+        vars.forEach {
+            println(it)
+        }
     }
 
     @Test
     fun oldVarToNewVar() {
+        assertEquals(MAJORVERSION, PipelineVarUtil.oldVarToNewVar("majorVersion"))
+        assertEquals(MINORVERSION, PipelineVarUtil.oldVarToNewVar("minorVersion"))
+        assertEquals(FIXVERSION, PipelineVarUtil.oldVarToNewVar("fixVersion"))
+        assertEquals(BUILD_NO, PipelineVarUtil.oldVarToNewVar("BuildNo"))
+        assertEquals(PIPELINE_START_CHANNEL, PipelineVarUtil.oldVarToNewVar("pipeline.start.channel"))
+        assertEquals(PIPELINE_BUILD_LAST_UPDATE, PipelineVarUtil.oldVarToNewVar("pipeline.build.last.update"))
+        assertEquals(PIPELINE_BUILD_SVN_REVISION, PipelineVarUtil.oldVarToNewVar("pipeline.build.svn.revision"))
+        assertEquals(
+            PIPELINE_START_PARENT_PIPELINE_ID,
+            PipelineVarUtil.oldVarToNewVar("pipeline.start.parent.pipeline.id")
+        )
+        assertEquals(PIPELINE_START_USER_ID, PipelineVarUtil.oldVarToNewVar("pipeline.start.user.id"))
+        assertEquals(PIPELINE_START_TASK_ID, PipelineVarUtil.oldVarToNewVar("pipeline.start.task.id"))
         assertEquals(PIPELINE_START_USER_NAME, PipelineVarUtil.oldVarToNewVar("pipeline.start.user.name"))
         assertEquals(PIPELINE_START_TYPE, PipelineVarUtil.oldVarToNewVar("pipeline.start.type"))
         assertEquals(PIPELINE_BUILD_NUM, PipelineVarUtil.oldVarToNewVar("pipeline.build.num"))
@@ -77,6 +94,20 @@ class PipelineVarUtilTest {
 
     @Test
     fun newVarToOldVar() {
+        assertEquals("majorVersion", PipelineVarUtil.newVarToOldVar(MAJORVERSION))
+        assertEquals("minorVersion", PipelineVarUtil.newVarToOldVar(MINORVERSION))
+        assertEquals("fixVersion", PipelineVarUtil.newVarToOldVar(FIXVERSION))
+        assertEquals("BuildNo", PipelineVarUtil.newVarToOldVar(BUILD_NO))
+        assertEquals("pipeline.start.channel", PipelineVarUtil.newVarToOldVar(PIPELINE_START_CHANNEL))
+        assertEquals("pipeline.build.last.update", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_LAST_UPDATE))
+        assertEquals("pipeline.build.svn.revision", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_SVN_REVISION))
+        assertEquals(
+            "pipeline.start.parent.pipeline.id",
+            PipelineVarUtil.newVarToOldVar(PIPELINE_START_PARENT_PIPELINE_ID)
+        )
+        assertEquals("pipeline.start.user.id", PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID))
+        assertEquals("pipeline.start.task.id", PipelineVarUtil.newVarToOldVar(PIPELINE_START_TASK_ID))
+
         assertEquals("pipeline.start.user.name", PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_NAME))
         assertEquals("pipeline.start.type", PipelineVarUtil.newVarToOldVar(PIPELINE_START_TYPE))
         assertEquals("pipeline.build.num", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_NUM))

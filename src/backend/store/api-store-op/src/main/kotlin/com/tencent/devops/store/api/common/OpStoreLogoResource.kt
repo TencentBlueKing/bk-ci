@@ -71,7 +71,7 @@ interface OpStoreLogoResource {
 
     @ApiOperation("新增一条logo记录")
     @POST
-    @Path("/types/{logoType}")
+    @Path("/type/{logoType}")
     fun add(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -85,7 +85,7 @@ interface OpStoreLogoResource {
 
     @ApiOperation("更新一条logo记录")
     @PUT
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun update(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -99,7 +99,7 @@ interface OpStoreLogoResource {
 
     @ApiOperation("获取一条logo记录")
     @GET
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun get(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -111,7 +111,7 @@ interface OpStoreLogoResource {
 
     @ApiOperation("list logo记录")
     @GET
-    @Path("/types/{logoType}")
+    @Path("/type/{logoType}")
     fun list(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -123,7 +123,7 @@ interface OpStoreLogoResource {
 
     @ApiOperation("删除一条logo记录")
     @DELETE
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun delete(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

@@ -30,11 +30,22 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentStatus
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_2_BUILD_DENY
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_CREATE_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_VIEW_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_INSUFFICIENT_PERMISSIONS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -71,13 +82,13 @@ class EnvService @Autowired constructor(
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
         if (envDao.isNameExist(dslContext, projectId, envId, envName)) {
-            throw OperationException("环境名称【$envName】已存在")
+            throw ErrorCodeException(errorCode = ERROR_NODE_NAME_DUPLICATE, params = arrayOf(envName))
         }
     }
 
     override fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE)) {
-            throw OperationException("No Permission")
+            throw ErrorCodeException(errorCode = ERROR_ENV_NO_CREATE_PERMISSSION)
         }
 
         checkName(projectId, null, envCreateInfo.name)
@@ -91,16 +102,16 @@ class EnvService @Autowired constructor(
     override fun updateEnvironment(userId: String, projectId: String, envHashId: String, envUpdateInfo: EnvUpdateInfo) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
-            throw OperationException("No Permission")
+            throw ErrorCodeException(errorCode = ERROR_ENV_NO_EDIT_PERMISSSION)
         }
         checkName(projectId, envId, envUpdateInfo.name)
 
         val existEnv = envDao.get(dslContext, projectId, envId)
         if (existEnv.envType == EnvType.BUILD.name && envUpdateInfo.envType != EnvType.BUILD) {
-            throw OperationException("构建环境不能修改为部署环境")
+            throw ErrorCodeException(errorCode = ERROR_ENV_BUILD_2_DEPLOY_DENY)
         }
         if (existEnv.envType != EnvType.BUILD.name && envUpdateInfo.envType == EnvType.BUILD) {
-            throw OperationException("构建环境不能修改为构建环境")
+            throw ErrorCodeException(errorCode = ERROR_ENV_DEPLOY_2_BUILD_DENY)
         }
 
         dslContext.transaction { configuration ->
@@ -300,7 +311,7 @@ class EnvService @Autowired constructor(
     override fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
-            throw OperationException("No Permission")
+            throw ErrorCodeException(errorCode = ERROR_ENV_NO_VIEW_PERMISSSION)
         }
         val env = envDao.get(dslContext, projectId, envId)
         val nodeCount = envNodeDao.count(dslContext, projectId, envId)
@@ -383,7 +394,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
-            throw OperationException("No Permission")
+            throw ErrorCodeException(errorCode = ERROR_ENV_NO_DEL_PERMISSSION)
         }
 
         dslContext.transaction { configuration ->
@@ -423,7 +434,10 @@ class EnvService @Autowired constructor(
         val canUseEnvIdList = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.USE)
         val invalidEnvIds = envIds.filterNot { canUseEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {
-            throw OperationException("节点权限不足：节点ID[${invalidEnvIds.joinToString(",")}]")
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                params = arrayOf(invalidEnvIds.joinToString(","))
+            )
         }
 
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
@@ -462,7 +476,7 @@ class EnvService @Autowired constructor(
     override fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
-            throw OperationException("No EDIT Permission")
+            throw ErrorCodeException(errorCode = ERROR_ENV_NO_EDIT_PERMISSSION)
         }
 
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
@@ -471,7 +485,10 @@ class EnvService @Autowired constructor(
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
-            throw OperationException("节点权限不足：[${unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]")
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+            )
         }
 
         val env = envDao.get(dslContext, projectId, envId)
@@ -481,7 +498,10 @@ class EnvService @Autowired constructor(
         val existNodeIds = existNodes.map { it.nodeId }.toSet()
         val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
         if (notExistNodeIds.isNotEmpty()) {
-            throw OperationException("节点：[${notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) }}]不存在")
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+            )
         }
 
         // 过滤已在环境中的节点
@@ -494,10 +514,16 @@ class EnvService @Autowired constructor(
 
         toAddNodeIds.forEach {
             if (env.envType == EnvType.BUILD.name && existNodesMap[it]?.nodeType in serverNodeTypes) {
-                throw OperationException("服务器节点[${HashUtil.encodeLongId(it)}]不能添加到构建环境")
+                throw ErrorCodeException(
+                    errorCode = ERROR_ENV_BUILD_CAN_NOT_ADD_SVR,
+                    params = arrayOf(HashUtil.encodeLongId(it))
+                )
             }
             if (env.envType != EnvType.BUILD.name && existNodesMap[it]?.nodeType !in serverNodeTypes) {
-                throw OperationException("构建节点[${HashUtil.encodeLongId(it)}]不能添加到非构建环境")
+                throw ErrorCodeException(
+                    errorCode = ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT,
+                    params = arrayOf(HashUtil.encodeLongId(it))
+                )
             }
         }
 
@@ -507,7 +533,7 @@ class EnvService @Autowired constructor(
     override fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
-            throw OperationException("No Permission")
+            throw ErrorCodeException(errorCode = ERROR_ENV_NO_EDIT_PERMISSSION)
         }
 
         envNodeDao.batchDeleteEnvNode(

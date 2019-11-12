@@ -40,12 +40,12 @@ import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
-import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.ErrorType

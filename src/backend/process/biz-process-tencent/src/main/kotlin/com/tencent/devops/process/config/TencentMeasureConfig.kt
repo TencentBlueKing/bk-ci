@@ -69,7 +69,6 @@ class TencentMeasureConfig {
         templateService = templateService
     )
 
-
     @Value("\${queueConcurrency.measure:3}")
     private val measureConcurrency: Int? = null
 

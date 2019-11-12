@@ -334,7 +334,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
         val vars = variables.map { it -> it.key to it.value.toString() }.toMap().toMutableMap()
-        PipelineVarUtil.fillNewVar(vars)
+        PipelineVarUtil.replaceOldByNewVar(vars)
         pipelineBuildVarDao.batchSave(
             dslContext = dslContext,
             projectId = projectId,
@@ -380,10 +380,10 @@ class PipelineRuntimeService @Autowired constructor(
         buildStatus: BuildStatus? = null
     ): List<PipelineBuildTask> {
         val list = pipelineBuildTaskDao.listByStatus(
-            dslContext,
-            buildId,
-            containerId,
-            if (buildStatus != null) setOf(buildStatus) else null
+            dslContext = dslContext,
+            buildId = buildId,
+            containerId = containerId,
+            statusSet = if (buildStatus != null) setOf(buildStatus) else null
         )
         val result = mutableListOf<PipelineBuildTask>()
         if (list.isNotEmpty()) {

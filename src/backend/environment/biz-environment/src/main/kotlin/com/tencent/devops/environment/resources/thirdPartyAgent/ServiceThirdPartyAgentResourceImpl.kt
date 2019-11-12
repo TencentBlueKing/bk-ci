@@ -26,7 +26,8 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -94,13 +95,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {
-            throw ParamBlankException("UserId is illegal")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("userId"))
         }
     }
 
     private fun checkProjectId(projectId: String) {
         if (projectId.isBlank()) {
-            throw ParamBlankException("ProjectId is illegal")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
         }
     }
 }

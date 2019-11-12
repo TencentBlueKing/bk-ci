@@ -26,11 +26,15 @@
 
 package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.environment.agent.client.DevCloudClient
 import com.tencent.devops.common.environment.agent.pojo.devcloud.ContainerType
+import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskAction
+import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.StaticData
@@ -38,8 +42,6 @@ import com.tencent.devops.environment.dao.devcloud.DevCloudTaskDao
 import com.tencent.devops.environment.pojo.DevCloudImageParam
 import com.tencent.devops.environment.pojo.DevCloudModel
 import com.tencent.devops.environment.pojo.DevCloudVmParam
-import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskAction
-import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -82,13 +84,19 @@ class DevCloudService @Autowired constructor(
         val projectConfig = projectConfigDao.get(dslContext, projectId, userId)
         if (!projectConfig.devCloudEnalbed) {
             logger.error("projectConfig.devCloudEnalbed is disabled")
-            throw OperationException("项目[$projectId]没有开通过DevCloud功能，请联系【蓝盾助手】申请资源")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_PROJECT_FEATURE_NOT_ACTIVED,
+                params = arrayOf(projectId)
+            )
         }
         val usedCount = nodeDao.countDevCloudVm(dslContext, projectId)
         val limit = projectConfig.devCloudQuota
         if (devCloudVmParam.instanceCount > limit - usedCount) {
             logger.error("projectConfig.devCloudQuota exhausted, max: $limit, used: $usedCount")
-            throw OperationException("DevCloud虚拟机配额不足，总量$limit, 已使用: $usedCount")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_QUOTA_LIMIT,
+                params = arrayOf(limit.toString(), usedCount.toString())
+            )
         }
         val devCloudModel = StaticData.getDevCloudModelList().filter { it.moduleId == devCloudVmParam.modelId }
         val now = LocalDateTime.now()
@@ -155,7 +163,8 @@ class DevCloudService @Autowired constructor(
         action: TaskAction
     ) {
         val nodeLongId = HashUtil.decodeIdToLong(nodeHashId)
-        val node = nodeDao.get(dslContext, projectId, nodeLongId) ?: throw OperationException("虚拟机不存在！")
+        val node = nodeDao.get(dslContext, projectId, nodeLongId)
+            ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS)
         if (action == TaskAction.DELETE) {
             if (node.nodeStatus == NodeStatus.DELETED.name ||
                 node.nodeStatus == NodeStatus.CREATING.name ||
@@ -166,7 +175,10 @@ class DevCloudService @Autowired constructor(
                 node.nodeStatus == NodeStatus.BUILDING_IMAGE.name
             ) {
                 logger.info("dev cloud vm status is ${node.nodeStatus}, can not delete")
-                throw OperationException("虚拟机状态为:${NodeStatus.getStatusName(node.nodeStatus)}, 不允许销毁！请稍后操作！")
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_VM_CAN_NOT_DESTROY,
+                    params = arrayOf(NodeStatus.getStatusName(node.nodeStatus))
+                )
             }
         }
 
@@ -215,10 +227,14 @@ class DevCloudService @Autowired constructor(
         devCloudImage: DevCloudImageParam
     ) {
         val nodeLongId = HashUtil.decodeIdToLong(nodeHashId)
-        val node = nodeDao.get(dslContext, projectId, nodeLongId) ?: throw OperationException("虚拟机不存在！")
+        val node = nodeDao.get(dslContext, projectId, nodeLongId)
+            ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS)
         if (node.nodeStatus != NodeStatus.RUNNING.name && node.nodeStatus != NodeStatus.NORMAL.name) {
             logger.info("dev cloud vm status is ${node.nodeStatus}, can not build image")
-            throw OperationException("虚拟机状态为:${NodeStatus.getStatusName(node.nodeStatus)}, 无法制作镜像！")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_VM_CAN_NOT_IMAGED,
+                params = arrayOf(NodeStatus.getStatusName(node.nodeStatus))
+            )
         }
         logger.info("insert into dev cloud task, containerName: $containerName, createEnv is buildImage")
         dslContext.transaction { configuration ->

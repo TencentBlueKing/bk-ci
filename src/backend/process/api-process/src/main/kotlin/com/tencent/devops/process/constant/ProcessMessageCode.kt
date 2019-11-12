@@ -71,4 +71,60 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LOCK = 2101047 // 流水线锁定
     const val ERROR_PIPELINE_QUEUE_FULL = 2101049 // 流水线队列满
     const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = 2101050 // 第三方构建机状态异常
+
+    const val ERROR_BUILD_UNKNOWN_ERROR = 2101001 //
+    const val ERROR_BUILD_UNKNOWN_ERROR_2 = 2101002 //
+    // 构建时错误
+    const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = 2101111 // bcsAppInstId is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = 2101112 // category is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM = 2101113 // bcsInstNum is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID = 2101114 // instVersionId is not init
+    const val ERROR_BUILD_TASK_BCS_OPERATE_FAIL = 2101115 // BCS operate failed
+    const val ERROR_BUILD_TASK_BCS_PARAM_NAMESPACE_VAR = 2101116 // instVersionId is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_VERSIONID = 2101117 // versionId is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_SHOW_VERSIONID = 2101118  // showVersionId is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_INSTANCE_ENTITY = 2101119 // instanceEntity is not init
+    const val ERROR_BUILD_TASK_BCS_CREATE_INSTANCE_FAIL = 2101120 // create instance fail
+    const val ERROR_BUILD_TASK_ENV_NAME_IS_NULL = 2101121 // EnvName is not init
+    const val ERROR_BUILD_TASK_ENV_ID_IS_NULL = 2101122 // EnvId is not init
+    const val ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS = 2101123 // 以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames
+    const val ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI = 2101124 // 用户没有操作这些环境的权限！环境：$noExistsEnvNames
+    const val ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS = 2101125 //  "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+    const val ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL = 2101126 // Unsupported targetEnvType: $targetEnvType
+    const val ERROR_BUILD_TASK_CDN_FAIL = 2101127 // "分发CDN失败
+    const val ERROR_BUILD_TASK_JOB_PUSH_FILE_FAIL = 2101128
+    const val ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS = 2101129 // "Index file not exist")
+    const val ERROR_BUILD_TASK_ZHIYUN_FAIL = 2101130 // 织云操作失败,织云返回错误信息：$msg
+    const val ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL = 2101131 // 织云异步升级失败,织云返回错误信息：$msg
+
+    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_PATH = 2101121 // The path is not init
+    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_CUSTOMIZED = 2101122
+    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = 2101123
+
+    const val ERROR_BUILD_TASK_QUALITY_IN = 2101137 // 质量红线(准入)检测失败
+    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = 2101908 // 质量红线(准入)配置有误：Fail to find quality gate intercept element
+    const val ERROR_BUILD_TASK_QUALITY_OUT = 2101909 // 质量红线(准出)检测失败
+    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = 2101910 // 质量红线(准出)配置有误：Fail to find quality gate intercept element
+
+    const val ERROR_PARAM_PROJEC_ID_NULL = 2101101 // 项目ID为空
+    const val ERROR_PARAM_USER_ID_NULL = 2101102 // 用户ID为空
+    const val ERROR_PARAM_PIPELINE_ID_NULL = 2101103 // 参数：流水线ID为空
+    const val ERROR_PARAM_PIPELINE_NAME_TOO_LONG = 2101104 // 参数：流水线名称过长
+    const val ERROR_PARAM_PIPELINE_NAME_DUP = 2101105 // 参数：流水线名称重复
+
+    // 权限错误 210198开头
+    const val ERROR_PERMISSION_VIEW_NEED = 2101981 // 无查看权限
+    const val ERROR_PERMISSION_CREATE_NEED = 2101982 // 无写权限
+    const val ERROR_PERMISSION_EXECUTE_NEED = 2101983 // 无执行权限
+    const val ERROR_PERMISSION_DELETE_NEED = 2101984 // 无删除权限
+    const val ERROR_PERMISSION_LIST_NEED = 2101985 // 无列表权限
+    const val ERROR_PERMISSION_NOT_IN_PROJECT = 2101990 // 非项目成员
+
+    // 流水线模块业务错误21011
+    const val ERROR_ADD_PIPELINE_TIMER_QUARTZ = 2101105 // 流水线的定时Quartz任务保存失败
+    const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = 2101107 // 流水线的定时Quartz任务删除失败
+
+    const val ERROR_PIPELINE_DENY_RUN = 2101197 // 流水线不能执行
+    const val ERROR_PIPELINE_IS_RUNNING_LOCK = 2101198 // 流水线正在运行中，锁定
+    const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = 2101190 // 流水线定时触发时代码没有变更
 }

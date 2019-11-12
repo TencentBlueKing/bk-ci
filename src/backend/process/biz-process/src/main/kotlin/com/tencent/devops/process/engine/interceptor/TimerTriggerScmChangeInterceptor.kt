@@ -44,8 +44,8 @@ import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
-import com.tencent.devops.process.engine.common.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
-import com.tencent.devops.process.engine.common.OK
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
+import com.tencent.devops.process.constant.ProcessMessageCode.OK
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.service.scm.ScmService
 import com.tencent.devops.repository.api.ServiceCommitResource

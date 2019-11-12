@@ -42,6 +42,7 @@ package com.tencent.devops.environment.constant
  *
  */
 object EnvironmentMessageCode {
+    const val ERROR_ENV_NOT_EXISTS = "2105000" // 环境管理：[{0}] 环境不存在
     const val ERROR_NODE_INSUFFICIENT_PERMISSIONS = "2105001" // 环境管理：节点权限不足 [{0}]
     const val ERROR_NODE_NOT_EXISTS = "2105002" // 环境管理：[{0}] 节点不存在
     const val ERROR_NODE_NAME_DUPLICATE = "2105003" // 环境管理：环境名称已存在: [{0}]
@@ -59,7 +60,22 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NO_EDIT_PERMISSSION = "2105015" // 环境管理：没有节点编辑权限
     const val ERROR_NODE_NO_VIEW_PERMISSSION = "2105016" // 环境管理：没有节点查看权限
     const val ERROR_NODE_NO_DEL_PERMISSSION = "2105017" // 环境管理：没有节点删除权限
-    const val ERROR_NODE_NULL_BCSVM_PARAM = "2105018" // 环境管理：Invalid b c s V m Param
-    const val ERROR_NODE_INVALID_BCSVM_PARAM = "2105019" // 环境管理：Invalid b c s V m Param {0}
+    const val ERROR_NODE_AGENT_STATUS_EXCEPTION = "2105018" // 环境管理：构建机状态异常
+    const val ERROR_NODE_AGENT_SECRET_KEY_INVALID = "2105019" // 环境管理：构建机密钥不对
     const val ERROR_ENV_EXPIRED_DAYS = "2105020" // 环境管理：有效期不能超过[{0}]天
+    const val ERROR_ENV_BUILD_CAN_NOT_ADD_SVR = "2105021" // 服务器节点[{0}]不能添加到构建环境
+    const val ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT = "2105022" // 构建节点[{0}]不能添加到非构建环境
+    const val ERROR_NODE_CHANGE_USER_NOT_SUPPORT = "2105023" // 节点类型【{0}】不支持修改导入人
+    const val ERROR_NODE_IMPORT_EXCEED = "2105024" // 环境管理：导入节点数不能超过配额[{0}]
+    const val ERROR_NODE_IP_ILLEGAL_USER = "2105025" // 环境管理：非法 IP [{0}], 请确认是否是服务器的责任人
+    const val ERROR_QUOTA_LIMIT = "2105026" // 环境管理：配额不足，总量{0}, 已使用: {1}
+    const val ERROR_VM_CAN_NOT_DESTROY = "2105027" // 环境管理：虚拟机状态为:{0}, 不允许销毁！请稍后操作！
+    const val ERROR_VM_CAN_NOT_IMAGED = "2105028" // 环境管理：虚拟机状态为:{0}, 无法制作镜像!
+    const val ERROR_NODE_HAD_BEEN_ASSIGN = "2105029" // 环境管理：节点已被分配，不能重新分配
+    const val ERROR_ENV_BCS_NOT_ACTIVED = "2105030" // 环境管理：项目[{0}]没有开通过BCS虚拟机功能
+    const val ERROR_NODE_INFLUX_QUERY_HOST_INFO_FAIL = "2105031" // 环境管理：查询构建机主机信息失败: {0}
+    const val ERROR_NODE_INFLUX_QUERY_CPU_INFO_FAIL = "2105032" // 环境管理：查询构建机CPU信息失败: {0}
+    const val ERROR_NODE_INFLUX_QUERY_MEM_INFO_FAIL = "2105033" // 环境管理：查询构建机内存信息失败: {0}
+    const val ERROR_NODE_INFLUX_QUERY_DISK_INFO_FAIL = "2105034" // 环境管理：查询构建机磁盘信息失败: {0}
+    const val ERROR_NODE_INFLUX_QUERY_NET_INFO_FAIL = "2105035" // 环境管理：查询构建机网络信息失败: {0}
 }

@@ -33,12 +33,12 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.quality.task.QUALITY_RESULT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
-import com.tencent.devops.process.engine.common.ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT
-import com.tencent.devops.process.engine.common.MANUAL_ACTION
-import com.tencent.devops.process.engine.common.MANUAL_ACTION_USERID
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -85,7 +85,7 @@ class QualityGateInTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val taskName = task.taskName
         val success = task.getTaskParam(QUALITY_RESULT)
-        val actionUser = task.getTaskParam(MANUAL_ACTION_USERID)
+        val actionUser = task.getTaskParam(BS_MANUAL_ACTION_USERID)
 
         return if (success.isNotEmpty()) {
             logger.info("[$buildId]|QUALITY_FINISH|taskName=$taskName|taskId=$taskId|success=$success")
@@ -96,7 +96,7 @@ class QualityGateInTaskAtom @Autowired constructor(
                 AtomResponse(BuildStatus.QUALITY_CHECK_FAIL)
             }
         } else {
-            val manualAction = task.getTaskParam(MANUAL_ACTION)
+            val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
             logger.info("[$buildId]|QUALITY_FINISH|taskName=$taskName|taskId=${task.taskId}|action=$manualAction")
             if (manualAction.isNotEmpty()) {
                 when (ManualReviewAction.valueOf(manualAction)) {

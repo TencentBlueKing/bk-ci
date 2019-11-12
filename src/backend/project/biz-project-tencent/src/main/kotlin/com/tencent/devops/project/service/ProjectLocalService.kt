@@ -100,9 +100,6 @@ class ProjectLocalService @Autowired constructor(
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
-    @Value("\${paas_cc.url}")
-    private lateinit var ccUrl: String
-
     /**
      * 创建项目信息
      */
@@ -571,6 +568,7 @@ class ProjectLocalService @Autowired constructor(
 
     private fun getAuthProjectIds(accessToken: String): List<String/*projectId*/> {
         val url = "$authUrl?access_token=$accessToken"
+        logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
         val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)

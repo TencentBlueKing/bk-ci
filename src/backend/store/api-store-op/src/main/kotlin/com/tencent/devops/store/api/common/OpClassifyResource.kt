@@ -86,7 +86,7 @@ interface OpClassifyResource {
 
     @ApiOperation("根据ID获取分类信息")
     @GET
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun getClassifyById(
         @ApiParam("分类ID", required = true)
         @QueryParam("id")
@@ -95,7 +95,7 @@ interface OpClassifyResource {
 
     @ApiOperation("根据ID删除分类信息")
     @DELETE
-    @Path("/ids/{id}")
+    @Path("/{id}")
     fun deleteClassifyById(
         @ApiParam("分类ID", required = true)
         @PathParam("id")

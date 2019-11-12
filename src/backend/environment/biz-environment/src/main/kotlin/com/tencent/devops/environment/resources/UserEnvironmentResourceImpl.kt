@@ -26,6 +26,7 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -68,23 +69,26 @@ class UserEnvironmentResourceImpl @Autowired constructor(
 
         if (NodeSource.CREATE == environment.source) {
             val bcsVmParam = environment.bcsVmParam
-                ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_INVALID_BCSVM_PARAM)
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                    params = arrayOf("bcsVmParam")
+                )
 
             if (bcsVmParam.clusterId.isBlank()) {
                 throw ErrorCodeException(
-                    errorCode = EnvironmentMessageCode.ERROR_NODE_NULL_BCSVM_PARAM,
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                     params = arrayOf("clusterId")
                 )
             }
             if (bcsVmParam.imageId.isBlank()) {
                 throw ErrorCodeException(
-                    errorCode = EnvironmentMessageCode.ERROR_NODE_INVALID_BCSVM_PARAM,
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                     params = arrayOf("imageId")
                 )
             }
             if (bcsVmParam.vmModelId.isBlank()) {
                 throw ErrorCodeException(
-                    errorCode = EnvironmentMessageCode.ERROR_NODE_INVALID_BCSVM_PARAM,
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                     params = arrayOf("vmModelId")
                 )
             }

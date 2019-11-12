@@ -26,8 +26,9 @@
 
 package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
@@ -184,12 +185,19 @@ class OpNodeService @Autowired constructor(
         return true
     }
 
-    private fun checkImportCount(dslContext: DSLContext, projectConfigDao: ProjectConfigDao, nodeDao: NodeDao, projectId: String, userId: String, toAddNodeCount: Int) {
+    private fun checkImportCount(
+        dslContext: DSLContext,
+        projectConfigDao: ProjectConfigDao,
+        nodeDao: NodeDao,
+        projectId: String,
+        userId: String,
+        toAddNodeCount: Int
+    ) {
         val projectConfig = projectConfigDao.get(dslContext, projectId, userId)
         val importQuata = projectConfig.importQuota
         val existImportNodeCount = nodeDao.countImportNode(dslContext, projectId)
         if (toAddNodeCount + existImportNodeCount > importQuata) {
-            throw OperationException("导入CC/CMDB节点数不能超过配额[$importQuata]，如有特别需求，请联系【蓝盾助手】")
+            throw ErrorCodeException(errorCode = ERROR_NODE_IMPORT_EXCEED, params = arrayOf(importQuata.toString()))
         }
     }
 }

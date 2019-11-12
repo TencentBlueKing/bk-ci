@@ -27,12 +27,12 @@
 package com.tencent.devops.environment.service.thirdPartyAgent
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentPipelineDao
-import com.tencent.devops.environment.exception.AgentAuthException
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.CommandPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.CommandPipelineCreate
@@ -123,7 +123,10 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         val agentRecord = getAgentByNode(nodeId, projectId)
         val seqId = HashUtil.decodeIdToLong(seqIdStr)
         val pipelineRecord = thirdPartyAgentPipelineDao.getPipeline(dslContext, seqId, agentRecord.id)
-            ?: throw OperationException("不存在该管道信息")
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                defaultMessage = "不存在该管道信息"
+            )
         return PipelineResponse(
             seqIdStr,
             PipelineStatus.from(pipelineRecord.status),
@@ -136,7 +139,10 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         val record = thirdPartyAgentDao.getAgentByNodeId(dslContext, id, projectId)
         if (record == null) {
             logger.warn("The node $nodeId is not third party agent")
-            throw OperationException("这个节点不是第三方构建机")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                defaultMessage = "这个节点不是第三方构建机"
+            )
         }
         return record
     }
@@ -147,7 +153,10 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
     ) {
         val key = SecurityUtil.decrypt(agentRecord.secretKey)
         if (key != secretKey) {
-            throw AgentAuthException("Agent secret key 不对")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_SECRET_KEY_INVALID,
+                defaultMessage = "Illegal agent secret key"
+            )
         }
     }
 

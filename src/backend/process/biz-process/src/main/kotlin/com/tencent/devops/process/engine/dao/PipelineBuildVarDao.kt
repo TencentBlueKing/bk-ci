@@ -105,15 +105,21 @@ class PipelineBuildVarDao @Autowired constructor() {
         val sets =
             mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
         with(T_PIPELINE_BUILD_VAR) {
+            val maxLength = VALUE.dataType.length()
             variables.forEach { (key, value) ->
+                val valueString = value.toString()
+                if (valueString.length > maxLength) {
+                    logger.warn("[$buildId]|[$pipelineId]|ABANDON_DATA|len[$key]=${valueString.length}(max=$maxLength)")
+                    return@forEach
+                }
                 val set = dslContext.insertInto(this)
                     .set(PROJECT_ID, projectId)
                     .set(PIPELINE_ID, pipelineId)
                     .set(BUILD_ID, buildId)
                     .set(KEY, key)
-                    .set(VALUE, value.toString())
+                    .set(VALUE, valueString)
                     .onDuplicateKeyUpdate()
-                    .set(VALUE, value.toString())
+                    .set(VALUE, valueString)
                 sets.add(set)
             }
         }
