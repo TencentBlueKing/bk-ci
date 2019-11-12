@@ -63,7 +63,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * LINT获取分析记录的逻辑实现类

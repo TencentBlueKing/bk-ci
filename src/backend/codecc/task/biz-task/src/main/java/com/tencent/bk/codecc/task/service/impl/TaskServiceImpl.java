@@ -80,7 +80,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
 import static com.tencent.devops.common.constant.ComConstants.*;
 
 /**

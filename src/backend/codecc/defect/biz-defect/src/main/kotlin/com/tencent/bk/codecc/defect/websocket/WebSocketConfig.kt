@@ -46,7 +46,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor
 
 @Configuration
 @EnableWebSocketMessageBroker
-class WebSocketConfig @Autowired constructor(
+open class WebSocketConfig @Autowired constructor(
         private val bkAuthExPermissionApi : BkAuthExPermissionApi
 )
 : AbstractWebSocketMessageBrokerConfigurer(){

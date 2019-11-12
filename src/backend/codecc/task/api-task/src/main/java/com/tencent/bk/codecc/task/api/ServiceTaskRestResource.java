@@ -36,7 +36,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
 
-import static com.tencent.devops.common.api.auth.HeaderKt.*;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
 
 /**
  * task interface

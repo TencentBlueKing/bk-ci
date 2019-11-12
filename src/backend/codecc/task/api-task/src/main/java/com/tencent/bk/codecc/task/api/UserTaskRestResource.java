@@ -36,7 +36,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static com.tencent.devops.common.api.auth.HeaderKt.*;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
 
 /**
  * 任务接口

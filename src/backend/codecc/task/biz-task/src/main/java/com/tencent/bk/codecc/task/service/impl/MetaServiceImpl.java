@@ -39,7 +39,6 @@ import com.tencent.bk.codecc.task.service.MetaService;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaDetailVO;
-import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.BkAuthExPermissionApi;
 import com.tencent.devops.common.auth.util.AdminMemberUtils;
 import com.tencent.devops.common.util.CompressionUtils;
@@ -55,7 +54,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
 
 /**
  * 工具元数据业务逻辑处理类
