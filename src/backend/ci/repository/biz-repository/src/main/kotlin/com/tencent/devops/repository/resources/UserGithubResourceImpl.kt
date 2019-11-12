@@ -30,13 +30,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserGithubResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.service.github.GithubService
 import com.tencent.devops.repository.service.github.GithubTokenService
+import com.tencent.devops.repository.service.github.IGithubService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGithubResourceImpl @Autowired constructor(
-        private val githubService: GithubService,
+        private val githubService: IGithubService,
         private val githubTokenService: GithubTokenService
 ) : UserGithubResource {
     override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {

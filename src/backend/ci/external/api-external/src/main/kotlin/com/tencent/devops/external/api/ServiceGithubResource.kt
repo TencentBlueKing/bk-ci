@@ -27,12 +27,12 @@
 package com.tencent.devops.external.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.external.pojo.GithubBranch
 import com.tencent.devops.external.pojo.GithubCheckRuns
 import com.tencent.devops.external.pojo.GithubCheckRunsResponse
-import com.tencent.devops.external.pojo.GithubOauth
 import com.tencent.devops.external.pojo.GithubRepository
-import com.tencent.devops.external.pojo.GithubTag
+import com.tencent.devops.repository.pojo.github.GithubBranch
+import com.tencent.devops.repository.pojo.github.GithubOauth
+import com.tencent.devops.repository.pojo.github.GithubTag
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":common:common-web")
+    compile project(":repository:api-repository")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

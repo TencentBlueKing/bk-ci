@@ -164,24 +164,24 @@ interface UserRepositoryResource {
     @GET
     @Path("/{projectId}/search/")
     fun fuzzySearchByAliasName(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("仓库类型", required = false)
-            @QueryParam("repositoryType")
-            repositoryType: ScmType?,
-            @ApiParam("仓库类型", required = false)
-            @QueryParam("aliasName")
-            aliasName: String?,
-            @ApiParam("第几页", required = false, defaultValue = "1")
-            @QueryParam("page")
-            page: Int?,
-            @ApiParam("每页多少条", required = false, defaultValue = "20")
-            @QueryParam("pageSize")
-            pageSize: Int?
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("仓库类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: ScmType?,
+        @ApiParam("仓库类型", required = false)
+        @QueryParam("aliasName")
+        aliasName: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
 
     @ApiOperation("代码库列表")
@@ -236,30 +236,30 @@ interface UserRepositoryResource {
     @PUT
     @Path("/{projectId}/{repositoryHashId}/lock")
     fun lock(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("代码库哈希ID", required = true)
-            @PathParam("repositoryHashId")
-            repositoryHashId: String
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String
     ): Result<Boolean>
 
     @ApiOperation("解锁代码库")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/unlock")
     fun unlock(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("代码库哈希ID", required = true)
-            @PathParam("repositoryHashId")
-            repositoryHashId: String
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String
     ): Result<Boolean>
 //
 //

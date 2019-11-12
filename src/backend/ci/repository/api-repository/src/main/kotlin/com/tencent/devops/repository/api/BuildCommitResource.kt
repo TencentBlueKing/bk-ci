@@ -35,7 +35,13 @@ import com.tencent.devops.repository.pojo.commit.CommitResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_COMMIT"], description = "构建-git相关")
@@ -55,35 +61,35 @@ interface BuildCommitResource {
     @GET
     @Path("/getLatestCommit")
     fun getLatestCommit(
-            @ApiParam("流水线ID", required = true)
-            @QueryParam("pipelineId")
-            pipelineId: String,
-            @ApiParam("原子ID", required = true)
-            @QueryParam("elementId")
-            elementId: String,
-            @ApiParam("仓库ID或者仓库名", required = true)
-            @QueryParam("repoId")
-            repositoryId: String,
-            @ApiParam("代码库请求类型", required = false)
-            @QueryParam("repositoryType")
-            repositoryType: RepositoryType?,
-            @ApiParam("第几页", required = false)
-            @QueryParam("page")
-            page: Int?,
-            @ApiParam("每页大小", required = false)
-            @QueryParam("pageSize")
-            pageSize: Int?
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("原子ID", required = true)
+        @QueryParam("elementId")
+        elementId: String,
+        @ApiParam("仓库ID或者仓库名", required = true)
+        @QueryParam("repoId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页大小", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<List<CommitData>>
 
     @ApiOperation("根据构建ID获取提交记录")
     @GET
     @Path("/getCommitsByBuildId")
     fun getCommitsByBuildId(
-            @ApiParam(value = "构建ID", required = true)
-            @HeaderParam(AUTH_HEADER_BUILD_ID)
-            buildId: String,
-            @ApiParam("Agent ID", required = true)
-            @HeaderParam(AUTH_HEADER_AGENT_ID)
-            agentId: String
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_AGENT_ID)
+        agentId: String
     ): Result<List<CommitResponse>>
 }

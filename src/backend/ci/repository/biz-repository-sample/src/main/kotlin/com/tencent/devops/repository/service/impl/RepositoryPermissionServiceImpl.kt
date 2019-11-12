@@ -40,7 +40,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service
-@ConditionalOnProperty
 class RepositoryPermissionServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryDao: RepositoryDao,

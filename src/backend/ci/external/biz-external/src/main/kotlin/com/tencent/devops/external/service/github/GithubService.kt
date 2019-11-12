@@ -32,14 +32,14 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.external.pojo.GithubBranch
 import com.tencent.devops.external.pojo.GithubCheckRuns
 import com.tencent.devops.external.pojo.GithubCheckRunsResponse
 import com.tencent.devops.external.pojo.GithubRepository
-import com.tencent.devops.external.pojo.GithubTag
-import com.tencent.devops.external.pojo.github.GithubRepo
 import com.tencent.devops.process.api.service.ServiceScmResource
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
+import com.tencent.devops.repository.pojo.github.GithubBranch
+import com.tencent.devops.repository.pojo.github.GithubRepo
+import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.exception.GithubApiException
 import okhttp3.MediaType
 import okhttp3.Request
@@ -137,12 +137,12 @@ class GithubService @Autowired constructor(
         val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault())
         return githubRepos.map {
             GithubRepository(
-                    it.id.toString(),
-                    it.name,
-                    it.fullName,
-                    it.sshUrl,
-                    it.httpUrl,
-                ZonedDateTime.parse(it.updateAt, formatter).toEpochSecond() * 1000L
+                id = it.id.toString(),
+                name = it.name,
+                fullName = it.fullName,
+                sshUrl = it.sshUrl,
+                httpUrl = it.httpUrl,
+                updatedAt = ZonedDateTime.parse(it.updateAt, formatter).toEpochSecond() * 1000L
             )
         }
     }

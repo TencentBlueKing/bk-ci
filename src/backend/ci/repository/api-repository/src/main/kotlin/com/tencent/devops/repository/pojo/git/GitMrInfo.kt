@@ -48,19 +48,19 @@ import io.swagger.annotations.ApiModel
     "updated_at": "2019-09-04T08:31:21+0000",
     "assignee": {
         "id": 66212,
-        "username": "v_kaizewu",
-        "web_url": "http://git.code.oa.com/u/v_kaizewu",
+        "username": "user1",
+        "web_url": "http://git.xxx.com/u/user1",
         "name": "v_kaizewu",
         "state": "active",
-        "avatar_url": "http://git.code.oa.com/assets/images/avatar/no_user_avatar.png"
+        "avatar_url": "http://git.xxx.com/assets/images/avatar/no_user_avatar.png"
     },
     "author": {
         "id": 16703,
-        "username": "ddlin",
-        "web_url": "http://git.code.oa.com/u/ddlin",
-        "name": "ddlin",
+        "username": "user1",
+        "web_url": "http://git.xxx.com/u/user1",
+        "name": "user1",
         "state": "active",
-        "avatar_url": "http://git.code.oa.com/assets/images/avatar/no_user_avatar.png"
+        "avatar_url": "http://git.xxx.com/assets/images/avatar/no_user_avatar.png"
     },
     "milestone": {
         "id": 3669,

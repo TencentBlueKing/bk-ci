@@ -35,15 +35,15 @@ import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.GithubService
 import com.tencent.devops.repository.service.github.GithubTokenService
+import com.tencent.devops.repository.service.github.IGithubService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubResourceImpl @Autowired constructor(
-        private val githubTokenService: GithubTokenService,
-        private val githubService: GithubService,
-        private val githubOAuthService: GithubOAuthService
+    private val githubTokenService: GithubTokenService,
+    private val githubService: IGithubService,
+    private val githubOAuthService: GithubOAuthService
 ) : ServiceGithubResource {
     override fun createAccessToken(
         userId: String,
@@ -68,18 +68,18 @@ class ServiceGithubResourceImpl @Autowired constructor(
     }
 
     override fun addCheckRuns(
-            accessToken: String,
-            projectName: String,
-            checkRuns: GithubCheckRuns
+        accessToken: String,
+        projectName: String,
+        checkRuns: GithubCheckRuns
     ): Result<GithubCheckRunsResponse> {
         return Result(githubService.addCheckRuns(accessToken, projectName, checkRuns))
     }
 
     override fun updateCheckRuns(
-            accessToken: String,
-            projectName: String,
-            checkRunId: Int,
-            checkRuns: GithubCheckRuns
+        accessToken: String,
+        projectName: String,
+        checkRunId: Int,
+        checkRuns: GithubCheckRuns
     ): Result<Boolean> {
         githubService.updateCheckRuns(accessToken, projectName, checkRunId, checkRuns)
         return Result(true)

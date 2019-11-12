@@ -34,11 +34,11 @@ import io.swagger.annotations.ApiModel
 * {
     "author": {
         "id": 16703,
-        "username": "ddlin",
-        "web_url": "http://git.code.oa.com/u/ddlin",
-        "name": "ddlin",
+        "username": "user23",
+        "web_url": "http://git.xsxx.com/u/user23",
+        "name": "user23",
         "state": "active",
-        "avatar_url": "http://git.code.oa.com/assets/images/avatar/no_user_avatar.png"
+        "avatar_url": "http://git.xsxx.com/assets/images/avatar/no_user_avatar.png"
     },
     "reviewers": [
         {
@@ -47,11 +47,11 @@ import io.swagger.annotations.ApiModel
             "created_at": "2019-09-02T08:58:46+0000",
             "updated_at": "2019-09-02T08:58:46+0000",
             "id": 78458,
-            "username": "v_menglu",
-            "web_url": "http://git.code.oa.com/u/v_menglu",
-            "name": "v_menglu",
+            "username": "user2",
+            "web_url": "http://git.xsxx.com/u/user2",
+            "name": "user2",
             "state": "active",
-            "avatar_url": "http://git.code.oa.com/assets/images/avatar/no_user_avatar.png"
+            "avatar_url": "http://git.xsxx.com/assets/images/avatar/no_user_avatar.png"
         },
         {
             "type": "suggestion",
@@ -59,11 +59,11 @@ import io.swagger.annotations.ApiModel
             "created_at": "2019-09-02T08:58:46+0000",
             "updated_at": "2019-09-02T08:58:46+0000",
             "id": 66212,
-            "username": "v_kaizewu",
-            "web_url": "http://git.code.oa.com/u/v_kaizewu",
-            "name": "v_kaizewu",
+            "username": "user1",
+            "web_url": "http://git.xsxx.com/u/user1",
+            "name": "user1",
             "state": "active",
-            "avatar_url": "http://git.code.oa.com/assets/images/avatar/no_user_avatar.png"
+            "avatar_url": "http://git.xsxx.com/assets/images/avatar/no_user_avatar.png"
         }
     ],
     "id": 707707,

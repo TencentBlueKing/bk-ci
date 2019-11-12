@@ -46,7 +46,6 @@ import com.tencent.devops.repository.pojo.Project
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
-import com.tencent.devops.repository.service.IGithubService
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import okhttp3.MediaType
@@ -54,6 +53,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -61,16 +61,16 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Service
+@ConditionalOnMissingClass
 class GithubService @Autowired constructor(
-        private val githubTokenService: GithubTokenService,
-        private val githubOAuthService: GithubOAuthService,
-        private val IGithubService: IGithubService,
-        private val objectMapper: ObjectMapper,
-        private val gitConfig: GitConfig,
-        private val client: Client
-) {
+    private val githubTokenService: GithubTokenService,
+    private val githubOAuthService: GithubOAuthService,
+    private val objectMapper: ObjectMapper,
+    private val gitConfig: GitConfig,
+    private val client: Client
+) : IGithubService {
 
-    fun webhookCommit(event: String, guid: String, signature: String, body: String) {
+    override fun webhookCommit(event: String, guid: String, signature: String, body: String) {
         try {
             val removePrefixSignature = signature.removePrefix("sha1=")
             val genSignature = ShaUtils.hmacSha1(gitConfig.signSecret.toByteArray(), body.toByteArray())
@@ -81,21 +81,21 @@ class GithubService @Autowired constructor(
             }
 
             client.get(ServiceScmResource::class)
-                    .webHookCodeGithubCommit(GithubWebhook(event, guid, removePrefixSignature, body))
+                .webHookCodeGithubCommit(GithubWebhook(event, guid, removePrefixSignature, body))
         } catch (t: Throwable) {
             logger.info("Github webhook exception", t)
         }
     }
 
-    fun addCheckRuns(
-            token: String,
-            projectName: String,
-            checkRuns: GithubCheckRuns
+    override fun addCheckRuns(
+        token: String,
+        projectName: String,
+        checkRuns: GithubCheckRuns
     ): GithubCheckRunsResponse {
         logger.info("Github add check [projectName=$projectName, checkRuns=$checkRuns]")
 
         if ((checkRuns.conclusion != null && checkRuns.completedAt == null) ||
-                (checkRuns.conclusion == null && checkRuns.completedAt != null)
+            (checkRuns.conclusion == null && checkRuns.completedAt != null)
         ) {
             logger.warn("conclusion and completedAt must be null or not null together")
         }
@@ -106,16 +106,16 @@ class GithubService @Autowired constructor(
         return callMethod(OPERATION_ADD_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
     }
 
-    fun updateCheckRuns(
-            token: String,
-            projectName: String,
-            checkRunId: Int,
-            checkRuns: GithubCheckRuns
+    override fun updateCheckRuns(
+        token: String,
+        projectName: String,
+        checkRunId: Int,
+        checkRuns: GithubCheckRuns
     ) {
         logger.info("Github add check [projectName=$projectName, checkRuns=$checkRuns]")
 
         if ((checkRuns.conclusion != null && checkRuns.completedAt == null) ||
-                (checkRuns.conclusion == null && checkRuns.completedAt != null)
+            (checkRuns.conclusion == null && checkRuns.completedAt != null)
         ) {
             logger.warn("conclusion and completedAt must be null or not null together")
         }
@@ -126,61 +126,57 @@ class GithubService @Autowired constructor(
         callMethod(OPERATION_UPDATE_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
     }
 
-    fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult {
+    override fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult {
         val accessToken = githubTokenService.getAccessToken(userId)
         if (accessToken == null) {
-//            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
-            val url = IGithubService.getGithubOauth(projectId, userId, repoHashId)
+            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
             return AuthorizeResult(HTTP_403, url)
         }
 
         return try {
-////            val repos = getRepositories(accessToken.accessToken)
-//            val repos = IGithubService.getProject(accessToken.accessToken, userId)
-//            val fmt = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault())
-//            val projects = repos.map {
-//                Project(
-//                        id = it.id.toString(),
-//                        name = it.name,
-//                        nameWithNameSpace = it.fullName,
-//                        sshUrl = it.sshUrl,
-//                        httpUrl = it.httpUrl,
-//                        lastActivity = TimeUnit.SECONDS.toMillis(ZonedDateTime.parse(it.updateAt, fmt).toEpochSecond())
-//                )
-//            }.toMutableList()
-            val projects = IGithubService.getProject(accessToken.accessToken, userId).toMutableList()
+            val repos = getRepositories(accessToken.accessToken)
+            val fmt = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault())
+            val projects = repos.map {
+                Project(
+                    id = it.id.toString(),
+                    name = it.name,
+                    nameWithNameSpace = it.fullName,
+                    sshUrl = it.sshUrl,
+                    httpUrl = it.httpUrl,
+                    lastActivity = TimeUnit.SECONDS.toMillis(ZonedDateTime.parse(it.updateAt, fmt).toEpochSecond())
+                )
+            }.toMutableList()
 
             AuthorizeResult(HTTP_200, "", projects)
         } catch (ignored: Throwable) {
             logger.warn("Github get project fail", ignored)
-//            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
-            val url = IGithubService.getGithubOauth(projectId, userId, repoHashId)
+            val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl
             AuthorizeResult(HTTP_403, url)
         }
     }
 
-//    fun getRepositories(token: String): List<GithubRepo> {
-//        val githubRepos = mutableListOf<GithubRepo>()
-//        var page = 0
-//        run outside@{
-//            while (page < PAGE_SIZE) {
-//                page++
-//                val request = buildGet(token, "user/repos?page=$page&per_page=$PAGE_SIZE")
-//                val body = getBody(OPERATION_GET_REPOS, request)
-//                val repos = objectMapper.readValue<List<GithubRepo>>(body)
-//                githubRepos.addAll(repos)
-//
-//                if (repos.size < PAGE_SIZE) {
-//                    return@outside
-//                }
-//            }
-//        }
-//        logger.info("GitHub get repos($githubRepos)")
-//
-//        return githubRepos
-//    }
+    fun getRepositories(token: String): List<GithubRepo> {
+        val githubRepos = mutableListOf<GithubRepo>()
+        var page = 0
+        run outside@{
+            while (page < PAGE_SIZE) {
+                page++
+                val request = buildGet(token, "user/repos?page=$page&per_page=$PAGE_SIZE")
+                val body = getBody(OPERATION_GET_REPOS, request)
+                val repos = objectMapper.readValue<List<GithubRepo>>(body)
+                githubRepos.addAll(repos)
 
-    fun getBranch(token: String, projectName: String, branch: String?): GithubBranch? {
+                if (repos.size < PAGE_SIZE) {
+                    return@outside
+                }
+            }
+        }
+        logger.info("GitHub get repos($githubRepos)")
+
+        return githubRepos
+    }
+
+    override fun getBranch(token: String, projectName: String, branch: String?): GithubBranch? {
         logger.info("getBranch| $projectName - $branch")
 
         return RetryUtils.execute(object : RetryUtils.Action<GithubBranch?> {
@@ -199,7 +195,7 @@ class GithubService @Autowired constructor(
         }, 1, SLEEP_MILLS_FOR_RETRY_500)
     }
 
-    fun getTag(token: String, projectName: String, tag: String): GithubTag? {
+    override fun getTag(token: String, projectName: String, tag: String): GithubTag? {
         logger.info("getTag| $projectName - $tag")
         return RetryUtils.execute(object : RetryUtils.Action<GithubTag?> {
             override fun fail(e: Throwable): GithubTag? {
@@ -217,7 +213,7 @@ class GithubService @Autowired constructor(
     }
 
     //TODO:脱敏
-    fun getFileContent(projectName: String, ref: String, filePath: String): String {
+    override fun getFileContent(projectName: String, ref: String, filePath: String): String {
         val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
         OkhttpUtils.doGet(url).use {
             logger.info("github content url: $url")
@@ -228,27 +224,27 @@ class GithubService @Autowired constructor(
 
     private fun buildPost(token: String, path: String, body: String): Request {
         return request(token, path)
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
-                .build()
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .build()
     }
 
     private fun buildPatch(token: String, path: String, body: String): Request {
         return request(token, path)
-                .patch(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
-                .build()
+            .patch(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .build()
     }
 
     private fun buildGet(token: String, path: String): Request {
         return request(token, path)
-                .get()
-                .build()
+            .get()
+            .build()
     }
 
     private fun request(token: String, path: String): Request.Builder {
         return Request.Builder()
-                .url("$GITHUB_API_URL/$path")
-                .header("Authorization", "token $token")
-                .header("Accept", " application/vnd.github.antiope-preview+json")
+            .url("$GITHUB_API_URL/$path")
+            .header("Authorization", "token $token")
+            .header("Accept", " application/vnd.github.antiope-preview+json")
     }
 
     private fun getBody(operation: String, request: Request): String {

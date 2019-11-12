@@ -28,9 +28,9 @@ package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.repository.pojo.scm.TokenCheckResult
 import com.tencent.devops.repository.pojo.scm.request.CommitCheckRequest
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -56,66 +56,66 @@ interface ServiceScmResource {
     @GET
     @Path("/latestRevision")
     fun getLatestRevision(
-            @ApiParam("项目名称", required = true)
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("branch name", required = false)
-            @QueryParam("branchName")
-            branchName: String? = null,
-            @ApiParam("SVN additional path", required = false)
-            @QueryParam("additionalPath")
-            additionalPath: String? = null,
-            @ApiParam("privateKey", required = false)
-            @QueryParam("privateKey")
-            privateKey: String?,
-            @ApiParam("passPhrase", required = false)
-            @QueryParam("passPhrase")
-            passPhrase: String?,
-            @ApiParam("token", required = false)
-            @QueryParam("token")
-            token: String?,
-            @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-            @QueryParam("region")
-            region: CodeSvnRegion?,
-            @ApiParam("仓库对应的用户名", required = false)
-            @QueryParam("userName")
-            userName: String?
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("branch name", required = false)
+        @QueryParam("branchName")
+        branchName: String? = null,
+        @ApiParam("SVN additional path", required = false)
+        @QueryParam("additionalPath")
+        additionalPath: String? = null,
+        @ApiParam("privateKey", required = false)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @ApiParam("passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @ApiParam("token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = false)
+        @QueryParam("userName")
+        userName: String?
     ): Result<RevisionInfo>
 
     @ApiOperation("List all the branches of repo")
     @GET
     @Path("/branches")
     fun listBranches(
-            @ApiParam("项目名称", required = true)
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("privateKey", required = true)
-            @QueryParam("privateKey")
-            privateKey: String?,
-            @ApiParam("passPhrase", required = false)
-            @QueryParam("passPhrase")
-            passPhrase: String?,
-            @ApiParam("token", required = false)
-            @QueryParam("token")
-            token: String?,
-            @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-            @QueryParam("region")
-            region: CodeSvnRegion?,
-            @ApiParam("仓库对应的用户名", required = false)
-            @QueryParam("userName")
-            userName: String?
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @ApiParam("passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @ApiParam("token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = false)
+        @QueryParam("userName")
+        userName: String?
     ): Result<List<String>>
 
     @ApiOperation("添加Git分支")
@@ -191,163 +191,163 @@ interface ServiceScmResource {
     @GET
     @Path("/tags")
     fun listTags(
-            @ApiParam("项目名称", required = true)
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("token", required = true)
-            @QueryParam("token")
-            token: String,
-            @ApiParam("仓库对应的用户名", required = true)
-            @QueryParam("userName")
-            userName: String
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam("仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String
     ): Result<List<String>>
 
     @ApiOperation("Check if the svn private key and passphrase legal")
     @GET
     @Path("tokenCheck")
     fun checkPrivateKeyAndToken(
-            @ApiParam("项目名称", required = true)
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("privateKey", required = true)
-            @QueryParam("privateKey")
-            privateKey: String?,
-            @ApiParam("passPhrase", required = false)
-            @QueryParam("passPhrase")
-            passPhrase: String?,
-            @ApiParam("token", required = false)
-            @QueryParam("token")
-            token: String?,
-            @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-            @QueryParam("region")
-            region: CodeSvnRegion?,
-            @ApiParam("仓库对应的用户名", required = false)
-            @QueryParam("userName")
-            userName: String
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @ApiParam("passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @ApiParam("token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = false)
+        @QueryParam("userName")
+        userName: String
     ): Result<TokenCheckResult>
 
     @ApiOperation("Check if the svn private key and passphrase legal")
     @GET
     @Path("usernameAndPasswordCheck")
     fun checkUsernameAndPassword(
-            @ApiParam("项目名称", required = true)
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("username", required = true)
-            @QueryParam("username")
-            username: String,
-            @ApiParam("password", required = false)
-            @QueryParam("password")
-            password: String,
-            @ApiParam("token", required = false)
-            @QueryParam("token")
-            token: String,
-            @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-            @QueryParam("region")
-            region: CodeSvnRegion?,
-            @ApiParam("仓库对应的用户名", required = false)
-            @QueryParam("repoUsername")
-            repoUsername: String
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("username", required = true)
+        @QueryParam("username")
+        username: String,
+        @ApiParam("password", required = false)
+        @QueryParam("password")
+        password: String,
+        @ApiParam("token", required = false)
+        @QueryParam("token")
+        token: String,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = false)
+        @QueryParam("repoUsername")
+        repoUsername: String
     ): Result<TokenCheckResult>
 
     @ApiOperation("添加Git或者Gitlab WEB hook")
     @POST
     @Path("addWebHook")
     fun addWebHook(
-            @ApiParam("项目名称", required = true)
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("privateKey", required = true)
-            @QueryParam("privateKey")
-            privateKey: String?,
-            @ApiParam("passPhrase", required = false)
-            @QueryParam("passPhrase")
-            passPhrase: String?,
-            @ApiParam("token", required = true)
-            @QueryParam("token")
-            token: String?,
-            @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-            @QueryParam("region")
-            region: CodeSvnRegion?,
-            @ApiParam("仓库对应的用户名", required = true)
-            @QueryParam("userName")
-            userName: String,
-            @ApiParam("事件类型", required = false)
-            @QueryParam("event")
-            event: String?
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @ApiParam("passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String,
+        @ApiParam("事件类型", required = false)
+        @QueryParam("event")
+        event: String?
     ): Result<Boolean>
 
     @ApiOperation("添加Git Commit Check")
     @POST
     @Path("addCommitCheck")
     fun addCommitCheck(
-            request: CommitCheckRequest
+        request: CommitCheckRequest
     ): Result<Boolean>
 
     @ApiOperation("lock svn")
     @POST
     @Path("lock")
     fun lock(
-            @ApiParam("项目ID", required = true)
-            @QueryParam("projectId")
-            projectId: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-            @QueryParam("region")
-            region: CodeSvnRegion?,
-            @ApiParam("仓库对应的用户名", required = true)
-            @QueryParam("userName")
-            userName: String
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String
     ): Result<Boolean>
 
     @ApiOperation("lock svn")
     @POST
     @Path("unlock")
     fun unlock(
-            @ApiParam("项目名称", required = true)
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("仓库地址", required = true)
-            @QueryParam("url")
-            url: String,
-            @ApiParam("仓库类型", required = true)
-            @QueryParam("type")
-            type: ScmType,
-            @ApiParam("仓库区域前缀（只有svn用到）", required = false)
-            @QueryParam("region")
-            region: CodeSvnRegion?,
-            @ApiParam("仓库对应的用户名", required = true)
-            @QueryParam("userName")
-            userName: String
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String
     ): Result<Boolean>
 
     @ApiOperation("List all the commits of repo")

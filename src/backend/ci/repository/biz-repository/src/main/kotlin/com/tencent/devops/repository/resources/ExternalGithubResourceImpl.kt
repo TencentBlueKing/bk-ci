@@ -30,14 +30,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalGithubResource
 import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.GithubService
+import com.tencent.devops.repository.service.github.IGithubService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
 class ExternalGithubResourceImpl @Autowired constructor(
-        private val githubService: GithubService,
+        private val githubService: IGithubService,
         private val githubOauthService: GithubOAuthService
 ) : ExternalGithubResource {
 

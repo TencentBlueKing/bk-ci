@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.external.pojo.GithubOauth
-import com.tencent.devops.external.pojo.GithubToken
 import com.tencent.devops.repository.api.ServiceGithubResource
+import com.tencent.devops.repository.pojo.github.GithubOauth
+import com.tencent.devops.repository.pojo.github.GithubToken
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody

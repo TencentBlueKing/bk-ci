@@ -47,11 +47,11 @@ import io.swagger.annotations.ApiModel
     "assignee": null,
     "author": {
         "id": 23906,
-        "username": "jsonwan",
-        "web_url": "http://git.code.oa.com/u/jsonwan",
-        "name": "jsonwan",
+        "username": "user1",
+        "web_url": "http://git.xxx.com/u/user1",
+        "name": "user1",
         "state": "active",
-        "avatar_url": "http://git.code.oa.com/assets/images/avatar/no_user_avatar.png"
+        "avatar_url": "http://git.xxx.com/assets/images/avatar/no_user_avatar.png"
     },
     "milestone": null,
     "necessary_reviewers": null,

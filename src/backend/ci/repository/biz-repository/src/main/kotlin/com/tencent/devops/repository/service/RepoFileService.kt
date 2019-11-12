@@ -37,7 +37,7 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.github.GithubService
+import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -54,7 +54,7 @@ class RepoFileService @Autowired constructor(
     private val gitTokenDao: GitTokenDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val githubService: GithubService,
+    private val githubService: IGithubService,
     private val repositoryScmService: RepostioryScmService
 ) {
 
@@ -208,7 +208,6 @@ class RepoFileService @Autowired constructor(
     private fun getGithubFile(repo: GithubRepository, filePath: String, ref: String, subModule: String?): String {
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGithubFile for projectName: $projectName")
-//        return client.get(ServiceGithubResource::class).getFileContent(projectName!!, ref, filePath).data ?: ""
         return githubService.getFileContent(projectName!!, ref, filePath)
     }
 
