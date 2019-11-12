@@ -64,7 +64,7 @@ class WebsocketConfiguration {
      */
     @Bean
     fun pipelineWebSocketFanoutExchange(): FanoutExchange {
-        return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, false, false)
+        return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, true, false)
     }
 
     @Bean
