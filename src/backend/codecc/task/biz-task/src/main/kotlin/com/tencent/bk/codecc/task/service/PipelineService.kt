@@ -35,8 +35,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.repository.pojo.Repository
 
-interface LogServiceImpl
-PipelineServiceImplPipelineService {
+interface PipelineService {
 
     /**
      * 获取创建流水线参数
