@@ -78,6 +78,7 @@ class ImageProjectService @Autowired constructor(
     ) {
         val result =
             client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )
