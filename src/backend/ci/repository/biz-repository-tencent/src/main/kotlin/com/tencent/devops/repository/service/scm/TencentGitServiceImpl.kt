@@ -42,9 +42,11 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import javax.servlet.http.HttpServletResponse
 
+@Primary
 @Service
 class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitService {
 

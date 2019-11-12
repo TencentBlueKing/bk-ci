@@ -34,8 +34,10 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IScmOauthService {
 

@@ -36,9 +36,11 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotSupportedException
 
+@Primary
 @Service
 class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmService {
 

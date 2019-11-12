@@ -31,8 +31,10 @@ import com.tencent.devops.scm.api.ServiceSvnResource
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.pojo.SvnFileInfo
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnService {
     override fun getFileContent(
