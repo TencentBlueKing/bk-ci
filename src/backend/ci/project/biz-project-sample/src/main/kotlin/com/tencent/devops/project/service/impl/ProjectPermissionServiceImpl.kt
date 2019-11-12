@@ -42,13 +42,18 @@ import org.springframework.stereotype.Service
 class ProjectPermissionServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val bkAuthProjectApi: AuthProjectApi,
-    private val bkAuthResourceApi: AuthResourceApi,
+    private val authProjectApi: AuthProjectApi,
+    private val authResourceApi: AuthResourceApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
 
-    override fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean {
-        return true
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
+        val projectCodes = authProjectApi.getUserProjects(
+            serviceCode = projectAuthServiceCode,
+            userId = userId,
+            supplier = supplierForPermission
+        )
+        return projectCodes.contains(projectCode)
     }
 
     private val supplierForPermission = {
@@ -59,22 +64,16 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         fakeList
     }
 
-//    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-////
-//////        return bkAuthProjectApi.getUserProjectsAvailable(
-//////            serviceCode = projectAuthServiceCode,
-//////            userId = userId,
-//////            supplier = supplierForPermission
-//////        )
-////        return emptyMap()
-////    }
-
-    override fun getUserProjectsAvailable(userId: String): List<String> {
-        return emptyList()
+    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+        return authProjectApi.getUserProjectsAvailable(
+            serviceCode = projectAuthServiceCode,
+            userId = userId,
+            supplier = supplierForPermission
+        )
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        return bkAuthProjectApi.getUserProjects(
+        return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
             supplier = supplierForPermission
@@ -82,7 +81,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(projectCode: String, projectName: String) {
-        bkAuthResourceApi.modifyResource(
+        authResourceApi.modifyResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
@@ -93,7 +92,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun deleteResource(projectCode: String) {
 
-        bkAuthResourceApi.deleteResource(
+        authResourceApi.deleteResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
@@ -102,21 +101,12 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResources(userId: String, projectList: List<ResourceRegisterInfo>) {
-        bkAuthResourceApi.batchCreateResource(
+        authResourceApi.batchCreateResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             resourceList = projectList,
             projectCode = BK_DEVOPS_SCOPE,
             user = userId
         )
-    }
-
-    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
-        val projectCodes = bkAuthProjectApi.getUserProjects(
-            serviceCode = projectAuthServiceCode,
-            userId = userId,
-            supplier = supplierForPermission
-        )
-        return projectCodes.contains(projectCode)
     }
 }

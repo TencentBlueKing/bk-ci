@@ -32,8 +32,9 @@ interface ProjectPermissionService {
 
     /**
      * 校验用户是否有这个项目的权限
+     * @param accessToken 用于超级管理员绕过项目成员的限制，可为空
      */
-    fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean
+    fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String): Boolean
 
     fun createResources(userId: String, projectList: List<ResourceRegisterInfo>)
 
@@ -43,4 +44,5 @@ interface ProjectPermissionService {
 
     fun getUserProjects(userId: String): List<String>
 
-    fun getUserProjectsAvailable(userId: String): Map<String, String>}
+    fun getUserProjectsAvailable(userId: String): Map<String, String>
+}

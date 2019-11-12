@@ -50,31 +50,6 @@ class AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authProperties() = AuthProperties()
-
-//    @Bean
-//    fun bkAuthProperties(@Autowired authProperties: AuthProperties):BkAuthProperties {
-//        return BkAuthProperties(
-//            envName = authProperties.envName,
-//            idProvider = authProperties.idProvider,
-//            grantType = authProperties.grantType,
-//            url = authProperties.url,
-//            bcsSecret = authProperties.bcsSecret,
-//            codeSecret = authProperties.codeSecret,
-//            pipelineSecret = authProperties.pipelineSecret,
-//            artifactorySecret = authProperties.artifactorySecret,
-//            ticketSecret = authProperties.ticketSecret,
-//            environmentSecret = authProperties.environmentSecret,
-//            experienceSecret = authProperties.experienceSecret,
-//            thirdPartyAgentSecret = authProperties.thirdPartyAgentSecret,
-//            vsSecret = authProperties.vsSecret,
-//            qualitySecret = authProperties.qualitySecret,
-//            wetestSecret = authProperties.wetestSecret
-//        )
-//    }
-
-    @Bean
-    @Primary
     fun bsAuthTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
         BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
 

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -66,7 +67,6 @@ interface ServiceProjectResource {
         userId: String
     ): Result<List<ProjectVO>>
 
-    // TODO 需移动到企业版，该接口为企业版特有
     @GET
     @Path("/getAllProject")
     @ApiOperation("查询所有项目")
@@ -118,6 +118,9 @@ interface ServiceProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @ApiOperation(" 校验用户是否项目成员")
     fun verifyUserProjectPermission(
+        @ApiParam("accessToken", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String? = null,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,

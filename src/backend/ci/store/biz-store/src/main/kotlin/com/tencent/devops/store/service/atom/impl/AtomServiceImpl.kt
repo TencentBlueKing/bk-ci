@@ -139,7 +139,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("getPipelineAtoms projectCode is :$projectCode,category is :$category,classifyId is :$classifyId,page is :$page,pageSize is :$pageSize")
         val validateFlag: Boolean?
         try {
-            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(projectCode, userId).data
+            validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                accessToken = accessToken,
+                projectCode = projectCode,
+                userId = userId
+            ).data
         } catch (e: Exception) {
             logger.info("verifyUserProjectPermission error is :$e")
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
