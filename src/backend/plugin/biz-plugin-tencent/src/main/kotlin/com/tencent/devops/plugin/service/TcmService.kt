@@ -53,10 +53,10 @@ class TcmService @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
 
-    @Value("\${app.code}")
+    @Value("\${esb.appCode}")
     private val appCode = ""
 
-    @Value("\${app.secret}")
+    @Value("\${esb.appSecret}")
     private val appSecret = ""
 
     @Value("\${tcm.apps.url}")

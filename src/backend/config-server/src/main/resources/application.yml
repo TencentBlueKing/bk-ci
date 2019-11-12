@@ -32,8 +32,8 @@ spring:
     config:
       server:
         git:
-          uri: file:///data/bkci/config/devops-config
-          default-label: prod
+          uri: file:///data/bkci/config-server/devops-config
+          default-label: master
     consul:
       discovery:
         tags: prod
@@ -44,8 +44,3 @@ server:
 ---
 spring:
   profiles: prod-gray
-  cloud:
-    config:
-      server:
-        git:
-          default-label: prod-gray
