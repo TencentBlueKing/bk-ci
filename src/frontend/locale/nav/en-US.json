@@ -138,6 +138,8 @@
         "artifactory": "Artifactory",
         "store": "Store",
         "environment": "Environment",
+        "environmentManage": "Environment",
+        "xinghai": "XingHai",
         "experience": "Experience",
         "quality": "Quality",
         "vs": "Vs",
