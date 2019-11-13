@@ -40,10 +40,7 @@ import javax.ws.rs.core.Response
 
 @Service
 class LogServiceDispatcher @Autowired constructor(
-    private val logService: PipelineLogService,
-    private val indexService: IndexService,
-    private val logServiceV2: LogServiceV2,
-    private val v2ProjectService: V2ProjectService
+    private val logServiceV2: LogServiceV2
 ) {
 
     fun getInitLogs(
@@ -56,31 +53,16 @@ class LogServiceDispatcher @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        if (v2ProjectService.buildEnable(buildId, projectId)) {
-            return Result(
-                logServiceV2.queryInitLogs(
-                    buildId,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                    jobId,
-                    executeCount
-                )
+        return Result(
+            logServiceV2.queryInitLogs(
+                buildId,
+                isAnalysis ?: false,
+                queryKeywords,
+                tag,
+                jobId,
+                executeCount
             )
-        } else {
-            val indexAndType = indexService.parseIndexAndType(buildId)
-            return Result(
-                logService.queryInitLogs(
-                    buildId,
-                    indexAndType.left,
-                    indexAndType.right,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                    executeCount
-                )
-            )
-        }
+        )
     }
 
     fun getInitLogsPage(
@@ -96,7 +78,6 @@ class LogServiceDispatcher @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<PageQueryLogs> {
-        if (v2ProjectService.buildEnable(buildId, projectId)) {
             return Result(
                 logServiceV2.queryInitLogsPage(
                     buildId,
@@ -109,22 +90,6 @@ class LogServiceDispatcher @Autowired constructor(
                     pageSize ?: -1
                 )
             )
-        } else {
-            val indexAndType = indexService.parseIndexAndType(buildId)
-            return Result(
-                logService.queryInitLogsPage(
-                    buildId,
-                    indexAndType.left,
-                    indexAndType.right,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                        executeCount,
-                    page ?: -1,
-                    pageSize ?: -1
-                )
-            )
-        }
     }
 
     fun getMoreLogs(
@@ -139,7 +104,6 @@ class LogServiceDispatcher @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        if (v2ProjectService.buildEnable(buildId, projectId)) {
             return Result(
                 logServiceV2.queryMoreLogsBetweenLines(
                     buildId,
@@ -152,23 +116,6 @@ class LogServiceDispatcher @Autowired constructor(
                         executeCount
                 )
             )
-        } else {
-            val indexAndType = indexService.parseIndexAndType(buildId)
-
-            return Result(
-                logService.queryMoreLogsBetweenLines(
-                    buildId,
-                    indexAndType.left,
-                    indexAndType.right,
-                    num ?: 100,
-                    fromStart ?: true,
-                    start,
-                    end,
-                    tag,
-                    executeCount
-                )
-            )
-        }
     }
 
     fun getAfterLogs(
@@ -182,7 +129,6 @@ class LogServiceDispatcher @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        if (v2ProjectService.buildEnable(buildId, projectId)) {
             return Result(
                 logServiceV2.queryMoreLogsAfterLine(
                     buildId,
@@ -194,22 +140,6 @@ class LogServiceDispatcher @Autowired constructor(
                         executeCount
                 )
             )
-        } else {
-            val indexAndType = indexService.parseIndexAndType(buildId)
-
-            return Result(
-                logService.queryMoreLogsAfterLine(
-                    buildId,
-                    indexAndType.left,
-                    indexAndType.right,
-                    start,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                    executeCount
-                )
-            )
-        }
     }
 
     fun downloadLogs(
@@ -220,11 +150,7 @@ class LogServiceDispatcher @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        return if (v2ProjectService.buildEnable(buildId, projectId)) {
-            logServiceV2.downloadLogs(pipelineId, buildId, tag, jobId, executeCount)
-        } else {
-            logService.downloadLogs(pipelineId, buildId, tag ?: "", executeCount)
-        }
+        return logServiceV2.downloadLogs(pipelineId, buildId, tag, jobId, executeCount)
     }
 
     fun getEndLogs(
@@ -237,34 +163,18 @@ class LogServiceDispatcher @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
-        return if (v2ProjectService.buildEnable(buildId, projectId)) {
-            Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, jobId, executeCount, size))
-        } else {
-            Result(logService.getEndLogs(pipelineId, buildId, tag ?: "", executeCount, size))
-        }
+        return Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, jobId, executeCount, size))
     }
 
     fun logEvent(event: LogEvent) {
-        if (v2ProjectService.buildEnable(event.buildId)) {
-            logServiceV2.addLogEvent(event)
-        } else {
-            logService.addLogEvent(event)
-        }
+        logServiceV2.addLogEvent(event)
     }
 
     fun logBatchEvent(event: LogBatchEvent) {
-        if (v2ProjectService.buildEnable(event.buildId)) {
-            logServiceV2.addBatchLogEvent(event)
-        } else {
-            logService.addBatchLogEvent(event)
-        }
+        logServiceV2.addBatchLogEvent(event)
     }
 
     fun logStatusEvent(event: LogStatusEvent) {
-        if (v2ProjectService.buildEnable(event.buildId)) {
-            logServiceV2.updateLogStatus(event)
-        } else {
-            logService.upsertLogStatus(event)
-        }
+        logServiceV2.updateLogStatus(event)
     }
 }

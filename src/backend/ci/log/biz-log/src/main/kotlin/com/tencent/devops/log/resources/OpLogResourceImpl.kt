@@ -31,10 +31,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.OpLogResource
 import com.tencent.devops.log.cron.CleanBuildJob
 import com.tencent.devops.log.cron.ESIndexCloseJob
-import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.service.IndexService
-import com.tencent.devops.log.service.PipelineLogService
-import com.tencent.devops.log.service.V2ProjectService
 import com.tencent.devops.log.service.v2.LogServiceV2
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -44,36 +40,10 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class OpLogResourceImpl @Autowired constructor(
-    private val indexService: IndexService,
-    private val logService: PipelineLogService,
-    private val v2ProjectService: V2ProjectService,
     private val esIndexCloseJob: ESIndexCloseJob,
     private val cleanBuildJob: CleanBuildJob,
     private val logServiceV2: LogServiceV2
 ) : OpLogResource {
-
-    override fun preCreateIndices(numDays: Int): Result<Int> {
-        if (numDays <= 0 || numDays > 1000) {
-            throw IllegalArgumentException("无效的 numDays")
-        }
-        return Result(logService.preCreateIndices(numDays))
-    }
-
-    override fun createLogStatus(): Result<Boolean> {
-        return Result(logService.createLogStatusIndex())
-    }
-
-    override fun enableV2(projectId: String, enable: Boolean): Result<Boolean> {
-        return if (enable) {
-            Result(v2ProjectService.enable(projectId))
-        } else {
-            return Result(v2ProjectService.disable(projectId))
-        }
-    }
-
-    override fun getV2Projects(): Result<Set<String>> {
-        return Result(v2ProjectService.getEnableProjects())
-    }
 
     override fun getBuildExpire(): Result<Int> {
         return Result(cleanBuildJob.getExpire())
@@ -95,60 +65,5 @@ class OpLogResourceImpl @Autowired constructor(
 
     override fun reopenIndex(buildId: String): Result<Boolean> {
         return Result(logServiceV2.reopenIndex(buildId))
-    }
-
-    override fun getInitLogs(
-        buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
-        tag: String?,
-        executeCount: Int?
-    ): Result<QueryLogs> {
-
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-                logService.queryInitLogs(
-                        buildId, indexAndType.left, indexAndType.right, isAnalysis ?: false,
-                        queryKeywords, tag, executeCount
-                )
-        )
-    }
-
-    override fun getMoreLogs(
-        buildId: String,
-        num: Int?,
-        fromStart: Boolean?,
-        start: Long,
-        end: Long,
-        tag: String?,
-        executeCount: Int?
-    ): Result<QueryLogs> {
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-                logService.queryMoreLogsBetweenLines(
-                        buildId, indexAndType.left, indexAndType.right, num ?: 100,
-                        fromStart ?: true, start, end, tag, executeCount
-                )
-        )
-    }
-
-    override fun getAfterLogs(
-        buildId: String,
-        start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
-        tag: String?,
-        executeCount: Int?
-    ): Result<QueryLogs> {
-        val indexAndType = indexService.parseIndexAndType(buildId)
-
-        return Result(
-                logService.queryMoreLogsAfterLine(
-                        buildId, indexAndType.left, indexAndType.right, start,
-                        isAnalysis ?: false, queryKeywords, tag, executeCount
-                )
-        )
     }
 }
