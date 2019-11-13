@@ -6,17 +6,20 @@ const yargs = require('yargs')
 const argv = yargs.alias({
     'dist': 'd',
     'env': 'e',
-    'lsVersion': 'l'
+    'lsVersion': 'l',
+    'type': 't'
 }).default({
     'dist': 'frontend',
     'env': 'master',
-    'lsVersion': 'dev'
+    'lsVersion': 'dev',
+    'type': 'tencent'
 }).describe({
     'dist': 'build output dist directory',
     'env': 'environment [dev, test, master, external]',
-    'lsVersion': 'localStorage version'
+    'lsVersion': 'localStorage version',
+    'type': 'bkdevops version 【ee | tencent】'
 }).argv
-const { dist, env, lsVersion } = argv
+const { dist, env, lsVersion, type } = argv
 
 
 const svgSpriteConfig = {
@@ -47,7 +50,7 @@ task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
 task('copy', () => src(['common-lib/**'], { 'base': '.' }).pipe(dest(`${dist}/`)))
 task('build', cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
-    require('child_process').exec(`yarn build:${env} -- -- --env.dist=${dist} --env.lsVersion=${lsVersion}`, {
+    require('child_process').exec(`yarn build:${env} -- -- --env.dist=${dist} --env.version=${type} --env.lsVersion=${lsVersion}`, {
         maxBuffer: 5000 * 1024
     }, (err, res) => {
         if (err) {

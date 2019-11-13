@@ -46,10 +46,10 @@ request.interceptors.request.use(config => {
             ...(config.headers || {}),
             'X-DEVOPS-PROJECT-ID': routePid
         } : config.headers
-    };
-  }, function (error) {
-    return Promise.reject(error);
-  });
+    }
+}, function (error) {
+    return Promise.reject(error)
+})
 
 // request.interceptors.response.use(response => {
 //     injectCSRFTokenToHeaders() // 注入csrfToken
