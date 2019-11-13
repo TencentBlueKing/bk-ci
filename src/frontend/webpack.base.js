@@ -4,7 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 // const TerserPlugin = require('terser-webpack-plugin')
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
@@ -74,7 +74,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             ]
         },
         plugins: [
-            new BundleAnalyzerPlugin(),
+            // new BundleAnalyzerPlugin(),
             new VueLoaderPlugin(),
             new webpack.optimize.LimitChunkCountPlugin({
                 minChunkSize: 1000
