@@ -76,8 +76,6 @@ class IndexServiceV2 @Autowired constructor(
                             } finally {
                                 redisLock.unlock()
                             }
-                            logger.warn("[$buildId] Fail to get the index")
-                            throw RuntimeException("Fail to get index")
                         }
                         indexName!!
                     }
