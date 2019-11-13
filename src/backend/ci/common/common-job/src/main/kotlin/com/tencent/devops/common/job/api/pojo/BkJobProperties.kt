@@ -26,10 +26,13 @@
 
 package com.tencent.devops.common.job.api.pojo
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-data class BkJobProperties(
-    val url: String? = null,
+class BkJobProperties {
+    @Value("\${job.nginx.url:#{null}}")
+    val url: String? = null
+    @Value("\${job.nginx.linkUrl:#{null}}")
     val linkUrl: String? = null
-)
+}
