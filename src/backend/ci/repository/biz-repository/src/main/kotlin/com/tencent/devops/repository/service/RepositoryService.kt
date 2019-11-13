@@ -101,10 +101,10 @@ class RepositoryService @Autowired constructor(
     private val repositoryPermissionService: RepositoryPermissionService
 ) {
 
-    @Value("\${git.devopsPrivateToken}")
+    @Value("\${repository.git.devopsPrivateToken}")
     private lateinit var devopsPrivateToken: String
 
-    @Value("\${git.devopsGroupName}")
+    @Value("\${repository.git.devopsGroupName}")
     private lateinit var devopsGroupName: String
 
     fun hasAliasName(projectId: String, repositoryHashId: String?, aliasName: String): Boolean {
