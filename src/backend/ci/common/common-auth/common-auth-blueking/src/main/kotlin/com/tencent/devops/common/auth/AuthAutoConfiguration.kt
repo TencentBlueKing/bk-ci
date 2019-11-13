@@ -44,14 +44,15 @@ import com.tencent.devops.common.auth.code.BkRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BkTicketAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 
 @Configuration
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class AuthAutoConfiguration {
