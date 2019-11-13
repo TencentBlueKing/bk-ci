@@ -68,7 +68,7 @@ class JobAutoConfiguration {
     )
 
     @Bean
-    @Profile("dev", "default")
+    @Profile("dev", "default", "local")
     fun bkJobPropertiesDev(jobProperties: JobProperties) = BkJobProperties(
             jobProperties.devUrl, jobProperties.devLinkUrl
     )
