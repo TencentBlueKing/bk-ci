@@ -51,23 +51,23 @@ import javax.servlet.http.HttpServletResponse
 class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitService {
 
     override fun getProject(accessToken: String, userId: String): List<Project> {
-        return client.get(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
+        return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): GitToken {
-        return client.get(ServiceGitResource::class).refreshToken(userId = userId, accessToken = accessToken).data!!
+        return client.getScm(ServiceGitResource::class).refreshToken(userId = userId, accessToken = accessToken).data!!
     }
 
     override fun getAuthUrl(authParamJsonStr: String): String {
-        return client.get(ServiceGitResource::class).getAuthUrl(authParamJsonStr = authParamJsonStr).data!!
+        return client.getScm(ServiceGitResource::class).getAuthUrl(authParamJsonStr = authParamJsonStr).data!!
     }
 
     override fun getToken(userId: String, code: String): GitToken {
-        return client.get(ServiceGitResource::class).getToken(userId = userId, code = code).data!!
+        return client.getScm(ServiceGitResource::class).getToken(userId = userId, code = code).data!!
     }
 
     override fun getRedirectUrl(redirectUrlType: String?): String {
-        return client.get(ServiceGitResource::class).getRedirectUrl(authParamJsonStr = redirectUrlType!!).data!!
+        return client.getScm(ServiceGitResource::class).getRedirectUrl(authParamJsonStr = redirectUrlType!!).data!!
     }
 
     override fun getGitFileContent(
@@ -77,7 +77,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         token: String,
         ref: String
     ): String {
-        return client.get(ServiceGitResource::class).getGitFileContent(
+        return client.getScm(ServiceGitResource::class).getGitFileContent(
             repoName = repoName,
             filePath = filePath,
             authType = authType,
@@ -93,7 +93,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         ref: String,
         accessToken: String
     ): String {
-        return client.get(ServiceGitResource::class).getGitlabFileContent(
+        return client.getScm(ServiceGitResource::class).getGitlabFileContent(
             repoName = repoName,
             filePath = filePath,
             ref = ref,
@@ -110,7 +110,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         visibilityLevel: VisibilityLevelEnum?,
         tokenType: TokenTypeEnum
     ): Result<GitRepositoryResp?> {
-        return client.get(ServiceGitResource::class).createGitCodeRepository(
+        return client.getScm(ServiceGitResource::class).createGitCodeRepository(
             userId = userId,
             token = token,
             repositoryName = repositoryName,
@@ -128,7 +128,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         token: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        return client.get(ServiceGitResource::class).addGitProjectMember(
+        return client.getScm(ServiceGitResource::class).addGitProjectMember(
             userIdList = userIdList,
             repositorySpaceName = repoName,
             gitAccessLevel = gitAccessLevel,
@@ -143,7 +143,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         token: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        return client.get(ServiceGitResource::class).deleteGitProjectMember(
+        return client.getScm(ServiceGitResource::class).deleteGitProjectMember(
             userIdList = userIdList,
             repositorySpaceName = repoName,
             token = token,
@@ -157,7 +157,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         token: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        return client.get(ServiceGitResource::class).updateGitCodeRepository(
+        return client.getScm(ServiceGitResource::class).updateGitCodeRepository(
             token = token,
             projectName = projectName,
             updateGitProjectInfo = updateGitProjectInfo,
@@ -171,7 +171,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         token: String,
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?> {
-        return client.get(ServiceGitResource::class).moveProjectToGroup(
+        return client.getScm(ServiceGitResource::class).moveProjectToGroup(
             groupCode = groupCode,
             repositoryName = repoName,
             token = token,
@@ -180,7 +180,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
     }
 
     override fun getMrInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo {
-        return client.get(ServiceGitResource::class).getMergeRequestInfo(
+        return client.getScm(ServiceGitResource::class).getMergeRequestInfo(
             repoName = repoName,
             mrId = mrId,
             tokenType = tokenType,
@@ -195,7 +195,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         tokenType: TokenTypeEnum,
         response: HttpServletResponse
     ) {
-        client.get(ServiceGitResource::class).downloadGitRepoFile(
+        client.getScm(ServiceGitResource::class).downloadGitRepoFile(
             repoName = repoName,
             sha = sha,
             token = token,
@@ -210,7 +210,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         tokenType: TokenTypeEnum,
         token: String
     ): GitMrReviewInfo {
-        return client.get(ServiceGitResource::class).getMergeRequestReviewersInfo(
+        return client.getScm(ServiceGitResource::class).getMergeRequestReviewersInfo(
             repoName = repoName,
             mrId = mrId,
             tokenType = tokenType,
@@ -224,7 +224,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         tokenType: TokenTypeEnum,
         token: String
     ): GitMrChangeInfo {
-        return client.get(ServiceGitResource::class).getMergeRequestChangeInfo(
+        return client.getScm(ServiceGitResource::class).getMergeRequestChangeInfo(
             repoName = repoName,
             mrId = mrId,
             tokenType = tokenType,

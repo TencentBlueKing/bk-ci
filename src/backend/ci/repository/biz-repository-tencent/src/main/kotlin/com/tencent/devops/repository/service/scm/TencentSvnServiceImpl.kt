@@ -46,7 +46,7 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
         credential1: String,
         credential2: String?
     ): String {
-        return client.get(ServiceSvnResource::class).getFileContent(
+        return client.getScm(ServiceSvnResource::class).getFileContent(
             url = url,
             userId = userId,
             svnType = svnType,
@@ -67,7 +67,7 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
         credential2: String,
         credential3: String?
     ): List<SvnFileInfo> {
-        return client.get(ServiceSvnResource::class).getDirectories(
+        return client.getScm(ServiceSvnResource::class).getDirectories(
             url = url,
             userId = userId,
             svnType = svnType,

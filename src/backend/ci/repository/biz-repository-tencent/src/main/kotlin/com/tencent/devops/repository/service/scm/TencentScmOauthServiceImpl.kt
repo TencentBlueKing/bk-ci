@@ -52,7 +52,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         region: CodeSvnRegion?,
         userName: String?
     ): RevisionInfo {
-        return client.get(ServiceScmOauthResource::class).getLatestRevision(
+        return client.getScm(ServiceScmOauthResource::class).getLatestRevision(
             projectName = projectName,
             url = url,
             type = type,
@@ -75,7 +75,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         region: CodeSvnRegion?,
         userName: String?
     ): List<String> {
-        return client.get(ServiceScmOauthResource::class).listBranches(
+        return client.getScm(ServiceScmOauthResource::class).listBranches(
             projectName = projectName,
             url = url,
             type = type,
@@ -94,7 +94,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         token: String,
         userName: String
     ): List<String> {
-        return client.get(ServiceScmOauthResource::class).listTags(
+        return client.getScm(ServiceScmOauthResource::class).listTags(
             projectName = projectName,
             url = url,
             type = type,
@@ -113,7 +113,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         region: CodeSvnRegion?,
         userName: String
     ): TokenCheckResult {
-        return client.get(ServiceScmOauthResource::class).checkPrivateKeyAndToken(
+        return client.getScm(ServiceScmOauthResource::class).checkPrivateKeyAndToken(
             projectName = projectName,
             url = url,
             type = type,
@@ -136,7 +136,7 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
         userName: String,
         event: String?
     ) {
-        client.get(ServiceScmOauthResource::class).addWebHook(
+        client.getScm(ServiceScmOauthResource::class).addWebHook(
             projectName = projectName,
             url = url,
             type = type,
@@ -150,6 +150,6 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
     }
 
     override fun addCommitCheck(request: CommitCheckRequest) {
-        client.get(ServiceScmOauthResource::class).addCommitCheck(request)
+        client.getScm(ServiceScmOauthResource::class).addCommitCheck(request)
     }
 }
