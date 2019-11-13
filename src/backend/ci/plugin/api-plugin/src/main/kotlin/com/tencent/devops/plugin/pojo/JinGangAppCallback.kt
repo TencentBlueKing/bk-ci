@@ -55,12 +55,3 @@ data class JinGangAppCallback(
     val responseUser: String
 
 )
-/*
-'{"status":"0","msg":"","buildId":"0","taskId":"0",
-"md5":"a781144592236df91e763847ca2b5f6a",
-"scan_url":"http://kk.oa.com:8080/report/new/8c3fd81aa725b0908aa5dcb5d4ed7788629876.html",
-"scan_xml":"http://kk.oa.com:8080/report/xml/8c3fd81aa725b0908aa5dcb5d4ed7788.xml",
-"responseuser":"tom"}'
-
-
- */

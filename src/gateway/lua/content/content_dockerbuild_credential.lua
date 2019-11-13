@@ -1,16 +1,17 @@
 --- 初始化HTTP连接
 local httpc = http.new()
-local jfrogConfig = config.jfrog
+local jfrogConfig = config.artifactory
 --- 开始连接
 httpc:set_timeout(3000)
 httpc:connect(jfrogConfig.host, jfrogConfig.port)
 --- 发送请求
+local auth_code = ngx.encode_base64(config.artifactory.user .. ":" .. config.artifactory.password)
 local res, err = httpc:request({
   path = "/api/plugins/execute/createDockerUser?params=projectCode=" .. ngx.var.projectId .. ";permanent=false",
   method = "GET",
   headers = {
     ["Host"] = jfrogConfig.host,
-    ["Authorization"] = jfrogConfig.auth_code,
+    ["Authorization"] = auth_code,
   }
 })
 httpc:set_keepalive(60000, 5)
@@ -49,6 +50,6 @@ local return_result = {
   user = result.data.user,
   password = result.data.password,
   host = jfrogConfig.host,
-  port = jfrogConfig.docker_port
+  port = jfrogConfig.docker
 }
 ngx.say(json.encode(return_result))

@@ -56,7 +56,9 @@ s3:
   bucketName: __BKCI_S3_BUCKET__
 
 auth:
-  idProvider: bk_login
+  # idProvider为权限中心对接方式，sample(开源默认实现无鉴权)/ bk_login（蓝鲸登录) / client
+  # 选择sample后以下配置无效
+  idProvider: __AUTH_PROVIDER__
   grantType: rization_code
   principalType: user
   envName: prod

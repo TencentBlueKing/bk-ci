@@ -65,6 +65,8 @@ class GitUtilsTest {
     fun getProjectName() {
         var projectName = GitUtils.getProjectName("git@github.com:Tencent/bk-ci.git")
         assertEquals(repoName, projectName)
+        projectName = GitUtils.getProjectName("git@git.xxx.com:Tencent/bk-ci.git")
+        assertEquals(repoName, projectName)
         projectName = GitUtils.getProjectName("https://github.com/Tencent/bk-ci.git")
         assertEquals(repoName, projectName)
         projectName = GitUtils.getProjectName("http://github.com/Tencent/bk-ci.git")

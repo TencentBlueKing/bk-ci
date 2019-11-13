@@ -33,8 +33,8 @@ import com.tencent.devops.gitci.OBJECT_KIND_MERGE_REQUEST
 {
     "object_kind":"merge_request",
     "user":{
-        "name":"aaronxsheng",
-        "username":"aaronxsheng",
+        "name":"user1",
+        "username":"user1",
         "avatar_url":null
     },
     "object_attributes":{
@@ -57,31 +57,31 @@ import com.tencent.devops.gitci.OBJECT_KIND_MERGE_REQUEST
         "description":"ddd",
         "source":{
             "name":"aaron-git-test",
-            "ssh_url":"git@git.code.oa.com:aaronxsheng/aaron-git-test.git",
-            "http_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test.git",
-            "web_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test",
-            "namespace":"aaronxsheng",
+            "ssh_url":"git@git.xxx.com:user1/aaron-git-test.git",
+            "http_url":"http://git.xxx.com/user1/aaron-git-test.git",
+            "web_url":"http://git.xxx.com/user1/aaron-git-test",
+            "namespace":"user1",
             "visibility_level":0
         },
         "target":{
             "name":"aaron-git-test",
-            "ssh_url":"git@git.code.oa.com:aaronxsheng/aaron-git-test.git",
-            "http_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test.git",
-            "web_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test",
-            "namespace":"aaronxsheng",
+            "ssh_url":"git@git.xxx.com:user1/aaron-git-test.git",
+            "http_url":"http://git.xxx.com/user1/aaron-git-test.git",
+            "web_url":"http://git.xxx.com/user1/aaron-git-test",
+            "namespace":"user1",
             "visibility_level":0
         },
         "last_commit":{
             "id":"1663cbea34521a3c8097046716306d2fbdd9cfea",
             "message":"ddd",
             "timestamp":"2018-11-19T08:41:32+0000",
-            "url":"http://git.code.oa.com/aaronxsheng/aaron-git-test/commits/1663cbea34521a3c8097046716306d2fbdd9cfea",
+            "url":"http://git.xxx.com/user1/aaron-git-test/commits/1663cbea34521a3c8097046716306d2fbdd9cfea",
             "author":{
-                "name":"aaronxsheng",
-                "email":"aaronxsheng@tencent.com"
+                "name":"user1",
+                "email":"user1@tencent.com"
             }
         },
-        "url":"http://git.code.oa.com/aaronxsheng/aaron-git-test/merge_requests/3",
+        "url":"http://git.xxx.com/user1/aaron-git-test/merge_requests/3",
         "action":"open" / "close",
         "extension_action":"push-update"
     }

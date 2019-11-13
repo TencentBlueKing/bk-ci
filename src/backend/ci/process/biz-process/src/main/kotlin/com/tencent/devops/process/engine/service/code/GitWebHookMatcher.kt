@@ -38,6 +38,7 @@ import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 import java.util.regex.Pattern
@@ -416,7 +417,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             is GitMergeRequestEvent -> event.object_attributes.target.ssh_url
             else -> ""
         }
-        return sshUrl.removePrefix("git@git.code.oa.com:").removeSuffix(".git")
+        return GitUtils.getProjectName(sshUrl)
     }
 
     override fun getBranchName(): String {
