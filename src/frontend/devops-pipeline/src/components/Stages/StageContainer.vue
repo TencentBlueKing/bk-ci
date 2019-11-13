@@ -8,22 +8,22 @@
             <span class="connect-line right" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
         </template>
         <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click="showContainerPanel">
-                <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
-                    {{ containerSerialNum }}
-                </status-icon>
-                <p class="container-name">
-                    <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
-                </p>
-                <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
-                <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
-                    <Logo name="copy" size="18"></Logo>
-                </span>
-                <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
-                <span @click.stop v-if="showCheckedToatal && canSkipElement">
-                    <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
-                </span>
-                <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
-            </h3>
+            <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
+                {{ containerSerialNum }}
+            </status-icon>
+            <p class="container-name">
+                <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
+            </p>
+            <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
+            <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
+                <Logo name="copy" size="18"></Logo>
+            </span>
+            <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
+            <span @click.stop v-if="showCheckedToatal && canSkipElement">
+                <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
+            </span>
+            <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
+        </h3>
         <atom-list :container="container" :editable="editable" :is-preview="isPreview" :can-skip-element="canSkipElement" :stage-index="stageIndex" :container-index="containerIndex" :container-status="container.status">
         </atom-list>
     </div>
