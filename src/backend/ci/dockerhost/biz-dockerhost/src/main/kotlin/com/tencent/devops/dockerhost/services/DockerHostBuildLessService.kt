@@ -42,6 +42,7 @@ import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
+import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
@@ -134,7 +135,7 @@ class DockerHostBuildLessService(
             val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
             val volumeTmpLink = Volume(linkPath)
 
-            val gateway = System.getProperty("soda.gateway", "gw.open.oa.com")
+            val gateway = DockerEnv.getGatway()
             logger.info("[${event.buildId}]|gateway is: $gateway")
             val binds = Binds(
                 Bind("${dockerHostConfig.hostPathMavenRepo}/${event.pipelineId}/", volumeMavenRepo),
