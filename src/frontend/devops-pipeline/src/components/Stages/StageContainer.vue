@@ -7,8 +7,7 @@
             <span class="connect-line left" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
             <span class="connect-line right" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
         </template>
-        <show-tooltip placement="bottom" v-bind="containerTooltipConfig">
-            <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click="showContainerPanel">
+        <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click="showContainerPanel">
                 <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
                     {{ containerSerialNum }}
                 </status-icon>
@@ -25,7 +24,6 @@
                 </span>
                 <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
             </h3>
-        </show-tooltip>
         <atom-list :container="container" :editable="editable" :is-preview="isPreview" :can-skip-element="canSkipElement" :stage-index="stageIndex" :container-index="containerIndex" :container-status="container.status">
         </atom-list>
     </div>
@@ -36,7 +34,6 @@
     import { getOuterHeight } from '@/utils/util'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
-    import showTooltip from '@/components/common/showTooltip'
     import StatusIcon from './StatusIcon'
     import Logo from '@/components/Logo'
 
@@ -45,7 +42,6 @@
             StatusIcon,
             ContainerType,
             AtomList,
-            showTooltip,
             Logo
         },
         props: {
@@ -108,25 +104,6 @@
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false)
-            },
-            containerTooltipConfig () {
-                let name, content
-                switch (true) {
-                    case this.isTriggerContainer(this.container):
-                        name = 'build_trigger'
-                        content = this.$t('editPage.triggerTooltips')
-                        break
-                    case this.container && this.container.baseOS === 'LINUX' && !window.showLinuxTipYet:
-                        window.showLinuxTipYet = true
-                        name = 'linux_login_debugg'
-                        content = this.$t('editPage.docker.consoleEnterTips')
-                        break
-                }
-                return !this.isPreview && name ? {
-                    name,
-                    content,
-                    key: name
-                } : {}
             }
         },
         watch: {
