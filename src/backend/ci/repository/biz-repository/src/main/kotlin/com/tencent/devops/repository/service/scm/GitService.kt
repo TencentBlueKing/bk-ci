@@ -81,13 +81,13 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
     }
 
-    @Value("\${git.public.account}")
+    @Value("\${scm.git.public.account}")
     private lateinit var gitPublicAccount: String
 
-    @Value("\${git.public.email}")
+    @Value("\${scm.git.public.email}")
     private lateinit var gitPublicEmail: String
 
-    @Value("\${git.public.secret}")
+    @Value("\${scm.git.public.secret}")
     private lateinit var gitPublicSecret: String
 
     private val executorService = Executors.newFixedThreadPool(2)
