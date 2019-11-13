@@ -58,7 +58,8 @@ module.exports = {
         'OIED_URL': true,
         'ZHIYUN_URL': true,
         "CODECC_SOFWARE_URL": true,
-        "JOB_URL": true
+        "JOB_URL": true,
+        "VERSION_TYPE": false
     },
     // add your custom rules hered
     rules: {
