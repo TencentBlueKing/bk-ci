@@ -58,7 +58,6 @@ class WeTestClient constructor(private val secretId: String, private val secretK
     companion object {
         private val wetestHost = "http://api.wetest.oa.com"
         private val host = "http://wetest.apigw.o.oa.com/prod"
-        //        private val host = "http://tool.wetest.oa.com"
         private val expire = 600L
         private val METHOD_POST = "POST"
         private val METHOD_GET = "GET"

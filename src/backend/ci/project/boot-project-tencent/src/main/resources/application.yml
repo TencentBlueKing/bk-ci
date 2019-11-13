@@ -7,6 +7,3 @@ spring:
 
 server:
   port: 21912
-
-paas_cc:
-  url: http://api.apigw-biz.o.oa.com/api/paas-cc/test/project

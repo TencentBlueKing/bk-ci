@@ -54,10 +54,6 @@ class MigCDNService @Autowired constructor(
 
     val MIG_CDN_URL = "http://up.cdn.qq.com:8600/uploadserver/uploadfile.jsp"
 
-    /*
-    curl -v -X 'POST' -H "X-CDN-Authentication:D71748F48D99FEF199DD71FBEA63602D" "http://up.cdn.qq.com:8600/uploadserver/uploadfile.jsp?appname=bkdevops&user=johuang&filename=pom&filetype=xml&filepath=/aaa/&filesize=528&remoteurl=http%3a%2f%2fbk.artifactory.oa.com%2fdocker-service%2fpaas%2fpublic%2ftest%2fv1%2fmanifest.json"
-    */
-
     fun pushFile(migCDNUploadParam: MigCDNUploadParam): String {
         val fileParams = migCDNUploadParam.fileParams
         logger.info("MIG CDN upload param for build(${fileParams.buildId}): $migCDNUploadParam")
