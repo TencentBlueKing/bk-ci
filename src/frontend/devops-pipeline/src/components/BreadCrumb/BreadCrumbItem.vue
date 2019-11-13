@@ -13,13 +13,11 @@
 
 <script>
     import CrumbRecords from './CrumbRecords'
-    import showTooltip from '@/components/common/showTooltip'
 
     export default {
         name: 'bread-crumb-item',
         components: {
-            CrumbRecords,
-            showTooltip
+            CrumbRecords
         },
         props: {
             showTips: Boolean,
