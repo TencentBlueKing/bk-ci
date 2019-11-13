@@ -71,13 +71,13 @@ public class ServiceToolRestResourceImpl implements ServiceToolRestResource
     }
 
     @Override
-    public Result<ToolConfigInfoVO> getToolByTaskIdAndName(long taskId, String toolName)
+    public Result<ToolConfigInfoVO> getToolByTaskIdAndName(Long taskId, String toolName)
     {
         return new Result<>(toolService.getToolByTaskIdAndName(taskId, toolName));
     }
 
     @Override
-    public Result<ToolConfigInfoVO> getToolWithNameByTaskIdAndName(long taskId, String toolName)
+    public Result<ToolConfigInfoVO> getToolWithNameByTaskIdAndName(Long taskId, String toolName)
     {
         return new Result<>(toolService.getToolWithNameByTaskIdAndName(taskId, toolName));
     }

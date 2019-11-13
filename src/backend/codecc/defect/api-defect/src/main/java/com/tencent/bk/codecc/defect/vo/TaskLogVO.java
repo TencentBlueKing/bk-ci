@@ -42,16 +42,16 @@ import java.util.List;
 @ApiModel("任务分析记录信息")
 public class TaskLogVO
 {
-    @ApiModelProperty(value = "流名称", required = true)
+    @ApiModelProperty(value = "流名称")
     private String streamName;
 
-    @ApiModelProperty(value = "任务主键id", required = true)
+    @ApiModelProperty(value = "任务主键id")
     private long taskId;
 
-    @ApiModelProperty(value = "工具名称", required = true)
+    @ApiModelProperty(value = "工具名称")
     private String toolName;
 
-    @ApiModelProperty(value = "当前步骤", required = true)
+    @ApiModelProperty(value = "当前步骤")
     private int currStep;
 
     @ApiModelProperty(value = "步骤状态")
@@ -78,19 +78,19 @@ public class TaskLogVO
     @ApiModelProperty(value = "触发来源")
     private String triggerFrom;
 
-    @ApiModelProperty(value = "步骤列表", required = true)
+    @ApiModelProperty(value = "步骤列表")
     private List<TaskUnit> stepArray;
 
     @Data
     public static class TaskUnit
     {
-        @ApiModelProperty(value = "当前步骤", required = true)
+        @ApiModelProperty(value = "当前步骤")
         private int stepNum;
 
-        @ApiModelProperty(value = "步骤状态", required = true)
+        @ApiModelProperty(value = "步骤状态")
         private int flag;
 
-        @ApiModelProperty(value = "开始时间", required = true)
+        @ApiModelProperty(value = "开始时间")
         private long startTime;
 
         @ApiModelProperty(value = "结束时间")

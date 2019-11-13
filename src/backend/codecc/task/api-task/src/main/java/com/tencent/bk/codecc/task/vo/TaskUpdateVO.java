@@ -45,7 +45,7 @@ import java.util.List;
 public class TaskUpdateVO
 {
 
-    @ApiModelProperty(value = "任务主键id", required = true)
+    @ApiModelProperty(value = "任务主键id")
     private long taskId;
 
     @ApiModelProperty(value = "任务中文名")

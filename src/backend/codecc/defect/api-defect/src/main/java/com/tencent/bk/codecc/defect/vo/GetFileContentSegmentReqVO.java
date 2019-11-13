@@ -36,11 +36,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ApiModel("获取文件内容片段的请求对象")
 public class GetFileContentSegmentReqVO
 {
-    @ApiModelProperty(value = "工具名称", required = true)
+    @ApiModelProperty(value = "工具名称")
     @NotEmpty(message = "工具名称不能为空")
     private String toolName;
 
-    @ApiModelProperty(value = "文件完整路径", required = true)
+    @ApiModelProperty(value = "文件完整路径")
     @NotEmpty(message = "文件路径不能为空")
     private String filePath;
 

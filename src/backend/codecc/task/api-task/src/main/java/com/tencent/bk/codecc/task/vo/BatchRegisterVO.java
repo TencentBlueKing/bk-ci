@@ -54,73 +54,73 @@ public class BatchRegisterVO extends CommonVO
      * 任务id
      */
     @Min(value = 1000L, message = "任务主键数值不正确")
-    @ApiModelProperty(value = "任务主键id", required = true)
+    @ApiModelProperty(value = "任务主键id")
     private long taskId;
 
     /**
      * 代码库hashid
      */
-    @ApiModelProperty(value = "代码库hashid", required = true)
+    @ApiModelProperty(value = "代码库hashid")
     private String repositoryHashId;
 
     /**
      * 代码库别名
      */
-    @ApiModelProperty(value = "代码库别名", required = true)
+    @ApiModelProperty(value = "代码库别名")
     private String repositoryAliasName;
 
     /**
      * 代码库路径
      */
-    @ApiModelProperty(value = "代码库路径", required = true)
+    @ApiModelProperty(value = "代码库路径")
     private String repositoryUrl;
 
     /**
      * scm类型
      */
-    @ApiModelProperty(value = "scm类型", required = true)
+    @ApiModelProperty(value = "scm类型")
     private String scmType;
 
     /**
      * 分支名
      */
-    @ApiModelProperty(value = "scm类型", required = true)
+    @ApiModelProperty(value = "scm类型")
     private String branchName;
 
     /**
      * 操作系统各类型
      */
-    @ApiModelProperty(value = "操作系统类型", required = true)
+    @ApiModelProperty(value = "操作系统类型")
     private String osType;
 
     /**
      * 构建环境
      */
-    @ApiModelProperty(value = "构建环境", required = true)
+    @ApiModelProperty(value = "构建环境")
     private Map<String, String> buildEnv;
 
     /**
      * 构建脚本类型
      */
-    @ApiModelProperty(value = "构建脚本类型", required = true)
+    @ApiModelProperty(value = "构建脚本类型")
     private String buildScriptType;
 
     /**
      * 脚本名称
      */
-    @ApiModelProperty(value = "脚本名称", required = true)
+    @ApiModelProperty(value = "脚本名称")
     private String scriptName;
 
     /**
      * 脚本内容
      */
-    @ApiModelProperty(value = "脚本内容", required = true)
+    @ApiModelProperty(value = "脚本内容")
     private String scriptContent;
 
     /**
      * 扫描类型
      */
-    @ApiModelProperty(value = "扫描类型", required = true)
+    @ApiModelProperty(value = "扫描类型")
     private String scanType;
 
 
@@ -129,7 +129,7 @@ public class BatchRegisterVO extends CommonVO
      */
     @NotNull(message = "工具清单不能为空")
     @Size(min = 1, message = "工具清单不能为空")
-    @ApiModelProperty(value = "工具清单", required = true)
+    @ApiModelProperty(value = "工具清单")
     private List<ToolConfigInfoVO> tools;
 
 }

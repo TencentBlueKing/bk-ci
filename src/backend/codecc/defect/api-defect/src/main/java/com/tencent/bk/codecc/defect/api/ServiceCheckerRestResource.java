@@ -55,13 +55,13 @@ public interface ServiceCheckerRestResource
 {
 
     @ApiOperation("获取打开的规则")
-    @Path("/openedChecker")
+    @Path("/opened")
     @POST
     Result<Map<String, CheckerDetailVO>> queryOpenChecker(
             @ApiParam(value = "工具信息", required = true)
                     ToolConfigInfoVO toolConfigInfoVO);
 
-    @ApiOperation("获取打开的规则")
+    @ApiOperation("获取全量的规则")
     @Path("/all")
     @POST
     Result<List<CheckerDetailVO>> queryAllChecker(
@@ -69,7 +69,7 @@ public interface ServiceCheckerRestResource
                     ToolConfigInfoVO toolConfigInfoVO);
 
     @ApiOperation("添加忽略规则")
-    @Path("/ignoreChecker/taskId/{taskId}/toolName/{toolName}")
+    @Path("/ignored/taskId/{taskId}/toolName/{toolName}")
     @PUT
     Result<Boolean> mergeIgnoreChecker(
             @ApiParam(value = "任务id")
@@ -83,7 +83,7 @@ public interface ServiceCheckerRestResource
 
 
     @ApiOperation("新建默认忽略规则")
-    @Path("/ignoreChecker")
+    @Path("/ignored")
     @POST
     Result<Boolean> createDefaultIgnoreChecker(
             @ApiParam(value = "忽略规则信息")
@@ -93,7 +93,7 @@ public interface ServiceCheckerRestResource
             String userName);
 
     @ApiOperation("新建默认忽略规则")
-    @Path("/ignoreChecker/taskId/{taskId}/toolName/{toolName}")
+    @Path("/ignored/taskId/{taskId}/toolName/{toolName}")
     @GET
     Result<IgnoreCheckerVO> getIgnoreCheckerInfo(
             @ApiParam(value = "任务id")

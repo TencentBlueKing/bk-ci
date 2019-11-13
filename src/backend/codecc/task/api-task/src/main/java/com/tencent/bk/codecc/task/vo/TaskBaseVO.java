@@ -46,39 +46,39 @@ import java.util.List;
 @ApiModel("任务的基本信息")
 public class TaskBaseVO extends CommonVO
 {
-    @ApiModelProperty(value = "任务主键id", required = true)
+    @ApiModelProperty(value = "任务主键id")
     private long taskId;
 
-    @ApiModelProperty(value = "任务英文名", required = true)
+    @ApiModelProperty(value = "任务英文名")
     @Pattern(regexp = "^[0-9a-zA-Z_]{1,50}$", message = "输入的英文名称不符合命名规则")
     private String nameEn;
 
-    @ApiModelProperty(value = "任务中文名", required = true)
+    @ApiModelProperty(value = "任务中文名")
     @Pattern(regexp = "^[a-zA-Z0-9_\\u4e00-\\u9fa5]{1,50}", message = "输入的中文名称不符合命名规则")
     private String nameCn;
 
-    @ApiModelProperty(value = "项目ID", required = true)
+    @ApiModelProperty(value = "项目ID")
     private String projectId;
 
-    @ApiModelProperty(value = "项目名称", required = true)
+    @ApiModelProperty(value = "项目名称")
     private String projectName;
 
-    @ApiModelProperty(value = "流水线ID", required = true)
+    @ApiModelProperty(value = "流水线ID")
     private String pipelineId;
 
-    @ApiModelProperty(value = "流水线名称", required = true)
+    @ApiModelProperty(value = "流水线名称")
     private String pipelineName;
 
-    @ApiModelProperty(value = "代码语言", required = true)
+    @ApiModelProperty(value = "代码语言")
     private Long codeLang;
 
-    @ApiModelProperty(value = "任务负责人", required = true)
+    @ApiModelProperty(value = "任务负责人")
     private List<String> taskOwner;
 
-    @ApiModelProperty(value = "任务状态", required = true)
+    @ApiModelProperty(value = "任务状态")
     private Integer status;
 
-    @ApiModelProperty(value = "创建来源", required = true)
+    @ApiModelProperty(value = "创建来源")
     private String createFrom;
 
     @ApiModelProperty(value = "定时任务执行时间")
@@ -87,9 +87,9 @@ public class TaskBaseVO extends CommonVO
     @ApiModelProperty(value = "定时任务执行时间")
     private List<String> executeDate;
 
-    @ApiModelProperty(value = "启用的工具列表", required = true)
+    @ApiModelProperty(value = "启用的工具列表")
     private List<ToolConfigBaseVO> enableToolList;
 
-    @ApiModelProperty(value = "停用的工具列表", required = true)
+    @ApiModelProperty(value = "停用的工具列表")
     private List<ToolConfigBaseVO> disableToolList;
 }

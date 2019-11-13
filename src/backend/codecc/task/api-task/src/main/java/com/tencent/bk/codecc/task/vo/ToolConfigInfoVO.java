@@ -50,32 +50,32 @@ public class ToolConfigInfoVO extends CommonVO
     /**
      * 配置信息对应的项目ID
      */
-    @ApiModelProperty(value = "配置信息对应的项目ID", required = true)
+    @ApiModelProperty(value = "配置信息对应的项目ID")
     private long taskId;
 
     /**
      * 工具的名称
      */
-    @ApiModelProperty(value = "工具的名称", required = true)
+    @ApiModelProperty(value = "工具的名称")
     private String toolName;
 
     /**
      * 工具当前任务执行步骤
      */
-    @ApiModelProperty(value = "工具当前任务执行步骤", required = true)
+    @ApiModelProperty(value = "工具当前任务执行步骤")
     private int curStep;
 
     /**
      * 工具当前任务步骤的状态，成功/失败
      */
-    @ApiModelProperty(value = "工具当前任务步骤的状态，成功/失败", required = true)
+    @ApiModelProperty(value = "工具当前任务步骤的状态，成功/失败")
     private int stepStatus;
 
 
     /**
      * 扫描类型 0:全量扫描  1:增量扫描
      */
-    @ApiModelProperty(value = "扫描类型 0:全量扫描  1:增量扫描", required = true, allowableValues = "{0,1}")
+    @ApiModelProperty(value = "扫描类型 0:全量扫描  1:增量扫描", allowableValues = "{0,1}")
     private String scanType;
 
 
@@ -86,18 +86,18 @@ public class ToolConfigInfoVO extends CommonVO
     /**
      * 跟进状态 对照PREFIX_FOLLOW_STATUS
      */
-    @ApiModelProperty(value = "跟进状态", required = true)
+    @ApiModelProperty(value = "跟进状态")
     private int followStatus;
 
 
     /**
      * 上次跟进状态
      */
-    @ApiModelProperty(value = "上次跟进状态", required = true)
+    @ApiModelProperty(value = "上次跟进状态")
     private int lastFollowStatus;
 
 
-    @ApiModelProperty(value = "默认忽略规则", required = true)
+    @ApiModelProperty(value = "默认忽略规则")
     private List<String> ignoreCheckers;
 
 

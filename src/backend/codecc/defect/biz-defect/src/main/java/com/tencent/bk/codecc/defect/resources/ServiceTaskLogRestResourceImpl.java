@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.defect.resources;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.defect.api.ServiceTaskLogRestResource;
 import com.tencent.bk.codecc.defect.service.TaskLogService;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
@@ -38,7 +37,6 @@ import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
-import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.web.RestResource;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -80,14 +78,14 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
     }
 
     @Override
-    public Result<Boolean> stopRunningTask(String pipelineId, String streamName, Set<String> toolSet, String projectId, long taskId, String userName)
+    public Result<Boolean> stopRunningTask(String pipelineId, String streamName, Set<String> toolSet, String projectId, Long taskId, String userName)
     {
         return new Result<>(taskLogService.stopRunningTask(projectId, pipelineId, streamName, taskId, toolSet, userName));
     }
 
 
     @Override
-    public Result<TaskLogVO> getLatestTaskLog(long taskId, String toolName)
+    public Result<TaskLogVO> getLatestTaskLog(Long taskId, String toolName)
     {
         return new Result<>(taskLogService.getLatestTaskLog(taskId, toolName.toUpperCase()));
     }
@@ -101,7 +99,7 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
     }
 
     @Override
-    public Result<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(long taskId, Set<String> toolSet)
+    public Result<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(Long taskId, Set<String> toolSet)
     {
         return new Result<>(taskLogService.getLastAnalysisResults(taskId, toolSet));
     }

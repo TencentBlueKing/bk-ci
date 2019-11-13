@@ -40,24 +40,24 @@ import lombok.Data;
 @ApiModel("工具配置的基本信息")
 public class ToolConfigBaseVO
 {
-    @ApiModelProperty(value = "任务ID", required = true)
+    @ApiModelProperty(value = "任务ID")
     private long taskId;
 
-    @ApiModelProperty(value = "工具ID", required = true)
+    @ApiModelProperty(value = "工具ID")
     private String toolName;
 
-    @ApiModelProperty(value = "工具展示名称", required = true)
+    @ApiModelProperty(value = "工具展示名称")
     private String toolDisplayName;
 
-    @ApiModelProperty(value = "工具模型", required = true)
+    @ApiModelProperty(value = "工具模型")
     private String toolPattern;
 
-    @ApiModelProperty(value = "当前步骤", required = true)
+    @ApiModelProperty(value = "当前步骤")
     private int curStep;
 
-    @ApiModelProperty(value = "当前步骤状态，0成功/1失败", required = true)
+    @ApiModelProperty(value = "当前步骤状态，0成功/1失败")
     private int stepStatus;
 
-    @ApiModelProperty(value = "跟进状态，0/1-未跟进，2-体验，3-接入中，4-已接入，5-挂起，6-下架/停用", required = true)
+    @ApiModelProperty(value = "跟进状态，0/1-未跟进，2-体验，3-接入中，4-已接入，5-挂起，6-下架/停用")
     private int followStatus;
 }

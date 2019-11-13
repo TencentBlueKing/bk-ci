@@ -54,7 +54,7 @@ public interface UserOperHisRestResource
     Result<List<OperationHistoryVO>> getOperHisRecord(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
-            long taskId,
+            Long taskId,
             @ApiParam(value = "工具名")
             @QueryParam("toolName")
             String toolName,

@@ -46,7 +46,7 @@ public class FilterPathInputVO
 {
 
     @NotNull(message = "任务ID不能为空")
-    @ApiModelProperty(value = "任务ID", required = true)
+    @ApiModelProperty(value = "任务ID")
     private Long taskId;
 
     @ApiModelProperty(value = "默认过滤路径文件")

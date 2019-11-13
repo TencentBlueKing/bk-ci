@@ -41,31 +41,31 @@ import lombok.Data;
 @ApiModel("代码重复率的扫描统计结果")
 public class DUPCScanSummaryVO
 {
-    @ApiModelProperty(value = "重复文件数", required = true)
+    @ApiModelProperty(value = "重复文件数")
     @JsonProperty("dup_file_count")
     private long dupFileCount;
 
-    @ApiModelProperty(value = "总文件数", required = true)
+    @ApiModelProperty(value = "总文件数")
     @JsonProperty("total_file_count")
     private long totalFileCount;
 
-    @ApiModelProperty(value = "分析耗时", required = true)
+    @ApiModelProperty(value = "分析耗时")
     @JsonProperty("processing_time")
     private long processingTime;
 
-    @ApiModelProperty(value = "significant有意义的行，即非注释行", required = true)
+    @ApiModelProperty(value = "significant有意义的行，即非注释行")
     @JsonProperty("significantline_count")
     private long significantlineCount;
 
-    @ApiModelProperty(value = "重复块数", required = true)
+    @ApiModelProperty(value = "重复块数")
     @JsonProperty("dup_block_count")
     private long dupBlockCount;
 
-    @ApiModelProperty(value = "原始代码行数，即包括注释行", required = true)
+    @ApiModelProperty(value = "原始代码行数，即包括注释行")
     @JsonProperty("rawline_count")
     private long rawlineCount;
 
-    @ApiModelProperty(value = "重复代码行数", required = true)
+    @ApiModelProperty(value = "重复代码行数")
     @JsonProperty("dup_line_count")
     private long dupLineCount;
 }

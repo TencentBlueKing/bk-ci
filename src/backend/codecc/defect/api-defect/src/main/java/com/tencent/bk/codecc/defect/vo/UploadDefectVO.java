@@ -41,7 +41,7 @@ import lombok.Data;
 @ApiModel("告警上报入参的抽象类")
 public class UploadDefectVO
 {
-    @ApiModelProperty(value = "流名称", required = true)
+    @ApiModelProperty(value = "流名称")
     @JsonProperty("stream_name")
     private String streamName;
 
@@ -49,19 +49,19 @@ public class UploadDefectVO
     @JsonProperty("task_id")
     private long taskId;
 
-    @ApiModelProperty(value = "工具名称", required = true)
+    @ApiModelProperty(value = "工具名称")
     @JsonProperty("tool_name")
     private String toolName;
 
-    @ApiModelProperty(value = "文件路径(代码下载到服务器上的存放路径)", required = true)
+    @ApiModelProperty(value = "文件路径(代码下载到服务器上的存放路径)")
     @JsonProperty("filename")
     private String filePath;
 
-    @ApiModelProperty(value = "文件最近修改时间", required = true)
+    @ApiModelProperty(value = "文件最近修改时间")
     @JsonProperty("file_change_time")
     private long fileUpdateTime;
 
-    @ApiModelProperty(value = "告警压缩后的字符串", required = true)
+    @ApiModelProperty(value = "告警压缩后的字符串")
     private String defectsCompress;
 
     @ApiModelProperty("代码库路径")
@@ -89,7 +89,7 @@ public class UploadDefectVO
     /**
      * 相对路径
      */
-    @ApiModelProperty(value = "相对路径", required = true)
+    @ApiModelProperty(value = "相对路径")
     @JsonProperty("rel_path")
     private String relPath;
 

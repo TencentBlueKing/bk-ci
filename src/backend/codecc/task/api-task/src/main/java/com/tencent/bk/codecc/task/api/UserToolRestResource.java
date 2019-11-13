@@ -109,7 +109,7 @@ public interface UserToolRestResource
 
 
     @ApiOperation("停用流水线")
-    @Path("/delete/pipeline")
+    @Path("/pipeline")
     @DELETE
     Result<Boolean> deletePipeline(
             @ApiParam(value = "任务ID", required = true)

@@ -68,16 +68,16 @@ public interface UserDefectRestResource
     Result<CommonFileQueryRspVO> queryFileList(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "查询参数详情", required = true)
             @Valid
                     CommonFileQueryReqVO commonFileQueryReqVO,
             @ApiParam(value = "页数")
             @QueryParam(value = "pageNum")
-                    int pageNum,
+                    Integer pageNum,
             @ApiParam(value = "页面大小")
             @QueryParam(value = "pageSize")
-                    int pageSize,
+                    Integer pageSize,
             @ApiParam(value = "排序字段")
             @QueryParam(value = "sortField")
                     String sortField,
@@ -92,7 +92,7 @@ public interface UserDefectRestResource
     Result<CommonDefectQueryRspVO> queryDefectDetail(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "查询参数详情", required = true)
             @Valid
                     CommonDefectQueryReqVO commonDefectQueryReqVO,
@@ -109,7 +109,7 @@ public interface UserDefectRestResource
     Result<CommonDefectQueryRspVO> getFileContentSegment(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "获取文件片段", required = true)
             @Valid
                     GetFileContentSegmentReqVO getFileContentSegmentReqVO);
@@ -120,7 +120,7 @@ public interface UserDefectRestResource
     Result<Boolean> authorTransfer(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "作者批量转换信息", required = true)
             @Valid
                     CommonAuthorTransVO commonAuthorTransVO);

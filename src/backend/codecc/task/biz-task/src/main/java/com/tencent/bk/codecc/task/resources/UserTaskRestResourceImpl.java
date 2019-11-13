@@ -119,7 +119,7 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> modifyTimeAnalysisTask(TimeAnalysisReqVO timeAnalysisReqVO, long taskId, String userName)
+    public Result<Boolean> modifyTimeAnalysisTask(TimeAnalysisReqVO timeAnalysisReqVO, Long taskId, String userName)
     {
         return new Result<>(taskRegisterService.modifyTimeAnalysisTask(timeAnalysisReqVO.getExecuteDate(), timeAnalysisReqVO.getExecuteTime(),
                 taskId, userName));
@@ -190,7 +190,7 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> executeTask(long taskId, String isFirstTrigger,
+    public Result<Boolean> executeTask(Long taskId, String isFirstTrigger,
                                        String userName)
     {
         return new Result<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
@@ -198,7 +198,7 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<TaskMemberVO> getTaskMemberAndAdmin(long taskId, String projectId)
+    public Result<TaskMemberVO> getTaskMemberAndAdmin(Long taskId, String projectId)
     {
         return new Result<>(taskService.getTaskMemberAndAdmin(taskId, projectId));
     }

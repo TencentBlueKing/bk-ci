@@ -51,7 +51,7 @@ public class UserOperHisRestResourceImpl implements UserOperHisRestResource
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<List<OperationHistoryVO>> getOperHisRecord(long taskId, String toolName, List<String> funcId)
+    public Result<List<OperationHistoryVO>> getOperHisRecord(Long taskId, String toolName, List<String> funcId)
     {
         return new Result<>(operationHistoryService.getOperHisByTaskIdAndFuncId(taskId, toolName, funcId));
     }

@@ -44,58 +44,58 @@ import lombok.EqualsAndHashCode;
 public class CheckerDetailVO extends CommonVO
 {
 
-    @ApiModelProperty(value = "工具名", required = true)
+    @ApiModelProperty(value = "工具名")
     private String toolName;
 
-    @ApiModelProperty(value = "告警类型key", required = true)
+    @ApiModelProperty(value = "告警类型key")
     private String checkerKey;
 
-    @ApiModelProperty(value = "规则名称", required = true)
+    @ApiModelProperty(value = "规则名称")
     private String checkerName;
 
-    @ApiModelProperty(value = "规则详细描述", required = true)
+    @ApiModelProperty(value = "规则详细描述")
     private String checkerDesc;
 
-    @ApiModelProperty(value = "规则严重程度，1=>严重，2=>一般，3=>提示", required = true, allowableValues = "{1,2,3}")
+    @ApiModelProperty(value = "规则严重程度，1=>严重，2=>一般，3=>提示", allowableValues = "{1,2,3}")
     private Integer severity;
 
-    @ApiModelProperty(value = "规则所属语言（针对KLOCKWORK）", required = true)
+    @ApiModelProperty(value = "规则所属语言（针对KLOCKWORK）")
     private Integer language;
 
-    @ApiModelProperty(value = "规则状态 2=>打开 1=>关闭;", required = true, allowableValues = "{1,2}")
+    @ApiModelProperty(value = "规则状态 2=>打开 1=>关闭;", allowableValues = "{1,2}")
     private Integer status;
 
     @ApiModelProperty("规则状态是否打开")
     private Boolean checkerStatus;
 
-    @ApiModelProperty(value = "规则类型", required = true)
+    @ApiModelProperty(value = "规则类型")
     private String checkerType;
 
-    @ApiModelProperty(value = "规则类型说明", required = true)
+    @ApiModelProperty(value = "规则类型说明")
     private String checkerTypeDesc;
 
-    @ApiModelProperty(value = "规则类型排序序列号", required = true)
+    @ApiModelProperty(value = "规则类型排序序列号")
     private String checkerTypeSort;
 
-    @ApiModelProperty(value = "所属规则包", required = true)
+    @ApiModelProperty(value = "所属规则包")
     private String pkgKind;
 
-    @ApiModelProperty(value = "项目框架（针对Eslint工具,目前有vue,react,standard）", required = true)
+    @ApiModelProperty(value = "项目框架（针对Eslint工具,目前有vue,react,standard）")
     private String frameworkType;
 
-    @ApiModelProperty(value = "规则映射", required = true)
+    @ApiModelProperty(value = "规则映射")
     private String checkerMapped;
 
-    @ApiModelProperty(value = "规则配置", required = true)
+    @ApiModelProperty(value = "规则配置")
     private String props;
 
-    @ApiModelProperty(value = "规则所属标准", required = true)
+    @ApiModelProperty(value = "规则所属标准")
     private Integer standard;
 
-    @ApiModelProperty(value = "规则是否支持配置true：支持;空或false：不支持", required = true)
+    @ApiModelProperty(value = "规则是否支持配置true：支持;空或false：不支持")
     private String editable;
 
-    @ApiModelProperty(value = "示例代码", required = true)
+    @ApiModelProperty(value = "示例代码")
     private String codeExample;
 
 }

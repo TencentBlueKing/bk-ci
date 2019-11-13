@@ -40,13 +40,13 @@ import lombok.Data;
 @ApiModel("上报任务分析记录步骤的VO")
 public class UploadTaskLogStepVO
 {
-    @ApiModelProperty(value = "流名称", required = true)
+    @ApiModelProperty(value = "流名称")
     private String streamName;
 
     @ApiModelProperty(value = "任务主键id")
     private long taskId;
 
-    @ApiModelProperty(value = "工具名（ID）", required = true)
+    @ApiModelProperty(value = "工具名（ID）")
     private String toolName;
 
     @ApiModelProperty(value = "构建Id")
@@ -55,13 +55,13 @@ public class UploadTaskLogStepVO
     @ApiModelProperty(value = "触发来源,用于保存任务手动触发的触发人")
     private String triggerFrom;
 
-    @ApiModelProperty(value = "当前步骤", required = true)
+    @ApiModelProperty(value = "当前步骤")
     private int stepNum;
 
-    @ApiModelProperty(value = "步骤状态", required = true)
+    @ApiModelProperty(value = "步骤状态")
     private int flag;
 
-    @ApiModelProperty(value = "开始时间", required = true)
+    @ApiModelProperty(value = "开始时间")
     private long startTime;
 
     @ApiModelProperty(value = "结束时间")

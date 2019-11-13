@@ -43,31 +43,31 @@ import java.util.List;
 @ApiModel("任务信息概览数据")
 public class TaskOverviewVO
 {
-    @ApiModelProperty(value = "任务主键id", required = true)
+    @ApiModelProperty(value = "任务主键id")
     private long taskId;
 
-    @ApiModelProperty(value = "工具最近一次分析结果列表", required = true)
+    @ApiModelProperty(value = "工具最近一次分析结果列表")
     private List<LastAnalysis> lastAnalysisResultList;
 
     @Data
     public static class LastAnalysis
     {
-        @ApiModelProperty(value = "工具名称", required = true)
+        @ApiModelProperty(value = "工具名称")
         private String toolName;
 
-        @ApiModelProperty(value = "当前步骤", required = true)
+        @ApiModelProperty(value = "当前步骤")
         private int curStep;
 
-        @ApiModelProperty(value = "当前步骤状态，0成功/1失败", required = true)
+        @ApiModelProperty(value = "当前步骤状态，0成功/1失败")
         private int stepStatus;
 
-        @ApiModelProperty(value = "最近一次分析时间", required = true)
+        @ApiModelProperty(value = "最近一次分析时间")
         private long lastAnalysisTime;
 
-        @ApiModelProperty(value = "最近一次分析耗时", required = true)
+        @ApiModelProperty(value = "最近一次分析耗时")
         private long elapseTime;
 
-        @ApiModelProperty(value = "最近一次分析结果", required = true)
+        @ApiModelProperty(value = "最近一次分析结果")
         private BaseLastAnalysisResultVO lastAnalysisResult;
     }
 }

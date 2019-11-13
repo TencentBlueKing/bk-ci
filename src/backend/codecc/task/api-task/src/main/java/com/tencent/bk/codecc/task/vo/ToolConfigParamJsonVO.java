@@ -42,13 +42,13 @@ import java.util.List;
 @ApiModel("工具配置参数")
 public class ToolConfigParamJsonVO
 {
-    @ApiModelProperty(value = "配置信息对应的项目ID", required = true)
+    @ApiModelProperty(value = "配置信息对应的项目ID")
     private Long taskId;
 
-    @ApiModelProperty(value = "工具的名称", required = true)
+    @ApiModelProperty(value = "工具的名称")
     private String toolName;
 
-    @ApiModelProperty(value = "选中的值", required = true)
+    @ApiModelProperty(value = "选中的值")
     private String chooseValue;
 
     @ApiModelProperty(value = "键")
@@ -60,7 +60,7 @@ public class ToolConfigParamJsonVO
     @ApiModelProperty(value = "参数类型")
     private String varType;
 
-    @ApiModelProperty(value = "参数名称", required = true)
+    @ApiModelProperty(value = "参数名称")
     private String varName;
 
     @ApiModelProperty(value = "参数默认值")

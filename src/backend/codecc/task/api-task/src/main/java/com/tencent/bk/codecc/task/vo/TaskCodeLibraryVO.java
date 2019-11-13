@@ -59,15 +59,15 @@ public class TaskCodeLibraryVO
     private String pipelineName;
 
     @NotBlank(message = "凭证管理的主键id不能为空")
-    @ApiModelProperty(value = "凭证管理的主键id", required = true)
+    @ApiModelProperty(value = "凭证管理的主键id")
     private String repoHashId;
 
     @NotBlank(message = "分支名称不能为空")
-    @ApiModelProperty(value = "分支名，默认为master", required = true)
+    @ApiModelProperty(value = "分支名，默认为master")
     private String branch;
 
     @NotBlank(message = "代码库类型不能为空")
-    @ApiModelProperty(value = "代码库类型", required = true)
+    @ApiModelProperty(value = "代码库类型")
     private String scmType;
 
     /**

@@ -44,18 +44,18 @@ public class UploadDUPCStatisticVO
     /**
      * 流名称,必填
      */
-    @ApiModelProperty(value = "流名称", required = true)
+    @ApiModelProperty(value = "流名称")
     @JsonProperty("stream_name")
     private String streamName;
 
-    @ApiModelProperty(value = "任务id", required = true)
+    @ApiModelProperty(value = "任务id")
     @JsonProperty("task_id")
     private Long taskId;
 
     /**
      * 重复率上报的分析结果统计
      */
-    @ApiModelProperty(value = "分析结果统计数据", required = true)
+    @ApiModelProperty(value = "分析结果统计数据")
     @JsonProperty("scan_summary")
     private DUPCScanSummaryVO scanSummary;
 }

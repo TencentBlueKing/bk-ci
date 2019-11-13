@@ -43,13 +43,13 @@ import java.util.List;
 public class ToolStatusUpdateReqVO
 {
 
-    @ApiModelProperty(value = "工具名清单", required = true)
+    @ApiModelProperty(value = "工具名清单")
     private List<String> toolNameList;
 
-    @ApiModelProperty(value = "停用原因", required = true)
+    @ApiModelProperty(value = "停用原因")
     private String stopReason;
 
-    @ApiModelProperty(value = "停用/启用动作", required = true, allowableValues = "{Y,N}")
+    @ApiModelProperty(value = "停用/启用动作", allowableValues = "{Y,N}")
     private String manageType;
 
 }

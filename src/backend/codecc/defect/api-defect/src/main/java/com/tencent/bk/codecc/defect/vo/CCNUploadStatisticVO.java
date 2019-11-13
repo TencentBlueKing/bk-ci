@@ -41,14 +41,14 @@ import lombok.Data;
 @ApiModel("工具侧上报分析的结果统计数据的请求对象")
 public class CCNUploadStatisticVO
 {
-    @ApiModelProperty(value = "流名称", required = true)
+    @ApiModelProperty(value = "流名称")
     @JsonProperty("stream_name")
     private String streamName;
 
-    @ApiModelProperty(value = "任务id", required = true)
+    @ApiModelProperty(value = "任务id")
     @JsonProperty("task_id")
     private Long taskId;
 
-    @ApiModelProperty(value = "平均圈复杂度", required = true)
+    @ApiModelProperty(value = "平均圈复杂度")
     private String averageCCN;
 }

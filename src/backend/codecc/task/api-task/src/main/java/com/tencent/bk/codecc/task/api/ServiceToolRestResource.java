@@ -78,7 +78,7 @@ public interface ServiceToolRestResource
     Result<ToolConfigInfoVO> getToolByTaskIdAndName(
             @ApiParam(value = "任务id", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
                     String toolName);
@@ -90,7 +90,7 @@ public interface ServiceToolRestResource
     Result<ToolConfigInfoVO> getToolWithNameByTaskIdAndName(
             @ApiParam(value = "任务id", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-            long taskId,
+                    Long taskId,
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
             String toolName);

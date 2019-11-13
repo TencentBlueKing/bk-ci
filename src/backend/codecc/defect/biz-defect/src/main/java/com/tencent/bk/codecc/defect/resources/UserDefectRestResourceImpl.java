@@ -59,10 +59,10 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
     }
 
     @Override
-    public Result<CommonFileQueryRspVO> queryFileList(long taskId,
+    public Result<CommonFileQueryRspVO> queryFileList(Long taskId,
                                                       CommonFileQueryReqVO commonFileQueryReqVO,
-                                                      int pageNum,
-                                                      int pageSize,
+                                                      Integer pageNum,
+                                                      Integer pageSize,
                                                       String sortField,
                                                       Sort.Direction sortType)
     {
@@ -72,7 +72,7 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
     }
 
     @Override
-    public Result<CommonDefectQueryRspVO> queryDefectDetail(long taskId,
+    public Result<CommonDefectQueryRspVO> queryDefectDetail(Long taskId,
                                                             CommonDefectQueryReqVO commonDefectQueryReqVO,
                                                             String sortField,
                                                             Sort.Direction sortType)
@@ -83,7 +83,7 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
     }
 
     @Override
-    public Result<CommonDefectQueryRspVO> getFileContentSegment(long taskId, GetFileContentSegmentReqVO getFileContentSegmentReqVO)
+    public Result<CommonDefectQueryRspVO> getFileContentSegment(Long taskId, GetFileContentSegmentReqVO getFileContentSegmentReqVO)
     {
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(getFileContentSegmentReqVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
@@ -91,7 +91,7 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
     }
 
     @Override
-    public Result<Boolean> authorTransfer(long taskId, CommonAuthorTransVO commonAuthorTransVO)
+    public Result<Boolean> authorTransfer(Long taskId, CommonAuthorTransVO commonAuthorTransVO)
     {
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonAuthorTransVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);

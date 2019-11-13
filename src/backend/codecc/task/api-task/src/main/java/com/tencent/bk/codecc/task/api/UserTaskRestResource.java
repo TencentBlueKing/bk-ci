@@ -130,7 +130,7 @@ public interface UserTaskRestResource
                     TimeAnalysisReqVO timeAnalysisReqVO,
             @ApiParam(value = "任务id", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "当前用户", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName);
@@ -156,7 +156,7 @@ public interface UserTaskRestResource
 
 
     @ApiOperation("添加路径屏蔽")
-    @Path("/add/filter/path")
+    @Path("/filter/path")
     @POST
     Result<Boolean> addFilterPath(
             @ApiParam(value = "任务信息", required = true)
@@ -169,7 +169,7 @@ public interface UserTaskRestResource
 
 
     @ApiOperation("删除路径屏蔽")
-    @Path("/del/filter")
+    @Path("/filter/path")
     @DELETE
     Result<Boolean> deleteFilterPath(
             @ApiParam(value = "删除路径", required = true)
@@ -255,7 +255,7 @@ public interface UserTaskRestResource
 
 
     @ApiOperation("更新代码库配置信息")
-    @Path("/code/lib/update")
+    @Path("/code/lib")
     @PUT
     Result<Boolean> updateCodeLibrary(
             @ApiParam(value = "任务ID", required = true)
@@ -276,7 +276,7 @@ public interface UserTaskRestResource
     Result<Boolean> executeTask(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "是否首次触发")
             @QueryParam("isFirstTrigger")
                     String isFirstTrigger,
@@ -290,7 +290,7 @@ public interface UserTaskRestResource
     Result<TaskMemberVO> getTaskMemberAndAdmin(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "项目id", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId

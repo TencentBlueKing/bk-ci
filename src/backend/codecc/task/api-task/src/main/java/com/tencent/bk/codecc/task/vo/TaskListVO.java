@@ -48,14 +48,14 @@ public class TaskListVO
     /**
      * 启用的任务清单
      */
-    @ApiModelProperty(value = "启用的任务清单", required = true)
+    @ApiModelProperty(value = "启用的任务清单")
     private List<TaskDetailVO> enableTasks;
 
 
     /**
      * 停用的任务清单
      */
-    @ApiModelProperty(value = "停用的任务清单", required = true)
+    @ApiModelProperty(value = "停用的任务清单")
     private List<TaskDetailVO> disableTasks;
 
 }

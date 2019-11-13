@@ -44,16 +44,16 @@ import org.springframework.data.domain.Page;
 @ApiModel("查询分析记录视图")
 public class QueryTaskLogVO extends CommonVO
 {
-    @ApiModelProperty(value = "任务主键id", required = true)
+    @ApiModelProperty(value = "任务主键id")
     private long taskId;
 
-    @ApiModelProperty(value = "工具名称", required = true)
+    @ApiModelProperty(value = "工具名称")
     private String toolName;
 
-    @ApiModelProperty(value = "第几页", required = true)
+    @ApiModelProperty(value = "第几页")
     private int page;
 
-    @ApiModelProperty(value = "每页多少条", required = true)
+    @ApiModelProperty(value = "每页多少条")
     private int pageSize;
 
     @ApiModelProperty(value = "分析记录列表")

@@ -135,7 +135,7 @@ public interface ServiceTaskRestResource
 
 
     @ApiOperation("通过流水线ID获取任务信息")
-    @Path("/task/info/{pipelineId}")
+    @Path("/taskInfo/{pipelineId}")
     @GET
     Result<TaskDetailVO> getPipelineTask(
             @ApiParam(value = "流水线ID", required = true)

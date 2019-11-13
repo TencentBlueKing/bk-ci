@@ -43,11 +43,11 @@ public class QueryLogReqVO
 {
 
     @NotBlank(message = "流水线ID不能为空")
-    @ApiModelProperty(value = "流水线ID", required = true)
+    @ApiModelProperty(value = "流水线ID")
     String pipelineId;
 
     @NotBlank(message = "构建ID不能为空")
-    @ApiModelProperty(value = "构建ID", required = true)
+    @ApiModelProperty(value = "构建ID")
     String buildId;
 
     @ApiModelProperty("行数")
@@ -57,11 +57,11 @@ public class QueryLogReqVO
     Boolean fromStart;
 
     @NotBlank(message = "起始行号不能为空")
-    @ApiModelProperty(value = "起始行号", required = true)
+    @ApiModelProperty(value = "起始行号")
     Long start;
 
     @NotBlank(message = "结尾行号不能为空")
-    @ApiModelProperty(value = "结尾行号", required = true)
+    @ApiModelProperty(value = "结尾行号")
     Long end;
 
     @ApiModelProperty("对应elementId")

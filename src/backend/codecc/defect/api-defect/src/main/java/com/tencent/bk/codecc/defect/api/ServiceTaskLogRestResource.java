@@ -84,7 +84,7 @@ public interface ServiceTaskLogRestResource
                     String projectId,
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "用户名", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName);
@@ -96,7 +96,7 @@ public interface ServiceTaskLogRestResource
     Result<TaskLogVO> getLatestTaskLog(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
                     String toolName
@@ -116,7 +116,7 @@ public interface ServiceTaskLogRestResource
     Result<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
-                    long taskId,
+                    Long taskId,
             @ApiParam(value = "工具名称清单", required = true)
                     Set<String> toolSet);
 

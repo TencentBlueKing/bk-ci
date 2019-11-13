@@ -43,9 +43,9 @@ import lombok.Data;
 public class TaskIdVO
 {
 
-    @ApiModelProperty(value = "任务主键", required = true)
+    @ApiModelProperty(value = "任务主键")
     private long taskId;
 
-    @ApiModelProperty(value = "项目英文名", required = true)
+    @ApiModelProperty(value = "项目英文名")
     private String nameEn;
 }
