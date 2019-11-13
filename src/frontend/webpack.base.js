@@ -93,7 +93,6 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             namedChunks: true,
             minimize: true,
             splitChunks: {
-                chunks: 'all',
                 cacheGroups: {
                     styles: {
                         name: 'styles',
