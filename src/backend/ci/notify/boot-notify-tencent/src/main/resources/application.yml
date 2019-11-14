@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: notify
+    desc: DevOps Project Service
+    version: 4.0
+    packageName: com.tencent.devops.notify
+
+server:
+  port: 21923

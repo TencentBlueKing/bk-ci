@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: prebuild
+    desc: Devops prebuild Service
+    version: 4.0.0
+    packageName: com.tencent.devops.prebuild
+  cloud:
+    consul:
+      discovery:
+        tags: local
+
+server:
+  port: 8099
+  undertow:
+    worker-threads: 100

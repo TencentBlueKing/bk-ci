@@ -5,5 +5,5 @@ cp -r ${WORKSPACE}/src/gateway/* ${WORKSPACE}/ci/gateway
 cd ${WORKSPACE}/scripts/
 sh ./render_local -m ci ../support-files/templates/*
 cd ${WORKSPACE}/ci/gateway
-cp ./lua/auth_user_oa.lua ./lua/auth_user.lua
-cp ./lua/oauth_util_oa.lua ./lua/oauth_util.lua
+cp ./lua/auth/auth_user_oa.lua ./lua/auth/auth_user.lua
+cp ./lua/auth/oauth_util_oa.lua ./lua/auth/oauth_util.lua
