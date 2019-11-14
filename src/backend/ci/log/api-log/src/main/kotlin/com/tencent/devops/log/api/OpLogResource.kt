@@ -51,37 +51,6 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpLogResource {
 
-    @ApiOperation("(Warning: 没事不要随便调用哦) 预创建 numDays 天内的 ES Index")
-    @POST
-    @Path("/preCreateIndices")
-    fun preCreateIndices(
-        @ApiParam("创建天数", required = true)
-        @QueryParam("numDays")
-        numDays: Int
-    ): Result<Int>
-
-    @ApiOperation("(Warning: 没事不要随便调用哦) 创建 log status index")
-    @POST
-    @Path("/logStatus")
-    fun createLogStatus(): Result<Boolean>
-
-    @ApiOperation("设置项目支持v2版本")
-    @PUT
-    @Path("/v2/projects/{projectId}")
-    fun enableV2(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("开启或禁止", required = true)
-        @QueryParam("enable")
-        enable: Boolean
-    ): Result<Boolean>
-
-    @ApiParam("获取支持V2版本的项目")
-    @GET
-    @Path("/v2/projects")
-    fun getV2Projects(): Result<Set<String>>
-
     @ApiParam("设置构建清理过期时长")
     @PUT
     @Path("/v2/build/clean/expire")
@@ -119,75 +88,6 @@ interface OpLogResource {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("根据构建ID获取初始化所有日志")
-    @GET
-    @Path("/{buildId}/")
-    fun getInitLogs(
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("是否请求分析日志", required = false)
-        @QueryParam("isAnalysis")
-        isAnalysis: Boolean? = false,
-        @ApiParam("搜索关键字", required = false)
-        @QueryParam("queryKeywords")
-        queryKeywords: String?,
-        @ApiParam("对应elementId", required = false)
-        @QueryParam("tag")
-        tag: String?,
-        @ApiParam("执行次数", required = false)
-        @QueryParam("executeCount")
-        executeCount: Int?
-    ): Result<QueryLogs>
 
-    @ApiOperation("获取更多日志")
-    @GET
-    @Path("/{buildId}/more")
-    fun getMoreLogs(
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("日志行数", required = false)
-        @QueryParam("num")
-        num: Int? = 100,
-        @ApiParam("是否正序输出", required = false)
-        @QueryParam("fromStart")
-        fromStart: Boolean? = true,
-        @ApiParam("起始行号", required = true)
-        @QueryParam("start")
-        start: Long,
-        @ApiParam("结尾行号", required = true)
-        @QueryParam("end")
-        end: Long,
-        @ApiParam("对应elementId", required = false)
-        @QueryParam("tag")
-        tag: String?,
-        @ApiParam("执行次数", required = false)
-        @QueryParam("executeCount")
-        executeCount: Int?
-    ): Result<QueryLogs>
 
-    @ApiOperation("获取某行后的日志")
-    @GET
-    @Path("/{buildId}/after")
-    fun getAfterLogs(
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("起始行号", required = true)
-        @QueryParam("start")
-        start: Long,
-        @ApiParam("是否请求分析日志", required = false)
-        @QueryParam("isAnalysis")
-        isAnalysis: Boolean? = false,
-        @ApiParam("搜索关键字", required = false)
-        @QueryParam("queryKeywords")
-        queryKeywords: String?,
-        @ApiParam("对应elementId", required = false)
-        @QueryParam("tag")
-        tag: String?,
-        @ApiParam("执行次数", required = false)
-        @QueryParam("executeCount")
-        executeCount: Int?
-    ): Result<QueryLogs>
 }

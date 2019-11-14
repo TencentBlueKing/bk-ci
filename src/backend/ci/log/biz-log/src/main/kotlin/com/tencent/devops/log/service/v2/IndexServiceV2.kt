@@ -29,9 +29,12 @@ package com.tencent.devops.log.service.v2
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.dao.v2.IndexDaoV2
 import com.tencent.devops.log.dao.v2.LogStatusDaoV2
 import com.tencent.devops.log.model.v2.IndexAndType
+import com.tencent.devops.log.util.IndexNameUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -44,7 +47,8 @@ import java.util.concurrent.TimeUnit
 class IndexServiceV2 @Autowired constructor(
     private val dslContext: DSLContext,
     private val indexDaoV2: IndexDaoV2,
-    private val logStatusDaoV2: LogStatusDaoV2
+    private val logStatusDaoV2: LogStatusDaoV2,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -59,17 +63,32 @@ class IndexServiceV2 @Autowired constructor(
                 override fun load(buildId: String): String {
                     return dslContext.transactionResult { configuration ->
                         val context = DSL.using(configuration)
-                        val indexName = indexDaoV2.getIndexName(context, buildId)
+                        var indexName = indexDaoV2.getIndexName(context, buildId)
                         if (indexName.isNullOrBlank()) {
-                            logger.warn("[$buildId] Fail to get the index")
-                            throw RuntimeException("Fail to get index")
-                        } else {
-                            indexName!!
+                            val redisLock = RedisLock(redisOperation, "log:build:enable:lock:key", 10)
+                            redisLock.lock()
+                            try {
+                                indexName = indexDaoV2.getIndexName(context, buildId)
+                                if (indexName.isNullOrBlank()) {
+                                    logger.info("[$buildId] Add the build record")
+                                    indexName = saveIndex(buildId)
+                                }
+                            } finally {
+                                redisLock.unlock()
+                            }
                         }
+                        indexName!!
                     }
                 }
             }
         )
+
+    private fun saveIndex(buildId: String): String {
+        val indexName = IndexNameUtils.getIndexName()
+        indexDaoV2.create(dslContext, buildId, indexName, true)
+        logger.info("[$buildId|$indexName] Create new index/type in db and cache")
+        return indexName
+    }
 
     fun getIndexAndType(buildId: String): IndexAndType {
         val index = indexCache.get(buildId)

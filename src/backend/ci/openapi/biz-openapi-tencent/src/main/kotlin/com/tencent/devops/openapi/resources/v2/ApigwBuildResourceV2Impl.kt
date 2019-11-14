@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.v2.ApigwBuildResourceV2
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -44,6 +45,17 @@ class ApigwBuildResourceV2Impl @Autowired constructor(private val client: Client
     ): Result<Boolean> {
         logger.info("Stop the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
         return client.get(ServiceBuildResource::class).manualShutdown(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.BS
+        )
+    }
+
+    override fun detail(userId: String, projectId: String, pipelineId: String, buildId: String): Result<ModelDetail> {
+        logger.info("get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
+        return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
