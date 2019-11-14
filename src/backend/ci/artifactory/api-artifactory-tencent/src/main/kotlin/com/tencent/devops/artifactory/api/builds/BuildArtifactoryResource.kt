@@ -200,4 +200,22 @@ interface BuildArtifactoryResource {
         @QueryParam("targetPath")
         targetPath: String
     ): Result<Count>
+
+    @ApiOperation("检查项目是否灰度仓库")
+    @Path("/checkRepoGray")
+    @GET
+    fun checkRepoGray(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam("X-DEVOPS-PROJECT-ID")
+        projectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("检查项目是否灰度")
+    @Path("/checkGrayProject")
+    @GET
+    fun checkGrayProject(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam("X-DEVOPS-PROJECT-ID")
+        projectId: String
+    ): Result<Boolean>
 }

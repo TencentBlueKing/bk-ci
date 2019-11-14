@@ -28,6 +28,7 @@ package com.tencent.devops.common.service
 
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -60,4 +61,7 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun commonConfig() = CommonConfig()
+
+    @Bean
+    fun repoGray() = RepoGray()
 }

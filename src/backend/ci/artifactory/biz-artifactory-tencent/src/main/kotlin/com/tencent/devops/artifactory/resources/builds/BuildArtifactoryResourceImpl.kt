@@ -39,6 +39,9 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +49,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildArtifactoryResourceImpl @Autowired constructor(
     private val artifactoryService: ArtifactoryService,
     private val artifactoryDownloadService: ArtifactoryDownloadService,
-    private val jfrogService: JfrogService
+    private val jfrogService: JfrogService,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val gray: Gray
 ) : BuildArtifactoryResource {
 
     override fun getOwnFileList(userId: String, projectId: String): Result<FileInfoPage<FileInfo>> {
@@ -133,6 +139,14 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         checkParam(projectId)
         val result = artifactoryService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath)
         return Result(result)
+    }
+
+    override fun checkRepoGray(projectId: String): Result<Boolean> {
+        return Result(repoGray.isGray(projectId, redisOperation))
+    }
+
+    override fun checkGrayProject(projectId: String): Result<Boolean> {
+        return Result(gray.isGrayProject(projectId, redisOperation))
     }
 
     private fun checkParam(projectId: String) {
