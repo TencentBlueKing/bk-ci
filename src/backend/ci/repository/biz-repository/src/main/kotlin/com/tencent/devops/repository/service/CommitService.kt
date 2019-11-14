@@ -64,7 +64,7 @@ class CommitService @Autowired constructor(
                 it.repoId?.toString(),
                 it.repoName,
                 it.elementId,
-                if (it.type.equals(2) && repoUrl != null) {
+                if (it.type.toInt() == 2 && repoUrl != null) {
                     val urlAndRepo = GitUtils.getDomainAndRepoName(repoUrl)
                     "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
                 } else null
