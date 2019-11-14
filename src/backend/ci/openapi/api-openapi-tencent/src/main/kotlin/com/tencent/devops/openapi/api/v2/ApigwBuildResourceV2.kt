@@ -65,7 +65,7 @@ interface ApigwBuildResourceV2 {
     ): Result<Boolean>
 
     @ApiOperation("构建详情")
-    @PUT
+    @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     fun detail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
