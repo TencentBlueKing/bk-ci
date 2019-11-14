@@ -33,6 +33,7 @@ import com.tencent.devops.repository.dao.CommitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.repository.pojo.commit.CommitResponse
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -51,6 +52,7 @@ class CommitService @Autowired constructor(
         val repoMap = repos?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
 
         return commits?.map {
+            val repoUrl = repoMap.get(it.repoId.toString())?.url
             CommitData(
                 it.type,
                 it.pipelineId,
@@ -61,7 +63,11 @@ class CommitService @Autowired constructor(
                 it.comment,
                 it.repoId?.toString(),
                 it.repoName,
-                it.elementId
+                it.elementId,
+                if (it.type.equals(2) && repoUrl != null) {
+                    val urlAndRepo = GitUtils.getDomainAndRepoName(repoUrl)
+                    "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
+                } else null
             )
         }?.groupBy { it.elementId }?.map {
             val elementId = it.value[0].elementId
@@ -78,12 +84,12 @@ class CommitService @Autowired constructor(
     }
 
     fun getLatestCommit(
-            pipelineId: String,
-            elementId: String,
-            repositoryId: String,
-            repositoryType: RepositoryType?,
-            page: Int?,
-            pageSize: Int?
+        pipelineId: String,
+        elementId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        page: Int?,
+        pageSize: Int?
     ): List<CommitData> {
         val commitList = if (repositoryType == null || repositoryType == RepositoryType.ID) {
             val repoId = HashUtil.decodeOtherIdToLong(repositoryId)
@@ -93,16 +99,16 @@ class CommitService @Autowired constructor(
         }
         return commitList.map { data ->
             CommitData(
-                    data.type,
-                    pipelineId,
-                    data.buildId,
-                    data.commit,
-                    data.committer,
-                    data.commitTime.timestampmilli(),
-                    data.comment,
-                    data.repoId.toString(),
-                    null,
-                    data.elementId
+                data.type,
+                pipelineId,
+                data.buildId,
+                data.commit,
+                data.committer,
+                data.commitTime.timestampmilli(),
+                data.comment,
+                data.repoId.toString(),
+                null,
+                data.elementId
             )
         }
     }
