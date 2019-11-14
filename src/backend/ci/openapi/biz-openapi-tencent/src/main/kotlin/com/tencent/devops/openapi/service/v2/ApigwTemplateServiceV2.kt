@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.tx.util.OrganizationUtil
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.process.api.v2.template.ServiceProjectTemplateResource
 import com.tencent.devops.process.pojo.template.TemplateModel
@@ -75,9 +76,12 @@ class ApigwTemplateServiceV2(
         // 项目接口内容判空
         if (projectsResult.isNotOk()) {
             val resultStr = JsonUtil.toJson(projectsResult)
+            val serviceInfo = "project:ServiceProjectResource:getProjectByGroup"
             throw MicroServiceInvokeFailure(
-                "project:ServiceProjectResource:getProjectByGroup",
-                "projectsResult=$resultStr"
+                serviceInterface = serviceInfo,
+                message = "projectsResult=$resultStr",
+                errorCode = OpenAPIMessageCode.ERROR_OPENAPI_INNER_SERVICE_FAIL,
+                params = arrayOf(serviceInfo)
             )
         }
         // 2.根据所有项目Id获取对应模板
@@ -94,9 +98,12 @@ class ApigwTemplateServiceV2(
         )
         val resultStr = JsonUtil.toJson(templatesResult)
         if (templatesResult.isNotOk()) {
+            val serviceInfo = "process:ServiceProjectTemplateResource:listTemplateByProjectIds"
             throw MicroServiceInvokeFailure(
-                "process:ServiceProjectTemplateResource:listTemplateByProjectIds",
-                "templatesResult=$resultStr"
+                serviceInterface = serviceInfo,
+                message = "projectsResult=$resultStr",
+                errorCode = OpenAPIMessageCode.ERROR_OPENAPI_INNER_SERVICE_FAIL,
+                params = arrayOf(serviceInfo)
             )
         }
         return templatesResult
