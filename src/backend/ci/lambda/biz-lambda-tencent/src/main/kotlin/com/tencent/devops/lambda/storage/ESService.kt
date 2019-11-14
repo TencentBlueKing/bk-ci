@@ -31,6 +31,9 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_OFFSET_LESS_THAN_ZERO
+import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_ORIGIN_TOO_MANY
+import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_START_DATE_AFTER_END_DATE
 import com.tencent.devops.lambda.pojo.BuildData
 import com.tencent.devops.lambda.pojo.BuildResult
 import com.tencent.devops.lambda.pojo.BuildResultWithPage
@@ -94,13 +97,16 @@ class ESService @Autowired constructor(
         project: String
     ): BuildResultWithPage {
         if (offset < 0) {
-            throw InvalidParamException("Offset cannot be less than 0", params = arrayOf("offset=$offset"))
+            throw InvalidParamException(
+                message = "Offset cannot be less than 0, offset=$offset",
+                errorCode = ERROR_LAMBDA_OFFSET_LESS_THAN_ZERO,
+                params = arrayOf("$offset"))
         }
         if (limitOrigin > 100) {
-            throw InvalidParamException("Limit cannot be bigger than 100", params = arrayOf("limitOrigin=$limitOrigin"))
-        }
-        if (project.isBlank()) {
-            throw InvalidParamException("project cannot be blank", params = arrayOf("project=$project"))
+            throw InvalidParamException(
+                message = "Limit cannot be bigger than 100, limitOrigin=$limitOrigin",
+                errorCode = ERROR_LAMBDA_ORIGIN_TOO_MANY,
+                params = arrayOf("$limitOrigin"))
         }
         val limit = if (limitOrigin <= 0) {
             10
@@ -249,7 +255,10 @@ class ESService @Autowired constructor(
         var startDate = Timestamp(beginTime * 1000).toLocalDateTime()
         val endDate = Timestamp(end * 1000).toLocalDateTime()
         if (startDate.isAfter(endDate)) {
-            throw InvalidParamException("startDate cannot be after endDate", params = arrayOf("startDate=$startDate,endDate=$endDate"))
+            throw InvalidParamException(
+                message = "startDate cannot be after endDate, startDate=$startDate, endDate=$endDate",
+                errorCode = ERROR_LAMBDA_START_DATE_AFTER_END_DATE,
+                params = arrayOf("$startDate", "$endDate"))
         }
         val result = HashSet<String>()
         while (!startDate.isAfter(endDate)) {

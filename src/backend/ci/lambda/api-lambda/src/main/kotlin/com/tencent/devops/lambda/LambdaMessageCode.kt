@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.constant
+package com.tencent.devops.lambda
 
 /**
  * 环境管理微服务模块请求返回状态码
@@ -34,18 +34,16 @@ package com.tencent.devops.openapi.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-蓝盾环境 06：experience-版本体验 07：image-镜像 08：log-蓝盾日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-蓝盾支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店  21：lambda）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  * @since: 2019-03-05
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object OpenAPIMessageCode {
-    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2112001" // OpenAPI：API Gateway公钥文件未设置
-    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2112002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
-    const val ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR = "2112003" // OpenAPI：API Gateway公钥文件读取错误，路径：{0}
-    const val ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY = "2112004" // OpenAPI：API Gateway公钥文件内容为空，路径：{0}
-    const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2112005" // OpenAPI：JWT解析失败
-    const val ERROR_OPENAPI_INNER_SERVICE_FAIL = "2112006" // OpenAPI：内部服务调用失败：{0}
+object LambdaMessageCode {
+    const val ERROR_LAMBDA_PROJECT_NOT_EXIST = "2121001" // Lambda：项目{0}不存在
+    const val ERROR_LAMBDA_OFFSET_LESS_THAN_ZERO = "2121002" // Lambda：offset不可小于0,当前offset={0}
+    const val ERROR_LAMBDA_ORIGIN_TOO_MANY = "2121003" // Lambda：origin数量不可超过100,当前limitOrigin={0}
+    const val ERROR_LAMBDA_START_DATE_AFTER_END_DATE = "2121004" // Lambda：起始时间不可晚于结束时间，startDate={0},endDate={1}
 }

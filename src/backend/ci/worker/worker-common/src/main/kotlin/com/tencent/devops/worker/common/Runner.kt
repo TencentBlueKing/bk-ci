@@ -125,7 +125,12 @@ object Runner {
                                 } else {
                                     // Worker执行的错误处理
                                     logger.warn("[Worker Error] Fail to execute the task($buildTask) with system error", e)
-                                    message = e.message ?: "Unknown system error has occurred"
+                                    val defaultErrorMsg = "Unknown system error has occurred with StackTrace:\n"
+                                    defaultErrorMsg.plus(e.toString())
+                                    e.stackTrace.map {
+                                        defaultErrorMsg.plus("\n    at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})")
+                                    }
+                                    message = e.message ?: defaultErrorMsg
                                     errorType = ErrorType.SYSTEM.name
                                     errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
                                 }
