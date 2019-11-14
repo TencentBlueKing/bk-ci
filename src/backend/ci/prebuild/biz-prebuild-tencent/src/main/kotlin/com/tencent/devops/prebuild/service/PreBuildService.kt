@@ -229,8 +229,17 @@ class PreBuildService @Autowired constructor(
 
     fun getInitLogs(userId: String, pipelineId: String, buildId: String): QueryLogs {
         val projectId = getUserProjectId(userId)
-        val originLog = client.get(UserLogResource::class).getInitLogs(userId, projectId, pipelineId, buildId,
-                false, null, null, null).data!!
+        val originLog = client.get(UserLogResource::class).getInitLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            isAnalysis = false,
+            queryKeywords = null,
+            tag = null,
+            jobId = null,
+            executeCount = null
+        ).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
         return QueryLogs(originLog.buildId, originLog.finished, cleanLogs, originLog.timeUsed, originLog.status)
@@ -238,7 +247,18 @@ class PreBuildService @Autowired constructor(
 
     fun getAfterLogs(userId: String, preProjectId: String, buildId: String, start: Long): QueryLogs {
         val prebuildProjRecord = getPreProjectInfo(preProjectId, userId)
-        val originLog = client.get(UserLogResource::class).getAfterLogs(userId, prebuildProjRecord.projectId, prebuildProjRecord.pipelineId, buildId, start, false, null, null, null).data!!
+        val originLog = client.get(UserLogResource::class).getAfterLogs(
+            userId = userId,
+            projectId = prebuildProjRecord.projectId,
+            pipelineId = prebuildProjRecord.pipelineId,
+            buildId = buildId,
+            start = start,
+            isAnalysis = false,
+            queryKeywords = null,
+            tag = null,
+            jobId = null,
+            executeCount = null
+        ).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
         return QueryLogs(originLog.buildId, originLog.finished, cleanLogs, originLog.timeUsed, originLog.status)
@@ -254,8 +274,17 @@ class PreBuildService @Autowired constructor(
                 s.containers.forEach { c ->
                     if (c is VMBuildContainer) {
                         c.elements.forEach { e ->
-                            val queryLogs = client.get(UserLogResource::class).getInitLogs(userId, prebuildProjRecord.projectId,
-                                prebuildProjRecord.pipelineId, buildId, false, null, e.id, null).data!!
+                            val queryLogs = client.get(UserLogResource::class).getInitLogs(
+                                userId = userId,
+                                projectId = prebuildProjRecord.projectId,
+                                pipelineId = prebuildProjRecord.pipelineId,
+                                buildId = buildId,
+                                isAnalysis = false,
+                                queryKeywords = null,
+                                tag = e.id,
+                                jobId = null,
+                                executeCount = null
+                            ).data!!
                             if (queryLogs.status == LogStatus.SUCCEED) {
                                 logs.addAll(queryLogs.logs.filterNot { it.message.contains("soda_fold") })
                             }
