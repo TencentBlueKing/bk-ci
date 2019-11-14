@@ -1,8 +1,0 @@
-
-           id: b64da87da29e4ed2129ef2d67beb0fd7690f1ca7
-           message: 修正超级管理员没有权限的问题
-
-           user: irwinsun
-           email: irwin.ypsun@gmail.com
-           time: Tue Nov 12 18:16:24 CST 2019
-        
