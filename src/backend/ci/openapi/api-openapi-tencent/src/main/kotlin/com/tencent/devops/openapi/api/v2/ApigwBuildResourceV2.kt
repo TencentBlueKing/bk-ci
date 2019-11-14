@@ -28,6 +28,7 @@ package com.tencent.devops.openapi.api.v2
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -62,4 +63,22 @@ interface ApigwBuildResourceV2 {
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
+
+    @ApiOperation("构建详情")
+    @PUT
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    fun detail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<ModelDetail>
 }
