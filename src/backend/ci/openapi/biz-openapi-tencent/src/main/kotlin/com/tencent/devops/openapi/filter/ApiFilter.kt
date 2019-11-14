@@ -26,8 +26,10 @@
 package com.tencent.devops.openapi.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import io.jsonwebtoken.Jwts
 import net.sf.json.JSONObject
@@ -138,11 +140,13 @@ class ApiFilter : ContainerRequestFilter {
             return JSONObject.fromObject(parse.body)
         } catch (e: Exception) {
             logger.error("Parse jwt failed.", e)
-            throw e
+            throw ErrorCodeException(
+                errorCode = ERROR_OPENAPI_JWT_PARSE_FAIL,
+                defaultMessage = "Parse jwt failed",
+                params = arrayOf(bkApiJwt)
+            )
         } finally {
-            if (reader != null) {
-                reader.close()
-            }
+            reader?.close()
         }
     }
 

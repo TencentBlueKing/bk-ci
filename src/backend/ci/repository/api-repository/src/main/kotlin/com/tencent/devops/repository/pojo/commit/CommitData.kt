@@ -36,5 +36,6 @@ data class CommitData(
     val comment: String?,
     val repoId: String?,
     val repoName: String?,
-    val elementId: String
+    val elementId: String,
+    var url: String? = null // 只有Git返回链接
 )

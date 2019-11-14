@@ -84,7 +84,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         region: CodeSvnRegion?,
         userName: String?
     ): RevisionInfo {
-        return client.get(ServiceScmResource::class).getLatestRevision(
+        return client.getScm(ServiceScmResource::class).getLatestRevision(
             projectName = projectName,
             url = url,
             type = type,
@@ -108,7 +108,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         userName: String?
     ): List<String> {
 
-        return client.get(ServiceScmResource::class).listBranches(
+        return client.getScm(ServiceScmResource::class).listBranches(
             projectName = projectName,
             url = url,
             type = type,
@@ -127,7 +127,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         token: String,
         userName: String
     ): List<String> {
-        return client.get(ServiceScmResource::class).listTags(
+        return client.getScm(ServiceScmResource::class).listTags(
             projectName = projectName,
             url = url,
             type = type,
@@ -146,7 +146,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         region: CodeSvnRegion?,
         userName: String
     ): TokenCheckResult {
-        return client.get(ServiceScmResource::class).checkPrivateKeyAndToken(
+        return client.getScm(ServiceScmResource::class).checkPrivateKeyAndToken(
             projectName = projectName,
             url = url,
             type = type,
@@ -168,7 +168,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         region: CodeSvnRegion?,
         repoUsername: String
     ): TokenCheckResult {
-        return client.get(ServiceScmResource::class).checkUsernameAndPassword(
+        return client.getScm(ServiceScmResource::class).checkUsernameAndPassword(
             projectName = projectName,
             url = url,
             type = type,
@@ -191,7 +191,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         userName: String,
         event: String?
     ) {
-        client.get(ServiceScmResource::class).addWebHook(
+        client.getScm(ServiceScmResource::class).addWebHook(
             projectName = projectName,
             url = url,
             type = type,
@@ -205,11 +205,11 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
     }
 
     override fun addCommitCheck(request: CommitCheckRequest) {
-        client.get(ServiceScmResource::class).addCommitCheck(request)
+        client.getScm(ServiceScmResource::class).addCommitCheck(request)
     }
 
     override fun lock(projectName: String, url: String, type: ScmType, region: CodeSvnRegion?, userName: String) {
-        client.get(ServiceScmResource::class).lock(
+        client.getScm(ServiceScmResource::class).lock(
             projectName = projectName,
             url = url,
             type = type,
@@ -219,7 +219,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
     }
 
     override fun unlock(projectName: String, url: String, type: ScmType, region: CodeSvnRegion?, userName: String) {
-        client.get(ServiceScmResource::class).unlock(
+        client.getScm(ServiceScmResource::class).unlock(
             projectName = projectName,
             url = url,
             type = type,

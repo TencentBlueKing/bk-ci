@@ -25,6 +25,10 @@
  */
 package com.tencent.devops.openapi.utils
 
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR
 import com.tencent.devops.openapi.exception.InvalidConfigException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -56,20 +60,35 @@ class ApiGatewayPubFile {
                     return pubOuter!!
                 }
                 if (pubFileOuter == null) {
-                    throw InvalidConfigException("Api gateway pub file is not settle")
+                    throw InvalidConfigException(
+                        message = "Api gateway pub file is not settle",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE
+                    )
                 }
 
                 val file = File(pubFileOuter)
                 if (!file.exists()) {
-                    throw InvalidConfigException("The pub file (${file.absolutePath}) is not exist")
+                    throw InvalidConfigException(
+                        message = "The pub file (${file.absolutePath}) is not exist",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST,
+                        params = arrayOf(file.absolutePath)
+                    )
                 }
                 pubOuter = file.readText()
                 if (pubOuter == null) {
-                    throw InvalidConfigException("Can't read the pub content from ${file.absolutePath}")
+                    throw InvalidConfigException(
+                        message = "Can't read the pub content from ${file.absolutePath}",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR,
+                        params = arrayOf(file.absolutePath)
+                    )
                 }
 
                 if (pubOuter!!.trim().isEmpty()) {
-                    throw InvalidConfigException("The pub file is empty from ${file.absolutePath}")
+                    throw InvalidConfigException(
+                        message = "The pub file is empty from ${file.absolutePath}",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY,
+                        params = arrayOf(file.absolutePath)
+                    )
                 }
                 logger.info("Get the pub($pubOuter) from ${file.absolutePath}")
             }
@@ -85,20 +104,35 @@ class ApiGatewayPubFile {
                     return pubInner!!
                 }
                 if (pubFileInner == null) {
-                    throw InvalidConfigException("Api gateway pub file is not settle")
+                    throw InvalidConfigException(
+                        message = "Api gateway pub file is not settle",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE
+                    )
                 }
 
                 val file = File(pubFileInner)
                 if (!file.exists()) {
-                    throw InvalidConfigException("The pub file (${file.absolutePath}) is not exist")
+                    throw InvalidConfigException(
+                        message = "The pub file (${file.absolutePath}) is not exist",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST,
+                        params = arrayOf(file.absolutePath)
+                    )
                 }
                 pubInner = file.readText()
                 if (pubInner == null) {
-                    throw InvalidConfigException("Can't read the pub content from ${file.absolutePath}")
+                    throw InvalidConfigException(
+                        message = "Can't read the pub content from ${file.absolutePath}",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR,
+                        params = arrayOf(file.absolutePath)
+                    )
                 }
 
                 if (pubInner!!.trim().isEmpty()) {
-                    throw InvalidConfigException("The pub file is empty from ${file.absolutePath}")
+                    throw InvalidConfigException(
+                        message = "The pub file is empty from ${file.absolutePath}",
+                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY,
+                        params = arrayOf(file.absolutePath)
+                    )
                 }
                 logger.info("Get the pub($pubInner) from ${file.absolutePath}")
             }

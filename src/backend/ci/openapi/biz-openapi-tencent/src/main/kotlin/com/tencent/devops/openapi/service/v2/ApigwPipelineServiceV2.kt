@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.tx.util.OrganizationUtil
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_INNER_SERVICE_FAIL
 import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.process.api.v2.ServiceProjectPipelineResource
 import com.tencent.devops.process.pojo.Pipeline
@@ -75,9 +76,12 @@ class ApigwPipelineServiceV2(private val client: Client) {
         // 项目接口内容判空
         if (projectsResult.isNotOk()) {
             val resultStr = JsonUtil.toJson(projectsResult)
+            val serviceInfo = "project:ServiceProjectResource:getProjectByGroup"
             throw MicroServiceInvokeFailure(
-                "project:ServiceProjectResource:getProjectByGroup",
-                "projectsResult=$resultStr"
+                serviceInterface = serviceInfo,
+                message = "projectsResult=$resultStr",
+                errorCode = ERROR_OPENAPI_INNER_SERVICE_FAIL,
+                params = arrayOf(serviceInfo)
             )
         }
         // 2.根据所有项目Id获取对应流水线
@@ -90,9 +94,12 @@ class ApigwPipelineServiceV2(private val client: Client) {
         )
         val resultStr = JsonUtil.toJson(pipelinesResult)
         if (pipelinesResult.isNotOk()) {
+            val serviceInfo = "process:ServiceProjectPipelineResource:listPipelinesByProjectIds"
             throw MicroServiceInvokeFailure(
-                "process:ServiceProjectPipelineResource:listPipelinesByProjectIds",
-                "pipelinesResult=$resultStr"
+                serviceInterface = serviceInfo,
+                message = "projectsResult=$resultStr",
+                errorCode = ERROR_OPENAPI_INNER_SERVICE_FAIL,
+                params = arrayOf(serviceInfo)
             )
         }
         return pipelinesResult
