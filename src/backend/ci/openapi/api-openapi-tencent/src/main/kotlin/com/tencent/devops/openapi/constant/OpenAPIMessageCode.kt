@@ -42,5 +42,10 @@ package com.tencent.devops.openapi.constant
  *
  */
 object OpenAPIMessageCode {
-    const val ERROR_ = "2112001" //
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2112001" // OpenAPI：API Gateway公钥文件未设置
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2112002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR = "2112003" // OpenAPI：API Gateway公钥文件读取错误，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY = "2112004" // OpenAPI：API Gateway公钥文件内容为空，路径：{0}
+    const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2112005" // OpenAPI：JWT解析失败
+    const val ERROR_OPENAPI_INNER_SERVICE_FAIL = "2112006" // OpenAPI：内部服务调用失败：{0}
 }
