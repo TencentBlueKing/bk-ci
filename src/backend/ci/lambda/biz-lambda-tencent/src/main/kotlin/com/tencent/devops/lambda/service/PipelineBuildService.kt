@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishB
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.dao.BuildTaskDao
 import com.tencent.devops.lambda.dao.PipelineBuildDao
 import com.tencent.devops.lambda.dao.PipelineResDao
@@ -132,7 +133,11 @@ class PipelineBuildService @Autowired constructor(
                     val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
                     if (projectInfo == null) {
                         logger.warn("[$projectId] Fail to get the project info")
-                        throw InvalidParamException("Fail to get the project info,projectId=$projectId", params = arrayOf("projectId=$projectId"))
+                        throw InvalidParamException(
+                            message = "Fail to get the project info, projectId=$projectId",
+                            errorCode = ERROR_LAMBDA_PROJECT_NOT_EXIST,
+                            params = arrayOf(projectId)
+                        )
                     }
                     return ProjectOrganize(
                         projectId = projectId,
