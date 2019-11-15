@@ -50,9 +50,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.coverity.CodeccReport
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.CoverityUtils
@@ -1457,46 +1455,5 @@ class PipelineBuildService(
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
         pipelineRuntimeService.saveBuildVmInfo(projectId, pipelineId, buildId, vmSeqId, vmInfo)
-    }
-
-    fun getCodeccReport(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        checkPermission: Boolean = true
-    ): CodeccReport {
-
-        if (checkPermission) {
-            checkPermission(
-                userId,
-                projectId,
-                pipelineId,
-                AuthPermission.VIEW,
-                "用户（$userId) 无权限获取流水线($pipelineId)Codecc报告"
-            )
-        }
-
-        val model = pipelineRepositoryService.getModel(pipelineId)
-            ?: throw NotFoundException("流水线不存在")
-
-        try {
-            model.stages.forEach { s ->
-                s.containers.forEach { c ->
-                    if (c is VMBuildContainer) {
-                        c.elements.forEach { e ->
-                            if (e is LinuxPaasCodeCCScriptElement) {
-                                if (e.codeCCTaskId != null) {
-                                    return CoverityUtils.getReport(projectId, pipelineId, e.codeCCTaskId!!, userId)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            logger.warn("Fail to parse the model($pipelineId)", e)
-            throw RuntimeException("Fail to parse the mode of pipeline")
-        }
-        throw OperationException("此流水线没有包含代码扫描原子")
     }
 }
