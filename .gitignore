@@ -25,3 +25,6 @@ node_modules/
 src/backend/.project
 src/backend/ci/.project
 src/backend/ci/.setting
+src/backend/ci/.settings
+
+.vscode
