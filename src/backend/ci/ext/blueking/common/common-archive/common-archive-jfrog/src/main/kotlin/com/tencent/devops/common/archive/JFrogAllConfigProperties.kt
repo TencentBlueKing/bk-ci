@@ -24,10 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:api-plugin")
-    compile project(":core:environment:api-environment")
-    compile project(":ext:tencent:common:common-archive:common-archive-tencent")
-    compile "org.glassfish.jersey.media:jersey-media-multipart"
-    compile group: 'org.json', name: 'json', version: '20180130'
+package com.tencent.devops.common.archive
+
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+@Component
+class JFrogAllConfigProperties {
+    @Value("\${jfrog.url:#{null}}")
+    val url: String? = null
+    @Value("\${jfrog.username:#{null}}")
+    val username: String? = null
+    @Value("\${jfrog.password:#{null}}")
+    val password: String? = null
 }

@@ -27,7 +27,7 @@
 dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-web")
-    compile project(":ext:tencent:lambda:api-lambda-tencent")
+    compile project(":ext:tencent:lambda:api-lambda")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

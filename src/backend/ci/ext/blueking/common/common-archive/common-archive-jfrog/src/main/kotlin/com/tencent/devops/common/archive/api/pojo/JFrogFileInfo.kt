@@ -24,10 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:api-plugin")
-    compile project(":core:environment:api-environment")
-    compile project(":ext:tencent:common:common-archive:common-archive-tencent")
-    compile "org.glassfish.jersey.media:jersey-media-multipart"
-    compile group: 'org.json', name: 'json', version: '20180130'
-}
+package com.tencent.devops.common.archive.api.pojo
+
+data class JFrogFileInfo(
+    val uri: String,
+    val size: Long,
+    val lastModified: String,
+    val folder: Boolean
+)

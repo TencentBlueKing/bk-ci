@@ -28,7 +28,7 @@ dependencies {
     compile project(":ext:blueking:common:common-auth:common-auth-blueking")
     compile project(":core:artifactory:biz-artifactory")
     compile project(":core:artifactory:biz-artifactory-store") // 对接研发商店
-    compile project(":ext:tencent:artifactory:biz-artifactory-jfrog")
+    compile project(":ext:blueking:artifactory:biz-artifactory-jfrog")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

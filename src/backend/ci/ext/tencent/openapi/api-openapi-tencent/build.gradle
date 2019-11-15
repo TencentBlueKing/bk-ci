@@ -28,7 +28,7 @@ dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-web")
     compile project(":core:common:common-util")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
+    //compile project(":ext:tencent:openapi:api-openapi")
     compile project(":core:store:api-store")
     compile project(":ext:tencent:store:api-store-tencent")
     compile project(":core:process:api-process")

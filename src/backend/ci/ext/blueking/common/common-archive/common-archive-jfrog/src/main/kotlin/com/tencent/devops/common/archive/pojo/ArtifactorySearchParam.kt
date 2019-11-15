@@ -24,11 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:store:api-store-image")
-    compile project(":core:store:biz-store")
-    compile project(":core:store:model-store")
-}
+package com.tencent.devops.common.archive.pojo
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+data class ArtifactorySearchParam(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val regexPath: String,
+    val custom: Boolean,
+    val executeCount: Int = 1, // 打印日志用到
+    val elementId: String = "", // 打印日志用到
+    val containerId: String = "" // 打印日志用到
+)

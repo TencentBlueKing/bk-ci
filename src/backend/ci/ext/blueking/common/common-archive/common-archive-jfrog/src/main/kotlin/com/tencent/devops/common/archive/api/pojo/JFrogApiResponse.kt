@@ -24,24 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth")
-    compile project(":core:common:common-archive")
-    compile project(":ext:tencent:common:common-archive-jfrog")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:common:common-notify:common-notify-api")
-    compile project(":ext:tencent:artifactory:api-artifactory-jfrog")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:artifactory:biz-artifactory")
-    compile project(":core:notify:api-notify")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:artifactory:model-artifactory")
-}
+package com.tencent.devops.common.archive.api.pojo
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+data class JFrogApiResponse<out T>(
+    val status: Int,
+    val data: T?,
+    val message: String
+)
