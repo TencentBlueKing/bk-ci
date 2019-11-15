@@ -24,17 +24,4 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_shadow_jar.gradle"
-
-mainClassName = "com.tencent.devops.agent.ApplicationKt"
-
-dependencies {
-    compile project(":core:worker:worker-common")
-    compile project(":core:worker:worker-api-sdk")
-    compile project(":core:worker:worker-plugin-scm")
-    compile project(":core:worker:worker-plugin-archive")
-
-    compile project (":core:plugin:codecc-plugin:worker-plugin-codecc")
-
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
-}
+apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -24,17 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_shadow_jar.gradle"
+package com.tencent.devops.agent
 
-mainClassName = "com.tencent.devops.agent.ApplicationKt"
+const val AGENT_VERSION = 8.3
 
-dependencies {
-    compile project(":core:worker:worker-common")
-    compile project(":core:worker:worker-api-sdk")
-    compile project(":core:worker:worker-plugin-scm")
-    compile project(":core:worker:worker-plugin-archive")
-
-    compile project (":core:plugin:codecc-plugin:worker-plugin-codecc")
-
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
+fun main(argv: Array<String>) {
+    println(AGENT_VERSION)
 }
