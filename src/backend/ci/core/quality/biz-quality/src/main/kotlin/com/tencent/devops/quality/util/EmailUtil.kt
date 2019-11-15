@@ -141,10 +141,9 @@ object EmailUtil {
             "                                    <tbody>\n" +
             "                                        <tr style=\"height: 64px; background: #555;\">\n" +
             "                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n" +
-            "                                                <img src=\"http://dev.gw.open.oa.com/email/logo.png\" width=\"52\" style=\"display: block\">\n" +
+            "                                                <img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo.png\" width=\"52\" style=\"display: block\">\n" +
             "                                            </td>\n" +
             "                                            <td style=\"padding-left: 6px;\">\n" +
-            "                                                <img src=\"http://dev.gw.open.oa.com/email/title.png\" width=\"176\" style=\"display: block\">\n" +
             "                                            </td>\n" +
             "                                        </tr>\n" +
             "                                    </tbody>\n" +
@@ -227,10 +226,9 @@ object EmailUtil {
             "                                    <tbody>\n" +
             "                                        <tr style=\"height: 64px; background: #555;\">\n" +
             "                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n" +
-            "                                                <img src=\"http://dev.gw.open.oa.com/email/logo.png\" width=\"52\" style=\"display: block\">\n" +
+            "                                                <img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo.png\" width=\"52\" style=\"display: block\">\n" +
             "                                            </td>\n" +
             "                                            <td style=\"padding-left: 6px;\">\n" +
-            "                                                <img src=\"http://dev.gw.open.oa.com/email/title.png\" width=\"176\" style=\"display: block\">\n" +
             "                                            </td>\n" +
             "                                        </tr>\n" +
             "                                    </tbody>\n" +
