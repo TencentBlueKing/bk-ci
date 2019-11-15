@@ -17,33 +17,29 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-string = require("string")
-math = require("math")
-json = require("cjson.safe")
-uuid = require("resty.jit-uuid")
-resolver = require("resty.dns.resolver")
-ck = require("resty.cookie")
-http = require("resty.http")
-stringUtil = require("util.string_util")
-ipUtil = require("util.ip_util")
-consulUtil = require("util.consul_util")
-logUtil = require("util.log_util")
-redisUtil = require("util.redis_util")
-oauthUtil = require("util.oauth_util")
-md5 = require("resty.md5")
-arrayUtil = require("util.array_util")
-cookieUtil = require("util.cookie_util")
-grayUtil = require("util.gray_util")
-itloginUtil = require("util.itlogin_util")
-urlUtil = require("util.url_util")
+local x_ckey = ngx.var.http_x_ckey
+local querysArgs = urlUtil:parseUrl(ngx.var.request_uri)
+local ckey = querysArgs["cKey"]
+-- ngx.log(ngx.ERR, "x_ckey:",x_ckey)
 
-math.randomseed(os.time())
-uuid.seed()
+if ckey == nill and x_ckey == nil then
+ngx.log(ngx.ERR, "request does not has header=x-ckey or arg_cKey.")
+ngx.exit(401)
+return
+end
 
-local ok_table = {
-  status = 0,
-  data = true
-}
+local real_ckey = nil
 
-response_ok = json.encode(ok_table)
+if x_ckey ~= nil then
+real_ckey = x_ckey
+end
 
+if ckey ~= nil then
+real_ckey = ckey
+end
+
+--- 请求itlogin后台查询用户信息
+local staff_info = itloginUtil:get_staff_info(real_ckey)
+
+--- 设置sid
+ngx.header["X-DEVOPS-UID"] = staff_info.EnglishName
