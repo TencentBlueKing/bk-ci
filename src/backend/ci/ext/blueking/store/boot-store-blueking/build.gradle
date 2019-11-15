@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":ext:tencent:store:biz-store-op")
+    //compile project(":ext:tencent:store:biz-store-op")
     compile project(":ext:blueking:store:biz-store-blueking")
 }
 

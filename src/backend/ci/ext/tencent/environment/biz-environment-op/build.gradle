@@ -27,7 +27,7 @@
 dependencies {
     compile project(":core:environment:biz-environment")
     compile project(":ext:tencent:environment:api-environment-op")
-    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
+    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
