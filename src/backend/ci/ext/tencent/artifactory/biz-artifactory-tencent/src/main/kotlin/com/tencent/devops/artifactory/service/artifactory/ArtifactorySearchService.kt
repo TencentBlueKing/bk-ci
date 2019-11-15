@@ -24,11 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.service.artifactory
 
+import com.tencent.devops.artifactory.client.JFrogAQLService
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.service.RepoSearchService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -45,8 +48,7 @@ class ArtifactorySearchService @Autowired constructor(
     val jFrogAQLService: JFrogAQLService,
     val pipelineService: PipelineService,
     val artifactoryService: ArtifactoryService
-) {
-
+) : RepoSearchService {
     fun search(
         userId: String,
         projectId: String,
@@ -134,7 +136,7 @@ class ArtifactorySearchService @Autowired constructor(
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
-    fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Pair<Long, List<FileInfo>> {
+    override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Pair<Long, List<FileInfo>> {
         logger.info("Service search file and property. [ProjectId=$projectId, Props=$searchProps]")
 
         val repoPathPrefix = JFrogUtil.getRepoPath()
@@ -168,7 +170,7 @@ class ArtifactorySearchService @Autowired constructor(
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
-    fun serviceSearchFileByRegex(
+    override fun serviceSearchFileByRegex(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -199,10 +201,10 @@ class ArtifactorySearchService @Autowired constructor(
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
-    fun serviceSearchFileAndProperty(
+    override fun serviceSearchFileAndProperty(
         projectId: String,
         searchProps: List<Property>,
-        customized: Boolean? = null
+        customized: Boolean?
     ): Pair<Long, List<FileInfo>> {
         logger.info("Service search file and property. [ProjectId=$projectId, Props=$searchProps]")
 
@@ -235,10 +237,10 @@ class ArtifactorySearchService @Autowired constructor(
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
-    fun serviceSearchFileAndPropertyByOr(
+    override fun serviceSearchFileAndPropertyByOr(
         projectId: String,
         searchProps: List<Property>,
-        customized: Boolean? = null
+        customized: Boolean?
     ): Pair<Long, List<FileInfo>> {
         logger.info("Service search file and property by or. [ProjectId=$projectId, Props=$searchProps]")
 
@@ -271,7 +273,7 @@ class ArtifactorySearchService @Autowired constructor(
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
-    fun getJforgInfoByteewTime(page: Int, pageSize: Int, startTime: Long, endTime: Long): List<FileInfo> {
+    override fun getJforgInfoByteewTime(page: Int, pageSize: Int, startTime: Long, endTime: Long): List<FileInfo> {
         val pageNotNull = page ?: 0
         var pageSizeNotNull = pageSize ?: 500
         if (pageSizeNotNull > 500) {
@@ -286,7 +288,7 @@ class ArtifactorySearchService @Autowired constructor(
             val properties = it.properties
             if (properties != null) {
                 properties.forEach { p ->
-                    if (p.key == "projectId") {
+                    if (p.key.equals("projectId")) {
                         projectId = p.value!!
                     }
                 }
@@ -302,8 +304,8 @@ class ArtifactorySearchService @Autowired constructor(
                 }
             }
         }
-        val fileInfoList: MutableList<FileInfo> = mutableListOf()
-        jfrogInfoMapbyProject.forEach { (projectId, list) ->
+        var fileInfoList: MutableList<FileInfo> = mutableListOf()
+        jfrogInfoMapbyProject?.forEach { projectId, list ->
             fileInfoList.addAll(artifactoryService.transferJFrogAQLFileInfo(projectId, list, emptyList(), false))
         }
 

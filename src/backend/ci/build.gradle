@@ -80,8 +80,8 @@ buildscript {
 
     repositories {
         mavenLocal()
-        //maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url mavenRepoUrl }
+        maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()
@@ -136,8 +136,8 @@ allprojects {
 
     repositories {
         mavenLocal()
-        //maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url mavenRepoUrl }
+        maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()

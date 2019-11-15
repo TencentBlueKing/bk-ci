@@ -24,17 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.service.artifactory
 
+import com.tencent.devops.artifactory.client.JFrogAQLService
+import com.tencent.devops.artifactory.client.JFrogApiService
+import com.tencent.devops.artifactory.client.JFrogService
 import com.tencent.devops.artifactory.dao.TokenDao
 import com.tencent.devops.artifactory.pojo.DownloadUrl
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.Platform
+import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
@@ -64,17 +70,20 @@ class ArtifactoryDownloadService @Autowired constructor(
     private val dslContext: DSLContext,
     private val tokenDao: TokenDao,
     private val pipelineService: PipelineService,
-    private val customDirService: CustomDirService,
+    private val artifactoryCustomDirService: ArtifactoryCustomDirService,
     private val artifactoryService: ArtifactoryService,
     private val shortUrlApi: ShortUrlApi,
     private val jFrogService: JFrogService,
     private val jFrogApiService: JFrogApiService,
     private val jFrogAQLService: JFrogAQLService,
     private val jFrogPropertiesApi: JFrogPropertiesApi
-) {
+) : RepoDownloadService {
     private val regex = Pattern.compile(",|;")
 
-    fun getDownloadUrl(token: String): DownloadUrl {
+    /**
+     * 不支持的特性
+     */
+    override fun getDownloadUrl(token: String): DownloadUrl {
         val tokenRecord = tokenDao.getOrNull(dslContext, token) ?: throw NotFoundException("token不存在")
         if (tokenRecord.expireTime.isBefore(LocalDateTime.now())) {
             throw PermissionForbiddenException("token已过期")
@@ -91,19 +100,24 @@ class ArtifactoryDownloadService @Autowired constructor(
         return DownloadUrl(url, platform)
     }
 
-    fun serviceGetExternalDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url {
-        val path = JFrogUtil.normalize(argPath)
-        if (!JFrogUtil.isValid(path)) {
-            logger.error("Path $path is not valid")
-            throw BadRequestException("非法路径")
-        }
+    override fun serviceGetExternalDownloadUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        ttl: Int,
+        directed: Boolean
+    ): Url {
+        logger.info("serviceGetExternalDownloadUrl, userId: $userId, userId: $projectId, userId: $projectId, " +
+            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
 
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
         return Url(url)
     }
 
-    fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url {
+    override fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean): Url {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -115,7 +129,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         return Url(url)
     }
 
-    fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
+    override fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -124,7 +138,7 @@ class ArtifactoryDownloadService @Autowired constructor(
 
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         if (artifactoryType == ArtifactoryType.CUSTOM_DIR && path.startsWith("/share/")) {
-            if (!customDirService.isProjectUser(userId, projectId)) {
+            if (!artifactoryCustomDirService.isProjectUser(userId, projectId)) {
                 throw CustomException(Response.Status.BAD_REQUEST, "用户($userId)不是项目($projectId)成员")
             }
         } else {
@@ -142,7 +156,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         return Url(url, url2)
     }
 
-    fun getIoaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
+    override fun getIoaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -151,7 +165,7 @@ class ArtifactoryDownloadService @Autowired constructor(
 
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         if (artifactoryType == ArtifactoryType.CUSTOM_DIR && path.startsWith("/share/")) {
-            if (!customDirService.isProjectUser(userId, projectId)) {
+            if (!artifactoryCustomDirService.isProjectUser(userId, projectId)) {
                 throw CustomException(Response.Status.BAD_REQUEST, "用户($userId)不是项目($projectId)成员")
             }
         } else {
@@ -167,7 +181,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         return Url(url)
     }
 
-    fun getExternalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
+    override fun getExternalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -191,7 +205,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         return Url(shortUrl)
     }
 
-    fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String) {
+    override fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String) {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -204,7 +218,7 @@ class ArtifactoryDownloadService @Autowired constructor(
                 pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.SHARE, "用户($userId)在工程($projectId)下没有流水线${pipelineId}分享权限")
             }
             ArtifactoryType.CUSTOM_DIR -> {
-                customDirService.validatePermission(userId, projectId)
+                artifactoryCustomDirService.validatePermission(userId, projectId)
             }
         }
 
@@ -226,7 +240,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 
-    fun getThirdPartyDownloadUrl(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int?): List<String> {
+    override fun getThirdPartyDownloadUrl(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int?): List<String> {
         val pathArray = regex.split(argPath)
 
         val repoPathPrefix = JFrogUtil.getRepoPath()
