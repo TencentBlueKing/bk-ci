@@ -127,7 +127,7 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig, isSvn, isGit, isGithub, isTGit } from '../../config/'
-    import { parsePathAlias, parsePathRegion } from '../../utils'
+    import { parsePathAlias, extendParsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
         props: {
@@ -251,6 +251,9 @@
             credentialTypes () {
                 return this.codelibConfig.credentialTypes
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             credentialId: {
                 get () {
                     return this.codelib.credentialId
@@ -268,12 +271,9 @@
                 },
                 set (url) {
                     const { codelib, codelibTypeName } = this
-                    const { alias, msg } = parsePathAlias(
-                        codelibTypeName,
-                        url,
-                        codelib.authType,
-                        codelib.svnType
-                    )
+                    const { alias, msg } = this.isExtendTx
+                        ? extendParsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
+                        : parsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
                     if (msg) {
                         this.urlErrMsg = msg
                     }
