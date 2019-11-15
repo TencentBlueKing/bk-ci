@@ -38,8 +38,12 @@ function errorHandler (error) {
 }
 
 request.interceptors.request.use(config => {
-    // @ts-ignore
-    const routePid = window.pipelineVue && window.pipelineVue.$route && window.pipelineVue.$route.params && window.pipelineVue.$route.params.projectId
+    console.log(config.url, 'config.url')
+    if (/^(\/?ms\/backend|\/?backend)/.test(config.url)) {
+        return config
+    }
+
+    const routePid = getCurrentPid()
     return {
         ...config,
         headers: routePid ? {
@@ -105,6 +109,16 @@ const injectCSRFTokenToHeaders = () => {
         request.defaults.headers.post['X-CSRFToken'] = CSRFToken
     } else {
         console.warn('Can not find backend_csrftoken in document.cookie')
+    }
+}
+
+const getCurrentPid = () => {
+    try {
+        const pathPid = window.pipelineVue && window.pipelineVue.$route && window.pipelineVue.$route.params && window.pipelineVue.$route.params.projectId
+        const lsPid = localStorage.getItem('projectId')
+        return pathPid || lsPid
+    } catch (e) {
+        return undefined
     }
 }
 

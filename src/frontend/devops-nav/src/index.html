@@ -156,6 +156,8 @@
                         } 
                     }
                     return ''    
+                }else if (location.pathname.match(/^\/console\/store\/(\w+)?/)){ // TODO store没有projectId
+                    return ''    
                 } else {
                     var res = location.pathname.match(reg)
                     return res ? res[1] : ''

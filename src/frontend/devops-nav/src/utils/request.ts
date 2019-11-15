@@ -22,8 +22,11 @@ function errorHandler (error: object) {
 }
 
 request.interceptors.request.use(config => {
-    // @ts-ignore
-    const routePid = window.devops && window.devops.$route && window.devops.$route.params && window.devops.$route.params.projectId
+    if (/^(\/?ms\/backend|\/?backend)/.test(config.url)) {
+        return config   
+    }
+    
+    const routePid = getCurrentPid()
     console.log('routePid', routePid)
     return {
         ...config,
@@ -69,6 +72,18 @@ const injectCSRFTokenToHeaders = () => {
         request.defaults.headers.common['X-CSRFToken'] = CSRFToken
     } else {
         console.warn('Can not find backend_csrftoken in document.cookie')
+    }
+}
+
+
+const getCurrentPid = () => {
+    try {
+        // @ts-ignore
+        const pathPid = window.devops && window.devops.$route && window.devops.$route.params && window.devops.$route.params.projectId
+        const lsPid = localStorage.getItem('projectId')
+        return pathPid || lsPid
+    } catch (e) {
+        return undefined
     }
 }
 
