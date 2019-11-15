@@ -30,10 +30,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 
-/**
- * deng
- * 2019-01-17
- */
 data class TemplateCompareModel(
     val buildNo: BuildNo?,
     val params: List<BuildFormProperty>,

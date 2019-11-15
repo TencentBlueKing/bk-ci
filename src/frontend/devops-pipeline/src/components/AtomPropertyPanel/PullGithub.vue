@@ -45,7 +45,7 @@
     }
 </script>
 
-<style>
+<style lang="scss">
     .no-support {
         text-align: center;
     }

@@ -29,10 +29,6 @@ package com.tencent.devops.process.pojo.template
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 
-/**
- * deng
- * 2019-01-10
- */
 data class TemplateInstanceParams(
     val pipelineId: String,
     val pipelineName: String,
