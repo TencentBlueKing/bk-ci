@@ -38,7 +38,6 @@ function errorHandler (error) {
 }
 
 request.interceptors.request.use(config => {
-    console.log(config.url, 'config.url')
     if (/^(\/?ms\/backend|\/?backend)/.test(config.url)) {
         return config
     }
