@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.atom
+package com.tencent.devops.common.archive.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
@@ -52,5 +52,6 @@ data class BuildPushDockerImageElement(
         const val classType = "buildPushDockerImage"
     }
 
-    override fun getClassType() = classType
+    override fun getClassType() =
+        classType
 }

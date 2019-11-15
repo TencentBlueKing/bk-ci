@@ -31,7 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.pojo.element.atom.BuildPushDockerImageElement
+import com.tencent.devops.common.archive.element.BuildPushDockerImageElement
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.process.pojo.BuildTask
