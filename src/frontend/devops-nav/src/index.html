@@ -133,7 +133,7 @@
             document.cookie = cname + "=" + cvalue + "; " + 'domain=' + domain + '; path=/';
         }
         
-        function setProjectIdCookie (projectId) {
+        window.setProjectIdCookie = function (projectId) {
             try {
                 setCookie(X_DEVOPS_PROJECT_ID, '', 'oa.com')
                 setCookie(X_DEVOPS_PROJECT_ID, projectId, 'oa.com')
@@ -170,7 +170,7 @@
         }
 
         var pathPid = matchPathProjectId() || localStorage.getItem('projectId')
-        setProjectIdCookie(pathPid)
+        window.setProjectIdCookie(pathPid)
         
     </script>
     <script>
@@ -263,7 +263,7 @@
             var defaultPid = projectList[0] && projectList[0].projectCode
             var isPidOk = isValidPid(projectList, pathPid)
             if (!isPidOk && defaultPid) {
-                setProjectIdCookie(defaultPid)
+                window.setProjectIdCookie(defaultPid)
             }
 
 
