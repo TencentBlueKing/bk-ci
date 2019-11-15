@@ -30,7 +30,7 @@ import com.tencent.devops.artifactory.Constants
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.service.ArtifactoryInfoService
-import com.tencent.devops.artifactory.service.ArtifactorySearchService
+import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher

@@ -24,44 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service
+package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient
-import org.springframework.cloud.consul.ConsulAutoConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.PropertySource
-import org.springframework.core.Ordered
-import org.springframework.core.env.Environment
+import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.service.ReportService
+import com.tencent.devops.artifactory.util.JFrogUtil
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@PropertySource("classpath:/common-service.properties")
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureBefore(ConsulAutoConfiguration::class)
-@EnableDiscoveryClient
-class ServiceAutoConfiguration {
-    @Bean
-    fun profile(environment: Environment) = Profile(environment)
+@Service
+class ArtifactoryReportService @Autowired constructor(
+    private val jFrogService: JFrogService
+) : ReportService {
+    override fun get(projectId: String, pipelineId: String, buildId: String, elementId: String, path: String): Response {
+        logger.info("report get ($projectId, $pipelineId, $buildId, $elementId, $path)")
 
-    @Bean
-    fun springContextUtil() = SpringContextUtil()
+        val normalizePath = JFrogUtil.normalize(path)
+        val realPath = JFrogUtil.getReportPath(projectId, pipelineId, buildId, elementId, normalizePath)
+        if (!jFrogService.exist(realPath)) {
+            logger.error("文件($realPath)不存在")
+            throw NotFoundException("文件($path)不存在")
+        }
 
-    @Bean
-    fun gray() = Gray()
+        val response = jFrogService.get(realPath)
+        return Response.ok(response.first, MediaType.valueOf(response.second.toString())).build()
+    }
 
-    @Bean
-    fun commonConfig() = CommonConfig()
-
-    @Bean
-    fun repoGray() = RepoGray()
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

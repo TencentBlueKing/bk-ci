@@ -27,17 +27,22 @@
 package com.tencent.devops.artifactory.resources.user
 
 import com.tencent.devops.artifactory.api.user.UserReportResource
-import com.tencent.devops.artifactory.service.ReportService
+import com.tencent.devops.artifactory.service.artifactory.ArtifactoryReportService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoReportService
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
 class UserReportResourceImpl @Autowired constructor(
-    private val reportService: ReportService
+    private val artifactoryReportService: ArtifactoryReportService,
+    private val bkRepoReportService: BkRepoReportService,
+    val redisOperation: RedisOperation,
+    val repoGray: RepoGray
 ) : UserReportResource {
-
     override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String): Response {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -57,6 +62,10 @@ class UserReportResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-        return reportService.get(projectId, pipelineId, buildId, elementId, path)
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoReportService.get(projectId, pipelineId, buildId, elementId, path)
+        } else {
+            artifactoryReportService.get(projectId, pipelineId, buildId, elementId, path)
+        }
     }
 }

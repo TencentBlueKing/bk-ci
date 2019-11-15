@@ -50,6 +50,10 @@ class Gray {
         return gray!!
     }
 
+    fun isGrayProject(projectId: String, redisOperation: RedisOperation): Boolean {
+        return grayProjectSet(redisOperation).contains(projectId)
+    }
+
     fun isGrayMatchProject(projectId: String, redisOperation: RedisOperation): Boolean {
         return isGrayMatchProject(projectId, grayProjectSet(redisOperation))
     }

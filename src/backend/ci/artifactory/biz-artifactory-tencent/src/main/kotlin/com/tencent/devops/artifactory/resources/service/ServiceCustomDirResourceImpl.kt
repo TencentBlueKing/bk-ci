@@ -28,15 +28,21 @@ package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.devops.artifactory.api.service.ServiceCustomDirResource
 import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.service.CustomDirGsService
+import com.tencent.devops.artifactory.service.artifactory.ArtifactoryCustomDirGsService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirGsService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceCustomDirResourceImpl @Autowired constructor(
-    private val customDirGsService: CustomDirGsService
+    private val artifactoryCustomDirGsService: ArtifactoryCustomDirGsService,
+    private val bkRepoCustomDirGsService: BkRepoCustomDirGsService,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray
 ) : ServiceCustomDirResource {
 
     override fun getGsDownloadUrl(projectId: String, fileName: String, userId: String): Result<Url> {
@@ -49,6 +55,11 @@ class ServiceCustomDirResourceImpl @Autowired constructor(
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
-        return Result(Url(customDirGsService.getDownloadUrl(projectId, fileName, userId)))
+
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(Url(bkRepoCustomDirGsService.getDownloadUrl(projectId, fileName, userId)))
+        } else {
+            Result(Url(artifactoryCustomDirGsService.getDownloadUrl(projectId, fileName, userId)))
+        }
     }
 }

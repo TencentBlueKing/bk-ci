@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -59,7 +59,7 @@ class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMap
 //        .build()
 
     /**
-     * 通过JFrog AQL接口查询文件，并根据文searchByProperty件创建时间倒序返回
+     * 通过JFrog AQL接口查询文件，并根据文件创建时间倒序返回
      *
      * 参数：
      * @param parentFolder 父目录包含repo，例如: generic-local/bk-custom/a90/

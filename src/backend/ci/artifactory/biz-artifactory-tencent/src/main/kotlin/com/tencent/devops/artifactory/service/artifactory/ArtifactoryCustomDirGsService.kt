@@ -24,44 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service
+package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient
-import org.springframework.cloud.consul.ConsulAutoConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.PropertySource
-import org.springframework.core.Ordered
-import org.springframework.core.env.Environment
+import com.tencent.devops.artifactory.client.JFrogApiService
+import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.service.CustomDirGsService
+import com.tencent.devops.artifactory.util.JFrogUtil
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@PropertySource("classpath:/common-service.properties")
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureBefore(ConsulAutoConfiguration::class)
-@EnableDiscoveryClient
-class ServiceAutoConfiguration {
-    @Bean
-    fun profile(environment: Environment) = Profile(environment)
+@Service
+class ArtifactoryCustomDirGsService @Autowired constructor(
+    private val jFrogApiService: JFrogApiService,
+    private val jFrogService: JFrogService
+) : CustomDirGsService {
+    override fun getDownloadUrl(projectId: String, fileName: String, userId: String): String {
 
-    @Bean
-    fun springContextUtil() = SpringContextUtil()
+        val path = JFrogUtil.getCustomDirPath(projectId, fileName)
 
-    @Bean
-    fun gray() = Gray()
+        if (!jFrogService.exist(path)) {
+            throw NotFoundException("文件不存在")
+        }
 
-    @Bean
-    fun commonConfig() = CommonConfig()
-
-    @Bean
-    fun repoGray() = RepoGray()
+        return jFrogApiService.internalDownloadUrl(path, 3*24*3600, userId)
+    }
 }

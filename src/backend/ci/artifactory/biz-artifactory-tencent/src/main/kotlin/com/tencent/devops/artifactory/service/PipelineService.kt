@@ -1,45 +1,14 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.pojo.FileChecksums
-import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.pojo.JFrogFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.archive.api.JFrogPropertiesApi
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceJfrogResource
@@ -48,15 +17,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import javax.ws.rs.BadRequestException
 
 @Service
 class PipelineService @Autowired constructor(
-    private val bkAuthPermissionApi: BSAuthPermissionApi,
-    private val jFrogPropertiesApi: JFrogPropertiesApi,
-    private val jFrogService: JFrogService,
     private val client: Client,
-    private val pipelineAuthServiceCode: BSPipelineAuthServiceCode
+    private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val bkAuthPermissionApi: BSAuthPermissionApi
 ) {
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
 
@@ -64,94 +30,7 @@ class PipelineService @Autowired constructor(
         return validatePermission(userId, projectId, pipelineId, authPermission)
     }
 
-    fun list(userId: String, projectId: String, path: String): List<FileInfo> {
-        return list(userId, projectId, path, AuthPermission.VIEW)
-    }
-
-    fun list(userId: String, projectId: String, argPath: String, authPermission: AuthPermission): List<FileInfo> {
-        val path = JFrogUtil.normalize(argPath)
-        if (!JFrogUtil.isValid(path)) {
-            logger.error("Path $path is not valid")
-            throw BadRequestException("非法路径")
-        }
-
-        val realPath = JFrogUtil.getPipelinePath(projectId, path)
-        val jFrogFileInfoList = jFrogService.list(realPath, false, 1)
-
-        return when {
-            isRootDir(path) -> {
-                getRootPathFileList(userId, projectId, path, jFrogFileInfoList, authPermission)
-            }
-            isPipelineDir(path) -> {
-                val pipelineId = getPipelineId(path)
-                validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
-                getPipelinePathList(projectId, path, jFrogFileInfoList)
-            }
-            else -> {
-                val pipelineId = getPipelineId(path)
-                validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
-                getBuildPathList(projectId, path, jFrogFileInfoList)
-            }
-        }
-    }
-
-    fun show(userId: String, projectId: String, argPath: String): FileDetail {
-        val path = JFrogUtil.normalize(argPath)
-        if (!JFrogUtil.isValid(path)) {
-            logger.error("Path $path is not valid")
-            throw BadRequestException("非法路径")
-        }
-
-        // 项目目录不存在时，创建根目录
-        val realPath = JFrogUtil.getPipelinePath(projectId, path)
-        if (JFrogUtil.isRoot(path) && !jFrogService.exist(realPath)) {
-            jFrogService.mkdir(realPath)
-        }
-
-        val jFrogFileInfo = jFrogService.file(realPath)
-        val jFrogProperties = jFrogPropertiesApi.getProperties(realPath)
-        val jFrogPropertiesMap = mutableMapOf<String, String>()
-        jFrogProperties.map {
-            jFrogPropertiesMap[it.key] = it.value.joinToString(",")
-        }
-        if (jFrogProperties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            val pipelineId = jFrogProperties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-            val pipelineName = getPipelineName(projectId, pipelineId)
-            jFrogPropertiesMap[ARCHIVE_PROPS_PIPELINE_NAME] = pipelineName
-        }
-
-        return if (jFrogFileInfo.checksums == null) {
-            FileDetail(
-                    getDirectoryName(projectId, path),
-                    path,
-                    getFullName(projectId, path),
-                    path,
-                    jFrogFileInfo.size,
-                    LocalDateTime.parse(jFrogFileInfo.created, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                    LocalDateTime.parse(jFrogFileInfo.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                    FileChecksums("", "", ""),
-                    jFrogPropertiesMap
-            )
-        } else {
-            FileDetail(
-                    getName(projectId, path),
-                    path,
-                    getFullName(projectId, path),
-                    path,
-                    jFrogFileInfo.size,
-                    LocalDateTime.parse(jFrogFileInfo.created, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                    LocalDateTime.parse(jFrogFileInfo.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                    FileChecksums(
-                            jFrogFileInfo.checksums.sha256,
-                            jFrogFileInfo.checksums.sha1,
-                            jFrogFileInfo.checksums.md5
-                    ),
-                    jFrogPropertiesMap
-            )
-        }
-    }
-
-    private fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>, authPermission: AuthPermission): List<FileInfo> {
+    fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>, authPermission: AuthPermission): List<FileInfo> {
         val hasPermissionList = filterPipeline(userId, projectId, authPermission)
         val pipelineIdToNameMap = getPipelineNames(projectId, hasPermissionList.toSet())
 
@@ -164,14 +43,14 @@ class PipelineService @Autowired constructor(
                 val fullName = getFullName(fullPath, pipelineId, pipelineName)
                 fileInfoList.add(
                     FileInfo(
-                            pipelineName,
-                            fullName,
-                            it.uri,
-                            fullPath,
-                            it.size,
-                            it.folder,
-                            LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                            ArtifactoryType.PIPELINE
+                        pipelineName,
+                        fullName,
+                        it.uri,
+                        fullPath,
+                        it.size,
+                        it.folder,
+                        LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        ArtifactoryType.PIPELINE
                     )
                 )
             }
@@ -179,7 +58,7 @@ class PipelineService @Autowired constructor(
         return JFrogUtil.sort(fileInfoList)
     }
 
-    private fun getPipelinePathList(projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
+    fun getPipelinePathList(projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
         val pipelineId = getPipelineId(path)
         val pipelineName = getPipelineName(projectId, pipelineId)
         val buildIdList = jFrogFileInfoList.map { it.uri.removePrefix("/") }
@@ -193,23 +72,23 @@ class PipelineService @Autowired constructor(
                 val buildName = buildIdToNameMap[buildId]!!
                 val fullName = getFullName(fullPath, pipelineId, pipelineName, buildId, buildName)
                 fileInfoList.add(
-                        FileInfo(
-                                buildName,
-                                fullName,
-                                it.uri,
-                                fullPath,
-                                it.size,
-                                it.folder,
-                                LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                                ArtifactoryType.PIPELINE
-                        )
+                    FileInfo(
+                        buildName,
+                        fullName,
+                        it.uri,
+                        fullPath,
+                        it.size,
+                        it.folder,
+                        LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        ArtifactoryType.PIPELINE
+                    )
                 )
             }
         }
         return JFrogUtil.sort(fileInfoList)
     }
 
-    private fun getBuildPathList(projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
+    fun getBuildPathList(projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
         val pipelineId = getPipelineId(path)
         val buildId = getBuildId(path)
         val pipelineName = getPipelineName(projectId, pipelineId)
@@ -220,14 +99,14 @@ class PipelineService @Autowired constructor(
             val fullName = getFullName(fullPath, pipelineId, pipelineName, buildId, buildName)
             val name = JFrogUtil.getFileName(fullPath)
             FileInfo(
-                    name,
-                    fullName,
-                    it.uri,
-                    fullPath,
-                    it.size,
-                    it.folder,
-                    LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                    ArtifactoryType.PIPELINE
+                name,
+                fullName,
+                it.uri,
+                fullPath,
+                it.size,
+                it.folder,
+                LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                ArtifactoryType.PIPELINE
             )
         }
         return JFrogUtil.sort(fileInfoList)
@@ -308,11 +187,11 @@ class PipelineService @Autowired constructor(
         return path.replaceFirst("/$pipelineId/$buildId", "/$pipelineName/$buildName")
     }
 
-    private fun isRootDir(path: String): Boolean {
+    fun isRootDir(path: String): Boolean {
         return path == "/"
     }
 
-    private fun isPipelineDir(path: String): Boolean {
+    fun isPipelineDir(path: String): Boolean {
         val roadList = path.split("/")
         return roadList.size == 2 && roadList[1].isNotBlank()
     }
@@ -382,7 +261,14 @@ class PipelineService @Autowired constructor(
     }
 
     fun validatePermission(user: String, projectId: String, pipelineId: String, authPermission: AuthPermission): Boolean {
-        return bkAuthPermissionApi.validateUserResourcePermission(user, pipelineAuthServiceCode, resourceType, projectId, pipelineId, authPermission)
+        return bkAuthPermissionApi.validateUserResourcePermission(
+            user,
+            pipelineAuthServiceCode,
+            AuthResourceType.PIPELINE_DEFAULT,
+            projectId,
+            pipelineId,
+            authPermission
+        )
     }
 
     fun filterPipeline(user: String, projectId: String, authPermission: AuthPermission): List<String> {

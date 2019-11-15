@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.resources.service
 import com.tencent.devops.artifactory.api.service.ServicePipelineResource
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.service.artifactory.ArtifactoryPipelineDirService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -39,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService
 ) : ServicePipelineResource {
-
     override fun hasPermission(userId: String, projectId: String, pipelineId: String, permission: Permission): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
