@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.monitoring.consumer
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
@@ -32,17 +33,18 @@ import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.common.notify.utils.CommonUtils
-import com.tencent.devops.common.web.mq.EXCHANGE_NOTIFY_MESSAGE
-import com.tencent.devops.common.web.mq.QUEUE_NOTIFY_MESSAGE
-import com.tencent.devops.common.web.mq.ROUTE_NOTIFY_MESSAGE
-import com.tencent.devops.common.web.mq.alert.Alert
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.monitoring.dao.AlertUserDao
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.EMAIL_URL
 import com.tencent.devops.common.notify.utils.TOFService.Companion.RTX_URL
 import com.tencent.devops.common.notify.utils.TOFService.Companion.WECHAT_URL
+import com.tencent.devops.common.web.mq.EXCHANGE_NOTIFY_MESSAGE
+import com.tencent.devops.common.web.mq.QUEUE_NOTIFY_MESSAGE
+import com.tencent.devops.common.web.mq.ROUTE_NOTIFY_MESSAGE
+import com.tencent.devops.common.web.mq.alert.Alert
+import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.ERROR_MONITORING_SEND_NOTIFY_FAIL
+import com.tencent.devops.monitoring.dao.AlertUserDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -109,6 +111,10 @@ class NotifyMessageConsumer @Autowired constructor(
             }
         } catch (t: Throwable) {
             logger.warn("Fail to send the notify message", t)
+            throw ErrorCodeException(
+                errorCode = ERROR_MONITORING_SEND_NOTIFY_FAIL,
+                defaultMessage = "Fail to send the notify message"
+            )
         }
     }
 
