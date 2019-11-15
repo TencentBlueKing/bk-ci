@@ -26,20 +26,23 @@
 package com.tencent.devops.notify.resources
 
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.op.OpNotifyResource
-import com.tencent.devops.notify.service.EmailService
-import com.tencent.devops.notify.service.RtxService
-import com.tencent.devops.notify.service.SmsService
-import com.tencent.devops.notify.service.WechatService
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_NOTIFY_TYPE
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_RECEIVERS
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_TITLE
 import com.tencent.devops.notify.pojo.BaseMessage
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.service.EmailService
+import com.tencent.devops.notify.service.RtxService
+import com.tencent.devops.notify.service.SmsService
+import com.tencent.devops.notify.service.WechatService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -52,13 +55,25 @@ class OpNotifyResourceImpl @Autowired constructor(
 
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         if (message.title.isEmpty()) {
-            throw ParamBlankException("无效的标题")
+            throw InvalidParamException(
+                message = "invalid title:${message.title}",
+                errorCode = ERROR_NOTIFY_INVALID_TITLE,
+                params = arrayOf(message.title)
+            )
         }
         if (message.body.isEmpty()) {
-            throw ParamBlankException("无效的内容")
+            throw InvalidParamException(
+                message = "invalid body:${message.body}",
+                errorCode = ERROR_NOTIFY_INVALID_BODY,
+                params = arrayOf(message.body)
+            )
         }
         if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
+            throw InvalidParamException(
+                message = "invalid receivers:${message.getReceivers()}",
+                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
+                params = arrayOf("${message.getReceivers()}")
+            )
         }
         rtxService.sendMqMsg(message)
         return Result(true)
@@ -66,13 +81,25 @@ class OpNotifyResourceImpl @Autowired constructor(
 
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
         if (message.title.isEmpty()) {
-            throw ParamBlankException("无效的标题")
+            throw InvalidParamException(
+                message = "invalid title:${message.title}",
+                errorCode = ERROR_NOTIFY_INVALID_TITLE,
+                params = arrayOf(message.title)
+            )
         }
         if (message.body.isEmpty()) {
-            throw ParamBlankException("无效的内容")
+            throw InvalidParamException(
+                message = "invalid body:${message.body}",
+                errorCode = ERROR_NOTIFY_INVALID_BODY,
+                params = arrayOf(message.body)
+            )
         }
         if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
+            throw InvalidParamException(
+                message = "invalid receivers:${message.getReceivers()}",
+                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
+                params = arrayOf("${message.getReceivers()}")
+            )
         }
         emailService.sendMqMsg(message)
         return Result(true)
@@ -80,10 +107,18 @@ class OpNotifyResourceImpl @Autowired constructor(
 
     override fun sendWechatNotify(message: WechatNotifyMessage): Result<Boolean> {
         if (message.body.isEmpty()) {
-            throw ParamBlankException("无效的内容")
+            throw InvalidParamException(
+                message = "invalid body:${message.body}",
+                errorCode = ERROR_NOTIFY_INVALID_BODY,
+                params = arrayOf(message.body)
+            )
         }
         if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
+            throw InvalidParamException(
+                message = "invalid receivers:${message.getReceivers()}",
+                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
+                params = arrayOf("${message.getReceivers()}")
+            )
         }
         wechatService.sendMqMsg(message)
         return Result(true)
@@ -91,24 +126,67 @@ class OpNotifyResourceImpl @Autowired constructor(
 
     override fun sendSmsNotify(message: SmsNotifyMessage): Result<Boolean> {
         if (message.body.isEmpty()) {
-            throw ParamBlankException("无效的内容")
+            throw InvalidParamException(
+                message = "invalid body:${message.body}",
+                errorCode = ERROR_NOTIFY_INVALID_BODY,
+                params = arrayOf(message.body)
+            )
         }
         if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
+            throw InvalidParamException(
+                message = "invalid receivers:${message.getReceivers()}",
+                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
+                params = arrayOf("${message.getReceivers()}")
+            )
         }
         smsService.sendMqMsg(message)
         return Result(true)
     }
 
-    override fun listNotifications(type: String?, page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): Result<NotificationResponseWithPage<BaseMessage>?> {
+    override fun listNotifications(
+        type: String?,
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): Result<NotificationResponseWithPage<BaseMessage>?> {
         if (type.isNullOrEmpty() || !(type == "rtx" || type == "email" || type == "wechat" || type == "sms")) {
-            throw InvalidParamException("无效的通知方式参数type")
+            throw InvalidParamException(
+                message = "invalid notify type:${type}",
+                errorCode = ERROR_NOTIFY_INVALID_NOTIFY_TYPE,
+                params = arrayOf(type ?: "")
+            )
         }
         when (type) {
-            "rtx" -> return Result(rtxService.listByCreatedTime(page, pageSize, success, fromSysId, createdTimeSortOrder))
-            "email" -> return Result(emailService.listByCreatedTime(page, pageSize, success, fromSysId, createdTimeSortOrder))
-            "wechat" -> return Result(wechatService.listByCreatedTime(page, pageSize, success, fromSysId, createdTimeSortOrder))
-            "sms" -> return Result(smsService.listByCreatedTime(page, pageSize, success, fromSysId, createdTimeSortOrder))
+            "rtx" -> return Result(rtxService.listByCreatedTime(
+                page = page,
+                pageSize = pageSize,
+                success = success,
+                fromSysId = fromSysId,
+                createdTimeSortOrder = createdTimeSortOrder
+            ))
+            "email" -> return Result(emailService.listByCreatedTime(
+                page = page,
+                pageSize = pageSize,
+                success = success,
+                fromSysId = fromSysId,
+                createdTimeSortOrder = createdTimeSortOrder
+            ))
+            "wechat" -> return Result(wechatService.listByCreatedTime(
+                page = page,
+                pageSize = pageSize,
+                success = success,
+                fromSysId = fromSysId,
+                createdTimeSortOrder = createdTimeSortOrder
+            ))
+            "sms" -> return Result(smsService.listByCreatedTime(
+                page = page,
+                pageSize = pageSize,
+                success = success,
+                fromSysId = fromSysId,
+                createdTimeSortOrder = createdTimeSortOrder
+            ))
         }
         return Result(0, "")
     }
