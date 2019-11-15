@@ -14,7 +14,7 @@ local return_result = {
   status = 0,
   data = {
     englishName = ngx.var.sid,
-    profile = "http://dayu.oa.com/avatars/" .. ngx.var.sid .. "/profile.jpg",
+    profile = "http://localhost/avatars/" .. ngx.var.sid .. "/profile.jpg",
     menu = menu
   }
 }
