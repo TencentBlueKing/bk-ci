@@ -1,3 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.common.archive.ShortUrlAutoConfiguration,\
-com.tencent.devops.common.archive.JFrogAutoConfiguration
