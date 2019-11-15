@@ -29,10 +29,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.op.OpNotifyResource
-import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_NOTIFY_TYPE
-import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_RECEIVERS
-import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_TITLE
 import com.tencent.devops.notify.pojo.BaseMessage
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
@@ -43,6 +40,7 @@ import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
+import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -54,91 +52,25 @@ class OpNotifyResourceImpl @Autowired constructor(
 ) : OpNotifyResource {
 
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
-        if (message.title.isEmpty()) {
-            throw InvalidParamException(
-                message = "invalid title:${message.title}",
-                errorCode = ERROR_NOTIFY_INVALID_TITLE,
-                params = arrayOf(message.title)
-            )
-        }
-        if (message.body.isEmpty()) {
-            throw InvalidParamException(
-                message = "invalid body:${message.body}",
-                errorCode = ERROR_NOTIFY_INVALID_BODY,
-                params = arrayOf(message.body)
-            )
-        }
-        if (message.isReceiversEmpty()) {
-            throw InvalidParamException(
-                message = "invalid receivers:${message.getReceivers()}",
-                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
-                params = arrayOf("${message.getReceivers()}")
-            )
-        }
+        MessageCheckUtil.checkRtxMessage(message)
         rtxService.sendMqMsg(message)
         return Result(true)
     }
 
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
-        if (message.title.isEmpty()) {
-            throw InvalidParamException(
-                message = "invalid title:${message.title}",
-                errorCode = ERROR_NOTIFY_INVALID_TITLE,
-                params = arrayOf(message.title)
-            )
-        }
-        if (message.body.isEmpty()) {
-            throw InvalidParamException(
-                message = "invalid body:${message.body}",
-                errorCode = ERROR_NOTIFY_INVALID_BODY,
-                params = arrayOf(message.body)
-            )
-        }
-        if (message.isReceiversEmpty()) {
-            throw InvalidParamException(
-                message = "invalid receivers:${message.getReceivers()}",
-                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
-                params = arrayOf("${message.getReceivers()}")
-            )
-        }
+        MessageCheckUtil.checkEmailMessage(message)
         emailService.sendMqMsg(message)
         return Result(true)
     }
 
     override fun sendWechatNotify(message: WechatNotifyMessage): Result<Boolean> {
-        if (message.body.isEmpty()) {
-            throw InvalidParamException(
-                message = "invalid body:${message.body}",
-                errorCode = ERROR_NOTIFY_INVALID_BODY,
-                params = arrayOf(message.body)
-            )
-        }
-        if (message.isReceiversEmpty()) {
-            throw InvalidParamException(
-                message = "invalid receivers:${message.getReceivers()}",
-                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
-                params = arrayOf("${message.getReceivers()}")
-            )
-        }
+        MessageCheckUtil.checkWechatMessage(message)
         wechatService.sendMqMsg(message)
         return Result(true)
     }
 
     override fun sendSmsNotify(message: SmsNotifyMessage): Result<Boolean> {
-        if (message.body.isEmpty()) {
-            throw InvalidParamException(
-                message = "invalid body:${message.body}",
-                errorCode = ERROR_NOTIFY_INVALID_BODY,
-                params = arrayOf(message.body)
-            )
-        }
-        if (message.isReceiversEmpty()) {
-            throw InvalidParamException(
-                message = "invalid receivers:${message.getReceivers()}",
-                errorCode = ERROR_NOTIFY_INVALID_RECEIVERS,
-                params = arrayOf("${message.getReceivers()}")
-            )
-        }
+        MessageCheckUtil.checkSmsMessage(message)
         smsService.sendMqMsg(message)
         return Result(true)
     }

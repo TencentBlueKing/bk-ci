@@ -72,7 +72,7 @@ class WechatServiceImpl @Autowired constructor(
     override fun sendMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {
         val wechatNotifyPost = generateWechatNotifyPost(wechatNotifyMessageWithOperation)
         if (wechatNotifyPost == null) {
-            logger.warn("WechatNotifyPost is empty after being processed, WechatNotifyMessageWithOperation: " + wechatNotifyMessageWithOperation.toString())
+            logger.warn("WechatNotifyPost is empty after being processed, WechatNotifyMessageWithOperation: $wechatNotifyMessageWithOperation")
             return
         }
 

@@ -42,11 +42,11 @@ class NotifyService @Autowired constructor(
 ) {
 
     companion object {
-        val EMAIL_URL = "/api/c/compapi/cmsi/send_mail/"
-        val RTX_URL = "/api/c/compapi/cmsi/send_qy_weixin/"
-        val SMS_URL = "/api/c/compapi/cmsi/send_sms/"
-        val WECHAT_URL = "/api/c/compapi/cmsi/send_weixin/"
-        val NOC_NOTICE_URL = "/api/c/compapi/cmsi/noc_notice/"
+        const val EMAIL_URL = "/api/c/compapi/cmsi/send_mail/"
+        const val RTX_URL = "/api/c/compapi/cmsi/send_qy_weixin/"
+        const val SMS_URL = "/api/c/compapi/cmsi/send_sms/"
+        const val WECHAT_URL = "/api/c/compapi/cmsi/send_weixin/"
+        const val NOC_NOTICE_URL = "/api/c/compapi/cmsi/noc_notice/"
     }
 
     fun post(url: String, postData: Any, tofConf: Map<String, String>? = null): NotifyResult {
@@ -69,6 +69,12 @@ class NotifyService @Autowired constructor(
                 throw RuntimeException("Unknown message type")
             }
         }
-        return NotifyResult(apiResp.code!!, apiResp.code, apiResp.message ?: "", null, apiResp.data)
+        return NotifyResult(
+            Ret = apiResp.code!!,
+            ErrCode = apiResp.code,
+            ErrMsg = apiResp.message ?: "",
+            StackTrace = null,
+            data = apiResp.data
+        )
     }
 }

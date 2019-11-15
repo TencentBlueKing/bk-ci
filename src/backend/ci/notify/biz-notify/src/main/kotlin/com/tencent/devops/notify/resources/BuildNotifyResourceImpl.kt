@@ -25,7 +25,6 @@
  */
 package com.tencent.devops.notify.resources
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.BuildNotifyResource
@@ -37,6 +36,7 @@ import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
+import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -53,51 +53,25 @@ class BuildNotifyResourceImpl @Autowired constructor(
 ) : BuildNotifyResource {
 
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
-        if (message.title.isNullOrEmpty()) {
-            throw ParamBlankException("无效的标题")
-        }
-        if (message.body.isNullOrEmpty()) {
-            throw ParamBlankException("无效的内容")
-        }
-        if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
-        }
+        MessageCheckUtil.checkRtxMessage(message)
         rtxService.sendMqMsg(message)
         return Result(true)
     }
 
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
-        if (message.title.isNullOrEmpty()) {
-            throw ParamBlankException("无效的标题")
-        }
-        if (message.body.isNullOrEmpty()) {
-            throw ParamBlankException("无效的内容")
-        }
-        if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
-        }
+        MessageCheckUtil.checkEmailMessage(message)
         emailService.sendMqMsg(message)
         return Result(true)
     }
 
     override fun sendWechatNotify(message: WechatNotifyMessage): Result<Boolean> {
-        if (message.body.isNullOrEmpty()) {
-            throw ParamBlankException("无效的内容")
-        }
-        if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
-        }
+        MessageCheckUtil.checkWechatMessage(message)
         wechatService.sendMqMsg(message)
         return Result(true)
     }
 
     override fun sendSmsNotify(message: SmsNotifyMessage): Result<Boolean> {
-        if (message.body.isNullOrEmpty()) {
-            throw ParamBlankException("无效的内容")
-        }
-        if (message.isReceiversEmpty()) {
-            throw ParamBlankException("无效的接收者")
-        }
+        MessageCheckUtil.checkSmsMessage(message)
         smsService.sendMqMsg(message)
         return Result(true)
     }

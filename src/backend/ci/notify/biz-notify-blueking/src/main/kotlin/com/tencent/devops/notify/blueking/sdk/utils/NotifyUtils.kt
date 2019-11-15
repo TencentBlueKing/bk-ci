@@ -26,9 +26,11 @@
 package com.tencent.devops.notify.blueking.sdk.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.notify.blueking.sdk.pojo.ApiReq
 import com.tencent.devops.notify.blueking.sdk.pojo.ApiResp
 import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_SEND_FAIL
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -64,9 +66,9 @@ class NotifyUtils constructor(
         logger.info("notify post body: $jsonbody")
 
         val request = Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build()
+            .url(url)
+            .post(requestBody)
+            .build()
         val result = this.doRequest(request)
         logger.info("notify post request result: $result")
 
@@ -90,7 +92,10 @@ class NotifyUtils constructor(
             }
             return resultBean
         } catch (e: Exception) {
-            throw RuntimeException("notify send msg failed", e)
+            throw ErrorCodeException(
+                errorCode = ERROR_NOTIFY_SEND_FAIL,
+                defaultMessage = "notify send msg failed"
+            )
         }
     }
 
@@ -109,12 +114,12 @@ class NotifyUtils constructor(
     })
 
     private val okHttpClient = okhttp3.OkHttpClient.Builder()
-            .connectTimeout(5L, TimeUnit.SECONDS)
-            .readTimeout(30L, TimeUnit.SECONDS)
-            .writeTimeout(30L, TimeUnit.SECONDS)
-            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
-            .hostnameVerifier { _, _ -> true }
-            .build()!!
+        .connectTimeout(5L, TimeUnit.SECONDS)
+        .readTimeout(30L, TimeUnit.SECONDS)
+        .writeTimeout(30L, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()!!
 
     private fun sslSocketFactory(): SSLSocketFactory {
         try {

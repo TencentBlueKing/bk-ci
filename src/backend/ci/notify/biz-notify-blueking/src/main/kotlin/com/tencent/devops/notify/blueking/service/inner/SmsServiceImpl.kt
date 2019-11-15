@@ -70,7 +70,7 @@ class SmsServiceImpl @Autowired constructor(
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
         val smsNotifyPosts = generateSmsNotifyPost(smsNotifyMessageWithOperation)
         if (smsNotifyPosts.isEmpty()) {
-            logger.warn("List<SmsNotifyPost> is empty after being processed, SmsNotifyMessageWithOperation: " + smsNotifyMessageWithOperation.toString())
+            logger.warn("List<SmsNotifyPost> is empty after being processed, SmsNotifyMessageWithOperation: $smsNotifyMessageWithOperation")
             return
         }
 

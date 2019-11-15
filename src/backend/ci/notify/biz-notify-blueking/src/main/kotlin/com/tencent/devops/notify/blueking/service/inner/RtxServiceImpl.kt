@@ -29,23 +29,23 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.notify.blueking.utils.NotifyService
-import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
+import com.tencent.devops.common.notify.utils.ChineseStringUtil
+import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_RTX
+import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
 import com.tencent.devops.notify.dao.RtxNotifyDao
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.service.RtxService
-import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.CommonUtils
-import com.tencent.devops.common.notify.utils.Configuration
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -73,7 +73,7 @@ class RtxServiceImpl @Autowired constructor(
     override fun sendMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
         val rtxNotifyPosts = generateRtxNotifyPost(rtxNotifyMessageWithOperation)
         if (rtxNotifyPosts.isEmpty()) {
-            logger.warn("List<RtxNotifyPost> is empty after being processed, RtxNotifyMessageWithOperation: " + rtxNotifyMessageWithOperation.toString())
+            logger.warn("List<RtxNotifyPost> is empty after being processed, RtxNotifyMessageWithOperation: $rtxNotifyMessageWithOperation")
             return
         }
 
@@ -201,7 +201,7 @@ class RtxServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:" + filteredOutReceivers)
+            logger.warn("Filtered out receivers:$filteredOutReceivers")
         }
         return filteredReceivers
     }
