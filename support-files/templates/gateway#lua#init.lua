@@ -91,6 +91,9 @@ config = {
     port = __BKCI_ITLOGIN_PORT__,
     host = "__BKCI_ITLOGIN_HOST__"
   },
+  bkrepo = {
+    domain = "__BKREPO_HOST__"
+  }
 }
   
 require("init_common")

@@ -70,6 +70,11 @@ if service_name == "job" then
   return 
 end
 
+if service_name == "bkrepo" then
+  ngx.var.target = config.bkrepo.domain
+  return
+end
+
 
 -- 获取灰度设置
 local devops_gray = ngx.var.gray
