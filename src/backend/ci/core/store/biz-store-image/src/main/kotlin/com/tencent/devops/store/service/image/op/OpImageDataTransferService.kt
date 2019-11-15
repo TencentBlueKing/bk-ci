@@ -61,7 +61,7 @@ class OpImageDataTransferService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(OpImageDataTransferService::class.java)
 
     @Value("\${store.imageAdminUsers}")
-    private val imageAdminUsersStr: String? = "fayewang;carlyin;jsonwan"
+    private val imageAdminUsersStr: String? = ""
 
     private val finishedSet: HashSet<Triple<String, String, String>> = HashSet()
 

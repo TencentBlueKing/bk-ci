@@ -37,7 +37,6 @@ package com.tencent.devops.plugin.constant
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店）
  * 4、最后4位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如0001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
- * @author: carlyin
  * @since: 2019-03-05
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
