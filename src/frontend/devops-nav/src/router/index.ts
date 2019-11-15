@@ -150,6 +150,10 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
             loadedModule[serviceAlias] = true
         }
         const newPath = initProjectId(to, store)
+
+        // @ts-ignore
+        setProjectIdCookie(getProjectId(store, to.params))
+        
         if (to.path !== newPath) {
             next({
                 path: newPath,
