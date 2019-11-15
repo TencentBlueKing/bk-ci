@@ -24,8 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.service.artifactory
 
+import com.tencent.devops.artifactory.client.JFrogAQLService
+import com.tencent.devops.artifactory.client.JFrogApiService
+import com.tencent.devops.artifactory.client.JFrogService
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -38,6 +41,8 @@ import com.tencent.devops.artifactory.pojo.FilePipelineInfo
 import com.tencent.devops.artifactory.pojo.FolderSize
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.exception.OperationException
@@ -68,11 +73,11 @@ class ArtifactoryService @Autowired constructor(
     val jFrogAQLService: JFrogAQLService,
     val jFrogService: JFrogService,
     val pipelineService: PipelineService,
-    val customDirService: CustomDirService,
+    val artifactoryPipelineDirService: ArtifactoryPipelineDirService,
+    val artifactoryCustomDirService: ArtifactoryCustomDirService,
     val jFrogPropertiesApi: JFrogPropertiesApi,
     val shortUrlApi: ShortUrlApi
-) {
-
+) : RepoService {
     fun hasDownloadPermission(
         userId: String,
         projectId: String,
@@ -88,29 +93,29 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
+    override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
         return when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
-                pipelineService.list(userId, projectId, path)
+                artifactoryPipelineDirService.list(userId, projectId, path)
             }
             ArtifactoryType.CUSTOM_DIR -> {
-                customDirService.list(userId, projectId, path)
+                artifactoryCustomDirService.list(userId, projectId, path)
             }
         }
     }
 
-    fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
+    override fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
         return when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
-                pipelineService.show(userId, projectId, path)
+                artifactoryPipelineDirService.show(userId, projectId, path)
             }
             ArtifactoryType.CUSTOM_DIR -> {
-                customDirService.show(userId, projectId, path)
+                artifactoryCustomDirService.show(userId, projectId, path)
             }
         }
     }
 
-    fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): FolderSize {
+    override fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): FolderSize {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -125,7 +130,7 @@ class ArtifactoryService @Autowired constructor(
         return FolderSize(jFrogApiService.folderCount(realPath))
     }
 
-    fun setDockerProperties(projectId: String, imageName: String, tag: String, properties: Map<String, String>) {
+    override fun setDockerProperties(projectId: String, imageName: String, tag: String, properties: Map<String, String>) {
         if (properties.isEmpty()) {
             return
         }
@@ -155,7 +160,7 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    fun setProperties(
+    override fun setProperties(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
@@ -178,7 +183,7 @@ class ArtifactoryService @Autowired constructor(
         jFrogPropertiesApi.setProperties(realPath, propertiesMap)
     }
 
-    fun getProperties(projectId: String, artifactoryType: ArtifactoryType, argPath: String): List<Property> {
+    override fun getProperties(projectId: String, artifactoryType: ArtifactoryType, argPath: String): List<Property> {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -199,7 +204,7 @@ class ArtifactoryService @Autowired constructor(
         return propertyList
     }
 
-    fun getPropertiesByRegex(
+    override fun getPropertiesByRegex(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -245,7 +250,7 @@ class ArtifactoryService @Autowired constructor(
         return ret
     }
 
-    fun getOwnFileList(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<FileInfo>> {
+    override fun getOwnFileList(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<FileInfo>> {
         val startTimestamp = System.currentTimeMillis()
 
         try {
@@ -266,7 +271,7 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
+    override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
         val startTimestamp = System.currentTimeMillis()
 
         try {
@@ -353,7 +358,7 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    fun getFilePipelineInfo(
+    override fun getFilePipelineInfo(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -370,7 +375,7 @@ class ArtifactoryService @Autowired constructor(
         return FilePipelineInfo(pipelineId, pipelineName)
     }
 
-    fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
+    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
         val realPath = if (artifactoryType == ArtifactoryType.PIPELINE) {
             JFrogUtil.getPipelinePath(projectId, path)
         } else {
@@ -420,12 +425,12 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
+    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         return jFrogService.exist(realPath)
     }
 
-    fun acrossProjectCopy(
+    override fun acrossProjectCopy(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -601,11 +606,11 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    fun createDockerUser(projectCode: String): DockerUser {
+    override fun createDockerUser(projectCode: String): DockerUser {
         return jFrogApiService.createDockerUser(projectCode)
     }
 
-    fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
+    override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
         val allFiles = jFrogAQLService.searchByPathAndProperties(
             path = "generic-local/bk-custom/$projectId",
             properties = condition.properties
@@ -633,7 +638,7 @@ class ArtifactoryService @Autowired constructor(
         return matchedFiles.toSet().toList().sortedByDescending { it.modified }.map { it.path }
     }
 
-    fun copyToCustom(
+    override fun copyToCustom(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -641,7 +646,7 @@ class ArtifactoryService @Autowired constructor(
         copyToCustomReq: CopyToCustomReq
     ) {
         checkCopyToCustomReq(copyToCustomReq)
-        customDirService.validatePermission(userId, projectId)
+        artifactoryCustomDirService.validatePermission(userId, projectId)
 
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
         val buildNo = pipelineService.getBuildName(buildId)

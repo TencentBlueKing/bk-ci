@@ -31,46 +31,81 @@ import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.PathPair
-import com.tencent.devops.artifactory.service.BuildCustomDirService
+import com.tencent.devops.artifactory.service.artifactory.ArtifactoryBuildCustomDirService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoBuildCustomDirService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildCustomDirResourceImpl @Autowired constructor(
-    val buildCustomDirService: BuildCustomDirService
+    private val artifactoryBuildCustomDirService: ArtifactoryBuildCustomDirService,
+    private val bkRepoBuildCustomDirService: BkRepoBuildCustomDirService,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray
 ) : BuildCustomDirResource {
-
     override fun list(projectId: String, path: String): List<FileInfo> {
         if (path.contains(".")) {
             throw RuntimeException("please confirm the param is directory...")
+        }
+
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoBuildCustomDirService.list(projectId, path)
         } else {
-            return buildCustomDirService.list(projectId, path)
+            artifactoryBuildCustomDirService.list(projectId, path)
         }
     }
 
     override fun mkdir(projectId: String, path: String): Result<Boolean> {
-        buildCustomDirService.mkdir(projectId, path)
+        logger.info("mkdir, projectId: $projectId")
+        if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoBuildCustomDirService.mkdir(projectId, path)
+        } else {
+            artifactoryBuildCustomDirService.mkdir(projectId, path)
+        }
         return Result(true)
     }
 
     override fun rename(projectId: String, pathPair: PathPair): Result<Boolean> {
-        buildCustomDirService.rename(projectId, pathPair.srcPath, pathPair.destPath)
+        if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoBuildCustomDirService.rename(projectId, pathPair.srcPath, pathPair.destPath)
+        } else {
+            artifactoryBuildCustomDirService.rename(projectId, pathPair.srcPath, pathPair.destPath)
+        }
         return Result(true)
     }
 
     override fun copy(projectId: String, combinationPath: CombinationPath): Result<Boolean> {
-        buildCustomDirService.copy(projectId, combinationPath)
+        if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoBuildCustomDirService.copy(projectId, combinationPath)
+        } else {
+            artifactoryBuildCustomDirService.copy(projectId, combinationPath)
+        }
         return Result(true)
     }
 
     override fun move(projectId: String, combinationPath: CombinationPath): Result<Boolean> {
-        buildCustomDirService.move(projectId, combinationPath)
+        if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoBuildCustomDirService.move(projectId, combinationPath)
+        } else {
+            artifactoryBuildCustomDirService.move(projectId, combinationPath)
+        }
         return Result(true)
     }
 
     override fun delete(projectId: String, pathList: PathList): Result<Boolean> {
-        buildCustomDirService.delete(projectId, pathList)
+        if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoBuildCustomDirService.delete(projectId, pathList)
+        } else {
+            artifactoryBuildCustomDirService.delete(projectId, pathList)
+        }
         return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

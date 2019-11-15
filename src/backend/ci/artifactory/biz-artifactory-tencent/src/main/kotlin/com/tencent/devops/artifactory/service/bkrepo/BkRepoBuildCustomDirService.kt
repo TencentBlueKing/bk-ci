@@ -1,0 +1,133 @@
+package com.tencent.devops.artifactory.service.bkrepo
+
+import com.tencent.devops.artifactory.client.BkRepoClient
+import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.pojo.CombinationPath
+import com.tencent.devops.artifactory.pojo.FileDetail
+import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.PathList
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.BuildCustomDirService
+import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.common.api.exception.OperationException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotFoundException
+
+@Service
+class BkRepoBuildCustomDirService @Autowired constructor(
+    private val bkRepoClient: BkRepoClient
+) : BuildCustomDirService {
+    override fun list(projectId: String, path: String): List<FileInfo> {
+        logger.info("list, projectId: $projectId, path: $path")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+        val fileList = bkRepoClient.listFile(
+            userId = "",
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR),
+            path = normalizedPath
+        ).map {
+            RepoUtils.toFileInfo(it)
+        }
+        return JFrogUtil.sort(fileList)
+    }
+
+    override fun show(projectId: String, path: String): FileDetail {
+        logger.info("show, projectId: $projectId, path: $path")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+        val fileDetail = bkRepoClient.getFileDetail("", projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
+            ?: throw NotFoundException("文件不存在")
+        return RepoUtils.toFileDetail(fileDetail)
+    }
+
+    override fun mkdir(projectId: String, path: String) {
+        logger.info("mkdir, projectId: $projectId, path: $path")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+        bkRepoClient.mkdir("", projectId, RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR), normalizedPath)
+    }
+
+    override fun rename(projectId: String, fromPath: String, toPath: String) {
+        logger.info("rename, projectId: $projectId, srcPath: $fromPath, toPath: $toPath")
+        val normalizedFromPath = PathUtils.checkAndNormalizeAbsPath(fromPath)
+        val normalizedToPath = PathUtils.checkAndNormalizeAbsPath(toPath)
+        bkRepoClient.rename("", projectId, RepoUtils.CUSTOM_REPO, normalizedFromPath, normalizedToPath)
+    }
+
+    override fun copy(projectId: String, combinationPath: CombinationPath) {
+        logger.info("copy, projectId: $projectId, combinationPath: $combinationPath")
+        val normalizeDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
+        if (combinationPath.srcPaths.size > 1) {
+            val destFileInfo = bkRepoClient.getFileDetail("", projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
+            if (destFileInfo != null && !destFileInfo.fileInfo.folder) {
+                throw OperationException("目标路径应为文件夹")
+            }
+        }
+
+        combinationPath.srcPaths.map { srcPath ->
+            val normalizedSrcPath = JFrogUtil.normalize(srcPath)
+            if (JFrogUtil.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
+                logger.error("Cannot copy in same path ($normalizedSrcPath, $normalizeDestPath)")
+                throw BadRequestException("不能在拷贝到当前目录")
+            }
+
+            bkRepoClient.copy(
+                "",
+                projectId,
+                RepoUtils.CUSTOM_REPO,
+                normalizedSrcPath,
+                projectId,
+                RepoUtils.CUSTOM_REPO,
+                normalizeDestPath
+            )
+        }
+    }
+
+    override fun move(projectId: String, combinationPath: CombinationPath) {
+        logger.info("move, projectId: $projectId, combinationPath: $combinationPath")
+        val normalizedDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
+
+        combinationPath.srcPaths.map { srcPath ->
+            val normalizedSrcPath = JFrogUtil.normalize(srcPath)
+
+            if (normalizedSrcPath == normalizedDestPath ||
+                JFrogUtil.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
+                logger.error("Cannot move in same path ($normalizedSrcPath, $normalizedDestPath)")
+                throw BadRequestException("不能移动到当前目录")
+            }
+
+            if (normalizedDestPath.startsWith(normalizedSrcPath)) {
+                logger.error("Cannot move parent path to sub path ($normalizedSrcPath, $normalizedDestPath)")
+                throw BadRequestException("不能将父目录移动到子目录")
+            }
+
+            bkRepoClient.move(
+                "",
+                projectId,
+                RepoUtils.CUSTOM_REPO,
+                normalizedSrcPath,
+                normalizedDestPath
+            )
+        }
+    }
+
+    override fun delete(projectId: String, pathList: PathList) {
+        logger.info("delete, projectId: $projectId, pathList: $pathList")
+        pathList.paths.map { path ->
+            val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+            bkRepoClient.delete(
+                "",
+                projectId,
+                RepoUtils.CUSTOM_REPO,
+                normalizedPath
+            )
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+    }
+}

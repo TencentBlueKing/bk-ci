@@ -33,8 +33,10 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.ArtifactoryDownloadService
-import com.tencent.devops.artifactory.service.ArtifactoryService
+import com.tencent.devops.artifactory.service.BkRepoDownloadService
+import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
+import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.JfrogService
@@ -48,7 +50,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildArtifactoryResourceImpl @Autowired constructor(
     private val artifactoryService: ArtifactoryService,
+    private val bkRepoService: BkRepoService,
     private val artifactoryDownloadService: ArtifactoryDownloadService,
+    private val bkRepoDownloadService: BkRepoDownloadService,
     private val jfrogService: JfrogService,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray,
@@ -56,13 +60,21 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
 ) : BuildArtifactoryResource {
 
     override fun getOwnFileList(userId: String, projectId: String): Result<FileInfoPage<FileInfo>> {
-        val result = artifactoryService.getOwnFileList(userId, projectId, 0, -1)
-        return Result(FileInfoPage(0L, 1, -1, result.second, result.first))
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            val result = bkRepoService.getOwnFileList(userId, projectId, 0, -1)
+            Result(FileInfoPage(0L, 1, -1, result.second, result.first))
+        } else {
+            val result = artifactoryService.getOwnFileList(userId, projectId, 0, -1)
+            Result(FileInfoPage(0L, 1, -1, result.second, result.first))
+        }
     }
     override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
         checkParam(projectId, path)
-        val result = artifactoryService.check(projectId, artifactoryType, path)
-        return Result(result)
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(bkRepoService.check(projectId, artifactoryType, path))
+        } else {
+            Result(artifactoryService.check(projectId, artifactoryType, path))
+        }
     }
 
     override fun setProperties(
@@ -72,7 +84,11 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         properties: Map<String, String>
     ): Result<Boolean> {
         checkParam(projectId, path)
-        artifactoryService.setProperties(projectId, artifactoryType, path, properties)
+        if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoService.setProperties(projectId, artifactoryType, path, properties)
+        } else {
+            artifactoryService.setProperties(projectId, artifactoryType, path, properties)
+        }
         return Result(true)
     }
 
@@ -82,12 +98,19 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<Property>> {
         checkParam(projectId, path)
-        val result = artifactoryService.getProperties(projectId, artifactoryType, path)
-        return Result(result)
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(bkRepoService.getProperties(projectId, artifactoryType, path))
+        } else {
+            Result(artifactoryService.getProperties(projectId, artifactoryType, path))
+        }
     }
 
     override fun getPropertiesByRegex(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, path: String): Result<List<FileDetail>> {
-        return Result(artifactoryService.getPropertiesByRegex(projectId, pipelineId, buildId, artifactoryType, path))
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(bkRepoService.getPropertiesByRegex(projectId, pipelineId, buildId, artifactoryType, path))
+        } else {
+            Result(artifactoryService.getPropertiesByRegex(projectId, pipelineId, buildId, artifactoryType, path))
+        }
     }
 
     override fun getThirdPartyDownloadUrl(
@@ -99,7 +122,11 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         ttl: Int?
     ): Result<List<String>> {
         checkParam(projectId, path)
-        return Result(artifactoryDownloadService.getThirdPartyDownloadUrl(projectId, pipelineId, buildId, artifactoryType, path, ttl))
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(bkRepoDownloadService.getThirdPartyDownloadUrl(projectId, pipelineId, buildId, artifactoryType, path, ttl))
+        } else {
+            Result(artifactoryDownloadService.getThirdPartyDownloadUrl(projectId, pipelineId, buildId, artifactoryType, path, ttl))
+        }
     }
 
     override fun getFileDownloadUrl(
@@ -110,14 +137,18 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<String>> {
         val param = ArtifactorySearchParam(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            regexPath = path,
-            custom = artifactoryType == ArtifactoryType.CUSTOM_DIR,
-            executeCount = 1
+            projectId,
+            pipelineId,
+            buildId,
+            path,
+            artifactoryType == ArtifactoryType.CUSTOM_DIR,
+            1
         )
-        return Result(jfrogService.getFileDownloadUrl(param))
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(bkRepoService.getFileDownloadUrl(param))
+        } else {
+            Result(jfrogService.getFileDownloadUrl(param))
+        }
     }
 
     private fun checkParam(projectId: String, path: String) {
@@ -129,6 +160,12 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
+    private fun checkProjectId(projectId: String) {
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+    }
+
     override fun acrossProjectCopy(
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -137,8 +174,11 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         targetPath: String
     ): Result<Count> {
         checkParam(projectId)
-        val result = artifactoryService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath)
-        return Result(result)
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(bkRepoService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
+        } else {
+            Result(artifactoryService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
+        }
     }
 
     override fun checkRepoGray(projectId: String): Result<Boolean> {
