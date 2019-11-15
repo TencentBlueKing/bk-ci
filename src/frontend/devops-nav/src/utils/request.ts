@@ -21,6 +21,21 @@ function errorHandler (error: object) {
     })
 }
 
+request.interceptors.request.use(config => {
+    // @ts-ignore
+    const routePid = window.devops && window.devops.$route && window.devops.$route.params && window.devops.$route.params.projectId
+    console.log('routePid', routePid)
+    return {
+        ...config,
+        headers: routePid ? {
+            ...(config.headers || {}),
+            'X-DEVOPS-PROJECT-ID': routePid
+        } : config.headers
+    };
+  }, function (error) {
+    return Promise.reject(error);
+  });
+
 request.interceptors.response.use(response => {
     injectCSRFTokenToHeaders() // 注入csrfToken
     const { data: { code, data, message, status }, status: httpStatus } = response

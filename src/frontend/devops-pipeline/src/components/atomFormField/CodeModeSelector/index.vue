@@ -63,7 +63,7 @@
             return {
                 noPermission: false,
                 isLoading: false,
-                selectorLoadingTips: '获取数据中...',
+                selectorLoadingTips: this.$t('editPage.loadingData'),
                 list: [],
                 gitPullModeType: (this.value && this.value.type) || '',
                 gitPullModeVal: (this.value && this.value.value) || '',
@@ -71,11 +71,13 @@
                     BRANCH: {
                         label: this.$t('editPage.branch'),
                         placeholder: this.$t('editPage.branchTips'),
+                        url: `/process/api/user/scm/{projectId}/{repositoryHashId}/branches`,
                         default: 'master'
                     },
                     TAG: {
                         label: 'Tag',
                         placeholder: this.$t('editPage.tagTips'),
+                        url: `/process/api/user/scm/{projectId}/{repositoryHashId}/tags`,
                         default: ''
                     },
                     COMMIT_ID: {

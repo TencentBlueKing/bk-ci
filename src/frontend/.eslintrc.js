@@ -61,7 +61,7 @@ module.exports = {
         "JOB_URL": true,
         "CODEGIT_URL_PREFIX": true,
         "GITLAB_URL_PREFIX": true,
-        "VERSION_TYPE": true
+        "VERSION_TYPE": false
     },
     // add your custom rules hered
     rules: {

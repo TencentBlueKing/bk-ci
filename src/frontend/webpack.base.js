@@ -12,7 +12,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const envDist = env && env.dist ? env.dist : 'frontend'
     const version = env && env.version ? env.version : 'tencent'
     const buildDist = path.join(__dirname, envDist, dist)
-    console.log(path.join(__dirname, 'locale', dist))
+    console.log(path.join(__dirname, 'locale', dist), version)
     return {
         entry,
         output: {
@@ -43,7 +43,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.scss$/,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
+                    use: [isDev ? MiniCssExtractPlugin.loader : 'style-loader', 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(png|jpe?g|gif|svg|webp|cur)(\?.*)?$/,
@@ -85,13 +85,24 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 chunkName: '[id].css'
             }),
             new webpack.DefinePlugin({
-                VERSION_TYPE: version
+                VERSION_TYPE: JSON.stringify(version)
             }),
             new CopyWebpackPlugin([{ from: path.join(__dirname, 'locale', dist), to: buildDist }])
         ],
         optimization: {
             namedChunks: true,
-            minimize: true
+            minimize: true,
+            splitChunks: {
+                cacheGroups: {
+                    styles: {
+                        name: 'styles',
+                        test: /\.css$/,
+                        chunks: 'all',
+                        enforce: true,
+                        priority: 20, 
+                      }
+                }
+            }
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],

@@ -25,6 +25,7 @@
                         :toolbars-flag="false"
                         :box-shadow="false"
                         :external-link="false"
+                        preview-background="#fff"
                         v-model="detail.description"
                         v-if="detail.description"
                     >

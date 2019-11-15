@@ -77,7 +77,7 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss">
     @import '@/assets/scss/conf.scss';
     
     .atom-list-wrapper {

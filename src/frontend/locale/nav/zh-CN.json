@@ -139,6 +139,8 @@
         "artifactory": "版本仓库",
         "store": "研发商店",
         "environment": "环境管理",
+        "environmentManage": "环境管理",
+        "xinghai": "星海",
         "experience": "版本体验",
         "quality": "质量红线",
         "vs": "漏洞扫描-终端（金刚）",

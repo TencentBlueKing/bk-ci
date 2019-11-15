@@ -83,7 +83,8 @@
     "atomDebug": {
         "title": "研发商店插件前端task.json在线调试",
         "inputTips": "请在此输入正确的task.json内容...",
-        "outputErrTips": "task.json格式错误"
+        "outputErrTips": "task.json格式错误",
+        "taskJsonEmpty": "task.json内容为空"
     },
     "group": {
         "labelInputTips": "请输入标签名称,按Enter键确定",
@@ -457,6 +458,8 @@
         }
     },
     "editPage": {
+        "devopsImg": "蓝盾自有镜像",
+        "thirdImg": "第三方镜像",
         "baseSetting": "基础设置",
         "saving": "正在保存",
         "selectJob": "请选择Job类型",
@@ -517,6 +520,7 @@
         "svnParams": "请选择svn代码库",
         "relativePath": "代码库相对目录",
         "relativePathTips": "请填写代码库相对目录,如为空则会拉取所选代码库的根路径下的子目录",
+        "gitRepo": "请选择git代码库",
         "codelibParams": "请选择代码库类型",
         "buildEnv": "请选择构建环境",
         "buildResType": "请选择构建资源类型",
@@ -640,6 +644,7 @@
         "enum": "单选框",
         "multiple": "复选框",
         "svntag": "SVN分支或TAG",
+        "gitref": "GIT分支或TAG",
         "codelib": "代码库",
         "buildResource": "构建资源",
         "artifactory": "版本仓库过滤器",

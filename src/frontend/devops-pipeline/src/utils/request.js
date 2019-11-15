@@ -37,6 +37,20 @@ function errorHandler (error) {
     return Promise.reject(error)
 }
 
+request.interceptors.request.use(config => {
+    // @ts-ignore
+    const routePid = window.pipelineVue && window.pipelineVue.$route && window.pipelineVue.$route.params && window.pipelineVue.$route.params.projectId
+    return {
+        ...config,
+        headers: routePid ? {
+            ...(config.headers || {}),
+            'X-DEVOPS-PROJECT-ID': routePid
+        } : config.headers
+    }
+}, function (error) {
+    return Promise.reject(error)
+})
+
 // request.interceptors.response.use(response => {
 //     injectCSRFTokenToHeaders() // 注入csrfToken
 //     const { data: { status, message, code, result } } = response

@@ -51,16 +51,15 @@
             :title="$t('安装提示')"
             width="700"
             class="install-tip"
+            :draggable="false"
             @confirm="confirmInstall"
         >
             <h3 class="mb10"> {{ $t('VSCode 插件安装指引：') }} </h3>
-            {{ $t('Step1：首先安装 T-extensions 插件') }} <bk-popover :content="$t('T-extensions 管理公司内部的所有VSCode插件')" placement="top"><i class="plugin-tip bk-icon icon-info-circle"></i></bk-popover> {{ $t('到VSCode') }} <br>
-            {{ $t('Step2：在 T-extensions 中安装目标插件，或在蓝盾研发商店中点击目标插件详情页面的安装按钮') }}
-
-            <h3 class="mb10 mt10"> {{ $t('如何安装T-extensions？') }} </h3>
-            Step1：<a class="down-link" href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.3/t-extension-0.0.3.vsix"> {{ $t('点此下载') }} </a> {{ $t('T-extensions 插件安装包') }} <br>
-            {{ $t('Step2：在 VSCode 扩展 =》更多功能 =》从VSIX安装，安装上一步下载的VSIX包，入口如下图所示：') }}
+            1. {{ $t('首先安装') }} <span class="text-tip" v-bk-tooltips="{ placements: ['top'], content: $t('T-extensions 管理公司内部的所有VSCode插件') }">T-extensions</span> {{ $t('到 VSCode。若已安装，则跳过此步') }} <br>
+            <span class="ml10">1）<a class="down-link" href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.3/t-extension-0.0.3.vsix"> {{ $t('点此下载') }} </a>  {{ $t('T-extensions 插件安装包') }} <br></span>
+            <span class="ml10">2）{{ $t('在 VSCode 扩展 =》更多功能 =》从VSIX安装，安装上一步下载的VSIX包，入口如下图所示：') }}</span>
             <img src="http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15705911044808382165408406563094.png?v=1570591104">
+            <span class="mt10 inb">2. {{ $t('在 T-extensions 中安装目标插件，或在蓝盾研发商店中点击目标插件详情页面的安装按钮') }}</span>
         </bk-dialog>
     </section>
 </template>
@@ -128,10 +127,13 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
 
     .install-tip {
+        .inb {
+            display: inline-block;
+        }
         .mt10 {
             margin-top: 10px;
         }
@@ -149,13 +151,16 @@
             }
         }
         img {
-            width: 500px;
+            width: 400px;
             display: block;
             margin: 15px auto 0;
         }
         .plugin-tip {
             vertical-align: middle;
             margin: 0 5px;
+        }
+        .text-tip {
+            border-bottom: 1px dashed $fontGray;
         }
     }
 
