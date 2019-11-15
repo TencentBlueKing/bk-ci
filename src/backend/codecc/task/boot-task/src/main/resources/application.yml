@@ -5,33 +5,8 @@ spring:
     desc: Task Service
     version: 4.0.0
     packageName: com.tencent.bk.codecc.task
-  data:
-    mongodb:
-#      uri: mongodb://codecc_ee:codecc1024@10.125.224.233:27017,10.125.224.233:27018,10.125.224.233:27019/db_task?replicaSet=rs0&slaveOk=true
-      uri: mongodb://codecc_ee:codecc1024@9.134.78.250:27017/db_task
-  # consul config do not need to change
-  redis:
-    host: 9.134.35.250
-    password: MQKfk)2549Sx
-    port: 6379
-    pool:
-      maxActive: 16
-      maxWait: -1
-      maxIdle: 16
-      minIdle: 0
-  rabbitmq:
-    virtual-host: codecc_dev
-    username: codecc
-    password: codecc
-    addresses: 10.123.102.174:5672
-    listener:
-      simple:
-        concurrency: 10
-        acknowledge-mode: auto
   cloud:
     consul:
-#      host: 9.134.77.223
-#      port: 8500
       discovery:
         tags: dev
         health-check-path: /management/health
@@ -39,7 +14,6 @@ spring:
           enabled: true
         query-passing: true
         preferIpAddress: true
-  #      port: 8080
   http:
     encoding:
       charset: UTF-8
@@ -49,7 +23,6 @@ spring:
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 23910
 server:
   port: 8086 # 服务端口
-
 
 time:
   analysis:

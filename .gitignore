@@ -23,3 +23,6 @@ frontend/*/package-lock.json
 node_modules/
 
 src/backend/.project
+out
+/src/backend/codecc/task/boot-task/src/main/resources/version.txt
+version.txt
