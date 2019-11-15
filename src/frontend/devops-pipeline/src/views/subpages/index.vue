@@ -12,6 +12,7 @@
                                         <i class="bk-icon icon-angle-up" :disabled="execDetail.latestBuildNum === execDetail.buildNum || isLoading" @click="switchBuildNum(1)" />
                                         <i class="bk-icon icon-angle-down" :disabled="1 === execDetail.buildNum || isLoading" @click="switchBuildNum(-1)" />
                                     </p>
+                                    <i class="bk-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
                                 </template>
                             </div>
                         </bread-crumb-item>
@@ -20,16 +21,16 @@
                 </bread-crumb>
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
-                <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>编辑</bk-button></router-link>
+                <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
                 <bk-button :disabled="btnDisabled" :icon="executeStatus ? 'loading' : ''" theme="primary" @click="startExcuete">
-                    执行
+                    {{ $t('exec') }}
                 </bk-button>
             </template>
             <template v-else slot="right">
                 <bk-button v-if="$route.name === 'pipelinesEdit'" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
-                    保存
+                    {{ $t('save') }}
                 </bk-button>
-                <router-link v-else :to="{ name: 'pipelinesEdit' }"><bk-button>编辑</bk-button></router-link>
+                <router-link v-else :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
                 <triggers
                     class="bkdevops-header-trigger-btn"
                     :pipeline-id="pipelineId"
@@ -39,27 +40,26 @@
                     @exec="toExecute">
                     <section slot="exec-bar" slot-scope="triggerProps">
                         <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
-                            {{ isEditing ? '保存并执行' : '执行' }}
+                            {{ isEditing ? $t('subpage.saveAndExec') : $t('exec') }}
                         </bk-button>
                     </section>
                 </triggers>
 
                 <div :class="{ 'more-operation-entry': true, 'active': isDropmenuShow }">
-                    <show-tooltip placement="bottom-end" content="这里可以将当前流水线保存为模板哦" key="more_operation" name="more_operation" style="z-index: 1">
+                    <show-tooltip placement="bottom-end" :content="$t('subpage.saveTempTooltips')" key="more_operation" name="more_operation" style="z-index: 1">
                         <div class="entry-btn">
                             <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
                         </div>
                     </show-tooltip>
                     <div class="more-operation-dropmenu">
                         <ul>
-                            <li @click="renamePipeline">重命名</li>
-                            <li @click="toggleCollect">{{curPipeline.hasCollect ? '取消收藏' : '收藏'}}</li>
+                            <li @click="renamePipeline">{{ $t('rename') }}</li>
+                            <li @click="toggleCollect">{{curPipeline.hasCollect ? $t('uncollect') : $t('collect')}}</li>
                         </ul>
                         <ul>
-                            <li @click="copyPipeline">复制为</li>
-                            <li @click="showTemplateDialog">另存为模板</li>
-                            <!-- <li>导出</li> -->
-                            <li @click="deletePipeline">删除</li>
+                            <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
+                            <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
+                            <li @click="deletePipeline">{{ $t('delete') }}</li>
                         </ul>
                     </div>
                 </div>
@@ -68,12 +68,12 @@
         <router-view class="biz-content" v-bkloading="{ isLoading }"></router-view>
         <portal-target name="artifactory-popup"></portal-target>
 
-        <bk-dialog width="500" :loading="dialogConfig.loading" v-model="isDialogShow" :title="dialogConfig.title" @confirm="dialogConfig.handleDialogConfirm" @cancel="dialogConfig.handleDialogCancel">
+        <bk-dialog width="500" :loading="dialogConfig.loading" header-position="left" :mask-close="false" v-model="isDialogShow" :title="dialogConfig.title" @confirm="dialogConfig.handleDialogConfirm" @cancel="dialogConfig.handleDialogCancel">
             <bk-form :model="dialogConfig.formData" form-type="vertical" style="padding: 0 10px">
                 <bk-form-item v-for="item in dialogConfig.formConfig" :label="item.label" :required="item.required" :rules="item.rules" :property="item.name" :key="item.name">
                     <bk-radio-group v-if="item.component === 'enum-input'" v-model="dialogConfig.formData[item.name]">
-                        <bk-radio class="bkdevops-radio" :value="true">是</bk-radio>
-                        <bk-radio class="bkdevops-radio" :value="false">否</bk-radio>
+                        <bk-radio class="bkdevops-radio" :value="true">{{ $t('true') }}</bk-radio>
+                        <bk-radio class="bkdevops-radio" :value="false">{{ $t('false') }}</bk-radio>
                     </bk-radio-group>
                     <component v-else :is="item.component" v-model="dialogConfig.formData[item.name]" v-bind="item.bindData"></component>
                 </bk-form-item>
@@ -103,6 +103,9 @@
         mixins: [pipelineOperateMixin],
         data () {
             return {
+                tabMap: {
+                    'trendData': this.$t('history.trendData')
+                },
                 breadCrumbPath: [],
                 isLoading: false,
                 hasNoPermission: false,
@@ -135,26 +138,20 @@
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
             }),
-            hasCodeccAtom () {
-                if (this.execDetail && this.execDetail.model) {
-                    return this.getAllElements(this.execDetail.model.stages).some(element => element['@type'] === 'linuxPaasCodeCCScript')
-                }
-                return false
-            },
             templateFormConfig () {
                 return [{
                     name: 'templateName',
-                    label: '模板名称',
+                    label: this.$t('template.name'),
                     required: true,
                     rules: [],
                     component: 'bk-input',
                     bindData: {
-                        placeholder: '请输入模板名称',
-                        maxlength: 40
+                        placeholder: this.$t('template.nameInputTips'),
+                        maxlength: 30
                     }
                 }, {
                     name: 'isCopySetting',
-                    label: '应用设置',
+                    label: this.$t('template.applySetting'),
                     required: true,
                     rules: [],
                     component: 'enum-input'
@@ -163,21 +160,22 @@
             renameFormConfig () {
                 return [{
                     name: 'name',
-                    label: '流水线名称',
+                    label: this.$t('pipelineName'),
                     required: true,
                     rules: [],
                     component: 'bk-input',
                     bindData: {
-                        placeholder: '请输入流水线名称',
+                        placeholder: this.$t('pipelineNameInputTips'),
                         maxlength: 40
                     }
                 }, {
                     name: 'desc',
-                    label: '流水线描述',
+                    label: this.$t('pipelineDesc'),
                     rules: [],
                     component: 'bk-input',
                     bindData: {
-                        placeholder: '请输入流水线描述'
+                        placeholder: this.$t('pipelineDescInputTips'),
+                        maxlength: 100
                     }
                 }]
             },
@@ -202,7 +200,7 @@
             breadCrumbs () {
                 return [{
                     icon: 'pipeline',
-                    selectedValue: '流水线',
+                    selectedValue: this.$t('pipeline'),
                     to: {
                         name: 'pipelinesList'
                     }
@@ -215,13 +213,13 @@
                     ],
                     showTips: true,
                     tipsName: 'switch_pipeline_hint',
-                    tipsContent: '点击这里可以切换流水线哦',
+                    tipsContent: this.$t('subpage.switchPipelineTooltips'),
                     to: this.$route.name === 'pipelinesHistory' ? null : {
                         name: 'pipelinesHistory'
                     },
                     handleSelected: this.handleSelected
                 }, {
-                    selectedValue: this.$route.meta.title
+                    selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t('history.execHistory')
                 }]
             }
         },
@@ -232,9 +230,7 @@
         },
         created () {
             this.fetchPipelineList()
-            if (!this.longProjectId) {
-                this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
-            }
+            this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
         },
         methods: {
             ...mapActions('pipelines', [
@@ -242,7 +238,8 @@
                 'requestExecPipeline'
             ]),
             ...mapActions('atom', [
-                'requestPipelineExecDetailByBuildNum'
+                'requestPipelineExecDetailByBuildNum',
+                'togglePropertyPanel'
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
@@ -283,13 +280,19 @@
                     }
                 }
             },
+            showLog () {
+                this.togglePropertyPanel({
+                    isShow: true,
+                    isComplete: true
+                })
+            },
             startExcuete () {
                 bus.$emit('start-execute')
             },
             renamePipeline () {
                 this.isDialogShow = true
                 this.dialogConfig = {
-                    title: '流水线重命名',
+                    title: this.$t('subpage.renamePipeline'),
                     formData: {
                         ...this.pipelineFormData,
                         name: this.curPipeline.pipelineName
@@ -313,7 +316,7 @@
                 const { curPipeline } = this
                 this.isDialogShow = true
                 this.dialogConfig = {
-                    title: '复制流水线',
+                    title: this.$t('newlist.copyPipeline'),
                     formData: {
                         ...this.pipelineFormData,
                         name: `${curPipeline.pipelineName}_copy`
@@ -335,22 +338,24 @@
             },
             resetDialog () {
                 this.isDialogShow = false
-                this.tempPipline = {
-                    name: '',
-                    desc: ''
-                }
-                this.dialogConfig = {
-                    title: '',
-                    formData: {},
-                    formConfig: [],
-                    handleDialogConfirm: () => {},
-                    handleDialogCancel: () => {}
-                }
+                setTimeout(() => {
+                    this.tempPipline = {
+                        name: '',
+                        desc: ''
+                    }
+                    this.dialogConfig = {
+                        title: '',
+                        formData: {},
+                        formConfig: [],
+                        handleDialogConfirm: () => {},
+                        handleDialogCancel: () => {}
+                    }
+                }, 200)
             },
             showTemplateDialog () {
                 this.isDialogShow = true
                 this.dialogConfig = {
-                    title: '另存为模板',
+                    title: this.$t('newlist.saveAsTemp'),
                     loading: false,
                     formData: this.templateFormData,
                     formConfig: this.templateFormConfig,
@@ -507,6 +512,14 @@
                         }
                     }
                 }
+                .icon-txt {
+                    font-size: 18px;
+                    font-weight: normal;
+                    cursor: pointer;
+                    &:hover {
+                        color: $primaryColor;
+                    }
+                }
             }
         }
     }
@@ -524,6 +537,7 @@
         // display: flex;
         // overflow: hidden;
         // flex-direction: column;
+        min-height: 100%;
         border: 0;
         background-color: transparent;
         &-setting {
@@ -558,10 +572,11 @@
         }
         .bk-tab-section {
             width: 100%;
+            min-height: calc(100% - 60px);
             padding: 0;
             margin-top: 10px;
             flex: 1;
-            overflow: hidden;
+            // overflow: hidden;
             .bk-tab-content {
                 height: 100%;
                 display: flex;

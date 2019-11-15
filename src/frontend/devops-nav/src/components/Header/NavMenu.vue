@@ -8,7 +8,7 @@
             :class="{ active: show }"
             @click.stop="toggleNavMenu"
         >
-            <span>服务</span>
+            <span>{{ $t('service') }}</span>
             <span
                 v-if="showNewServiveTips"
                 class="unread-icon"
@@ -26,7 +26,7 @@
                     @click.stop="hideNavMenu"
                 >
                     <div class="nav-collect">
-                        <h3>我的收藏</h3>
+                        <h3>{{ $t('collection') }}</h3>
                         <ul
                             v-if="collectServices.length > 0"
                             class="nav-collect-menu"
@@ -57,12 +57,13 @@
                             class="empty-collect"
                         >
                             <img src="../../assets/images/empty.png">
-                            <p>未收藏任何服务</p>
+                            <p>{{ $t('noCollection') }}</p>
                         </div>
                     </div>
                     <div class="nav-menu">
                         <nav-box
                             :services="services"
+                            :current-page="currentPage"
                             :toggle-collect="toggleCollect"
                         />
                     </div>
@@ -83,18 +84,19 @@
     import eventBus from '../../utils/eventBus'
 
     @Component({
-      name: 'nav-menu',
-      components: {
-        Logo,
-        NavBox
-      },
-      directives: {
-        clickoutside
-      }
+        name: 'nav-menu',
+        components: {
+            Logo,
+            NavBox
+        },
+        directives: {
+            clickoutside
+        }
     })
     export default class NavMenu extends Vue {
         @Getter('getCollectServices') collectServices
         @State services
+        @State currentPage
         @State isShowPreviewTips
         @Action toggleServiceCollect
         show: boolean = false
@@ -102,104 +104,104 @@
         showExplorerTips: string = localStorage.getItem('showExplorerTips')
 
         get chromeExplorer (): boolean {
-          const explorer = window.navigator.userAgent
-          return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
+            const explorer = window.navigator.userAgent
+            return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
         }
 
         get newServiceList (): object[] {
-          const newServiceList = localStorage.getItem('newServiceList')
-          return newServiceList ? JSON.parse(newServiceList) : []
+            const newServiceList = localStorage.getItem('newServiceList')
+            return newServiceList ? JSON.parse(newServiceList) : []
         }
 
         get curNewServices (): object[] {
-          const newServices = []
-          window.allServices.forEach(service => {
-            service.children.forEach(child => {
-              if (child.status === 'new') {
-                newServices.push(child.name)
-              }
+            const newServices = []
+            this.services.forEach(service => {
+                service.children.forEach(child => {
+                    if (child.status === 'new') {
+                        newServices.push(child.name)
+                    }
+                })
             })
-          })
 
-          return newServices
+            return newServices
         }
 
         toggleNavMenu (): void {
-          if (this.showNewServiveTips) {
-            this.showNewServiveTips = false
+            if (this.showNewServiveTips) {
+                this.showNewServiveTips = false
 
-            this.curNewServices.forEach(service => {
-              if (this.newServiceList.indexOf(service) === -1) {
-                this.newServiceList.push(service)
-              }
-            })
+                this.curNewServices.forEach(service => {
+                    if (this.newServiceList.indexOf(service) === -1) {
+                        this.newServiceList.push(service)
+                    }
+                })
 
-            if (this.newServiceList.length) {
-              localStorage.setItem('newServiceList', JSON.stringify(this.newServiceList))
+                if (this.newServiceList.length) {
+                    localStorage.setItem('newServiceList', JSON.stringify(this.newServiceList))
+                }
             }
-          }
 
-          this.show = !this.show
+            this.show = !this.show
         }
 
         hideNavMenu (): void {
-          this.show = false
+            this.show = false
         }
 
         serviceName (name): string {
-          return name.slice(0, name.indexOf('('))
+            return name.slice(0, name.indexOf('('))
         }
 
         getServiceLogoByPath (link: string): string {
-          return getServiceLogoByPath(link)
+            return getServiceLogoByPath(link)
         }
 
         addConsole (link: string): string {
-          return urlJoin('/console/', link)
+            return urlJoin('/console/', link)
         }
 
         serviceId (name): string {
-          return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
+            return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
         gotoPage ({ link_new: linkNew }) {
-          const cAlias = window.currentPage && getServiceAliasByPath(window.currentPage['link_new'])
-          const nAlias = getServiceAliasByPath(linkNew)
-          const destUrl = this.addConsole(linkNew)
+            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
+            const nAlias = getServiceAliasByPath(linkNew)
+            const destUrl = this.addConsole(linkNew)
 
-          if (cAlias === nAlias && window.currentPage && window.currentPage['inject_type'] === 'iframe') {
-            eventBus.$emit('goHome')
-            return
-          }
-          this.$router.push(destUrl)
+            if (cAlias === nAlias && this.currentPage && this.currentPage['inject_type'] === 'iframe') {
+                eventBus.$emit('goHome')
+                return
+            }
+            this.$router.push(destUrl)
         }
 
         created () {
-          if (this.curNewServices.length && this.curNewServices.some(service => {
-            return this.newServiceList.indexOf(service) === -1
-          })) {
-            this.showNewServiveTips = true
-          }
+            if (this.curNewServices.length && this.curNewServices.some(service => {
+                return this.newServiceList.indexOf(service) === -1
+            })) {
+                this.showNewServiveTips = true
+            }
         }
 
         async toggleCollect (child: any, isCollected: boolean) {
-          try {
-            if (isCollected && this.collectServices.length === 8) {
-              this.$bkMessage({
-                message: '及时清除不常使用的链接，才能添加新的链接哦：）',
-                theme: 'error'
-              })
-              return
+            try {
+                if (isCollected && this.collectServices.length === 8) {
+                    this.$bkMessage({
+                        message: this.$t('outofCollectionTips'),
+                        theme: 'error'
+                    })
+                    return
+                }
+                child.collected = isCollected
+                await this.toggleServiceCollect({
+                    serviceId: child.id,
+                    isCollected
+                })
+            } catch (e) {
+                console.warn(e)
+                child.collected = !isCollected
             }
-            child.collected = isCollected
-            await this.toggleServiceCollect({
-              serviceId: child.id,
-              isCollected
-            })
-          } catch (e) {
-            console.warn(e)
-            child.collected = !isCollected
-          }
         }
     }
 </script>

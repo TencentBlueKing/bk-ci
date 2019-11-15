@@ -23,7 +23,7 @@ import {
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
-import { SET_TEMPLATE, SET_CONTAINER_DETAIL, SET_ATOMS, SET_ATOM_MODAL, SET_ATOM_MODAL_FETCHING, UPDATE_ATOM_TYPE, UPDATE_ATOM, INSERT_ATOM, PROPERTY_PANEL_VISIBLE, SET_PIPELINE_EDITING, DELETE_CONTAINER, DELETE_STAGE, ADD_CONTAINER, DELETE_ATOM, UPDATE_CONTAINER, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS } from './constants'
+import { SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_CONTAINER_DETAIL, SET_ATOMS, SET_ATOM_MODAL, SET_ATOM_MODAL_FETCHING, UPDATE_ATOM_TYPE, UPDATE_ATOM, INSERT_ATOM, PROPERTY_PANEL_VISIBLE, SET_PIPELINE_EDITING, DELETE_CONTAINER, DELETE_STAGE, ADD_CONTAINER, DELETE_ATOM, UPDATE_CONTAINER, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS, SET_AUTH_EDITING } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -41,6 +41,9 @@ function getMapByKey (list, key) {
 }
 
 export default {
+    setAuthEditing ({ commit }, editing) {
+        commit(SET_AUTH_EDITING, editing)
+    },
     setExecuteStatus ({ commit }, status) {
         commit(SET_EXECUTE_STATUS, status)
     },
@@ -50,7 +53,7 @@ export default {
     addStoreAtom ({ commit, state }) {
         const store = state.storeAtomData || {}
         let page = store.page || 1
-        const pageSize = store.pageSize || 40
+        const pageSize = store.pageSize || 1000
         const atomName = store.atomName || undefined
         const loadEnd = store.loadEnd || false
         const loading = store.loading || false
@@ -64,7 +67,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 40,
+                pageSize: 1000,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 atomName
@@ -86,6 +89,14 @@ export default {
         commit(SET_STORE_DATA, {})
     },
 
+    setPipelineStage ({ commit }, stages) {
+        commit(SET_PIPELINE_STAGE, stages)
+    },
+
+    setPipelineContainer ({ commit }, { oldContainers, containers }) {
+        commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
+    },
+
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
             const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
@@ -101,8 +112,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    handleCheckAtom: ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/review/${action}`).then(response => {
+    getCheckAtomInfo: ({ commit }, { projectId, pipelineId, buildId, elementId }) => {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/toReview`).then(response => {
+            return response.data
+        })
+    },
+    handleCheckAtom: ({ commit }, { projectId, pipelineId, buildId, elementId, postData }) => {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/review/`, postData).then(response => {
             return response.data
         })
     },
@@ -136,6 +152,7 @@ export default {
             const containerList = containers.filter(container => container.type !== 'trigger')
             const triggerContainer = containers.find(container => container.type === 'trigger')
             const [containerTypeList, containerModalMap] = getMapByKey(containerList, 'baseOS')
+
             commit(SET_CONTAINER_DETAIL, {
                 containerTypeList: ['TRIGGER', ...containerTypeList],
                 containerModalMap: {
@@ -211,7 +228,6 @@ export default {
     addStage: PipelineEditActionCreator(ADD_STAGE),
     deleteStage: ({ commit }, payload) => {
         commit(DELETE_STAGE, payload)
-        commit(PROPERTY_PANEL_VISIBLE, { isShow: false })
         commit(SET_PIPELINE_EDITING, true)
     },
     addContainer: ({ commit, getters }, { type, ...restPayload }) => {
@@ -219,6 +235,7 @@ export default {
         if (newContainer) {
             const { name, required, typeList, type, baseOS, defaultBuildType, defaultPublicBuildResource = '', ...restProps } = newContainer
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
+            const isError = baseOS === 'WINDOWS'
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
@@ -231,7 +248,7 @@ export default {
                         value: defaultPublicBuildResource
                     },
                     elements: [],
-                    isError: true
+                    isError
                 }
             })
             commit(SET_PIPELINE_EDITING, true)
@@ -239,7 +256,6 @@ export default {
     },
     deleteContainer: ({ commit }, payload) => {
         commit(DELETE_CONTAINER, payload)
-        commit(PROPERTY_PANEL_VISIBLE, { isShow: false })
         commit(SET_PIPELINE_EDITING, true)
     },
     updateContainer: PipelineEditActionCreator(UPDATE_CONTAINER),
@@ -251,6 +267,7 @@ export default {
         })
         commit(PROPERTY_PANEL_VISIBLE, {
             isShow: true,
+            isComplete: false,
             editingElementPos: {
                 stageIndex: stageIndex,
                 containerIndex: containerIndex,
@@ -272,9 +289,9 @@ export default {
     updateAtomOutputNameSpace: PipelineEditActionCreator(UPDATE_ATOM_OUTPUT_NAMESPACE),
     deleteAtomProps: PipelineEditActionCreator(DELETE_ATOM_PROP),
     togglePropertyPanel: ({ commit }, payload) => {
-        if (payload.isShow && !payload.editingElementPos) {
-            return
-        }
+        // if (payload.isShow && !payload.editingElementPos) {
+        //     return
+        // }
         commit(PROPERTY_PANEL_VISIBLE, payload)
     },
     requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId }) => {
@@ -318,5 +335,35 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    toggleAtomSelectorPopup: actionCreator(TOGGLE_ATOM_SELECTOR_POPUP)
+    toggleAtomSelectorPopup: actionCreator(TOGGLE_ATOM_SELECTOR_POPUP),
+
+    // 安装插件
+    installAtom ({ commit }, param) {
+        return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param)
+    },
+
+    // 获取项目下已安装的插件列表
+    getInstallAtomList ({ commit }, projectCode) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=1000`)
+    },
+
+    // 获取已安装的插件详情
+    getInstallAtomDetail ({ commit }, { projectCode, atomCode }) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/statistic/projectCodes/${projectCode}/atomCodes/${atomCode}/pipelines`)
+    },
+
+    // 卸载插件
+    unInstallAtom ({ commit }, { projectCode, atomCode, reasonList }) {
+        return request.delete(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/atoms/${atomCode}`, { data: { reasonList } })
+    },
+
+    // 获取卸载原因
+    getDeleteReasons () {
+        return request.get(`${STORE_API_URL_PREFIX}/user/store/reason/types/UNINSTALLATOM`)
+    },
+
+    // 获取分类
+    getAtomClassify () {
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`)
+    }
 }

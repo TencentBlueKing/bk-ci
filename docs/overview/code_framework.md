@@ -117,7 +117,7 @@
 ```
 
 - template 目录文件说明:
-  - 文件中的 #表示当前文件的相对路径分隔符号，如#etc#bkci#common.yml   ，假设蓝鲸总根目录在/data/bkee/， 则表示该文件最终要改名后最终路径是/data/bkee/etc/bkci/common.yml
+  - 文件中的 #表示当前文件的相对路径分隔符号，如#etc#bkci#common.yml   ，假设蓝鲸总根目录在/data/bkee/， 则表示该文件最终要改名后最终路径是/data/bkee/etc/ci/common.yml
   - 关于占位符号 ，则看support-files/README.md
 
 ## 安装脚本(scripts)

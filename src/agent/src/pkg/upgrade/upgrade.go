@@ -33,6 +33,7 @@ import (
 	"pkg/api"
 	"pkg/config"
 	"pkg/util/fileutil"
+	"pkg/util/systemutil"
 	"time"
 )
 
@@ -81,11 +82,12 @@ func agentUpgrade() {
 }
 
 func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error) {
-	tmpDir := config.GetAgentWorkdir() + "/tmp"
-	os.MkdirAll(config.GetAgentWorkdir()+"/tmp", os.ModePerm)
+	workDir := systemutil.GetWorkDir()
+	upgradeDir := systemutil.GetUpgradeDir()
+	os.MkdirAll(upgradeDir, os.ModePerm)
 
 	logs.Info("download upgrader start")
-	_, err = api.DownloadUpgradeFile("upgrade/"+config.GetServerUpgraderFile(), tmpDir+"/"+config.GetClientUpgraderFile())
+	_, err = api.DownloadUpgradeFile("upgrade/"+config.GetServerUpgraderFile(), upgradeDir+"/"+config.GetClientUpgraderFile())
 	if err != nil {
 		logs.Error("download upgrader failed", err)
 		return false, false, errors.New("download upgrader failed")
@@ -93,7 +95,7 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	logs.Info("download upgrader done")
 
 	logs.Info("download agent start")
-	newAgentMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerAgentFile(), tmpDir+"/"+config.GetClienAgentFile())
+	newAgentMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerAgentFile(), upgradeDir+"/"+config.GetClienAgentFile())
 	if err != nil {
 		logs.Error("download agent failed", err)
 		return false, false, errors.New("download agent failed")
@@ -101,19 +103,19 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	logs.Info("download agent done")
 
 	logs.Info("download worker start")
-	newWorkerMd5, err := api.DownloadUpgradeFile("jar/"+config.WorkAgentFile, tmpDir+"/"+config.WorkAgentFile)
+	newWorkerMd5, err := api.DownloadUpgradeFile("jar/"+config.WorkAgentFile, upgradeDir+"/"+config.WorkAgentFile)
 	if err != nil {
 		logs.Error("download worker failed", err)
 		return false, false, errors.New("download worker failed")
 	}
 	logs.Info("download worker done")
 
-	agentMd5, err := fileutil.GetFileMd5(config.GetAgentWorkdir() + "/" + config.GetClienAgentFile())
+	agentMd5, err := fileutil.GetFileMd5(workDir + "/" + config.GetClienAgentFile())
 	if err != nil {
 		logs.Error("check agent md5 failed", err)
 		return false, false, errors.New("check agent md5 failed")
 	}
-	workerMd5, err := fileutil.GetFileMd5(config.GetAgentWorkdir() + "/" + config.WorkAgentFile)
+	workerMd5, err := fileutil.GetFileMd5(workDir + "/" + config.WorkAgentFile)
 	if err != nil {
 		logs.Error("check worker md5 failed", err)
 		return false, false, errors.New("check agent md5 failed")

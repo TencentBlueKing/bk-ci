@@ -25,10 +25,17 @@ $borderWeightColor: #dde4eb; // 相对较深，常用于输入框边框色
 $inputBorderColor: #d1d9e1;
 
 // 字体色
+$fontLightColor: #c4c6cd;
 $fontColor: #7b7d8a;
 $fontWeightColor: #737987;
 $fontBoldColor: #333948;
 $fontLigtherColor: #c3cdd7;
+$fontDarkColor: #63656f;
+$fontLightGray: #63656e;
+
+// 蓝色
+$darkerBlue: #0484ff;
+$tinyBlue: #9ac5ff;
 
 // 主体 icon 颜色
 $iconPrimaryColor: #3c96ff;
@@ -49,6 +56,8 @@ $warningColor: #ffb400;
 
 // 淡色
 $primaryLightColor: #ebf4ff;
+$lightColor: #dcdee6;
+$borderLightColor: #f0f1f5;
 
 // 适配宽度
 $mediaWidth: 1500px;

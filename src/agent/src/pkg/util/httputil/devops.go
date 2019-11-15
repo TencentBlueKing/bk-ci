@@ -94,6 +94,41 @@ func (r *HttpResult) IntoAgentResult() (*AgentResult, error) {
 	}
 }
 
+func DownloadAgentInstallScript(url string, headers map[string]string, filepath string) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
+	}()
+	if err != nil {
+		logs.Error("download agent install script failed", err)
+		return errors.New("download agent install script failed")
+	}
+
+	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		logs.Error("download agent install script failed, status: " + resp.Status + ", responseBody: " + string(body))
+		return errors.New("download agent install script failed")
+	}
+
+	err = writeToFile(filepath, resp.Body)
+	if err != nil {
+		logs.Error("write agent install script failed", err)
+		return errors.New("write agent install script failed")
+	}
+	return nil
+}
+
 func DownloadUpgradeFile(url string, headers map[string]string, filepath string) (md5 string, err error) {
 	oldFileMd5, err := fileutil.GetFileMd5(filepath)
 	if err != nil {
@@ -109,7 +144,7 @@ func DownloadUpgradeFile(url string, headers map[string]string, filepath string)
 		return "", err
 	}
 
-	//header
+	// header
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}

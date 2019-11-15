@@ -3,7 +3,6 @@ import Router from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
-import request from '../utils/request'
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -15,8 +14,6 @@ const Index = () => import('../views/Index.vue')
 const Home = () => import('../views/Home.vue')
 
 const IFrame = () => import('../views/IFrame.vue')
-
-const QuickStart = () => import('../views/QuickStart.vue')
 
 const ProjectManage = () => import('../views/ProjectManage.vue')
 
@@ -55,15 +52,6 @@ const routes = [
                 }
             },
             {
-                path: 'quickstart',
-                name: 'quickstart',
-                component: QuickStart,
-                meta: {
-                    showProjectList: false,
-                    showNav: true
-                }
-            },
-            {
                 path: 'pm',
                 name: 'pm',
                 component: ProjectManage,
@@ -87,7 +75,7 @@ function isAmdModule (currentPage: subService): boolean {
     return currentPage && currentPage.inject_type === 'amd'
 }
 
-const createRouter = (store: any) => {
+const createRouter = (store: any, dynamicLoadModule: any) => {
     const router = new Router({
         mode: 'history',
         routes: routes
@@ -97,6 +85,7 @@ const createRouter = (store: any) => {
 
     if (isAmdModule(window.currentPage)) {
         const serviceAlias = getServiceAliasByPath(window.currentPage.link_new)
+        dynamicLoadModule(serviceAlias)
         loadedModule = {
             [serviceAlias]: true
         }
@@ -105,19 +94,23 @@ const createRouter = (store: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-        
+
         window.currentPage = currentPage
+        store.dispatch('updateCurrentPage', currentPage) // update currentPage
         if (!currentPage) { // console 首页
             next()
             return
         }
+        
         const { css_url, js_url } = currentPage
+        
         
         if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
             store.dispatch('toggleModuleLoading', true)
             Promise.all([
                 importStyle(css_url, document.head),
-                importScript(js_url, document.body)
+                importScript(js_url, document.body),
+                dynamicLoadModule(serviceAlias)
             ]).then(() => {
                 const module = window.Pages[serviceAlias]
                 store.registerModule(serviceAlias, module.store)
@@ -179,7 +172,7 @@ function parseOS (): string {
 }
 
 function getProjectId (store, params): string {
-    const projectId = localStorage.getItem('projectId') || store.getters.onlineProjectList[0].project_code
+    const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].project_code
     return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
 }
 

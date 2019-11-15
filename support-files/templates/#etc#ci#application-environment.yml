@@ -11,6 +11,7 @@ server:
 
 environment:
   agent-package: __INSTALL_PATH__/__MODULE__/agent-package
+  agentCollectorOn: __AGENT_COLLECTOR_ON__
 
 influxdb:
   server: __INFLUXDB_SERVER__

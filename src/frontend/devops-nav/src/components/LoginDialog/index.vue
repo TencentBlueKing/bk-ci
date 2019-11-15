@@ -22,16 +22,14 @@
 <script lang='ts'>
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { Action } from 'vuex-class'
 
     @Component
     export default class LoginDialog extends Vue {
-        @Action setUserInfo
         iframeSrc: string = `${LOGIN_SERVICE_URL}/plain?app_code=1&c_url=${location.origin}/console/static/login_success.html?is_ajax=1`
         showLoginDialog: boolean = true
         width: number = 666
         beforeDestroy () {
-          location.reload()
+            location.reload()
         }
     }
 </script>

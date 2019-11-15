@@ -3,11 +3,11 @@
         <div class="template-list-content">
             <div class="view-table-wrapper">
                 <bk-button theme="primary" class="add-template" @click="showSetting" :disabled="!isManagerUser" v-if="!showSelfEmpty">
-                    <i class="bk-icon icon-plus"></i><span>新建模板</span>
+                    <i class="bk-icon icon-plus"></i><span>{{ $t('template.addTemplate') }}</span>
                 </bk-button>
                 <template-table @getApiData="getTempFromSelf" ref="selfTemp"></template-table>
                 <empty-tips v-if="showSelfEmpty"
-                    title="暂无模板"
+                    :title="$t('template.noTemplate')"
                     :desc="emptyTipsConfig.desc"
                     :btn-disabled="emptyTipsConfig.btnDisabled"
                     :btns="emptyTipsConfig.btns">
@@ -19,14 +19,14 @@
             v-model="setting.isShow"
             :close-icon="false"
             header-position="left"
-            title="新增模板"
+            :title="$t('template.addTemplate')"
             width="480"
             @confirm="createTemplate">
             <div>
-                <form-field :required="false" label="模板名称" :is-error="errors.has(&quot;templateName&quot;)" :error-msg="errors.first(&quot;templateName&quot;)">
+                <form-field :required="false" :label="$t('template.name')" :is-error="errors.has(&quot;templateName&quot;)" :error-msg="errors.first(&quot;templateName&quot;)">
                     <input class="bk-form-input"
                         maxlength="30"
-                        placeholder="请输入模板名称，不能超过30个字符"
+                        :placeholder="$t('template.nameInputTips')"
                         v-focus="isFocus()"
                         v-model="setting.value"
                         id="templateName"
@@ -70,7 +70,7 @@
                 showSelfEmpty: false,
                 showStoreEmpty: false,
                 emptyTipsConfig: {
-                    desc: '合理的运用流水线模板，可以大大降低多个流水线的维护成本，开始创建你的第一个模板吧',
+                    desc: this.$t('template.emptyDesc'),
                     btnDisabled: true,
                     btns: [
                         {
@@ -79,7 +79,7 @@
                             handler: () => {
                                 this.setting.isShow = true
                             },
-                            text: '新建模板'
+                            text: this.$t('template.addTemplate')
                         }
                     ]
                 },
@@ -87,7 +87,7 @@
                     name: '',
                     desc: '',
                     labels: [],
-                    stages: [{ 'containers': [{ '@type': 'trigger', 'name': '构建触发', 'elements': [{ '@type': 'manualTrigger', 'name': '手动触发', 'id': 'T-1-1-1', 'canElementSkip': true, 'useLatestParameters': false, 'executeCount': 1, 'canRetry': false, 'classType': 'manualTrigger', 'taskAtom': '' }], 'params': [], 'canRetry': false, 'classType': 'trigger' }], 'id': 'stage-1' }]
+                    stages: [{ 'containers': [{ '@type': 'trigger', 'name': this.$t('buildTrigger'), 'elements': [{ '@type': 'manualTrigger', 'name': this.$t('manualTrigger'), 'id': 'T-1-1-1', 'canElementSkip': true, 'useLatestParameters': false, 'executeCount': 1, 'canRetry': false, 'classType': 'manualTrigger', 'taskAtom': '' }], 'params': [], 'canRetry': false, 'classType': 'trigger' }], 'id': 'stage-1' }]
                 }
             }
         },
@@ -175,7 +175,6 @@
 
     .pipeline-template-list {
         padding-bottom: 20px;
-        overflow: hidden;
         .template-list-content {
             margin: 0 auto;
             padding-top: 16px;

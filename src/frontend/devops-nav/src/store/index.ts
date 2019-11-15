@@ -23,11 +23,13 @@ export default new Vuex.Store<RootState>({
     actions,
     getters,
     state: {
+        isPermissionDialogShow: false,
         projectList,
         fetchError: null,
         moduleLoading: false,
         user: userInfo,
         services: allServices,
+        currentPage: window.currentPage,
         related: null,
         news: null,
         demo: null,

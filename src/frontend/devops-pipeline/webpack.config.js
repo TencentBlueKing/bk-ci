@@ -36,10 +36,11 @@ module.exports = (env, argv) => {
         entry: {
             pipeline: './src/main.js'
         },
-        publicPath: '/',
+        publicPath: '/pipeline/',
         dist: '/pipeline',
         port: 8006
     })
+    config.plugins.pop()
     config.plugins = [
         ...config.plugins,
         // brace 优化，只提取需要的语法
@@ -50,7 +51,7 @@ module.exports = (env, argv) => {
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
             inject: true,
-            VENDOR_LIBS: `${isProd ? '/pipeline' : ''}/main.dll.js?v=${Math.random()}`,
+            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`,
             urlPrefix,
             extUrlPrefix
         }),
@@ -63,5 +64,11 @@ module.exports = (env, argv) => {
             '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
         })])
     ]
+
+    config.devServer.historyApiFallback = {
+        rewrites: [
+            { from: /^\/pipeline/, to: '/pipeline/index.html' }
+        ]
+      }
     return config
 }

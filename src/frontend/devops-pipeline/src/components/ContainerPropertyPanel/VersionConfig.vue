@@ -1,7 +1,7 @@
 <template>
     <div class="build-params-comp">
         <ul v-bkloading="{ isLoading: !buildParams }" v-if="isExecDetail">
-            <li class="param-item" v-for="param in buildParams" :key="param.key">
+            <li :class="{ 'param-item': true, 'diff-param-item': isDefaultDiff(param) }" v-for="param in buildParams" :key="param.key">
                 <vuex-input :disabled="true" name="key" :value="param.key" />
                 <span>=</span>
                 <vuex-input :disabled="true" name="value" :value="param.value" />
@@ -11,11 +11,11 @@
             <accordion show-checkbox :show-content="isShowVersionParams" is-version="true">
                 <template slot="header">
                     <span>
-                        推荐版本号
+                        {{ $t('preview.introVersion') }}
                         <bk-popover placement="right">
                             <i style="display:block;" class="bk-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
-                                <div> 可以在插件中引用该变量,用于设置版本号或其他需要用到该变量的地方 </div>
+                                <div> {{ $t('editPage.introVersionTips') }} </div>
                             </div>
                         </bk-popover>
                     </span>
@@ -32,7 +32,7 @@
                     </div>
                     <template v-if="buildNo">
                         <div class="params-flex-col">
-                            <form-field :required="true" label="构建号" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
+                            <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
                                 <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
                             </form-field>
                             <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
@@ -40,6 +40,9 @@
                             </form-field>
                         </div>
                     </template>
+                    <form-field class="params-flex-col">
+                        <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="execuVisible" name="required" :handle-change="handleBuildNoChange" />
+                    </form-field>
                 </div>
             </accordion>
 
@@ -53,6 +56,7 @@
     import Accordion from '@/components/atomFormField/Accordion'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '../validMixins'
     import { isMultipleParam, DEFAULT_PARAM, STRING } from '@/store/modules/atom/paramsConfig'
@@ -63,7 +67,8 @@
             Accordion,
             VuexInput,
             FormField,
-            EnumInput
+            EnumInput,
+            AtomCheckbox
         },
         mixins: [validMixins],
         props: {
@@ -85,8 +90,7 @@
         },
         data () {
             return {
-                isShowVersionParams: false,
-                showTips: '若value为版本号,则不能包含“”""等符号；\n如果参数类型为复选框，选择多个值时将以a,b的方式传递给流水线'
+                isShowVersionParams: false
             }
         },
 
@@ -108,23 +112,23 @@
             versionConfig () {
                 return {
                     MajorVersion: {
-                        label: '主版本',
+                        label: this.$t('preview.majorVersion'),
                         type: 'STRING',
-                        desc: '主版本（MajorVersion）',
+                        desc: 'MajorVersion',
                         default: '0',
                         placeholder: 'MajorVersion'
                     },
                     MinorVersion: {
-                        label: '特性版本',
+                        label: this.$t('preview.minorVersion'),
                         type: 'STRING',
-                        desc: '特性版本（MinorVersion）',
+                        desc: 'MinorVersion',
                         default: '0',
                         placeholder: 'MinorVersion'
                     },
                     FixVersion: {
-                        label: '修正版本',
+                        label: this.$t('preview.fixVersion'),
                         type: 'STRING',
-                        desc: '修正版本（FixVersion）',
+                        desc: 'FixVersion',
                         default: '0',
                         placeholder: 'FixVersion'
                     }
@@ -153,6 +157,9 @@
             isExecDetail () {
                 const { buildNo } = this.$route.params
                 return !!buildNo
+            },
+            execuVisible () {
+                return this.buildNo && this.buildNo.required ? this.buildNo.required : false
             }
         },
         created () {
@@ -171,6 +178,10 @@
                 'updateContainer',
                 'requestBuildParams'
             ]),
+            isDefaultDiff ({ key, value }) {
+                const param = this.params.find(param => param.id === key)
+                return param && key ? param.defaultValue !== value : false
+            },
             getVersionById (id) {
                 return this.versions.find(v => v.id === id) || {}
             },
@@ -271,6 +282,9 @@
         margin: 20px 0;
         .params-flex-col {
             display: flex;
+            &:last-child {
+                margin-top: 20px;
+            }
             .bk-form-item {
                 flex: 1;
                 padding-right: 8px;
@@ -389,6 +403,12 @@
         margin-bottom: 10px;
         > span {
             margin: 0 10px;
+        }
+        &.diff-param-item {
+            .bk-form-input[name=value] {
+                color: #45E35F !important;
+            }
+
         }
     }
 </style>

@@ -28,6 +28,7 @@
 .sodaci-property-panel {
     .bk-sideslider-content {
         height: calc(100% - 60px);
+        max-height: calc(100vh - 60px);
         .container-property-panel {
             padding: 20px 32px 10px 32px;
         }
@@ -46,8 +47,7 @@
       flex-direction: column;
       .atom-form-content {
             flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow: auto;
       }
   }
   .atom-type-selector {
@@ -57,12 +57,3 @@
     border-bottom: 1px solid $borderColor;
   }
 }
-.bk-selector-create-item {
-    a {
-        display: block;
-        color: $fontWeightColor;
-        cursor: pointer;
-    }
-}
-
-

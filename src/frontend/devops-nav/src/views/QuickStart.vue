@@ -1,6 +1,6 @@
 <template>
     <div class="devops-quickstart">
-        <h2>新手接入蓝盾DevOps平台</h2>
+        <h2>$t('quickstartTitle')新手接入蓝盾DevOps平台</h2>
         <quick-start-steps
             ref="step"
             v-bkloading="{ isLoading }"
@@ -10,28 +10,28 @@
         />
         <footer v-if="!done">
             <router-link to="/console/">
-                <bk-button>取消</bk-button>
+                <bk-button>{{ $t('cancelText') }}</bk-button>
             </router-link>
             <bk-button
                 v-if="stepIndex > 0"
                 theme="primary"
                 @click="prev"
             >
-                上一步
+                {{$t('form.prev')}}
             </bk-button>
             <bk-button
                 v-if="stepIndex < stepList.length - 1"
                 theme="success"
                 @click="next"
             >
-                下一步
+                {{$t('form.next')}}
             </bk-button>
             <bk-button
                 v-if="stepIndex === stepList.length - 1"
                 theme="success"
                 @click="doCreate"
             >
-                提交
+                {{$t('form.submit')}}
             </bk-button>
         </footer>
     </div>
@@ -44,18 +44,18 @@
     import QuickStartSteps from '../components/QuickStartSteps/index.vue'
 
     @Component({
-      components: {
-        QuickStartSteps
-      }
+        components: {
+            QuickStartSteps
+        }
     })
     export default class QuickStart extends Vue {
         stepIndex: number = 0
         done: boolean = false
         isLoading: boolean = false
         stepList: string[] = [
-          '配置项目',
-          '配置流水线',
-          '完成'
+            this.$t('configProject'),
+            this.$t('configPipeline'),
+            this.$t('complete')
         ]
         isError: boolean = false
 
@@ -68,47 +68,47 @@
         }
 
         next (): void {
-          if (this.$refs.step.validate()) {
-            this.isError = false
-            this.stepIndex++
-          } else {
-            this.isError = true
-          }
+            if (this.$refs.step.validate()) {
+                this.isError = false
+                this.stepIndex++
+            } else {
+                this.isError = true
+            }
         }
 
         prev (): void {
-          this.stepIndex--
+            this.stepIndex--
         }
 
         @Watch('demo')
         watchDemo (demo) {
-          this.isError = !this.$refs.step.validate()
+            this.isError = !this.$refs.step.validate()
         }
 
         async doCreate () {
-          try {
-            if (!this.demo) {
-              throw new Error('请选择对应的项目')
+            try {
+                if (!this.demo) {
+                    throw new Error(this.$t('exception.noProject'))
+                }
+                const { projectId, projectName } = this.demo
+                this.isLoading = true
+                const { id } = await this.createDemo({
+                    projectId,
+                    projectName
+                })
+                this.setDemoPipelineId({
+                    pipelineId: id
+                })
+                this.done = true
+                this.next()
+            } catch (e) {
+                this.$bkMessage({
+                    message: e.message,
+                    theme: 'error'
+                })
+            } finally {
+                this.isLoading = false
             }
-            const { projectId, projectName } = this.demo
-            this.isLoading = true
-            const { id } = await this.createDemo({
-              projectId,
-              projectName
-            })
-            this.setDemoPipelineId({
-              pipelineId: id
-            })
-            this.done = true
-            this.next()
-          } catch (e) {
-            this.$bkMessage({
-              message: e.message,
-              theme: 'error'
-            })
-          } finally {
-            this.isLoading = false
-          }
         }
     }
 </script>

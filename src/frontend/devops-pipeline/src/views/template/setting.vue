@@ -3,7 +3,7 @@
         <header class="create-pipeline-header">
             <div>
                 <span class="pointer">
-                    设置
+                    {{ $t('setting') }}
                 </span>
             </div>
         </header>
@@ -20,7 +20,6 @@
     import { mapActions } from 'vuex'
     import SettingBase from '@/components/pipelineSetting/settingBase/index.vue'
     import { navConfirm } from '@/utils/util'
-    import { CONFIRM_MSG, CONFIRM_TITLE } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -29,7 +28,9 @@
         data () {
             return {
                 isEditing: false,
-                isLoading: true
+                isLoading: true,
+                confirmMsg: this.$t('editPage.confirmMsg'),
+                confirmTitle: this.$t('editPage.confirmTitle')
             }
         },
         computed: {
@@ -60,7 +61,7 @@
             },
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
-                    navConfirm({ content: CONFIRM_MSG, title: CONFIRM_TITLE })
+                    navConfirm({ content: this.confirmMsg, title: this.confirmTitle })
                         .then(() => next())
                         .catch(() => next(false))
                 } else {
@@ -74,8 +75,8 @@
                 window.removeEventListener('beforeunload', this.leaveSure)
             },
             leaveSure (e) {
-                e.returnValue = CONFIRM_MSG
-                return CONFIRM_MSG
+                e.returnValue = this.confirmMsg
+                return this.confirmMsg
             },
             exit () {
                 this.$router.push({

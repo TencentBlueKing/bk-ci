@@ -12,19 +12,19 @@
             <bk-tab :active="curItemTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card pipeline-detail-tab-card" type="unborder-card">
                 <div slot="setting" class="pipeline-info">
                     <div class="info-item">
-                        <span class="item-label">状态：</span>
+                        <span class="item-label">{{ $t('status') }}：</span>
                         <template v-if="execDetail.status === 'CANCELED'">
-                            <span v-bk-tooltips.light="`取消人：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
+                            <span v-bk-tooltips.light="`${$t('details.canceller')}：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
                         </template>
                         <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
-                        <i v-if="showRetryIcon" title="重试" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
+                        <i v-if="showRetryIcon" :title="$t('retry')" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
                     </div>
                     <div class="info-item">
-                        <span class="item-label">执行人：</span>
+                        <span class="item-label">{{ $t('details.executor') }}：</span>
                         <span class="trigger-mode">{{ execDetail.userId || '--' }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="item-label">任务耗时：</span>
+                        <span class="item-label">{{ $t('details.executionTime') }}：</span>
                         <span>{{ execDetail.endTime ? convertMStoStringByRule(execDetail.endTime - execDetail.startTime) : '--' }}</span>
                     </div>
                 </div>
@@ -40,33 +40,43 @@
                 </bk-tab-panel>
             </bk-tab>
         </template>
-
-        <bk-sideslider v-if="editingElementPos && execDetail" v-bind="sidePanelConfig" :is-show.sync="isPropertyPanelShow" :quick-close="true">
-            <template slot="content">
+        <template v-if="editingElementPos && execDetail">
+            <template v-if="showLog">
                 <pipeline-log
                     class="log-panel"
-                    v-if="showLog"
+                    v-bind="sidePanelConfig"
                     :build-no="$route.params.buildNo"
                     :build-num="execDetail.buildNum"
                     :show-export="true"
                     :build-tag="getElementId"
                     :execute-count="getExecuteCount"
                 />
+            </template>
+            <template v-else-if="showContainerPanel">
                 <container-property-panel
-                    v-else-if="showContainerPanel"
+                    :title="sidePanelConfig.title"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
                     :stages="execDetail.model.stages"
                     :editable="false"
                 />
             </template>
-        </bk-sideslider>
+        </template>
+        <template v-if="execDetail">
+            <pipeline-log v-if="showCompleteLog"
+                class="log-panel"
+                :title="`${$t('history.viewLog')}${execDetail.buildNum ? `（#${execDetail.buildNum}）` : ''}`"
+                :build-no="$route.params.buildNo"
+                :build-num="execDetail.buildNum"
+                :show-export="true"
+            />
+        </template>
     </section>
 </template>
 
 <script>
     import { mapState, mapActions } from 'vuex'
-    import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    import webSocketMessage from '@/utils/webSocketMessage'
     import stages from '@/components/Stages'
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
@@ -75,7 +85,7 @@
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import { statusMap } from '@/utils/pipelineConst'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
 
     export default {
@@ -88,21 +98,21 @@
             outputOption,
             emptyTips
         },
-        mixins: [pipelineOperateMixin],
+        mixins: [pipelineOperateMixin, pipelineConstMixin],
 
         data () {
             return {
                 isLoading: true,
                 hasNoPermission: false,
                 noPermissionTipsConfig: {
-                    title: '没有权限',
-                    desc: '你没有查看该流水线的权限，请切换项目或申请相应权限',
+                    title: this.$t('noPermission'),
+                    desc: this.$t('history.noPermissionTips'),
                     btns: [
                         {
                             theme: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('changeProject')
                         },
                         {
                             theme: 'success',
@@ -110,7 +120,7 @@
                             handler: () => {
                                 this.goToApplyPerm('role_manager')
                             },
-                            text: '申请权限'
+                            text: this.$t('applyPermission')
                         }
                     ]
                 }
@@ -122,18 +132,16 @@
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
+                'isShowCompleteLog',
                 'fetchingAtomList'
             ]),
             ...mapState([
                 'fetchError'
             ]),
-            statusMap () {
-                return statusMap
-            },
             panels () {
                 return [{
                     name: 'executeDetail',
-                    label: '执行详情',
+                    label: this.$t('details.executeDetail'),
                     component: 'stages',
                     className: 'exec-pipeline',
                     bindData: {
@@ -142,19 +150,19 @@
                     }
                 }, {
                     name: 'partView',
-                    label: '查看构件',
+                    label: this.$t('details.partView'),
                     className: '',
                     component: 'view-part',
                     bindData: {}
                 }, {
                     name: 'codeRecords',
-                    label: '代码变更记录',
+                    label: this.$t('details.codeRecords'),
                     className: '',
                     component: 'code-record',
                     bindData: {}
                 }, {
                     name: 'output',
-                    label: '产出物报告',
+                    label: this.$t('details.outputReport'),
                     className: '',
                     component: 'output-option',
                     bindData: {
@@ -165,6 +173,10 @@
             showLog () {
                 const { editingElementPos, $route: { params } } = this
                 return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
+            },
+            showCompleteLog () {
+                const { isShowCompleteLog, $route: { params } } = this
+                return isShowCompleteLog && params.buildNo
             },
             showContainerPanel () {
                 const { editingElementPos } = this
@@ -203,10 +215,10 @@
             },
             sidePanelConfig () {
                 return this.showLog ? {
-                    title: `${this.getElementViewName || '查看日志'}`,
+                    title: `${this.getElementViewName || this.$t('history.viewLog')}`,
                     width: 820
                 } : {
-                    title: '属性栏',
+                    title: this.$t('propertyBar'),
                     class: 'sodaci-property-panel',
                     width: 640
                 }
@@ -221,16 +233,6 @@
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
             },
-            isPropertyPanelShow: {
-                get () {
-                    return this.isPropertyPanelVisible
-                },
-                set (value) {
-                    this.togglePropertyPanel({
-                        isShow: value
-                    })
-                }
-            },
             showRetryIcon () {
                 return this.execDetail && (this.execDetail.latestVersion === this.execDetail.curVersion) && ['RUNNING', 'QUEUE', 'SUCCEED'].indexOf(this.execDetail.status) < 0
             }
@@ -239,12 +241,16 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                if (this.$route.hash) { // 带上elementId时，弹出日志弹窗
+                    const isBuildId = /^#(e|T)-+/.test(this.$route.hash) // 检查是否是合法的elementId
+                    isBuildId && this.showElementLog(this.$route.hash.slice(1))
+                }
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
                     if (val !== oldVal) {
                         this.requestPipelineExecDetail(this.routerParams)
-                        this.initWebSocket(val)
+                        // this.initWebSocket(val)
                     }
                 }
             },
@@ -256,8 +262,10 @@
             }
         },
 
-        created () {
+        mounted () {
             this.requestPipelineExecDetail(this.routerParams)
+            webSocketMessage.installWsMessage(this.setPipelineDetail)
+            // this.initWebSocket()
         },
 
         beforeDestroy () {
@@ -265,7 +273,8 @@
             this.togglePropertyPanel({
                 isShow: false
             })
-            pipelineWebsocket.disconnect()
+            webSocketMessage.unInstallWsMessage()
+            // pipelineWebsocket.disconnect()
         },
 
         methods: {
@@ -286,17 +295,25 @@
                 })
             },
 
-            initWebSocket () {
-                const projectId = this.routerParams.projectId
-                const subscribe = `/topic/pipelineDetail/${this.routerParams.buildNo}`
-
-                pipelineWebsocket.connect(projectId, subscribe, {
-                    success: (res) => {
-                        const data = JSON.parse(res.body)
-                        this.setPipelineDetail(data)
-                    },
-                    error: (message) => this.$showTips({ message, theme: 'error' })
+            showElementLog (elementId) {
+                let eleIndex, conIndex
+                const staIndex = this.execDetail.model.stages.findIndex(stage => {
+                    conIndex = stage.containers.findIndex(container => {
+                        eleIndex = container.elements.findIndex(element => element.id === elementId)
+                        return eleIndex > -1
+                    })
+                    return conIndex > -1
                 })
+                if (staIndex > -1) {
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos: {
+                            stageIndex: staIndex,
+                            containerIndex: conIndex,
+                            elementIndex: eleIndex
+                        }
+                    })
+                }
             }
         }
     }
@@ -312,7 +329,7 @@
         .pipeline-detail-tab-card {
             height: 100%;
             .bk-tab-section {
-                height: calc(100% - 52px);
+                height: calc(100% - 60px);
                 padding-bottom: 10px;
             }
         }

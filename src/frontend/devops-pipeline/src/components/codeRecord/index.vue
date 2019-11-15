@@ -7,11 +7,10 @@
         <!-- 代码变更记录 -->
         <vertical-tab v-if="codeCommitList.length && showContent" :tabs="tabs" :init-tab-index="initIndex">
         </vertical-tab>
-            
         <div class="artifactory-empty" v-else-if="showContent && !codeCommitList.length">
             <div class="no-data-right">
                 <img src="../../images/box.png">
-                <p>暂时没有变更记录</p>
+                <p>{{ $t('details.noCodeRecords') }}</p>
             </div>
         </div>
     </div>
@@ -69,7 +68,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('loadingTips')
 
                 try {
                     const res = await this.$store.dispatch('soda/requestCommitList', {

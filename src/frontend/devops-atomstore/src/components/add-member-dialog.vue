@@ -1,15 +1,13 @@
 <template>
     <bk-dialog
         class="add-member-dialog"
-        v-model="showDialog"
-        title="新增成员"
-        ok-text="保存"
-        :width="width"
+        v-model="showDialog" :title="$t('新增成员')"
+        :ok-text="$t('保存')"
+        :width="580"
         :close-icon="addMemberConf.closeIcon"
         :quick-close="addMemberConf.quickClose"
     >
         <main class="member-logo-content"
-           
             v-bkloading="{
                 isLoading: loading.isLoading,
                 title: loading.title
@@ -17,20 +15,20 @@
             <div class="add-member-content">
                 <form class="bk-form add-member-form g-form-radio" onsubmit="return false">
                     <div class="bk-form-item member-form-item is-required">
-                        <label class="bk-label">成员名称：</label>
+                        <label class="bk-label"> {{ $t('成员名称：') }} </label>
                         <div class="bk-form-content member-item-content">
-                            <input type="text" class="bk-form-input member-name-input" placeholder="请输入成员名称"
+                            <input type="text" class="bk-form-input member-name-input" :placeholder="$t('请输入成员名称')"
                                 name="memberName"
                                 v-model="memberForm.memberName"
                                 v-validate="{
                                     required: true
                                 }"
                                 :class="{ 'is-danger': errors.has('memberName') }">
-                            <div v-if="errors.has('memberName')" class="error-tips">成员名称不能为空</div>
+                            <div v-if="errors.has('memberName')" class="error-tips"> {{ $t('成员名称不能为空') }} </div>
                         </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
-                        <label class="bk-label">角色：</label>
+                        <label class="bk-label"> {{ $t('角色：') }} </label>
                         <div class="bk-form-content member-item-content">
                             <bk-radio-group v-model="memberForm.type" class="radio-group">
                                 <bk-radio :value="entry.value" v-for="(entry, key) in typeList" :key="key">{{entry.label}}</bk-radio>
@@ -38,7 +36,7 @@
                         </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
-                        <label class="bk-label">权限列表：</label>
+                        <label class="bk-label"> {{ $t('权限列表：') }} </label>
                         <div class="bk-form-content permission-list-content">
                             <div class="permission-name" :class="{ 'active-item': entry.active }" v-for="(entry, index) in permissionList" :key="index">
                                 {{ entry.name }}
@@ -52,12 +50,8 @@
             <div class="bk-dialog-outer">
                 <template>
                     <bk-button theme="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
-                        @click="toConfirm">
-                        保存
-                    </bk-button>
-                    <bk-button class="bk-dialog-btn bk-dialog-btn-cancel" @click="toCloseDialog">
-                        取消
-                    </bk-button>
+                        @click="toConfirm"> {{ $t('保存') }} </bk-button>
+                    <bk-button class="bk-dialog-btn bk-dialog-btn-cancel" @click="toCloseDialog"> {{ $t('取消') }} </bk-button>
                 </template>
             </div>
         </template>
@@ -81,9 +75,11 @@
                     { label: 'Developer', value: 'DEVELOPER' }
                 ],
                 permissionList: [
-                    { name: '插件开发', active: true },
-                    { name: '版本发布', active: true },
-                    { name: '成员管理', active: true }
+                    { name: this.$t('插件开发'), active: true },
+                    { name: this.$t('版本发布'), active: true },
+                    { name: this.$t('私有配置'), active: true },
+                    { name: this.$t('审批'), active: true },
+                    { name: this.$t('成员管理'), active: true }
                 ],
                 memberForm: {
                     memberName: '',
@@ -120,11 +116,11 @@
                 } else {
                     this.permissionList[2].active = false
                     this.permissionList[3].active = false
+                    this.permissionList[4].active = false
                 }
             },
             showDialog (val) {
                 if (!val) {
-                    this.$validator.reset()
                     this.memberForm.memberName = ''
                     this.memberForm.type = 'ADMIN'
                 }
@@ -135,7 +131,7 @@
                 const valid = await this.$validator.validate()
                 if (valid) {
                     const params = {
-                        atomCode: this.atomCode,
+                        storeCode: this.atomCode,
                         type: this.memberForm.type,
                         member: []
                     }
@@ -162,15 +158,16 @@
             }
         }
         .add-member-form {
+            flex: 1;
             padding: 25px 0 15px;
-            width: 96%;
             text-align: left;
             .bk-label {
-                width: 100px;
+                padding-right: 18px;
+                width: 95px;
                 font-weight: normal;
             }
             .bk-form-content {
-                margin-left: 100px;
+                margin-left: 95px;
             }
             .prompt-tips {
                 font-size: 12px;
