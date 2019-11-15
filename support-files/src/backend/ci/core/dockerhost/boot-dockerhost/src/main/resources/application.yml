@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: dockerhost${service-suffix}
+    desc: DevOps Dockerhost Service
+    version: 4.0
+    packageName: com.tencent.devops.dockerhost
+
+server:
+  port: 21923

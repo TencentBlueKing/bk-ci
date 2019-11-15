@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "sourceMap": true,
+        "strict": true,
+        "jsx": "preserve",
+        "noImplicitReturns": true,
+        "experimentalDecorators": true,
+        "strictPropertyInitialization": false,
+        "strictNullChecks": false,
+        "allowJs": true,
+        "noImplicitAny": false,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "target": "es5",
+        "lib": [ "es2015", "dom" ]
+    },
+    "include": [
+        "./src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

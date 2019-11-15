@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.devops.common.service.ServiceAutoConfiguration
+org.springframework.context.ApplicationContextInitializer=\
+com.tencent.devops.common.service.Log4j2Initializer
