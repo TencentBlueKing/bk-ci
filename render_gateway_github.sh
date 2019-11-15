@@ -7,6 +7,7 @@ cd ${WORKSPACE}/scripts/
 cp -rf bkenv.properties ci_env.properties
 sh ./render_ci -m ci ../support-files/templates/*
 cd ${WORKSPACE}/ci/gateway
-cp -rf ./static-tencent/* ./static
-cp ./lua/auth/auth_user_tencent.lua ./lua/auth/auth_user.lua
-cp ./lua/util/oauth_util_tencent.lua ./lua/util/oauth_util.lua
+rm -rf ./static-tencent
+rm -rf ./vhosts
+rm -rf  ./lua/auth/auth_user_tencent.lua 
+rm -rf  ./lua/util/oauth_util_tencent.lua

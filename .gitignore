@@ -28,3 +28,4 @@ src/backend/ci/.setting
 src/backend/ci/.settings
 
 .vscode
+scripts/ci_env.properties
