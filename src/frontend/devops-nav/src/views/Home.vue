@@ -3,28 +3,56 @@
         <section>
             <accordion>
                 <accordion-item :init-content-show="true">
-                    <span class="home-accordion-header" slot="header">
+                    <span
+                        slot="header"
+                        class="home-accordion-header"
+                    >
                         最近访问服务
                     </span>
-                    <div slot="content" class="recent-visit-service-list">
+                    <div
+                        slot="content"
+                        class="recent-visit-service-list"
+                    >
                         <template v-if="recentVisitService.length">
-                            <router-link v-for="service in recentVisitService" :key="service.key" :to="addConsole(service.link_new)">
-                                <Logo :name="service.key" size="16" />
+                            <router-link
+                                v-for="service in recentVisitService"
+                                :key="service.key"
+                                :to="addConsole(service.link_new)"
+                            >
+                                <Logo
+                                    :name="service.key"
+                                    size="16"
+                                />
                                 {{ service.name }}
                             </router-link>
                         </template>
-                        <p class="no-recent-service" v-else>
+                        <p
+                            v-else
+                            class="no-recent-service"
+                        >
                             暂无最近访问服务，请查看
                             <span @click="updateShowAllService(true)">所有服务</span>
                         </p>
                     </div>
                 </accordion-item>
-                <accordion-item :init-content-show="isAllServiceListShow" @update:contentShow="updateShowAllService">
-                    <p class="all-service-header" slot="header">
+                <accordion-item
+                    :init-content-show="isAllServiceListShow"
+                    @update:contentShow="updateShowAllService"
+                >
+                    <p
+                        slot="header"
+                        class="all-service-header"
+                    >
                         所有服务
-                        <span class="service-count">共{{serviceCount}}个服务</span>
+                        <span class="service-count">共{{ serviceCount }}个服务</span>
                     </p>
-                    <NavBox class="all-service-list" slot="content" column-width="190px" :with-hover="false" :services="services" />
+                    <NavBox
+                        slot="content"
+                        class="all-service-list"
+                        column-width="190px"
+                        :with-hover="false"
+                        :services="services"
+                    />
                 </accordion-item>
             </accordion>
 
@@ -35,7 +63,10 @@
                 <span style="left: 382px;">测试</span>
                 <span style="left: 518px;">部署</span>
                 <span style="left: 652px;">运营</span>
-                <router-link class="bkdevops-button" :to="{ name: &quot;quickstart&quot; }">
+                <router-link
+                    class="bkdevops-button"
+                    :to="{ name: &quot;quickstart&quot; }"
+                >
                     <!--<bk-button theme="primary" icon-right="angle-double-right">
                         新手接入
                     </bk-button>-->
@@ -44,12 +75,21 @@
 
             <div class="devops-news">
                 <header>
-                    <p class="title">最新动态</p>
+                    <p class="title">
+                        最新动态
+                    </p>
                 </header>
 
                 <div class="devops-news-content">
-                    <p v-for="(item, index) in news" :key="item.name" class="news-item">
-                        <a target="_blank" :href="item.link">
+                    <p
+                        v-for="(item, index) in news"
+                        :key="item.name"
+                        class="news-item"
+                    >
+                        <a
+                            target="_blank"
+                            :href="item.link"
+                        >
                             <span v-if="index === 0">[最新]</span>
                             {{ item.name }}
                         </a>
@@ -59,30 +99,41 @@
             </div>
         </section>
         <aside>
-
             <article>
                 <h2>蓝盾DevOps平台</h2>
                 <p>
                     蓝鲸团队打造的一站式DevOps研发平台，从业务安全出发，贯穿产品研发、测试和运营的全生命周期；助力业务平滑过渡到敏捷研发模式，打造一站式研发运维体系，持续快速交付高质量的产品。
-                    <a :href="DOCS_URL_PREFIX" class="more" target="_blank">了解更多</a>
+                    <a
+                        :href="DOCS_URL_PREFIX"
+                        class="more"
+                        target="_blank"
+                    >了解更多</a>
                 </p>
             </article>
             <article>
                 <h2>用蓝盾流水线加速你的交付</h2>
                 <p>
                     持续交付强调更快、更可靠、低成本的自动化软件交付，蓝盾流水线（Pipeline）提供可视化、一键式部署服务，和持续集成无缝集成，支持并行部署。
-                    <a :href="`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`" target="_blank" class="more">了解更多</a>
+                    <a
+                        :href="`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`"
+                        target="_blank"
+                        class="more"
+                    >了解更多</a>
                 </p>
             </article>
             <article>
                 <h2>相关链接</h2>
                 <div>
-                    <a v-for="item in related" :key="item.name" :href="item.link" target="_blank">
+                    <a
+                        v-for="item in related"
+                        :key="item.name"
+                        :href="item.link"
+                        target="_blank"
+                    >
                         {{ item.name }}
                     </a>
                 </div>
             </article>
-
         </aside>
     </div>
 </template>
@@ -98,12 +149,12 @@
     import { urlJoin } from '../utils/util'
 
     @Component({
-        components: {
-            NavBox,
-            Accordion,
-            AccordionItem,
-            Logo
-        }
+      components: {
+        NavBox,
+        Accordion,
+        AccordionItem,
+        Logo
+      }
     })
     export default class Home extends Vue {
         @State services
@@ -114,39 +165,39 @@
         DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
 
         get recentVisitService (): object[] {
-            const recentVisitService = localStorage.getItem('recentVisitService')
-            const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-            return recentVisitServiceList.map(service => {
-                const serviceObj = window.serviceObject.serviceMap[service.key] || {}
-                return {
-                    ...service,
-                    ...serviceObj
-                }
-            })
+          const recentVisitService = localStorage.getItem('recentVisitService')
+          const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
+          return recentVisitServiceList.map(service => {
+            const serviceObj = window.serviceObject.serviceMap[service.key] || {}
+            return {
+              ...service,
+              ...serviceObj
+            }
+          })
         }
 
         get serviceCount (): number {
-            return this.services.reduce((sum, service) => {
-                sum += service.children.length
-                return sum
-            }, 0)
+          return this.services.reduce((sum, service) => {
+            sum += service.children.length
+            return sum
+          }, 0)
         }
 
         updateShowAllService (show: boolean): void {
-            this.isAllServiceListShow = show
+          this.isAllServiceListShow = show
         }
 
         addConsole (link: string): string {
-            return urlJoin('/console/', link)
+          return urlJoin('/console/', link)
         }
 
         created () {
-            this.fetchLinks({
-                type: 'news'
-            })
-            this.fetchLinks({
-                type: 'related'
-            })
+          this.fetchLinks({
+            type: 'news'
+          })
+          this.fetchLinks({
+            type: 'related'
+          })
         }
     }
 </script>

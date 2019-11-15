@@ -68,6 +68,8 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
             checkUnimportAgent()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the third party agent heartbeat", ignored)
+        } finally {
+            redisOperation.delete(LOCK_KEY)
         }
     }
 

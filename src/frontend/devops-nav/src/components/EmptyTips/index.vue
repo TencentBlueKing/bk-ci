@@ -1,9 +1,13 @@
 <template>
     <section class="devops-empty-tips">
-        <h2 class="title">{{ title }}</h2>
-        <p class="desc">{{ desc }}</p>
+        <h2 class="title">
+            {{ title }}
+        </h2>
+        <p class="desc">
+            {{ desc }}
+        </p>
         <p class="btns-row">
-            <slot></slot>
+            <slot />
         </p>
     </section>
 </template>

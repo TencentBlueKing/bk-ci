@@ -31,13 +31,25 @@ config = {
       ip = {
         "127.0.0.1"
       },
-      port = __BKCI_CONSUL_PORT__,
+      port = __BKCI_CONSUL_DNS_PORT__,
+      http_port = __BKCI_CONSUL_PORT__,
       domain = "__BKCI_CONSUL_DOMAIN__",
       tag = "__BKCI_CONSUL_TAG__",
+      nodes_url = "/v1/catalog/nodes"
+    },
+    ns_gray = {
+      ip = {
+        "127.0.0.1"
+      },
+      port = __BKCI_CONSUL_DNS_PORT__,
+      http_port = __BKCI_CONSUL_PORT__,
+      domain = "__BKCI_CONSUL_DOMAIN__",
+      tag = "__BKCI_CONSUL_TAG__",
+      nodes_url = "/v1/catalog/nodes"
     },
     redis = {
-      host = "__REDIS_CLUSTER_HOST__",
-      port = __REDIS_CLUSTER_PORT__,
+      host = "__REDIS_IP0__",
+      port = __REDIS_PORT__,
       pass = "__REDIS_PASS__",  -- redis 密码，没有密码的话，把这行注释掉
       database = 0,         -- 默认选择db0
       max_idle_time = 600000, -- 保留在连接池的时间

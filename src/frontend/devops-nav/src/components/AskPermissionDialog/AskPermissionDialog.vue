@@ -1,5 +1,6 @@
 <template>
-    <bk-dialog v-model="showDialog"
+    <bk-dialog
+        v-model="showDialog"
         class="devops-ask-permission-dialog"
         :width="width"
         theme="primary"
@@ -13,10 +14,15 @@
                 :max-height="300"
                 :data="noPermissionList"
                 empty-text="暂无数据"
-                
             >
-                <bk-table-column label="名称" prop="resource"></bk-table-column>
-                <bk-table-column label="名称" prop="option"></bk-table-column>
+                <bk-table-column
+                    label="名称"
+                    prop="resource"
+                />
+                <bk-table-column
+                    label="名称"
+                    prop="option"
+                />
             </bk-table>
         </main>
     </bk-dialog>
@@ -44,22 +50,22 @@
         showDialog: boolean = false
 
         created () {
-            eventBus.$on('update-permission-props', props => {
-                Object.keys(props).map(prop => {
-                    this[prop] = props[prop]
-                })
-                this.showDialog = true
+          eventBus.$on('update-permission-props', props => {
+            Object.keys(props).map(prop => {
+              this[prop] = props[prop]
             })
+            this.showDialog = true
+          })
         }
 
         handleClose (done) {
-            done()
+          done()
         }
 
         toApplyPermission (done) {
-            window.open(this.applyPermissionUrl, '_blank')
-            done()
-            this.showDialog = false
+          window.open(this.applyPermissionUrl, '_blank')
+          done()
+          this.showDialog = false
         }
     }
 </script>

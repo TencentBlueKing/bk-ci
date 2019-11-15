@@ -53,10 +53,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * deng
- * 2019-01-08
- */
 @Api(tags = ["USER_TEMPLATE"], description = "用户-流水模板资源")
 @Path("/user/templates")
 @Produces(MediaType.APPLICATION_JSON)
