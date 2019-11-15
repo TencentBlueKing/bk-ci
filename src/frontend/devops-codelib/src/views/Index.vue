@@ -18,7 +18,7 @@
             <code-lib-table v-bind="codelibs" :switch-page="switchPage"></code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
-            <bk-button v-for="typeLabel in codelibTypes" theme="primary" :key="typeLabel" @click="createCodelib(typeLabel)" v-if="typeLabel !== 'Gitlab' || isBlueKing">
+            <bk-button v-for="typeLabel in codelibTypes" theme="primary" :key="typeLabel" @click="createCodelib(typeLabel)" v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKin">
                 {{ `${$t('codelib.link')}${typeLabel}${$t('codelib.codelib')}` }}
             </bk-button>
         </empty-tips>
@@ -40,6 +40,7 @@
         getCodelibConfig,
         isGit,
         isGithub,
+        isGitLab,
         isTGit
     } from '../config/'
     export default {
@@ -67,8 +68,15 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             codelibTypes () {
-                return codelibTypes
+                let typeList = codelibTypes
+                if (!this.isExtendTx) {
+                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
+                }
+                return typeList
             },
             hasCodelibs () {
                 const { codelibs } = this
@@ -158,6 +166,9 @@
                 if (isTGit(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'HTTPS' })
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
+                }
+                if (isGitLab(typeName)) {
+                    Object.assign(CodelibDialog, { authType: 'HTTP' })
                 }
                 this.toggleCodelibDialog(CodelibDialog)
             },

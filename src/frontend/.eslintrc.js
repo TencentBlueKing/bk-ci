@@ -59,6 +59,8 @@ module.exports = {
         'ZHIYUN_URL': true,
         "CODECC_SOFWARE_URL": true,
         "JOB_URL": true,
+        "CODEGIT_URL_PREFIX": true,
+        "GITLAB_URL_PREFIX": true,
         "VERSION_TYPE": false
     },
     // add your custom rules hered
