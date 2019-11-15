@@ -47,10 +47,10 @@ class MQConfiguration {
 
     @Bean
     fun pipelineBuildAtomMarketQueueBind(
-        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired pipelineBuildAtomMarketQueue: Queue,
         @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineBuildFinishQueue)
+        return BindingBuilder.bind(pipelineBuildAtomMarketQueue)
             .to(pipelineBuildFinishFanoutExchange)
     }
 
