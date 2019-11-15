@@ -61,7 +61,7 @@ export default {
         }, {
             all: {
                 classifyCode: 'all',
-                classifyName: '所有',
+                classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.all')) || 'all',
                 level: 0,
                 children: atomCodeList.map(atomCode => {
                     const atom = atomMap[atomCode]
@@ -146,7 +146,7 @@ export default {
         return state.containerTypeList.filter(type => type !== 'TRIGGER').map(type => {
             return {
                 value: type,
-                label: jobConst[type]
+                label: type !== 'NONE' ? jobConst[type] : ((window.pipelineVue.$i18n && window.pipelineVue.$i18n.t(`storeMap.${jobConst[type]}`)) || jobConst[type])
             }
         })
     },
@@ -164,7 +164,7 @@ export default {
             const allContainers = getters.getAllContainers(stages)
 
             if (allContainers.some(container => container.isError)) {
-                throw new Error('请输入正确的流水线')
+                throw new Error(this.$t('storeMap.oneCodecc'))
             }
 
             const allElements = getters.getAllElements(stages)
@@ -179,15 +179,15 @@ export default {
             })
 
             if (codeccCount > 1) {
-                throw new Error('只允许一个代码扫描插件')
+                throw new Error(this.$t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
-                throw new Error('流水线不允许超过一个手动触发插件')
+                throw new Error(this.$t('storeMap.oneManualTrigger'))
             } else if (timerTriggerCount > 1) {
-                throw new Error('流水线不允许超过一个定时触发插件')
+                throw new Error(this.$t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
-                throw new Error('流水线不允许超过一个远程触发插件')
+                throw new Error(this.$t('storeMap.oneRemoteTrigger'))
             } else if (elementValid) {
-                throw new Error('请输入正确的流水线')
+                throw new Error(this.$t('storeMap.correctPipeline'))
             }
 
             return {
@@ -232,11 +232,9 @@ export default {
                 const containerModal = getters.getContainerModalByType(container.baseOS)
                 if (previewEnvKey && containerModal) {
                     const buildType = buildEnvMap[previewEnvKey]
-                    const buildResourceId = container[previewEnvKey]
-                    const buildResourceValue = getters.getBuildResourceNameById(containerModal, buildType, buildResourceId)
                     Vue.set(container, 'dispatchType', {
                         buildType,
-                        value: buildResourceValue,
+                        value: '',
                         workspace: container.thirdPartyWorkspace || ''
                     })
                     delete container[previewEnvKey]
@@ -255,15 +253,6 @@ export default {
             }
         }
         return container
-    },
-    getBuildResourceNameById: state => (containerModal, buildType, buildResourceId) => {
-        try {
-            const resource = containerModal.resources[buildType].resources.find(resource => resource.id === buildResourceId)
-            return resource.name
-        } catch (error) {
-            console.warn(error, buildType, containerModal)
-            return ''
-        }
     },
     isDockerBuildResource: state => container => {
         return container && ((container.dispatchType && container.dispatchType.buildType === 'DOCKER') || container.dockerBuildVersion)
@@ -288,11 +277,16 @@ export default {
         }
         return element
     },
+    buildNoRules: state => buildNoRules.map(rule => {
+        return {
+            ...rule,
+            label: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t(`storeMap.${rule.label}`)) || rule.label
+        }
+    }),
     isVmContainer: state => container => isVmContainer(container['@type']),
     isTriggerContainer: state => container => isTriggerContainer(container['@type']),
     isCodePullAtom: state => atom => isCodePullAtom(atom['@type']),
     isNormalContainer: state => container => isNormalContainer(container['@type']),
-    buildNoRules: state => buildNoRules,
     defaultBuildNo: state => defaultBuildNo,
     getPlatformList: state => platformList,
     getAtomModalKey: state => getAtomModalKey,

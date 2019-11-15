@@ -14,12 +14,16 @@ const getters: GetterTree<RootState, any> = {
         }, [])
     },
 
-    isEmptyProject: (state: RootState) => (project: Project): boolean => {
+    isEmptyProject: () => (project: Project): boolean => {
         return isShallowEqual(project, EMPTY_PROJECT)
     },
 
-    onlineProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => project.approval_status === 2 && !project.is_offlined)
+    enableProjectList: (state: RootState) => {
+        return state.projectList.filter((project: ObjectMap) => (project.approval_status === 1 || project.approval_status === 2) && project.enabled)
+    },
+
+    disableProjectList: (state: RootState) => {
+        return state.projectList.filter((project: ObjectMap) => (project.approval_status === 1 || project.approval_status === 2) && !project.enabled)
     },
 
     approvalingProjectList: (state: RootState) => {

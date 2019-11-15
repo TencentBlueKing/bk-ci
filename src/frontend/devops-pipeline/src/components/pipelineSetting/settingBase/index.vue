@@ -1,17 +1,21 @@
 <template>
     <section class="bk-form pipeline-setting base" v-if="!isLoading">
         <div class="setting-container">
-            <form-field :required="true" label="名称" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
-                <input class="bk-form-input" placeholder="请输入流水线名称" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
+            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
+                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
             </form-field>
 
-            <form-field :required="false" label="分组" v-if="tagGroupList.length">
+            <form-field :required="false" :label="$t('settings.group')" v-if="tagGroupList.length">
                 <div class="form-group form-group-inline">
                     <div :class="grouInlineCol"
                         v-for="(filter, index) in tagGroupList"
                         :key="index">
                         <label class="group-title">{{filter.name}}</label>
-                        <bk-select v-model="pipelineSetting.labels" multiple>
+                        <bk-select :value="labelValues[index]"
+                            @selected="handleLabelSelect(index, arguments)"
+                            @clear="handleLabelSelect(index, [[]])"
+                            multiple
+                        >
                             <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
                             </bk-option>
                         </bk-select>
@@ -19,11 +23,11 @@
                 </div>
             </form-field>
 
-            <form-field label="描述" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
-                <textarea name="desc" v-model="pipelineSetting.desc" placeholder="请输入100个字符以内的描述内容" class="bk-form-textarea" v-validate.initial="&quot;max:100&quot;"></textarea>
+            <form-field :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
+                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="&quot;max:100&quot;"></textarea>
             </form-field>
 
-            <form-field label="运行锁定" class="opera-lock-radio">
+            <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
                 <bk-radio-group v-model="pipelineSetting.runLockType">
                     <bk-radio v-for="(entry, key) in runTypeList" :key="key" :value="entry.value" class="view-radio">{{ entry.label }}</bk-radio>
                 </bk-radio-group>
@@ -31,30 +35,31 @@
             <div class="bk-form-item opera-lock" v-if="pipelineSetting.runLockType === 'SINGLE'">
                 <div class="bk-form-content">
                     <div class="opera-lock-item">
-                        <label class="opera-lock-label">最大排队数量：</label>
+                        <label class="opera-lock-label">{{ $t('settings.largestNum') }}：</label>
                         <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="maxQueueSize" placeholder="请输入" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" v-model.number="pipelineSetting.maxQueueSize">
+                            <input type="text" name="maxQueueSize" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" v-model.number="pipelineSetting.maxQueueSize">
                             <div class="group-box group-append">
-                                <div class="group-text">个</div>
+                                <div class="group-text">{{ $t('settings.item') }}</div>
                             </div>
                             <p v-if="errors.has('maxQueueSize')" class="is-danger">{{errors.first("maxQueueSize")}}</p>
                         </div>
                     </div>
                     <div class="opera-lock-item">
-                        <label class="opera-lock-label">最大排队时长：</label>
+                        <label class="opera-lock-label">{{ $t('settings.lagestTime') }}：</label>
                         <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="waitQueueTimeMinute" placeholder="请输入" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:1440|min_value:60&quot;" v-model.number="pipelineSetting.waitQueueTimeMinute">
+                            <input type="text" name="waitQueueTimeMinute" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" v-model.number="pipelineSetting.waitQueueTimeMinute">
                             <div class="group-box group-append">
-                                <div class="group-text">分钟</div>
+                                <div class="group-text">{{ $t('settings.minutes') }}</div>
                             </div>
                             <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="handle-btn" style="margin-left: 146px;margin-top: 30px">
-                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">保存</bk-button>
-                <bk-button @click="exit">取消</bk-button>
+
+            <div class="handle-btn" style="margin: 30px 0 0 146px">
+                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
+                <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
     </section>
@@ -63,7 +68,6 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import Clipboard from 'clipboard'
     export default {
         components: {
             FormField
@@ -82,15 +86,15 @@
                 resetFlag: false,
                 runTypeList: [
                     {
-                        label: '可同时运行多个构建任务',
+                        label: this.$t('settings.runningOption.multiple'),
                         value: 'MULTIPLE'
                     },
                     {
-                        label: '锁定流水线，任何触发方式都无法运行',
+                        label: this.$t('settings.runningOption.lock'),
                         value: 'LOCK'
                     },
                     {
-                        label: '同一时间最多只能运行一个构建任务',
+                        label: this.$t('settings.runningOption.single'),
                         value: 'SINGLE'
                     }
                 ]
@@ -121,6 +125,18 @@
                 key += this.tagGroupList.length < 3 ? this.tagGroupList.length < 2 ? '' : 'column-2' : 'column-3'
                 classObj[key] = true
                 return classObj
+            },
+            labelValues () {
+                const labels = this.pipelineSetting.labels
+                return this.tagGroupList.map((tag) => {
+                    const currentLables = tag.labels || []
+                    const value = []
+                    currentLables.forEach((label) => {
+                        const index = labels.findIndex((item) => (item === label.id))
+                        if (index > -1) value.push(label.id)
+                    })
+                    return value
+                })
             }
         },
         watch: {
@@ -144,23 +160,20 @@
         },
         created () {
             this.requestTemplateSetting(this.$route.params)
-
             this.requestGrouptLists()
-
-            this.clipboard = new Clipboard('.copy-icon').on('success', e => {
-                this.$showTips({
-                    theme: 'success',
-                    message: '内容复制成功'
-                })
-            })
-        },
-        beforeDestroy () {
-            this.clipboard.destroy()
         },
         methods: {
             ...mapActions('soda', [
                 'requestTemplateSetting'
             ]),
+            handleLabelSelect (index, arg) {
+                let labels = []
+                this.labelValues.forEach((value, valueIndex) => {
+                    if (valueIndex === index) labels = labels.concat(arg[0])
+                    else labels = labels.concat(value)
+                })
+                this.pipelineSetting.labels = labels
+            },
             isStateChange () {
                 this.$emit('setState', {
                     isLoading: this.isLoading,
@@ -201,7 +214,7 @@
 
                     if (resData && resData.data) {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}修改成功`,
+                            message: `${pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.isEditing = false
@@ -209,7 +222,7 @@
                         result = true
                     } else {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}修改失败`,
+                            message: `${pipelineSetting.pipelineName}${this.$t('updateFail')}`,
                             theme: 'error'
                         })
                     }
@@ -217,8 +230,8 @@
                     if (this.routeName !== 'templateSetting' && err.code === 403) { // 没有权限执行
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: `流水线: ${this.pipelineSetting.pipelineName}`,
-                                option: '编辑'
+                                resource: `${this.$t('pipeline')}: ${this.pipelineSetting.pipelineName}`,
+                                option: this.$t('edit')
                             }],
                             applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
                         })

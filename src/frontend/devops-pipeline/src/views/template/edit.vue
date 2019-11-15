@@ -5,29 +5,29 @@
                 <div slot="pipeline-bar">
                     <bk-button @click="savePipeline()" theme="primary"
                         :disabled="isSaveDisable"
-                    >保存</bk-button>
-                    <bk-button @click="openVersionSideBar">版本列表</bk-button>
-                    <bk-button @click="exit">取消</bk-button>
+                    >{{ $t('save') }}</bk-button>
+                    <bk-button @click="openVersionSideBar">{{ $t('template.versionList') }}</bk-button>
+                    <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
                 </div>
             </pipeline>
-            <bk-sideslider title="版本列表" class="sodaci-property-panel" width="640" :is-show.sync="showVersionSideBar" :quick-close="true">
+            <bk-sideslider :title="$t('template.versionList')" class="sodaci-property-panel" width="640" :is-show.sync="showVersionSideBar" :quick-close="true">
                 <template slot="content">
                     <section class="version-list-wrapper">
                         <bk-table
                             :data="versionList"
                             size="small"
                         >
-                            <bk-table-column label="版本号" prop="name"></bk-table-column>
-                            <bk-table-column label="更新时间" prop="updateTime">
+                            <bk-table-column :label="$t('version')" prop="name"></bk-table-column>
+                            <bk-table-column :label="$t('lastUpdateTime')" prop="updateTime">
                                 <template slot-scope="props">
                                     <span>{{ localConvertMStoString(props.row.updateTime) }}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="最后更新人" prop="creator"></bk-table-column>
-                            <bk-table-column label="操作" width="150">
+                            <bk-table-column :label="$t('lastUpdater')" prop="creator"></bk-table-column>
+                            <bk-table-column :label="$t('operate')" width="150">
                                 <template slot-scope="props">
-                                    <bk-button theme="primary" text @click.stop="requestTemplateByVersion(props.row.version)">加载</bk-button>
-                                    <bk-button theme="primary" text :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'" @click="deleteVersion(props.row)">删除</bk-button>
+                                    <bk-button theme="primary" text @click.stop="requestTemplateByVersion(props.row.version)">{{ $t('load') }}</bk-button>
+                                    <bk-button theme="primary" text :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'" @click="deleteVersion(props.row)">{{ $t('delete') }}</bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -40,11 +40,12 @@
             ext-cls="version-dialog"
             v-model="showVersionDialog"
             :close-icon="false"
+            :auto-close="false"
             width="400"
             @confirm="saveTemplate">
             <div>
-                <form-field required="true" label="保存到版本" :is-error="errors.has(&quot;versionName&quot;)" :error-msg="errors.first(&quot;versionName&quot;)">
-                    <auto-complete v-validate="'required'" :list="versionList" name="versionName" open-list="true" placeholder="搜索或创建版本" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
+                <form-field v-if="showVersionDialog" required="true" :label="$t('template.saveAsVersion')" :is-error="errors.has(&quot;versionName&quot;)" :error-msg="errors.first(&quot;versionName&quot;)">
+                    <auto-complete v-validate="'required'" :list="versionList" name="versionName" open-list="true" :placeholder="$t('template.versionInputTips')" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
                 </form-field>
             </div>
         </bk-dialog>
@@ -56,7 +57,6 @@
     import Pipeline from '@/components/Pipeline'
     import AutoComplete from '@/components/atomFormField/AutoComplete'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import { CONFIRM_MSG, CONFIRM_TITLE } from '@/utils/pipelineConst'
     import {
         convertMStoStringByRule,
         navConfirm
@@ -74,7 +74,9 @@
                 showVersionSideBar: false,
                 isSaving: false,
                 isLoading: true,
-                saveVersionName: ''
+                saveVersionName: '',
+                confirmMsg: this.$t('editPage.confirmMsg'),
+                confirmTitle: this.$t('editPage.confirmTitle')
             }
         },
         computed: {
@@ -102,7 +104,7 @@
                 if (this.template && this.template.versions) {
                     return this.template.versions.map(item => ({
                         ...item,
-                        name: item.version === this.currentVersionId ? item.versionName + '(当前)' : item.versionName
+                        name: item.version === this.currentVersionId ? item.versionName + `(${this.$t('template.current')})` : item.versionName
                     }))
                 } else {
                     return []
@@ -131,10 +133,13 @@
         },
         mounted () {
             this.addLeaveListenr()
+            this.requestQualityAtom()
+            this.requestMatchTemplateRules()
         },
         beforeDestroy () {
             this.setPipeline()
             this.removeLeaveListenr()
+            this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
             this.leaveConfirm(to, from, next)
@@ -146,7 +151,8 @@
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',
-                'requestTemplate'
+                'requestTemplate',
+                'updateContainer'
             ]),
             handleVersionChange (name, value) {
                 this.saveVersionName = value
@@ -189,20 +195,23 @@
                 if (!valid) {
                     this.$showTips({
                         theme: 'error',
-                        message: '版本名称不能为空'
+                        message: this.$t('template.versionNullTips')
                     })
                     return
                 }
-                if (this.saveVersionName.endsWith('(当前)')) {
-                    this.saveVersionName = this.saveVersionName.substr(0, this.saveVersionName.length - 4)
+                const suffix = `(${this.$t('template.current')})`
+                if (this.saveVersionName.endsWith(suffix)) {
+                    this.saveVersionName = this.saveVersionName.substr(0, this.saveVersionName.length - suffix.length)
                 }
+                // 清除流水线参数渲染过程中添加的key
+                this.formatParams(this.pipeline)
                 let result
                 try {
                     this.isSaving = true
                     const { data } = await this.$ajax.put(`/process/api/user/templates/projects/${this.projectId}/templates/${this.templateId}?versionName=${this.saveVersionName}`, this.pipeline)
                     if (data) {
                         this.$showTips({
-                            message: `${this.pipeline.name}修改成功`,
+                            message: `${this.pipeline.name} ${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.setPipelineEditing(false)
@@ -210,7 +219,7 @@
                         result = true
                     } else {
                         this.$showTips({
-                            message: `${this.pipeline.name}修改失败`,
+                            message: `${this.pipeline.name} ${this.$t('updateFail')}`,
                             theme: 'error'
                         })
                     }
@@ -242,7 +251,7 @@
                     // this.requestTemplateList()
                     this.requestTemplateByVersion(this.currentVersionId)
                     this.$showTips({
-                        message: '删除模板版本成功',
+                        message: this.$t('deleteSuc'),
                         theme: 'success'
                     })
                 } catch (err) {
@@ -259,12 +268,23 @@
              */
             deleteVersion (row) {
                 if (this.template.hasPermission && this.currentVersionId !== row.version && this.template.templateType !== 'CONSTRAINT') {
-                    const content = `删除${row.versionName}`
-                    navConfirm({ title: `确认`, content })
+                    const content = `${this.$t('delete')}${row.versionName}`
+                    navConfirm({ title: this.$t('confirm'), content })
                         .then(() => {
                             this.confirmDeleteVersion(row)
                         }).catch(() => {})
                 }
+            },
+            requestQualityAtom () {
+                this.$store.dispatch('soda/requestQualityAtom', {
+                    projectId: this.projectId
+                })
+            },
+            requestMatchTemplateRules () {
+                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                    projectId: this.projectId,
+                    templateId: this.templateId
+                })
             },
             exit () {
                 this.$router.push({
@@ -273,12 +293,32 @@
             },
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
-                    navConfirm({ content: CONFIRM_MSG, title: CONFIRM_TITLE })
+                    navConfirm({ content: this.confirmMsg, title: this.confirmTitle })
                         .then(() => next())
                         .catch(() => next(false))
                 } else {
                     next(true)
                 }
+            },
+            formatParams (pipeline) {
+                const params = this.pipeline && this.pipeline.stages[0].containers[0].params
+                const templateParams = this.pipeline && this.pipeline.stages[0].containers[0].templateParams
+                const paramList = params && this.getParams(params)
+                const templateParamList = templateParams && this.getParams(templateParams)
+                this.updateContainer({
+                    container: this.pipeline.stages[0].containers[0],
+                    newParam: {
+                        params: paramList,
+                        templateParams: templateParamList
+                    }
+                })
+            },
+            getParams (params) {
+                const result = params.map(param => {
+                    const { paramIdKey, ...temp } = param
+                    return temp
+                })
+                return result
             },
             addLeaveListenr () {
                 window.addEventListener('beforeunload', this.leaveSure)
@@ -287,8 +327,8 @@
                 window.removeEventListener('beforeunload', this.leaveSure)
             },
             leaveSure (e) {
-                e.returnValue = CONFIRM_MSG
-                return CONFIRM_MSG
+                e.returnValue = this.confirmMsg
+                return this.confirmMsg
             },
             localConvertMStoString (num) {
                 return convertMStoStringByRule(new Date().getTime() - num)
@@ -305,7 +345,7 @@
             min-height: 20px;
         }
         .bk-dialog-body {
-            height: 270px;
+            height: 300px;
         }
         .bk-label {
             font-size: 14px;
@@ -317,6 +357,9 @@
     .template-edit {
         .version-list-wrapper {
             margin: 20px;
+        }
+        .scroll-wraper {
+            overflow: initial;
         }
     }
 

@@ -77,18 +77,6 @@ export default new Vuex.Store({
     },
     // 公共 actions
     actions: {
-        // requestProjectDetail: async ({ commit }, { projectId }) => {
-        //     return ajax.get(AJAX_URL_PIRFIX + `/backend/api/projects/${projectId}/`).then(response => {
-        //         let data = {}
-        //         if (typeof response.data === 'object' && typeof response.data.data === 'object') {
-        //             data = Object.assign({}, response.data.data, {'cc_app_name': response.data.cc_app_name})
-        //             if (data.cc_app_id) {
-        //                 Object.assign(data, {'cc_app_id': data.cc_app_id.toString()})
-        //             }
-        //         }
-        //         commit('updateCurProject', data)
-        //     })
-        // }
         requestProjectDetail: async ({ commit }, { projectId }) => {
             return ajax.get(AJAX_URL_PIRFIX + `/project/api/user/projects/${projectId}/`).then(response => {
                 let data = {}

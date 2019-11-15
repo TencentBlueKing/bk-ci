@@ -30,11 +30,13 @@
                                 :class="`path${key}`"
                             />
                         </i>
-                        <i
+                        <icon
                             v-else
-                            :class="{ &quot;bk-icon&quot;: true, &quot;service-icon&quot;: true, [`icon-${serviceIcon(child.name)}`]: true }"
+                            class="bk-icon service-icon"
+                            :size="20"
+                            :name="serviceIcon(child.name)"
                         />
-                        {{ serviceName(child.name) }}
+                        <span class="service-name">{{ serviceName(child.name) }}</span>
                         <span class="service-id">{{ serviceId(child.name) }}</span>
                         <span
                             v-if="child.status === &quot;new&quot;"
@@ -44,13 +46,13 @@
                     <template v-if="showCollectStar">
                         <i
                             v-if="child.collected"
-                            title="已收藏"
+                            :title="$t('collected')"
                             class="bk-icon collect-icon icon-star-shape"
                             @click.stop="toggleCollect(child, false)"
                         />
                         <i
                             v-else
-                            title="收藏"
+                            :title="$t('toCollect')"
                             class="bk-icon collect-icon icon-star"
                             @click.stop="toggleCollect(child, true)"
                         />
@@ -70,6 +72,9 @@
     @Component
     export default class NavBox extends Vue {
         readyServices: ObjectMap = {}
+
+        @Prop()
+        currentPage
         @Prop({ required: true })
         services
 
@@ -83,66 +88,67 @@
         withHover: boolean
 
        iconMap: ObjectMap = {
-         'Teamwork': 'tapd',
-         'Cloud Drive': '',
-         'Code': 'code',
-         'Pipeline': 'pipeline',
-         'Exp': 'experience',
-         'Artifactory': 'artifactory',
-         'OSIS': '',
-         'CodeCC': 'codecc',
-         'WeTest': 'wetest',
-         'BCS': 'bcs',
-         'Eagle': '',
-         'SOP': '',
-         'AD': '',
-         'Job': 'job',
-         'Env': 'environment',
-         'Monitor': 'monitor',
-         'LogSearch': '',
-         'KingKong': '',
-         'Scan': '',
-         'Apk': 'apk',
-         'Vs': 'vs',
-         'Measure': 'measure',
-         'Perm': 'perm',
-         'Ticket': 'ticket',
-         'Gate': 'gate',
-         'Turbo': 'turbo',
-         'Store': 'store'
+           'Teamwork': 'tapd',
+           'Cloud Drive': '',
+           'Code': 'code',
+           'Pipeline': 'pipeline',
+           'Exp': 'experience',
+           'Artifactory': 'artifactory',
+           'OSIS': '',
+           'CodeCC': 'codecc',
+           'WeTest': 'wetest',
+           'BCS': 'bcs',
+           'Eagle': '',
+           'SOP': '',
+           'AD': '',
+           'Job': 'job',
+           'Env': 'environment',
+           'Monitor': 'monitor',
+           'LogSearch': '',
+           'KingKong': '',
+           'Scan': '',
+           'Apk': 'apk',
+           'Vs': 'vs',
+           'Measure': 'measure',
+           'Perm': 'perm',
+           'Ticket': 'ticket',
+           'Gate': 'gate',
+           'Turbo': 'turbo',
+           'Store': 'store',
+           'xinghai': 'xinghai'
        }
 
        gotoPage ({ link_new: linkNew }) {
-         const cAlias = window.currentPage && getServiceAliasByPath(window.currentPage['link_new'])
-         const nAlias = getServiceAliasByPath(linkNew)
-         const destUrl = this.addConsole(linkNew)
+           const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
+           const nAlias = getServiceAliasByPath(linkNew)
+           const destUrl = this.addConsole(linkNew)
 
-         if (cAlias === nAlias && window.currentPage && window.currentPage['inject_type'] === 'iframe') {
-           eventBus.$emit('goHome')
-           return
-         }
-         this.$router.push(destUrl)
+           if (cAlias === nAlias && this.currentPage && this.currentPage['inject_type'] === 'iframe') {
+               eventBus.$emit('goHome')
+               return
+           }
+           this.$router.push(destUrl)
        }
 
        addConsole (link: string): string {
-         return urlJoin('/console', link)
+           return urlJoin('/console', link)
        }
 
        get showCollectStar (): boolean {
-         return typeof this.toggleCollect === 'function'
+           return typeof this.toggleCollect === 'function'
        }
 
        serviceName (name): string {
-         return name.slice(0, name.indexOf('('))
+           return name.slice(0, name.indexOf('('))
        }
 
        serviceId (name): string {
-         return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
+           return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
        }
 
        serviceIcon (name): string {
-         const iconName = this.iconMap[this.serviceId(name)]
-         return iconName ? `logo-${iconName}` : 'placeholder'
+           const iconName = this.iconMap[this.serviceId(name)]
+           return iconName ? `logo-${iconName}` : 'placeholder'
        }
     }
 </script>
@@ -208,6 +214,9 @@
                         font-size: 20px;
                         margin-right: 12px;
                         color: #6b798e;
+                    }
+                    .service-name {
+                        @include ellipsis();
                     }
                     .service-id {
                         margin-left: 5px;

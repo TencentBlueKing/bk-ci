@@ -1,13 +1,12 @@
 <template>
     <router-link :to="{ name: 'details', params: { code: atom.code, type: $route.query.pipeType || 'atom' } }" class="card-home">
-        <img class="card-pic atom-logo" :src="atom.logoUrl" v-if="atom.logoUrl">
-        <icon class="card-pic" v-else :name="getAtomIcon(atom.code)" size="78" style="fill:#C3CDD7" />
+        <img class="card-pic atom-logo" :src="atom.logoUrl">
         <p class="card-name text-overflow">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
             <span>{{ atom.downloads }} <i class="bk-icon icon-heat-2"></i></span>
         </h5>
-        <p v-if="hasSummary" class="card-summary">{{atom.summary || '暂无描述'}}</p>
+        <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('暂无描述')}}</p>
         <section class="card-rate">
             <p class="score-group">
                 <comment-rate :rate="5" :width="15" :height="16" :style="{ width: starWidth }" class="score-real"></comment-rate>
@@ -36,12 +35,6 @@
                 const fixWidth = 18 * integer
                 const rateWidth = 15 * (this.atom.score - integer)
                 return `${fixWidth + rateWidth}px`
-            }
-        },
-
-        methods: {
-            getAtomIcon (atomCode) {
-                return document.getElementById(atomCode) ? atomCode : 'placeholder'
             }
         }
     }

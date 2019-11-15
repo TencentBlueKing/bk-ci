@@ -23,8 +23,7 @@
                         </list-create-header>
 
                         <section class="pipeline-list-content">
-                            <div class="pipeline-list-cards clearfix"
-                                v-if="layout === 'card'">
+                            <div class="pipeline-list-cards clearfix" v-if="layout === 'card'">
                                 <task-card
                                     v-for="(card, index) of pipelineList"
                                     :has-permission="card.hasPermission"
@@ -35,8 +34,7 @@
                                 </task-card>
                             </div>
 
-                            <div class="pipeline-list-table"
-                                v-if="layout === 'table'">
+                            <div class="pipeline-list-table" v-if="layout === 'table'">
                                 <task-table
                                     :list="pipelineList">
                                 </task-table>
@@ -54,36 +52,42 @@
                 width="800"
                 v-model="copyDialogConfig.isShow"
                 :title="copyDialogConfig.title"
-                :mask-close="copyDialogConfig.quickClose"
-                :close-icon="copyDialogConfig.closeIcon"
+                :mask-close="false"
+                :close-icon="false"
+                :auto-close="false"
+                header-position="left"
                 @confirm="copyConfirmHandler"
                 @cancel="copyCancelHandler"
             >
                 <template>
                     <section class="copy-pipeline bk-form" v-bkloading="{ isLoading: copyConfig.loading }">
                         <div class="bk-form-item">
-                            <label class="bk-label">名称：</label>
+                            <label class="bk-label">{{ $t('name') }}：</label>
                             <div class="bk-form-content">
-                                <input type="text" class="bk-form-input" placeholder="新流水线名称"
+                                <input type="text" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')"
+                                    name="newPipelineName"
+                                    v-validate="&quot;required|max:40&quot;"
                                     v-model="copyConfig.newPipelineName"
                                     :class="{
-                                        'is-danger': copyConfig.nameHasError
+                                        'is-danger': errors.has('newPipelineName')
                                     }"
-                                    @input="copyConfig.nameHasError = false"
                                 >
+                                <p class="error-tips" v-if="errors.has('newPipelineName')">{{ $t('pipelineNameInputTips') }}</p>
                             </div>
                         </div>
 
                         <div class="bk-form-item">
-                            <label class="bk-label">描述：</label>
+                            <label class="bk-label">{{ $t('desc') }}：</label>
                             <div class="bk-form-content">
-                                <input type="text" class="bk-form-input" placeholder="新流水线描述"
+                                <input type="text" class="bk-form-input" :placeholder="$t('pipelineDescInputTips')"
+                                    name="newPipelineDesc"
                                     v-model="copyConfig.newPipelineDesc"
+                                    v-validate.initial="&quot;max:100&quot;"
                                     :class="{
-                                        'is-danger': copyConfig.descHasError
+                                        'is-danger': errors.has('newPipelineDesc')
                                     }"
-                                    @input="copyConfig.descHasError = false"
                                 >
+                                <p class="error-tips" v-if="errors.has('newPipelineDesc')"> {{ errors.first("newPipelineDesc") }}</p>
                             </div>
                         </div>
                     </section>
@@ -94,31 +98,32 @@
                 width="800"
                 v-model="saveAsTemp.isShow"
                 :title="saveAsTemp.title"
-                :close-icon="saveAsTemp.closeIcon"
-                :mask-close="saveAsTemp.quickClose"
+                :close-icon="false"
+                :mask-close="false"
+                :auto-close="false"
+                header-position="left"
                 @confirm="saveAsConfirmHandler"
                 @cancel="saveAsCancelHandler">
-                <section class="copy-pipeline bk-form">
+                <section class="copy-pipeline bk-form" ref="saveAsTemp">
                     <div class="bk-form-item">
-                        <label class="bk-label">模板名称</label>
+                        <label class="bk-label">{{ $t('template.name') }}</label>
                         <div class="bk-form-content">
                             <input type="text"
                                 class="bk-form-input"
-                                placeholder="请输入模板名称，不能超过30个字符"
+                                :placeholder="$t('template.nameInputTips')"
                                 v-model="saveAsTemp.templateName"
-                                :class="{ 'is-danger': saveAsTemp.nameHasError }"
-                                @input="saveAsTemp.nameHasError = false"
-                                name="copyTemplateName"
+                                :class="{ 'is-danger': errors.has('saveTemplateName') }"
+                                name="saveTemplateName"
                                 v-validate="&quot;required|max:30&quot;"
                                 maxlength="30"
                             >
                         </div>
-                        <div v-if="errors.has('copyTemplateName')" class="error-tips err-name">模板名称不能超过30个字符</div>
+                        <div v-if="errors.has('saveTemplateName')" class="error-tips err-name">{{ $t('template.nameInputTips') }}</div>
                     </div>
 
                     <div class="bk-form-item">
-                        <label class="bk-label tip-bottom">应用设置
-                            <span v-bk-tooltips.bottom="'选“是”则将流水线设置应用于另存后的模版'" class="bottom-start">
+                        <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
+                            <span v-bk-tooltips.bottom="$t('template.tipsSetting')" class="bottom-start">
                                 <i class="bk-icon icon-info-circle"></i>
                             </span>
                         </label>
@@ -135,7 +140,8 @@
 </template>
 
 <script>
-    import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    // import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    import webSocketMessage from '@/utils/webSocketMessage'
     import { mapGetters, mapState } from 'vuex'
     import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import { bus } from '@/utils/bus'
@@ -181,7 +187,7 @@
                 },
                 copyDialogConfig: {
                     isShow: false,
-                    title: '复制流水线',
+                    title: this.$t('newlist.copyPipeline'),
                     closeIcon: false,
                     quickClose: false,
                     padding: '0 20px',
@@ -190,8 +196,6 @@
                 copyConfig: {
                     newPipelineName: '',
                     newPipelineDesc: '',
-                    nameHasError: false,
-                    descHasError: false,
                     loading: false,
                     newPipelineGroup: '',
                     config: {
@@ -201,7 +205,7 @@
                 },
                 saveAsTemp: {
                     isShow: false,
-                    title: '另存为模板',
+                    title: this.$t('newlist.saveAsTemp'),
                     closeIcon: false,
                     quickClose: false,
                     padding: '0 20px',
@@ -210,11 +214,11 @@
                     isCopySetting: true
                 },
                 copySettings: [
-                    { label: '是', value: true },
-                    { label: '否', value: false }
+                    { label: this.$t('true'), value: true },
+                    { label: this.$t('false'), value: false }
                 ],
                 tipsSetting: {
-                    content: '选“是”则将流水线设置应用于复制后的模版',
+                    content: this.$t('template.tipsSetting'),
                     placements: ['right']
                 },
                 layout,
@@ -258,14 +262,13 @@
                     this.initPage()
                     this.showContent = true
                 }
-            },
-
-            projectId: {
-                handler (val) {
-                    this.initWebSocket(val)
-                },
-                immediate: true
             }
+            // projectId: {
+            //     handler (val) {
+            //         this.initWebSocket(val)
+            //     },
+            //     immediate: true
+            // }
         },
 
         created () {
@@ -302,10 +305,12 @@
 
         mounted () {
             this.initPage()
+            webSocketMessage.installWsMessage(this.updatePipelineStatus)
         },
 
         beforeDestroy () {
-            pipelineWebsocket.disconnect()
+            // pipelineWebsocket.disconnect()
+            webSocketMessage.unInstallWsMessage()
         },
 
         methods: {
@@ -334,7 +339,7 @@
                 }
             },
             toggleCreatePermission () {
-                this.setPermissionConfig('流水线', '创建', '')
+                this.setPermissionConfig(this.$t('pipeline'), this.$t('create'), '')
             },
             localConvertMStoString (num) {
                 return convertMStoString(num)
@@ -348,11 +353,15 @@
             calcLatestStartBuildTime (row) {
                 if (row.latestBuildStartTime) {
                     try {
-                        let result = this.localConvertMStoString(row.currentTimestamp - row.latestBuildStartTime).match(/^[0-9]{1,}([\u4e00-\u9fa5]){1,}/)[0]
-                        if (result.indexOf('分') > 0) {
-                            result += '钟'
+                        if (window.pipelineVue.$i18n && window.pipelineVue.$i18n.locale === 'en-US') {
+                            return this.localConvertMStoString(row.currentTimestamp - row.latestBuildStartTime)
+                        } else {
+                            let result = this.localConvertMStoString(row.currentTimestamp - row.latestBuildStartTime).match(/^[0-9]{1,}([\u4e00-\u9fa5]){1,}/)[0]
+                            if (result.indexOf('分') > 0) {
+                                result += '钟'
+                            }
+                            return `${result}前`
                         }
-                        return `${result}前`
                     } catch (err) {
                         return '---'
                     }
@@ -408,18 +417,6 @@
                 this.togglePageLoading(false)
             },
 
-            initWebSocket (projectId) {
-                const subscribe = `/topic/pipelineStatus/${projectId}`
-
-                pipelineWebsocket.connect(projectId, subscribe, {
-                    success: (res) => {
-                        const data = JSON.parse(res.body)
-                        this.updatePipelineStatus(data)
-                    },
-                    error: (message) => this.$showTips({ message, theme: 'error' })
-                })
-            },
-
             requestTemplatePermission () {
                 this.$store.dispatch('pipelines/requestTemplatePermission', this.projectId).then((res) => {
                     this.hasTemplatePermission = res
@@ -462,11 +459,11 @@
                                 status: '',
                                 content: [
                                     {
-                                        key: '最新构建号',
+                                        key: this.$t('lastBuildNum'),
                                         value: `${item.latestBuildNum ? `#${item.latestBuildNum}` : '--'}`
                                     },
                                     {
-                                        key: '最新执行时间',
+                                        key: this.$t('lastExecTime'),
                                         value: ''
                                     }
                                 ],
@@ -479,12 +476,12 @@
                                 footer: [
                                     {
                                         upperText: item.taskCount,
-                                        lowerText: '插件总数',
+                                        lowerText: this.$t('newlist.totalAtomNums'),
                                         handler: this.goEditPipeline
                                     },
                                     {
                                         upperText: item.buildCount,
-                                        lowerText: '已执行次数',
+                                        lowerText: this.$t('newlist.execTimes'),
                                         handler: this.goHistory
                                     }
                                 ],
@@ -512,9 +509,6 @@
                     $store.commit('pipelines/updateAllPipelineList', res)
                     this.updatePipelineStatus(res, true)
                 } catch (err) {
-                    // if (this.$isCancelReq(err)) {
-                    //     return
-                    // }
                     $store.commit('pipelines/updateAllPipelineList', [])
                     this.$showTips({
                         message: err.message || err,
@@ -569,13 +563,13 @@
                         isCollect
                     })
                     pipeline.hasCollect = isCollect
-                    pipeline.feConfig.extMenu[1].text = isCollect ? '取消收藏' : '收藏'
+                    pipeline.feConfig.extMenu[1].text = isCollect ? this.$t('uncollect') : this.$t('collect')
                     if (this.currentViewId === 'collect' && !isCollect) {
                         this.$store.commit('pipelines/removePipelineById', pipelineId)
                     }
 
                     this.$showTips({
-                        message: isCollect ? '收藏成功' : '取消收藏成功',
+                        message: isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc'),
                         theme: 'success'
                     })
                 } catch (err) {
@@ -704,24 +698,24 @@
                             case 'error':
                                 customBtns.splice(0, customBtns.length, {
                                     icon: 'check-1',
-                                    text: '我知道了',
+                                    text: this.$t('newlist.known'),
                                     handler: 'error-noticed'
                                 })
                                 break
                             case 'running':
                                 customBtns.splice(0, customBtns.length, {
-                                    text: '终止',
+                                    text: this.$t('terminate'),
                                     handler: 'terminate-pipeline'
                                 })
                                 break
                             case 'warning':
                                 const tmpArr = [
                                     {
-                                        text: '继续',
+                                        text: this.$t('resume'),
                                         handler: 'resume-pipeline'
                                     },
                                     {
-                                        text: '终止',
+                                        text: this.$t('teminate'),
                                         handler: 'terminate-pipeline'
                                     }
                                 ]
@@ -734,7 +728,7 @@
                             content: {
                                 index: [0, 1],
                                 key: ['value', 'value'],
-                                value: [cur.latestBuildNum ? `#${cur.latestBuildNum}` : '--', cur.latestBuildStartTime ? this.calcLatestStartBuildTime(cur) : '未执行过']
+                                value: [cur.latestBuildNum ? `#${cur.latestBuildNum}` : '--', cur.latestBuildStartTime ? this.calcLatestStartBuildTime(cur) : this.$t('newlist.noExecution')]
                             },
                             footer: {
                                 index: [0, 1],
@@ -752,25 +746,25 @@
                         if (!pipeline.feConfig.extMenu.length) {
                             obj.extMenu = [
                                 {
-                                    text: '编辑',
+                                    text: this.$t('edit'),
                                     handler: this.goEditPipeline
                                 },
                                 {
-                                    text: (cPipeline.hasCollect ? '取消收藏' : '收藏'),
+                                    text: (cPipeline.hasCollect ? this.$t('uncollect') : this.$t('collect')),
                                     // text: cur.favor,
                                     handler: this.togglePipelineCollect
                                 },
                                 {
-                                    text: '复制为',
+                                    text: this.$t('newlist.copyAs'),
                                     handler: this.copyPipeline
                                 },
                                 {
-                                    text: '另存为模板',
+                                    text: this.$t('newlist.saveAsTemp'),
                                     disable: !this.hasTemplatePermission,
                                     handler: this.copyAsTemplate
                                 },
                                 {
-                                    text: '删除',
+                                    text: this.$t('delete'),
                                     handler: this.deletePipeline
                                 }
                             ]
@@ -807,7 +801,7 @@
                         params
                     })
 
-                    message = '启动构建成功'
+                    message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
                     curPipeline.latestBuildId = res.id
 
@@ -822,7 +816,7 @@
                     feConfig.isRunning = true
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
-                        this.setPermissionConfig(`流水线：${curPipeline.pipelineName}`, '执行', curPipeline.pipelineId)
+                        this.setPermissionConfig(`${this.$t('pipeline')}：${curPipeline.pipelineName}`, this.$t('exec'), curPipeline.pipelineId)
                         return
                     } else {
                         feConfig.status = 'known_error'
@@ -892,7 +886,7 @@
                     })
                 } catch (err) {
                     if (err.code === 403) { // 没有权限终止
-                        this.setPermissionConfig(`流水线：${target.pipelineName}`, '执行', target.pipelineId)
+                        this.setPermissionConfig(`${this.$t('pipeline')}：${target.pipelineName}`, this.$t('exec'), target.pipelineId)
                     } else {
                         this.$showTips({
                             message: err.message || err,
@@ -963,14 +957,7 @@
             },
 
             async saveAsConfirmHandler () {
-                const valid = await this.$validator.validate()
-                if (!valid) return
-
-                const templateName = this.saveAsTemp.templateName || ''
-                if (!templateName.trim()) {
-                    this.saveAsTemp.nameHasError = true; return
-                }
-
+                if (this.errors.has('saveTemplateName')) return
                 const projectId = this.projectId
                 const postData = {
                     pipelineId: this.saveAsTemp.pipelineId,
@@ -980,13 +967,13 @@
 
                 this.$store.dispatch('pipelines/saveAsTemplate', { projectId, postData }).then(({ id }) => {
                     this.saveAsCancelHandler()
-                    this.$showTips({ message: '另存为模板成功', theme: 'success' })
+                    this.$showTips({ message: this.$t('saveAsTempSuc'), theme: 'success' })
                     this.$router.push({
                         name: 'templateEdit',
                         params: { templateId: id }
                     })
                 }).catch((err) => {
-                    const message = err.message || '另存为模板失败'
+                    const message = err.message || this.$t('saveAsTempFail')
                     this.$showTips({ message, theme: 'error' })
                 })
             },
@@ -1007,7 +994,6 @@
                 } = this
                 const curPipeline = this.pipelineList.find(item => item.pipelineId === pipelineId)
                 this.copyConfig.newPipelineName = `${curPipeline.pipelineName}_copy`
-                copyDialogConfig.hasHeader = false
                 copyDialogConfig.isShow = true
                 copyDialogConfig.pipelineId = pipelineId
             },
@@ -1019,16 +1005,16 @@
                     $store
                 } = this
                 const curPipeline = this.pipelineList.find(item => item.pipelineId === pipelineId)
-                const content = `删除${curPipeline.pipelineName}流水线`
+                const content = `${this.$t('newlist.deletePipeline')}: ${curPipeline.pipelineName}?`
 
-                navConfirm({ title: `确认`, content })
+                navConfirm({ title: this.$t('confirm'), content })
                     .then(() => {
                         let message, theme
                         const {
                             loading
                         } = this
 
-                        loading.title = '正在删除流水线，请稍候'
+                        loading.title = this.$t('newlist.deleteTips')
                         this.togglePageLoading(true)
                         setTimeout(async () => {
                             try {
@@ -1038,11 +1024,11 @@
                                 })
 
                                 $store.commit('pipelines/removePipelineById', pipelineId)
-                                message = '删除流水线成功'
+                                message = this.$t('deleteSuc')
                                 theme = 'success'
                             } catch (err) {
                                 if (err.code === 403) { // 没有权限删除
-                                    this.setPermissionConfig(`流水线：${curPipeline.pipelineName}`, '删除', curPipeline.pipelineId)
+                                    this.setPermissionConfig(`${this.$t('pipeline')}：${curPipeline.pipelineName}`, this.$t('delete'), curPipeline.pipelineId)
                                 } else {
                                     message = err.message || err
                                     theme = 'error'
@@ -1093,7 +1079,7 @@
                         }
                     })
 
-                    message = '复制成功'
+                    message = this.$t('copySuc')
                     theme = 'success'
                     setTimeout(() => {
                         this.copyDialogConfig.isShow = false
@@ -1102,35 +1088,35 @@
                     const copyItem = JSON.parse(JSON.stringify(prePipeline))
                     const extMenu = [
                         {
-                            text: '编辑',
+                            text: this.$t('edit'),
                             handler: this.goEditPipeline
                         },
                         {
-                            text: '收藏',
+                            text: this.$t('collect'),
                             handler: this.togglePipelineCollect
                         },
                         {
-                            text: '复制为',
+                            text: this.$t('newlist.copyAs'),
                             handler: this.copyPipeline
                         },
                         {
-                            text: '另存为模板',
+                            text: this.$t('newlist.saveAsTemp'),
                             handler: this.copyAsTemplate
                         },
                         {
-                            text: '删除',
+                            text: this.$t('delete'),
                             handler: this.deletePipeline
                         }
                     ]
                     const footer = [
                         {
                             upperText: copyItem.feConfig.footer[0].upperText,
-                            lowerText: '插件总数',
+                            lowerText: this.$t('newlist.totalAtomNume'),
                             handler: this.goEditPipeline
                         },
                         {
                             upperText: '0',
-                            lowerText: '已执行次数',
+                            lowerText: this.$t('newlist.execTimes'),
                             handler: this.goHistory
                         }
                     ]
@@ -1142,7 +1128,7 @@
                     copyItem.feConfig.name = newPipelineName
                     copyItem.feConfig.desc = newPipelineDesc
                     copyItem.feConfig.pipelineId = res.id
-                    copyItem.feConfig.content[1].value = '未执行过'
+                    copyItem.feConfig.content[1].value = this.$t('newlist.noExecution')
                     copyItem.feConfig.status = 'not_built'
                     // copyItem.feConfig.footer[1].upperText = 0
                     copyItem.feConfig.extMenu.splice(0, copyItem.feConfig.extMenu.length, ...extMenu)
@@ -1155,7 +1141,7 @@
                 } catch (err) {
                     if (err.code === 403) { // 没有权限复制
                         this.copyDialogConfig.isShow = false
-                        this.setPermissionConfig(`流水线：${prePipeline.pipelineName}`, '编辑', prePipeline.pipelineId)
+                        this.setPermissionConfig(`${this.$t('pipeline')}：${prePipeline.pipelineName}`, this.$t('edit'), prePipeline.pipelineId)
                     } else {
                         message = err.message || err
                         theme = 'error'
@@ -1180,8 +1166,6 @@
 
                 copyConfig.newPipelineName = ''
                 copyConfig.newPipelineDesc = ''
-                copyConfig.nameHasError = false
-                copyConfig.descHasError = false
             },
             /**
              * 设置权限弹窗的参数
@@ -1189,13 +1173,13 @@
             setPermissionConfig (resource, option, pipelineId) {
                 let role = 'role_manager'
                 switch (option) {
-                    case '创建':
+                    case this.$t('create'):
                         role = 'role_creator'
                         break
-                    case '执行':
+                    case this.$t('exec'):
                         role = 'role_executor'
                         break
-                    case '查看':
+                    case this.$t('newlist.view'):
                         role = 'role_viewer'
                         break
                 }
@@ -1367,7 +1351,7 @@
             width: 100px;
         }
         .bk-form-content {
-            margin-left: 100px;
+            margin-left: 110px;
         }
         .tip-bottom {
             padding: 0;

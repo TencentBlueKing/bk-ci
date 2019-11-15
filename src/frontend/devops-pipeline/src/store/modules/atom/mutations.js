@@ -18,11 +18,29 @@
  */
 
 import Vue from 'vue'
-import { SET_TEMPLATE, SET_ATOMS, SET_ATOM_MODAL_FETCHING, SET_ATOM_MODAL, SET_CONTAINER_FETCHING, UPDATE_ATOM_TYPE, SET_CONTAINER_DETAIL, ADD_CONTAINER, PROPERTY_PANEL_VISIBLE, INSERT_ATOM, DELETE_ATOM, DELETE_CONTAINER, UPDATE_CONTAINER, DELETE_STAGE, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, UPDATE_ATOM, SET_PIPELINE_EDITING, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS } from './constants'
+import { SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_ATOMS, SET_ATOM_MODAL_FETCHING, SET_ATOM_MODAL, SET_CONTAINER_FETCHING, UPDATE_ATOM_TYPE, SET_CONTAINER_DETAIL, ADD_CONTAINER, PROPERTY_PANEL_VISIBLE, INSERT_ATOM, DELETE_ATOM, DELETE_CONTAINER, UPDATE_CONTAINER, DELETE_STAGE, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, UPDATE_ATOM, SET_PIPELINE_EDITING, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS, SET_AUTH_EDITING } from './constants'
 import { getAtomModalKey, getAtomDefaultValue, getAtomOutputObj, isNewAtomTemplate } from './atomUtil'
 import { hashID } from '@/utils/util'
 
 export default {
+    [SET_AUTH_EDITING]: (state, editing) => {
+        return Object.assign(state, {
+            authSettingEditing: editing
+        })
+    },
+    [SET_PIPELINE_STAGE]: (state, stages) => {
+        state.pipeline.stages = stages
+    },
+    [SET_PIPELINE_CONTAINER]: (state, { oldContainers, containers }) => {
+        const stages = state.pipeline.stages || []
+        const stageIndex = stages.findIndex(stage => stage.containers === oldContainers)
+        if (containers.length > 0) {
+            const currentStages = state.pipeline.stages[stageIndex] || {}
+            currentStages.containers = containers
+        } else {
+            state.pipeline.stages.splice(stageIndex, 1)
+        }
+    },
     [SET_EXECUTE_STATUS]: (state, status) => {
         return Object.assign(state, {
             executeStatus: status
@@ -174,8 +192,8 @@ export default {
             console.warn(e, 'update atom input error', atom)
         }
     },
-    [DELETE_STAGE]: (state, { stages, stageIndex }) => {
-        stages.splice(stageIndex, 1)
+    [DELETE_STAGE]: (state, { stageIndex }) => {
+        state.pipeline.stages.splice(stageIndex, 1)
         return state
     },
     [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
@@ -188,8 +206,9 @@ export default {
     [ADD_CONTAINER]: (state, { containers, newContainer }) => {
         containers.push(newContainer)
     },
-    [DELETE_CONTAINER]: (state, { containers, containerIndex }) => {
-        containers.splice(containerIndex, 1)
+    [DELETE_CONTAINER]: (state, { stageIndex, containerIndex }) => {
+        const currentStage = state.pipeline.stages[stageIndex] || {}
+        currentStage.containers.splice(containerIndex, 1)
     },
     [UPDATE_CONTAINER]: (state, { container, newParam }) => {
         Object.assign(container, newParam)
@@ -202,9 +221,10 @@ export default {
     [DELETE_ATOM]: (state, { elements, atomIndex }) => {
         elements.splice(atomIndex, 1)
     },
-    [PROPERTY_PANEL_VISIBLE]: (state, { isShow, editingElementPos = null }) => {
+    [PROPERTY_PANEL_VISIBLE]: (state, { isShow, isComplete, editingElementPos = null }) => {
         return Object.assign(state, {
             isPropertyPanelVisible: isShow,
+            isShowCompleteLog: isComplete,
             editingElementPos
         })
     },

@@ -34,12 +34,12 @@
         
         @Watch('initContentShow')
         updateIsContentShow (val: boolean): void {
-          this.isContentShow = val
+            this.isContentShow = val
         }
 
         toggleContent () {
-          this.isContentShow = !this.isContentShow
-          this.$emit('update:contentShow', this.isContentShow)
+            this.isContentShow = !this.isContentShow
+            this.$emit('update:contentShow', this.isContentShow)
         }
     }
 </script>

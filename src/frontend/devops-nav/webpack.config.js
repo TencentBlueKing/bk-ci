@@ -38,7 +38,6 @@
 
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const AssetPlugin = require('../webpackPlugin/assets-webpack-plugin')
-const ReplacePlugin = require('../webpackPlugin/replace-webpack-plugin')
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -77,6 +76,7 @@ module.exports = (env = {}, argv) => {
       ]
     }
   ]
+  config.plugins.pop()
   config.plugins = [
     ...config.plugins,
     new HtmlWebpackPlugin({
@@ -101,11 +101,13 @@ module.exports = (env = {}, argv) => {
       context: __dirname,
       manifest: require('./src/assets/static/manifest.json')
     }),
-    new CopyWebpackPlugin([{ from: path.join(__dirname, './src/assets/static'), to: `${dist}/static` }]),
-    ...(isDev ? [new ReplacePlugin({
-      '__HTTP_SCHEMA__://__BKCI_FQDN__/ms': `${urlPrefix}/ms`,
-      '__HTTP_SCHEMA__://__BKCI_FQDN__': ''
-    })] : [])
+    new CopyWebpackPlugin([{ from: path.join(__dirname, './src/assets/static'), to: `${dist}/static` }])
   ]
+  config.devServer.historyApiFallback = {
+    rewrites: [
+        { from: /^\/console/, to: '/console/index.html' }
+    ]
+  }
+  config.output.publicPath = '/console/'
   return config
 }

@@ -28,28 +28,41 @@ import store from './store'
 import focus from './directives/focus/index.js'
 
 import VeeValidate from 'vee-validate'
+import validationENMessages from 'vee-validate/dist/locale/en'
+import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import PortalVue from 'portal-vue' // eslint-disable-line
+import createLocale from '../../locale'
 
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
-Vue.use(PortalVue)
-ExtendsCustomRules(VeeValidate.Validator.extend)
-VeeValidate.Validator.localize(validDictionary)
 
-Vue.use(VeeValidate, {
-    fieldsBagName: 'veeFields',
-    locale: 'cn'
-})
+const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
 
 Vue.use(focus)
 Vue.use(bkMagic)
+Vue.use(PortalVue)
 
-global.pass3Vue = new Vue({
+Vue.use(VeeValidate, {
+    i18nRootKey: 'validations', // customize the root path for validation messages.
+    i18n,
+    fieldsBagName: 'veeFields',
+    dictionary: {
+        'en-US': validationENMessages,
+        'zh-CN': validationCNMessages
+    }
+})
+VeeValidate.Validator.localize(validDictionary)
+ExtendsCustomRules(VeeValidate.Validator.extend)
+
+Vue.prototype.$setLocale = setLocale
+
+global.pipelineVue = new Vue({
     el: '#app',
     router: createRouter(store),
+    i18n,
     store,
     components: {
         App

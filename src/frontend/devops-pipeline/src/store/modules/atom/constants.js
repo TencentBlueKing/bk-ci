@@ -74,16 +74,19 @@ export const SET_STORE_SEARCH = 'SET_STORE_SEARCH'
 export const SET_EXECUTE_STATUS = 'SET_EXECUTE_STATUS'
 export const SET_SAVE_STATUS = 'SET_SAVE_STATUS'
 
+export const SET_PIPELINE_STAGE = 'SET_PIPELINE_STAGE'
+export const SET_PIPELINE_CONTAINER = 'SET_PIPELINE_CONTAINER'
+
 export const buildNoRules = [
     {
         value: 'CONSISTENT',
-        label: '锁定构建号'
+        label: 'consistent'
     }, {
         value: 'SUCCESS_BUILD_INCREMENT',
-        label: '构建成功 + 1'
+        label: 'success_build_increment'
     }, {
         value: 'EVERY_BUILD_INCREMENT',
-        label: '每次构建 + 1',
+        label: 'every_build_increment',
         default: true
     }
 ]
@@ -103,3 +106,5 @@ export const defaultBuildNo = {
     buildNo: '0',
     buildNoType: buildNoRules[2].value
 }
+
+export const SET_AUTH_EDITING = 'SET_AUTH_EDITING'

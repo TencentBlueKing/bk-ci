@@ -1,7 +1,7 @@
 <template>
     <div class="atom-overview-wrapper">
         <div class="inner-header">
-            <div class="title">插件概览</div>
+            <div class="title"> {{ $t('插件概览') }} </div>
         </div>
 
         <section
@@ -13,7 +13,7 @@
             <div class="atom-overview-container" v-if="showContent">
                 <div class="info-content info-content-left">
                     <div class="overview-statistics">
-                        <div class="info-title">总体统计</div>
+                        <div class="info-title"> {{ $t('总体统计') }} </div>
                         <div class="atom-statistic">
                             <div class="total-item" v-for="(entry, index) in statisticList" :key="index">
                                 <div class="item-value" :class="{ 'blue-theme': entry.name === 'commentCnt' || entry.name === 'score' }">{{ entry.value }}</div>
@@ -22,33 +22,33 @@
                         </div>
                     </div>
                     <div class="trend-chart">
-                        <div class="info-title">趋势图</div>
+                        <div class="info-title"> {{ $t('趋势图') }} </div>
                         <div class="chart-content">
                             <div class="info-tab">
-                                <span class="tab-item">安装量</span>
+                                <span class="tab-item"> {{ $t('安装量') }} </span>
                             </div>
                             <div class="chart-item">
                                 <img :src="image">
-                                <p>功能正在建设中···</p>
+                                <p>{{ $t('功能正在建设中') }}···</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="info-content info-content-right">
                     <div class="atom-code-card">
-                        <div class="card-title">插件代码</div>
+                        <div class="card-title"> {{ $t('插件代码') }} </div>
                         <div class="card-content">
                             <div class="code-form-item">
-                                <div class="info-label">开发语言：</div>
+                                <div class="info-label"> {{ $t('开发语言：') }} </div>
                                 <div class="info-value">{{ codeForm.language }}</div>
                             </div>
                         </div>
                     </div>
                     <div class="atom-latest-news">
-                        <div class="info-title">最新动态</div>
+                        <div class="info-title"> {{ $t('最新动态') }} </div>
                         <div class="news-content">
                             <img :src="image">
-                            <p>功能正在建设中···</p>
+                            <p>{{ $t('功能正在建设中') }}···</p>
                         </div>
                     </div>
                 </div>
@@ -58,7 +58,7 @@
 </template>
 
 <script>
-    import Clipboard from 'clipboard'
+    import { mapGetters } from 'vuex'
     import imgBuilding from '@/images/building.png'
 
     export default {
@@ -67,19 +67,22 @@
                 showContent: false,
                 image: imgBuilding,
                 statisticList: [
-                    { name: 'downloads', label: '安装量', value: 0 },
-                    { name: 'pipelineCnt', label: '流水线个数', value: 0 },
-                    { name: 'commentCnt', label: '评论数', value: 0 },
-                    { name: 'score', label: '评分', value: 0 }
+                    { name: 'downloads', label: this.$t('安装量'), value: 0 },
+                    { name: 'pipelineCnt', label: this.$t('流水线个数'), value: 0 },
+                    { name: 'commentCnt', label: this.$t('评论数'), value: 0 },
+                    { name: 'score', label: this.$t('评分'), value: 0 }
                 ],
                 loading: {
                     isLoading: false,
                     title: ''
-                },
-                codeForm: {}
+                }
             }
         },
         computed: {
+            ...mapGetters('store', {
+                'codeForm': 'getCurrentAtom',
+                'userInfo': 'getUserInfo'
+            }),
             atomId () {
                 return this.$route.params.atomId
             },
@@ -87,66 +90,30 @@
                 return this.$route.params.atomCode
             }
         },
-        async mounted () {
-            await this.requestAtomDetail()
-            await this.requestAtomStatistic()
+        created () {
+            this.initData()
         },
+
         methods: {
-            async requestAtomDetail () {
+            initData () {
                 this.loading.isLoading = true
-                this.loading.title = '数据加载中，请稍候'
 
-                try {
-                    const res = await this.$store.dispatch('store/requestAtom', {
-                        atomCode: this.atomCode
-                    })
-                    this.codeForm = res
-                    this.$store.dispatch('store/updateCurrentaAtom', { res })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    setTimeout(() => {
-                        this.loading.isLoading = false
-                        this.showContent = true
-                    }, 500)
-                }
+                this.requestAtomStatistic().catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.loading.isLoading = false
+                    this.showContent = true
+                })
             },
-            async requestAtomStatistic () {
-                try {
-                    const res = await this.$store.dispatch('store/requestAtomStatistic', {
-                        atomCode: this.atomCode
-                    })
+
+            requestAtomStatistic () {
+                return this.$store.dispatch('store/requestAtomStatistic', {
+                    atomCode: this.atomCode
+                }).then((res) => {
                     this.statisticList.forEach(item => {
                         item.value = res[item.name]
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            copyUrl () {
-                this.clipboardInstance = new Clipboard('.copy-btn')
-                this.clipboardInstance.on('success', e => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: '复制成功',
-                        limit: 1
-                    })
                 })
-            },
-            toLink (url) {
-                window.open(url, '_blank')
             }
         }
     }

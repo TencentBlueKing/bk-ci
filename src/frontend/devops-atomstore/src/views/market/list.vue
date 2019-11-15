@@ -1,17 +1,18 @@
 <template>
     <article v-bkloading="{ isLoading, opacity: 1 }">
         <h3 class="list-type" v-clickoutside="closeOrderList">
-            <span class="list-sort">排序：</span>
-            <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click="showOrderList = !showOrderList">{{ orderType.name }}</span>
+            <span class="list-count"> {{ $t('总数 :') }} <strong>{{count}}</strong></span>
+            <span class="list-sort"> {{ $t('排序：') }} </span>
+            <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click.stop="showOrderList = !showOrderList">{{ orderType.name }}</span>
             <ul class="list-menu" v-show="showOrderList">
-                <li v-for="(order, index) in orderList" :key="index" @click="chooseOrderType(order)">{{ order.name }}</li>
+                <li v-for="(order, index) in orderList" :key="index" @click.stop="chooseOrderType(order)">{{ order.name }}</li>
             </ul>
         </h3>
 
-        <hgroup class="list-cards">
-            <card v-for="(card, index) in cards" :key="card.atomCode + index" :atom="card" :has-summary="true" class="list-card"></card>
+        <hgroup class="list-cards" v-if="!isLoading">
+            <card v-for="card in cards" :key="card.atomCode" :atom="card" :has-summary="true" class="list-card"></card>
         </hgroup>
-        <p class="g-empty list-empty" v-if="cards.length <= 0">没找到相关结果</p>
+        <p class="g-empty list-empty" v-if="cards.length <= 0"> {{ $t('没找到相关结果') }} </p>
     </article>
 </template>
 
@@ -36,14 +37,15 @@
                 loadEnd: false,
                 isLoading: true,
                 cards: [],
-                orderType: { id: 'NAME', name: '按名称A-Z' },
+                count: 0,
+                orderType: { id: 'DOWNLOAD_COUNT', name: this.$t('按热度') },
                 showOrderList: false,
                 orderList: [
-                    { id: 'NAME', name: '按名称A-Z' },
-                    { id: 'CREATE_TIME', name: '按创建时间' },
-                    { id: 'UPDATE_TIME', name: '按修改时间' },
-                    { id: 'PUBLISHER', name: '按发布者' },
-                    { id: 'DOWNLOAD_COUNT', name: '按热度' }
+                    { id: 'NAME', name: this.$t('按名称A-Z') },
+                    { id: 'CREATE_TIME', name: this.$t('按创建时间') },
+                    { id: 'UPDATE_TIME', name: this.$t('按修改时间') },
+                    { id: 'PUBLISHER', name: this.$t('按发布者') },
+                    { id: 'DOWNLOAD_COUNT', name: this.$t('按热度') }
                 ]
             }
         },
@@ -72,7 +74,7 @@
             },
 
             initData () {
-                const orderType = this.$route.query.sortType || 'NAME'
+                const orderType = this.$route.query.sortType || 'DOWNLOAD_COUNT'
                 const order = this.orderList.find((order) => (order.id === orderType))
                 this.orderType = order
             },
@@ -97,12 +99,16 @@
                 }
                 if (classifyValue !== 'all') postData[classifyKey] = classifyValue
 
-                const apiFun = { atom: () => this.getAtomList(postData, searchStr), template: () => this.getTemplateList(postData, searchStr) }
+                const apiFun = {
+                    atom: () => this.getAtomList(postData, searchStr),
+                    template: () => this.getTemplateList(postData, searchStr)
+                }
 
                 apiFun[pipeType]().then((res) => {
                     this.cards = isReset ? res.records : this.cards.concat(res.records || [])
+                    this.count = res.count || 0
                     this.page++
-                    this.loadEnd = res.count < this.pageSize
+                    this.loadEnd = res.count <= this.cards.length
                 }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' })).finally(() => {
                     this.isLoading = false
                     this.isLoadingMore = false
@@ -122,6 +128,7 @@
             chooseOrderType (order) {
                 const oldId = this.orderType.id
                 this.orderType = order
+                this.$parent.filterData.sortType = this.orderType.id
                 this.showOrderList = false
                 if (oldId !== order.id) this.resetListData()
             },
@@ -129,7 +136,7 @@
             scrollLoadMore (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
-                if (bottomDis <= 400 && !this.loadEnd && !this.isLoadingMore) this.getListData()
+                if (bottomDis <= 500 && !this.loadEnd && !this.isLoadingMore) this.getListData()
             },
 
             addScrollLoadMore () {
@@ -172,6 +179,14 @@
         font-size: 12px;
         line-height: 16px;
         color: $fontLightBlack;
+        .list-count {
+            float: left;
+            color: $fontLightColor;
+            font-weight: bold;
+            strong {
+                color: $fontDarkColor;
+            }
+        }
         .list-sort {
             color: $fontWeightColor;
         }

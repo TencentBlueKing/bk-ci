@@ -4,23 +4,22 @@
         class="devops-ask-permission-dialog"
         :width="width"
         theme="primary"
-        :title="title"
-        ok-text="去申请"
+        :title="i18nTitle"
+        :ok-text="$t('goApply')"
         @confirm="toApplyPermission"
-        @cancel="handleClose"
     >
         <main class="ask-permission-table">
             <bk-table
                 :max-height="300"
                 :data="noPermissionList"
-                empty-text="暂无数据"
+                :empty-text="$t('emptyData')"
             >
                 <bk-table-column
-                    label="名称"
+                    :label="$t('name')"
                     prop="resource"
                 />
                 <bk-table-column
-                    label="名称"
+                    :label="$t('name')"
                     prop="option"
                 />
             </bk-table>
@@ -31,6 +30,7 @@
 <script lang='ts'>
     import Vue from 'vue'
     import { Component, Prop } from 'vue-property-decorator'
+    import { State, Action } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
 
     @Component
@@ -38,8 +38,8 @@
         @Prop({ default: 640 })
         width: number | string
 
-        @Prop({ default: '无权限操作' })
-        title: string
+        @Prop()
+        title: any = ''
 
         @Prop({ default: [] })
         noPermissionList: Permission[]
@@ -47,25 +47,34 @@
         @Prop({ default: '/console/perm/apply-perm' })
         applyPermissionUrl: string
 
-        showDialog: boolean = false
-
-        created () {
-          eventBus.$on('update-permission-props', props => {
-            Object.keys(props).map(prop => {
-              this[prop] = props[prop]
-            })
-            this.showDialog = true
-          })
+        @State isPermissionDialogShow
+        @Action togglePermissionDialog
+        
+        get showDialog (): boolean {
+            return this.isPermissionDialogShow
         }
 
-        handleClose (done) {
-          done()
+        set showDialog (v) {
+            this.togglePermissionDialog(v)
+        }
+
+        get i18nTitle () {
+            return this.title || this.$t('accessDeny.noOperateAccess')
+        }
+
+        created () {
+            eventBus.$on('update-permission-props', props => {
+                Object.keys(props).map(prop => {
+                    this[prop] = props[prop]
+                })
+                this.showDialog = true
+            })
         }
 
         toApplyPermission (done) {
-          window.open(this.applyPermissionUrl, '_blank')
-          done()
-          this.showDialog = false
+            window.open(this.applyPermissionUrl, '_blank')
+            done()
+            this.showDialog = false
         }
     }
 </script>

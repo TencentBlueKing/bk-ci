@@ -4,33 +4,25 @@
   "devDependencies": {
     "ghooks": "^2.0.4",
     "gulp": "^4.0.2",
-    "husky": "^3.0.5",
     "lerna": "^3.16.4",
     "ora": "^3.4.0",
-    "yargs": "^14.0.0"
+    "yargs": "^14.0.0",
+    "husky": "^3.0.7"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
-    "build:staging": "lerna run public:staging --parallel",
+    "start": "lerna bootstrap",
+    "build:dev": "lerna run public:dev --parallel",
     "build:test": "lerna run public:test --parallel",
-    "build": "lerna run public --parallel",
+    "build:master": "lerna run public:master --parallel",
+    "build:external": "lerna run public:external --parallel",
     "public": "gulp -d frontend"
   },
   "workspaces": [
-    "devops-nav",
-    "devops-pipeline",
     "devops-codelib",
     "devops-environment",
-    "devops-ticket",
     "devops-atomstore",
-    "devops-artifactory",
-    "devops-experience",
-    "devops-turbo",
-    "devops-quality"
-  ],
-  "husky": {
-    "hooks": {
-      "commit-msg": "node ./formatCommitMsg.js"
-    }
-  }
+    "devops-ticket",
+    "devops-pipeline",
+    "devops-nav"
+  ]
 }

@@ -1,16 +1,16 @@
 <template>
     <section>
         <create-header
-            :create-text="'新建流水线'"
+            :create-text="$t('newlist.addPipeline')"
             @createPipeline="toggleTemplatePopup(true)">
             <div slot="addon" class="create-header-right">
-                <span class="pipeline-num">（共{{num}}条流水线）</span>
-                <i @click.stop="showSlide" class="layout-icon bk-icon icon-filter-shape" :class="{ 'active-icon': hasFilter }" title="过滤"></i>
+                <span class="pipeline-num">（{{ $t('newlist.numPrefix') }}{{num}}{{ $t('newlist.numSuffix') }}）</span>
+                <i @click.stop="showSlide" class="layout-icon bk-icon icon-filter-shape" :class="{ 'active-icon': hasFilter }" :title="$t('newlist.filter')"></i>
                 <span class="seperate-line">|</span>
-                <i @click.stop="changeLayoutType('table')" class="layout-icon bk-icon icon-grid-view" v-if="layout === 'card'" title="卡片视图"></i>
-                <i @click.stop="changeLayoutType('card')" class="layout-icon bk-icon icon-list-view" v-if="layout === 'table'" title="列表视图"></i>
+                <i @click.stop="changeLayoutType('table')" class="layout-icon bk-icon icon-grid-view" v-if="layout === 'card'" :title="$t('newlist.cardLayout')"></i>
+                <i @click.stop="changeLayoutType('card')" class="layout-icon bk-icon icon-list-view" v-if="layout === 'table'" :title="$t('newlist.tableLayout')"></i>
                 <div v-bk-clickoutside="hideFeedBackMenu" class="list-method" style="display:inline">
-                    <i class="order-icon bk-icon icon-new-order" @click.stop="toggleFeedBackMenu" :class="{ 'active-icon': showOrderType }" title="排序"></i>
+                    <i class="order-icon bk-icon icon-new-order" @click.stop="toggleFeedBackMenu" :class="{ 'active-icon': showOrderType }" :title="$t('newlist.order')"></i>
                     <ul class="feedback-menu" v-show="showOrderType">
                         <li v-for="(order, index) in orderList" :key="`order${index}`">
                             <a @click.stop="changeOrderType(order.id)">{{ order.name }}</a>
@@ -46,13 +46,13 @@
                 orderList: [
                     {
                         'id': 'NAME',
-                        'name': '按名称A-Z'
+                        'name': this.$t('newlist.orderByAlpha')
                     }, {
                         'id': 'CREATE_TIME',
-                        'name': '按创建时间'
+                        'name': this.$t('newlist.orderByCreateTime')
                     }, {
                         'id': 'UPDATE_TIME',
-                        'name': '按修改时间'
+                        'name': this.$t('newlist.orderByUpdateTime')
                     }
                 ]
             }

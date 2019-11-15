@@ -5,19 +5,19 @@
         </div>
         <div class="tips-content">
             <p v-if="srcTips" class="tips-row" :style="!pathTips ? 'margin-top: 15px' : ''">
-                <span class="tips-label">源 ：</span>
+                <span class="tips-label">{{ $t('editPage.source') }} ：</span>
                 <span class="tips-route" :title="srcTips">{{ srcTips }}</span>
             </p>
             <p v-if="pathTips" class="tips-row" style="margin-top: 0px">
-                <span class="tips-label">目标 ：</span>
+                <span class="tips-label">{{ $t('editPage.target') }}  ：</span>
                 <span class="tips-route" :title="pathTips">{{ pathTips }}</span>
             </p>
             <p v-if="keystoreTips" class="tips-row keystore-row" :style="!pathTips ? 'margin-top: 15px' : ''">
-                <span class="tips-label" style="width: 78px">证书文件 ：</span>
+                <span class="tips-label" style="width: 78px">{{ $t('editPage.certFile') }}  ：</span>
                 <span class="tips-route" :title="keystoreTips">{{ keystoreTips }}</span>
             </p>
             <p v-if="githubAppUrl" class="tips-row" style="margin-top: 15px">
-                <span class="tips-route normal-route" style="margin-left: 15px">启用本插件需安装对应
+                <span class="tips-route normal-route" style="margin-left: 15px">{{ $t('editPage.githubAppTips') }}
                     <a class="link" :href="githubAppUrl" target="_blank">GitHub APP</a>（Tencent DevOps）
                 </span>
             </p>
@@ -29,6 +29,7 @@
     import atomFieldMixin from '../atomFieldMixin'
 
     export default {
+        name: 'route-tips',
         mixins: [atomFieldMixin],
         props: {
             visible: {

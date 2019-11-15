@@ -18,9 +18,6 @@
  */
 
 import Vue from 'vue'
-import {
-    
-} from './constant'
 
 const prefix = '/ticket/api'
 const vue = new Vue()
@@ -78,7 +75,7 @@ const actions = {
      * 证书列表
      */
     requestCertificateList ({ commit }, { projectId, page, pageSize }) {
-        return vue.$ajax.get(`${prefix}/user/certs/${projectId}?page=${page}&pageSize=${pageSize}`).then(response => {
+        return vue.$ajax.get(`${prefix}/user/certs/projects/${projectId}?page=${page}&pageSize=${pageSize}`).then(response => {
             return response
         })
     },
@@ -86,7 +83,7 @@ const actions = {
      * 删除证书
      */
     toDeleteCerts ({ commit }, { projectId, id }) {
-        return vue.$ajax.delete(`${prefix}/user/certs/${projectId}/${id}`).then(response => {
+        return vue.$ajax.delete(`${prefix}/user/certs/projects/${projectId}/${id}`).then(response => {
             return response
         })
     },
@@ -94,7 +91,7 @@ const actions = {
      * 新增凭据权限
      */
     requestCertsPermission ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/certs/${projectId}/hasCreatePermission`).then(response => {
+        return vue.$ajax.get(`${prefix}/user/certs/projects/${projectId}/hasCreatePermission`).then(response => {
             return response
         })
     },
@@ -118,7 +115,7 @@ const actions = {
      * 证书获取
      */
     requestCert ({ commit, state, dispatch }, projectId) {
-        return vue.$ajax.get(`/certs/${projectId}?page=1&pageSize=100`).then(response => {
+        return vue.$ajax.get(`/certs/projects/${projectId}?page=1&pageSize=100`).then(response => {
             return response.data
         })
     },
@@ -126,7 +123,7 @@ const actions = {
      * 证书详情获取
      */
     requestCertDetail ({ commit, state, dispatch }, { projectId, certType, certId }) {
-        return vue.$ajax.get(`${prefix}/user/certs/${projectId}/${certType}?certId=${certId}`).then(response => {
+        return vue.$ajax.get(`${prefix}/user/certs/projects/${projectId}/types/${certType}?certId=${certId}`).then(response => {
             return response
         })
     },
