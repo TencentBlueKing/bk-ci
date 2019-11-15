@@ -4,6 +4,9 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.store.listener.StorePipelineBuildFinishListener
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -31,6 +34,25 @@ class MQConfiguration {
 
     @Bean
     fun pipelineBuildAtomMarketQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET)
+
+    /**
+     * 构建结束广播交换机
+     */
+    @Bean
+    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineBuildAtomMarketQueueBind(
+        @Autowired pipelineBuildAtomMarketQueue: Queue,
+        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineBuildAtomMarketQueue)
+            .to(pipelineBuildFinishFanoutExchange)
+    }
 
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
