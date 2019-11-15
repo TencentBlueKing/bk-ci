@@ -35,7 +35,7 @@ function _M:isAccess()
         return false
     end
     -- 获取4字节的IP的KEY
-    local key = ngx.var.http_x_real_ip or ngx.var.binary_remote_addr or "0.0.0.0"
+    local key = ngx.var.http_x_devops_real_ip or ngx.var.http_x_real_ip or ngx.var.binary_remote_addr or "0.0.0.0"
     -- 获取key目前的状态:delay非空的时候，说明接受请求，err是排队信息；delay为空的时候，说明拒绝请求，err是错误信息。
     local delay, err = lim:incoming(key, true)
     if not delay then
