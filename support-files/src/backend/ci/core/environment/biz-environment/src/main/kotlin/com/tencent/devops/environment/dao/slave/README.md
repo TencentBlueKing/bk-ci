@@ -1,0 +1,1 @@
+SLAVE 表示的构建机进程，包括worker，agent等

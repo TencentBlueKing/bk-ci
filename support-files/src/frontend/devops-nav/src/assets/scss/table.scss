@@ -1,0 +1,173 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+@charset "utf-8";
+@import "./conf";
+
+/*===================================================*\
+ * bk-table
+\*===================================================*/
+
+.bk-table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    border: 0;
+    text-align: left;
+    >thead,
+    >tbody {
+        >tr {
+            >th,
+            >td {
+                height: 60px;
+                vertical-align: middle;
+                color: #7b7d8a;
+                font-size: 14px;
+                padding: 10px;
+                border-top: 1px solid $borderLightColor;
+            }
+        }
+    }
+
+    >tfoot {
+        border-top: 1px solid #ddd;
+    }
+
+    >thead>tr>th {
+        vertical-align: bottom;
+        height: 50px;
+        text-align: left;
+        border-bottom: 1px solid $borderLightColor;
+        color: #666;
+        font-size: 14px;
+    }
+
+    >tbody>tr>td {
+        color: #888;
+        font-size: 14px;
+    }
+
+    >caption+thead,
+    >colgroup+thead,
+    >thead:first-child {
+        >tr:first-child {
+            >th,
+            >td {
+                border-top: 0;
+            }
+        }
+    } // Account for multiple tbody instances
+    >tbody+tbody {
+        border-top: 2px solid $borderLightColor;
+    }
+
+    &.has-thead-bordered {
+        border: 1px solid $borderLightColor;
+        >thead,
+        >tbody,
+        >tfoot {
+            >tr {
+                >th {
+                    border: 1px solid $borderLightColor;
+                    border-bottom: none;
+                }
+            }
+        }
+    }
+
+    &.has-table-bordered {
+        border: 1px solid $borderLightColor;
+        >thead,
+        >tbody {
+            >tr {
+                >td {
+                    border: 1px solid $borderLightColor;
+                }
+            }
+        }
+        >thead,
+        >tbody,
+        >tfoot {
+            >tr {
+                >th {
+                    border: 1px solid $borderLightColor;
+                    border-bottom: none;
+                }
+            }
+        }
+
+        >thead>tr {
+            >th,
+            >td {
+                border-bottom-width: 2px;
+            }
+        }
+    }
+
+    &.has-table-striped {
+        >tbody>tr:nth-child(2n+2) {
+            background-color: #fafafa;
+        }
+    }
+
+    &.has-table-hover {
+        >tbody>tr:hover {
+            background-color: #f5f5f5;
+        }
+    }
+
+    .table-operations {
+        > .operation {
+            cursor: pointer;
+            color: #3c96ff;
+            &:not(:last-child) {
+                margin-right: 10px;
+            }
+        }
+    }
+}
+
+
+.bk-table-sortable {
+    position: relative;
+}
+
+.bk-sort-box {
+    position: absolute;
+    right: 5px;
+    top: 15px;
+    margin-left: 5px;
+    cursor: pointer;
+    display: inline-block;
+    width: 20px;
+    height: 10px;
+    font-size: 10px;
+    .ascing {
+        position: absolute;
+        top: -7px;
+    }
+    .descing {
+        position: absolute;
+        bottom: -7px;
+    }
+    .cur-sort {
+        color: #57a3f1;
+        font-weight: bold;
+    }
+}

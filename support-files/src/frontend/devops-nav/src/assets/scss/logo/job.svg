@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_5" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1006 1006" style="enable-background:new 0 0 1006 1006;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#3C81C3;}
+	.st1{fill:#FFFFFF;}
+</style>
+<g>
+	<circle class="st0" cx="503" cy="503" r="503"/>
+	<path class="st1" d="M753.4,551.9V304.3V197.6H645.6H437.9v106.7h207.7v185.3v44.9v24.7c0,0-0.6,6.3-0.6,9.5
+		c0,79.7-64.6,144.3-144.3,144.3c-75.4,0-137.3-57.9-143.7-131.6c0,0-1-13.4-1-25.4c0-5.4,0-21.6,0-21.6H249.9h-1.8v17.4v33.5
+		c8.6,132,118.4,236.5,252.6,236.5c139.8,0,253.2-113.4,253.2-253.2C753.9,563,753.7,557.4,753.4,551.9z"/>
+</g>
+</svg>

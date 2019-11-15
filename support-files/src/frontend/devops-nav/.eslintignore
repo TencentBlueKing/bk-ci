@@ -1,0 +1,3 @@
+src/assets/*
+src/utils/*.js
+src/directives/*.js

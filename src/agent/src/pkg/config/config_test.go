@@ -27,15 +27,9 @@
 package config
 
 import (
-	"os"
 	"testing"
 )
 
-func Test_GetWorkdir_01(t *testing.T) {
-	t.Log(os.Args[0])
-	t.Log(GetAgentWorkdir())
-}
-
 func Test_DetectSlaveVersion_01(t *testing.T) {
-	t.Log("DetectSlaveVersion: ", DetectSlaveVersion())
+	t.Log("DetectSlaveVersion: ", DetectWorkerVersion())
 }

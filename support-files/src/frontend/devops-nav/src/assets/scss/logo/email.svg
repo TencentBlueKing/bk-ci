@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1024 1024" style="enable-background:new 0 0 1024 1024;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#7A8193;}
+</style>
+<g id="邮件">
+	<path class="st0" d="M928,192H96c-17.7,0-32,14.3-32,32v576c0,17.7,14.3,32,32,32h832c17.7,0,32-14.3,32-32V224
+		C960,206.3,945.7,192,928,192z M838.3,256L529.8,461.8c-10.8,7.2-24.7,7.2-35.5,0L185.7,256H838.3z M128,768V294.5l330.7,220.6
+		c16.2,10.8,34.7,16.2,53.3,16.2s37.1-5.4,53.3-16.2L896,294.5V768H128z"/>
+</g>
+</svg>

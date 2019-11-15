@@ -1,0 +1,27 @@
+{
+    "atomCode": "demo",
+    "execution": {    
+        "language": "python",
+        "demands": [
+            "easy_install demo-1.0.0-py3.6.egg"
+        ],
+        "target": "demo"
+    },
+    "input": {       
+        "input_var_1": {
+            "label":"入参1",
+            "default":"",
+            "placeholder":"入参1",
+            "type":"vuex-input",
+            "desc":"入参1",
+            "required": true
+        }
+    }, 
+    "output": {
+        "outputDemo": {        
+            "description" : "输出示例",
+            "type": "string",
+            "isSensitive": false
+        }
+    }
+}

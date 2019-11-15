@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1024 1024" style="enable-background:new 0 0 1024 1024;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#4297FB;}
+	.st1{fill:#9A6CEB;}
+	.st2{fill:#EF7631;}
+	.st3{fill:#5FC160;}
+	.st4{fill:#F8F8F8;}
+</style>
+<g id="图层_2">
+</g>
+<g id="图层_1">
+</g>
+<g id="图层_3">
+</g>
+<g id="图层_4">
+	<g>
+		<path class="st0" d="M63.3,456l54.1,443.5c3.1,25.7,24.9,45,50.8,45h689.9c25.9,0,47.7-19.3,50.8-45L963,456h-59.1l11.8-62.6
+			H764.4v34.2H869l-7.3,34.2H510.3h-11.4h-340l-7.3-34.2H260h51.2h187.7h11.4h100.6v-34.2H311.2H260H104.9l11.8,62.6H63.3z"/>
+		<g>
+			<path class="st1" d="M318.7,435.8l-116.3-73.5c-6.8-4.3-8.9-13.3-4.6-20.2l73.4-116.3c4.3-6.8,13.3-8.9,20.2-4.6l116.3,73.4
+				c6.8,4.3,8.9,13.3,4.6,20.2l-73.4,116.4C334.5,438.1,325.5,440.1,318.7,435.8z M241.1,343l78.4,49.5l49.5-78.4l-78.4-49.5
+				L241.1,343z"/>
+		</g>
+		<g>
+			<path class="st2" d="M801.4,462h-45.1c0-43-32.3-70.8-70.8-70.8c-34.6,0-70.8,26.9-70.8,70.8h-45.1c0-63.9,52-115.8,115.8-115.8
+				S801.4,398.1,801.4,462z"/>
+		</g>
+		<g>
+			<path class="st3" d="M515.6,263.8l48-178.5c2.9-10.9,16.5-14.5,24.5-6.5l130.5,130.5c8,8,4.3,21.5-6.5,24.5l-178.5,48
+				C522.6,284.7,512.7,274.7,515.6,263.8z M589,131.4l-28.3,105.1l105.1-28.3L589,131.4z"/>
+		</g>
+		<path class="st4" d="M728,564.4c-6.9,0-12.9,4.8-14.3,11.6c-19,93.4-101.7,163.9-200.6,163.9s-181.6-70.5-200.6-163.9
+			c-1.4-6.8-7.4-11.6-14.3-11.6H276c-9.1,0-16.1,8.3-14.4,17.2C283.5,700.6,387.9,791,513.2,791s229.7-90.4,251.6-209.4
+			c1.6-9-5.3-17.2-14.4-17.2H728z"/>
+	</g>
+</g>
+</svg>
