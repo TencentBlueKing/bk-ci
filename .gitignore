@@ -25,3 +25,5 @@ node_modules/
 src/backend/.project
 src/backend/ci/.project
 src/backend/ci/.setting
+out
+**version.txt
