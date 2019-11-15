@@ -91,18 +91,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         ],
         optimization: {
             namedChunks: true,
-            minimize: true,
-            splitChunks: {
-                cacheGroups: {
-                    styles: {
-                        name: 'styles',
-                        test: /\.css$/,
-                        chunks: 'all',
-                        enforce: true,
-                        priority: 20, 
-                      }
-                }
-            }
+            minimize: true
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],
