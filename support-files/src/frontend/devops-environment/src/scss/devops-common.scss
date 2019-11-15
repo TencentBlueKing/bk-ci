@@ -1,0 +1,252 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/**
+ *  devops相关页面公用样式
+ */
+
+@import './conf';
+
+%clearfix {
+    &:before,
+    &:after {
+        content: '';
+        display: table;
+        line-height: 0;
+    }
+    &:after {
+        clear: both;
+    }
+}
+
+// 文字超出隐藏
+.text-overflow {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.overflow-hidden {
+    overflow: hidden !important;
+}
+
+.va-middle {
+    vertical-align: middle;
+}
+
+.ta-center {
+    text-align: center;
+}
+
+.text-link {
+    font-size: 12px;
+    color: $primaryColor;
+    &.disabled {
+        color: #ccc;
+        cursor: not-allowed;
+        &:hover {
+            color: #ccc !important;
+        }
+    }
+    & + .text-link {
+        margin-left: 10px;
+    }
+}
+
+%required {
+    content: '*';
+    position: absolute;
+    color: $dangerColor;
+    font-size: 12px;
+}
+
+.required {
+    &-pre {
+        position: relative;
+        &:before {
+            @extend %required;
+            left: 0;
+            padding-right: 5px;
+        }
+    }
+    &-post {
+        position: relative;
+        &:after {
+            @extend %required;
+            right: 0;
+            padding-left: 5px;
+        }
+    }
+}
+
+.beautify-scroller {
+    &::-webkit-scrollbar {
+        width: 4px;
+        background-color: #fff;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border-radius: 20px;
+        background: #a5a5a5;
+        -webkit-box-shadow: inset 0 0 6px rgba(204,204,204,0.3);
+    }
+}
+
+// 表单验证错误样式
+.has-error {
+    &[type="text"] {
+        &,
+        &:focus,
+        &:active {
+            border-color: $failColor !important;
+        }
+    }
+    .bk-selector-input {
+        &,
+        &:focus,
+        &:active,
+        &.active {
+            border-color: $failColor !important;
+            background-color: #fff4f4;
+            color: $failColor;
+        }
+    }
+    .bk-selector {
+        ::-webkit-input-placeholder { /* WebKit browsers */
+            color: $failColor;
+        }
+        :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+            color: $failColor;
+        }
+        ::-moz-placeholder { /* Mozilla Firefox 19+ */
+            color: $failColor;
+        }
+        :-ms-input-placeholder { /* Internet Explorer 10+ */
+            color: $failColor;
+        }
+    }
+    .bk-selector-icon {
+        color: $failColor !important;
+    }
+}
+
+.error-tips {
+    color: $failColor;
+    font-size: 14px;
+    &:before {
+        content: '*';
+        margin-right: 5px;
+    }
+}
+
+button[disabled="disabled"] {
+    cursor: not-allowed !important;
+}
+
+// 移除input的type="number"中的小三角
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{
+    -webkit-appearance: none !important;
+    margin: 0;
+}
+input[type="number"]{-moz-appearance:textfield;}
+input[disabled="disabled"] {
+    cursor: not-allowed !important;
+}
+
+.ace-full-screen {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10000;
+}
+
+.back-arrow {
+    position: relative;
+    cursor: pointer;
+    &:before {
+        content: '';
+        position: absolute;
+        display: block;
+        top: -3px;
+        left: 0;
+        border-right: 4px solid $primaryColor;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+    }
+    &:after {
+        content: '';
+        position: absolute;
+        display: block;
+        top: 0;
+        left: 4px;
+        width: 10px;
+        border-top: 2px solid $primaryColor;
+    }
+}
+
+.bk-form-row {
+    display: flex;
+    .bk-form-item {
+        flex: 1;
+    }
+}
+
+.ci-paging {
+    margin: 30px 40px 0;
+    .paging-settings {
+        font-size: 14px;
+        color: $fontWeightColor;
+    }
+    .paging-total-count {
+        line-height: 36px;
+    }
+    .paging-per-page {
+        min-width: 107px;
+        margin-left: 20px;
+        font-size: 0;
+        &:before {
+            content: '每页';
+            vertical-align: top;
+            line-height: 36px;
+            font-size: 14px;
+        }
+        &:after {
+            content: '条';
+            vertical-align: top;
+            line-height: 36px;
+            font-size: 14px;
+        }
+        .bk-selector {
+            display: inline-block;
+            width: 62px;
+            margin: 0 5px;
+        }
+    }
+}
+
+.bk-table {
+    .table-operations {
+        padding: 0;
+    }
+}

@@ -1,0 +1,30 @@
+{
+  "atomCode": "demo",
+  "execution": {
+    "packagePath": "demo-jar-with-dependencies.jar",
+    "language": "java",
+    "minimumVersion": "1.8",
+    "demands": [],
+    "target": "$bk_java_path -jar demo-jar-with-dependencies.jar"
+  },
+  "input": {
+    "desc": {
+      "label": "描述",
+      "default": "123",
+      "placeholder": "请输入描述信息",
+      "type": "vuex-input",
+      "desc": "描述",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    }
+  },
+  "output": {
+    "testResult": {
+      "description": "升级是否成功",
+      "type": "string",
+      "isSensitive": false
+    }
+  }
+}

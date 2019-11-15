@@ -6,7 +6,7 @@ spring:
 # consul config do not need to change
   cloud:
     consul:
-      port: __BKCI_CONSUL_PORT__
+      port: __CONSUL_HTTP_PORT__
       discovery:
         tags: __BKCI_CONSUL_TAG__
 # redis config
@@ -16,7 +16,7 @@ spring:
 #      master: __REDIS_MASTER_NAME__
 #      nodes: __REDIS_CLUSTER_HOST__:__REDIS_CLUSTER_PORT__
 #   # Redis 单机配置方式
-    host: __REDIS_IP0__
+    host: __REDIS_IP__
     port: __REDIS_PORT__
     password: __REDIS_PASS__
     database: __REDIS_DB__
@@ -30,6 +30,7 @@ spring:
     password: __RABBITMQ_PASSWORD__
     addresses: __RABBITMQ_HOST__:__RABBITMQ_PORT__
 
+service-suffix: "-__BKCI_CONSUL_TAG__"
 # http concurrency
 server:
   undertow:
@@ -37,7 +38,72 @@ server:
 
 # gateway for system
 devopsGateway:
-  build: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__        # for build agent like dev.devops.blueking.com:80
-  host: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__         # for web many be same to buildGateWay
-  api: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__          # for api many be same to host
-  outer: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__        # for internet domain
+  build: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__        # for build agent like dev.devops.blueking.com:80
+  host: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__         # for web many be same to buildGateWay
+  api: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__          # for api many be same to host
+  outer: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__        # for internet domain
+
+# certificate server 配置
+certificate:
+  server: https://__LICENSE_HOST__:__LICENSE_PORT__/certificate
+
+
+#S3 Storage
+s3:
+  endpointUrl: __BKCI_S3_URL__
+  accessKey: __BKCI_S3_ACCESSKEY__
+  secretKey: __BKCI_S3_SECRETKEY__
+  bucketName: __BKCI_S3_BUCKET__
+
+auth:
+  # idProvider为权限中心对接方式，sample(开源默认实现无鉴权)/ bk_login（蓝鲸登录) / client
+  # 选择sample后以下配置无效
+  idProvider: __AUTH_PROVIDER__
+  grantType: rization_code
+  principalType: user
+  envName: prod
+  #  开发时需要配置Host解析到iam.service.consul
+  url: http://__IAM_HOST__
+  appCode: __APP_CODE__
+  appSecret: __APP_TOKEN__
+  bkloginUrl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/login/api/v2
+
+
+#esb config for cd plugin in pipeline
+esb:
+  code: __APP_CODE__
+  secret: __APP_TOKEN__
+  job:
+    url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/job/
+  gcloud:
+    url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/sops/
+  cmdb:
+    searchhosturl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/
+
+
+# codecc config
+codecc:
+  host: __CODECC_HOST__:__CODECC_HTTP_PORT__
+
+codeccGateway:
+  gateway: http://__CODECC_HOST__:__CODECC_HTTP_PORT__
+  gatewayWeb: __HTTP_SCHEMA__://__CODECC_FQDN__:__CODECC_HTTPS_PORT__
+  api:
+   createTask: /ms/task/api/service/task/
+   updateTask: /ms/task/api/service/task/
+   checkTaskExists: /ms/task/api/service/task/exists/
+   deleteTask: /ms/task/api/service/task/
+   codeCheckReport: /ms/api/
+alert:
+  users: ''
+codeoa:
+  api-key: __CODEOA_API_KEY__
+  api-url: __CODEOA_API_URL__
+  git-url: __CODEOA_GIT_URL__
+# notify
+app:
+  code: __APP_CODE__
+  secret: __APP_TOKEN__
+bk:
+  paas:
+    host: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__

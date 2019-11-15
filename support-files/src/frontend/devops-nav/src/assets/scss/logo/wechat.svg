@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+  ~
+  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~
+  ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+  ~
+  ~ A copy of the MIT License is included in this file.
+  ~
+  ~
+  ~ Terms of the MIT License:
+  ~ ---------------------------------------------------
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1024 1024" style="enable-background:new 0 0 1024 1024;" xml:space="preserve">
+<style type="text/css">
+	.st0{clip-path:url(#SVGID_2_);fill:url(#XMLID_2_);}
+	.st1{clip-path:url(#SVGID_4_);fill:url(#XMLID_3_);}
+	.st2{fill:#116F20;}
+	.st3{fill:#7B7F7F;}
+</style>
+<g id="图层_3">
+	<g>
+		<g>
+			<g id="XMLID_475_">
+				<g>
+					<defs>
+						<path id="SVGID_1_" d="M64,421.1c0,81.4,43.7,154.6,112.1,204.2c5.5,3.9,9.1,10.3,9.1,17.6c0,2.4-0.5,4.6-1.2,6.9
+							c-5.5,20.3-14.2,52.9-14.6,54.5c-0.7,2.6-1.7,5.2-1.7,7.9c0,6,4.8,10.8,10.8,10.8c2.4,0,4.3-0.9,6.2-2l71-41
+							c5.4-3.1,11-5,17.2-5c3.3,0,6.5,0.5,9.6,1.4c33.1,9.5,68.9,14.8,105.9,14.8c179.2,0,324.5-120.9,324.5-270.1
+							C713,271.9,567.7,151,388.5,151S64,271.9,64,421.1"/>
+					</defs>
+					<clipPath id="SVGID_2_">
+						<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+					</clipPath>
+					
+						<linearGradient id="XMLID_2_" gradientUnits="userSpaceOnUse" x1="205.0728" y1="-246.1785" x2="215.0707" y2="-246.1785" gradientTransform="matrix(0 -50.1904 -50.1904 0 -11967.2969 11100.9766)">
+						<stop  offset="0" style="stop-color:#74CD2F"/>
+						<stop  offset="3.285710e-02" style="stop-color:#74CD2F"/>
+						<stop  offset="0.9554" style="stop-color:#9EEE69"/>
+						<stop  offset="1" style="stop-color:#9EEE69"/>
+					</linearGradient>
+					<rect id="XMLID_477_" x="64" y="151" class="st0" width="649" height="572"/>
+				</g>
+			</g>
+			<g id="XMLID_472_">
+				<g>
+					<defs>
+						<path id="SVGID_3_" d="M419.5,621.6c0,124.2,121,224.9,270.2,224.9c30.8,0,60.6-4.4,88.2-12.3c2.5-0.8,5.2-1.2,7.9-1.2
+							c5.2,0,9.9,1.6,14.4,4.1l59.2,34.1c1.6,1,3.2,1.7,5.2,1.7c5,0,9-4,9-9c0-2.2-0.9-4.4-1.5-6.6c-0.3-1.3-7.6-28.4-12.2-45.4
+							c-0.5-1.9-0.9-3.7-0.9-5.7c0-6,3-11.4,7.6-14.7c57-41.2,93.4-102.2,93.4-170c0-124.2-121-224.9-270.2-224.9
+							C540.5,396.7,419.5,497.4,419.5,621.6"/>
+					</defs>
+					<clipPath id="SVGID_4_">
+						<use xlink:href="#SVGID_3_"  style="overflow:visible;"/>
+					</clipPath>
+					
+						<linearGradient id="XMLID_3_" gradientUnits="userSpaceOnUse" x1="203.2898" y1="-251.8479" x2="213.2878" y2="-251.8479" gradientTransform="matrix(0 -47.4395 -47.4395 0 -11257.7891 10518.9678)">
+						<stop  offset="0" style="stop-color:#D2D2D2"/>
+						<stop  offset="4.010990e-03" style="stop-color:#E4E8E9"/>
+						<stop  offset="1" style="stop-color:#F0F0F0"/>
+					</linearGradient>
+					<rect id="XMLID_474_" x="419.5" y="396.7" class="st1" width="540.5" height="476.3"/>
+				</g>
+			</g>
+			<path id="XMLID_471_" class="st2" d="M323.4,334.3c0,24-19.4,43.4-43.4,43.4s-43.4-19.4-43.4-43.4s19.4-43.4,43.4-43.4
+				S323.4,310.4,323.4,334.3"/>
+			<path id="XMLID_470_" class="st2" d="M540.4,334.3c0,24-19.4,43.4-43.4,43.4c-24,0-43.4-19.4-43.4-43.4s19.4-43.4,43.4-43.4
+				C521,290.9,540.4,310.4,540.4,334.3"/>
+			<path id="XMLID_469_" class="st3" d="M746.6,553c0,20,16.2,36.1,36.2,36.1S819,572.9,819,553c0-20-16.2-36.2-36.2-36.2
+				C762.8,516.9,746.6,533,746.6,553"/>
+			<path id="XMLID_468_" class="st3" d="M565.7,553c0,20,16.2,36.1,36.2,36.1s36.2-16.2,36.2-36.1c0-20-16.2-36.2-36.2-36.2
+				C581.9,516.9,565.7,533,565.7,553"/>
+		</g>
+	</g>
+</g>
+</svg>

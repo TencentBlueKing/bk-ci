@@ -1,28 +1,39 @@
 #!/bin/bash
-echo "Start uninstalling the agent..."
+echo "start uninstalling the agent..."
 t=`date +"%Y-%m-%d_%H-%M-%S"`
 workspace=`pwd`
 user=${USER}
+agent_id='##agentId##'
 
-function uninstall()
+function getServiceName()
 {
-  echo "uninstall agent"
-  grep_result=$(grep "devopsDaemon" /etc/rc.d/rc.local)
+  echo "devops_agent_"${agent_id}
+}
+
+function uninstallAgentService()
+{
+  echo "uninstall agent service"
+  grep_result=$(grep "${service_name}" /etc/rc.d/rc.local)
   if test -x "/etc/rc.d/rc.local" ; then
     if [[ -z "$grep_result" ]]; then
         echo "already remove from rclocal"
     else
-        sed -i '/devopsDaemon/d' "/etc/rc.d/rc.local"
-        echo "remove from rclocal done"
+        sed -i "/${service_name}/d" "/etc/rc.d/rc.local"
+        echo "removal done"
     fi
   fi
-  
-  ./stop.sh
+
+  cd ${workspace}
+  chmod +x *.sh
+  ${workspace}/stop.sh
 }
 
+service_name=`getServiceName`
+
 if [[ "$user" = "root" ]]; then
-    uninstall
+    uninstallAgentService
 else
     cd ${workspace}
+    chmod +x *.sh
     ${workspace}/stop.sh
 fi

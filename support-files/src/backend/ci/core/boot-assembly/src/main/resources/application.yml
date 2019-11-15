@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: bk-ci
+    desc: DevOps BK-CI Service
+    version: 0.0.1
+    packageName: com.tencent.devops
+  cloud:
+    consul:
+      discovery:
+        service-name: bk-ci  # single service 合并后的单体服务
+file:
+  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
+  maxUploadFileSize: 52428800
+
+aes:
+  aesKey: "J%k^yO{?vt}3tXpG"
+  aesMock: "******"
+
+server:
+  port: 21900
