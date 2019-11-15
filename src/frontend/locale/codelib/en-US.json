@@ -45,10 +45,5 @@
     "svnSshRule": "start by svn+ssh:// and the correct one",
     "httpRule": "start by http:// and the correct one",
     "httpsRule": "start by http:// and end with .git",
-    "paramBeString": "parameter must be string",
-    "gitCodeRule": "start by http://git.code.oa.com and end with .git",
-    "gitlabRule": "start by http://gitlab-paas.open.oa.com and end with .git",
-    "gitCodeInternalRule": "start by git@git.code.oa.com and end with .git",
-    "tgitHttpRule": "start by https://git.tencent.com and end with .git",
-    "tgitRule": "start by git@git.tencent.com and end with .git"
+    "paramBeString": "parameter must be string"
 }
