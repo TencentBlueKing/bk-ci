@@ -31,9 +31,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.plugin.codecc.dao.CodeccElementDao
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.plugin.codecc.dao.CodeccElementDao
 import com.tencent.devops.plugin.codecc.pojo.CodeccElementData
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -78,23 +78,23 @@ class CodeccElementService @Autowired constructor(
                     }
                 }
                 val elementData = CodeccElementData(
-                    projectId,
-                    pipelineId,
-                    element.codeCCTaskName ?: "",
-                    pipelineModel.name,
-                    taskId ?: "",
-                    isSync,
-                    element.scanType ?: "",
-                    element.languages.joinToString(","),
-                    element.compilePlat ?: "",
-                    element.tools?.joinToString(",") ?: "",
-                    element.pyVersion ?: "",
-                    element.eslintRc ?: "",
-                    element.path ?: "",
-                    element.scriptType.name,
-                    element.script,
-                    channelCode,
-                    userId
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    taskName = element.codeCCTaskName ?: "",
+                    taskCnName = pipelineModel.name,
+                    taskId = taskId ?: "",
+                    sync = isSync,
+                    scanType = element.scanType ?: "",
+                    language = element.languages.joinToString(","),
+                    platform = element.compilePlat ?: "",
+                    tools = element.tools?.joinToString(",") ?: "",
+                    pythonVersion = element.pyVersion ?: "",
+                    eslintRc = element.eslintRc ?: "",
+                    codePath = element.path ?: "",
+                    scriptType = element.scriptType.name,
+                    script = element.script,
+                    channelCode = channelCode,
+                    updateUserId = userId
                 )
                 codeccElementDao.save(dslContext, elementData)
             }
@@ -116,23 +116,23 @@ class CodeccElementService @Autowired constructor(
         val record = codeccElementDao.get(dslContext, projectId, pipelineId)
             ?: throw RuntimeException("not found codecc element for project($projectId), pipeline($pipelineId)")
         return CodeccElementData(
-            projectId,
-            pipelineId,
-            record.taskName,
-            record.taskCnName,
-            record.taskId,
-            record.isSync,
-            record.scanType,
-            record.language,
-            record.platform,
-            record.tools,
-            record.pyVersion,
-            record.eslintRc,
-            record.codePath,
-            record.scriptType,
-            record.script,
-            record.channelCode,
-            record.updateUserId
+            projectId = projectId,
+            pipelineId = pipelineId,
+            taskName = record.taskName,
+            taskCnName = record.taskCnName,
+            taskId = record.taskId,
+            sync = record.isSync,
+            scanType = record.scanType,
+            language = record.language,
+            platform = record.platform,
+            tools = record.tools,
+            pythonVersion = record.pyVersion,
+            eslintRc = record.eslintRc,
+            codePath = record.codePath,
+            scriptType = record.scriptType,
+            script = record.script,
+            channelCode = record.channelCode,
+            updateUserId = record.updateUserId
         )
     }
 }

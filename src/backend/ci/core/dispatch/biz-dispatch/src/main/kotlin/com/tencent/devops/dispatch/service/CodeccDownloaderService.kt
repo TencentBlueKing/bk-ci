@@ -28,7 +28,7 @@ package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.dispatch.pojo.enums.CodeccToolType
+import com.tencent.devops.plugin.codecc.pojo.CodeccToolType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
