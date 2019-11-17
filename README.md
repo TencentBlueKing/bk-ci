@@ -40,7 +40,7 @@
 | **流水线模板** |  流水线模板将是企业内部推行研发规范的一大助力  |
 
 ## Getting started
-- [v1版Docker体验镜像下载](https://cloud.docker.com/u/blueking/repository/docker/blueking/bk-ci)
+- [v1版Docker体验镜像下载](https://hub.docker.com/r/blueking/bk-ci)
 - [下载与编译](docs/overview/source_compile.md)
 - [一分钟安装部署](docs/overview/installation.md)
 
