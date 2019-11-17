@@ -59,6 +59,7 @@ open class LinuxCodeCCScriptElement(
     open val path: String? = null,
     @ApiModelProperty("codecc原子执行环境，例如WINDOWS，LINUX，MACOS等", required = true)
     var compilePlat: String? = null,
+
     @ApiModelProperty("JSONArray格式的字符串\n" +
             "eg：\"[\"COVERITY\",\"CPPLINT\",\"PYLINT\",\"TSCLUA\",\"CCN\",\"DUPC\",\"ESLINT\",\"GOML\",\"KLOCWORK\"]\"，其中\n" +
             "COVERITY：Coverity工具\n" +
