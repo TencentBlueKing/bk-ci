@@ -29,7 +29,7 @@ package com.tencent.devops.plugin.codecc.element
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement.ProjectLanguage
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import org.junit.Assert
 import org.junit.Test
 
@@ -42,16 +42,16 @@ class LinuxCodeCCScriptElementBizPluginTest {
     private val pipelineName = "codecc Pipeline"
     private val userId = "admin"
     private val element = LinuxCodeCCScriptElement(
-            name = "exe",
-            id = "1",
-            status = "1",
-            script = "echo hello",
-            scanType = "1",
-            scriptType = BuildScriptType.SHELL,
-            codeCCTaskCnName = "demo",
-            asynchronous = true,
-            path = "/tmp/codecc",
-            languages = listOf(ProjectLanguage.JAVA)
+        name = "exe",
+        id = "1",
+        status = "1",
+        script = "echo hello",
+        scanType = "1",
+        scriptType = BuildScriptType.SHELL,
+        codeCCTaskCnName = "demo",
+        asynchronous = true,
+        path = "/tmp/codecc",
+        languages = listOf(ProjectLanguage.JAVA)
     )
 
     @Test
@@ -82,5 +82,4 @@ class LinuxCodeCCScriptElementBizPluginTest {
     fun checkMoreOne() {
         plugin.check(element, 2)
     }
-
 }
