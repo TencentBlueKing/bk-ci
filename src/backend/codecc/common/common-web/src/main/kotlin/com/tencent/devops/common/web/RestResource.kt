@@ -31,7 +31,6 @@ import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 
 /**
- * Created by liangyuzhou on 2017/8/28.
  * Powered By Tencent
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)

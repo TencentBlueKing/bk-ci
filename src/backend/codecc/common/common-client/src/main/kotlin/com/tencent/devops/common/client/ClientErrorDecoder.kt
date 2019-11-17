@@ -41,7 +41,6 @@ import java.io.IOException
 import javax.ws.rs.core.Response.Status
 
 /**
- * Created by liangyuzhou on 2017/9/14.
  * Powered By Tencent
  */
 @Service

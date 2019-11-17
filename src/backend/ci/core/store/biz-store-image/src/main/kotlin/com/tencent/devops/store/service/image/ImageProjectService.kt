@@ -51,7 +51,6 @@ import org.springframework.stereotype.Service
 
 /**
  * 镜像发布逻辑处理
- * author: carlyin
  * since: 2019-09-12
  */
 @Service

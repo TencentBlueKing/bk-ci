@@ -46,7 +46,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
 /**
- * @ Author     ：Royal Huang
  * @ Date       ：Created in 16:50 2019-08-07
  */
 

@@ -40,7 +40,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 /**
- * Created by liangyuzhou on 2017/6/15.
  * Powered By Tencent
  */
 @Configuration

@@ -40,9 +40,6 @@ import org.springframework.util.StringUtils;
 
 import java.net.URI;
 
-/**
- * Created by Aaron Sheng on 2017/12/20.
- */
 public class Log4j2Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
 

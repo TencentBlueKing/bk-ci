@@ -58,9 +58,6 @@ import java.util.Collections
 import java.util.stream.Collectors
 import javax.ws.rs.NotFoundException
 
-/**
- * Created by rdeng on 2017/9/1.
- */
 @Service
 class VMService @Autowired constructor(
     private val vmDao: VMDao,

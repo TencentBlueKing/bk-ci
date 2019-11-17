@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 /**
- * @ Author     ：Royal Huang
  * @ Date       ：Created in 10:32 2019-08-08
  */
 

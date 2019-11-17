@@ -43,9 +43,6 @@ import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
-/**
- * Created by rdeng on 2017/9/1.
- */
 @Repository
 class VMDao {
 

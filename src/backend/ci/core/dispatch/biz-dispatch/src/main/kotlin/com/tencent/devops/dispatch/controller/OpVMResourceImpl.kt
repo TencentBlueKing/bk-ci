@@ -36,9 +36,6 @@ import com.tencent.devops.dispatch.service.VMService
 import com.tencent.devops.dispatch.utils.ShutdownVMAfterBuildUtils
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * Created by rdeng on 2017/9/4.
- */
 @RestResource
 class OpVMResourceImpl @Autowired constructor(
     private val vmService: VMService,
