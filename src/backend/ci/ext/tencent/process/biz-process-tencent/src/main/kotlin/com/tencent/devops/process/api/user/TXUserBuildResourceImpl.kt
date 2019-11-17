@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.codecc.pojo.coverity.CodeccReport
-import com.tencent.devops.plugin.codecc.service.PipelineCodeccService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import org.springframework.beans.factory.annotation.Autowired
 
