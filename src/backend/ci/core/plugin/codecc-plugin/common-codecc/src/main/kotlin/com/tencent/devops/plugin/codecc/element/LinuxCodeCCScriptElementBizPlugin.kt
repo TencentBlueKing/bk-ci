@@ -35,12 +35,12 @@ import com.tencent.devops.process.plugin.annotation.ElementBiz
 class LinuxCodeCCScriptElementBizPlugin : ElementBizPlugin<LinuxCodeCCScriptElement> {
 
     override fun afterCreate(
-            element: LinuxCodeCCScriptElement,
-            projectId: String,
-            pipelineId: String,
-            pipelineName: String,
-            userId: String,
-            channelCode: ChannelCode
+        element: LinuxCodeCCScriptElement,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode
     ) {
     }
 
