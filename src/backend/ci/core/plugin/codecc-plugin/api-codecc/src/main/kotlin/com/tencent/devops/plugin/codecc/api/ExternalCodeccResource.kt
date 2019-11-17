@@ -24,27 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.pojo.codecc
+package com.tencent.devops.plugin.codecc.api
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("codecc原子数据")
-data class CodeccElementData(
-    val projectId: String,
-    val pipelineId: String,
-    val taskName: String,
-    val taskCnName: String,
-    val taskId: String,
-    val sync: String,
-    val scanType: String,
-    val language: String,
-    val platform: String,
-    val tools: String,
-    val pythonVersion: String,
-    val eslintRc: String,
-    val codePath: String,
-    val scriptType: String,
-    val script: String,
-    val channelCode: String,
-    val updateUserId: String
-)
+@Api(tags = ["EXTERNAL_CODECC"], description = "服务-创建异步任务")
+@Path("/external/codecc")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalCodeccResource {
+
+    @ApiOperation("提供根据流水线构建id查询构建号（页面上展示用的）、构建时间、构建人等信息件")
+    @POST
+    @Path("/callback")
+    fun callback(
+        callback: CodeccCallback
+    ): Result<String>
+}

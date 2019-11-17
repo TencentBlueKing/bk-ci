@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -86,7 +87,24 @@ open class LinuxCodeCCScriptElement(
     @ApiModelProperty("spotbugs相关参数", required = false)
     var projectBuildType: String? = null,
     @ApiModelProperty("spotbugs相关参数", required = false)
-    var projectBuildCommand: String? = null
+    var projectBuildCommand: String? = null,
+    @ApiModelProperty("圈复杂度阈值", required = false)
+    var ccnThreshold: Int? = null,
+    @ApiModelProperty("是否隐藏代码内容，字符串的false和true", required = false)
+    var needCodeContent: String? = null,
+    val coverityToolSetId: String? = null,
+    val klocworkToolSetId: String? = null,
+    val cpplintToolSetId: String? = null,
+    val eslintToolSetId: String? = null,
+    val pylintToolSetId: String? = null,
+    val gometalinterToolSetId: String? = null,
+    val checkStyleToolSetId: String? = null,
+    val styleCopToolSetId: String? = null,
+    val detektToolSetId: String? = null,
+    val phpcsToolSetId: String? = null,
+    val sensitiveToolSetId: String? = null,
+    val occheckToolSetId: String? = null,
+    val gociLintToolSetId: String? = null
 ) : Element(name, id, status) {
 
     companion object {
@@ -95,31 +113,4 @@ open class LinuxCodeCCScriptElement(
 
     override fun getClassType() =
         classType
-
-    enum class ProjectLanguage(val value: String) {
-        C("c"),
-        C_PLUS_PLUSH("c++"),
-        C_CPP("cpp"),
-        OBJECTIVE_C("objective-C"),
-        OC("objective-C"),
-        C_SHARP("c#"),
-        JAVA("java"),
-        PYTHON("python"),
-        JAVASCRIPT("javascript"),
-        JS("javascript"),
-        PHP("php"),
-        RUBY("ruby"),
-        LUA("lua"),
-        GOLANG("golang"),
-        SWIFT("swift"),
-        TYPESCRIPT("typescript"),
-        KOTLIN("kotlin"),
-        OTHERS("others");
-
-        companion object {
-            fun fromValue(value: String) =
-                    values().associateBy(ProjectLanguage::value)[value]
-                            ?: throw RuntimeException("The project language($value) is not exist")
-        }
-    }
 }

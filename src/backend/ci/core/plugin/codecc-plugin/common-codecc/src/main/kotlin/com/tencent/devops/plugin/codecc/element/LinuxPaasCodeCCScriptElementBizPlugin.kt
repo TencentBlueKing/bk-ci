@@ -54,12 +54,12 @@ class LinuxPaasCodeCCScriptElementBizPlugin constructor(
     }
 
     override fun afterCreate(
-            element: LinuxPaasCodeCCScriptElement,
-            projectId: String,
-            pipelineId: String,
-            pipelineName: String,
-            userId: String,
-            channelCode: ChannelCode
+        element: LinuxPaasCodeCCScriptElement,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode
     ) {
         with(element) {
             if (languages.isEmpty()) {
