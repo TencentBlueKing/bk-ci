@@ -44,10 +44,19 @@ class BeanConfig {
 
     @Bean
     @Primary
-    fun pipelinePermissionService(dslContext: DSLContext,
-                                  authProjectApi: AuthProjectApi,
-                                  authResourceApi: AuthResourceApi,
-                                  authPermissionApi: AuthPermissionApi,
-                                  pipelineAuthServiceCode: PipelineAuthServiceCode) =
-            PipelinePermissionServiceImpl(dslContext, PipelineInfoDao(), authProjectApi, authResourceApi, authPermissionApi, pipelineAuthServiceCode)
+    fun pipelinePermissionService(
+        dslContext: DSLContext,
+        authProjectApi: AuthProjectApi,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode
+    ) =
+        PipelinePermissionServiceImpl(
+            dslContext,
+            PipelineInfoDao(),
+            authProjectApi,
+            authResourceApi,
+            authPermissionApi,
+            pipelineAuthServiceCode
+        )
 }

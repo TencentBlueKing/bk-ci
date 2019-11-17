@@ -24,20 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.resources
+package com.tencent.devops.common.pipeline.element
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.ServiceCodeccElementResource
-import com.tencent.devops.plugin.pojo.codecc.CodeccElementData
-import com.tencent.devops.plugin.service.CodeccElementService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceCodeccElementResourceImpl @Autowired constructor(
-    private val codeccElementService: CodeccElementService
-) : ServiceCodeccElementResource {
-    override fun get(projectId: String, pipelineId: String): Result<CodeccElementData?> {
-        return Result(codeccElementService.getCodeccElement(projectId, pipelineId))
+@ApiModel("IOS证书安装", description = IosCertInstallElement.classType)
+data class IosCertInstallElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "ios证书安装",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("用户在上传证书时指定的ID号", required = false)
+    val certId: String = ""
+) : Element(name, id, status) {
+    companion object {
+        const val classType = "iosCertInstall"
     }
+
+    override fun getClassType() = classType
 }

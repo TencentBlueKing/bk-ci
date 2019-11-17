@@ -43,7 +43,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_BUILD"], description = "用户-构建资源-扩展")
-@Path("/user/codecc/builds")
+@Path("/user/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ServiceInterface("plugin") // 指明接入到哪个微服务
@@ -51,7 +51,8 @@ interface UserBuildCodeccResource {
 
     @ApiOperation("获取CodeCC报告")
     @GET
-    @Path("/project/{projectId}/pipeline/{pipelineId}/codeccReport")
+    // @Path("/project/{projectId}/pipeline/{pipelineId}/codeccReport")
+    @Path("/{projectId}/{pipelineId}/codeccReport")
     fun getCodeccReport(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

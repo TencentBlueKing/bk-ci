@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.plugin.pojo.codecc.CodeccCallback
+import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.api.UserPreBuildResource
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.Prebuild

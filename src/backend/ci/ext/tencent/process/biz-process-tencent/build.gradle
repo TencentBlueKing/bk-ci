@@ -36,6 +36,8 @@ dependencies {
     compile project(":core:common:common-pipeline:common-pipeline-api")
     compile project(":ext:tencent:common:common-pipeline:common-pipeline-tencent")
     //compile project(":ext:tencent:common:common-archive:common-archive-jfrog")
+    compile project(":core:plugin:codecc-plugin:common-codecc")
+    compile project(":core:plugin:codecc-plugin:biz-codecc")
     compile project(":ext:tencent:common:common-job")
     compile project(":ext:tencent:common:common-itest")
     compile project(":ext:tencent:common:common-gcloud")

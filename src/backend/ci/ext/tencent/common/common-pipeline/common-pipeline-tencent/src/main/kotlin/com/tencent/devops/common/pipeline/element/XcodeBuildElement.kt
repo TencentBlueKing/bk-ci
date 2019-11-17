@@ -24,62 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.agent
+package com.tencent.devops.common.pipeline.element
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("CodeCC代码检查任务", description = LinuxPaasCodeCCScriptElement.classType)
-data class LinuxPaasCodeCCScriptElement(
+@ApiModel("xcode构建任务", description = XcodeBuildElement.classType)
+data class XcodeBuildElement(
     @ApiModelProperty("任务名称", required = true)
-    override var name: String = "执行Linux脚本",
+    override val name: String = "xcode构建任务",
     @ApiModelProperty("id", required = false)
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("脚本类型", required = true)
-    override var scriptType: BuildScriptType,
-    @ApiModelProperty("脚本内容", required = true)
-    override var script: String = "",
-    @ApiModelProperty("CodeCC Task Name", required = false, hidden = true)
-    override var codeCCTaskName: String? = null,
-    @ApiModelProperty("CodeCC Task CN Name", required = false, hidden = true)
-    override var codeCCTaskCnName: String? = null,
-    @ApiModelProperty("CodeCC Task Id", required = false, hidden = true)
-    var codeCCTaskId: String? = null,
-    @ApiModelProperty("是否异步", required = false)
-    override var asynchronous: Boolean? = false,
-    @ApiModelProperty("扫描类型（0：全量, 1：增量）", required = false)
-    override var scanType: String?,
-    @ApiModelProperty("代码存放路径", required = false)
-    override var path: String? = null,
-    @ApiModelProperty("工程语言", required = true)
-    override var languages: List<ProjectLanguage>
-) : LinuxCodeCCScriptElement(
-    name,
-    id,
-    status,
-    scriptType,
-    script,
-    codeCCTaskName,
-    codeCCTaskCnName,
-    languages,
-    asynchronous,
-    scanType,
-    path
-) {
-
+    @ApiModelProperty("xcodeproj的相对路径,例如project-aa/Unity-iPhone.xcodeproj", required = true)
+    val project: String = "",
+    @ApiModelProperty("xcodebuild的-scheme参数值", required = false)
+    val scheme: String = "",
+    @ApiModelProperty("xcodebuild的-configuration参数值", required = false)
+    val configuration: String = "",
+    @ApiModelProperty("IOS IPA所在的目录， 默认是result", required = false)
+    val iosPath: String = "result",
+    @ApiModelProperty("IOS IPA名, 默认是output.ipa", required = false)
+    val iosName: String = "output.ipa",
+    @ApiModelProperty("XCode 工程的根目录", required = false)
+    val rootDir: String = "",
+    @ApiModelProperty("启用或禁用bitCode模式, 默认禁止", required = false)
+    val enableBitCode: Boolean = false,
+    @ApiModelProperty("证书id", required = true)
+    val certId: String = "",
+    @ApiModelProperty("xcode编译额外参数", required = false)
+    val extraParams: String = ""
+) : Element(name, id, status) {
     companion object {
-        const val classType = "linuxPaasCodeCCScript"
+        const val classType = "xcodeBuild"
     }
 
-    override fun cleanUp() {
-        codeCCTaskId = null
-        codeCCTaskName = null
-    }
-
-    override fun getClassType() =
-        classType
+    override fun getClassType() = classType
 }

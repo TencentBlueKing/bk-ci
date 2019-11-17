@@ -24,12 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.plugin.codecc.event.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
-import com.tencent.devops.plugin.service.CodeccElementService
+import com.tencent.devops.plugin.codecc.service.CodeccElementService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

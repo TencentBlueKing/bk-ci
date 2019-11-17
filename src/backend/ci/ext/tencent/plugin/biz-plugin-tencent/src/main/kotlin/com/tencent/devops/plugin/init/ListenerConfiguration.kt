@@ -30,7 +30,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.plugin.listener.CodeWebhookFinishListener
 import com.tencent.devops.plugin.listener.GitHubPullRequestListener
-import com.tencent.devops.plugin.listener.PipelineModelAnalysisListener
 import com.tencent.devops.plugin.listener.TGitCommitListener
 import com.tencent.devops.plugin.listener.measure.MeasureListener
 import org.springframework.amqp.core.Binding
@@ -68,44 +67,6 @@ class ListenerConfiguration {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
-    }
-
-    @Value("\${queueConcurrency.modelAnalysis:2}")
-    private val modelAnalysisConcurrency: Int? = null
-
-    /**
-     * 监控队列--- 并发可小
-     */
-    @Bean
-    fun pipelineModelAnalysisQueue() = Queue(MQ.QUEUE_PIPELINE_EXTENDS_MODEL)
-
-    @Bean
-    fun pipelineBuildMonitorQueueBind(
-        @Autowired pipelineModelAnalysisQueue: Queue,
-        @Autowired pipelineFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineModelAnalysisQueue).to(pipelineFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineModelAnalysisListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineModelAnalysisQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineModelAnalysisListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineModelAnalysisQueue.name)
-        val concurrency = modelAnalysisConcurrency!!
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(10, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-
-        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
     }
 
     /**

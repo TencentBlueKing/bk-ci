@@ -35,14 +35,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement.ProjectLanguage
-import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.CodeccReport
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import com.tencent.devops.process.permission.PipelinePermissionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,9 +50,9 @@ import javax.ws.rs.NotFoundException
 
 @Service
 class PipelineCodeccService @Autowired constructor(
-        private val client: Client,
-        private val coverityApi: CodeccApi,
-        private val pipelinePermissionService: PipelinePermissionService
+    private val client: Client,
+    private val coverityApi: CodeccApi,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     fun getCodeccReport(
@@ -111,22 +111,23 @@ class PipelineCodeccService @Autowired constructor(
             val tools = taskParams["tools"]?.toString()
 
             val codeccElement = LinuxPaasCodeCCScriptElement(
-                    "",
-                    "",
-                    "",
-                    BuildScriptType.SHELL,
-                    "",
-                    "",
-                    "",
-                    taskId.toString(),
-                    false,
-                    taskParams["scanType"]?.toString() ?: "1",
-                    "",
-                    language
+                "",
+                "",
+                "",
+                BuildScriptType.SHELL,
+                "",
+                "",
+                "",
+                taskId.toString(),
+                false,
+                taskParams["scanType"]?.toString() ?: "1",
+                "",
+                language
             )
             codeccElement.compilePlat = taskParams["compilePlat"]?.toString() ?: "LINUX"
-            codeccElement.tools = if (!tools.isNullOrBlank()) JsonUtil.to(tools!!, object : TypeReference<List<String>>() {})
-                                    else listOf("COVERITY")
+            codeccElement.tools =
+                if (!tools.isNullOrBlank()) JsonUtil.to(tools!!, object : TypeReference<List<String>>() {})
+                else listOf("COVERITY")
             codeccElement.pyVersion = taskParams["pyVersion"]?.toString() ?: ""
             codeccElement.eslintRc = taskParams["eslintRc"]?.toString() ?: ""
             codeccElement.scanType = taskParams["scanType"]?.toString() ?: ""
@@ -157,9 +158,4 @@ class PipelineCodeccService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineCodeccService::class.java)
     }
-}
-
-fun main(args: Array<String>) {
-    val language = JsonUtil.to("[PYTHON, GOLANG]", object : TypeReference<List<ProjectLanguage>>() {})
-    println(language)
 }

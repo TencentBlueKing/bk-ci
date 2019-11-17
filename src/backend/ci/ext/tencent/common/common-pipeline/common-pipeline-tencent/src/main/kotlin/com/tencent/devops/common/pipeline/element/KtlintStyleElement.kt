@@ -24,34 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.coverity
+package com.tencent.devops.common.pipeline.element
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.pipeline.element.ktlint.KtlintReporter
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * deng
- * 26/01/2018
- */
-data class CoverityConfig(
-    val name: String,
-    val cnName: String,
-    val projectType: CoverityProjectType,
-    val tools: List<String>,
-    var asynchronous: Boolean, // 是否同步，默认是同步
-    val filterTools: List<String>,
-    val repos: List<RepoItem>,
-    val scanCodePath: String,
-    val scmType: String,
-    val certType: String,
-    val timeOut: Long = 4 * 3600 // 4小时
-) {
-    data class RepoItem(
-        val repositoryConfig: RepositoryConfig,
-        val type: String,
-        val relPath: String = "", // 代码路径
-        val relativePath: String = "", // 代码相对路径
-        var url: String = "",
-        var authType: String = "",
-        var repoHashId: String = ""
-    )
+@ApiModel("ktlint代码静态检查", description = KtlintStyleElement.classType)
+class KtlintStyleElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "执行Linux脚本",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("代码存放路径", required = false)
+    val path: String? = null,
+    @ApiModelProperty("ktlint要检查的文件pattern", required = false)
+    val patterns: String?,
+    @ApiModelProperty("ktlint命令行参数", required = false)
+    val flags: String?,
+    @ApiModelProperty("ktlint reporters", required = false)
+    val reporters: List<KtlintReporter>?
+) : Element(name, id, status) {
+
+    override fun getClassType() = classType
+
+    companion object {
+        const val classType = "ktlint"
+    }
 }

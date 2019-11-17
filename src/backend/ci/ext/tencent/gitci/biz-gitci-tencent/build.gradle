@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":core:common:common-service")
     compile project(":core:common:common-web")
