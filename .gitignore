@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.gradle
 bin/
 docs/node_modules
 docs/_book
@@ -20,3 +21,10 @@ frontend/*/yarn-error.log*
 
 frontend/*/package-lock.json
 node_modules/
+
+src/backend/*/gradlew
+src/backend/*/gradlew.bat
+src/backend/ci/.project
+src/backend/ci/.setting
+out
+**version.txt

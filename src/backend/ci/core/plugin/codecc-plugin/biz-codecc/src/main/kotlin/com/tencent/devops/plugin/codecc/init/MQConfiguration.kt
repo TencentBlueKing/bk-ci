@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.plugin.codecc.event.listener.ChangeCodeCCListener
+import com.tencent.devops.plugin.codecc.event.listener.PipelineModelAnalysisListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -39,8 +40,10 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -105,5 +108,43 @@ class MQConfiguration {
             concurrency = 1,
             maxConcurrency = 10
         )
+    }
+
+    @Value("\${queueConcurrency.modelAnalysis:2}")
+    private val modelAnalysisConcurrency: Int? = null
+
+    /**
+     * 监控队列--- 并发可小
+     */
+    @Bean
+    fun pipelineModelAnalysisQueue() = Queue(MQ.QUEUE_PIPELINE_EXTENDS_MODEL)
+
+    @Bean
+    fun pipelineModelAnalysisQueueBind(
+        @Autowired pipelineModelAnalysisQueue: Queue,
+        @Autowired pipelineFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineModelAnalysisQueue).to(pipelineFanoutExchange)
+    }
+
+    @Bean
+    fun pipelineModelAnalysisListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineModelAnalysisQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: PipelineModelAnalysisListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(pipelineModelAnalysisQueue.name)
+        val concurrency = modelAnalysisConcurrency!!
+        container.setConcurrentConsumers(concurrency)
+        container.setMaxConcurrentConsumers(Math.max(10, concurrency))
+        container.setRabbitAdmin(rabbitAdmin)
+
+        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.messageListener = adapter
+        return container
     }
 }
