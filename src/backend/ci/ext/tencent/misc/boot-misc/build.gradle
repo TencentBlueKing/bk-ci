@@ -25,5 +25,5 @@
  */
 
 dependencies {
-    compile project(":ext:tencent:misc:api-misc")
+    compile project(":ext:tencent:misc:biz-misc")
 }

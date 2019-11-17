@@ -202,8 +202,8 @@ class CodeccDownloaderService {
             }
         }
         return Response
-                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = ${target.name}")
-                .build()
+            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = ${target.name}")
+            .build()
     }
 }

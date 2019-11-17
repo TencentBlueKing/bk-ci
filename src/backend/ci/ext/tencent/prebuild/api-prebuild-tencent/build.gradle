@@ -25,6 +25,7 @@
  */
 
 dependencies {
+    compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:common:common-api")
     compile project(":core:common:common-api")
     compile project(":core:common:common-event")

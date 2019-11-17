@@ -24,32 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.api
+package com.tencent.devops.common.pipeline.element
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.plugin.pojo.codecc.CodeccElementData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.pipeline.enums.Platform
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["SERVICE_CODECC_ELEMENT"])
-@Path("/service/codecc/element")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceCodeccElementResource {
+@ApiModel("rqd符号表上传", description = RqdElement.classType)
+data class RqdElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "rqd异常上报",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("版本号", required = false)
+    val versionId: String = "",
+    @ApiModelProperty("待上传给rqd的符号表文件夹(选择了安卓平台才显示，只能填一个路径，不支持正则匹配)", required = false)
+    val rqdFolder: String = "",
+    @ApiModelProperty("App所在的文件夹", required = false)
+    val appFolder: String = "",
+    @ApiModelProperty("凭证id", required = true)
+    val credId: String = "",
+    @ApiModelProperty("平台类型（ANDROID或者IPHONE）", required = true)
+    val platform: Platform
+) : Element(name, id, status) {
+    companion object {
+        const val classType = "rqd"
+    }
 
-    @ApiOperation("提供根据流水线构建id查询构建号（页面上展示用的）、构建时间、构建人等信息件")
-    @GET
-    @Path("/project/{projectId}/pipeline/{pipelineId}")
-    fun get(
-        @PathParam("projectId")
-        projectId: String,
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<CodeccElementData?>
+    override fun getClassType() = classType
 }

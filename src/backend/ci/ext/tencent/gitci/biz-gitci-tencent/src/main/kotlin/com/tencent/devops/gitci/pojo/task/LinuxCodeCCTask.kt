@@ -27,9 +27,9 @@
 package com.tencent.devops.gitci.pojo.task
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.pojo.coverity.ProjectLanguage
-import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.gitci.service.BuildConfig
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -52,18 +52,18 @@ open class LinuxCodeCCTask(
 
     override fun covertToElement(config: BuildConfig): LinuxPaasCodeCCScriptElement {
         val element = LinuxPaasCodeCCScriptElement(
-                displayName ?: "CodeCCScript",
-                null,
-                null,
-                inputs.scriptType,
-                inputs.script,
-                null,
-                null,
-                null,
-                inputs.asynchronous,
-                inputs.scanType,
-                inputs.path,
-                inputs.languages
+            name = displayName ?: "CodeCCScript",
+            id = null,
+            status = null,
+            scriptType = inputs.scriptType,
+            script = inputs.script,
+            codeCCTaskName = null,
+            codeCCTaskCnName = null,
+            codeCCTaskId = null,
+            asynchronous = inputs.asynchronous,
+            scanType = inputs.scanType,
+            path = inputs.path,
+            languages = inputs.languages
         )
         element.compilePlat = inputs.compilePlat
         element.tools = inputs.tools

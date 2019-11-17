@@ -24,14 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.coverity
+package com.tencent.devops.common.pipeline.element.ktlint
 
-/**
- * deng
- * 30/01/2018
- */
-data class CoverityTaskInfo(
-    val task_id: String,
-    val task_en_name: String,
-    val task_cn_name: String
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("ktlint reporter")
+data class KtlintReporter(
+    @ApiModelProperty("reporter", required = true)
+    val reporter: KtlintReporterType,
+    @ApiModelProperty("报告保存路径", required = false)
+    val reportOutput: String?,
+    @ApiModelProperty("报告在构件详情中显示的名字", required = false)
+    val reportName: String?
 )

@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.init
 import com.tencent.devops.common.pipeline.ElementSubTypeFetcher
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.element.*
+import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 
 class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
 
@@ -77,7 +78,23 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             SpmDistributionElement.classType to SpmDistributionElement::class.java,
             ItestProcessCreateElement.classType to ItestProcessCreateElement::class.java,
             ItestReviewCreateElement.classType to ItestReviewCreateElement::class.java,
-            ItestTaskCreateElement.classType to ItestTaskCreateElement::class.java
+            ItestTaskCreateElement.classType to ItestTaskCreateElement::class.java,
+            BuglyElement.classType to BuglyElement::class.java,
+            RqdElement.classType to RqdElement::class.java,
+            IosCertInstallElement.classType to IosCertInstallElement::class.java,
+            AndroidCertInstallElement.classType to AndroidCertInstallElement::class.java,
+            IosEnterpriseSignElement.classType to IosEnterpriseSignElement::class.java,
+            IosSJTYSignElement.classType to IosSJTYSignElement::class.java,
+            KtlintStyleElement.classType to KtlintStyleElement::class.java,
+            FileArchiveElement.classType to FileArchiveElement::class.java,
+            GitCommentCheckElement.classType to GitCommentCheckElement::class.java,
+            AtomBuildArchiveElement.classType to AtomBuildArchiveElement::class.java,
+            DeployDistributionElement.classType to DeployDistributionElement::class.java,
+            FileArchiveElement.classType to FileArchiveElement::class.java,
+            MetaFileScanElement.classType to MetaFileScanElement::class.java,
+            Unity3dBuildElement.classType to Unity3dBuildElement::class.java,
+            XcodeBuildElement.classType to XcodeBuildElement::class.java,
+            XcodeBuildElement2.classType to XcodeBuildElement2::class.java
         )
     }
 }

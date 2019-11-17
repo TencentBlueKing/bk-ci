@@ -37,6 +37,7 @@ dependencies {
     compile project(":ext:tencent:prebuild:api-prebuild-tencent")
     compile project(":core:dispatch:api-dispatch-docker")
     compile project(":core:process:api-process")
+    compile project(":core:plugin:codecc-plugin:api-codecc")
     compile project(":ext:tencent:plugin:api-plugin-tencent")
     compile group: 'com.github.docker-java', name: 'docker-java', version: '3.1.1'
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'

@@ -27,8 +27,8 @@
 package com.tencent.devops.prebuild.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.pojo.coverity.ProjectLanguage
-import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.prebuild.service.PreBuildConfig
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -48,23 +48,23 @@ open class LinuxCodeCCTask(
 
     override fun covertToElement(config: PreBuildConfig): LinuxCodeCCScriptElement {
         return LinuxCodeCCScriptElement(
-                displayName,
-                null,
-                null,
-                input.scriptType,
-                input.script,
-                null,
-                null,
-                input.languages,
-                input.asynchronous,
-                input.scanType,
-                input.path,
-                input.compilePlat,
-                input.tools,
-                input.pyVersion,
-                input.eslintRc,
-                input.phpcsStandard,
-                input.goPath
+            name = displayName,
+                id = null,
+                status = null,
+                scriptType = input.scriptType,
+                script = input.script,
+                codeCCTaskName = null,
+                codeCCTaskCnName = null,
+                languages = input.languages,
+                asynchronous = input.asynchronous,
+                scanType = input.scanType,
+                path = input.path,
+                compilePlat = input.compilePlat,
+                tools = input.tools,
+                pyVersion = input.pyVersion,
+                eslintRc = input.eslintRc,
+                phpcsStandard = input.phpcsStandard,
+                goPath = input.goPath
         )
     }
 }
