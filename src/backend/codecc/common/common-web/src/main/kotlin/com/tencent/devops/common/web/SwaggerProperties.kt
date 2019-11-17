@@ -29,7 +29,6 @@ package com.tencent.devops.common.web
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Created by liangyuzhou on 2017/8/29.
  * Powered By Tencent
  */
 @ConfigurationProperties(prefix = "spring.application")

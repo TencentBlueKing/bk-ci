@@ -30,7 +30,6 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 /**
- * @ Author     ：Royal Huang
  * @ Date       ：Created in 11:14 2019-07-31
  */
 

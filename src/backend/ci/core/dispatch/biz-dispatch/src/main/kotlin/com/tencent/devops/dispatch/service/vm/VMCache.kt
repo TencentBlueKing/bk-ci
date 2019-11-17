@@ -42,9 +42,6 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
-/**
- * Created by rdeng on 2017/8/31.
- */
 const val VIRTUAL_MACHINE = "VirtualMachine"
 @Component
 class VMCache @Autowired constructor(

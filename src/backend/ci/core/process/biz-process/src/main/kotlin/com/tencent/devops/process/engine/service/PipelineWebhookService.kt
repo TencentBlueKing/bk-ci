@@ -217,18 +217,10 @@ class PipelineWebhookService @Autowired constructor(
         val second = repoSplit[2]
 
         return path.removePrefix("$domain/$first/$second").removePrefix("/")
-        /*
-        //如果项目名是三层的，比如svn+ssh://sh-svn.tencent.com/ied/ied_kihan_rep/server_proj，那对应的rep_name 是 ied_kihan_rep
-        return if (second.endsWith("_proj")) {
-            path.removePrefix("$domain/$first/$second").removePrefix("/")
-        } else {
-            path.removePrefix("$domain/$first/$second/$third").removePrefix("/")
-        }
-        */
     }
 
     fun getProjectName(projectName: String): String {
-        // 如果项目名是三层的，比如ied/ied_kihan_rep/server_proj，那对应的rep_name 是 ied_kihan_rep
+        // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b
         val repoSplit = projectName.split("/")
         if (repoSplit.size != 3) {
             return projectName

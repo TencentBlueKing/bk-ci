@@ -33,9 +33,6 @@ import com.tencent.devops.dispatch.api.OpPipelineResource
 import com.tencent.devops.dispatch.service.PipelineVMService
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * Created by rdeng on 2017/9/4.
- */
 @RestResource
 class OpPipelineResourceImpl @Autowired constructor(private val pipelineVMService: PipelineVMService) : OpPipelineResource {
 

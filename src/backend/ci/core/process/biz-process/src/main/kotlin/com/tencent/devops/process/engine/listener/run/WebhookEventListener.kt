@@ -39,7 +39,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
 
 /**
- * @ Author     ：Royal Huang
  * @ Date       ：Created in 16:34 2019-08-07
  */
 

@@ -37,7 +37,6 @@ package com.tencent.devops.process.pojo
  * 4、最后4位数字代表具体插件模块下不同错误的唯一标识
  * 5、第5-6位在process插件中用于区分错误类型，50为系统错误，51位插件错误
  *
- * @author: royalhuang
  * @since: 2019-09-26
  * @version: $Revision$ $Date$ $LastChangedBy$
  *

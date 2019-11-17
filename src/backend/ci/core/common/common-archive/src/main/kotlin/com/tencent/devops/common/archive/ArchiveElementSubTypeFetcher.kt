@@ -27,6 +27,7 @@
 package com.tencent.devops.common.archive
 
 import com.tencent.devops.common.archive.element.BuildArchiveGetElement
+import com.tencent.devops.common.archive.element.BuildPushDockerImageElement
 import com.tencent.devops.common.archive.element.CustomizeArchiveGetElement
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.archive.element.SingleArchiveElement
@@ -40,7 +41,8 @@ class ArchiveElementSubTypeFetcher : ElementSubTypeFetcher {
             BuildArchiveGetElement.classType to BuildArchiveGetElement::class.java,
             ReportArchiveElement.classType to ReportArchiveElement::class.java,
             SingleArchiveElement.classType to SingleArchiveElement::class.java,
-            CustomizeArchiveGetElement.classType to CustomizeArchiveGetElement::class.java
+            CustomizeArchiveGetElement.classType to CustomizeArchiveGetElement::class.java,
+            BuildPushDockerImageElement.classType to BuildPushDockerImageElement::class.java
         )
     }
 }

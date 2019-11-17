@@ -37,7 +37,6 @@ import javax.ws.rs.ext.ExceptionMapper
 import javax.ws.rs.ext.Provider
 
 /**
- * Created by liangyuzhou on 2017/9/23.
  * Powered By Tencent
  */
 @Provider
