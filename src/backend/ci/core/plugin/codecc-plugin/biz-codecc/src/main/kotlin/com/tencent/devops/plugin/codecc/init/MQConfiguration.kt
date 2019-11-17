@@ -120,7 +120,7 @@ class MQConfiguration {
     fun pipelineModelAnalysisQueue() = Queue(MQ.QUEUE_PIPELINE_EXTENDS_MODEL)
 
     @Bean
-    fun pipelineBuildMonitorQueueBind(
+    fun pipelineModelAnalysisQueueBind(
         @Autowired pipelineModelAnalysisQueue: Queue,
         @Autowired pipelineFanoutExchange: FanoutExchange
     ): Binding {
