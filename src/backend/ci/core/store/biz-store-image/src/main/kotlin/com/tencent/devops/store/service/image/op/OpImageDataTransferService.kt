@@ -61,7 +61,7 @@ class OpImageDataTransferService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(OpImageDataTransferService::class.java)
 
     @Value("\${store.imageAdminUsers}")
-    private val imageAdminUsersStr: String? = "fayewang;carlyin;jsonwan"
+    private val imageAdminUsersStr: String? = ""
 
     private val finishedSet: HashSet<Triple<String, String, String>> = HashSet()
 
@@ -199,7 +199,7 @@ class OpImageDataTransferService @Autowired constructor(
                     imageRepoName = it.repo!!.replace("paas/bkdevops", "paas"),
                     ticketId = null,
                     imageTag = imageTag,
-                    logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_1564495644412278667612475788088.png?v=1564495644",
+                    logoUrl = "",
                     summary = "系统根据已拷贝的构建镜像自动生成",
                     description = "系统根据已拷贝的构建镜像自动生成，可在项目流水线中选择使用，初始状态为仅本关联项目可见，拷贝的原始构建镜像地址与版本为：${it.image}",
                     publisher = creator,

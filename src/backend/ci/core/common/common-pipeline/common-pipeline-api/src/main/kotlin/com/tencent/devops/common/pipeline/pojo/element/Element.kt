@@ -36,8 +36,6 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.*
-import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -50,7 +48,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType),
     JsonSubTypes.Type(value = CodeGitWebHookTriggerElement::class, name = CodeGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeGitlabWebHookTriggerElement::class, name = CodeGitlabWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeSVNWebHookTriggerElement::class, name = CodeSVNWebHookTriggerElement.classType),
@@ -65,34 +62,11 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = ManualTriggerElement::class, name = ManualTriggerElement.classType),
     JsonSubTypes.Type(value = RemoteTriggerElement::class, name = RemoteTriggerElement.classType),
     JsonSubTypes.Type(value = TimerTriggerElement::class, name = TimerTriggerElement.classType),
+    JsonSubTypes.Type(value = ManualReviewUserTaskElement::class, name = ManualReviewUserTaskElement.classType),
+    JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType),
     JsonSubTypes.Type(value = MarketBuildAtomElement::class, name = MarketBuildAtomElement.classType),
-    JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType),
-    JsonSubTypes.Type(value = LinuxCodeCCScriptElement::class, name = LinuxCodeCCScriptElement.classType),
-    JsonSubTypes.Type(value = LinuxPaasCodeCCScriptElement::class, name = LinuxPaasCodeCCScriptElement.classType),
-    JsonSubTypes.Type(value = SensitiveScanElement::class, name = SensitiveScanElement.classType),
-    JsonSubTypes.Type(value = BuildPushDockerImageElement::class, name = BuildPushDockerImageElement.classType),
-    JsonSubTypes.Type(value = BuglyElement::class, name = BuglyElement.classType),
-    JsonSubTypes.Type(value = RqdElement::class, name = RqdElement.classType),
-    JsonSubTypes.Type(value = WindowsScriptElement::class, name = WindowsScriptElement.classType),
-    JsonSubTypes.Type(value = IosCertInstallElement::class, name = IosCertInstallElement.classType),
-    JsonSubTypes.Type(value = AndroidCertInstallElement::class, name = AndroidCertInstallElement.classType),
-    JsonSubTypes.Type(value = IosEnterpriseSignElement::class, name = IosEnterpriseSignElement.classType),
-    JsonSubTypes.Type(value = IosSJTYSignElement::class, name = IosSJTYSignElement.classType),
-    JsonSubTypes.Type(value = KtlintStyleElement::class, name = KtlintStyleElement.classType),
-    JsonSubTypes.Type(value = GitCommentCheckElement::class, name = GitCommentCheckElement.classType),
-    JsonSubTypes.Type(value = AtomBuildArchiveElement::class, name = AtomBuildArchiveElement.classType),
-    JsonSubTypes.Type(value = BuildArchiveGetElement::class, name = BuildArchiveGetElement.classType),
-    JsonSubTypes.Type(value = CustomizeArchiveGetElement::class, name = CustomizeArchiveGetElement.classType),
-    JsonSubTypes.Type(value = CustomizeFileArchiveElement::class, name = CustomizeFileArchiveElement.classType),
-    JsonSubTypes.Type(value = DeployDistributionElement::class, name = DeployDistributionElement.classType),
-    JsonSubTypes.Type(value = FileArchiveElement::class, name = FileArchiveElement.classType),
-    JsonSubTypes.Type(value = MetaFileScanElement::class, name = MetaFileScanElement.classType),
-    JsonSubTypes.Type(value = ReportArchiveElement::class, name = ReportArchiveElement.classType),
-    JsonSubTypes.Type(value = Unity3dBuildElement::class, name = Unity3dBuildElement.classType),
-    JsonSubTypes.Type(value = XcodeBuildElement::class, name = XcodeBuildElement.classType),
-    JsonSubTypes.Type(value = XcodeBuildElement2::class, name = XcodeBuildElement2.classType)
-    )
-
+    JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType)
+)
 abstract class Element(
     open val name: String,
     open var id: String? = null,

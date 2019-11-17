@@ -57,27 +57,3 @@ data class ReportArchiveElement(
 
     override fun getClassType() = classType
 }
-// fun main(array: Array<String>) {
-//    val e = ReportArchiveElement("python文件编译", "id", "true", "dir", "file"
-//    ,"reportName", true, setOf("a","b","d","dd"),"title")
-//    val toMutableMap = JsonUtil.toMutableMap(e)
-//    val reportArchiveElement = JsonUtil.mapTo(toMutableMap, ReportArchiveElement::class.java)
-//    println("$reportArchiveElement")
-//    println("map=$toMutableMap")
-//    val emailReceivers = toMutableMap["emailReceivers"]
-//    val toJson = JsonUtil.toJson(emailReceivers!!)
-//    println(toJson::class.java.isAssignableFrom(String::class.java))
-//    println(JsonUtil.toJson("abc"))
-//    println(JsonUtil.toJson(123))
-//    val bean = setOf("dd", "bb")
-//    val toJson1 = JsonUtil.toJson(bean)
-//    val to = JsonUtil.to<List<String>>("dd,bb")
-//    to.forEach {
-//        println("{$it}")
-//    }
-//
-//    to.joinToString(",") {
-//        if ()
-//    }
-//
-// }

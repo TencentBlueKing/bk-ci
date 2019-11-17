@@ -44,9 +44,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * Created by rdeng on 2017/9/4.
- */
 @Api(tags = ["OP_VM"], description = "VM 管理")
 @Path("/op/vms")
 @Produces(MediaType.APPLICATION_JSON)

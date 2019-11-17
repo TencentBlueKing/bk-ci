@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 
 /**
- * Created by ddlin on 2017/11/26.
  * Powered By Tencent
  */
 object PageUtil {

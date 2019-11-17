@@ -39,9 +39,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * Created by rdeng on 2017/9/4.
- */
 @Api(tags = ["OP_PIPELINE"], description = "PIPELINE 管理")
 @Path("/op/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
