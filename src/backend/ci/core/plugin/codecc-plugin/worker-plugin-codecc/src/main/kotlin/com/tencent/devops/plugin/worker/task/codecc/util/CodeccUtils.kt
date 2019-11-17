@@ -27,9 +27,9 @@
 package com.tencent.devops.plugin.worker.task.codecc.util
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement.ProjectLanguage
 import com.tencent.devops.plugin.worker.pojo.CoverityConfig
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.plugin.worker.task.codecc.ANT_PATH
 import com.tencent.devops.plugin.worker.task.codecc.GOMETALINTER_PATH
 import com.tencent.devops.plugin.worker.task.codecc.GO_PATH
