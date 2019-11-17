@@ -24,17 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.tof
+package com.tencent.devops.plugin.codecc.resources
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.codecc.api.ExternalCodeccResource
+import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.plugin.codecc.service.CodeccService
+import org.springframework.beans.factory.annotation.Autowired
 
-data class CCAppNameRequest(
-    val app_code: String,
-    val app_secret: String,
-    val app_std_key_values: CCAppNameApplicationID,
-    val method: String = "getAppList",
-    val app_std_req_column: List<String> = listOf("DisplayName")
-)
-
-data class CCAppNameApplicationID(
-    val ApplicationID: Long
-)
+@RestResource
+class ExternalCodeccResourceImpl @Autowired constructor(
+    private val codeccService: CodeccService
+) : ExternalCodeccResource {
+    override fun callback(callback: CodeccCallback): Result<String> {
+        return Result(codeccService.callback(callback))
+    }
+}
