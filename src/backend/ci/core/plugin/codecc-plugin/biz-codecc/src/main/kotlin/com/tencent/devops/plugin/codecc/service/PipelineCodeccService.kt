@@ -31,6 +31,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
@@ -42,7 +45,6 @@ import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.permission.PipelinePermissionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,8 +54,11 @@ import javax.ws.rs.NotFoundException
 class PipelineCodeccService @Autowired constructor(
     private val client: Client,
     private val coverityApi: CodeccApi,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
+
+    private val resourceType = AuthResourceType.PIPELINE_DEFAULT
 
     fun getCodeccReport(
         userId: String,
@@ -78,10 +83,12 @@ class PipelineCodeccService @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        if (!pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
+        if (!authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = resourceType,
+                projectCode = projectId,
+                resourceCode = pipelineId,
                 permission = AuthPermission.VIEW
             )
         ) {
