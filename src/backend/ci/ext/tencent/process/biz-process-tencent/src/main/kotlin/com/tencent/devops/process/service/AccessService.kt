@@ -41,14 +41,14 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.coverity.ProjectLanguage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.AccessRepository
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -83,14 +83,14 @@ class AccessService @Autowired constructor(
         val hashCode = HashUtil.encodeLongId(timestamp)
 
         val credentialId = "git_credential_$hashCode"
-        val credentialRemark = "新手接入凭据"
+        val credentialRemark = "beginner code demo git credential"
         createCredential(userId, projectId, credentialId, credentialRemark)
 
         val projectName = "bkdevops/cmake"
         val repositoryAliasName = "Code Demo（新手接入专用）_$hashCode"
         val repositoryHashId = createRepository(userId, projectId, projectName, credentialId, url, repositoryAliasName)
 
-        val pipelineName = "新手接入_$hashCode"
+        val pipelineName = "Beginner_$hashCode"
         return createPipeline(pipelineName, userId, projectId, repositoryHashId)
     }
 
@@ -118,13 +118,14 @@ class AccessService @Autowired constructor(
 
     private fun createCmakePipeline(pipelineName: String, userId: String, projectId: String, repositoryHashId: String): String {
         val model = generateModel(
-                pipelineName,
-                "C++（CMake）构建",
-                repositoryHashId,
-                "",
-                "cmake .\r\nmake",
-                "make clean\r\ncmake .\r\nmake",
-                "cmake")
+            name = pipelineName,
+            desc = "C++（CMake）Build",
+            repositoryHashId = repositoryHashId,
+            repositoryPath = "",
+            codeCCScript = "cmake .\r\nmake",
+            script = "make clean\r\ncmake .\r\nmake",
+            archivePath = "cmake"
+        )
         return pipelineService.createPipeline(userId, projectId, model, ChannelCode.BS)
     }
 
@@ -132,63 +133,69 @@ class AccessService @Autowired constructor(
         var containerSeqId = 0
         // stage-1
         val stageFirstElement = ManualTriggerElement(
-                "手动触发",
-                "T-1-1-1",
-                null)
+            name = "Manual trigger",
+            id = "T-1-1-1",
+            status = null
+        )
         val stageFirstElements = listOf<Element>(stageFirstElement)
-        val stageFirstContainer = TriggerContainer(containerSeqId.toString(),
-                "构建触发",
-                stageFirstElements,
-                null,
-                null,
-                null,
-                null,
-                emptyList(), null, null)
+        val stageFirstContainer = TriggerContainer(
+            id = containerSeqId.toString(),
+            name = "Trigger Job",
+            elements = stageFirstElements,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            params = emptyList(), templateParams = null, buildNo = null
+        )
         containerSeqId++
         val stageFirstContainers = listOf<Container>(stageFirstContainer)
         val stageFirst = Stage(stageFirstContainers, "stage-1")
 
         // stage-2
         val stageSecondPullCodeElement = CodeGitElement(
-                "拉取Git仓库代码",
-                "T-2-1-1",
-                null,
-                repositoryHashId,
-                "",
-                "",
-                CodePullStrategy.FRESH_CHECKOUT,
-                repositoryPath, true, GitPullMode(GitPullModeType.BRANCH, "master"))
+            name = "Pull Git Code",
+            id = "T-2-1-1",
+            status = null,
+            repositoryHashId = repositoryHashId,
+            branchName = "",
+            revision = "",
+            strategy = CodePullStrategy.FRESH_CHECKOUT,
+            path = repositoryPath, enableSubmodule = true, gitPullMode = GitPullMode(GitPullModeType.BRANCH, "master")
+        )
         val stageSecondCodeCCElement = LinuxPaasCodeCCScriptElement(
-                "CodeCC代码检查任务",
-                "T-2-1-2",
-                null,
-                BuildScriptType.SHELL,
-                codeCCScript,
-                null,
-                null,
-                null,
-                false,
-                "1",
-                repositoryPath,
-                listOf(ProjectLanguage.C_CPP)
+            name = "CodeCC Check",
+            id = "T-2-1-2",
+            status = null,
+            scriptType = BuildScriptType.SHELL,
+            script = codeCCScript,
+            codeCCTaskName = null,
+            codeCCTaskCnName = null,
+            codeCCTaskId = null,
+            asynchronous = false,
+            scanType = "1",
+            path = repositoryPath,
+            languages = listOf(ProjectLanguage.C_CPP)
         )
         stageSecondCodeCCElement.tools = listOf("COVERITY")
         val stageSecondLinuxScriptElement = LinuxScriptElement(
-                "执行Linux脚本",
-                "T-2-1-3",
-                null,
-                BuildScriptType.SHELL,
-                script,
-                false,
-                false,
-                null)
+            name = "Bash",
+            id = "T-2-1-3",
+            status = null,
+            scriptType = BuildScriptType.SHELL,
+            script = script,
+            continueNoneZero = false,
+            enableArchiveFile = false,
+            archiveFile = null
+        )
         val stageSecondSingleArchiveElement = SingleArchiveElement(
-                "归档构件",
-                "T-2-1-4",
-                null,
-                archivePath,
-                "./",
-                false)
+            name = "Archive",
+            id = "T-2-1-4",
+            status = null,
+            filePath = archivePath,
+            destPath = "./",
+            customize = false
+        )
         val stageSecondElements = listOf(stageSecondPullCodeElement, stageSecondCodeCCElement, stageSecondLinuxScriptElement, stageSecondSingleArchiveElement)
 
         // buildEnv
@@ -197,7 +204,7 @@ class AccessService @Autowired constructor(
 
         val stageSecondContainer = VMBuildContainer(
             id = containerSeqId.toString(),
-            name = "构建环境",
+            name = "Build Job (Linux)",
             elements = stageSecondElements,
             status = null,
             startEpoch = null,
@@ -216,7 +223,7 @@ class AccessService @Autowired constructor(
             tstackAgentId = null,
             dispatchType = DockerDispatchType("tlinux2.2")
         )
-        containerSeqId++
+
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
         val stageSecond = Stage(stageSecondContainers, "stage-2")
 

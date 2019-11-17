@@ -24,8 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc.exception
+package com.tencent.devops.common.pipeline.element.ktlint
 
-import com.tencent.devops.common.api.enums.OSType
-
-class CodeccDownloadException constructor(osType: OSType) : RuntimeException("not support os: $osType")
+enum class KtlintReporterType {
+    plain,
+    html,
+    json,
+    checkstyle
+}

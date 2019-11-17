@@ -24,8 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc.exception
+package com.tencent.devops.plugin.codecc.resources
 
-import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.codecc.api.ExternalCodeccResource
+import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.plugin.codecc.service.CodeccService
+import org.springframework.beans.factory.annotation.Autowired
 
-class CodeccDownloadException constructor(osType: OSType) : RuntimeException("not support os: $osType")
+@RestResource
+class ExternalCodeccResourceImpl @Autowired constructor(
+    private val codeccService: CodeccService
+) : ExternalCodeccResource {
+    override fun callback(callback: CodeccCallback): Result<String> {
+        return Result(codeccService.callback(callback))
+    }
+}

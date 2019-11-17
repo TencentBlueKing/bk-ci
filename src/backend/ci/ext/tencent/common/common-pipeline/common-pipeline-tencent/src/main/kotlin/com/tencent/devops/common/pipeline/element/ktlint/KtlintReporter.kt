@@ -24,8 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc.exception
+package com.tencent.devops.common.pipeline.element.ktlint
 
-import com.tencent.devops.common.api.enums.OSType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class CodeccDownloadException constructor(osType: OSType) : RuntimeException("not support os: $osType")
+@ApiModel("ktlint reporter")
+data class KtlintReporter(
+    @ApiModelProperty("reporter", required = true)
+    val reporter: KtlintReporterType,
+    @ApiModelProperty("报告保存路径", required = false)
+    val reportOutput: String?,
+    @ApiModelProperty("报告在构件详情中显示的名字", required = false)
+    val reportName: String?
+)

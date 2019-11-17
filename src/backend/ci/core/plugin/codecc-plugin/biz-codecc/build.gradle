@@ -37,7 +37,6 @@ dependencies {
     compile project (":core:common:common-pipeline:common-pipeline-api")
     compile project (":core:process:plugin-sdk")
     compile project (":core:process:api-process")
-    compile project (":core:process:biz-process-sample")
 
     testCompile project(":core:common:common-test")
 }

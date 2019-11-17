@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.pojo.elements.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -39,8 +41,6 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.atom.ReportArchiveElement
-import com.tencent.devops.common.notify.pojo.elements.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -53,16 +53,18 @@ import com.tencent.devops.log.model.pojo.LogLine
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.log.model.pojo.enums.LogStatus
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
-import com.tencent.devops.plugin.api.UserCodeccResource
+import com.tencent.devops.plugin.codecc.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PrebuildPersonalVmDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
-import com.tencent.devops.prebuild.pojo.UserProject
-import com.tencent.devops.prebuild.pojo.Prebuild
-import com.tencent.devops.prebuild.pojo.PreProjectReq
-import com.tencent.devops.prebuild.pojo.InitPreProjectTask
 import com.tencent.devops.prebuild.pojo.AbstractTask
 import com.tencent.devops.prebuild.pojo.CodeCCScanTask
 import com.tencent.devops.prebuild.pojo.HistoryResponse
+import com.tencent.devops.prebuild.pojo.InitPreProjectTask
+import com.tencent.devops.prebuild.pojo.PreProject
+import com.tencent.devops.prebuild.pojo.PreProjectReq
+import com.tencent.devops.prebuild.pojo.Prebuild
+import com.tencent.devops.prebuild.pojo.UserNode
+import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.enums.TaskStatus
 import com.tencent.devops.prebuild.utils.RedisUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -70,8 +72,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.prebuild.pojo.PreProject
-import com.tencent.devops.prebuild.pojo.UserNode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -197,28 +197,32 @@ class PreBuildService @Autowired constructor(
 
     private fun addAssociateElement(it: AbstractTask, elementList: MutableList<Element>, userId: String, preProjectId: String) {
         if (it.getClassType() == CodeCCScanTask.classType) { // 如果yaml里面写的是codecc检查任务，则需要增加一个归档报告的插件
-            elementList.add(ReportArchiveElement(
-                    "reportArchive",
-                    null,
-                    null,
-                    "/tmp/codecc_$preProjectId/",
-                    "index.html",
-                    "PreBuild Report",
-                    true,
-                    setOf(userId),
-                    "【\${pipeline.name}】 #\${pipeline.build.num} PreBuild报告已归档"
-            ))
-            elementList.add(SendRTXNotifyElement(
-                    "sendRTXNotify",
-                    null,
-                    null,
-                    setOf(userId),
-                    "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成通知",
-                    "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成\n",
-                    false,
-                    null,
-                    true
-            ))
+            elementList.add(
+                ReportArchiveElement(
+                    name = "reportArchive",
+                    id = null,
+                    status = null,
+                    fileDir = "/tmp/codecc_$preProjectId/",
+                    indexFile = "index.html",
+                    reportName = "PreBuild Report",
+                    enableEmail = true,
+                    emailReceivers = setOf(userId),
+                    emailTitle = "【\${pipeline.name}】 #\${pipeline.build.num} PreBuild报告已归档"
+                )
+            )
+            elementList.add(
+                SendRTXNotifyElement(
+                    name = "sendRTXNotify",
+                    id = null,
+                    status = null,
+                    receivers = setOf(userId),
+                    title = "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成通知",
+                    body = "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成\n",
+                    wechatGroupFlag = false,
+                    wechatGroup = null,
+                    detailFlag = true
+                )
+            )
         }
     }
 
@@ -319,14 +323,14 @@ class PreBuildService @Autowired constructor(
         }
         val project = projectResult.data!!
         return UserProject(
-            project.id,
-            project.projectId,
-            project.projectName,
-            project.projectCode,
-            project.creator,
-            project.description,
-            project.englishName,
-            project.updatedAt
+            id = project.id,
+            preProjectId = project.projectId,
+            preProjectName = project.projectName,
+            projectCode = project.projectCode,
+            creator = project.creator,
+            description = project.description,
+            english_name = project.englishName,
+            updated_at = project.updatedAt
         )
     }
 
@@ -349,27 +353,27 @@ class PreBuildService @Autowired constructor(
         val preProject = prebuildProjectDao.get(dslContext, req.preProjectId, userId)
         if (preProject == null) {
             prebuildProjectDao.create(
-                    dslContext,
-                    req.preProjectId,
-                    userProject.projectCode,
-                    userId,
-                    "",
-                    "",
-                    req.workspace
+                dslContext = dslContext,
+                prebuildProjectId = req.preProjectId,
+                projectId = userProject.projectCode,
+                owner = userId,
+                yaml = "",
+                pipelineId = "",
+                workspace = req.workspace
             )
         }
         val taskID = UUIDUtil.generate()
         val task = InitPreProjectTask(
-            taskID,
-            req.preProjectId,
-            userProject.projectCode,
-            req.workspace,
-            "root",
-            "",
-            "",
-            TaskStatus.RUNNING,
-            mutableListOf(),
-            userId
+            taskId = taskID,
+            preProjectId = req.preProjectId,
+            projectId = userProject.projectCode,
+            workspace = req.workspace,
+            account = "root",
+            password = "",
+            ip = "",
+            taskStatus = TaskStatus.RUNNING,
+            logs = mutableListOf(),
+            userId = userId
         )
         redisUtils.setPreBuildInitTask(taskID, task)
         val taskRunner = SpringContextUtil.getBean(TaskRunner::class.java)
@@ -424,11 +428,11 @@ class PreBuildService @Autowired constructor(
         val projectCode = getUserProjectId(userId)
         return prebuildProjectDao.list(dslContext, userId, projectCode).map {
             PreProject(
-                it.prebuildProjectId,
-                it.projectId,
-                it.workspace,
-                it.prebuildProjectId,
-                ""
+                preProjectId = it.prebuildProjectId,
+                projectId = it.projectId,
+                workspace = it.workspace,
+                account = it.prebuildProjectId,
+                password = ""
             )
         }
     }
@@ -441,11 +445,11 @@ class PreBuildService @Autowired constructor(
         historyList.forEach {
             result.add(
                 HistoryResponse(
-                    it.id,
-                    it.buildNum,
-                    it.startTime,
-                    it.endTime,
-                    it.status
+                    buildId = it.id,
+                    buildNum = it.buildNum,
+                    startTime = it.startTime,
+                    endTime = it.endTime,
+                    status = it.status
                 )
             )
         }

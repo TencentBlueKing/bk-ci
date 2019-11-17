@@ -24,8 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc.exception
+package com.tencent.devops.common.pipeline.element
 
-import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.pipeline.enums.Platform
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class CodeccDownloadException constructor(osType: OSType) : RuntimeException("not support os: $osType")
+@ApiModel("rqd符号表上传", description = RqdElement.classType)
+data class RqdElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "rqd异常上报",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("版本号", required = false)
+    val versionId: String = "",
+    @ApiModelProperty("待上传给rqd的符号表文件夹(选择了安卓平台才显示，只能填一个路径，不支持正则匹配)", required = false)
+    val rqdFolder: String = "",
+    @ApiModelProperty("App所在的文件夹", required = false)
+    val appFolder: String = "",
+    @ApiModelProperty("凭证id", required = true)
+    val credId: String = "",
+    @ApiModelProperty("平台类型（ANDROID或者IPHONE）", required = true)
+    val platform: Platform
+) : Element(name, id, status) {
+    companion object {
+        const val classType = "rqd"
+    }
+
+    override fun getClassType() = classType
+}

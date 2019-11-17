@@ -42,13 +42,13 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
 open class CodeccApi constructor(
-        private val codeccApiUrl: String,
-        private val createPath: String = "/blueShield/createTask",
-        private val updatePath: String = "/blueShield/updateTask",
-        private val existPath: String = "/blueShield/checkTaskExists",
-        private val deletePath: String = "/blueShield/deleteTask",
-        private val report: String = "/blueShield/codeCheckReport",
-        private val getRuleSetsPath: String = "/blueShield/getRuleSets"
+    private val codeccApiUrl: String,
+    private val createPath: String = "/blueShield/createTask",
+    private val updatePath: String = "/blueShield/updateTask",
+    private val existPath: String = "/blueShield/checkTaskExists",
+    private val deletePath: String = "/blueShield/deleteTask",
+    private val report: String = "/blueShield/codeCheckReport",
+    private val getRuleSetsPath: String = "/blueShield/getRuleSets"
 ) {
 
     companion object {
@@ -61,66 +61,76 @@ open class CodeccApi constructor(
     }
 
     open fun createTask(
-            projectId: String,
-            pipelineId: String,
-            pipelineName: String,
-            rtx: String,
-            element: LinuxCodeCCScriptElement
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        rtx: String,
+        element: LinuxCodeCCScriptElement
     ): CoverityResult {
         with(element) {
             if (tools == null || tools!!.isEmpty() || languages.isEmpty()) return CoverityResult()
             val devopsToolParams = mutableListOf<DevOpsToolParams>()
-            devopsToolParams.addAll(listOf(DevOpsToolParams("compilePlat", compilePlat ?: "LINUX"),
+            devopsToolParams.addAll(
+                listOf(
+                    DevOpsToolParams("compilePlat", compilePlat ?: "LINUX"),
                     DevOpsToolParams("scan_type", scanType ?: "1"),
                     DevOpsToolParams("phpcs_standard", phpcsStandard ?: ""),
-                    DevOpsToolParams("go_path", goPath ?:""),
+                    DevOpsToolParams("go_path", goPath ?: ""),
                     DevOpsToolParams("py_version", pyVersion ?: ""),
-                    DevOpsToolParams("eslint_rc", eslintRc ?: "")))
+                    DevOpsToolParams("eslint_rc", eslintRc ?: "")
+                )
+            )
             if (!element.projectBuildType.isNullOrBlank()) {
                 devopsToolParams.add(DevOpsToolParams("PROJECT_BUILD_TYPE", projectBuildType!!))
                 devopsToolParams.add(DevOpsToolParams("PROJECT_BUILD_COMMAND", projectBuildCommand ?: ""))
             }
             val body = mapOf(
-                    "pipelineId" to pipelineId,
-                    "pipelineName" to pipelineName,
-                    "devopsCodeLang" to objectMapper.writeValueAsString(languages),
-                    "devopsTools" to objectMapper.writeValueAsString(tools),
-                    "devopsToolParams" to devopsToolParams
+                "pipelineId" to pipelineId,
+                "pipelineName" to pipelineName,
+                "devopsCodeLang" to objectMapper.writeValueAsString(languages),
+                "devopsTools" to objectMapper.writeValueAsString(tools),
+                "devopsToolParams" to devopsToolParams
             )
-            val header = mapOf(USER_NAME_HEADER to rtx,
-                    DEVOPS_PROJECT_ID to projectId,
-                    CONTENT_TYPE to CONTENT_TYPE_JSON)
+            val header = mapOf(
+                USER_NAME_HEADER to rtx,
+                DEVOPS_PROJECT_ID to projectId,
+                CONTENT_TYPE to CONTENT_TYPE_JSON
+            )
             return taskExecution(body, createPath, header, "POST")
         }
     }
 
     open fun updateTask(
-            pipelineName: String,
-            userId: String,
-            element: LinuxPaasCodeCCScriptElement
+        pipelineName: String,
+        userId: String,
+        element: LinuxPaasCodeCCScriptElement
     ) {
         with(element) {
-            val devopsToolParams = mutableListOf(DevOpsToolParams("compilePlat", compilePlat ?: "LINUX"),
+            val devopsToolParams = mutableListOf(
+                DevOpsToolParams("compilePlat", compilePlat ?: "LINUX"),
                 DevOpsToolParams("scan_type", scanType ?: "1"),
                 DevOpsToolParams("phpcs_standard", phpcsStandard ?: ""),
-                DevOpsToolParams("go_path", goPath ?:""),
+                DevOpsToolParams("go_path", goPath ?: ""),
                 DevOpsToolParams("py_version", pyVersion ?: ""),
-                DevOpsToolParams("eslint_rc", eslintRc ?: ""))
+                DevOpsToolParams("eslint_rc", eslintRc ?: "")
+            )
             if (!element.projectBuildType.isNullOrBlank()) {
                 devopsToolParams.add(DevOpsToolParams("PROJECT_BUILD_TYPE", projectBuildType!!))
                 devopsToolParams.add(DevOpsToolParams("PROJECT_BUILD_COMMAND", projectBuildCommand ?: ""))
             }
             if (codeCCTaskId.isNullOrBlank()) return
             val body = mapOf(
-                    "pipelineName" to pipelineName,
-                    "devopsCodeLang" to objectMapper.writeValueAsString(languages),
-                    "devopsTools" to objectMapper.writeValueAsString(tools ?: listOf<String>()),
-                    "taskId" to codeCCTaskId!!,
-                    "devopsToolParams" to devopsToolParams
+                "pipelineName" to pipelineName,
+                "devopsCodeLang" to objectMapper.writeValueAsString(languages),
+                "devopsTools" to objectMapper.writeValueAsString(tools ?: listOf<String>()),
+                "taskId" to codeCCTaskId!!,
+                "devopsToolParams" to devopsToolParams
             )
             logger.info("Update the coverity task($body)")
-            val header = mapOf(USER_NAME_HEADER to userId,
-                    CONTENT_TYPE to CONTENT_TYPE_JSON)
+            val header = mapOf(
+                USER_NAME_HEADER to userId,
+                CONTENT_TYPE to CONTENT_TYPE_JSON
+            )
             taskExecution(body, updatePath, header, "PUT")
         }
     }
@@ -137,8 +147,8 @@ open class CodeccApi constructor(
         val body = emptyMap<String, String>()
 
         val headers = mapOf(
-                "proj_id" to taskId,
-                USER_NAME_HEADER to rtx
+            "proj_id" to taskId,
+            USER_NAME_HEADER to rtx
         )
         taskExecution(body, "$deletePath/$taskId", headers, "DELETE")
     }
@@ -150,7 +160,6 @@ open class CodeccApi constructor(
         val result = taskExecution("$getRuleSetsPath?bsProjectId=$projectId&toolName=$toolName", headers)
         return objectMapper.readValue(result)
     }
-
 
     private fun taskExecution(path: String, headers: Map<String, String>? = null): String {
         logger.info("taskExecution url: ${codeccApiUrl + path}")
@@ -178,24 +187,31 @@ open class CodeccApi constructor(
     }
 
     private fun taskExecution(
-            body: Map<String, Any>,
-            path: String,
-            headers: Map<String, String>? = null,
-            method: String = "GET"
+        body: Map<String, Any>,
+        path: String,
+        headers: Map<String, String>? = null,
+        method: String = "GET"
     ): CoverityResult {
         val jsonBody = objectMapper.writeValueAsString(body)
         val requestBody = RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"), jsonBody
+            MediaType.parse("application/json; charset=utf-8"), jsonBody
         )
 
         val builder = Request.Builder()
-                .url(codeccApiUrl + path)
+            .url(codeccApiUrl + path)
 
         when (method) {
-            "GET" -> {}
-            "POST" -> { builder.post(requestBody) }
-            "DELETE" -> { builder.delete(requestBody) }
-            "PUT" -> { builder.put(requestBody) }
+            "GET" -> {
+            }
+            "POST" -> {
+                builder.post(requestBody)
+            }
+            "DELETE" -> {
+                builder.delete(requestBody)
+            }
+            "PUT" -> {
+                builder.put(requestBody)
+            }
         }
 
         if (headers != null && headers.isNotEmpty()) {
@@ -221,24 +237,24 @@ open class CodeccApi constructor(
     }
 
     open fun getReport(
-            projectId: String,
-            pipelineId: String,
-            taskId: String,
-            userId: String
+        projectId: String,
+        pipelineId: String,
+        taskId: String,
+        userId: String
     ): CodeccReport {
         try {
             val body = mapOf(
-                    "bs_project_id" to projectId,
-                    "pipeline_id" to pipelineId,
-                    "task_id" to taskId
+                "bs_project_id" to projectId,
+                "pipeline_id" to pipelineId,
+                "task_id" to taskId
             )
             val requestBody = RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(body)
+                MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(body)
             )
             val builder = Request.Builder()
-                    .header(USER_NAME_HEADER, userId)
-                    .url(codeccApiUrl + report)
-                    .post(requestBody)
+                .header(USER_NAME_HEADER, userId)
+                .url(codeccApiUrl + report)
+                .post(requestBody)
 
             val request = builder.build()
 
@@ -258,7 +274,7 @@ open class CodeccApi constructor(
     }
 
     private data class DevOpsToolParams(
-            val varName: String,
-            val chooseValue: String
+        val varName: String,
+        val chooseValue: String
     )
 }
