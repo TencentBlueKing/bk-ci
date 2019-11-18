@@ -51,6 +51,9 @@ import javax.ws.rs.ext.Provider
 @PreMatching
 @RequestFilter
 class ApiFilter : ContainerRequestFilter {
+
+    private val excludeVeritfyPath = listOf("swagger.json", "external/service/versionInfo")
+
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")
         val apigwtType = requestContext.getHeaderString("X-DEVOPS-APIGW-TYPE")
@@ -110,6 +113,13 @@ class ApiFilter : ContainerRequestFilter {
     }
 
     override fun filter(requestContext: ContainerRequestContext) {
+        val path = requestContext.uriInfo?.path
+        if (!path.isNullOrBlank()) {
+            if (excludeVeritfyPath.contains(path)) {
+                logger.info("The path($path) already exclude")
+                return
+            }
+        }
         val valid = verifyJWT(requestContext)
         // 验证通过
         if (!valid) {
