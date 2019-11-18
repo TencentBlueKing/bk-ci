@@ -92,7 +92,7 @@ class RepositoryDao {
         projectId: String,
         repositoryType: ScmType?,
         aliasName: String?,
-        repositoryIds: Set<Long>
+        repositoryIds: Set<Long>?
     ): Long {
         with(TRepository.T_REPOSITORY) {
             return when (repositoryType) {
@@ -101,7 +101,10 @@ class RepositoryDao {
                         .from(this)
                         .where(PROJECT_ID.eq(projectId))
                         .and(IS_DELETED.eq(false))
-                        .and(REPOSITORY_ID.`in`(repositoryIds))
+
+                    if (repositoryIds != null) {
+                        step.and(REPOSITORY_ID.`in`(repositoryIds))
+                    }
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
                     }
@@ -111,8 +114,10 @@ class RepositoryDao {
                     val step = dslContext.selectCount()
                         .from(this)
                         .where(PROJECT_ID.eq(projectId))
-                        .and(TYPE.eq(repositoryType.name))
                         .and(IS_DELETED.eq(false))
+                    if (repositoryIds != null) {
+                        step.and(REPOSITORY_ID.`in`(repositoryIds))
+                    }
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
                     }
@@ -164,35 +169,8 @@ class RepositoryDao {
     fun listByProject(
         dslContext: DSLContext,
         projectId: String,
-        repositoryType:
-        ScmType?
-    ): Result<TRepositoryRecord> {
-        with(TRepository.T_REPOSITORY) {
-            return when (repositoryType) {
-                null -> {
-                    dslContext.selectFrom(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(IS_DELETED.eq(false))
-                        .orderBy(REPOSITORY_ID.desc())
-                        .fetch()
-                }
-                else -> {
-                    dslContext.selectFrom(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(TYPE.eq(repositoryType.name))
-                        .and(IS_DELETED.eq(false))
-                        .orderBy(REPOSITORY_ID.desc())
-                        .fetch()
-                }
-            }
-        }
-    }
-
-    fun listByProject(
-        dslContext: DSLContext,
-        projectId: String,
         repositoryType: ScmType?,
-        repositoryIds: Set<Long>,
+        repositoryIds: Set<Long>?,
         offset: Int,
         limit: Int
     ): Result<TRepositoryRecord> {
@@ -201,7 +179,7 @@ class RepositoryDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
 
-            if (repositoryIds.isNotEmpty()) {
+            if (repositoryIds != null && repositoryIds.isNotEmpty()) {
                 query.and(REPOSITORY_ID.`in`(repositoryIds))
             }
             if (repositoryType != null) {
@@ -219,7 +197,7 @@ class RepositoryDao {
         projectId: String,
         repositoryType: ScmType?,
         aliasName: String?,
-        repositoryIds: Set<Long>,
+        repositoryIds: Set<Long>?,
         offset: Int,
         limit: Int
     ): Result<TRepositoryRecord> {
@@ -229,7 +207,9 @@ class RepositoryDao {
                     val step = dslContext.selectFrom(this)
                         .where(PROJECT_ID.eq(projectId))
                         .and(IS_DELETED.eq(false))
-                        .and(REPOSITORY_ID.`in`(repositoryIds))
+                    if (repositoryIds != null) {
+                        step.and(REPOSITORY_ID.`in`(repositoryIds))
+                    }
 
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
@@ -243,8 +223,11 @@ class RepositoryDao {
                     val step = dslContext.selectFrom(this)
                         .where(PROJECT_ID.eq(projectId))
                         .and(TYPE.eq(repositoryType.name))
-                        .and(REPOSITORY_ID.`in`(repositoryIds))
                         .and(IS_DELETED.eq(false))
+                    if (repositoryIds != null) {
+                        step.and(REPOSITORY_ID.`in`(repositoryIds))
+                    }
+
                     if (!aliasName.isNullOrBlank()) {
                         step.and(ALIAS_NAME.like("%$aliasName%"))
                     }
