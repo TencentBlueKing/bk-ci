@@ -26,6 +26,9 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -92,4 +95,25 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return Result(projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId))
     }
+
+    override fun verifyProjectByOrganization(
+        projectCode: String,
+        organizationType: String,
+        organizationId: Int
+    ): Result<Boolean> {
+        val projectInfo = projectLocalService.getByEnglishName(projectCode)
+        val organizationIdString = organizationId.toString()
+        return if(projectInfo != null) {
+            val result = when(organizationType) {
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG ->  projectInfo.bgId == organizationIdString
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT ->  projectInfo.deptId == organizationIdString
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER ->  projectInfo.centerId == organizationIdString
+                else -> projectInfo.bgId == organizationIdString
+            }
+            Result(result)
+        }else {
+            Result(false)
+        }
+    }
+
 }

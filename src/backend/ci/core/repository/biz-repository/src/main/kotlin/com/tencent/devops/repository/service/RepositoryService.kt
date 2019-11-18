@@ -802,7 +802,7 @@ class RepositoryService @Autowired constructor(
         projectId: String,
         scmType: ScmType?
     ): List<RepositoryInfoWithPermission> {
-        val dbRecords = repositoryDao.listByProject(dslContext, projectId, scmType)
+        val dbRecords = repositoryDao.listByProject(dslContext, projectId, scmType,null, 0, 9999)
         val gitRepoIds = dbRecords.filter { it.type == "CODE_GIT" }.map { it.repositoryId }.toSet()
         val gitAuthMap = repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
 
@@ -920,6 +920,42 @@ class RepositoryService @Autowired constructor(
                 repositoryType = repositoryType,
                 aliasName = null,
                 repositoryIds = hasPermissionList.toSet(),
+                offset = offset,
+                limit = limit
+            )
+        val repositoryList = repositoryRecordList.map {
+            RepositoryInfo(
+                repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                aliasName = it.aliasName,
+                url = it.url,
+                type = ScmType.valueOf(it.type),
+                updatedTime = it.updatedTime.timestamp()
+            )
+        }
+        return SQLPage(count, repositoryList)
+    }
+
+
+    fun listByProject(
+        projectId: String,
+        repositoryType: ScmType?,
+        offset: Int,
+        limit: Int
+    ): SQLPage<RepositoryInfo> {
+
+        val count = repositoryDao.countByProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryType = repositoryType,
+            aliasName = null,
+            repositoryIds = null
+        )
+        val repositoryRecordList =
+            repositoryDao.listByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repositoryIds = null,
                 offset = offset,
                 limit = limit
             )

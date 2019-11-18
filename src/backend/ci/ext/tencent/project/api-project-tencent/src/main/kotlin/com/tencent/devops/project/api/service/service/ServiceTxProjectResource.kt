@@ -28,6 +28,8 @@ package com.tencent.devops.project.api.service.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -145,5 +147,21 @@ interface ServiceTxProjectResource {
         @ApiParam("用户ID", required = true)
         @PathParam("userId")
         userId: String
+    ): Result<Boolean>
+
+
+    @GET
+    @Path("/{projectCode}/verifyProjectByOrganization")
+    @ApiOperation(" 校验项目是否数据某组织架构")
+    fun verifyProjectByOrganization(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam(value = "组织类型", required = true)
+        @QueryParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织ID", required = true)
+        @QueryParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Int
     ): Result<Boolean>
 }
