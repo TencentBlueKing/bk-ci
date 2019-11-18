@@ -24,10 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/*dependencies {
-    compile project(":core:prebuild:biz-prebuild")
-    compile project(":ext:tencent:prebuild:api-prebuild-tencent")
-}*/
 dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-service")
@@ -62,11 +58,10 @@ dependencies {
     //compile project(":common:common-tcm")
     compile project(":core:common:common-db")
     compile project(":ext:tencent:common:common-wechatwork")
-    compile project(":core:prebuild:api-prebuild")
     compile project(":core:log:api-log")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:environment:api-environment-tencent")
-    compile project(":core:prebuild:model-prebuild")
+    compile project(":ext:tencent:prebuild:model-prebuild")
     compile "com.zaxxer:HikariCP"
     compile "mysql:mysql-connector-java"
     compile "org.apache.commons:commons-exec"
