@@ -361,7 +361,7 @@
              */
             localCoverAvatar (data) {
                 const member = /^\$\{(.*)\}$/.test(data) ? 'un_know' : data
-                return `http://dayu.oa.com/avatars/${member}/avatar.jpg`
+                return `${USER_IMG_URL}/avatars/${member}/avatar.jpg`
             },
             // 重置input
             resetInput () {
