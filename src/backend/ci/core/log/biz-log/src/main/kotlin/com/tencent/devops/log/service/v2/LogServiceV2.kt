@@ -315,7 +315,7 @@ class LogServiceV2 @Autowired constructor(
                             Constants.DEFAULT_PRIORITY_NOT_DELETED
                     )
                     val dateTime = sdf.format(Date(logLine.timestamp))
-                    val str = "[${logLine.lineNo}] - $dateTime : ${logLine.message}" + System.lineSeparator()
+                    val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
                     sb.append(str)
                 }
                 output.write(sb.toString().toByteArray())
