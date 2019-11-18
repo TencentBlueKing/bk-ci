@@ -1,6 +1,6 @@
 {
   "name": "devops-nav",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "devops common",
   "main": "index.ts",
   "scripts": {
