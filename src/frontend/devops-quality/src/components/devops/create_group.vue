@@ -31,25 +31,33 @@
                             </bk-input>
                         </devops-form-item>
                         <bk-form-item label="通知人员：" :property="'internal_list'">
-                            <staff-input :name="'innerList'"
-                                :placeholder="placeholder"
-                                :value="createGroupForm.internal_list" :handle-change="onChange"></staff-input>
-                            <div v-if="errors.has('groupInternalList')" class="error-tips">内部人员不能为空</div>
-                            <div class="dropdown-menu" v-clickoutside="close">
-                                <div class="dropdown-trigger" @click="importMember">
-                                    <span>从用户组导入</span>
-                                    <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                            <template v-if="isExtendTx">
+                                <staff-input :name="'innerList'"
+                                    :placeholder="placeholder"
+                                    :value="createGroupForm.internal_list" :handle-change="onChange"></staff-input>
+                                <div v-if="errors.has('groupInternalList')" class="error-tips">内部人员不能为空</div>
+                                <div class="dropdown-menu" v-clickoutside="close">
+                                    <div class="dropdown-trigger" @click="importMember">
+                                        <span>从用户组导入</span>
+                                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                                    </div>
+                                    <div class="dropdown-list" v-if="isDropdownShow">
+                                        <ul class="list-wrapper">
+                                            <li v-for="(entry, index) in userGroupList" :key="index">
+                                                <a href="javascript:;" @click="selectUsers(entry)">{{ entry.groupName }}
+                                                    <span>({{ entry.users.length }})</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
-                                <div class="dropdown-list" v-if="isDropdownShow">
-                                    <ul class="list-wrapper">
-                                        <li v-for="(entry, index) in userGroupList" :key="index">
-                                            <a href="javascript:;" @click="selectUsers(entry)">{{ entry.groupName }}
-                                                <span>({{ entry.users.length }})</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                            </template>
+                            <user-input v-else
+                                :handle-change="onChange"
+                                name="innerList"
+                                :value="createGroupForm.internal_list"
+                                placeholder="请输入通知人员"
+                            ></user-input>
                         </bk-form-item>
                         <bk-form-item label="通知人员：" :property="'desc'">
                             <bk-input
@@ -73,6 +81,7 @@
 
 <script>
     import staffInput from '@/components/devops/StaffInput'
+    import UserInput from '@/components/devops/UserInput/index.vue'
     import clickoutside from '@/directives/clickoutside'
 
     export default {
@@ -80,7 +89,8 @@
             clickoutside
         },
         components: {
-            'staff-input': staffInput
+            'staff-input': staffInput,
+            UserInput
         },
         props: {
             nodeSelectConf: Object,
@@ -103,6 +113,9 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -134,7 +147,7 @@
                     const res = await this.$store.dispatch('quality/requestUserGroup', {
                         projectId: this.projectId
                     })
-                    
+
                     this.userGroupList.splice(0, this.userGroupList.length)
                     if (res) {
                         res.map(item => {
