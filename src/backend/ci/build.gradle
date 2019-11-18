@@ -81,6 +81,7 @@ buildscript {
     repositories {
         mavenLocal()
         maven { url mavenRepoUrl }
+        maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()
@@ -100,18 +101,9 @@ buildscript {
 ext {
     commit = null
     // Open the Git repository in the current directory.
-    def gitDir = file('.git')
+    def gitDir = file('../../../.git')
     if (gitDir.exists()) {
-        gitDir = file('.')
-    } else {
-        gitDir = file('../.git')
-        if (gitDir.exists()) {
-            gitDir = file('..')
-        }
-    }
-
-    if (gitDir.exists()) {
-
+        gitDir = file('../../../')
         git = Grgit.open(gitDir)
 
         commit = git.head()
@@ -136,6 +128,7 @@ allprojects {
     repositories {
         mavenLocal()
         maven { url mavenRepoUrl }
+        maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()

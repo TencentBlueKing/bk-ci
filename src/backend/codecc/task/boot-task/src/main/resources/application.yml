@@ -1,0 +1,34 @@
+# 服务配置文件模板
+spring:
+  application:
+    name: task
+    desc: Task Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.task
+  cloud:
+    consul:
+      discovery:
+        tags: dev
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 23910
+server:
+  port: 8086 # 服务端口
+
+time:
+  analysis:
+    maxhour: 7
+
+devops:
+  retry:
+    attempt: 7
+    interval: 1000
