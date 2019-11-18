@@ -1,6 +1,6 @@
 <template>
     <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
-        <template v-if="hasCodelibs">
+        <template v-if="hasCodelibs || isSearch">
             <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib" :is-blue-king="isBlueKing"></link-code-lib>
             <bk-button theme="primary" v-else @click.stop="goCreatePermission">
                 <i class="bk-icon icon-plus"></i>
@@ -11,7 +11,7 @@
                 :clearable="true"
                 :right-icon="'bk-icon icon-search'"
                 v-model="aliasName"
-                @enter="refreshCodelibList(projectId, page, pageSize, aliasName)"
+                @enter="query"
                 @change="clearAliasName"
             >
             </bk-input>
@@ -55,6 +55,7 @@
         data () {
             return {
                 isLoading: !this.codelibs,
+                isSearch: false,
                 defaultPagesize: 10,
                 startPage: 1,
                 showCodelibDialog: false,
@@ -99,6 +100,7 @@
                 this.isLoading = false
             },
             projectId (projectId) {
+                this.isSearch = false
                 this.refreshCodelibList(projectId)
             }
         },
@@ -135,6 +137,12 @@
                 this.refreshCodelibList(projectId, page, pageSize)
             },
 
+            query () {
+                const { projectId, startPage, defaultPagesize, aliasName } = this
+                this.isSearch = true
+                this.refreshCodelibList(projectId, startPage, defaultPagesize, aliasName)
+            },
+
             refreshCodelibList (
                 projectId = this.projectId,
                 page = this.startPage,
@@ -142,6 +150,7 @@
                 aliasName = this.aliasName
             ) {
                 this.isLoading = true
+                aliasName = encodeURIComponent(aliasName)
                 this.requestList({
                     projectId,
                     aliasName,
