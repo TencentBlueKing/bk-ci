@@ -28,9 +28,13 @@ package com.tencent.devops.common.websocket.dispatch.message
 
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 
+
 abstract class SendMessage(
     open val userId: String,
+    // 用于匹配redis中对应的sessionList
     open var page: String?,
+    // 用于拼接对应客户端订阅链接
     open val sessionList: List<String>?,
+    // websocket最终推送报文
     open var notifyPost: NotifyPost
 )
