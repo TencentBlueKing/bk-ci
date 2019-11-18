@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwRepositoryResourceV2 {
 
     @ApiOperation("查询项目的代码库列表")
-    @POST
+    @GET
     @Path("/projects/{projectId}/listByProject")
     fun listByProject(
         @ApiParam(value = "组织类型", required = true)
