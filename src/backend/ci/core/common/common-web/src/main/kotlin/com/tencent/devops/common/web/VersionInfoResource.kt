@@ -44,7 +44,6 @@ class VersionInfoResource {
 
     @ApiOperation("获取微服务当前信息")
     @GET
-    @Path("/")
     fun getInfo(): String {
         try {
             return VersionInfoResource::class.java.getResource("/version.txt").readText()
