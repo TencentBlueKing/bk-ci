@@ -132,4 +132,23 @@ interface ServiceRepositoryResource {
         @QueryParam("permission")
         permission: Permission
     ): Result<Page<RepositoryInfo>>
+
+
+    @ApiOperation("获取项目代码库列表")
+    @GET
+    @Path("/projects/{projectId}/listByProject")
+    fun listByProject(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("仓库类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: ScmType?,
+        @ApiParam("分页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("分页大小", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<RepositoryInfo>>
 }
