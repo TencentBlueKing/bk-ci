@@ -83,5 +83,6 @@
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1",
     "vuex-class": "^0.3.0"
-  }
+  },
+  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
 }
