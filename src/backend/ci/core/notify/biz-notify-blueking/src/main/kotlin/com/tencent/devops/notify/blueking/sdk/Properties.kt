@@ -24,13 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
-}
+package com.tencent.devops.notify.blueking.sdk
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+/**
+ * 蓝鲸关键配置项
+ */
+@Component
+class Properties {
+
+    @Value("\${esb.code:#{null}}")
+    val appCode: String? = null
+    @Value("\${esb.secret:#{null}}")
+    val appSecret: String? = null
+
+    @Value("\${bk.paas.host:#{null}}")
+    val bkHost: String? = null
+}

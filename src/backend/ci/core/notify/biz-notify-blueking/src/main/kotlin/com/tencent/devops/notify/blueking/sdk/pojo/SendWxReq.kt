@@ -23,14 +23,32 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.sdk.pojo
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
+import io.swagger.annotations.ApiModel
+
+@ApiModel("微信发送模型")
+data class SendWxReq(
+    val receiver: String?,
+    val receiver__username: String?,
+    val data: Data,
+
+    override var bk_app_code: String? = "",
+    override var bk_app_secret: String? = "",
+    override var bk_token: String? = "",
+    override var bk_username: String? = ""
+) : ApiReq(bk_app_code, bk_app_secret, bk_token, bk_username) {
+    data class Data(
+        val heading: String? = "",
+        val message: String? = "",
+        val date: String? = "",
+        val remark: String? = "",
+        val is_message_base64: String? = ""
+    )
 }
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+// heading	string	是	通知头部文字
+// message	string	是	通知文字
+// date	string	否	通知发送时间，默认为当前时间 "YYYY-mm-dd HH:MM"
+// remark	string	否	通知尾部文字
+// is_message_base64	bool	否	通知文字message是否base64编码，默认False，不编码，若编码请使用base64.b64encode方法

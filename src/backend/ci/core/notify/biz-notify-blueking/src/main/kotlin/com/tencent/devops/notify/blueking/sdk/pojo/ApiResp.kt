@@ -23,14 +23,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+package com.tencent.devops.notify.blueking.sdk.pojo
 
-@MicroService
-@ComponentScan("com.tencent.devops.notify")
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
-}
+class ApiResp(
+    val message: String? = "",
+    val code: Int? = -1,
+    val result: Boolean? = false,
+    val request_id: String? = "",
+    val data: Any? = null
+)
