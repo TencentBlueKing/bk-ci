@@ -24,11 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc
+package com.tencent.devops.quality
 
-import com.tencent.devops.plugin.codecc.config.CodeccConfig
-import com.tencent.devops.plugin.codecc.element.LinuxCodeCCScriptElementBizPlugin
-import com.tencent.devops.plugin.codecc.element.LinuxPaasCodeCCScriptElementBizPlugin
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,25 +36,8 @@ import org.springframework.core.Ordered
 class AutoConfiguration {
 
     @Bean
-    fun codeccConfig() = CodeccConfig()
+    fun qualityGateInElementBizPlugin() = QualityGateInElementBizPlugin()
 
     @Bean
-    fun coverityApi(codeccConfig: CodeccConfig): CodeccApi {
-        return CodeccApi(
-            codeccApiUrl = codeccConfig.codeccApiGateWay,
-            createPath = codeccConfig.createPath,
-            deletePath = codeccConfig.deletePath,
-            updatePath = codeccConfig.updatePath,
-            existPath = codeccConfig.existPath,
-            report = codeccConfig.report,
-            getRuleSetsPath = codeccConfig.getRuleSetsPath
-        )
-    }
-
-    @Bean
-    fun linuxCodeCCScriptElementBizPlugin() = LinuxCodeCCScriptElementBizPlugin()
-
-    @Bean
-    fun linuxPaasCodeCCScriptElementBizPlugin(coverityApi: CodeccApi) =
-        LinuxPaasCodeCCScriptElementBizPlugin(coverityApi)
+    fun qualityGateOutElementBizPlugin() = QualityGateOutElementBizPlugin()
 }
