@@ -23,27 +23,40 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.configuration
 
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+package com.tencent.devops.websocket.servcie
 
-@Configuration
-class WebsocketConfiguration {
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-/*    @Bean
-    fun getWebsocketPushDispatcher(
-        rabbitTemplate: RabbitTemplate
-    ): WebsocketPushDispatcher {
-        return WebsocketPushDispatcher(rabbitTemplate)
-    }*/
+@Service
+class ProjectProxyServiceImpl @Autowired constructor(
+    private val client: Client
+) : ProjectProxyService {
+    override fun checkProject(projectId: String, userId: String): Boolean {
+        try {
+            val projectList = client.get(ServiceProjectResource::class).list(userId).data
+            val privilegeProjectCodeList = mutableListOf<String>()
+            projectList?.map {
+                privilegeProjectCodeList.add(it.projectCode)
+            }
+            return if (privilegeProjectCodeList.contains(projectId)) {
+                true
+            } else {
+                logger.warn("changePage checkProject fail, user:$userId,projectId:$projectId,projectList:$projectList")
+                false
+            }
+        } catch (e: Exception) {
+            logger.error("checkProject fail,message:{}", e)
+            // 此处为了解耦，假设调用超时，默认还是做changePage的操作
+            return true
+        }
+    }
 
-    @Bean
-    fun getWebSocketDispatcher(
-        rabbitTemplate: RabbitTemplate
-    ): WebSocketDispatcher {
-        return WebSocketDispatcher(rabbitTemplate)
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

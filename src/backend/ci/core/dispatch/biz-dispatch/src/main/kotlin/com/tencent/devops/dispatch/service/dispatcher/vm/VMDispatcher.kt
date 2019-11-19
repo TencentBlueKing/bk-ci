@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
-import com.tencent.devops.dispatch.dao.PipelineBuildDao
+import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuildCreate
 import com.tencent.devops.dispatch.pojo.VM
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -59,7 +59,7 @@ class VMDispatcher @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val vmService: VMService,
-    private val pipelineBuildDao: PipelineBuildDao,
+    private val dispatchPipelineBuildDao: DispatchPipelineBuildDao,
     private val pipelineVMService: PipelineVMService,
     private val redisOperation: RedisOperation,
     private val rabbitTemplate: RabbitTemplate,
@@ -71,8 +71,8 @@ class VMDispatcher @Autowired constructor(
         pipelineAgentStartupEvent.dispatchType is ESXiDispatchType
 
     override fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
-        if (!pipelineBuildDao.exist(dslContext, pipelineAgentStartupEvent.buildId, pipelineAgentStartupEvent.vmSeqId)) {
-            pipelineBuildDao.add(
+        if (!dispatchPipelineBuildDao.exist(dslContext, pipelineAgentStartupEvent.buildId, pipelineAgentStartupEvent.vmSeqId)) {
+            dispatchPipelineBuildDao.add(
                 dslContext, PipelineBuildCreate(
                     pipelineAgentStartupEvent.projectId,
                     pipelineAgentStartupEvent.pipelineId,
@@ -83,7 +83,7 @@ class VMDispatcher @Autowired constructor(
             )
         }
         // Get the pre vms
-        val preVms = pipelineBuildDao.listByPipelineAndVmSeqId(
+        val preVms = dispatchPipelineBuildDao.listByPipelineAndVmSeqId(
             dslContext,
             pipelineAgentStartupEvent.pipelineId,
             pipelineAgentStartupEvent.vmSeqId,
@@ -156,7 +156,7 @@ class VMDispatcher @Autowired constructor(
                             pipelineAgentStartupEvent.atoms
                         )
                     )
-                    pipelineBuildDao.updatePipelineStatus(
+                    dispatchPipelineBuildDao.updatePipelineStatus(
                         dslContext,
                         pipelineAgentStartupEvent.buildId,
                         pipelineAgentStartupEvent.vmSeqId,
@@ -191,20 +191,20 @@ class VMDispatcher @Autowired constructor(
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         val list = if (pipelineAgentShutdownEvent.buildResult) {
-            pipelineBuildDao.getPipelineByBuildIdOrNull(
+            dispatchPipelineBuildDao.getPipelineByBuildIdOrNull(
                 dslContext,
                 pipelineAgentShutdownEvent.buildId,
                 pipelineAgentShutdownEvent.vmSeqId
             )
         } else {
-            pipelineBuildDao.getPipelineByBuildIdOrNull(dslContext, pipelineAgentShutdownEvent.buildId, null)
+            dispatchPipelineBuildDao.getPipelineByBuildIdOrNull(dslContext, pipelineAgentShutdownEvent.buildId, null)
         }
         if (list.isEmpty()) {
             logger.warn("The pipeline record is not exist in dispatch db")
             return
         }
         list.forEach {
-            val build = pipelineBuildDao.convert(it)
+            val build = dispatchPipelineBuildDao.convert(it)
             // Get the vm
             val vm = vmService.queryVMById(build.vmId)
             val redisLock = VMLock(redisOperation, vm.ip)
@@ -249,7 +249,7 @@ class VMDispatcher @Autowired constructor(
                     PipelineTaskStatus.FAILURE
                 }
                 redisUtils.deleteRedisBuild(vm.ip)
-                pipelineBuildDao.updatePipelineStatus(dslContext, it.id, status)
+                dispatchPipelineBuildDao.updatePipelineStatus(dslContext, it.id, status)
             } finally {
                 redisLock.unlock()
             }
