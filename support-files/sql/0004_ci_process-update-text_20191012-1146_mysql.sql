@@ -269,6 +269,105 @@ BEGIN
             CHANGE `PARAM` `PARAM` mediumtext AFTER BUILD_NO;
     END IF;
 
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
+                    AND COLUMN_NAME = 'PROJECT_ID') THEN
+        ALTER TABLE T_PIPELINE_BUILD_VAR
+            ADD COLUMN `PROJECT_ID` varchar(64) DEFAULT NULL AFTER `VALUE`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
+                    AND COLUMN_NAME = 'PIPELINE_ID') THEN
+        ALTER TABLE T_PIPELINE_BUILD_VAR
+            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL AFTER `PROJECT_ID`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
+                    AND INDEX_NAME = 'IDX_DEL') THEN
+        ALTER TABLE T_PIPELINE_BUILD_VAR
+            ADD INDEX `IDX_DEL` (`PROJECT_ID`,`PIPELINE_ID`);
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                    AND COLUMN_NAME = 'ERROR_TYPE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_TASK
+            ADD COLUMN `ERROR_TYPE` int(11) DEFAULT NULL AFTER `TOTAL_TIME`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                    AND COLUMN_NAME = 'ERROR_CODE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_TASK
+            ADD COLUMN `ERROR_CODE` int(11) DEFAULT NULL AFTER `ERROR_TYPE`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                    AND COLUMN_NAME = 'ERROR_MSG') THEN
+        ALTER TABLE T_PIPELINE_BUILD_TASK
+            ADD COLUMN `ERROR_MSG` text DEFAULT NULL AFTER `ERROR_CODE`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                    AND COLUMN_NAME = 'CONTAINER_HASH_ID') THEN
+        ALTER TABLE T_PIPELINE_BUILD_TASK
+            ADD COLUMN `CONTAINER_HASH_ID` varchar(64) DEFAULT NULL AFTER `ERROR_MSG`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'ERROR_TYPE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY
+            ADD COLUMN `ERROR_TYPE` int(11) DEFAULT NULL AFTER `RECOMMEND_VERSION`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'ERROR_CODE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY
+            ADD COLUMN `ERROR_CODE` int(11) DEFAULT NULL AFTER `ERROR_TYPE`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'ERROR_MSG') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY
+            ADD COLUMN `ERROR_MSG` text DEFAULT NULL AFTER `ERROR_CODE`;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
