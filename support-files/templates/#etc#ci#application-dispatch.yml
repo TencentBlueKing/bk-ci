@@ -19,6 +19,6 @@ dispatch:
   dockerhostPort: __BKCI_DOCKERHOST_API_PORT__
 
 codecc:
-  path: __INSTALL_PATH__/public/codecc/
+  path: __INSTALL_PATH__/public/codecc/tools
   covFile: build_dev.py
   toolFile: build_tool_dev.py
