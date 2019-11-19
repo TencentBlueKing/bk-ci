@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.pojo.tof
 
-
 data class CCAppNameRequest(
     val app_code: String,
     val app_secret: String,

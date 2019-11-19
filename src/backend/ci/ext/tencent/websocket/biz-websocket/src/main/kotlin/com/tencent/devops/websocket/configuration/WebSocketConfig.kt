@@ -27,7 +27,6 @@
 package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.websocket.handler.BKHandshakeInterceptor
-import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

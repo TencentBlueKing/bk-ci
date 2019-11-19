@@ -87,7 +87,7 @@ class ProjectLabelService @Autowired constructor(
         val nameCount = projectLabelDao.countByName(dslContext, labelName)
         if (nameCount > 0) {
             throw CustomException(Response.Status.BAD_REQUEST,
-                    MessageCodeUtil.generateResponseDataObject<String>(ProjectMessageCode.LABLE_NAME_EXSIT, arrayOf(labelName)).message!! ) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
+                    MessageCodeUtil.generateResponseDataObject<String>(ProjectMessageCode.LABLE_NAME_EXSIT, arrayOf(labelName)).message!!) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
         }
         projectLabelDao.add(dslContext, labelName)
         return true
@@ -100,7 +100,7 @@ class ProjectLabelService @Autowired constructor(
             val projectLabel = projectLabelDao.getProjectLabel(dslContext, id)
             if (null != projectLabel && !labelName.equals(projectLabel.labelName)) {
                 throw CustomException(Response.Status.BAD_REQUEST,
-                        MessageCodeUtil.generateResponseDataObject<String>(ProjectMessageCode.LABLE_NAME_EXSIT, arrayOf(labelName)).message!! ) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
+                        MessageCodeUtil.generateResponseDataObject<String>(ProjectMessageCode.LABLE_NAME_EXSIT, arrayOf(labelName)).message!!) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
             }
         }
         projectLabelDao.update(dslContext, id, labelName)

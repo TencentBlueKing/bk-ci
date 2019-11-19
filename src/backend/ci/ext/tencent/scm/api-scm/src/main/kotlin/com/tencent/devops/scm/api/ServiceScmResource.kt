@@ -261,9 +261,9 @@ interface ServiceScmResource {
     @POST
     @Path("unlock")
     fun unlock(
-      @ApiParam("项目名称", required = true)
-      @QueryParam("projectName")
-      projectName: String,
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
         @ApiParam("仓库地址", required = true)
         @QueryParam("url")
         url: String,

@@ -102,12 +102,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
         val url = StringBuilder("/artifactory/custom/upload/build/$jfrogPath")
         with(buildVariables) {
-            url.append(";${ARCHIVE_PROPS_PROJECT_ID}=${encodeProperty(projectId)}")
-            url.append(";${ARCHIVE_PROPS_PIPELINE_ID}=${encodeProperty(pipelineId)}")
-            url.append(";${ARCHIVE_PROPS_BUILD_ID}=${encodeProperty(buildId)}")
-            url.append(";${ARCHIVE_PROPS_USER_ID}=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
-            url.append(";${ARCHIVE_PROPS_BUILD_NO}=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-            url.append(";${ARCHIVE_PROPS_SOURCE}=pipeline")
+            url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
+            url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
+            url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
+            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
+            url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
+            url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
             setProps(file, url)
         }
 

@@ -53,7 +53,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
     private val gray: Gray
-): OpProjectService {
+) : OpProjectService {
 
     override fun listGrayProject(): Result<OpGrayProject> {
         // 从redis中获取灰度项目列表
@@ -110,7 +110,6 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                     projectId,
                     labelIdList!!
             )
-
         }
         return if (!flag) {
             0 // 更新操作

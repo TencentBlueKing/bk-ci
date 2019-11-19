@@ -330,7 +330,7 @@ class BkRepoService @Autowired constructor(
             "path: $path, ttl: $ttl, directed: $directed")
 
         return bkRepoClient.externalDownloadUrl(
-            userId =userId,
+            userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
             path = path,

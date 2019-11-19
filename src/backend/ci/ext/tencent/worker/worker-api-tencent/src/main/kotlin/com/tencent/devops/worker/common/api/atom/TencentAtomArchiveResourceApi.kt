@@ -129,12 +129,12 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDK
 
         val url = StringBuilder("/atom/result/$jfrogPath")
         with(buildVariables) {
-            url.append(";${ARCHIVE_PROPS_PROJECT_ID}=${encodeProperty(projectId)}")
-            url.append(";${ARCHIVE_PROPS_PIPELINE_ID}=${encodeProperty(pipelineId)}")
-            url.append(";${ARCHIVE_PROPS_BUILD_ID}=${encodeProperty(buildId)}")
-            url.append(";${ARCHIVE_PROPS_USER_ID}=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
-            url.append(";${ARCHIVE_PROPS_BUILD_NO}=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-            url.append(";${ARCHIVE_PROPS_SOURCE}=pipeline")
+            url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
+            url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
+            url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
+            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
+            url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
+            url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
         }
 
         val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))

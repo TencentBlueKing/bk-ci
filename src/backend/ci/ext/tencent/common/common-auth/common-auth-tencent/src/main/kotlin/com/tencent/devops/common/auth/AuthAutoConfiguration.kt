@@ -27,8 +27,24 @@
 package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.auth.api.*
-import com.tencent.devops.common.auth.code.*
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.BSAuthResourceApi
+import com.tencent.devops.common.auth.api.BSAuthTokenApi
+import com.tencent.devops.common.auth.api.BSCCProjectApi
+import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
+import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
+import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
+import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
+import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.common.auth.code.BSQualityAuthServiceCode
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
+import com.tencent.devops.common.auth.code.BSTicketAuthServiceCode
+import com.tencent.devops.common.auth.code.BSVSAuthServiceCode
+import com.tencent.devops.common.auth.code.BSWetestAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder

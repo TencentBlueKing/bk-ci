@@ -35,14 +35,13 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectLocalService
-import com.tencent.devops.project.service.ProjectService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
-        private val projectLocalService: ProjectLocalService
+    private val projectLocalService: ProjectLocalService
 ) : UserProjectResource {
 
     override fun list(accessToken: String, includeDisable: Boolean?): Result<List<ProjectVO>> {

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.pojo.tof
 
-
 class DeptInfoResponse(
     val TypeId: String,
     val LeaderId: String,

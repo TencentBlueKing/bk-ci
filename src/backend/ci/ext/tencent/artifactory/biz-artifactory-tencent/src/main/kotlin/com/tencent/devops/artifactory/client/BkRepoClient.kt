@@ -31,7 +31,7 @@ import javax.ws.rs.NotFoundException
 @Component
 class BkRepoClient @Autowired constructor(
     private val objectMapper: ObjectMapper
-){
+) {
 
     // todo apicode 鉴权
     @Value("\${bkrepo.bkrepoUrl:#{null}}")

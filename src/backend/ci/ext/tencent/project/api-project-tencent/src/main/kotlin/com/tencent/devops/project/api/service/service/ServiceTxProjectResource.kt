@@ -149,7 +149,6 @@ interface ServiceTxProjectResource {
         userId: String
     ): Result<Boolean>
 
-
     @GET
     @Path("/{projectCode}/verifyProjectByOrganization")
     @ApiOperation(" 校验项目是否数据某组织架构")

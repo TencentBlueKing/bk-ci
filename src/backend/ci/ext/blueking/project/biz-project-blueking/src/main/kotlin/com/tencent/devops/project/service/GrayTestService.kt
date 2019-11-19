@@ -26,11 +26,9 @@
 
 package com.tencent.devops.project.service
 
-
 import com.tencent.devops.project.pojo.service.GrayTestCreate
 import com.tencent.devops.project.pojo.service.GrayTestInfo
 import com.tencent.devops.project.pojo.service.GrayTestListInfo
-
 
 interface GrayTestService {
     fun create(userId: String, grayTestCreate: GrayTestCreate): Boolean

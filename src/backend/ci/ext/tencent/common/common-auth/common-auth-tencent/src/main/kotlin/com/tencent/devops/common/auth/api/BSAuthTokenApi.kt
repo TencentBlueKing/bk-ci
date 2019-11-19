@@ -141,8 +141,8 @@ class BSAuthTokenApi @Autowired constructor(
         secretMap[BSAuthServiceCode.WETEST.value] = bkAuthProperties.wetestSecret
         secretMap[BSAuthServiceCode.PROJECT.value] = bkAuthProperties.pipelineSecret
 
-        secretMap.forEach { key,value ->
-            logger.info("[secretMap] key: $key , value: $value" )
+        secretMap.forEach { key, value ->
+            logger.info("[secretMap] key: $key , value: $value")
         }
         logger.info("auth.url: ${bkAuthProperties.url}")
     }

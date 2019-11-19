@@ -56,22 +56,22 @@ class BSAuthPermissionApi @Autowired constructor(
 ) : AuthPermissionApi {
 
     override fun validateUserResourcePermission(
-            user: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            permission: AuthPermission
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permission: AuthPermission
     ): Boolean {
         return validateUserResourcePermission(user, serviceCode, resourceType, projectCode, "*", permission)
     }
 
     override fun validateUserResourcePermission(
-            user: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            resourceCode: String,
-            permission: AuthPermission
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        permission: AuthPermission
     ): Boolean {
         val epoch = System.currentTimeMillis()
         var success = false
@@ -121,12 +121,12 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     override fun getUserResourceByPermission(
-            user: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            permission: AuthPermission,
-            supplier: (() -> List<String>)?
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permission: AuthPermission,
+        supplier: (() -> List<String>)?
     ): List<String> {
         val epoch = System.currentTimeMillis()
         var success = false
@@ -164,12 +164,12 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     override fun getUserResourcesByPermissions(
-            user: String,
-            serviceCode: AuthServiceCode,
-            resourceType: AuthResourceType,
-            projectCode: String,
-            permissions: Set<AuthPermission>,
-            supplier: (() -> List<String>)?
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
 
         val epoch = System.currentTimeMillis()
@@ -228,13 +228,13 @@ class BSAuthPermissionApi @Autowired constructor(
     }
 
     override fun getUserResourcesByPermissions(
-            userId: String,
-            scopeType: String,
-            scopeId: String,
-            resourceType: AuthResourceType,
-            permissions: Set<AuthPermission>,
-            systemId: AuthServiceCode,
-            supplier: (() -> List<String>)?
+        userId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: AuthResourceType,
+        permissions: Set<AuthPermission>,
+        systemId: AuthServiceCode,
+        supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
         val epoch = System.currentTimeMillis()
         var success = false

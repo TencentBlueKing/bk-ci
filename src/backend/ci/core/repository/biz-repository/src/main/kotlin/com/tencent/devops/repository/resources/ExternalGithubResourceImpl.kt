@@ -37,8 +37,8 @@ import javax.ws.rs.core.Response
 
 @RestResource
 class ExternalGithubResourceImpl @Autowired constructor(
-        private val githubService: IGithubService,
-        private val githubOauthService: GithubOAuthService
+    private val githubService: IGithubService,
+    private val githubOauthService: GithubOAuthService
 ) : ExternalGithubResource {
 
     override fun webhookCommit(event: String, guid: String, signature: String, body: String): Result<Boolean> {

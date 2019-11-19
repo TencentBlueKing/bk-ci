@@ -35,13 +35,14 @@ import com.tencent.devops.project.service.tof.TOFService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserProjectOrganizationResourceImpl @Autowired constructor(private val tofService: TOFService
+class UserProjectOrganizationResourceImpl @Autowired constructor(
+    private val tofService: TOFService
 ) : UserProjectOrganizationResource {
 
     override fun getOrganizations(
-            userId: String,
-            type: OrganizationType,
-            id: Int
+        userId: String,
+        type: OrganizationType,
+        id: Int
     ): Result<List<OrganizationInfo>> {
         return Result(tofService.getOrganizationInfo(userId, type, id))
     }

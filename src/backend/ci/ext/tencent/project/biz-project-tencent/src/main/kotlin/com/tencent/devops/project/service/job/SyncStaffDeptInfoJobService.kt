@@ -27,16 +27,10 @@
 package com.tencent.devops.project.service.job
 
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.async.AsyncGetStaffDeptInfoService
-import com.tencent.devops.project.service.async.QueryStaffDeptRequest
-import com.tencent.devops.project.service.async.UpdateStaffDeptRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
 
 /**
  * 同步项目创建人机构信息

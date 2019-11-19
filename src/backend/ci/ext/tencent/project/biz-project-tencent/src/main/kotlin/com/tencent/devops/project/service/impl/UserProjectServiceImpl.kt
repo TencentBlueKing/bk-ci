@@ -34,7 +34,11 @@ import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.ServiceUpdateUrls
-import com.tencent.devops.project.pojo.service.*
+import com.tencent.devops.project.pojo.service.OPPServiceVO
+import com.tencent.devops.project.pojo.service.ServiceCreateInfo
+import com.tencent.devops.project.pojo.service.ServiceListVO
+import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
+import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.utils.BG_IEG_ID
 import org.jooq.DSLContext
@@ -52,7 +56,7 @@ class UserProjectServiceImpl @Autowired constructor(
     private val gray: Gray,
     private val redisOperation: RedisOperation,
     private val tofService: TOFService
-) : AbsUserProjectServiceServiceImpl(dslContext,serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
+) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
@@ -79,7 +83,7 @@ class UserProjectServiceImpl @Autowired constructor(
                             logoUrl = tServiceRecord.logoUrl,
                             webSocket = tServiceRecord.webSocket,
                             hidden = isServiceHidden(tServiceRecord.name, isIEGMember),
-                            weigHt = tServiceRecord.weight ?:0
+                            weigHt = tServiceRecord.weight ?: 0
                     )
             )
         } else {
@@ -139,7 +143,3 @@ class UserProjectServiceImpl @Autowired constructor(
         })
     }
 }
-
-
-
-

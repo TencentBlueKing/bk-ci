@@ -79,7 +79,6 @@ class GrayTestServiceImpl @Autowired constructor(
         }
     }
 
-
     override fun listAllUsers(): Map<String, List<Any>> {
         val allUsers = grayTestDao.listAllUsers(dslContext)
         val allService = grayTestDao.listAllService(dslContext)

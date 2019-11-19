@@ -31,7 +31,10 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.*
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -42,14 +45,14 @@ import java.io.InputStream
 
 @Service
 class ProjectServiceImpl @Autowired constructor(
-        private val projectPermissionService: ProjectPermissionService,
-        private val dslContext: DSLContext,
-        private val projectDao: ProjectDao,
-        private val projectJmxApi: ProjectJmxApi,
-        private val redisOperation: RedisOperation,
-        private val gray: Gray,
-        private val client: Client
-): AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client){
+    projectPermissionService: ProjectPermissionService,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
+    projectJmxApi: ProjectJmxApi,
+    redisOperation: RedisOperation,
+    gray: Gray,
+    client: Client
+) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client) {
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         super.validate(validateType, name, projectId)
     }
@@ -94,12 +97,11 @@ class ProjectServiceImpl @Autowired constructor(
         return super.updateLogo(userId, projectId, inputStream, disposition)
     }
 
-
     override fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 }

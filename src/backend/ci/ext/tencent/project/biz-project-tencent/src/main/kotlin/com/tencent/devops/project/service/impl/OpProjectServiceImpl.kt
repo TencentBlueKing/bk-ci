@@ -32,7 +32,11 @@ import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
-import com.tencent.devops.project.pojo.*
+import com.tencent.devops.project.pojo.OpGrayProject
+import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.PaasCCUpdateProject
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.Result
 import org.jooq.DSLContext
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +50,7 @@ class OpProjectServiceImpl @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
     private val gray: Gray
-): AbsOpProjectServiceImpl(dslContext,projectDao, projectLabelRelDao, redisOperation, gray) {
+) : AbsOpProjectServiceImpl(dslContext, projectDao, projectLabelRelDao, redisOperation, gray) {
     override fun listGrayProject(): Result<OpGrayProject> {
         return super.listGrayProject()
     }

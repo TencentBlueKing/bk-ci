@@ -34,5 +34,4 @@ import com.tencent.devops.common.api.digest.enc.DigestPriority
  * DigestPriority 优化级越高
  */
 @DigestPriority(name = "SecurityUtil", priority = Int.MAX_VALUE - 1)
-class TencentAESSecurityDigest : AESSecurityDigest(aesKey = "k&nM\$3+1") {
-}
+class TencentAESSecurityDigest : AESSecurityDigest(aesKey = "k&nM\$3+1")

@@ -65,7 +65,7 @@ class BcsClusterService @Autowired constructor(
 
     fun addBcsVmNodes(userId: String, projectId: String, bcsVmParam: BcsVmParam) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
-            throw            ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
         }
 
         val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId)

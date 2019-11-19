@@ -288,7 +288,7 @@ class ProjectLocalService @Autowired constructor(
                     }
                 }
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
-                try{
+                try {
                 projectDao.create(
                     dslContext = dslContext,
                     userId = userId,

@@ -82,7 +82,6 @@ class ActivityDao {
         }
     }
 
-
     fun delete(dslContext: DSLContext, activityId: Long) {
         with(TActivity.T_ACTIVITY) {
             dslContext.deleteFrom(this).where(ID.eq(activityId)).execute()

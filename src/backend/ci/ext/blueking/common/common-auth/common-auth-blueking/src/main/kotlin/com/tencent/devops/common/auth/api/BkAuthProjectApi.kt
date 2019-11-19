@@ -40,11 +40,11 @@ import okhttp3.Request
 import org.slf4j.LoggerFactory
 
 class BkAuthProjectApi constructor(
-        private val bkAuthPermissionApi: BkAuthPermissionApi,
-        private val bkAuthProperties: BkAuthProperties,
-        private val objectMapper: ObjectMapper,
-        private val projectAuthServiceCode: BkProjectAuthServiceCode,
-        private val bkAuthTokenApi: BkAuthTokenApi
+    private val bkAuthPermissionApi: BkAuthPermissionApi,
+    private val bkAuthProperties: BkAuthProperties,
+    private val objectMapper: ObjectMapper,
+    private val projectAuthServiceCode: BkProjectAuthServiceCode,
+    private val bkAuthTokenApi: BkAuthTokenApi
 ) : AuthProjectApi {
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {

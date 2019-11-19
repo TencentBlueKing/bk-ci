@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.pojo.tof
 
-
 data class StaffInfoResponse(
     val LoginName: String,
     val DepartmentName: String,

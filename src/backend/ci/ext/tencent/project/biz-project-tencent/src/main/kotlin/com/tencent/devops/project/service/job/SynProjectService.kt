@@ -36,9 +36,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class SynProjectService @Autowired constructor(
-        private val projectDao: ProjectDao,
-        private val tofService: TOFService,
-        private val dslContext: DSLContext
+    private val projectDao: ProjectDao,
+    private val tofService: TOFService,
+    private val dslContext: DSLContext
 ) {
 
     fun syncCCAppName(): Int {

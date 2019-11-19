@@ -30,14 +30,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.ApigwRepositoryResource
 import com.tencent.devops.openapi.api.v2.ApigwRepositoryResourceV2
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import com.tencent.devops.repository.pojo.enums.Permission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -53,17 +49,16 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
     ): Result<Page<RepositoryInfo>?> {
         logger.info("get  repostitories list in project:,projectId=$projectId,repositoryType:$repositoryType,organizationId=$organizationId,organizationType=$organizationType")
         val verify = client.get(ServiceTxProjectResource::class).verifyProjectByOrganization(projectId, organizationType, organizationId).data
-        return if(verify != null && verify) {
+        return if (verify != null && verify) {
             client.get(ServiceRepositoryResource::class).listByProject(
                 projectId = projectId,
                 repositoryType = repositoryType,
                 page = page,
                 pageSize = pageSize
             )
-        }else {
+        } else {
             Result(data = null)
         }
-
     }
 
     companion object {

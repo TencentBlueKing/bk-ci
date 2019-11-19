@@ -40,12 +40,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
-import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
@@ -54,9 +49,9 @@ import java.net.URLDecoder
 
 @RestResource
 class ServiceRepositoryResourceImpl @Autowired constructor(
-        private val repoFileService: RepoFileService,
-        private val repositoryService: RepositoryService,
-        private val repositoryUserService: RepositoryUserService
+    private val repoFileService: RepoFileService,
+    private val repositoryService: RepositoryService,
+    private val repositoryUserService: RepositoryUserService
 ) : ServiceRepositoryResource {
 
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {

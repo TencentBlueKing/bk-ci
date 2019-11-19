@@ -59,7 +59,6 @@ class S3Service @Autowired constructor(private val profile: Profile) {
     @Value("\${s3.bucketName:#{null}}")
     private val bucketName: String? = null
 
-
     private var client: AmazonS3? = null
 
     fun saveLogo(logo: File, projectCode: String): String {

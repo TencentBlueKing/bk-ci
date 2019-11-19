@@ -49,5 +49,4 @@ class ZhiyunConfig {
 
     @Value("\${zhiyun.esbUrl}")
     val esbUrl: String = ""
-
 }

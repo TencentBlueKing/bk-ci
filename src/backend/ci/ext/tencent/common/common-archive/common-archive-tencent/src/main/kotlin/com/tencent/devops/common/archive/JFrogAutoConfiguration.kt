@@ -91,7 +91,6 @@ class JFrogAutoConfiguration {
         return JFrogStorageApi(jFrogConfigProperties, objectMapper)
     }
 
-
     @Bean
     @Primary
     fun jFrogExecutionApi(jFrogConfigProperties: JFrogConfigProperties, objectMapper: ObjectMapper): JFrogExecutionApi =

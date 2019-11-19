@@ -1,20 +1,17 @@
 package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.devops.artifactory.client.BkRepoClient
-import com.tencent.devops.artifactory.client.JFrogService
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.service.CustomDirService
-import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory

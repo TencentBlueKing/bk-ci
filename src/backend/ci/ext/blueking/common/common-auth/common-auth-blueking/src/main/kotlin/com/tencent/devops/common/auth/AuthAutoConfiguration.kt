@@ -100,7 +100,7 @@ class AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bkAuthProjectApi(bkAuthPermissionApi: BkAuthPermissionApi,objectMapper: ObjectMapper, bkAuthProperties: BkAuthProperties, bkProjectAuthServiceCode: BkProjectAuthServiceCode, bkAuthTokenApi: BkAuthTokenApi) =
+    fun bkAuthProjectApi(bkAuthPermissionApi: BkAuthPermissionApi, objectMapper: ObjectMapper, bkAuthProperties: BkAuthProperties, bkProjectAuthServiceCode: BkProjectAuthServiceCode, bkAuthTokenApi: BkAuthTokenApi) =
             BkAuthProjectApi(bkAuthPermissionApi, bkAuthProperties, objectMapper, bkProjectAuthServiceCode, bkAuthTokenApi)
 
     @Bean

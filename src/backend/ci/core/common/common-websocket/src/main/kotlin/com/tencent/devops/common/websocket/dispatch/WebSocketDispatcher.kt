@@ -57,7 +57,7 @@ class WebSocketDispatcher(
                         message
                     }
                 } else {
-                    val sessionList = RedisUtlis.getSessionListFormPageSessionByPage(event.redisOperation, event.page?: "")
+                    val sessionList = RedisUtlis.getSessionListFormPageSessionByPage(event.redisOperation, event.page ?: "")
                     logger.debug("page:${event.page},sessionList:$sessionList,bug nobody load page")
                 }
             }

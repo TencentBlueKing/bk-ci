@@ -50,7 +50,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         centerName: String?
     ): Result<List<String>> {
         return Result(
-             projectLocalService.getProjectEnNamesByOrganization(
+            projectLocalService.getProjectEnNamesByOrganization(
                 userId = userId,
                 bgId = bgId,
                 deptName = deptName,
@@ -73,17 +73,15 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.list(accessToken, true))
     }
 
-
     override fun getPreUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
         return Result(projectLocalService.getOrCreatePreProject(userId, accessToken))
     }
-
 
     override fun getPreUserProjectV2(userId: String, accessToken: String): Result<ProjectVO?> {
         return Result(projectLocalService.getOrCreatePreProject(userId, accessToken))
     }
 
-    //TODO
+    // TODO
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
         return Result(projectLocalService.create(userId, "", projectCreateInfo))
     }
@@ -103,17 +101,16 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val projectInfo = projectLocalService.getByEnglishName(projectCode)
         val organizationIdString = organizationId.toString()
-        return if(projectInfo != null) {
-            val result = when(organizationType) {
-                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG ->  projectInfo.bgId == organizationIdString
-                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT ->  projectInfo.deptId == organizationIdString
-                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER ->  projectInfo.centerId == organizationIdString
+        return if (projectInfo != null) {
+            val result = when (organizationType) {
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> projectInfo.bgId == organizationIdString
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> projectInfo.deptId == organizationIdString
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> projectInfo.centerId == organizationIdString
                 else -> projectInfo.bgId == organizationIdString
             }
             Result(result)
-        }else {
+        } else {
             Result(false)
         }
     }
-
 }

@@ -53,15 +53,15 @@ class ProjectPermissionServiceImpl @Autowired constructor(
 ) : ProjectPermissionService {
 
     override fun createResources(userId: String, projectList: List<ResourceRegisterInfo>) {
-        //内部版用不到
+        // 内部版用不到
     }
 
     override fun deleteResource(projectCode: String) {
-        //内部版用不到
+        // 内部版用不到
     }
 
     override fun modifyResource(projectCode: String, projectName: String) {
-        //内部版用不到
+        // 内部版用不到
     }
 
     override fun getUserProjects(userId: String): List<String> {

@@ -37,16 +37,15 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectOrganizationServiceImpl @Autowired constructor(private val tofService: TOFService) : ProjectOrganizationService {
 
-	override fun getDeptInfo(userId: String, id: Int): DeptInfo {
-		return tofService.getDeptInfo(userId, id)
-	}
+    override fun getDeptInfo(userId: String, id: Int): DeptInfo {
+        return tofService.getDeptInfo(userId, id)
+    }
 
-	override fun getOrganizations(userId: String, type: OrganizationType, id: Int): List<OrganizationInfo> {
-		return tofService.getOrganizationInfo(userId, type, id)
-	}
+    override fun getOrganizations(userId: String, type: OrganizationType, id: Int): List<OrganizationInfo> {
+        return tofService.getOrganizationInfo(userId, type, id)
+    }
 
-	override fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo> {
-		return tofService.getParentDeptInfo(deptId, level)
-	}
-
+    override fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo> {
+        return tofService.getParentDeptInfo(deptId, level)
+    }
 }

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.service.job
 
-import com.tencent.devops.project.service.ProjectService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
