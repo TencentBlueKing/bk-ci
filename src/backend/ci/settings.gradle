@@ -101,6 +101,7 @@ include ":core:repository"
 include ":core:repository:api-repository"
 include ":core:repository:biz-repository"
 include ":core:repository:biz-repository-sample"
+include ":core:repository:boot-repository"
 include ":core:repository:model-repository"
 
 include ":core:ticket"
