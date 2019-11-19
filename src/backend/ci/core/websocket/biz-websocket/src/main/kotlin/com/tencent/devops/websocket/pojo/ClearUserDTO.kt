@@ -24,18 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:ticket:api-ticket")
-    compile project(":core:process:api-process")
-    compile project(":core:common:common-scm")
-    compile project(":core:repository:api-repository")
-    compile project(":core:repository:model-repository")
-    compile project(":core:common:common-db")
-    compile "org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r"
-}
+package com.tencent.devops.websocket.pojo
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+data class ClearUserDTO(
+    val userId: String,
+    val sessionId: String
+)
