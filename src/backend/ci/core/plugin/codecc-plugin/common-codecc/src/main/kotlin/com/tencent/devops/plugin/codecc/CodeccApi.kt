@@ -93,8 +93,7 @@ open class CodeccApi constructor(
                 "devopsTools" to objectMapper.writeValueAsString(tools),
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "bs_pipeline_name" to pipelineName,
-                "bs_task_name" to pipelineName
+                "nameCn" to pipelineName
             )
             logger.info("start to create task: $body")
 
@@ -133,8 +132,7 @@ open class CodeccApi constructor(
                 "taskId" to codeCCTaskId!!,
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "bs_pipeline_name" to pipelineName,
-                "bs_task_name" to pipelineName
+                "nameCn" to pipelineName
             )
             logger.info("Update the coverity task($body)")
             val header = mapOf(
