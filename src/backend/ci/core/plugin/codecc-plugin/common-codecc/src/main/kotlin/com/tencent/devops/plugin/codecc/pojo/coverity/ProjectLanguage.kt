@@ -26,10 +26,6 @@
 
 package com.tencent.devops.plugin.codecc.pojo.coverity
 
-/**
- * deng
- * 26/01/2018
- */
 enum class ProjectLanguage(val value: String) {
     C("c"),
     C_PLUS_PLUSH("c++"),

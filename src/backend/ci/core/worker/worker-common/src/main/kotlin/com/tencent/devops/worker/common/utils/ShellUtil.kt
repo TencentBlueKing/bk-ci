@@ -27,7 +27,6 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -71,7 +70,6 @@ object ShellUtil {
         "    }\n"
     const val GATEWAY_FILE = "gatewayValueFile.ini"
 
-    lateinit var buildId: String
     lateinit var dir: File
     lateinit var buildEnvs: List<BuildEnv>
 
@@ -79,20 +77,27 @@ object ShellUtil {
     private val specialValue = listOf("|", "&", "(", ")")
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
-    fun execute(script: String, continueNoneZero: Boolean = false): String {
-        return execute(buildId, script, dir, buildEnvs, emptyMap(), null, continueNoneZero)
-    }
-
     fun execute(
-        buildId: String,
         script: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
-        outerCommandFunc: ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?,
         continueNoneZero: Boolean = false,
         prefix: String = ""
     ): String {
+        return executeUnixCommand(
+            command = getCommandFile(script, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
+            sourceDir = dir,
+            prefix = prefix
+        )
+    }
+
+    fun getCommandFile(
+        script: String,
+        buildEnvs: List<BuildEnv>,
+        runtimeVariables: Map<String, String>,
+        continueNoneZero: Boolean = false
+    ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
 
@@ -164,13 +169,11 @@ object ShellUtil {
         command.append(setEnv.replace("##resultFile##", File(dir, "result.log").absolutePath))
         command.append(setGateValue.replace("##gateValueFile##", File(dir, GATEWAY_FILE).absolutePath))
         command.append(script)
+
         file.writeText(command.toString())
         executeUnixCommand("chmod +x ${file.absolutePath}", dir)
-        return if (outerCommandFunc == null) {
-            executeUnixCommand(file.absolutePath, dir, prefix)
-        } else {
-            outerCommandFunc(BuildScriptType.SHELL, buildId, file, dir)
-        }
+
+        return file
     }
 
     private fun executeUnixCommand(command: String, sourceDir: File, prefix: String = ""): String {

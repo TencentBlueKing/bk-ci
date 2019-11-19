@@ -227,11 +227,9 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\r\n${atomData.target.replace("\$bk_java_path", "%bk_java_path%")}\r\n")
                     BatScriptUtil.execute(
-                        buildVariables.buildId,
                         command.toString(),
                         environment,
-                        atomWorkspace,
-                        null
+                        atomWorkspace
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -242,12 +240,10 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\n${atomData.target}\n")
                     ShellUtil.execute(
-                        buildVariables.buildId,
                         command.toString(),
                         atomWorkspace,
                         buildVariables.buildEnvs,
-                        environment,
-                        null
+                        environment
                     )
                 }
             }

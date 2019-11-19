@@ -50,12 +50,9 @@ object BatScriptUtil {
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
 
     fun execute(
-        buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        outerCommandFunc:
-        ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)? = null,
         prefix: String = ""
     ): String {
         try {
@@ -95,13 +92,8 @@ object BatScriptUtil {
             logger.info("The default charset is $charset")
 
             file.writeText(command.toString(), charset)
-            return if (outerCommandFunc == null) {
-                logger.info("start to run windows script")
-                CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
-            } else {
-                logger.info("start to run windows codecc script")
-                outerCommandFunc(BuildScriptType.BAT, buildId, file, dir)
-            }
+            logger.info("start to run windows script")
+            return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
         } catch (e: Throwable) {
             logger.warn("Fail to execute bat script $script", e)
             throw e
