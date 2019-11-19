@@ -44,7 +44,7 @@ class WebSocketConfig @Autowired constructor(
     private val bkHandshake: BKHandshakeInterceptor
 ) : AbstractWebSocketMessageBrokerConfigurer() {
 
-    @Value("\${thread.min}")
+    @Value("\${thread.min:8}")
     private val min: Int = 8
 
     companion object {

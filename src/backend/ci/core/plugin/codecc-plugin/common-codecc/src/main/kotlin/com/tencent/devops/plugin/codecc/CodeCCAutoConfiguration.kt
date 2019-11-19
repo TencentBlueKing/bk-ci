@@ -24,25 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.plugin.codecc
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.plugin.codecc.config.CodeccConfig
+import com.tencent.devops.plugin.codecc.element.LinuxCodeCCScriptElementBizPlugin
+import com.tencent.devops.plugin.codecc.element.LinuxPaasCodeCCScriptElementBizPlugin
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import javax.annotation.PostConstruct
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
+class CodeCCAutoConfiguration {
 
-    @Autowired(required = false)
-    private var objectMapper: ObjectMapper? = null
+    @Bean
+    fun codeccConfig() = CodeccConfig()
 
-    @PostConstruct
-    fun registerSubtypesObjectMapper() {
-        ElementSubTypeRegisterLoader.registerElement(objectMapper)
-        DispatchSubTypeRegisterLoader.registerElement()
+    @Bean
+    fun coverityApi(codeccConfig: CodeccConfig): CodeccApi {
+        return CodeccApi(
+            codeccApiUrl = codeccConfig.codeccApiGateWay,
+            createPath = codeccConfig.createPath,
+            deletePath = codeccConfig.deletePath,
+            updatePath = codeccConfig.updatePath,
+            existPath = codeccConfig.existPath,
+            report = codeccConfig.report,
+            getRuleSetsPath = codeccConfig.getRuleSetsPath
+        )
     }
+
+    @Bean
+    fun linuxCodeCCScriptElementBizPlugin() = LinuxCodeCCScriptElementBizPlugin()
+
+    @Bean
+    fun linuxPaasCodeCCScriptElementBizPlugin(coverityApi: CodeccApi) =
+        LinuxPaasCodeCCScriptElementBizPlugin(coverityApi)
 }

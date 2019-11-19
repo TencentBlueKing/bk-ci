@@ -45,7 +45,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
-class TemplateDao {
+class StoreTemplateDao {
 
     fun list(
         dslContext: DSLContext,

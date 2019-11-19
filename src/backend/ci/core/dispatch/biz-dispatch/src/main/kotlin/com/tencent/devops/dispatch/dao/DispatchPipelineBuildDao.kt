@@ -38,7 +38,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineBuildDao {
+class DispatchPipelineBuildDao {
 
     fun exist(dslContext: DSLContext, buildId: String, vmSeqId: String): Boolean {
         with(TDispatchPipelineBuild.T_DISPATCH_PIPELINE_BUILD) {

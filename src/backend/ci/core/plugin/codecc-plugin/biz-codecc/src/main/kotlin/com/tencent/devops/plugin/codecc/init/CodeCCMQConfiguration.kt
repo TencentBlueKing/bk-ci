@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Configuration
  * MQ配置
  */
 @Configuration
-class MQConfiguration {
+class CodeCCMQConfiguration {
 
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)

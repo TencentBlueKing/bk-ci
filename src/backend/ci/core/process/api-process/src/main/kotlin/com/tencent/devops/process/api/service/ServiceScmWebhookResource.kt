@@ -24,39 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.websocket.servcie
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.code.github.GithubWebhook
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Service
-class ProjectServiceImpl @Autowired constructor(
-    private val client: Client
-) : ProjectService {
-    override fun checkProject(projectId: String, userId: String): Boolean {
-        try {
-            val projectList = client.get(ServiceProjectResource::class).list(userId).data
-            val privilegeProjectCodeList = mutableListOf<String>()
-            projectList?.map {
-                privilegeProjectCodeList.add(it.projectCode)
-            }
-            return if (privilegeProjectCodeList.contains(projectId)) {
-                true
-            } else {
-                logger.warn("changePage checkProject fail, user:$userId,projectId:$projectId,projectList:$projectList")
-                false
-            }
-        } catch (e: Exception) {
-            logger.error("checkProject fail,message:{}", e)
-            // 此处为了解耦，假设调用超时，默认还是做changePage的操作
-            return true
-        }
-    }
+@Api(tags = ["SERVICE_SCM"], description = "服务-SCM")
+@Path("/service/scm")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceScmWebhookResource {
 
-    companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
-    }
+    @ApiOperation("Github仓库提交")
+    @POST
+    @Path("/github/commit")
+    fun webHookCodeGithubCommit(
+        webhook: GithubWebhook
+    ): Result<Boolean>
+
+    @ApiOperation("Webhook代码库提交")
+    @POST
+    @Path("/webhook/commit")
+    fun webhookCommit(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        webhookCommit: WebhookCommit
+    ): Result<String>
 }

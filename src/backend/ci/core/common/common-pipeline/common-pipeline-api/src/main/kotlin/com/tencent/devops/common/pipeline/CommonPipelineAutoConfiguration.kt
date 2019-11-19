@@ -24,9 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.websocket.servcie
+package com.tencent.devops.common.pipeline
 
-interface ProjectService {
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import javax.annotation.PostConstruct
 
-	fun checkProject(projectId: String, userId: String): Boolean
+@Configuration
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class CommonPipelineAutoConfiguration {
+
+    @Autowired(required = false)
+    private var objectMapper: ObjectMapper? = null
+
+    @PostConstruct
+    fun registerSubtypesObjectMapper() {
+        ElementSubTypeRegisterLoader.registerElement(objectMapper)
+        DispatchSubTypeRegisterLoader.registerElement()
+    }
 }
