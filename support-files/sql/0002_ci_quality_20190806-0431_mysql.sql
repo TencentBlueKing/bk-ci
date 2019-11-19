@@ -83,19 +83,28 @@ CREATE TABLE IF NOT EXISTS `T_COUNT_PIPELINE` (
 -- Table structure for T_COUNT_RULE
 -- ----------------------------
 
-CREATE TABLE IF NOT EXISTS `T_COUNT_RULE` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `PROJECT_ID` varchar(32) NOT NULL,
-  `RULE_ID` bigint(20) NOT NULL,
-  `DATE` date NOT NULL,
-  `COUNT` int(11) NOT NULL,
-  `LAST_INTERCEPT_TIME` datetime NOT NULL,
-  `CREATE_TIME` datetime NOT NULL,
-  `UPDATE_TIME` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
-  `INTERCEPT_COUNT` int(11) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `PROJECT_ID_RULE_ID_DATE` (`PROJECT_ID`,`RULE_ID`,`DATE`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE`
+(
+    `ID`                      bigint(20)   NOT NULL AUTO_INCREMENT,
+    `NAME`                    varchar(128)          DEFAULT NULL COMMENT '规则名称',
+    `DESC`                    varchar(256)          DEFAULT NULL COMMENT '规则描述',
+    `INDICATOR_RANGE`         text,
+    `CONTROL_POINT`           varchar(64)           DEFAULT NULL COMMENT '控制点原子类型',
+    `CONTROL_POINT_POSITION`  varchar(64)           DEFAULT NULL COMMENT '控制点红线位置',
+    `CREATE_USER`             varchar(64)           DEFAULT NULL COMMENT '创建用户',
+    `UPDATE_USER`             varchar(64)           DEFAULT NULL COMMENT '更新用户',
+    `CREATE_TIME`             datetime              DEFAULT NULL COMMENT '创建时间',
+    `UPDATE_TIME`             datetime              DEFAULT NULL COMMENT '更新时间',
+    `ENABLE`                  bit(1)                DEFAULT b'1' COMMENT '是否启用',
+    `PROJECT_ID`              varchar(64)           DEFAULT NULL COMMENT '项目id',
+    `INTERCEPT_TIMES`         int(11)               DEFAULT '0' COMMENT '拦截次数',
+    `EXECUTE_COUNT`           int(11)               DEFAULT '0' COMMENT '生效流水线执行数',
+    `PIPELINE_TEMPLATE_RANGE` text COMMENT '流水线模板生效范围',
+    `GATEWAY_ID`              varchar(128) NOT NULL DEFAULT '',
+    PRIMARY KEY (`ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for T_GROUP
@@ -143,21 +152,26 @@ CREATE TABLE IF NOT EXISTS `T_HISTORY` (
 -- Table structure for T_QUALITY_CONTROL_POINT
 -- ----------------------------
 
-CREATE TABLE IF NOT EXISTS `T_QUALITY_CONTROL_POINT` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `ELEMENT_TYPE` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `NAME` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `STAGE` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `AVAILABLE_POSITION` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `DEFAULT_POSITION` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `ENABLE` bit(1) DEFAULT NULL,
-  `CREATE_USER` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `UPDATE_USER` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `CREATE_TIME` datetime DEFAULT NULL,
-  `UPDATE_TIME` datetime DEFAULT NULL,
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `ELEMENT_TYPE_INDEX` (`ELEMENT_TYPE`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='质量红线控制点表';
+CREATE TABLE IF NOT EXISTS `T_QUALITY_CONTROL_POINT`
+(
+    `ID`                 bigint(20)                   NOT NULL AUTO_INCREMENT,
+    `ELEMENT_TYPE`       varchar(64)        DEFAULT NULL COMMENT '原子的ClassType',
+    `NAME`               varchar(64)        DEFAULT NULL COMMENT '控制点名称(原子名称)',
+    `STAGE`              varchar(64)        DEFAULT NULL COMMENT '研发阶段',
+    `AVAILABLE_POSITION` varchar(64)        DEFAULT NULL COMMENT '支持红线位置(准入-BEFORE, 准出-AFTER)',
+    `DEFAULT_POSITION`   varchar(64)        DEFAULT NULL COMMENT '默认红线位置',
+    `ENABLE`             bit(1)                                DEFAULT NULL COMMENT '是否启用',
+    `CREATE_USER`        varchar(64)        DEFAULT NULL COMMENT '创建用户',
+    `UPDATE_USER`        varchar(64)        DEFAULT NULL COMMENT '更新用户',
+    `CREATE_TIME`        datetime                              DEFAULT NULL COMMENT '创建时间',
+    `UPDATE_TIME`        datetime                              DEFAULT NULL COMMENT '更新时间',
+    `ATOM_VERSION`       varchar(16)        DEFAULT '1.0.0' COMMENT '插件版本',
+    `TEST_PROJECT`       varchar(64) NOT NULL DEFAULT '' COMMENT '测试的项目',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `ELEMENT_TYPE_INDEX` (`ELEMENT_TYPE`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin COMMENT ='质量红线控制点表';
 
 -- ----------------------------
 -- Table structure for T_QUALITY_HIS_DETAIL_METADATA
@@ -198,32 +212,36 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_HIS_ORIGIN_METADATA` (
 -- ----------------------------
 -- Table structure for T_QUALITY_INDICATOR
 -- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_QUALITY_INDICATOR` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `ELEMENT_TYPE` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
-  `ELEMENT_NAME` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `ELEMENT_DETAIL` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `EN_NAME` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `CN_NAME` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `METADATA_IDS` text COLLATE utf8mb4_bin,
-  `DEFAULT_OPERATION` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
-  `OPERATION_AVAILABLE` text COLLATE utf8mb4_bin,
-  `THRESHOLD` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `THRESHOLD_TYPE` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
-  `DESC` varchar(256) COLLATE utf8mb4_bin DEFAULT NULL,
-  `INDICATOR_READ_ONLY` bit(1) DEFAULT NULL,
-  `STAGE` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
-  `INDICATOR_RANGE` text COLLATE utf8mb4_bin,
-  `ENABLE` bit(1) DEFAULT NULL,
-  `TYPE` varchar(32) COLLATE utf8mb4_bin DEFAULT 'SYSTEM',
-  `TAG` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
-  `CREATE_USER` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `UPDATE_USER` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
-  `CREATE_TIME` datetime DEFAULT NULL,
-  `UPDATE_TIME` datetime DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='质量红线指标表';
+CREATE TABLE IF NOT EXISTS `T_QUALITY_INDICATOR`
+(
+    `ID`                  bigint(20)    NOT NULL AUTO_INCREMENT,
+    `ELEMENT_TYPE`        varchar(32)            DEFAULT NULL COMMENT '原子的ClassType',
+    `ELEMENT_NAME`        varchar(64)            DEFAULT NULL COMMENT '产出原子',
+    `ELEMENT_DETAIL`      varchar(64)            DEFAULT NULL COMMENT '工具/原子子类',
+    `EN_NAME`             varchar(64)            DEFAULT NULL COMMENT '指标英文名',
+    `CN_NAME`             varchar(64)            DEFAULT NULL COMMENT '指标中文名',
+    `METADATA_IDS`        text COMMENT '指标所包含基础数据',
+    `DEFAULT_OPERATION`   varchar(32)            DEFAULT NULL COMMENT '默认操作',
+    `OPERATION_AVAILABLE` text COMMENT '可用操作',
+    `THRESHOLD`           varchar(64)            DEFAULT NULL COMMENT '默认阈值',
+    `THRESHOLD_TYPE`      varchar(32)            DEFAULT NULL COMMENT '阈值类型',
+    `DESC`                varchar(256)           DEFAULT NULL COMMENT '描述',
+    `INDICATOR_READ_ONLY` bit(1)                 DEFAULT NULL,
+    `STAGE`               varchar(32)            DEFAULT NULL COMMENT '阶段',
+    `INDICATOR_RANGE`     text,
+    `ENABLE`              bit(1)                 DEFAULT NULL COMMENT '是否启用',
+    `TYPE`                varchar(32)            DEFAULT 'SYSTEM' COMMENT '指标类型',
+    `TAG`                 varchar(32)            DEFAULT NULL COMMENT '指标标签，用于前端区分控制',
+    `CREATE_USER`         varchar(64)            DEFAULT NULL COMMENT '创建用户',
+    `UPDATE_USER`         varchar(64)            DEFAULT NULL COMMENT '更新用户',
+    `CREATE_TIME`         datetime               DEFAULT NULL COMMENT '创建时间',
+    `UPDATE_TIME`         datetime               DEFAULT NULL COMMENT '更新时间',
+    `ATOM_VERSION`        varchar(16)   NOT NULL DEFAULT '1.0.0' COMMENT '插件版本号',
+    `LOG_PROMPT`          varchar(1024) NOT NULL DEFAULT '',
+    PRIMARY KEY (`ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin COMMENT ='质量红线指标表';
 
 -- ----------------------------
 -- Table structure for T_QUALITY_METADATA
