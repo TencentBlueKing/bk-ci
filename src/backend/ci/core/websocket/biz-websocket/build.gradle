@@ -1,3 +1,4 @@
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,17 +26,13 @@
  */
 
 dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
     compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:ticket:api-ticket")
-    compile project(":core:process:api-process")
-    compile project(":core:common:common-scm")
-    compile project(":core:repository:api-repository")
-    compile project(":core:repository:model-repository")
-    compile project(":core:common:common-db")
-    compile "org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r"
+    compile project(":core:common:common-websocket")
+    compile project(":core:common:common-redis")
+    compile project(":core:project:api-project")
+    compile "org.springframework.boot:spring-boot-starter-websocket"
+    compile group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
+    compile "io.undertow:undertow-servlet"
+    compile "io.undertow:undertow-websockets-jsr"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

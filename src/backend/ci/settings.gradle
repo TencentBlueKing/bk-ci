@@ -172,3 +172,7 @@ include ":core:notify:biz-notify"
 include ":core:notify:biz-notify-blueking"
 include ":core:notify:model-notify"
 include ":core:notify:boot-notify"
+
+include ":core:websocket"
+include ":core:websocket:biz-websocket"
+include ":core:websocket:boot-websocket"

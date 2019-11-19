@@ -24,18 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:ticket:api-ticket")
-    compile project(":core:process:api-process")
-    compile project(":core:common:common-scm")
-    compile project(":core:repository:api-repository")
-    compile project(":core:repository:model-repository")
-    compile project(":core:common:common-db")
-    compile "org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r"
-}
+package com.tencent.devops.websocket.servcie
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class ProjectServiceImpl @Autowired constructor(
+    private val client: Client
+) : ProjectService {
+    override fun checkProject(projectId: String, userId: String): Boolean {
+        try {
+            val projectList = client.get(ServiceProjectResource::class).list(userId).data
+            val privilegeProjectCodeList = mutableListOf<String>()
+            projectList?.map {
+                privilegeProjectCodeList.add(it.projectCode)
+            }
+            return if (privilegeProjectCodeList.contains(projectId)) {
+                true
+            } else {
+                logger.warn("changePage checkProject fail, user:$userId,projectId:$projectId,projectList:$projectList")
+                false
+            }
+        } catch (e: Exception) {
+            logger.error("checkProject fail,message:{}", e)
+            // 此处为了解耦，假设调用超时，默认还是做changePage的操作
+            return true
+        }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
+}
