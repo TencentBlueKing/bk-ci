@@ -7,23 +7,23 @@ spring:
 
 # 并发配置
 queueConcurrency:
-  buildStart: 8
-  stage: 8
-  container: 8
-  task: 16
-  monitor: 8
-  buildFinish: 8
-  buildCancel: 3
-  pipelineCreate: 3
-  pipelineDelete: 2
-  pipelineUpdate: 5
-  timerTrigger: 8
-  webhook: 2
-  measure: 3
+  buildStart: 1
+  stage: 1
+  container: 1
+  task: 1
+  monitor: 1
+  buildFinish: 1
+  buildCancel: 1
+  pipelineCreate: 1
+  pipelineDelete: 1
+  pipelineUpdate: 1
+  timerTrigger: 1
+  webhook: 1
+  measure: 1
   market: 1
-  containerStartup: 2
-  heartBeat: 8
-  timerChanger: 3
+  containerStartup: 1
+  heartBeat: 1
+  timerChanger: 1
 
 server:
   port: 21921
