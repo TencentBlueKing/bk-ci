@@ -30,7 +30,7 @@
                             </template>
                         </bk-popover>
                     </label>
-                    <div class="bk-form-content" style="margin-top:4px;">
+                    <div class="bk-form-content gateway-item-content" style="margin-top:4px;">
                         <bk-radio-group v-model="constructImportForm.location">
                             <bk-radio v-for="(model, index) in gatewayList"
                                 :key="index"
@@ -170,6 +170,12 @@
         .handler-prompt {
             margin-top: 24px;
             text-align: left;
+        }
+
+        .gateway-item-content {
+            .bk-form-radio {
+                margin-bottom: 10px;
+            }
         }
 
         .construct-card-item {

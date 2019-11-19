@@ -3,25 +3,28 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right" v-if="nodeList.length > 0">
-                <bk-button theme="primary" class="create-node-btn"
-                    @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
-                <bk-dropdown-menu :align="'right'"
-                    @show="dropdownIsShow('show')"
-                    @hide="dropdownIsShow('hide')"
-                    ref="dropdown">
-                    <bk-button slot="dropdown-trigger">
-                        <span>{{ $t('environment.import') }}</span>
-                        <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
-                    </bk-button>
-                    <ul class="bk-dropdown-list" slot="dropdown-content">
-                        <li>
-                            <a href="javascript:;" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</a>
-                        </li>
-                        <li>
-                            <a href="javascript:;" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</a>
-                        </li>
-                    </ul>
-                </bk-dropdown-menu>
+                <template v-if="isExtendTx">
+                    <bk-button theme="primary" class="create-node-btn"
+                        @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
+                    <bk-dropdown-menu :align="'right'"
+                        @show="dropdownIsShow('show')"
+                        @hide="dropdownIsShow('hide')"
+                        ref="dropdown">
+                        <bk-button slot="dropdown-trigger">
+                            <span>{{ $t('environment.import') }}</span>
+                            <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                        </bk-button>
+                        <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <li>
+                                <a href="javascript:;" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</a>
+                            </li>
+                            <li>
+                                <a href="javascript:;" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</a>
+                            </li>
+                        </ul>
+                    </bk-dropdown-menu>
+                </template>
+                <bk-button theme="primary" class="import-vmbuild-btn" v-else @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -316,6 +319,9 @@
             },
             userInfo () {
                 return window.userInfo
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
