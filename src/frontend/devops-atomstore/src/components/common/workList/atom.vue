@@ -158,31 +158,33 @@
                                 <div v-if="atomErrors.languageError" class="error-tips"> {{ $t('开发语言不能为空') }} </div>
                             </div>
                         </div>
-                        <div class="bk-form-item is-required">
-                            <label class="bk-label"> {{ $t('授权方式') }} </label>
-                            <div class="bk-form-content atom-item-content">
-                                <bk-radio-group v-model="createAtomForm.authType">
-                                    <bk-radio :value="entry.value" v-for="(entry, key) in authTypeList" :key="key">{{ entry.label }}</bk-radio>
-                                </bk-radio-group>
+                        <template v-if="!isEnterprise">
+                            <div class="bk-form-item is-required">
+                                <label class="bk-label"> {{ $t('授权方式') }} </label>
+                                <div class="bk-form-content atom-item-content">
+                                    <bk-radio-group v-model="createAtomForm.authType">
+                                        <bk-radio :value="entry.value" v-for="(entry, key) in authTypeList" :key="key">{{ entry.label }}</bk-radio>
+                                    </bk-radio-group>
+                                </div>
                             </div>
-                        </div>
-                        <div class="bk-form-item is-required">
-                            <label class="bk-label"> {{ $t('是否开源') }} </label>
-                            <div class="bk-form-content atom-item-content">
-                                <bk-radio-group v-model="createAtomForm.visibilityLevel">
-                                    <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{ entry.label }}</bk-radio>
-                                </bk-radio-group>
-                                <p v-if="atomErrors.openSourceError" class="error-tips"> {{ $t('是否开源不能为空') }} </p>
+                            <div class="bk-form-item is-required">
+                                <label class="bk-label"> {{ $t('是否开源') }} </label>
+                                <div class="bk-form-content atom-item-content">
+                                    <bk-radio-group v-model="createAtomForm.visibilityLevel">
+                                        <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{ entry.label }}</bk-radio>
+                                    </bk-radio-group>
+                                    <p v-if="atomErrors.openSourceError" class="error-tips"> {{ $t('是否开源不能为空') }} </p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="bk-form-item is-required" v-if="createAtomForm.visibilityLevel === 'PRIVATE'">
-                            <label class="bk-label"> {{ $t('不开源原因') }} </label>
-                            <div class="bk-form-content atom-item-content">
-                                <bk-input v-model="createAtomForm.privateReason" type="textarea" :placeholder="$t('请输入不开源原因')" @input="atomErrors.privateReasonError = false"></bk-input>
-                                <p v-if="atomErrors.privateReasonError" class="error-tips"> {{ $t('不开源原因不能为空') }} </p>
+                            <div class="bk-form-item is-required" v-if="createAtomForm.visibilityLevel === 'PRIVATE'">
+                                <label class="bk-label"> {{ $t('不开源原因') }} </label>
+                                <div class="bk-form-content atom-item-content">
+                                    <bk-input v-model="createAtomForm.privateReason" type="textarea" :placeholder="$t('请输入不开源原因')" @input="atomErrors.privateReasonError = false"></bk-input>
+                                    <p v-if="atomErrors.privateReasonError" class="error-tips"> {{ $t('不开源原因不能为空') }} </p>
+                                </div>
                             </div>
-                        </div>
-                        <form-tips :tips-content="createTips" class="atom-tip"></form-tips>
+                            <form-tips :tips-content="createTips" class="atom-tip"></form-tips>
+                        </template>
                         <div class="form-footer">
                             <button class="bk-button bk-primary" type="button" @click="submitCreateAtom()"> {{ $t('提交') }} </button>
                             <button class="bk-button bk-default" type="button" @click="cancelCreateAtom()"> {{ $t('取消') }} </button>
@@ -333,6 +335,10 @@
                 const index = innerHosts.findIndex(innerHost => innerHost === host)
                 const group = index > -1 ? 'bkdevops-plugins-test' : 'bkdevops-plugins'
                 return `${this.$t('提交后，系统将在工蜂自动创建插件代码库，地址示例')}：http://git.code.oa.com/${group}/${this.createAtomForm.atomCode}.git`
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
 

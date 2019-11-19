@@ -181,6 +181,10 @@
             }
         },
 
+        created () {
+            if (VERSION_TYPE === 'ee') this.storeTypes.pop()
+        },
+
         methods: {
             ...mapActions('store', [
                 'requestAtomClassifys',
