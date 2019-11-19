@@ -34,7 +34,7 @@
                             <div class="table-node-item node-item-os">{{ $t('environment.nodeInfo.os') }}</div>
                             <div class="table-node-item node-item-area">{{ $t('environment.nodeInfo.gateway') }}</div>
                             <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
-                            <div class="table-node-item node-item-agstatus">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>
+                            <div class="table-node-item node-item-agstatus" v-if="isExtendTx">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>
                             <div class="table-node-item node-item-handler node-header-head">{{ $t('environment.operation') }}</div>
                         </div>
                         <div class="table-node-body" ref="scrollBox">
@@ -77,7 +77,7 @@
 
                                     <span class="node-status">{{ row.nodeStatus }}</span>
                                 </div>
-                                <div class="table-node-item node-item-agstatus">
+                                <div class="table-node-item node-item-agstatus" v-if="isExtendTx">
                                     <span class="node-status-icon normal-stutus-icon" v-if="row.agentStatus"></span>
                                     <span class="node-status-icon abnormal-stutus-icon" v-if="!row.agentStatus && row.nodeType !== $t('environment.BCSVirtualMachine')"></span>
                                     <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
@@ -354,6 +354,9 @@
             },
             curUserInfo () {
                 return window.userInfo
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {

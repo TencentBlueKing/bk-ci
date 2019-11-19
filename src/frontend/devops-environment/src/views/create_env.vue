@@ -44,8 +44,8 @@
                 <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
                     <bk-radio-group v-model="createEnvForm.envType">
                         <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
-                        <bk-radio :value="'DEV'">{{ $t('environment.envInfo.devEnvType') }}</bk-radio>
-                        <bk-radio :value="'PROD'">{{ $t('environment.envInfo.testEnvType') }}</bk-radio>
+                        <bk-radio :value="'DEV'" v-if="isExtendTx">{{ $t('environment.envInfo.devEnvType') }}</bk-radio>
+                        <bk-radio :value="'PROD'" v-if="isExtendTx">{{ $t('environment.envInfo.testEnvType') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
@@ -215,6 +215,9 @@
             },
             curUserInfo () {
                 return window.userInfo
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
