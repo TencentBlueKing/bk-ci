@@ -43,15 +43,14 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
-        private val dslContext: DSLContext,
-        private val serviceTypeDao: ServiceTypeDao,
-        private val serviceDao: ServiceDao,
-        private val favoriteDao: FavoriteDao,
-        private val gray: Gray,
-        private val redisOperation: RedisOperation
+    private val dslContext: DSLContext,
+    private val serviceTypeDao: ServiceTypeDao,
+    private val serviceDao: ServiceDao,
+    private val favoriteDao: FavoriteDao,
+    private val gray: Gray,
+    private val redisOperation: RedisOperation
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -94,12 +93,11 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
      * 批量修改服务url
      */
     override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
-        if(serviceUrlUpdateInfoList == null) {
+        if (serviceUrlUpdateInfoList == null) {
             return Result(data = true)
         }
         serviceUrlUpdateInfoList.forEach {
             serviceDao.updateUrlByName(dslContext, it)
-
         }
         return Result(data = true)
     }

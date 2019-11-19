@@ -52,7 +52,6 @@ class ActivityService @Autowired constructor(
         activityDao.create(dslContext, userId, activityInfo, type)
     }
 
-
     fun delete(userId: String, activityId: Long) {
         activityDao.delete(dslContext, activityId)
     }

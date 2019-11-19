@@ -67,8 +67,7 @@ interface UserProjectServiceService {
     /**
      * 批量跟新服务URL信息
      */
-    fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList:  List<ServiceUrlUpdateInfo>?): Result<Boolean>
-
+    fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean>
 
     /**
      * 读取指定服务的信息
@@ -81,5 +80,4 @@ interface UserProjectServiceService {
     fun syncService(userId: String, services: List<ServiceListVO>)
 
     fun updateServiceUrls(userId: String, name: String, serviceUpdateUrls: ServiceUpdateUrls): Result<Boolean>
-
 }
