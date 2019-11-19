@@ -30,6 +30,7 @@ import com.tencent.devops.common.auth.api.MockAuthPermissionApi
 import com.tencent.devops.common.auth.api.MockAuthProjectApi
 import com.tencent.devops.common.auth.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.api.MockAuthTokenApi
+import com.tencent.devops.common.auth.code.BkArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BkBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BkCodeAuthServiceCode
 import com.tencent.devops.common.auth.code.BkEnvironmentAuthServiceCode
@@ -91,4 +92,7 @@ class AuthAutoConfiguration {
 
     @Bean
     fun qualityAuthServiceCode() = BkQualityAuthServiceCode()
+
+    @Bean
+    fun artifactoryAuthServiceCode() = BkArtifactoryAuthServiceCode()
 }
