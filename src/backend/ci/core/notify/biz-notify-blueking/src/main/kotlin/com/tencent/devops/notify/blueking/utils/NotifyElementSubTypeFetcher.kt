@@ -24,13 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
-}
+package com.tencent.devops.notify.blueking.utils
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.notify.pojo.elements.SendEmailNotifyElement
+import com.tencent.devops.common.notify.pojo.elements.SendRTXNotifyElement
+import com.tencent.devops.common.notify.pojo.elements.SendSmsNotifyElement
+import com.tencent.devops.common.notify.pojo.elements.SendWechatNotifyElement
+import com.tencent.devops.common.pipeline.ElementSubTypeFetcher
+import com.tencent.devops.common.pipeline.pojo.element.Element
+
+class NotifyElementSubTypeFetcher : ElementSubTypeFetcher {
+    override fun jsonSubTypes(): Map<String, Class<out Element>> {
+        return mapOf(
+            SendEmailNotifyElement.classType to SendEmailNotifyElement::class.java,
+            SendRTXNotifyElement.classType to SendRTXNotifyElement::class.java,
+            SendSmsNotifyElement.classType to SendSmsNotifyElement::class.java,
+            SendWechatNotifyElement.classType to SendWechatNotifyElement::class.java
+        )
+    }
+}

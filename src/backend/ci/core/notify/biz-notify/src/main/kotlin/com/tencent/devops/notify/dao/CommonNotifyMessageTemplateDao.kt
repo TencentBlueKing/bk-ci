@@ -23,14 +23,29 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.dao
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
+import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
+import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class CommonNotifyMessageTemplateDao {
+    /**
+     * 根据模板代码和模板名称获取公共消息模板
+     */
+    fun getCommonNotifyMessageTemplateByCode(
+        dslContext: DSLContext,
+        templateCode: String
+    ): TCommonNotifyMessageTemplateRecord? {
+        with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_CODE.eq(templateCode))
+            val baseStep = dslContext.selectFrom(this)
+                .where(conditions)
+            return baseStep.fetchOne()
+        }
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

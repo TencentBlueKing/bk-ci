@@ -23,14 +23,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.sdk.pojo
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
-}
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+abstract class ApiReq(
+    open var bk_app_code: String?,
+    open var bk_app_secret: String?,
+    open var bk_token: String?,
+    open val bk_username: String?
+)
