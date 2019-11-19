@@ -82,6 +82,21 @@ CREATE TABLE IF NOT EXISTS `T_COUNT_PIPELINE` (
 -- ----------------------------
 -- Table structure for T_COUNT_RULE
 -- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_COUNT_RULE`
+(
+    `ID`                  bigint(20)  NOT NULL AUTO_INCREMENT,
+    `PROJECT_ID`          varchar(32) NOT NULL,
+    `RULE_ID`             bigint(20)  NOT NULL,
+    `DATE`                date        NOT NULL,
+    `COUNT`               int(11)     NOT NULL,
+    `INTERCEPT_COUNT`     int(11)     NOT NULL DEFAULT '0',
+    `LAST_INTERCEPT_TIME` datetime    NOT NULL,
+    `CREATE_TIME`         datetime    NOT NULL,
+    `UPDATE_TIME`         datetime    NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `PROJECT_ID_RULE_ID_DATE` (`PROJECT_ID`, `RULE_ID`, `DATE`) USING BTREE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE`
 (
