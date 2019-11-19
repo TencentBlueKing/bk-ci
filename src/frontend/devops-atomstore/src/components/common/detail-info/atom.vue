@@ -4,7 +4,7 @@
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 {{detail.name}}
-                <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
+                <template v-if="!isEnterprise && userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
                         <span>{{approveMsg}}</span>
@@ -146,6 +146,10 @@
                 if (this.detail.defaultFlag) info.des = `${this.$t('通用流水线插件，所有项目默认可用，无需安装')}`
                 if (!this.detail.flag) info.des = `${this.$t('你没有该流水线插件的安装权限，请联系流水线插件发布者')}`
                 return info
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
 
