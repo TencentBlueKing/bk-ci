@@ -9,14 +9,31 @@ spring:
 server:
   port: __BKCI_REPOSITORY_API_PORT__
 
+repository:
+  git: # git 管理私有Token，一般不用，用于插件库分组
+    devopsPrivateToken: __DEVOPS_GIT_PRIVATE_TOKEN__
+    devopsGroupName: __DEVOPS_GIT_PLUGIN_GROUP_NAME__
+
 scm:
-  #svn open api url
+  #svn open api url，如果不需要则放着即可
   svn:
     apiKey: __SVN_API_KEY__
     apiUrl: __SVN_URL__/rest
     webhookApiUrl: __SVN_URL__/rest/webhooks
     svnHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/ms/process/api/external/scm/codesvn/commit
-
+  # git 仓库配置，如果不需要则放着即可
+  git:
+    url: http://__GIT_HOST__
+    apiUrl: http://__GIT_HOST__/api/v3
+    clientId: clientId
+    clientSecret: Secret
+    redirectUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
+    redirectAtomMarketUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomList
+    gitHookUrl: http://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/process/api/external/scm/codegit/commit
+    public:
+      account: devops
+      email: devops@devops.com
+      secret: devops123
   external:
     #gitlab typo repository
     gitlab:
