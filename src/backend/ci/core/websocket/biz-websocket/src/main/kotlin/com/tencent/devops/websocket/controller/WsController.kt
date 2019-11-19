@@ -24,18 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:ticket:api-ticket")
-    compile project(":core:process:api-process")
-    compile project(":core:common:common-scm")
-    compile project(":core:repository:api-repository")
-    compile project(":core:repository:model-repository")
-    compile project(":core:common:common-db")
-    compile "org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r"
-}
+package com.tencent.devops.websocket.controller
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.websocket.pojo.ChangePageDTO
+import com.tencent.devops.websocket.pojo.ClearUserDTO
+import com.tencent.devops.websocket.pojo.LoginOutDTO
+import com.tencent.devops.websocket.servcie.WebsocketService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.messaging.handler.annotation.MessageMapping
+import org.springframework.stereotype.Controller
+
+@Controller
+class WsController @Autowired constructor(
+    val websocketService: WebsocketService
+) {
+
+    @MessageMapping("/changePage")
+    fun changePage(changePage: ChangePageDTO) {
+        websocketService.changePage(changePage.userId, changePage.sessionId, changePage.page, changePage.projectId)
+    }
+
+    @MessageMapping("/loginOut")
+    fun loginOut(loginOutDTO: LoginOutDTO) {
+        websocketService.loginOut(loginOutDTO.userId, loginOutDTO.sessionId, loginOutDTO.page)
+    }
+
+    @MessageMapping("/clearUserSession")
+    fun clearUserSession(clearUserDTO: ClearUserDTO) {
+        websocketService.clearUserSession(clearUserDTO.userId, clearUserDTO.sessionId)
+    }
+}
