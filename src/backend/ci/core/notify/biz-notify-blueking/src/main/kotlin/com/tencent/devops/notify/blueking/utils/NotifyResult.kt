@@ -23,14 +23,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.utils
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
+data class NotifyResult constructor(
+    var Ret: Int,
+    var ErrCode: Int,
+    var ErrMsg: String,
+    var StackTrace: String?,
+    var data: Any?
+) {
+    constructor(errorMessage: String) : this(-1, 500, errorMessage, null, null)
+
+    override fun toString(): String {
+        return "Ret:$Ret, ErrCode:$ErrCode, ErrMsg:$ErrMsg, StackTrace:$String, data:$data"
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -69,7 +69,7 @@ auth:
   bkloginUrl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/login/api/v2
 
 
-#esb config for cd plugin in pipeline
+#bk esb config for cd plugin in pipeline
 esb:
   code: __APP_CODE__
   secret: __APP_TOKEN__
@@ -100,10 +100,7 @@ codeoa:
   api-key: __CODEOA_API_KEY__
   api-url: __CODEOA_API_URL__
   git-url: __CODEOA_GIT_URL__
-# notify
-app:
-  code: __APP_CODE__
-  secret: __APP_TOKEN__
+
 bk:
   paas:
     host: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__
