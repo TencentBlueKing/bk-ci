@@ -52,7 +52,7 @@ module.exports = (env = {}, argv) => {
   const envDist = env && env.dist ? env.dist : 'frontend'
   const lsVersion = env && env.lsVersion ? env.lsVersion : 'dev' // 最后一个命令行参数为localStorage版本
   const dist = path.join(__dirname, `../${envDist}/console`)
-  console.log(lsVersion, 'lsVersion')
+  
   const config = webpackBaseConfig({
     env,
     argv,
