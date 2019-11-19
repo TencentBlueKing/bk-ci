@@ -25,8 +25,7 @@
  */
 
 dependencies {
-    compile project(":core:project:biz-project")
-    compile project(":core:common:common-auth:common-auth-sample")
+    compile project(":core:project:biz-project-sample")
 }
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+apply from: "$rootDir/task_spring_boot_package.gradle"
