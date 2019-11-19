@@ -24,40 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc
+package com.tencent.devops.process.api
 
-import com.tencent.devops.plugin.codecc.config.CodeccConfig
-import com.tencent.devops.plugin.codecc.element.LinuxCodeCCScriptElementBizPlugin
-import com.tencent.devops.plugin.codecc.element.LinuxPaasCodeCCScriptElementBizPlugin
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
+import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
+import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.code.github.GithubWebhook
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
-
-    @Bean
-    fun codeccConfig() = CodeccConfig()
-
-    @Bean
-    fun coverityApi(codeccConfig: CodeccConfig): CodeccApi {
-        return CodeccApi(
-            codeccApiUrl = codeccConfig.codeccApiGateWay,
-            createPath = codeccConfig.createPath,
-            deletePath = codeccConfig.deletePath,
-            updatePath = codeccConfig.updatePath,
-            existPath = codeccConfig.existPath,
-            report = codeccConfig.report,
-            getRuleSetsPath = codeccConfig.getRuleSetsPath
-        )
+@RestResource
+class ServiceScmWebhookResourceImpl @Autowired constructor(
+    private val pipelineBuildService: PipelineBuildWebhookService,
+    private val rabbitTemplate: RabbitTemplate
+) : ServiceScmWebhookResource {
+    override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
+        return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(rabbitTemplate, GithubWebhookEvent(githubWebhook = webhook)))
     }
 
-    @Bean
-    fun linuxCodeCCScriptElementBizPlugin() = LinuxCodeCCScriptElementBizPlugin()
-
-    @Bean
-    fun linuxPaasCodeCCScriptElementBizPlugin(coverityApi: CodeccApi) =
-        LinuxPaasCodeCCScriptElementBizPlugin(coverityApi)
+    override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
+        return Result(pipelineBuildService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
+    }
 }

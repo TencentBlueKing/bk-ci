@@ -47,7 +47,7 @@ import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
 import com.tencent.devops.process.constant.ProcessMessageCode.OK
 import com.tencent.devops.process.engine.pojo.Response
-import com.tencent.devops.process.service.scm.ScmService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceCommitResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,7 +59,7 @@ import org.springframework.stereotype.Component
  */
 @Component
 class TimerTriggerScmChangeInterceptor @Autowired constructor(
-    private val scmService: ScmService,
+    private val scmProxyService: ScmProxyService,
     private val client: Client
 ) : PipelineInterceptor {
 
@@ -186,7 +186,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         if (ele.revision.isNullOrBlank()) {
 
             val latestRevision =
-                scmService.recursiveFetchLatestRevision(projectId, pipelineId, repositoryConfig, ele.svnPath, variables)
+                scmProxyService.recursiveFetchLatestRevision(projectId, pipelineId, repositoryConfig, ele.svnPath, variables)
 
             if (latestRevision.isNotOk() || latestRevision.data == null) {
                 logger.warn("[$pipelineId] get svn latestRevision fail!")
@@ -259,7 +259,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 // 如果没有初始化，就初始化一下
                 if (t.isNullOrBlank()) {
                     val result =
-                        scmService.recursiveFetchLatestRevision(
+                        scmProxyService.recursiveFetchLatestRevision(
                             projectId,
                             pipelineId,
                             repositoryConfig,

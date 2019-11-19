@@ -44,12 +44,12 @@ import org.springframework.web.socket.server.HandshakeInterceptor
 
 @Configuration
 @EnableWebSocketMessageBroker
-class WebSocketConfig @Autowired constructor(
+class PipelineWebSocketConfig @Autowired constructor(
     private val client: Client
 ) : AbstractWebSocketMessageBrokerConfigurer() {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WebSocketConfig::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineWebSocketConfig::class.java)
     }
 
     override fun configureMessageBroker(config: MessageBrokerRegistry) {

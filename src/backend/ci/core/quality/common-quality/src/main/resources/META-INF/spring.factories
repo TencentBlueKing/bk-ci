@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.quality.AutoConfiguration
+com.tencent.devops.quality.QualityAutoConfiguration
