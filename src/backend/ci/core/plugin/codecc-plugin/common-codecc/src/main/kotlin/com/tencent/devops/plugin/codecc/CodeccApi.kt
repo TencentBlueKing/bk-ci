@@ -94,6 +94,8 @@ open class CodeccApi constructor(
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element)
             )
+            logger.info("start to create task: $body")
+
             val header = mapOf(
                 USER_NAME_HEADER to rtx,
                 DEVOPS_PROJECT_ID to projectId,
