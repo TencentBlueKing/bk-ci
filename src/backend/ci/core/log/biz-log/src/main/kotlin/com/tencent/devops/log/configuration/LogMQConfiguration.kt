@@ -54,7 +54,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class MQConfiguration @Autowired constructor() {
+class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
@@ -147,6 +147,6 @@ class MQConfiguration @Autowired constructor() {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MQConfiguration::class.java)
+        private val logger = LoggerFactory.getLogger(LogMQConfiguration::class.java)
     }
 }

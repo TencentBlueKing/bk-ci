@@ -65,8 +65,8 @@ import java.net.URLEncoder
 import java.util.Base64
 
 @Service
-class ScmService @Autowired constructor(private val client: Client) {
-    private val logger = LoggerFactory.getLogger(ScmService::class.java)
+class ScmProxyService @Autowired constructor(private val client: Client) {
+    private val logger = LoggerFactory.getLogger(ScmProxyService::class.java)
 
     fun recursiveFetchLatestRevision(
         projectId: String,

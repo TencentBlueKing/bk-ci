@@ -24,20 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality
+package com.tencent.devops.websocket.servcie
 
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+interface ProjectProxyService {
 
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
-
-    @Bean
-    fun qualityGateInElementBizPlugin() = QualityGateInElementBizPlugin()
-
-    @Bean
-    fun qualityGateOutElementBizPlugin() = QualityGateOutElementBizPlugin()
+	fun checkProject(projectId: String, userId: String): Boolean
 }
