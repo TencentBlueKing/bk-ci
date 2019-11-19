@@ -34,7 +34,7 @@
                 },
                 sideMenuNav: {
                     icon: 'artifactory',
-                    title: '版本仓库',
+                    title: VERSION_TYPE === 'tencent' ? '版本仓库' : '制品库',
                     url: `${DOCS_URL_PREFIX}/所有服务/版本仓库/summary.html`
                 },
                 baseObj: {
@@ -89,7 +89,9 @@
             }
         },
         created () {
-            this.$store.dispatch('artifactory/requestProjectList')
+            if (VERSION_TYPE === 'tencent') {
+                this.$store.dispatch('artifactory/requestProjectList')
+            }
             bus.$off('get-item')
             bus.$on('get-item', (data) => {
                 this.getItems(data.roadMap, data.list, data.noLoading)

@@ -64,7 +64,7 @@
                         <li @click.stop="handlerDownload()">
                             <i class="bk-icon icon-download"></i>下载
                         </li>
-                        <li @click.stop="handlerDownload($event, 'MoF')" v-if="isWindows && isApkOrIpa() && isMof">
+                        <li @click.stop="handlerDownload($event, 'MoF')" v-if="isExtendTx && isWindows && isApkOrIpa() && isMof">
                             <i class="bk-icon icon-download"></i>魔方有线安装
                         </li>
                         <li @click.stop="refresh()">
@@ -231,6 +231,9 @@
                 return this.projectList.find(item => {
                     return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
                 })
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {

@@ -6,7 +6,7 @@
             </div>
             <!-- <bk-guide></bk-guide> -->
             <div class="biz-actions">
-                <a :href="`${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E5%AE%B9%E5%99%A8%E6%9C%8D%E5%8A%A1/bkcli/%E5%A6%82%E4%BD%95%E5%90%91%E8%93%9D%E7%9B%BE%E6%8E%A8%E9%80%81%E9%95%9C%E5%83%8F.html`"
+                <a :href="`${DOCS_URL_PREFIX}/所有服务/容器服务/bkcli/如何向蓝盾推送镜像.html`"
                     target="_blank" class="bk-text-button ml10">如何推镜像？</a>
             </div>
         </div>

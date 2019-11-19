@@ -27,7 +27,7 @@
                     :key="index"
                     @click.stop="selectList(data)">
                     <div class="bk-selector-node" :class="activeClass(index)">
-                        <img :src="localCoverAvatar(data)" class="bk-data-avatar">
+                        <!-- <img :src="localCoverAvatar(data)" class="bk-data-avatar"> -->
                         <span class="text">{{ data }}</span>
                     </div>
                 </li>
@@ -361,7 +361,7 @@
              */
             localCoverAvatar (data) {
                 const member = /^\$\{(.*)\}$/.test(data) ? 'un_know' : data
-                return `http://dayu.oa.com/avatars/${member}/avatar.jpg`
+                return `http://bking.com/avatars/${member}/avatar.jpg`
             },
             // 重置input
             resetInput () {
