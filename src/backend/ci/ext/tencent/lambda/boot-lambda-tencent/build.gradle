@@ -25,8 +25,7 @@
  */
 
 dependencies {
-    compile project(":core:common:common-auth:common-auth-sample")
-    compile project(":ext:tencent:lambda:api-lambda-tencent")
+    //compile project(":ext:tencent:common:common-auth:common-auth-tencent")
     compile project(":ext:tencent:lambda:biz-lambda-tencent") // tencent是内部版实现
 }
 

@@ -25,6 +25,8 @@
  */
 
 dependencies {
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-web")
     compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":core:common:common-kafka")
     compile project(":core:common:common-es")
@@ -36,7 +38,6 @@ dependencies {
     compile project(":ext:tencent:lambda:model-lambda")
     compile project(":core:project:api-project")
     compile project(":ext:tencent:lambda:api-lambda-tencent")
-    compile project(":ext:tencent:lambda:model-lambda")
     testCompile project(":core:common:common-test")
 }
 
