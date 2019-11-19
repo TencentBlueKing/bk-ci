@@ -34,6 +34,8 @@ dockerCli:
   volumeNpmRc: /root/.npmrc
   volumeCcache: /root/.ccache
   volumeGradleCache: /root/.gradle/caches
+  hostPathLinkDir: /tmp/bkci
+  hostPathHosts: /etc/hosts
 
   # docker 母机上的配置，workspace用于存放构建的工作空间，可以以挂载的方式提供
   hostPathWorkspace: __INSTALL_PATH__/public/__MODULE__/docker/workspace
@@ -49,3 +51,13 @@ dockerCli:
   hostPathNpmRc: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/.npmrc
   hostPathCcache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/ccache/
   hostPathGradleCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/gradle_caches
+  # 需要共享的项目
+  shareProjectCodeWhiteList:
+  # docker.jar 存储路径
+  dockerAgentPath: __INSTALL_PATH__/__MODULE__/agent-package/worker-agent.jar
+  downloadDockerAgentUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/dispatch/gw/build/docker.jar
+  # 定期下载
+  downloadAgentCron: 0 0 3 * * ?
+  landunEnv: prod
+  clearLocalImageCron: 0 0 2 * * ?
+  localImageCacheDays: 7
