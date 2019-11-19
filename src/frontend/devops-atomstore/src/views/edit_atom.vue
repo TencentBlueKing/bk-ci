@@ -59,21 +59,34 @@
                         <div v-if="formErrors.sortError" class="error-tips"> {{ $t('分类不能为空') }} </div>
                     </div>
                 </div>
-                <div class="bk-form-item is-required" ref="jobError">
-                    <label class="bk-label env-label"> {{ $t('适用Job类型') }} </label>
+                <div class="bk-form-item is-required" v-if="isEnterprise">
+                    <label class="bk-label env-label"> {{ $t('操作系统') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-radio-group v-model="atomForm.jobType" class="radio-group">
-                            <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="formErrors.jobError = false">{{entry.label}}</bk-radio>
-                        </bk-radio-group>
-                        <div v-if="formErrors.jobError" class="error-tips"> {{ $t('字段有误，请重新选择') }} </div>
+                        <bk-checkbox-group v-model="atomForm.os">
+                            <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
+                                <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
+                            </bk-checkbox>
+                        </bk-checkbox-group>
+                        <div v-if="formErrors.envError" class="error-tips"> {{ $t('操作系统不能为空') }} </div>
                     </div>
                 </div>
-                <bk-checkbox-group v-model="atomForm.os" v-if="atomForm.jobType === 'AGENT'" class="bk-form-content" ref="envError">
-                    <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
-                        <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
-                    </bk-checkbox>
-                </bk-checkbox-group>
-                <div v-if="formErrors.envError" class="error-tips env-error"> {{ $t('需要选择编译环境') }} </div>
+                <template v-else>
+                    <div class="bk-form-item is-required" ref="jobError">
+                        <label class="bk-label env-label"> {{ $t('适用Job类型') }} </label>
+                        <div class="bk-form-content atom-item-content">
+                            <bk-radio-group v-model="atomForm.jobType" class="radio-group">
+                                <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="formErrors.jobError = false">{{entry.label}}</bk-radio>
+                            </bk-radio-group>
+                            <div v-if="formErrors.jobError" class="error-tips"> {{ $t('字段有误，请重新选择') }} </div>
+                        </div>
+                    </div>
+                    <bk-checkbox-group v-model="atomForm.os" v-if="atomForm.jobType === 'AGENT'" class="bk-form-content atom-os" ref="envError">
+                        <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
+                            <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i><span class="bk-checkbox-text">{{ entry.label }}</span>
+                        </bk-checkbox>
+                    </bk-checkbox-group>
+                </template>
+                <div v-if="!isEnterprise && formErrors.envError" class="error-tips env-error"> {{ $t('需要选择编译环境') }} </div>
                 <div class="bk-form-item">
                     <label class="bk-label"> {{ $t('功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
@@ -92,7 +105,7 @@
                         </bk-select>
                     </div>
                 </div>
-                <div class="bk-form-item is-required is-open" ref="openSourceError" v-if="!atomForm.version">
+                <div class="bk-form-item is-required is-open" ref="openSourceError" v-if="!atomForm.version && !isEnterprise">
                     <label class="bk-label"> {{ $t('是否开源') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
@@ -203,6 +216,20 @@
                         </bk-popover>
                     </div>
                 </div>
+                <div class="bk-form-item release-package-form-item is-required" style="margin-top: 10px" v-if="isEnterprise">
+                    <label class="bk-label"> {{ $t('发布包') }} </label>
+                    <div class="bk-form-content atom-item-content">
+                        <bk-file-upload
+                            :post-url="releasePackageUrl"
+                            :os="atomForm.os"
+                            :tip="$t('只允许上传 zip 格式的文件')"
+                            accept="application/zip"
+                            @uploadSuccess="uploadPackageSuccess"
+                            @uploadFail="uploadPackageErr"
+                        ></bk-file-upload>
+                        <div v-if="formErrors.releasePackageError" class="error-tips"> {{ $t('发布包不能为空') }} </div>
+                    </div>
+                </div>
                 <div class="bk-form-item versionlog-form-item is-required">
                     <label class="bk-label"> {{ $t('版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
@@ -230,10 +257,12 @@
 <script>
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
+    import bkFileUpload from '@/components/common/file-upload'
 
     export default {
         components: {
-            selectLogo
+            selectLogo,
+            bkFileUpload
         },
         data () {
             return {
@@ -327,6 +356,12 @@
             },
             toolbarOptions () {
                 return toolbars
+            },
+            releasePackageUrl () {
+                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+            },
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
         watch: {
@@ -538,6 +573,23 @@
                 }
             },
 
+            uploadPackageSuccess (data) {
+                if (data.atomEnvRequest) {
+                    this.atomForm.packageShaContent = data.atomEnvRequest.shaContent
+                    this.atomForm.pkgName = data.atomEnvRequest.pkgName
+                    this.formErrors.releasePackageError = false
+                }
+            },
+
+            uploadPackageErr (message) {
+                if (message) {
+                    this.$bkMessage({
+                        message: message,
+                        theme: 'error'
+                    })
+                }
+            },
+
             checkValid () {
                 let errorCount = 0
                 let ref = ''
@@ -560,7 +612,7 @@
                     errorCount++
                 }
 
-                if (this.jobTypeList.find(x => x.value === this.atomForm.jobType) < 0) {
+                if (!this.isEnterprise && this.jobTypeList.find(x => x.value === this.atomForm.jobType) < 0) {
                     this.formErrors.jobError = true
                     ref = ref || 'jobError'
                     errorCount++
@@ -572,7 +624,7 @@
                     errorCount++
                 }
 
-                if (this.isOpenSource.find(x => x.value === this.atomForm.visibilityLevel) < 0) {
+                if (!this.isEnterprise && this.isOpenSource.find(x => x.value === this.atomForm.visibilityLevel) < 0) {
                     this.formErrors.openSourceError = true
                     ref = ref || 'openSourceError'
                     errorCount++
@@ -581,6 +633,11 @@
                 if (!this.atomForm.releaseType) {
                     this.formErrors.releaseTypeError = true
                     ref = ref || 'releaseTypeError'
+                    errorCount++
+                }
+
+                if (this.isEnterprise && !this.atomForm.packageShaContent) {
+                    this.formErrors.releasePackageError = true
                     errorCount++
                 }
 
@@ -627,7 +684,9 @@
                                 logoUrl: this.atomForm.logoUrl || undefined,
                                 summary: this.atomForm.summary || undefined,
                                 description: this.atomForm.description || undefined,
-                                visibilityLevel: this.atomForm.visibilityLevel
+                                visibilityLevel: this.atomForm.visibilityLevel,
+                                packageShaContent: this.atomForm.packageShaContent,
+                                pkgName: this.atomForm.pkgName
                             }
 
                             const res = await this.$store.dispatch('store/editAtom', {
@@ -756,10 +815,10 @@
                 margin-left: 0;
                 .bk-form-checkbox {
                     margin: 10px 21px 20px 0;
-                    &:first-child {
-                        margin-left: 110px;
-                    }
                 }
+            }
+            .atom-os .bk-form-checkbox:first-child {
+                margin-left: 110px;
             }
             .env-error {
                 margin: -10px 0 20px 110px;
