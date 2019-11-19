@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ticket
+    name: ticket${service-suffix}
     desc: DevOps Ticket Service
     version: 4.0.0
     packageName: com.tencent.devops.ticket
