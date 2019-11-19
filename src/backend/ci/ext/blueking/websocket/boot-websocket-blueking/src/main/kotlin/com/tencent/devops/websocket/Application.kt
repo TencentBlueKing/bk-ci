@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,8 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:websocket:biz-websocket")
-    compile project(":core:project:api-project")
+package com.tencent.devops.websocket
+
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@ComponentScan("com.tencent.devops.websocket")
+@MicroService
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }

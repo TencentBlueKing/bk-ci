@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":core:websocket:biz-websocket")
     compile project(":core:project:api-project")
 }
