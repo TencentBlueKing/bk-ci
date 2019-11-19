@@ -23,14 +23,32 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.service.inner
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
+import com.tencent.devops.notify.service.OrgService
+import org.springframework.stereotype.Service
+
+@Service
+class OrgServiceImpl : OrgService {
+
+    override fun parseStaff(staffs: Set<String>): Set<String> {
+        val result = HashSet<String>()
+        val staffIds = HashSet<Int>()
+        if (!staffs.isEmpty()) {
+            staffs.forEach { staff ->
+                try {
+                    val staffId = Integer.parseInt(staff, 10)
+                    if (staffId > 10) {
+                        staffIds.add(staffId)
+                    }
+                } catch (ignore: NumberFormatException) {
+                    result.add(staff)
+                }
+            }
+        }
+        if (!staffIds.isEmpty()) {
+            // TODO: 转换数字用户ID为rtx名
+        }
+        return result
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

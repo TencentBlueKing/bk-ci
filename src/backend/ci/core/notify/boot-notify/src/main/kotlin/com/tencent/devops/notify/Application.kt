@@ -24,13 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
-}
+package com.tencent.devops.notify
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@MicroService
+@ComponentScan("com.tencent.devops.notify")
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
+}

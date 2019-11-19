@@ -23,14 +23,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.sdk.pojo
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+
+@ApiModel("公共语音通知模型")
+data class NocNoticeReq(
+    val auto_read_message: String,
+    val receiver__username: String,
+    val user_list_information: List<User>?,
+
+    override var bk_app_code: String? = "",
+    override var bk_app_secret: String? = "",
+    override var bk_token: String? = "",
+    override var bk_username: String? = ""
+) : ApiReq(bk_app_code, bk_app_secret, bk_token, bk_username) {
+    data class User(
+        @JsonProperty("username")
+        val username: String,
+        @JsonProperty("mobile_phone")
+        val mobilePhone: String
+    )
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

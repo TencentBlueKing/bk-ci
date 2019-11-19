@@ -23,14 +23,42 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.blueking.utils
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:notify:api-notify")
-//    compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:notify:model-notify")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-notify")
+import com.tencent.devops.notify.blueking.sdk.CMSApi
+import com.tencent.devops.notify.blueking.sdk.Properties
+import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
+import com.tencent.devops.notify.blueking.sdk.utils.NotifyUtils
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.PropertySource
+
+@Configuration
+@PropertySource("classpath:/common-notify.properties")
+class CMSAutoConfiguration {
+
+    @Bean
+    @Primary
+    fun properties(): Properties = Properties()
+
+    @Bean
+    @Primary
+    fun notifyProperties(properties: Properties): NotifyProperties =
+        NotifyProperties(properties.appCode, properties.appSecret, properties.bkHost)
+
+    @Bean
+    @Primary
+    fun notifyUtils(notifyProperties: NotifyProperties): NotifyUtils =
+        NotifyUtils(notifyProperties)
+
+    @Bean
+    @Primary
+    fun cms(notifyUtils: NotifyUtils): CMSApi = CMSApi(notifyUtils)
+
+    @Bean
+    fun notifyService(cmsApi: CMSApi): NotifyService = NotifyService(cmsApi)
+
+    @Bean
+    fun configuration() = com.tencent.devops.common.notify.utils.Configuration()
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
