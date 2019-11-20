@@ -35,6 +35,6 @@ dependencies {
     compile project(":core:artifactory:api-artifactory")
     compile project(":core:notify:api-notify")
     compile project(":core:project:api-project")
-    compile project(":ext:tencent:misc:api-misc")
+    compile project(":core:misc:api-misc")
     compile ("org.json:json")
 }

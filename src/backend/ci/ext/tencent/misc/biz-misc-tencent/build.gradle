@@ -27,8 +27,8 @@
 dependencies {
     compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":core:image:api-image")
-    compile project(":ext:tencent:misc:api-misc")
-    compile project(":ext:tencent:misc:biz-misc")
+    compile project(":core:misc:api-misc")
+    compile project(":core:misc:biz-misc")
     compile project(":ext:tencent:common:common-bcs")
     compile project(":ext:tencent:common:common-devcloud")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
