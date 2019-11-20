@@ -738,7 +738,7 @@
                     noPermissionList: [
                         { resource: resource, option: option }
                     ],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
+                    applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}` : PERM_URL_PREFIX
                 }
                 this.$showAskPermissionDialog(params)
             },

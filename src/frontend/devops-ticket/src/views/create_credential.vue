@@ -195,6 +195,9 @@
             },
             ticketType () {
                 return this.getTicketType()
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -232,7 +235,7 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
+                const url = this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential` : PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
             cancel () {

@@ -86,6 +86,9 @@
                 if (val) {
                     this.initTreeData()
                 }
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         created () {
@@ -215,7 +218,7 @@
                             noPermissionList: [
                                 { resource: '版本仓库', option: '查看' }
                             ],
-                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
+                            applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory` : PERM_URL_PREFIX
                         }
                         this.$showAskPermissionDialog(params)
                     }

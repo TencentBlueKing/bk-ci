@@ -648,7 +648,7 @@
             },
             goToApplyPerm () {
                 const host = GW_URL_PREFIX.replace('/console', '')
-                const url = `${host}/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_creator=rule`
+                const url = this.isExtendTx ? `${host}/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_creator=rule` : PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
             addLeaveListenr () {

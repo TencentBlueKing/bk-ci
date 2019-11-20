@@ -191,9 +191,9 @@
             },
 
             goApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                const url = this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
                     this.projectId
-                }&service_code=code&role_creator=repertory`
+                }&service_code=code&role_creator=repertory` : PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
 
@@ -205,9 +205,9 @@
                             option: this.$t('codelib.create')
                         }
                     ],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                    applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
                         this.projectId
-                    }&service_code=code&role_creator=repertory`
+                    }&service_code=code&role_creator=repertory` : PERM_URL_PREFIX
                 })
             }
         }

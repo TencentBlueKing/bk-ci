@@ -408,13 +408,13 @@
                                     option: repositoryHashId ? this.$t('codelib.edit') : this.$t('codelib.create')
                                 }
                             ],
-                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                            applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
                                 projectId
                             }&service_code=code&${
                                 repositoryHashId
                                     ? `role_manager=repertory`
                                     : 'role_creator=repertory'
-                            }`
+                            }` : PERM_URL_PREFIX
                         })
                     } else {
                         this.$bkMessage({

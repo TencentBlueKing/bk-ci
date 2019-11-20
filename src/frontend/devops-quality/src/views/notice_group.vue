@@ -126,7 +126,10 @@
             },
             ...mapGetters('quality', [
                 'getUserGroup'
-            ])
+            ]),
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            }
         },
         watch: {
             projectId () {
@@ -304,7 +307,7 @@
                         noPermissionList: [
                             { resource: '通知组', option: '编辑' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}` : PERM_URL_PREFIX
                     }
 
                     this.$showAskPermissionDialog(params)
@@ -351,7 +354,7 @@
                         noPermissionList: [
                             { resource: '通知组', option: '删除' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}` : PERM_URL_PREFIX
                     }
 
                     this.$showAskPermissionDialog(params)
