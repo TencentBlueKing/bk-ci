@@ -28,10 +28,6 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.Model
 
-/**
- * deng
- * 2019-01-09
- */
 data class TemplateModelDetail(
     val versions: List<TemplateVersion>,
     val currentVersion: TemplateVersion,

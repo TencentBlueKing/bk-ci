@@ -30,10 +30,6 @@ import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
 import java.util.concurrent.TimeUnit
 
-/**
- * deng
- * 2019-04-19
- */
 class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
 
     // max expire time is 30 days

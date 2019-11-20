@@ -26,16 +26,12 @@
 
 package com.tencent.devops.worker.common.task.script.bat
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.task.script.ICommand
 import com.tencent.devops.worker.common.utils.BatScriptUtil
 import java.io.File
 
-class CommandBatImpl(
-    override val outerCommandFunc:
-    ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?
-) :
+class CommandBatImpl() :
     ICommand {
 
     override fun execute(
@@ -49,6 +45,6 @@ class CommandBatImpl(
         continueNoneZero: Boolean
     ) {
         val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables))
-        BatScriptUtil.execute(buildId, realCommand, runtimeVariables, dir, outerCommandFunc)
+        BatScriptUtil.execute(realCommand, runtimeVariables, dir)
     }
 }

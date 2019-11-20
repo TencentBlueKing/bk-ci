@@ -24,21 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task.codecc.util
+package com.tencent.devops.plugin.quality
 
-import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.plugin.worker.pojo.CoverityConfig
-import java.io.File
+import com.tencent.devops.quality.QualityGateInElementBizPlugin
+import com.tencent.devops.quality.QualityGateOutElementBizPlugin
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-class Coverity constructor(private val coverityConfig: CoverityConfig) {
+@Configuration
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class QualityAutoConfiguration {
 
-    fun coverity(scriptType: BuildScriptType, buildId: String, file: File, workspace: File): String {
-        return when (scriptType) {
-            BuildScriptType.SHELL ->
-                CodeccUtils.executeCoverityCommand(buildId, workspace, coverityConfig)
-            else ->
-                throw InvalidParamException("unsupported scriptype $scriptType")
-        }
-    }
+    @Bean
+    fun qualityGateInElementBizPlugin() = QualityGateInElementBizPlugin()
+
+    @Bean
+    fun qualityGateOutElementBizPlugin() = QualityGateOutElementBizPlugin()
 }

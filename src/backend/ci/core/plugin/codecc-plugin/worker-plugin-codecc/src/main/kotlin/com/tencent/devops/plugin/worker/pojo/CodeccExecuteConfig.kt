@@ -27,27 +27,23 @@
 package com.tencent.devops.plugin.worker.pojo
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import java.io.File
 
 /**
  * 26/01/2018
  */
-data class CoverityConfig(
-    val name: String,
-    val cnName: String,
-    val projectType: CoverityProjectType,
-    val tools: List<String>,
-    var asynchronous: Boolean, // 是否同步，默认是同步
-    val filterTools: List<String>,
+data class CodeccExecuteConfig(
+    val scriptType: BuildScriptType,
     val repos: List<RepoItem>,
-    val scanCodePath: String,
-    val scmType: String,
-    val certType: String,
-    val taskParams: Map<String, String>,
     val buildVariables: BuildVariables,
     val buildTask: BuildTask,
+    val workspace: File,
+    val tools: List<String>,
+    val filterTools: List<String>,
     val timeOut: Long = 4 * 3600 // 4小时
 ) {
     data class RepoItem(

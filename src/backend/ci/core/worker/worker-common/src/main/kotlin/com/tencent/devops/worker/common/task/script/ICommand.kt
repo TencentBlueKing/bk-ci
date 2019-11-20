@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 interface ICommand {
-    val outerCommandFunc: ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?
 
     fun execute(
         buildId: String,

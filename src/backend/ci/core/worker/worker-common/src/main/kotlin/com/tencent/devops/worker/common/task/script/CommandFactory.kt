@@ -35,13 +35,10 @@ import com.tencent.devops.worker.common.task.script.shell.CommandShellImpl
 import java.io.File
 
 object CommandFactory {
-    fun create(
-        scriptType: String,
-        outerCommandFunc: ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)? = null
-    ): ICommand {
+    fun create(scriptType: String): ICommand {
         return when (BuildScriptType.valueOf(scriptType)) {
-            BuildScriptType.SHELL -> CommandShellImpl(outerCommandFunc)
-            BuildScriptType.BAT -> CommandBatImpl(outerCommandFunc)
+            BuildScriptType.SHELL -> CommandShellImpl()
+            BuildScriptType.BAT -> CommandBatImpl()
             else -> {
                 throw TaskExecuteException(
                     errorMsg = "Unsupported script type: $scriptType",
