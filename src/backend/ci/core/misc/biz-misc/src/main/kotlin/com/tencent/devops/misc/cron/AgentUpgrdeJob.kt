@@ -24,29 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
+package com.tencent.devops.misc.cron
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    testCompile "junit:junit"
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.misc.service.AgentUpgradeService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
 
-    compile project(":core:artifactory:biz-artifactory-store")
-    compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":core:environment:biz-environment-sample")
-    compile project(":core:image:biz-image")
-    compile project(":core:log:biz-log")
-    compile project(":core:misc:biz-misc")
-    compile project(":core:notify:biz-notify-blueking")
-    compile project(":core:plugin:biz-plugin")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:project:biz-project-sample")
-    compile project(":core:quality:biz-quality")
-    compile project(":core:repository:biz-repository-sample")
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:ticket:biz-ticket-sample")
-    compile project(":core:websocket:biz-websocket")
+@Component
+class AgentUpgrdeJob @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val updateService: AgentUpgradeService
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)
+        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
+    fun updateCanUpgradeAgentList() {
+        logger.info("updateCanUpgradeAgentList")
+        val lock = RedisLock(redisOperation, LOCK_KEY, 60)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+            updateService.updateCanUpgradeAgentList()
+        } catch (t: Throwable) {
+            logger.warn("update can upgrade agent list failed", t)
+        } finally {
+            lock.unlock()
+        }
+    }
 }
-
-apply from: "$rootDir/task_spring_boot_package.gradle"

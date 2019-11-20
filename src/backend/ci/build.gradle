@@ -101,18 +101,9 @@ buildscript {
 ext {
     commit = null
     // Open the Git repository in the current directory.
-    def gitDir = file('.git')
+    def gitDir = file('../../../.git')
     if (gitDir.exists()) {
-        gitDir = file('.')
-    } else {
-        gitDir = file('../.git')
-        if (gitDir.exists()) {
-            gitDir = file('..')
-        }
-    }
-
-    if (gitDir.exists()) {
-
+        gitDir = file('../../../')
         git = Grgit.open(gitDir)
 
         commit = git.head()
