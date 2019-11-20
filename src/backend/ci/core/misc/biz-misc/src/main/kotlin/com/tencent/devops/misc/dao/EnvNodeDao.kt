@@ -24,29 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
+package com.tencent.devops.misc.dao
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    testCompile "junit:junit"
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+import com.tencent.devops.model.environment.tables.TEnvNode
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-    compile project(":core:artifactory:biz-artifactory-store")
-    compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":core:environment:biz-environment-sample")
-    compile project(":core:image:biz-image")
-    compile project(":core:log:biz-log")
-    compile project(":core:misc:biz-misc")
-    compile project(":core:notify:biz-notify-blueking")
-    compile project(":core:plugin:biz-plugin")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:project:biz-project-sample")
-    compile project(":core:quality:biz-quality")
-    compile project(":core:repository:biz-repository-sample")
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:ticket:biz-ticket-sample")
-    compile project(":core:websocket:biz-websocket")
+@Repository
+class EnvNodeDao {
+    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
+        if (nodeIds.isEmpty()) {
+            return
+        }
+
+        with(TEnvNode.T_ENV_NODE) {
+            dslContext.deleteFrom(this)
+                    .where(NODE_ID.`in`(nodeIds))
+                    .execute()
+        }
+    }
 }
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
