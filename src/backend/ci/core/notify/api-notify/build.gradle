@@ -27,5 +27,5 @@
 dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-web")
-    compile project(":core:common:common-notify:common-notify-api")
+    compile project(":core:common:common-notify")
 }

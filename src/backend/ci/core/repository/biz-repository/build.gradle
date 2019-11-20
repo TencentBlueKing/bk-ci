@@ -29,7 +29,6 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-client")
     compile project(":core:common:common-auth:common-auth-api")
-    //compile project(":ext:tencent:common:common-auth:common-auth-tencent")
     compile project(":core:ticket:api-ticket")
     compile project(":core:process:api-process")
     compile project(":core:common:common-scm")
