@@ -60,7 +60,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
-import com.tencent.devops.process.service.scm.ScmService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
@@ -92,7 +92,7 @@ class BuildStartControl @Autowired constructor(
     private val projectOauthTokenService: ProjectOauthTokenService,
     private val buildDetailService: PipelineBuildDetailService,
     private val pipelineUserService: PipelineUserService,
-    private val scmService: ScmService,
+    private val scmProxyService: ScmProxyService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -431,7 +431,7 @@ class BuildStartControl @Autowired constructor(
                     if (callScm) {
                         logger.info("[$pipelineId-${ele.id}] is start,get revision by scmService")
                         val latestRevision =
-                            scmService.recursiveFetchLatestRevision(
+                            scmProxyService.recursiveFetchLatestRevision(
                                 projectId,
                                 pipelineId,
                                 repositoryConfig,
