@@ -24,29 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
+package com.tencent.devops.misc.resources
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    testCompile "junit:junit"
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.misc.api.OpThirdPartyAgentResource
+import com.tencent.devops.misc.service.AgentUpgradeService
+import org.springframework.beans.factory.annotation.Autowired
 
-    compile project(":core:artifactory:biz-artifactory-store")
-    compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":core:environment:biz-environment-sample")
-    compile project(":core:image:biz-image")
-    compile project(":core:log:biz-log")
-    compile project(":core:misc:biz-misc")
-    compile project(":core:notify:biz-notify-blueking")
-    compile project(":core:plugin:biz-plugin")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:project:biz-project-sample")
-    compile project(":core:quality:biz-quality")
-    compile project(":core:repository:biz-repository-sample")
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:ticket:biz-ticket-sample")
-    compile project(":core:websocket:biz-websocket")
+/**
+ * deng
+ * 2018/5/9
+ */
+@RestResource
+class OpThirdPartyAgentResourceImpl @Autowired constructor(
+    private val upgradeService: AgentUpgradeService
+) : OpThirdPartyAgentResource {
+
+    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
+        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
+        return Result(true)
+    }
+
+    override fun getMaxParallelUpgradeCount(): Result<Int> {
+        return Result(upgradeService.getMaxParallelUpgradeCount())
+    }
 }
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
