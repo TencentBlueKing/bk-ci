@@ -175,7 +175,7 @@ class WebhookMQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(gitEventQueue.name)
-        container.setConcurrentConsumers(10)
+        container.setConcurrentConsumers(2)
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
@@ -196,7 +196,7 @@ class WebhookMQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(gitlabEventQueue.name)
-        container.setConcurrentConsumers(10)
+        container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
@@ -217,7 +217,7 @@ class WebhookMQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(githubEventQueue.name)
-        container.setConcurrentConsumers(10)
+        container.setConcurrentConsumers(2)
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)

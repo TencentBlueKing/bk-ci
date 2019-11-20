@@ -72,9 +72,9 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 't_service'
+                    AND TABLE_NAME = 'T_SERVICE'
                     AND COLUMN_NAME = 'logo_url') THEN
-        ALTER TABLE t_service
+        ALTER TABLE T_SERVICE
             ADD COLUMN `logo_url` varchar(256) DEFAULT NULL AFTER `gray_js_url`;
     END IF;
 
@@ -82,9 +82,9 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 't_service'
+                    AND TABLE_NAME = 'T_SERVICE'
                     AND COLUMN_NAME = 'web_socket') THEN
-        ALTER TABLE t_service
+        ALTER TABLE T_SERVICE
             ADD COLUMN `web_socket` text AFTER `logo_url`;
     END IF;
 
