@@ -26,7 +26,6 @@
 
 dependencies {
     compile project(":core:project:biz-project")
-    compile project(":core:project:api-project-sample")
     compile project(":core:common:common-auth:common-auth-sample")
 }
 

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: repository
+    name: repository${service-suffix}
     desc: DevOps Repository Service
     version: 4.0.0
     packageName: com.tencent.devops.repository

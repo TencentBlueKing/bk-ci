@@ -1,6 +1,6 @@
 spring:
   application:
-    name: plugin
+    name: plugin${service-suffix}
     desc: DevOps Plugin Service
     version: 0.0.1
     packageName: com.tencent.devops.plugin
