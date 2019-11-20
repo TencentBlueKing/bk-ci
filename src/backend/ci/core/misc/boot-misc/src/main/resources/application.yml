@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: misc
+    desc: Devops misc Service
+    version: 4.0
+    packageName: com.tencent.devops.misc
+  cloud:
+    consul:
+      discovery:
+        tags: local
+
+server:
+  port: 21926

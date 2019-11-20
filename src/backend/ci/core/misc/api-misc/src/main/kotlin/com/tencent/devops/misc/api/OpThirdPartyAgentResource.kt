@@ -24,29 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
+package com.tencent.devops.misc.api
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    testCompile "junit:junit"
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    compile project(":core:artifactory:biz-artifactory-store")
-    compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":core:environment:biz-environment-sample")
-    compile project(":core:image:biz-image")
-    compile project(":core:log:biz-log")
-    compile project(":core:misc:biz-misc")
-    compile project(":core:notify:biz-notify-blueking")
-    compile project(":core:plugin:biz-plugin")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:project:biz-project-sample")
-    compile project(":core:quality:biz-quality")
-    compile project(":core:repository:biz-repository-sample")
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:ticket:biz-ticket-sample")
-    compile project(":core:websocket:biz-websocket")
+@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Path("/op/thirdPartyAgent")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpThirdPartyAgentResource {
+
+    @ApiOperation("设置agent最大并发升级数量")
+    @POST
+    @Path("/agents/setMaxParallelUpgradeCount")
+    fun setMaxParallelUpgradeCount(
+        @ApiParam("maxParallelUpgradeCount", required = true)
+        maxParallelUpgradeCount: Int
+    ): Result<Boolean>
+
+    @ApiOperation("获取agent最大并发升级数量")
+    @POST
+    @Path("/agents/getMaxParallelUpgradeCount")
+    fun getMaxParallelUpgradeCount(): Result<Int?>
 }
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
