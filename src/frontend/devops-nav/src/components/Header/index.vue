@@ -125,8 +125,9 @@
         get projectId (): string {
             return this.$route.params.projectId
         }
-        get title (): any {
-            return this.$route.meta.header ? this.$t(`subService.${this.$route.meta.header}`) : ''
+        get title (): string {
+            console.log(this.currentPage)
+            return this.currentPage.name
         }
         get serviceLogo (): string {
             return this.$route.meta.logo

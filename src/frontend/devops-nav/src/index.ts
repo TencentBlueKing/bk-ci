@@ -70,7 +70,7 @@ Vue.use(VeeValidate, {
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
-const router = createRouter(store, dynamicLoadModule)
+const router = createRouter(store, dynamicLoadModule, i18n)
 router.afterEach((route) => {
     bsWebSocket.changeRoute(route)
 })

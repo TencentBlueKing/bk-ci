@@ -27,25 +27,25 @@ import { isObject } from '../../utils/util'
 // const instance = null
 
 export default function showAskPermissionDialog (props) {
-  if (!isObject(props)) {
-    console.warn('权限弹窗需要传入一个对象')
-    return
-  }
-  console.log('emit')
-  eventBus.$emit('update-permission-props', props)
-  // instance = new DialogCreator({
-  //   propsData: props,
-  //   data: {
-  //     showDialog: true
-  //   },
-  //   methods: {
-  //     close,
-  //     $t (key) {
-  //       return key
-  //     }
-  //   }
-  // })
-  // console.log(instance.$setLocale, instance)
-  // instance.viewmodel = instance.$mount()
-  // document.body.appendChild(instance.viewmodel.$el)
+    if (!isObject(props)) {
+        console.warn('权限弹窗需要传入一个对象')
+        return
+    }
+    console.log('emit')
+    eventBus.$emit('update-permission-props', props)
+    // instance = new DialogCreator({
+    //   propsData: props,
+    //   data: {
+    //     showDialog: true
+    //   },
+    //   methods: {
+    //     close,
+    //     $t (key) {
+    //       return key
+    //     }
+    //   }
+    // })
+    // console.log(instance.$setLocale, instance)
+    // instance.viewmodel = instance.$mount()
+    // document.body.appendChild(instance.viewmodel.$el)
 }

@@ -228,7 +228,7 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')}${this.codelibConfig.label || ''}${this.$t('codelib.codelib')}`
+                return `${this.$t('codelib.link')} ${this.codelibConfig.label || ''} ${this.$t('codelib.codelib')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)
