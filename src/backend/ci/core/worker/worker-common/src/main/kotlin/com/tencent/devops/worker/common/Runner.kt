@@ -179,7 +179,7 @@ object Runner {
             throw e
         } finally {
             if (workspacePathFile != null && checkIfNeed2CleanWorkspace()) {
-                val file = workspacePathFile.absoluteFile
+                val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
                 if (!file.deleteRecursively()) {
                     logger.warn("Fail to clean up the workspace")
