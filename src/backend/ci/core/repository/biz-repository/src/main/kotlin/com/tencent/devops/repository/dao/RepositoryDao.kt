@@ -169,6 +169,33 @@ class RepositoryDao {
     fun listByProject(
         dslContext: DSLContext,
         projectId: String,
+        repositoryType:
+        ScmType?
+    ): Result<TRepositoryRecord> {
+        with(TRepository.T_REPOSITORY) {
+            return when (repositoryType) {
+                null -> {
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(IS_DELETED.eq(false))
+                        .orderBy(REPOSITORY_ID.desc())
+                        .fetch()
+                }
+                else -> {
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(TYPE.eq(repositoryType.name))
+                        .and(IS_DELETED.eq(false))
+                        .orderBy(REPOSITORY_ID.desc())
+                        .fetch()
+                }
+            }
+        }
+    }
+
+    fun listByProject(
+        dslContext: DSLContext,
+        projectId: String,
         repositoryType: ScmType?,
         repositoryIds: Set<Long>?,
         offset: Int,

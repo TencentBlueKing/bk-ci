@@ -29,7 +29,7 @@ dependencies {
     compile project(":core:common:common-service")
     compile project(":core:common:common-api")
     compile project(":ext:tencent:common:common-devcloud")
-    compile project(":core:common:common-notify:common-notify-api")
+    compile project(":core:common:common-notify")
     compile project(":ext:tencent:prebuild:api-prebuild-tencent")
     compile project(":core:dispatch:api-dispatch-docker")
     compile project(":core:process:api-process")

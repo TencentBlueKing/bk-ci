@@ -36,7 +36,7 @@ dependencies {
     compile project(":core:common:common-archive")
     compile project(":core:common:common-db")
     compile project(":ext:tencent:common:common-wechatwork")
-    compile project(":ext:tencent:common:common-pipeline:common-pipeline-tencent")
+    compile project(":ext:tencent:common:common-pipeline-tencent")
     compile project(":ext:tencent:gitci:api-gitci-tencent")
     compile project(":core:log:api-log")
     compile project(":ext:tencent:project:api-project-tencent")

@@ -24,11 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
-
 dependencies {
-    compile project(":core:common:common-pipeline:common-pipeline-api")
-    compile project(":core:common:common-web")
-    compile "org.mockito:mockito-all"
-    compile "com.nhaarman:mockito-kotlin-kt1.1:1.6.0"
+    compile project(":core:common:common-pipeline")
 }

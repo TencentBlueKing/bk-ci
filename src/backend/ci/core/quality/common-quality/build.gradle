@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":core:common:common-pipeline:common-pipeline-api")
+    compile project(":core:common:common-pipeline")
     compile project(":core:common:common-client")
     compile project(":core:quality:api-quality")
     compile project(":core:log:api-log")
