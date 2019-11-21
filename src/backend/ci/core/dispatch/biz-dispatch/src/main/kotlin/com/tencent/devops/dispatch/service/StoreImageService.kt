@@ -87,8 +87,8 @@ class StoreImageService @Autowired constructor(
             ch == '/'
         }
         if (ImageType.BKDEVOPS.name == imageDetail.imageSourceType || ImageType.THIRD.name == imageDetail.imageSourceType) {
-            //蓝盾项目源镜像或第三方源镜像
-            completeImageName = "${cleanImageRepoUrl}/${cleanImageRepoName}"
+            // 蓝盾项目源镜像或第三方源镜像
+            completeImageName = "$cleanImageRepoUrl/$cleanImageRepoName"
         } else {
             throw UnknownImageSourceType(
                 "imageId=${imageDetail.id},imageSourceType=${imageDetail.imageSourceType}",

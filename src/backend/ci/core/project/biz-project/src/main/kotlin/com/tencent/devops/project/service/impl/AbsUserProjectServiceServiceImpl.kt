@@ -105,7 +105,6 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         }
         serviceUrlUpdateInfoList.forEach {
             serviceDao.updateUrlByName(dslContext, it)
-
         }
         return Result(data = true)
     }
