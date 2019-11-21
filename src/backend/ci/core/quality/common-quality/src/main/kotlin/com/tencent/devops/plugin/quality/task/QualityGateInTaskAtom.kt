@@ -105,9 +105,9 @@ class QualityGateInTaskAtom @Autowired constructor(
     }
 
     override fun execute(
-            task: PipelineBuildTask,
-            param: QualityGateInElement,
-            runVariables: Map<String, String>
+        task: PipelineBuildTask,
+        param: QualityGateInElement,
+        runVariables: Map<String, String>
     ): AtomResponse {
         logger.info("QualityGateInTask start...")
 
@@ -148,12 +148,12 @@ class QualityGateInTaskAtom @Autowired constructor(
         ))
 
         if (checkResult.success) {
-            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)检测已通过", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)检测已通过", elementId, task.containerHashId, task.executeCount ?: 1)
 
             checkResult.resultList.forEach {
-                LogUtils.addLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
                 it.messagePairs.forEach { message ->
-                    LogUtils.addLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
                 }
             }
 
@@ -162,12 +162,12 @@ class QualityGateInTaskAtom @Autowired constructor(
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
             task.taskParams[QUALITY_RESULT] = checkResult.success
         } else {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准入)检测被拦截", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准入)检测被拦截", elementId, task.containerHashId, task.executeCount ?: 1)
 
             checkResult.resultList.forEach {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId,task.executeCount ?: 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
                 it.messagePairs.forEach { message ->
-                    LogUtils.addRedLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId,task.executeCount ?: 1)
+                    LogUtils.addRedLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
                 }
             }
 
@@ -181,7 +181,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             // 产生MQ消息，等待5分钟审核时间
             logger.info("quality check fail wait reviewing")
             val auditUsers = QualityUtils.getAuditUserList(client, projectId, pipelineId, buildId, interceptTask)
-            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)待审核!审核人：$auditUsers", elementId, task.containerHashId,task.executeCount ?: 1)
+            LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准入)待审核!审核人：$auditUsers", elementId, task.containerHashId, task.executeCount ?: 1)
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
             task.taskParams[QUALITY_RESULT] = checkResult.success
         }

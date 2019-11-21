@@ -38,7 +38,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
-
 object SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)
@@ -84,9 +83,11 @@ object SVNApi {
 
     fun lock(repname: String, applicant: String, subpath: String, svnConfig: SVNConfig) {
         val url = composeSvnLockPostUrl(svnConfig)
-        val requestData = mapOf("repname" to repname,
+        val requestData = mapOf(
+            "repname" to repname,
             "applicant" to applicant,
-            "subpath" to listOf(subpath))
+            "subpath" to listOf(subpath)
+        )
         val requestBody = ObjectMapper().writeValueAsString(requestData)
         logger.info("lock the svn repo, url:$url")
         logger.info("lock the svn repo, body:$requestBody")
@@ -105,9 +106,11 @@ object SVNApi {
 
     fun unlock(repname: String, applicant: String, subpath: String, svnConfig: SVNConfig) {
         val url = composeSvnUnLockPostUrl(svnConfig)
-        val requestData = mapOf("repname" to repname,
+        val requestData = mapOf(
+            "repname" to repname,
             "applicant" to applicant,
-            "subpath" to listOf(subpath))
+            "subpath" to listOf(subpath)
+        )
         val requestBody = ObjectMapper().writeValueAsString(requestData)
         logger.info("unlock the svn repo, url:$url")
         logger.info("unlock the svn repo, body:$requestBody")
