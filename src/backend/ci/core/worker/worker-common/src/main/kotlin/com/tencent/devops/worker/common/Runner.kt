@@ -32,6 +32,8 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.worker.common.env.BuildEnv
+import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -178,6 +180,17 @@ object Runner {
                 exitProcess(0)
             }
         }
+    }
+
+    private fun checkIfNeed2CleanWorkspace(): Boolean {
+        // current only add this option for pcg docker
+        if (BuildEnv.getBuildType() != BuildType.DOCKER) {
+            return false
+        }
+        if (System.getProperty(CLENA_WORKSAPCE)?.trim() == true.toString()) {
+            return true
+        }
+        return false
     }
 
     /**
