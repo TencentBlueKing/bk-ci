@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":core:common:common-pipeline:common-pipeline-api")
+    compile project(":core:common:common-pipeline")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -29,3 +29,5 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-notify")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"
