@@ -35,10 +35,14 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.ProjectService
+import com.tencent.devops.project.util.ImageUtil.drawImage
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.InputStream
@@ -53,6 +57,7 @@ class ProjectServiceImpl @Autowired constructor(
     gray: Gray,
     client: Client
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client) {
+
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         super.validate(validateType, name, projectId)
     }
@@ -98,10 +103,10 @@ class ProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectServiceImpl::class.java)
     }
 }

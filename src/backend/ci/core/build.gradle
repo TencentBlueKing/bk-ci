@@ -24,10 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:dockerhost:biz-dockerhost")
-    compile project(":ext:tencent:dockerhost:api-dockerhost-tencent")
-    compile "org.fusesource:sigar:1.6.4"
+subprojects {
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        testCompile "junit:junit"
+        testCompile "org.springframework.boot:spring-boot-starter-test"
+    }
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

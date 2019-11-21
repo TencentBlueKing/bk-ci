@@ -27,3 +27,5 @@
 dependencies {
     compile project(":core:misc:biz-misc")
 }
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
