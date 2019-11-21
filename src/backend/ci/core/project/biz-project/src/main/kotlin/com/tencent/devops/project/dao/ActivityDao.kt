@@ -82,7 +82,6 @@ class ActivityDao {
         }
     }
 
-
     fun delete(dslContext: DSLContext, activityId: Long) {
         with(TActivity.T_ACTIVITY) {
             dslContext.deleteFrom(this).where(ID.eq(activityId)).execute()
@@ -92,36 +91,36 @@ class ActivityDao {
     fun get(dslContext: DSLContext, activityId: Long): TActivityRecord? {
         with(TActivity.T_ACTIVITY) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(activityId))
-                    .fetchOne()
+                .where(ID.eq(activityId))
+                .fetchOne()
         }
     }
 
     fun listOPActivity(dslContext: DSLContext): List<OPActivityVO> {
         with(TActivity.T_ACTIVITY) {
             return dslContext.selectFrom(this)
-                    .fetch().map {
-                        OPActivityVO(
-                                it.id,
-                                it.name,
-                                it.link,
-                                it.type,
-                                it.status,
-                                it.creator, DateTimeUtil.toDateTime(it.createTime)
-                        )
-                    } ?: ArrayList<OPActivityVO>()
+                .fetch().map {
+                    OPActivityVO(
+                        it.id,
+                        it.name,
+                        it.link,
+                        it.type,
+                        it.status,
+                        it.creator, DateTimeUtil.toDateTime(it.createTime)
+                    )
+                } ?: ArrayList<OPActivityVO>()
         }
     }
 
     fun upDate(dslContext: DSLContext, activityId: Long, opActivityUpdate: OPActivityUpdate): Boolean {
         with(TActivity.T_ACTIVITY) {
             val result = dslContext.update(this)
-                    .set(NAME, opActivityUpdate.name)
-                    .set(LINK, opActivityUpdate.link)
-                    .set(TYPE, opActivityUpdate.type)
-                    .set(STATUS, opActivityUpdate.status)
-                    .where(ID.eq(activityId))
-                    .execute()
+                .set(NAME, opActivityUpdate.name)
+                .set(LINK, opActivityUpdate.link)
+                .set(TYPE, opActivityUpdate.type)
+                .set(STATUS, opActivityUpdate.status)
+                .where(ID.eq(activityId))
+                .execute()
             return result > 0
         }
     }

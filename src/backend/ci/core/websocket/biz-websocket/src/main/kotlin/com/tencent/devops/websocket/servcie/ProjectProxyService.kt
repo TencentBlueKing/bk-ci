@@ -28,5 +28,5 @@ package com.tencent.devops.websocket.servcie
 
 interface ProjectProxyService {
 
-	fun checkProject(projectId: String, userId: String): Boolean
+    fun checkProject(projectId: String, userId: String): Boolean
 }

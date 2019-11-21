@@ -38,4 +38,4 @@ open class UniqueIdException(
     val msg: String?,
     val uniqueId: String? = UUIDUtil.generate()
 ) :
-    RuntimeException("[uniqueId=${uniqueId}]$msg")
+    RuntimeException("[uniqueId=$uniqueId]$msg")
