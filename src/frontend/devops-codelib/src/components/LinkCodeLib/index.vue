@@ -6,7 +6,7 @@
         </bk-button>
         <ul class="devops-button-dropdown-menu" slot="dropdown-content">
             <li v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)" v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKing">
-                {{ `${typeLabel}${$t('codelib.codelib')}` }}
+                {{ `${typeLabel} ${$t('codelib.repo')}` }}
             </li>
         </ul>
     </bk-dropdown-menu>

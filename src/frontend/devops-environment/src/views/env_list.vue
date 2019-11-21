@@ -146,11 +146,12 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.comfirm')}${this.$t('environment.delete')}${this.$t('environment.environment')}(${row.name})？`)
+                }, `${this.$t('environment.deleteConfirmTips', [row.name])}？`)
 
                 this.$bkInfo({
-                    title: this.$t('environment.delete'),
                     subHeader: content,
+                    theme: 'warning',
+                    type: 'warning',
                     confirmFn: async () => {
                         let message, theme
                         try {

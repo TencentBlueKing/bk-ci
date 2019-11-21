@@ -15,7 +15,7 @@
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                        <label class="bk-label">{{ `${codelibConfig.label} ${$t('codelib.codelibUrl')}` }}:</label>
                         <div class="bk-form-content">
                             <bk-select v-model="codelibUrl"
                                 searchable
@@ -70,7 +70,7 @@
                 </div>
                 <!-- 源代码地址 start -->
                 <div class="bk-form-item is-required">
-                    <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                    <label class="bk-label">{{ `${codelibConfig.label} ${$t('codelib.codelibUrl')}` }}:</label>
                     <div class="bk-form-content">
                         <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" v-validate="&quot;required&quot;" :class="{ &quot;is-danger&quot;: urlErrMsg || errors.has(&quot;codelibUrl&quot;) }">
                         <span class="error-tips" v-if="urlErrMsg || errors.has(&quot;codelibUrl&quot;)">
@@ -228,7 +228,7 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')} ${this.codelibConfig.label || ''} ${this.$t('codelib.codelib')}`
+                return `${this.codelibConfig.label} ${this.$t('codelib.repo')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)

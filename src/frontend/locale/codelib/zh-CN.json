@@ -1,6 +1,7 @@
 {
     "codelib": "代码库",
     "linkCodelib": "关联代码库",
+    "repo": "代码库",
     "link": "关联",
     "codelibDesc": "代码库服务（Code）是将 SVN 及 GIT 的代码库与用户、凭据等进行关联，统一项目代码库的配置管理，便利于流水线代码库原子的编排。",
     "laodingTitle": "正在加载代码库列表",

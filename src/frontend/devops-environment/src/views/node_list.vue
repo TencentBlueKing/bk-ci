@@ -5,7 +5,7 @@
             <div slot="right" v-if="nodeList.length > 0">
                 <template v-if="isExtendTx">
                     <bk-button theme="primary" class="create-node-btn"
-                        @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
+                        @click="toCreateNode">{{ $t('environment.new') }}</bk-button>
                     <bk-dropdown-menu :align="'right'"
                         @show="dropdownIsShow('show')"
                         @hide="dropdownIsShow('hide')"
@@ -489,10 +489,11 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.nodeInfo.deleteNodetips')}(${row.nodeId})？`)
+                }, `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`)
 
                 this.$bkInfo({
-                    title: this.$t('environment.delete'),
+                    theme: 'warning',
+                    type: 'warning',
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -860,7 +861,8 @@
                 }, `${this.$t('environment.nodeInfo.destoryNode')}？`)
 
                 this.$bkInfo({
-                    title: this.$t('environment.comfirm'),
+                    theme: 'warning',
+                    type: 'warning',
                     subHeader: content,
                     confirmFn: async () => {
                         clearTimeout(this.timer)

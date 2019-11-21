@@ -606,10 +606,11 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.nodeInfo.removeNodetips')}(${row.nodeId})？`)
+                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.nodeId])}`)
 
                 this.$bkInfo({
-                    title: this.$t('environment.remove'),
+                    type: 'warning',
+                    theme: 'warning',
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -733,7 +734,8 @@
                     }, `${this.$t('environment.deleteConfigItem')}?`)
 
                     this.$bkInfo({
-                        title: this.$t('environment.delete'),
+                        type: 'warning',
+                        theme: 'warning',
                         subHeader: content,
                         confirmFn: async () => {
                             let message, theme
