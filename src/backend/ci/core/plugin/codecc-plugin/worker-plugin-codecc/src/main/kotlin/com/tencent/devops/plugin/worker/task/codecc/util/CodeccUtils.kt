@@ -101,6 +101,7 @@ object CodeccUtils {
         val scriptType = codeccExecuteConfig.scriptType
         val scriptFile = ShellUtil.getCommandFile(
             script = script,
+            dir = workspace,
             buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
             runtimeVariables = codeccExecuteConfig.buildVariables.variables
         )

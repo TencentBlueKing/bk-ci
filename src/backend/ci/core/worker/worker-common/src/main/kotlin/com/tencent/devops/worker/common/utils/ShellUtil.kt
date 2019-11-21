@@ -70,7 +70,6 @@ object ShellUtil {
         "    }\n"
     const val GATEWAY_FILE = "gatewayValueFile.ini"
 
-    lateinit var dir: File
     lateinit var buildEnvs: List<BuildEnv>
 
     private val specialKey = listOf(".", "-")
@@ -86,7 +85,7 @@ object ShellUtil {
         prefix: String = ""
     ): String {
         return executeUnixCommand(
-            command = getCommandFile(script, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
+            command = getCommandFile(script, dir, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
             sourceDir = dir,
             prefix = prefix
         )
@@ -94,6 +93,7 @@ object ShellUtil {
 
     fun getCommandFile(
         script: String,
+        dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false
