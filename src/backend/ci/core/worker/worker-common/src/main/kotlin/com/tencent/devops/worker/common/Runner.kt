@@ -41,12 +41,14 @@ import com.tencent.devops.worker.common.service.ProcessService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import org.slf4j.LoggerFactory
+import java.io.File
 import kotlin.system.exitProcess
 
 object Runner {
     private val logger = LoggerFactory.getLogger(Runner::class.java)
 
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
+        var workspacePathFile: File? = null
         try {
             logger.info("Start the worker ...")
             // 启动成功了，报告process我已经启动了
@@ -65,7 +67,7 @@ object Runner {
                 showMachineLog(buildVariables.vmName)
                 showSystemLog()
                 showRuntimeEnvs(buildVariables.variables)
-                val workspacePathFile =
+                workspacePathFile =
                     workspaceInterface.getWorkspace(buildVariables.variables, buildVariables.pipelineId)
 
                 LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
@@ -176,6 +178,13 @@ object Runner {
             logger.warn("Catch unknown exceptions", e)
             throw e
         } finally {
+            if (workspacePathFile != null && checkIfNeed2CleanWorkspace()) {
+                logger.warn("Need to clean up the workspace(${workspacePathFile.absolutePath})")
+                if (!workspacePathFile.deleteRecursively()) {
+                    logger.warn("Fail to clean up the workspace")
+                }
+            }
+
             if (systemExit) {
                 exitProcess(0)
             }
