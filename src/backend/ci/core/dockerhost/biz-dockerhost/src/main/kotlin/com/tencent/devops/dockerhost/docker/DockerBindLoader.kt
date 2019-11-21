@@ -28,7 +28,6 @@ package com.tencent.devops.dockerhost.docker
 
 import com.github.dockerjava.api.model.Bind
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.docker.annotation.BindGenerator
 import org.slf4j.Logger

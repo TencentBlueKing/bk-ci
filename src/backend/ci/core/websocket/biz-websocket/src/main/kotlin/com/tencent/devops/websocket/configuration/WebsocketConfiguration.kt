@@ -91,11 +91,11 @@ class WebsocketConfiguration {
 
     @Bean
     fun webSocketListenerContainer(
-            @Autowired connectionFactory: ConnectionFactory,
-            @Autowired rabbitAdmin: RabbitAdmin,
-            @Autowired messageConverter: Jackson2JsonMessageConverter,
-            @Autowired pipelineWebSocketQueue: Queue,
-            @Autowired buildListener: WebSocketListener
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired messageConverter: Jackson2JsonMessageConverter,
+        @Autowired pipelineWebSocketQueue: Queue,
+        @Autowired buildListener: WebSocketListener
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(pipelineWebSocketQueue.name)

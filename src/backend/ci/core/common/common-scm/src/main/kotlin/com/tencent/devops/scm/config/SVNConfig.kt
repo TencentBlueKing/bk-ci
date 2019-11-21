@@ -51,5 +51,4 @@ class SVNConfig {
 
     @Value("\${scm.svn.svnHookUrl:}")
     val svnHookUrl: String = ""
-
 }

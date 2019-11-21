@@ -264,7 +264,7 @@ interface UserRepositoryResource {
 //
 //
 //    @ApiOperation("是否拥有创建代码库权限")
-////    @Path("/{projectId}/hasCreatePermission")
+// //    @Path("/{projectId}/hasCreatePermission")
 //    @Path("/projectId/{projectId}/hasCreatePermission")
 //    @GET
 //    fun hasCreatePermissionV2(
@@ -277,7 +277,7 @@ interface UserRepositoryResource {
 //    ): Result<Boolean>
 //
 //    @ApiOperation("是否拥有创建代码库别名")
-////    @Path("/{projectId}/hasAliasName")
+// //    @Path("/{projectId}/hasAliasName")
 //    @Path("/projectId/{projectId}/hasAliasName")
 //    @GET
 //    fun hasAliasNameV2(
@@ -297,7 +297,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("关联代码库")
 //    @POST
-////    @Path("/{projectId}/")
+// //    @Path("/{projectId}/")
 //    @Path("/projectId/{projectId}/")
 //    fun createV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -312,7 +312,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("获取代码库详情")
 //    @GET
-////    @Path("/{projectId}/{repositoryId}/")
+// //    @Path("/{projectId}/{repositoryId}/")
 //    @Path("/projectId/{projectId}/repositoryId/{repositoryId}/")
 //    fun getV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -331,7 +331,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("编辑关联代码库")
 //    @PUT
-////    @Path("/{projectId}/{repositoryHashId}/")
+// //    @Path("/{projectId}/{repositoryHashId}/")
 //    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}/")
 //    fun editV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -349,7 +349,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("代码库列表")
 //    @GET
-////    @Path("/{projectId}/")
+// //    @Path("/{projectId}/")
 //    @Path("/projectId/{projectId}/")
 //    fun listV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -371,7 +371,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("代码库列表")
 //    @GET
-////    @Path("/{projectId}/hasPermissionList")
+// //    @Path("/{projectId}/hasPermissionList")
 //    @Path("/projectId/{projectId}/hasPermissionList")
 //    fun hasPermissionListV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -396,7 +396,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("删除代码库")
 //    @DELETE
-////    @Path("/{projectId}/{repositoryHashId}")
+// //    @Path("/{projectId}/{repositoryHashId}")
 //    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}")
 //    fun deleteV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -412,7 +412,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("根据构建ID获取提交记录")
 //    @GET
-////    @Path("/{buildId}/commit/get/record")
+// //    @Path("/{buildId}/commit/get/record")
 //    @Path("/buildId/{buildId}/commit/get/record")
 //    fun getCommitV2(
 //            @ApiParam(value = "构建ID", required = true)
@@ -422,7 +422,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("锁定代码库")
 //    @PUT
-////    @Path("/{projectId}/{repositoryHashId}/lock")
+// //    @Path("/{projectId}/{repositoryHashId}/lock")
 //    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}/lock")
 //    fun lockV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -438,7 +438,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("代码库列表根据别名模糊查询")
 //    @GET
-////    @Path("/{projectId}/search/")
+// //    @Path("/{projectId}/search/")
 //    @Path("/projectId/{projectId}/search/")
 //    fun fuzzySearchByAliasNameV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -463,7 +463,7 @@ interface UserRepositoryResource {
 //
 //    @ApiOperation("解锁代码库")
 //    @PUT
-////    @Path("/{projectId}/{repositoryHashId}/unlock")
+// //    @Path("/{projectId}/{repositoryHashId}/unlock")
 //    @Path("/projectId/{projectId}/repositoryHashId/{repositoryHashId}/unlock")
 //    fun unlockV2(
 //            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
