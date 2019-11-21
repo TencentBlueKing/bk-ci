@@ -197,7 +197,7 @@ object Runner {
         if (BuildEnv.getBuildType() != BuildType.DOCKER) {
             return false
         }
-        if (System.getProperty(CLENA_WORKSAPCE)?.trim() == true.toString()) {
+        if (System.getProperty(CLEAN_WORKSPACE)?.trim() == true.toString()) {
             return true
         }
         return false

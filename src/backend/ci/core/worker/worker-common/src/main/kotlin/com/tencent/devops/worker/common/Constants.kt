@@ -32,4 +32,4 @@ const val WORKSPACE_ENV = "WORKSPACE"
 
 const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
 
-const val CLENA_WORKSAPCE = "DEVOPS_CLEAN_WORKSACE"
+const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
