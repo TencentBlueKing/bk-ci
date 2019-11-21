@@ -38,7 +38,7 @@ BEGIN
     END IF;
 
     -- insert node
-    IF NOT EXISTS(SELECT 1 FROM devops_ci_environment.T_NODE WHERE ID = 1) THEN
+    IF NOT EXISTS(SELECT 1 FROM devops_ci_environment.T_NODE WHERE NODE_ID = 1) THEN
         insert into devops_ci_environment.T_NODE(NODE_ID, NODE_STRING_ID, PROJECT_ID, NODE_IP, NODE_NAME,
                                                  NODE_STATUS, NODE_TYPE, CREATED_USER, CREATED_TIME, OS_NAME,
                                                  DISPLAY_NAME, LAST_MODIFY_TIME, LAST_MODIFY_USER)

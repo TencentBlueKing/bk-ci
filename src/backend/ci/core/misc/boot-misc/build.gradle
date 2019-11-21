@@ -26,4 +26,8 @@
 
 dependencies {
     compile project(":core:misc:biz-misc")
+    // 无对接权限中心，根据common.yml配置文件项auth.idProvider=samle启用，会忽略下面蓝鲸权限中心实现
+    compile project(":core:common:common-auth:common-auth-sample")
+    // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
+    // compile project(":ext:blueking:common:common-auth:common-auth-blueking")
 }

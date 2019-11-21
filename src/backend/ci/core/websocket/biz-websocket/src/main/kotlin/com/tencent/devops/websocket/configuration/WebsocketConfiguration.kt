@@ -31,8 +31,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
 import com.tencent.devops.websocket.listener.WebSocketListener
-import com.tencent.devops.websocket.utils.HostUtils
-import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -58,13 +56,6 @@ class WebsocketConfiguration {
     @Value("\${activeTrigger.pipelineWebSocket:10}")
     private val webSocketActiveTrigger: Int? = null
 
-    @Value("\${devopsGateway.idc:#{null}}")
-    private val devopsGateway: String? = null
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(javaClass)
-    }
-
     @Bean
     fun websocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
 
@@ -85,9 +76,8 @@ class WebsocketConfiguration {
 
     @Bean
     fun pipelineWebSocketQueue(): Queue {
-        val hostIp = HostUtils.getHostIp(devopsGateway)
-        logger.info("Get the host ip: $hostIp")
-        return Queue(MQ.QUEUE_WEBSOCKET_TMP_EVENT + "." + hostIp)
+        val address = InetAddress.getLocalHost()
+        return Queue(MQ.QUEUE_WEBSOCKET_TMP_EVENT + "." + address.hostAddress)
 //        return QueueBuilder.nonDurable().autoDelete().exclusive().build()
     }
 
@@ -101,11 +91,11 @@ class WebsocketConfiguration {
 
     @Bean
     fun webSocketListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired messageConverter: Jackson2JsonMessageConverter,
-        @Autowired pipelineWebSocketQueue: Queue,
-        @Autowired buildListener: WebSocketListener
+            @Autowired connectionFactory: ConnectionFactory,
+            @Autowired rabbitAdmin: RabbitAdmin,
+            @Autowired messageConverter: Jackson2JsonMessageConverter,
+            @Autowired pipelineWebSocketQueue: Queue,
+            @Autowired buildListener: WebSocketListener
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(pipelineWebSocketQueue.name)

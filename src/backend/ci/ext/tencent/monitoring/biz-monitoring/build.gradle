@@ -28,6 +28,6 @@ dependencies {
     compile project(":ext:tencent:monitoring:api-monitoring")
     compile project(":core:notify:api-notify")
     compile project(":ext:tencent:monitoring:model-monitoring")
-    compile project(":core:common:common-notify:common-notify-api")
+    compile project(":core:common:common-notify")
     compile project(":core:common:common-db")
 }

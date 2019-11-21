@@ -27,6 +27,7 @@
 package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.websocket.handler.BKHandshakeInterceptor
+import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -43,7 +44,7 @@ class WebSocketConfig @Autowired constructor(
     private val bkHandshake: BKHandshakeInterceptor
 ) : AbstractWebSocketMessageBrokerConfigurer() {
 
-    @Value("\${thread.min}")
+    @Value("\${thread.min:8}")
     private val min: Int = 8
 
     companion object {

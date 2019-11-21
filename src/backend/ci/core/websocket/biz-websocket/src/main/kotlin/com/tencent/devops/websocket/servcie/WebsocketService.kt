@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val projectService: ProjectService
+    private val projectProxyService: ProjectProxyService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
@@ -47,7 +47,7 @@ class WebsocketService @Autowired constructor(
 
     // 用户切换页面，需调整sessionId-page,page-sessionIdList两个map
     fun changePage(userId: String, sessionId: String, newPage: String, projectId: String) {
-        if (!projectService.checkProject(projectId, userId)) {
+        if (!projectProxyService.checkProject(projectId, userId)) {
             return
         }
         val redisLock = lockUser(sessionId)
