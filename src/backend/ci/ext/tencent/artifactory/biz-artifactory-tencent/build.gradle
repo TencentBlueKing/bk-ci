@@ -38,7 +38,7 @@ dependencies {
     compile project(":ext:tencent:artifactory:api-artifactory-tencent")
     compile project(":core:artifactory:api-artifactory")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:common:common-archive:common-archive-tencent")
+    compile project(":ext:tencent:common:common-archive-tencent")
     compile project(":ext:tencent:process:api-process-tencent")
     compile project(":ext:tencent:experience:api-experience-tencent")
     compile project(":core:notify:api-notify")

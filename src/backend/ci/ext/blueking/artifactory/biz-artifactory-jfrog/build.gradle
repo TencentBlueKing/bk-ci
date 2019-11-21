@@ -34,7 +34,7 @@ dependencies {
     compile project(":core:common:common-db")
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":ext:blueking:common:common-auth:common-auth-blueking")
-    compile project(":core:common:common-notify:common-notify-api")
+    compile project(":core:common:common-notify")
     compile project(":ext:blueking:artifactory:api-artifactory-jfrog")
     //compile project(":ext:tencent:store:biz-store-op")
     compile project(":core:artifactory:api-artifactory")
