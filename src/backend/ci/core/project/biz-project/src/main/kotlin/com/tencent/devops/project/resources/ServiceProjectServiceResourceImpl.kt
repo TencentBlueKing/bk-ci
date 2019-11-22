@@ -37,7 +37,10 @@ class ServiceProjectServiceResourceImpl constructor(
     private val userProjectServiceService: UserProjectServiceService
 ) : ServiceProjectServiceResource {
 
-    override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
+    override fun updateServiceUrlByBatch(
+        userId: String,
+        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
+    ): Result<Boolean> {
         return userProjectServiceService.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
     }
 }
