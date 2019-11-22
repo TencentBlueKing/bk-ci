@@ -69,6 +69,9 @@
                     case 'template':
                         res = bkLocale.$t('流水线模板')
                         break
+                    default:
+                        res = bkLocale.$t('镜像')
+                        break
                 }
                 return res
             }
@@ -123,7 +126,8 @@
             requestDetail () {
                 const methods = {
                     atom: this.getAtomDetail,
-                    template: this.getTemplateDetail
+                    template: this.getTemplateDetail,
+                    image: this.getImageDetail
                 }
 
                 return methods[this.type]()
@@ -143,10 +147,18 @@
                 })
             },
 
+            getImageDetail () {
+                return this.$store.dispatch('store/requestImageDetailByCode', this.code).then((res) => {
+                    this.name = res.imageName
+                    this.id = res.imageId
+                })
+            },
+
             requestRelativeProject () {
                 const methods = {
                     atom: 'store/requestRelativeProject',
-                    template: 'store/requestRelativeTplProject'
+                    template: 'store/requestRelativeTplProject',
+                    image: 'store/requestRelativeImageProject'
                 }
 
                 this.$store.dispatch(methods[this.type], this.code).then((res) => {
@@ -210,7 +222,8 @@
 
                 const methods = {
                     atom: this.installAtom,
-                    template: this.installTemplate
+                    template: this.installTemplate,
+                    image: this.installImage
                 }
 
                 this.isLoading = true
@@ -252,6 +265,14 @@
                     projectCodeList: this.project
                 }
                 return this.$store.dispatch('store/installTemplate', { params })
+            },
+
+            installImage () {
+                const params = {
+                    imageCode: this.code,
+                    projectCodeList: this.project
+                }
+                return this.$store.dispatch('store/installImage', params)
             }
         }
     }
