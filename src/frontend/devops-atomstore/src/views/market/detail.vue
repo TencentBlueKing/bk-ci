@@ -15,6 +15,7 @@
         <main class="store-main" v-show="!isLoading">
             <atom v-if="type === 'atom'" :detail="detail" />
             <template-info v-if="type === 'template'" :detail="detail" />
+            <component :is="`${type}Info`"></component>
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
                 <bk-tab-panel name="des" :label="$t('概述')" class="summary-tab">
                     <mavon-editor
@@ -73,8 +74,9 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
-    import atom from '../../components/common/detail-info/atom'
+    import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
+    import imageInfo from '../../components/common/detail-info/image'
 
     export default {
         components: {
@@ -82,8 +84,9 @@
             commentRate,
             commentDialog,
             animatedInteger,
-            atom,
-            templateInfo
+            atomInfo,
+            templateInfo,
+            imageInfo
         },
 
         filters: {
@@ -93,6 +96,9 @@
                 switch (val) {
                     case 'template':
                         res = bkLocale.$t('流水线模板')
+                        break
+                    case 'image':
+                        res = bkLocale.$t('镜像')
                         break
                     default:
                         res = bkLocale.$t('流水线插件')
@@ -116,11 +122,13 @@
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData)
+                        template: (postData) => this.requestTemplateComments(postData),
+                        image: (postData) => this.requestImageComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode)
+                        template: () => this.requestTemplateScoreDetail(this.detailCode),
+                        image: () => this.requestImageScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -152,6 +160,9 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
+                'requestImage',
+                'requestImageComments',
+                'requestImageScoreDetail',
                 'getUserApprovalInfo'
             ]),
 
@@ -181,7 +192,8 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
-                    template: () => this.getTemplateDetail()
+                    template: () => this.getTemplateDetail(),
+                    image: () => this.getImageDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -216,6 +228,17 @@
                     this.detailId = templateDetail.templateId
                     this.detail.name = templateDetail.templateName
                     this.commentInfo = templateDetail.userCommentInfo || {}
+                })
+            },
+
+            getImageDetail () {
+                const imageCode = this.detailCode
+
+                return this.requestImage({ imageCode }).then((res) => {
+                    this.detail = res || {}
+                    this.detailId = res.imageId
+                    this.detail.name = res.imageName
+                    this.commentInfo = res.userCommentInfo || {}
                 })
             },
 
