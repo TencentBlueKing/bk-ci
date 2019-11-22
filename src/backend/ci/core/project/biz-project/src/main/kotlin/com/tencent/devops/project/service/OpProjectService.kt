@@ -41,26 +41,26 @@ interface OpProjectService {
     fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
 
     fun getProjectList(
-            projectName: String?,
-            englishName: String?,
-            projectType: Int?,
-            isSecrecy: Boolean?,
-            creator: String?,
-            approver: String?,
-            approvalStatus: Int?,
-            offset: Int,
-            limit: Int,
-            grayFlag: Boolean
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean
     ): Result<Map<String, Any?>?>
 
     fun getProjectCount(
-            projectName: String?,
-            englishName: String?,
-            projectType: Int?,
-            isSecrecy: Boolean?,
-            creator: String?,
-            approver: String?,
-            approvalStatus: Int?,
-            grayFlag: Boolean
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        grayFlag: Boolean
     ): Result<Int>
 }
