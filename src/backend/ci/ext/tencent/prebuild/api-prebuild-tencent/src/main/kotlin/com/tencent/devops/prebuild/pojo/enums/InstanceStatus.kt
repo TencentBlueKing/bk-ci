@@ -1,7 +1,6 @@
 package com.tencent.devops.prebuild.pojo.enums
 
-enum class TaskStatus {
+enum class InstanceStatus {
     RUNNING,
-    ERROR,
-    SUCCESS
+    STOPPED
 }
