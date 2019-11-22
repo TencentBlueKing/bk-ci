@@ -63,7 +63,6 @@ import java.io.InputStream
 import java.util.ArrayList
 import java.util.regex.Pattern
 
-
 abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
@@ -255,7 +254,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val grayProjectSet = grayProjectSet()
 
             projectCodes.forEach {
-                //多次查询保证有序
+                // 多次查询保证有序
                 val projectRecord =
                     projectDao.getByEnglishName(dslContext, it) ?: throw ProjectNotExistException("projectCode=$it")
                 list.add(packagingBean(projectRecord, grayProjectSet))

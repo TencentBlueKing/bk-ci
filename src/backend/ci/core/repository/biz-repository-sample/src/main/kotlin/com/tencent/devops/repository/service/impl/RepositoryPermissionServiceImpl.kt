@@ -36,7 +36,6 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service

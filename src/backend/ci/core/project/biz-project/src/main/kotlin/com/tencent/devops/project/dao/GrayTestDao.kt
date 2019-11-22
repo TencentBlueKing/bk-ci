@@ -28,7 +28,6 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TGrayTest
 import com.tencent.devops.project.pojo.service.GrayTestInfo
-import com.tencent.devops.project.pojo.service.GrayTestListInfo
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.springframework.stereotype.Repository
@@ -122,12 +121,12 @@ class GrayTestDao {
     }
 
     fun listByCondition(
-            dslContext: DSLContext,
-            userNameList: List<String>,
-            serviceIdList: List<String>,
-            statusList: List<String>,
-            pageSize: Int,
-            pageNum: Int
+        dslContext: DSLContext,
+        userNameList: List<String>,
+        serviceIdList: List<String>,
+        statusList: List<String>,
+        pageSize: Int,
+        pageNum: Int
     ): List<GrayTestInfo> {
         with(TGrayTest.T_GRAY_TEST) {
             val condition = dslContext.selectFrom(this).where(USERNAME.isNotNull)
