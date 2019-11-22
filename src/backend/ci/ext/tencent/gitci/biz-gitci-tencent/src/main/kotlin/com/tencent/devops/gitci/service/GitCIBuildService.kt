@@ -302,7 +302,7 @@ class GitCIBuildService @Autowired constructor(
                 null,
                 null,
                 ServiceJobDevCloudTask.atomCode,
-                "3.*",
+                "1.*",
                 mapOf("input" to serviceJobDevCloudInput, "namespace" to it.getServiceParamNameSpace())
             )
 

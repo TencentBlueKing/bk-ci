@@ -20,7 +20,7 @@ data class ServiceJobDevCloudTask(
     companion object {
         const val taskType = "serviceJobDevCloud"
         const val taskVersion = "@latest"
-        const val atomCode = "CreateDevnetContainer"
+        const val atomCode = "DevCloudJobService"
     }
 
     override fun getTaskType() = taskType
