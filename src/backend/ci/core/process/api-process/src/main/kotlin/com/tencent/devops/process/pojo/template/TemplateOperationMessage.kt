@@ -26,10 +26,6 @@
 
 package com.tencent.devops.process.pojo.template
 
-/**
- * deng
- * 2019-01-10
- */
 data class TemplateOperationMessage(
     val successPipelines: List<String>,
     val failurePipelines: List<String>,

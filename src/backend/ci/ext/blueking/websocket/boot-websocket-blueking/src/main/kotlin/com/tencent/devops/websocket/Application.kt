@@ -24,29 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.websocket
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
-import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
-import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
-import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.pojo.code.github.GithubWebhook
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
-@RestResource
-class ServiceScmWebhookResourceImpl @Autowired constructor(
-    private val pipelineBuildService: PipelineBuildWebhookService,
-    private val rabbitTemplate: RabbitTemplate
-) : ServiceScmWebhookResource {
-    override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
-        return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(rabbitTemplate, GithubWebhookEvent(githubWebhook = webhook)))
-    }
+@ComponentScan("com.tencent.devops.websocket")
+@MicroService
+class Application
 
-    override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
-        return Result(pipelineBuildService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
-    }
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }

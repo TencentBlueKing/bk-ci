@@ -1,3 +1,4 @@
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,25 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import javax.annotation.PostConstruct
-
-@Configuration
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class CommonPipelineAutoConfiguration {
-
-    @Autowired(required = false)
-    private var objectMapper: ObjectMapper? = null
-
-    @PostConstruct
-    fun registerSubtypesObjectMapper() {
-        ElementSubTypeRegisterLoader.registerElement(objectMapper)
-        DispatchSubTypeRegisterLoader.registerElement()
-    }
+dependencies {
+    compile project(":core:websocket:biz-websocket")
+    compile project(":core:project:api-project")
 }
