@@ -30,7 +30,7 @@ local ticket = nil
 if devops_access_token ~= nill then 
   ticket = oauthUtil:verify_token(devops_access_token)
 else
-  ticket = oauthUtil:get_ticket(bk_ticket)
+  ticket = oauthUtil:get_ticket(bk_token)
 end
 
 --- 设置用户信息
