@@ -5,12 +5,12 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.SmartProxyUtil
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Action
 import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudContainer
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Params
 import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudImage
 import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudImageVersion
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
