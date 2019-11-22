@@ -11,7 +11,9 @@ import com.tencent.devops.project.util.ProjectUtils.packagingBean
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
+@Service
 class ProjectS3Service @Autowired constructor(
     private val s3Service: S3Service,
     private val projectDao: ProjectDao,
