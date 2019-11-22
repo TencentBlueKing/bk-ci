@@ -39,17 +39,39 @@
                     </selector>
                 </form-field>
 
-                <form-field :label="$t('editPage.imageType')" v-if="buildResourceType === 'DOCKER'">
-                    <enum-input
-                        name="imageType"
-                        :list="imageTypeList"
-                        :disabled="!editable"
-                        :handle-change="changeBuildResource"
-                        :value="buildImageType">
-                    </enum-input>
-                </form-field>
+                <section v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)">
+                    <form-field :label="$t('editPage.imageType')">
+                        <enum-input
+                            name="imageType"
+                            :list="imageTypeList"
+                            :disabled="!editable"
+                            :handle-change="changeBuildResource"
+                            :value="buildImageType">
+                        </enum-input>
+                    </form-field>
 
-                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
+                    <form-field :is-error="errors.has(&quot;buildImageVersion&quot;)" error-msg="和版本不能为空"
+                        label="镜像源"
+                        :required="true"
+                        v-if="buildImageType === 'BKSTORE'">
+                        <section class="bk-image">
+                            <section class="image-name">
+                                <span :class="[{ disable: !editable }, 'image-named']" :title="buildImageName">{{buildImageName || '待选择镜像'}}</span>
+                                <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? '重选' : '选择'}}</bk-button>
+                            </section>
+                            <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
+                                <bk-option v-for="option in versionList"
+                                    :key="option.versionValue"
+                                    :id="option.versionValue"
+                                    :name="option.versionName"
+                                >
+                                </bk-option>
+                            </bk-select>
+                        </section>
+                    </form-field>
+                </section>
+
+                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId && !(['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && buildImageType === 'BKSTORE')" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
                     <container-env-node :disabled="!editable"
                         :os="container.baseOS"
                         :container-id="containerModalId"
@@ -150,6 +172,7 @@
     import JobOption from './JobOption'
     import JobMutual from './JobMutual'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import ImageSelector from '@/components/AtomSelector/imageSelector'
 
     export default {
         name: 'container-property-panel',
@@ -165,7 +188,8 @@
             JobOption,
             JobMutual,
             Selector,
-            AtomCheckbox
+            AtomCheckbox,
+            ImageSelector
         },
         props: {
             containerIndex: Number,
@@ -179,11 +203,11 @@
                 DOCS_URL_PREFIX,
                 imageTypeList: [
                     {
-                        label: this.$t('editPage.devopsImg'),
-                        value: 'BKDEVOPS'
+                        label: '从列表选择',
+                        value: 'BKSTORE'
                     },
                     {
-                        label: this.$t('editPage.thirdImg'),
+                        label: '手动输入',
                         value: 'THIRD'
                     }
                 ]
@@ -278,6 +302,18 @@
                 return this.container.dispatchType.value
             },
             buildImageType () {
+                return this.container.dispatchType.imageType
+            },
+            buildImageCode () {
+                return this.container.dispatchType && this.container.dispatchType.imageCode
+            },
+            buildImageVersion () {
+                return this.container.dispatchType.imageVersion
+            },
+            buildImageName () {
+                return this.container.dispatchType && this.container.dispatchType.imageName
+            },
+            buildImageType () {
                 return this.container.dispatchType.imageType || 'BKDEVOPS'
             },
             buildImageCreId () {
@@ -344,12 +380,62 @@
                     agentType: 'ID'
                 }))
             }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode) {
+                if (/\$\{/.test(this.buildResource)) {
+                    this.changeBuildResource('imageType', 'THIRD')
+                } else {
+                    this.changeBuildResource('imageType', 'BKSTORE')
+                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
+                        this.changeBuildResource('imageCode', res.code)
+                        this.changeBuildResource('imageName', res.name)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err }))
+                }
+            }
+            if (this.container.dispatchType && this.container.dispatchType.imageCode) {
+                this.getVersionList(this.container.dispatchType.imageCode)
+            }
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
                 'togglePropertyPanel'
             ]),
+            ...mapActions('pipelines', [
+                'requestImageVersionlist',
+                'requestImageHistory'
+            ]),
+
+            changeImageVersion (value) {
+                this.changeBuildResource('imageVersion', value)
+            },
+
+            choose (card) {
+                this.changeBuildResource('imageCode', card.code)
+                this.changeBuildResource('imageName', card.name)
+                return this.getVersionList(card.code).then(() => {
+                    const firstVersion = this.versionList[0] || {}
+                    this.changeBuildResource('imageVersion', firstVersion.versionValue)
+                })
+            },
+
+            getVersionList (imageCode) {
+                this.isVersionLoading = true
+                const data = {
+                    projectCode: this.projectId,
+                    imageCode
+                }
+                return this.requestImageVersionlist(data).then((res) => {
+                    this.versionList = res.data || []
+                }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => {
+                    this.isVersionLoading = false
+                })
+            },
+
+            chooseImage (event) {
+                event.preventDefault()
+                this.showImageSelector = !this.showImageSelector
+            },
+
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
 
