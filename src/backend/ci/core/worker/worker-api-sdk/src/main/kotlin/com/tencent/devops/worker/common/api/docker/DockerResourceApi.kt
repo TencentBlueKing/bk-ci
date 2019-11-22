@@ -24,25 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.worker.common.api.docker
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import okhttp3.MediaType
+import okhttp3.RequestBody
 
-@ApiModel("检查镜像合法性初始化流水线请求报文体")
-data class CheckImageInitPipelineReq(
-    @ApiModelProperty("镜像代码", required = true)
-    val imageCode: String,
-    @ApiModelProperty("镜像名称", required = true)
-    val imageName: String,
-    @ApiModelProperty("镜像版本号", required = true)
-    val version: String,
-    @ApiModelProperty("镜像类型", required = false)
-    val imageType: String? = null,
-    @ApiModelProperty("仓库用户名", required = false)
-    val registryUser: String? = null,
-    @ApiModelProperty("仓库密码", required = false)
-    val registryPwd: String? = null,
-    @ApiModelProperty("是否发送通知", required = false)
-    val sendNotify: Boolean? = false
-)
+class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
+
+    /**
+     * 更新镜像市场信息
+     */
+    override fun updateImageInfo (
+        userId: String,
+        projectCode: String,
+        imageCode: String,
+        version: String,
+        imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
+    ): Result<Boolean> {
+        val path = "/ms/store/api/build/market/image/projectCodes/$projectCode/imageCodes/$imageCode/versions/$version"
+        val body = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(imageBaseInfoUpdateRequest)
+        )
+        val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
+        val request = buildPut(path, body, headMap)
+        val responseContent = request(request, "更新镜像市场信息失败")
+        return objectMapper.readValue(responseContent)
+    }
+}
