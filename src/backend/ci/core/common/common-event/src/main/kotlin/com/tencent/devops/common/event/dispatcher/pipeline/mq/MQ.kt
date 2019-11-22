@@ -81,6 +81,7 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK = "q.engine.pipeline.build.code.webhook"
     const val QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET = "q.engine.pipeline.build.atom.market"
     const val QUEUE_PIPELINE_BUILD_FINISH_LAMBDA = "q.engine.pipeline.build.lambda"
+    const val QUEUE_PIPELINE_BUILD_FINISH_GITCI = "q.engine.pipeline.build.gitci"
 
     const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"
 
