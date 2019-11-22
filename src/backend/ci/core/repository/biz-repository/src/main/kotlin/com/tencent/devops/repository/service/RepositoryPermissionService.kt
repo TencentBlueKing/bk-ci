@@ -30,25 +30,25 @@ import com.tencent.devops.common.auth.api.AuthPermission
 
 interface RepositoryPermissionService {
     fun validatePermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long? = null,
-            message: String
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long? = null,
+        message: String
     )
 
     fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long>
     fun filterRepositories(
-            userId: String,
-            projectId: String,
-            authPermissions: Set<AuthPermission>
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>>
 
     fun hasPermission(
-            userId: String,
-            projectId: String,
-            authPermission: AuthPermission,
-            repositoryId: Long? = null
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long? = null
     ): Boolean
 
     fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String)
