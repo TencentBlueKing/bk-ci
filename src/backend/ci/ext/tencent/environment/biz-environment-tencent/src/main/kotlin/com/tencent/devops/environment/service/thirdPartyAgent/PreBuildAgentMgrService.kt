@@ -133,7 +133,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 gateway = gateway,
                 link = agentUrlService.genAgentInstallUrl(agentRecord),
                 script = agentUrlService.genAgentInstallScript(agentRecord),
-                ip = agentRecord.ip
+                ip = agentRecord.ip,
+                hostName = agentRecord.hostname
             )
 
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
@@ -158,7 +159,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 gateway = it.gateway,
                 link = agentUrlService.genAgentInstallUrl(it),
                 script = agentUrlService.genAgentInstallScript(it),
-                ip = it.ip
+                ip = it.ip,
+                hostName = it.hostname
             )
         }
     }
