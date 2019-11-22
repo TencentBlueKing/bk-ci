@@ -40,6 +40,7 @@ import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -159,5 +160,10 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String
     ): Result<GitMrChangeInfo> {
         return Result(gitService.getMrChangeInfo(repoName, mrId, tokenType, token))
+    }
+
+    override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {
+        gitService.addCommitCheck(request)
+        return Result(true)
     }
 }

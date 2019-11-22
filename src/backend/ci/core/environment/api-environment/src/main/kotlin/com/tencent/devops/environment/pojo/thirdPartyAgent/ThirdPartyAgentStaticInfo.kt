@@ -48,5 +48,7 @@ data class ThirdPartyAgentStaticInfo(
     @ApiModelProperty("script", required = true)
     val script: String,
     @ApiModelProperty("ip", required = true)
-    val ip: String
+    val ip: String,
+    @ApiModelProperty("hostName", required = false)
+    val hostName: String?
 )
