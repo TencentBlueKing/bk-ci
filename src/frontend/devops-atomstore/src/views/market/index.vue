@@ -99,6 +99,9 @@
                     case 'template':
                         res = bkLocale.$t('流水线模板')
                         break
+                    case 'image':
+                        res = bkLocale.$t('镜像')
+                        break
                     default:
                         res = bkLocale.$t('流水线插件')
                         break
@@ -134,7 +137,8 @@
                 showToTop: false,
                 storeTypes: [
                     { type: 'atom', des: this.$t('流水线插件') },
-                    { type: 'template', des: this.$t('流水线模板') }
+                    { type: 'template', des: this.$t('流水线模板') },
+                    { type: 'image', des: this.$t('容器镜像') }
                 ]
             }
         },
@@ -185,6 +189,9 @@
                 'requestTplCategorys',
                 'requestTplLabel',
                 'requestTplClassify',
+                'requestImageClassifys',
+                'requestImageCategorys',
+                'requestImageLabel',
                 'setMarketQuery'
             ]),
 
@@ -279,7 +286,8 @@
             getClassifys () {
                 const fun = {
                     atom: () => this.getAtomClassifys(),
-                    template: () => this.getTemplateClassifys()
+                    template: () => this.getTemplateClassifys(),
+                    image: () => this.getImageClassifys()
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const method = fun[type]
@@ -321,6 +329,16 @@
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('按应用范畴'), data: categorys })
                     if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('按分类'), data: classify })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('按功能'), data: lables })
+                    return res
+                })
+            },
+
+            getImageClassifys () {
+                return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
                     return res
                 })
             },
