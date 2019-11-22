@@ -66,12 +66,12 @@ class ActivityService @Autowired constructor(
         if (tActivityRecord != null) {
             return Result(tActivityRecord.let {
                 OPActivityVO(
-                        it.id,
-                        it.name,
-                        it.link,
-                        it.type,
-                        it.status,
-                        it.creator, DateTimeUtil.toDateTime(it.createTime)
+                    id = it.id,
+                    name = it.name,
+                    link = it.link,
+                    type = it.type,
+                    status = it.status,
+                    creator = it.creator, createTime = DateTimeUtil.toDateTime(it.createTime)
                 )
             })
         }
