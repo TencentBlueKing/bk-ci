@@ -53,7 +53,10 @@ import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
+import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import okhttp3.MediaType
 import okhttp3.Request
@@ -82,6 +85,7 @@ class GitService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
+        private val gitOauthApi = GitOauthApi()
     }
     @Value("\${gitCI.clientId}")
     private lateinit var gitCIClientId: String
@@ -714,6 +718,24 @@ class GitService @Autowired constructor(
             url.append("&sha=$sha")
         }
         OkhttpUtils.downloadFile(url.toString(), response)
+    }
+
+    fun addCommitCheck(request: CommitCheckRequest) {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            with(request) {
+                if (token == null || token == "") {
+                    throw RuntimeException("Git Token为空")
+                }
+                gitOauthApi.addCommitCheck(
+                    "$gitCIUrl/api/v3",
+                    token!!, projectName, commitId, state, targetUrl, context, description, block)
+            }
+        } catch (e: ScmException) {
+            throw RuntimeException("Git Token不正确")
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
+        }
     }
 
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {
