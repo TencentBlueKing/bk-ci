@@ -35,7 +35,7 @@ import javax.annotation.PostConstruct
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AutoConfiguration {
+class CommonPipelineAutoConfiguration {
 
     @Autowired(required = false)
     private var objectMapper: ObjectMapper? = null
