@@ -28,9 +28,7 @@ package com.tencent.devops.websocket.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
-import com.tencent.devops.common.websocket.utils.RedisUtlis
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -38,11 +36,11 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebSocketListener @Autowired constructor(
-        val objectMapper: ObjectMapper,
-        val messagingTemplate: SimpMessagingTemplate
-): Listener<SendMessage> {
+    val objectMapper: ObjectMapper,
+    val messagingTemplate: SimpMessagingTemplate
+) : Listener<SendMessage> {
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 
@@ -56,7 +54,7 @@ class WebSocketListener @Autowired constructor(
                             "/topic/bk/notify/$session",
                             objectMapper.writeValueAsString(event.notifyPost))
                 }
-            } else{
+            } else {
                 logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
         } catch (ex: Exception) {
