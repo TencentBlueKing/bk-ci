@@ -35,10 +35,13 @@
                                 :item-selected="changeTicketType"
                             >
                             </selector>
-                            <bk-popover placement="right">
+                            <bk-popover placement="right" :max-width="250">
                                 <i class="bk-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/${$t('allService')}/${$t('ticket.credentialManage')}/summary.html`">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div>
+                                        {{ getTypeDesc(localConfig.credentialType) }}
+                                        <a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/${$t('allService')}/${$t('ticket.credentialManage')}/summary.html`">{{ $t('ticket.learnMore') }}</a>
+                                    </div>
                                 </div>
                             </bk-popover>
 
@@ -69,9 +72,9 @@
                     <div v-for="(obj, key) in newModel" :key="key" :class="{ &quot;bk-form-item&quot;: true, &quot;is-required&quot;: obj.rules }">
                         <label v-if="obj.label" class="bk-label">{{ $t(obj.label) }}：</label>
                         <div class="bk-form-content">
-                            <a v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" href="javascript:;" @click="toggleShowPwdCon(obj.modelName)"><i :class="showPwdCon[obj.modelName] ? 'bk-icon icon-hide' : 'bk-icon icon-eye'"></i></a>
                             <component v-validate="($t(obj.label) === $t('ticket.credential.sshKey') && localConfig.credential[obj.modelName] === '******') ? {} : obj.rule" v-if="obj.type !== 'password' || !showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
                             <component v-validate="obj.rule" v-if="obj.type === 'password' && showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" type="text" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
+                            <i v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" @click="toggleShowPwdCon(obj.modelName)" :class="showPwdCon[obj.modelName] ? 'bk-icon icon-hide' : 'bk-icon icon-eye'"></i>
                             <a v-if="$t(obj.label) === $t('ticket.credential.privateToken')" target="_blank" :href="`${CODEGIT_URL_PREFIX}/profile/account`" class="text-link link-tips">{{ $t('ticket.view') }}</a>
                             <a v-if="$t(obj.label) === $t('ticket.credential.accessToken')" target="_blank" :href="`${GITLAB_URL_PREFIX}/profile/personal_access_tokens`" class="text-link link-tips">{{ $t('ticket.view') }}</a>
                             <p class="error-tips"
@@ -417,18 +420,15 @@
             width: 550px;
         }
         .icon-hide,.icon-eye {
-            right: 4%;
-            position: absolute;
-            padding: 10px;
+            // right: 4%;
+            // position: absolute;
+            // padding: 10px;
             color: #808080;
         }
         .icon-info-circle {
             padding-left: 8px;
             color: #C3CDD7;
             font-size: 14px;
-        }
-        .link-tips {
-            margin-left: 28px;
         }
     }
 </style>

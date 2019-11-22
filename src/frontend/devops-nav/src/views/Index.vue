@@ -39,7 +39,7 @@
                             class="empty-btns-item"
                             :href="`/console/perm/apply-join-project${$route.params.projectId ? `?project_code=${$route.params.projectId}` : ''}`"
                         >
-                            <bk-button theme="success">申请加入</bk-button>
+                            <bk-button theme="success">{{ $t('apply') }}</bk-button>
                         </a>
                     </empty-tips>
 

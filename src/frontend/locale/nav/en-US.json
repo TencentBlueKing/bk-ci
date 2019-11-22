@@ -119,6 +119,7 @@
     "notFindProject": "no project found",
     "notFindProjectTips": "you can create your own project and conduct user and access management accordingly, you can also apply for existed project",
     "applyProject": "apply to join the project",
+    "apply": "Apply",
     "disableProjectConfirm": "confirm to disable the project",
     "enableProjectConfirm": "confirm to enable the project",
     "projectSuccess": "project successed",
