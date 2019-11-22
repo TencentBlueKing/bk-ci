@@ -21,7 +21,8 @@ import ajax from '@/utils/request'
 import {
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
-    BACKEND_API_URL_PREFIX
+    BACKEND_API_URL_PREFIX,
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
 
 // import axios from 'axios'
@@ -204,6 +205,36 @@ const mutations = {
 }
 
 const actions = {
+    requestImageHistory ({ commit }, { agentType, value }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/history/transfer?agentType=${agentType}&value=${value}`)
+    },
+    requestImageVersionlist ({ commit }, { projectCode, imageCode }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/projectCodes/${projectCode}/imageCodes/${imageCode}/version/list`)
+    },
+
+    requestInstallImage ({ commit }, params) {
+        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/install`, params)
+    },
+    requestImageVersion ({ commit }, imageCode) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/imageCodes/${imageCode}/version/list`)
+    },
+
+    requestMarketImage ({ commit }, { projectCode, agentType, imageNamePart, recommendFlag, id }) {
+        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages/search?projectCode=${projectCode}&imageNamePart=${imageNamePart}&agentType=${agentType}&recommendFlag=${recommendFlag}&classifyId=${id}&page=1&pageSize=1000`)
+    },
+
+    requestImageClassifys ({ commit }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/classifys`)
+    },
+
+    requestInstallImageList ({ commit }, { projectCode, agentType, recommendFlag, id, page, pageSize }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/availableImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&classifyId=${id}&page=${page}&pageSize=${pageSize}`)
+    },
+
+    requestStoreImageList ({ commit }, { projectCode, agentType, recommendFlag, page, pageSize }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=${page}&pageSize=${pageSize}`)
+    },
+
     resetPipelineSetting: ({ commit }, payload) => {
         commit(RESET_PIPELINE_SETTING_MUNTATION, payload)
     },

@@ -15,16 +15,16 @@
             </p>
             <template v-if="card.availableFlag">
                 <template v-if="type === 'store'">
-                    <bk-button size="small" class="info-button" @click="choose" v-if="card.installed">{{code === card.code ? '已选' : '选择'}}</bk-button>
-                    <bk-button size="small" class="info-button" @click="installImage" v-else-if="card.flag" :loading="isInstalling">安装</bk-button>
-                    <bk-button size="small" class="info-button" v-else :disabled="true" title="暂无权限安装该镜像">安装</bk-button>
+                    <bk-button size="small" class="info-button" @click="choose" v-if="card.installed">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
+                    <bk-button size="small" class="info-button" @click="installImage" v-else-if="card.flag" :loading="isInstalling">{{ $t('editPage.install') }}</bk-button>
+                    <bk-button size="small" class="info-button" v-else :disabled="true" :title="$t('editPage.noInstallRight')">{{ $t('editPage.install') }}</bk-button>
                 </template>
-                <bk-button size="small" class="info-button" @click="choose" v-else>{{code === card.code ? '已选' : '选择'}}</bk-button>
+                <bk-button size="small" class="info-button" @click="choose" v-else>{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
             </template>
         </section>
         <p class="card-link">
-            <span class="link-pub">由{{card.publisher}}提供</span>
-            <a class="link-more" :href="card.docsLink" target="_blank">了解更多</a>
+            <span class="link-pub">{{ $t('editPage.by') + card.publisher + $t('editPage.provided')}}</span>
+            <a class="link-more" :href="card.docsLink" target="_blank">{{ $t('editPage.knowMore') }}</a>
         </p>
     </li>
 </template>
@@ -62,11 +62,11 @@
             return {
                 isInstalling: false,
                 toolTip: {
-                    content: !this.card.availableFlag ? `在当前构建资源类型下不可用${this.card.agentTypeScope.length ? '，仅支持' : ''}${this.card.agentTypeScope.map((item) => {
+                    content: !this.card.availableFlag ? `${this.$t('editPage.notWorkAtCur')}${this.card.agentTypeScope.length ? `，${this.$t('editPage.onlySupport')}` : ''}${this.card.agentTypeScope.map((item) => {
                         let res = ''
                         switch (item) {
                             case 'DOCKER':
-                                res = 'Devnet 物理机'
+                                res = this.$t('editPage.devnet')
                                 break
                             case 'IDC':
                                 res = 'IDC CVM'
@@ -101,7 +101,7 @@
                 this.isInstalling = true
                 this.$store.dispatch('pipelines/requestInstallImage', postData).then((res) => {
                     this.card.installed = true
-                    this.$showTips({ theme: 'success', message: '安装成功' })
+                    this.$showTips({ theme: 'success', message: this.$t('editPage.installSuc') })
                 }).catch((err) => {
                     this.$showTips({ theme: 'error', message: err.message || err })
                 }).finally(() => (this.isInstalling = false))

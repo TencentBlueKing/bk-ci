@@ -50,14 +50,14 @@
                         </enum-input>
                     </form-field>
 
-                    <form-field :is-error="errors.has(&quot;buildImageVersion&quot;)" error-msg="和版本不能为空"
-                        label="镜像源"
+                    <form-field :is-error="errors.has(&quot;buildImageVersion&quot;)" :error-msg="$t('editPage.imageErrMgs')"
+                        :label="$t('editPage.imageSource')"
                         :required="true"
                         v-if="buildImageType === 'BKSTORE'">
                         <section class="bk-image">
                             <section class="image-name">
-                                <span :class="[{ disable: !editable }, 'image-named']" :title="buildImageName">{{buildImageName || '待选择镜像'}}</span>
-                                <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? '重选' : '选择'}}</bk-button>
+                                <span :class="[{ disable: !editable }, 'image-named']" :title="buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
+                                <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
                             </section>
                             <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
                                 <bk-option v-for="option in versionList"
@@ -153,6 +153,12 @@
                     </job-mutual>
                 </div>
             </div>
+
+            <image-selector :is-show.sync="showImageSelector"
+                :code="buildImageCode"
+                :build-resource-type="buildResourceType"
+                @choose="choose"
+            ></image-selector>
         </section>
     </bk-sideslider>
 </template>
@@ -203,11 +209,11 @@
                 DOCS_URL_PREFIX,
                 imageTypeList: [
                     {
-                        label: '从列表选择',
+                        label: this.$t('editPage.fromList'),
                         value: 'BKSTORE'
                     },
                     {
-                        label: '手动输入',
+                        label: this.$t('editPage.fromHand'),
                         value: 'THIRD'
                     }
                 ]
@@ -313,9 +319,6 @@
             buildImageName () {
                 return this.container.dispatchType && this.container.dispatchType.imageName
             },
-            buildImageType () {
-                return this.container.dispatchType.imageType || 'BKDEVOPS'
-            },
             buildImageCreId () {
                 return this.container.dispatchType.credentialId || ''
             },
@@ -345,7 +348,7 @@
                     paramName: 'credentialId',
                     url: `/ticket/api/user/credentials/${this.projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000&credentialTypes=USERNAME_PASSWORD`,
                     hasAddItem: true,
-                    itemText: '添加相应凭据',
+                    itemText: this.$t('editPage.addCredentials'),
                     itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
                 }
             }
@@ -532,6 +535,36 @@
     }
     .container-property-panel {
         font-size: 14px;
+        .bk-image {
+            display: flex;
+            align-items: center;
+            .image-name {
+                width: 44%;
+                display: flex;
+                align-items: center;
+                .image-named {
+                    border: 1px solid #c4c6cc;
+                    flex: 1;
+                    height: 32px;
+                    line-height: 32px;
+                    font-size: 12px;
+                    color: $fontWeightColor;
+                    line-height: 32px;
+                    padding-left: 10px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    &.disable {
+                        color: #c4c6cc;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+            .image-tag {
+                width: 44%;
+                margin-left: 10px;
+            }
+        }
         .container-resource-name {
             display: flex;
             align-items: center;
