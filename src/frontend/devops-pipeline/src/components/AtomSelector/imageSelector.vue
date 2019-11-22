@@ -2,11 +2,11 @@
     <section class="selector-popup" v-bk-clickoutside="closeImageSelect" v-show="isShow">
         <main class="selector-main">
             <header class="selector-header">
-                <h3>请选择一个CI镜像<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'bk-icon', 'icon-refresh', 'fresh']" /></h3>
+                <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'bk-icon', 'icon-refresh', 'fresh']" /></h3>
                 <bk-input class="search-input"
                     ref="searchStr"
                     :clearable="true"
-                    placeholder="输入后回车搜索"
+                    :placeholder="$t('editPage.enterSearch')"
                     right-icon="bk-icon icon-search"
                     :value="searchKey"
                     @input="handleClear"
@@ -35,11 +35,11 @@
 
                         <section v-if="tab.unRecommendData.length">
                             <h3 :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="tab.expandObtained = !tab.expandObtained">
-                                不推荐使用
+                                {{ $t('editPage.unRecommend') }}
                                 <bk-popover placement="top">
                                     <i class="bk-icon icon-info-circle "></i>
                                     <div slot="content">
-                                        因设计缺陷，或实现方式变更，不再建议使用的 CI 镜像，后续将下架。此类 CI 镜像一般都已提供替换用的 CI 镜像，请使用新 CI 镜像
+                                        {{ $t('editPage.unRecomReason') }}
                                     </div>
                                 </bk-popover>
                             </h3>
@@ -63,7 +63,7 @@
             <section v-else class="search-result" v-bkloading="{ isLoading }">
                 <template v-if="!isLoading">
                     <template v-if="searchInstallList.length">
-                        <h3 class="search-title">已安装</h3>
+                        <h3 class="search-title">{{ $t('editPage.installed') }}</h3>
                         <card :current-item.sync="currentItem"
                             :card="card"
                             v-for="card in searchInstallList"
@@ -74,7 +74,7 @@
                     </template>
                     
                     <template v-if="searchUninstallList.length">
-                        <h3 class="search-title gap-border">未安装</h3>
+                        <h3 class="search-title gap-border">{{ $t('editPage.unInstalled') }}</h3>
                         <card :current-item.sync="currentItem"
                             :card="card"
                             v-for="card in searchUninstallList"
@@ -86,11 +86,11 @@
                     
                     <section v-if="searchUnrecomandList.length">
                         <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
-                            不推荐使用
+                            {{ $t('editPage.unRecommend') }}
                             <bk-popover placement="top">
                                 <i class="bk-icon icon-info-circle "></i>
                                 <div slot="content">
-                                    因设计缺陷，或实现方式变更，不再建议使用的 CI 镜像，后续将下架。此类 CI 镜像一般都已提供替换用的 CI 镜像，请使用新 CI 镜像
+                                    {{ $t('editPage.unRecomReason') }}
                                 </div>
                             </bk-popover>
                         </h3>
@@ -185,12 +185,12 @@
                 this.requestImageClassifys().then((res) => {
                     res.data.push({
                         classifyCode: 'store',
-                        classifyName: '研发商店',
+                        classifyName: this.$t('editPage.store'),
                         id: 'store'
                     })
                     res.data.unshift({
                         classifyCode: 'all',
-                        classifyName: '全部',
+                        classifyName: this.$t('editPage.all'),
                         id: ''
                     })
                     this.tabList = (res.data || []).map((item) => {
