@@ -29,6 +29,7 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-event")
     compile project(":ext:tencent:scm:api-scm")
+    compile project(":ext:tencent:common:common-pipeline-tencent")
 //    compile project(":api:api-measure")
 //    compile project(":api:api-environment")
 //    compile project(":api:api-image")
