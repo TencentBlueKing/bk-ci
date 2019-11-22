@@ -94,4 +94,61 @@ function _M:get_ticket(bk_ticket)
 end
 
 
+function _M:verify_token(access_token)
+    local requestBody = {
+        access_token = access_token
+    }
+    --- 初始化HTTP连接
+    local httpc = http.new()
+    --- 开始连接
+    httpc:set_timeout(3000)
+    httpc:connect(config.oauth.ip, config.oauth.port)
+    --- 发送请求
+    local res, err = httpc:request({
+        path = "/oauth/token" .. "?access_token=" .. access_token,
+        method = "GET",
+        headers = {
+        ["Host"] = config.oauth.host,
+        ["Accept"] = "application/json",
+        ["Content-Type"] = "application/json",
+        }
+    })
+    --- 判断是否出错了
+    if not res then
+        ngx.log(ngx.ERR, "failed to request verify_token: ", err)
+        ngx.exit(500)
+        return
+    end
+    --- 判断返回的状态码是否是200
+    if res.status ~= 200 then
+        ngx.log(ngx.ERR, "failed to request verify_token, status: ", res.status)
+        ngx.exit(500)
+        return
+    end
+    --- 获取所有回复
+    local responseBody = res:read_body()
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
+    --- 判断JSON转换是否成功
+    if result == nil then 
+        ngx.log(ngx.ERR, "failed to parse verify_token response：", responseBody)
+        ngx.exit(500)
+        return
+    end
+
+    --- 判断返回码:Q!
+    if result.code ~= 0 then
+        ngx.log(ngx.ERR, "invalid verify_token: ", result.message)
+        ngx.exit(401)
+        return
+    end
+    -- 记录用户的访问情况
+    -- ngx.log(ngx.ERR, "access user‘s rtx :", result.data.user_id)
+    result.data.access_token = access_token
+    return result.data
+end
+
+
 return _M
