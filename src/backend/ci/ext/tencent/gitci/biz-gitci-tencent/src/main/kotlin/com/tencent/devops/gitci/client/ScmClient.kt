@@ -31,21 +31,21 @@ class ScmClient @Autowired constructor(
         val token = getAccessToken(gitProjectConf.gitProjectId).first
         val buildNum = getBuildNum(gitProjectConf.projectCode.toString(), buildId)
         val request = CommitCheckRequest(
-            gitProjectConf.gitProjectId.toString(),
-            gitProjectConf.gitHttpUrl,
-            ScmType.CODE_GIT,
-            null,
-            null,
-            token,
-            null,
-            commitId,
-            status,
-            gitProjectConf.homepage + "/ci/pipelines#/build/" + buildId + "?buildNum=" + buildNum,
-            "",
-            description,
-            false,
-            mergeRequestId,
-            Pair(titleData, resultMap)
+            projectName = gitProjectConf.gitProjectId.toString(),
+            url = gitProjectConf.gitHttpUrl,
+            type = ScmType.CODE_GIT,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            commitId = commitId,
+            state = status,
+            targetUrl = gitProjectConf.homepage + "/ci/pipelines#/build/" + buildId + "?buildNum=" + buildNum,
+            context = "",
+            description = description,
+            block = false,
+            mrRequestId = mergeRequestId,
+            reportData = Pair(titleData, resultMap)
         )
         logger.info("user $userId buildId $buildId pushCommitCheck: $request")
         client.getScm(ServiceGitResource::class).addCommitCheck(request)
