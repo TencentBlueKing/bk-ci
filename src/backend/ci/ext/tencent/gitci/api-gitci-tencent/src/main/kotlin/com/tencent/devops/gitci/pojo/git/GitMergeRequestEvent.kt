@@ -1,40 +1,14 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.gitci.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.gitci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 
 /**
 {
     "object_kind":"merge_request",
     "user":{
-        "name":"user1",
-        "username":"user1",
+        "name":"aaronxsheng",
+        "username":"aaronxsheng",
         "avatar_url":null
     },
     "object_attributes":{
@@ -57,31 +31,31 @@ import com.tencent.devops.gitci.OBJECT_KIND_MERGE_REQUEST
         "description":"ddd",
         "source":{
             "name":"aaron-git-test",
-            "ssh_url":"git@git.xxx.com:user1/aaron-git-test.git",
-            "http_url":"http://git.xxx.com/user1/aaron-git-test.git",
-            "web_url":"http://git.xxx.com/user1/aaron-git-test",
-            "namespace":"user1",
+            "ssh_url":"git@git.code.oa.com:aaronxsheng/aaron-git-test.git",
+            "http_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test.git",
+            "web_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test",
+            "namespace":"aaronxsheng",
             "visibility_level":0
         },
         "target":{
             "name":"aaron-git-test",
-            "ssh_url":"git@git.xxx.com:user1/aaron-git-test.git",
-            "http_url":"http://git.xxx.com/user1/aaron-git-test.git",
-            "web_url":"http://git.xxx.com/user1/aaron-git-test",
-            "namespace":"user1",
+            "ssh_url":"git@git.code.oa.com:aaronxsheng/aaron-git-test.git",
+            "http_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test.git",
+            "web_url":"http://git.code.oa.com/aaronxsheng/aaron-git-test",
+            "namespace":"aaronxsheng",
             "visibility_level":0
         },
         "last_commit":{
             "id":"1663cbea34521a3c8097046716306d2fbdd9cfea",
             "message":"ddd",
             "timestamp":"2018-11-19T08:41:32+0000",
-            "url":"http://git.xxx.com/user1/aaron-git-test/commits/1663cbea34521a3c8097046716306d2fbdd9cfea",
+            "url":"http://git.code.oa.com/aaronxsheng/aaron-git-test/commits/1663cbea34521a3c8097046716306d2fbdd9cfea",
             "author":{
-                "name":"user1",
-                "email":"user1@tencent.com"
+                "name":"aaronxsheng",
+                "email":"aaronxsheng@tencent.com"
             }
         },
-        "url":"http://git.xxx.com/user1/aaron-git-test/merge_requests/3",
+        "url":"http://git.code.oa.com/aaronxsheng/aaron-git-test/merge_requests/3",
         "action":"open" / "close",
         "extension_action":"push-update"
     }

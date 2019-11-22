@@ -1,41 +1,17 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.gitci.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.CiYamlUtils
+import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
+import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.gitci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.gitci.OBJECT_KIND_PUSH
-import com.tencent.devops.gitci.OBJECT_KIND_TAG_PUSH
-import com.tencent.devops.gitci.OBJECT_KIND_MANUAL
-import com.tencent.devops.gitci.TASK_TYPE
+import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
@@ -45,20 +21,12 @@ import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
-import com.tencent.devops.gitci.pojo.enums.NotBuildReason
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitCommit
-import com.tencent.devops.gitci.pojo.yaml.CIBuildYaml
-import com.tencent.devops.gitci.pojo.yaml.MatchRule
-import com.tencent.devops.gitci.pojo.yaml.Trigger
-import com.tencent.devops.gitci.pojo.yaml.MergeRequest
-import com.tencent.devops.gitci.pojo.yaml.Stage
-import com.tencent.devops.gitci.pojo.yaml.Job
-import com.tencent.devops.gitci.pojo.yaml.JobDetail
-import com.tencent.devops.gitci.pojo.yaml.Pool
 import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -69,6 +37,7 @@ import java.io.BufferedReader
 import java.io.StringReader
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.TimeZone
 import javax.ws.rs.core.Response
 
 @Service
@@ -80,6 +49,8 @@ class GitCIRequestService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCISettingDao: GitCISettingDao,
+    private val gitServicesConfDao: GitCIServicesConfDao,
+    private val gitProjectConfService: GitProjectConfService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     companion object {
@@ -100,7 +71,7 @@ class GitCIRequestService @Autowired constructor(
             val yamlGit = getYamlFromGit(gitRequestEvent)
             if (yamlGit.isNullOrBlank()) {
                 logger.error("get ci yaml from git return null")
-                gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, NotBuildReason.GIT_CI_YAML_NOT_FOUND.name, gitRequestEvent.gitProjectId)
+                gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_YAML_NOT_FOUND.name, gitRequestEvent.gitProjectId)
                 return false
             }
             yamlGit!!
@@ -109,10 +80,10 @@ class GitCIRequestService @Autowired constructor(
         }
 
         val yaml = try {
-            createCIBuildYaml(triggerBuildReq.yaml!!, triggerBuildReq.gitProjectId)
+            createCIBuildYaml(yamlStr, triggerBuildReq.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, null, NotBuildReason.GIT_CI_YAML_INVALID.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, null, TriggerReason.GIT_CI_YAML_INVALID.name, gitRequestEvent.gitProjectId)
             return false
         }
 
@@ -145,7 +116,7 @@ class GitCIRequestService @Autowired constructor(
         val yamlStr = getYamlFromGit(gitRequestEvent)
         if (yamlStr.isNullOrBlank()) {
             logger.error("get ci yaml from git return null")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, NotBuildReason.GIT_CI_YAML_NOT_FOUND.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_YAML_NOT_FOUND.name, gitRequestEvent.gitProjectId)
             return false
         }
 
@@ -153,7 +124,7 @@ class GitCIRequestService @Autowired constructor(
             createCIBuildYaml(yamlStr!!, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, null, NotBuildReason.GIT_CI_YAML_INVALID.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, null, TriggerReason.GIT_CI_YAML_INVALID.name, gitRequestEvent.gitProjectId)
             return false
         }
 
@@ -168,7 +139,7 @@ class GitCIRequestService @Autowired constructor(
             true
         } else {
             logger.warn("Matcher is false, return, eventId: ${gitRequestEvent.id}")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, normalizedYaml, NotBuildReason.TRIGGER_NOT_MATCH.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, normalizedYaml, TriggerReason.TRIGGER_NOT_MATCH.name, gitRequestEvent.gitProjectId)
             false
         }
     }
@@ -176,83 +147,69 @@ class GitCIRequestService @Autowired constructor(
     fun createCIBuildYaml(yamlStr: String, gitProjectId: Long? = null): CIBuildYaml {
         logger.info("input yamlStr: $yamlStr")
 
-        var yaml = formatYaml(yamlStr)
+        var yaml = CiYamlUtils.formatYaml(yamlStr)
         yaml = replaceEnv(yaml, gitProjectId)
         val yamlObject = YamlUtil.getObjectMapper().readValue(yaml, CIBuildYaml::class.java)
-        return normalizeYaml(yamlObject)
+
+        // 检测services镜像
+        if (yamlObject.services != null) {
+            yamlObject.services!!.forEachIndexed { index, it ->
+                // 判断镜像格式是否合法
+                val (imageName, imageTag) = it.parseImage()
+                val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
+                    ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "Git CI没有此镜像版本记录. ${it.image}")
+                if (!record.enable) {
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "镜像版本不可用. ${it.image}")
+                }
+            }
+        }
+
+        return CiYamlUtils.normalizeGitCiYaml(yamlObject)
     }
 
     private fun checkGitProjectConf(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
-        val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
-        if (null == gitProjectConf) {
-            logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, NotBuildReason.GIT_CI_DISABLE.name, gitRequestEvent.gitProjectId)
+        if (!gitProjectConfService.isEnable(gitRequestEvent.gitProjectId)) {
+            logger.info("git project not in gray pool")
+            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_DISABLE.name, gitRequestEvent.gitProjectId)
             return false
         }
-        if (!gitProjectConf.enableCi) {
-            logger.warn("git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectConf.name}")
+
+        val gitProjectSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
+        if (null == gitProjectSetting) {
+            logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
+            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_DISABLE.name, gitRequestEvent.gitProjectId)
+            return false
+        }
+        if (!gitProjectSetting.enableCi) {
+            logger.warn("git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
             gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, "git ci config is not enabled", gitRequestEvent.gitProjectId)
             return false
         }
         when (event) {
             is GitPushEvent -> {
-                if (gitProjectConf.buildPushedBranches == false) {
-                    logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectConf.name}")
-                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, NotBuildReason.BUILD_PUSHED_BRANCHES_DISABLE.name, gitRequestEvent.gitProjectId)
+                if (!gitProjectSetting.buildPushedBranches) {
+                    logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
+                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name, gitRequestEvent.gitProjectId)
                     return false
                 }
             }
             is GitTagPushEvent -> {
-                if (gitProjectConf.buildPushedBranches == false) {
-                    logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectConf.name}")
-                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, NotBuildReason.BUILD_PUSHED_BRANCHES_DISABLE.name, gitRequestEvent.gitProjectId)
+                if (!gitProjectSetting.buildPushedBranches) {
+                    logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
+                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name, gitRequestEvent.gitProjectId)
                     return false
                 }
             }
             is GitMergeRequestEvent -> {
-                if (gitProjectConf.buildPushedPullRequest == false) {
-                    logger.warn("git ci conf buildPushedPullRequest is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectConf.name}")
-                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, NotBuildReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name, gitRequestEvent.gitProjectId)
+                if (!gitProjectSetting.buildPushedPullRequest) {
+                    logger.warn("git ci conf buildPushedPullRequest is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
+                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name, gitRequestEvent.gitProjectId)
                     return false
                 }
             }
         }
 
         return true
-    }
-
-    private fun formatYaml(yamlStr: String): String {
-        val sb = StringBuilder()
-        val br = BufferedReader(StringReader(yamlStr))
-        val taskTypeRegex = Regex("- $TASK_TYPE:\\s+")
-        val mrNoneRegex = Regex("^(mr:)\\s*(none)\$")
-        val triggerNoneRegex = Regex("^(mr:)\\s*(none)\$")
-        var line: String? = br.readLine()
-        while (line != null) {
-            val taskTypeMatches = taskTypeRegex.find(line)
-            if (null != taskTypeMatches) {
-                val taskType = taskTypeMatches.groupValues[0]
-                val taskVersion = line.removePrefix(taskType)
-                val task = taskVersion.split("@")
-                if (task.size != 2 || (task.size == 2 && task[1].isNullOrBlank())) {
-                    line = task[0] + "@latest"
-                }
-            }
-
-            val mrNoneMatches = mrNoneRegex.find(line)
-            if (null != mrNoneMatches) {
-                line = "mr:" + "\n" + "  enable: false"
-            }
-
-            val triggerNoneMatches = triggerNoneRegex.find(line)
-            if (null != triggerNoneMatches) {
-                line = "trigger:" + "\n" + "  enable: false"
-            }
-
-            sb.append(line).append("\n")
-            line = br.readLine()
-        }
-        return sb.toString()
     }
 
     private fun replaceEnv(yaml: String, gitProjectId: Long?): String {
@@ -293,19 +250,6 @@ class GitCIRequestService @Autowired constructor(
             }
         }
         return null
-    }
-
-    private fun normalizeYaml(originYaml: CIBuildYaml): CIBuildYaml {
-        if (originYaml.stages != null && originYaml.steps != null) {
-            logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
-            throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
-        }
-        val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("*"), null), null, null)
-        val defaultMr = originYaml.mr ?: MergeRequest(disable = false, autoCancel = true, branches = MatchRule(listOf("*"), null), paths = null)
-        val variable = originYaml.variables
-        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", Pool(null, null), originYaml.steps!!, null)))))
-
-        return CIBuildYaml(defaultTrigger, defaultMr, variable, stages, null)
     }
 
     private fun dispatchEvent(event: GitCIRequestTriggerEvent) {
@@ -379,7 +323,7 @@ class GitCIRequestService @Autowired constructor(
                 null,
                 gitPushEvent.after,
                 latestCommit?.message,
-                latestCommit?.timestamp,
+                getCommitTimeStamp(latestCommit?.timestamp),
                 gitPushEvent.user_name,
                 gitPushEvent.total_commits_count.toLong(),
                 null,
@@ -399,7 +343,7 @@ class GitCIRequestService @Autowired constructor(
                 null,
                 gitTagPushEvent.after,
                 latestCommit?.message,
-                latestCommit?.timestamp,
+                getCommitTimeStamp(latestCommit?.timestamp),
                 gitTagPushEvent.user_name,
                 gitTagPushEvent.total_commits_count.toLong(),
                 null,
@@ -419,7 +363,7 @@ class GitCIRequestService @Autowired constructor(
                 gitMrEvent.object_attributes.target_branch,
                 latestCommit.id,
                 latestCommit.message,
-                latestCommit.timestamp,
+                getCommitTimeStamp(latestCommit.timestamp),
                 latestCommit.author.name,
                 0,
                 gitMrEvent.object_attributes.id,
@@ -429,7 +373,6 @@ class GitCIRequestService @Autowired constructor(
     }
 
     private fun createGitRequestEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         return GitRequestEvent(null,
                 OBJECT_KIND_MANUAL,
                 "",
@@ -439,7 +382,7 @@ class GitCIRequestService @Autowired constructor(
                 null,
                 "",
                 triggerBuildReq.customCommitMsg,
-                formatter.format(Date()),
+                getCommitTimeStamp(null),
                 userId,
                 0,
                 null,
@@ -455,6 +398,19 @@ class GitCIRequestService @Autowired constructor(
             }
         }
         return null
+    }
+
+    private fun getCommitTimeStamp(commitTimeStamp: String?): String {
+        return if (commitTimeStamp.isNullOrBlank()) {
+            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+            formatter.format(Date())
+        } else {
+            val df = SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssZ")
+            val result = df.parse(commitTimeStamp)
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+            sdf.timeZone = TimeZone.getTimeZone("GMT+8")
+            sdf.format(result)
+        }
     }
 
     fun getYaml(gitProjectId: Long, buildId: String): String {
