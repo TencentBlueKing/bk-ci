@@ -103,6 +103,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
-        return Result(projectService.createGitCIProject(userId, gitProjectId))
+        TODO("can be remove")
     }
 }
