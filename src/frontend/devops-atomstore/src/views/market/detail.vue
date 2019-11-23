@@ -72,7 +72,7 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
-    import ideList from '../../components/common/detail-info/ide'
+    import ideInfo from '../../components/common/detail-info/ide'
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
@@ -85,7 +85,7 @@
             animatedInteger,
             atomInfo,
             templateInfo,
-            ideList,
+            ideInfo,
             imageInfo
         },
 

@@ -145,10 +145,7 @@
             color: $primaryColor;
         }
         /deep/ .bk-dialog {
-            top: 50%;
-            .bk-dialog-content {
-                transform: translateY(-50%);
-            }
+            top: 100px;
         }
         img {
             width: 400px;
