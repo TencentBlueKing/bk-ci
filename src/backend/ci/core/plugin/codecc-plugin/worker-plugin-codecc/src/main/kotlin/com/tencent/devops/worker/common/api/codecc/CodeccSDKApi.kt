@@ -24,36 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.pojo
+package com.tencent.devops.worker.common.api.codecc
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildVariables
-import java.io.File
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.pojo.Result
+import okhttp3.Response
 
-/**
- * 26/01/2018
- */
-data class CodeccExecuteConfig(
-    val scriptType: BuildScriptType,
-    val repos: List<RepoItem>,
-    val buildVariables: BuildVariables,
-    val buildTask: BuildTask,
-    val workspace: File,
-    val tools: List<String>,
-    val filterTools: List<String>,
-    val timeOut: Long = 4 * 3600 // 4小时
-) {
-    data class RepoItem(
-        val repositoryConfig: RepositoryConfig?,
-        val type: String,
-        val relPath: String = "", // 代码路径
-        val relativePath: String = "", // 代码相对路径
-        var url: String = "",
-        var authType: String = "",
-        var repoHashId: String = "",
-        var svnUerPassPair: Pair<String, String>? = null
-    )
+interface CodeccSDKApi {
+    fun saveTask(projectId: String, pipelineId: String, buildId: String): Result<String>
+    fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean = false): Response
+    fun downloadToolScript(osType: OSType, fileMd5: String): Response
 }
