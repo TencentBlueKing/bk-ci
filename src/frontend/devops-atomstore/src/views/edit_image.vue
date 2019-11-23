@@ -69,7 +69,7 @@
                     <p class="form-title"> {{ $t('镜像信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]" ref="imageSourceType">
+                <bk-form-item :label="$t('镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]" ref="imageSourceType" v-if="VERSION_TYPE !== 'ee'">
                     <bk-radio-group v-model="form.imageSourceType" @change="clearRepo">
                         <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('蓝盾源') }} </bk-radio>
                         <bk-radio value="THIRD"> {{ $t('第三方源') }} </bk-radio>
@@ -347,6 +347,7 @@
                         })
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
+                    if (VERSION_TYPE === 'ee') this.form.imageSourceType = 'THIRD'
                 })
             },
 
