@@ -85,6 +85,7 @@
             animatedInteger,
             atomInfo,
             templateInfo,
+            ideList,
             imageInfo
         },
 
