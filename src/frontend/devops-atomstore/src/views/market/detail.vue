@@ -13,7 +13,7 @@
         </h3>
 
         <main class="store-main" v-show="!isLoading">
-            <component :is="`${type}Info`"></component>
+            <component :is="`${type}Info`" :detail="detail"></component>
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
                 <bk-tab-panel name="des" :label="$t('概述')" class="summary-tab">
                     <mavon-editor
