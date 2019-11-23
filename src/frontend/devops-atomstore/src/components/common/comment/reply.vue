@@ -27,11 +27,12 @@
 
         filters: {
             timeFilter (val) {
+                const local = window.devops || {}
                 const date = new Date(val)
                 const year = date.getFullYear()
                 const month = date.getMonth() + 1
                 const day = date.getDate()
-                return `${year}年${month}月${day}日`
+                return `${year + local.$t('年') + month + local.$t('月') + day + local.$t('日')}`
             }
         },
 
@@ -47,12 +48,14 @@
                     expandReplys: {
                         atom: (id) => this.requestAtomReplyList(id),
                         template: (id) => this.requestTemplateReplyList(id),
-                        ide: (id) => this.requestIDEReplyList(id)
+                        ide: (id) => this.requestIDEReplyList(id),
+                        image: (id) => this.requestImageReplyList(id)
                     },
                     priase: {
                         atom: (id) => this.requestAtomPraiseComment(id),
                         template: (id) => this.requestTemplatePraiseComment(id),
-                        ide: (id) => this.requestIDEPraiseComment(id)
+                        ide: (id) => this.requestIDEPraiseComment(id),
+                        image: (id) => this.requestImagePraiseComment(id)
                     }
                 },
                 hadShowMore: false
@@ -85,6 +88,8 @@
                 'requestTemplateReplyList',
                 'requestIDEPraiseComment',
                 'requestIDEReplyList',
+                'requestImageReplyList',
+                'requestImagePraiseComment',
                 'clearCommentReply'
             ]),
 

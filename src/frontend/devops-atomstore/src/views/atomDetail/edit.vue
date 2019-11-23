@@ -108,6 +108,8 @@
                             v-model="atomForm.description"
                             :toolbars="toolbarOptions"
                             :external-link="false"
+                            :box-shadow="false"
+                            preview-background="#fff"
                             @imgAdd="addImage"
                         />
                         <bk-popover placement="left">

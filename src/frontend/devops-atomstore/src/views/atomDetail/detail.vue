@@ -46,6 +46,10 @@
                                 <div class="info-value">{{ atomDetail.visibilityLevel | levelFilter }}</div>
                             </div>
                         </div>
+                        <div class="detail-form-item" v-if="isEnterprise">
+                            <div class="info-label"> {{ $t('发布包：') }} </div>
+                            <div class="info-value">{{ atomDetail.pkgName }}</div>
+                        </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
                                 <div class="info-label"> {{ $t('功能标签：') }} </div>

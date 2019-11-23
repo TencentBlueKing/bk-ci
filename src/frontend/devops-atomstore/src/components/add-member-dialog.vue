@@ -1,11 +1,14 @@
 <template>
     <bk-dialog
         class="add-member-dialog"
-        v-model="showDialog" :title="$t('新增成员')"
+        v-model="showDialog"
+        :title="$t('新增成员')"
         :ok-text="$t('保存')"
         :width="580"
         :close-icon="addMemberConf.closeIcon"
         :quick-close="addMemberConf.quickClose"
+        @confirm="toConfirm"
+        @cancel="toCloseDialog"
     >
         <main class="member-logo-content"
             v-bkloading="{
@@ -14,25 +17,36 @@
             }">
             <div class="add-member-content">
                 <form class="bk-form add-member-form g-form-radio" onsubmit="return false">
-                    <div class="bk-form-item member-form-item is-required">
+                    <div class="bk-form-item member-form-item is-required" v-if="VERSION === 'ee'">
                         <label class="bk-label"> {{ $t('成员名称：') }} </label>
                         <div class="bk-form-content member-item-content">
-                            <bk-select
-                                searchable
-                                multiple
-                                show-select-all
-                                v-model="memberForm.list"
-                                @selected="selectMember"
-                            >
-                                <bk-option v-for="(option, index) in memberList"
-                                    :key="index"
-                                    :id="option.id"
-                                    :name="option.name">
-                                </bk-option>
-                            </bk-select>
-                            <div class="prompt-tips"> {{ $t('若列表中找不到用户，请先将其添加为插件所属调试项目的成员') }} </div>
-                            <div class="error-tips" v-if="nameError"> {{ $t('成员名称不能为空') }}</div>
+                            <bk-input type="text" :placeholder="$t('请输入成员名称')"
+                                name="memberName"
+                                v-model="memberForm.memberName"
+                                v-validate="{
+                                    required: true
+                                }"
+                                :class="{ 'is-danger': errors.has('memberName') }">
+                            </bk-input>
+                            <div v-if="errors.has('memberName')" class="error-tips"> {{ $t('成员名称不能为空') }} </div>
                         </div>
+                    </div>
+                    <div class="bk-form-content member-item-content" v-else>
+                        <bk-select
+                            searchable
+                            multiple
+                            show-select-all
+                            v-model="memberForm.list"
+                            @selected="selectMember"
+                        >
+                            <bk-option v-for="(option, index) in memberList"
+                                :key="index"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                        <div class="prompt-tips"> {{ $t('若列表中找不到用户，请先将其添加为插件所属调试项目的成员') }} </div>
+                        <div class="error-tips" v-if="nameError"> {{ $t('成员名称不能为空') }}</div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
                         <label class="bk-label"> {{ $t('角色：') }} </label>
@@ -53,24 +67,15 @@
                 </form>
             </div>
         </main>
-        <template slot="footer">
-            <div class="bk-dialog-outer">
-                <template>
-                    <bk-button theme="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
-                        @click="toConfirm"> {{ $t('保存') }} </bk-button>
-                    <bk-button class="bk-dialog-btn bk-dialog-btn-cancel" @click="toCloseDialog"> {{ $t('取消') }} </bk-button>
-                </template>
-            </div>
-        </template>
     </bk-dialog>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-
     export default {
         props: {
-            showDialog: Boolean
+            showDialog: Boolean,
+            projectCode: String,
+            permissionList: Array
         },
         data () {
             return {
@@ -81,16 +86,9 @@
                     { label: 'Owner', value: 'ADMIN' },
                     { label: 'Developer', value: 'DEVELOPER' }
                 ],
-                permissionList: [
-                    { name: this.$t('插件开发'), active: true },
-                    { name: this.$t('版本发布'), active: true },
-                    { name: this.$t('私有配置'), active: true },
-                    { name: this.$t('审批'), active: true },
-                    { name: this.$t('可见范围'), active: true },
-                    { name: this.$t('成员管理'), active: true }
-                ],
                 memberForm: {
                     list: [],
+                    memberName: '',
                     type: 'ADMIN'
                 },
                 loading: {
@@ -100,12 +98,6 @@
             }
         },
         computed: {
-            ...mapGetters('store', {
-                'currentAtom': 'getCurrentAtom'
-            }),
-            atomCode () {
-                return this.$route.params.atomCode
-            },
             addMemberConf () {
                 return {
                     hasHeader: false,
@@ -116,22 +108,18 @@
             }
         },
         watch: {
-            'memberForm.type' (val) {
-                if (val === 'ADMIN') {
-                    this.permissionList.map(item => {
-                        item.active = true
+            'memberForm.type': {
+                handler (val) {
+                    this.permissionList.forEach((item) => {
+                        item.active = (item.type === val || val === 'ADMIN')
                     })
-                } else {
-                    this.permissionList[1].active = false
-                    this.permissionList[2].active = false
-                    this.permissionList[3].active = false
-                    this.permissionList[4].active = false
-                }
+                },
+                immediate: true
             },
             showDialog (val) {
                 if (!val) {
                     this.nameError = false
-                    // this.$refs.memberSelector.$children[0].localTagList = []
+                    this.memberForm.memberName = ''
                     this.memberForm.list = []
                     this.memberForm.type = 'ADMIN'
                 }
@@ -149,7 +137,6 @@
                 this.getMemberList()
             }
         },
-
         methods: {
             async getMemberList () {
                 try {
@@ -185,14 +172,20 @@
                 this.nameError = false
             },
 
-            async toConfirm () {
-                const valid = await this.$validator.validate()
-                if (valid) {
+            toConfirm () {
+                if (!this.memberForm.memberName && !this.memberForm.list.length) {
+                    this.nameError = true
+                    this.$bkMessage({
+                        message: this.$t('请输入成员名称'),
+                        theme: 'error'
+                    })
+                    this.$emit('cancelHandle')
+                } else {
                     const params = {
-                        storeCode: this.atomCode,
                         type: this.memberForm.type,
                         member: this.memberForm.list
                     }
+                    if (VERSION_TYPE === 'ee') params.member.push(this.memberForm.memberName)
                     this.$emit('confirmHandle', params)
                 }
             },
@@ -245,13 +238,16 @@
         }
         .permission-list-content {
             display: flex;
-            justify-content: space-between;
             .permission-name {
-                padding: 4px 9px;
+                margin-left: 16px;
+                padding: 4px 6px;
                 border: 1px solid $borderColor;
                 border-radius: 22px;
                 font-size: 12px;
                 color: $fontLigtherColor;
+                &:first-child{
+                    margin-left: 0;
+                }
             }
             .active-item {
                 border-color: $primaryColor;
