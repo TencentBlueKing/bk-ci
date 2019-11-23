@@ -13,7 +13,7 @@
         </h3>
 
         <main class="store-main" v-show="!isLoading">
-            <component :is="`${type}Info`"></component>
+            <component :is="`${type}Info`" :detail="detail"></component>
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
                 <bk-tab-panel name="des" :label="$t('概述')" class="summary-tab">
                     <mavon-editor
@@ -72,6 +72,7 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
+    import ideList from '../../components/common/detail-info/ide'
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
