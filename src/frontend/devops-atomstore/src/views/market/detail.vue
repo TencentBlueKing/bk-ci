@@ -13,9 +13,7 @@
         </h3>
 
         <main class="store-main" v-show="!isLoading">
-            <ide v-if="type === 'ide'" :detail="detail" />
-            <atom v-if="type === 'atom'" :detail="detail" />
-            <template-info v-if="type === 'template'" :detail="detail" />
+            <component :is="`${type}Info`"></component>
             <bk-tab type="currentType" :active="'des'" class="detail-tabs">
                 <bk-tab-panel name="des" :label="$t('概述')" class="summary-tab">
                     <mavon-editor
@@ -74,9 +72,9 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
-    import ide from '../../components/common/detail-info/ide'
-    import atom from '../../components/common/detail-info/atom'
+    import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
+    import imageInfo from '../../components/common/detail-info/image'
 
     export default {
         components: {
@@ -84,9 +82,9 @@
             commentRate,
             commentDialog,
             animatedInteger,
-            ide,
-            atom,
-            templateInfo
+            atomInfo,
+            templateInfo,
+            imageInfo
         },
 
         filters: {
@@ -99,6 +97,9 @@
                         break
                     case 'ide':
                         res = bkLocale.$t('IDE插件')
+                        break
+                    case 'image':
+                        res = bkLocale.$t('镜像')
                         break
                     default:
                         res = bkLocale.$t('流水线插件')
@@ -123,12 +124,14 @@
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
                         template: (postData) => this.requestTemplateComments(postData),
-                        ide: (postData) => this.requestIDEComments(postData)
+                        ide: (postData) => this.requestIDEComments(postData),
+                        image: (postData) => this.requestImageComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
                         template: () => this.requestTemplateScoreDetail(this.detailCode),
-                        ide: () => this.requestIDEScoreDetail(this.detailCode)
+                        ide: () => this.requestIDEScoreDetail(this.detailCode),
+                        image: () => this.requestImageScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -163,6 +166,9 @@
                 'requestIDE',
                 'requestIDEComments',
                 'requestIDEScoreDetail',
+                'requestImage',
+                'requestImageComments',
+                'requestImageScoreDetail',
                 'getUserApprovalInfo'
             ]),
 
@@ -193,7 +199,8 @@
                 const funObj = {
                     atom: () => this.getAtomDetail(),
                     template: () => this.getTemplateDetail(),
-                    ide: () => this.getIDEDetail()
+                    ide: () => this.getIDEDetail(),
+                    image: () => this.getImageDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -238,6 +245,17 @@
                     this.detail = res || {}
                     this.detailId = res.atomId
                     this.detail.name = res.atomName
+                    this.commentInfo = res.userCommentInfo || {}
+                })
+            },
+
+            getImageDetail () {
+                const imageCode = this.detailCode
+
+                return this.requestImage({ imageCode }).then((res) => {
+                    this.detail = res || {}
+                    this.detailId = res.imageId
+                    this.detail.name = res.imageName
                     this.commentInfo = res.userCommentInfo || {}
                 })
             },

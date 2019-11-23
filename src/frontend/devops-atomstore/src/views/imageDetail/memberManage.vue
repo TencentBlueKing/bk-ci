@@ -36,7 +36,7 @@
             </empty-tips>
         </section>
         <add-member-dialog :show-dialog="showDialog"
-            :project-code="currentAtom.projectCode"
+            :project-code="currentImage.projectCode"
             :permission-list="permissionList"
             @confirmHandle="confirmHandle"
             @cancelHandle="cancelHandle">
@@ -65,11 +65,10 @@
                     'DEVELOPER': 'Developer'
                 },
                 permissionList: [
-                    { name: this.$t('插件开发'), active: false, type: 'DEVELOPER' },
-                    { name: this.$t('版本发布'), active: false, type: 'ADMIN' },
-                    { name: this.$t('私有配置'), active: false, type: 'ADMIN' },
+                    { name: this.$t(this.$t('镜像发布')), active: false, type: 'DEVELOPER' },
                     { name: this.$t('审批'), active: false, type: 'ADMIN' },
-                    { name: this.$t('成员管理'), active: false, type: 'ADMIN' }
+                    { name: this.$t('成员管理'), active: false, type: 'ADMIN' },
+                    { name: this.$t('可见范围'), active: false, type: 'ADMIN' }
                 ],
                 loading: {
                     isLoading: false,
@@ -79,18 +78,18 @@
         },
         computed: {
             ...mapGetters('store', {
-                'currentAtom': 'getCurrentAtom',
-                'userInfo': 'getUserInfo'
+                'currentImage': 'getCurrentImage',
+                'userInfo': 'getImageMeminfo'
             }),
 
-            atomCode () {
-                return this.$route.params.atomCode
+            imageCode () {
+                return this.$route.params.imageCode
             },
 
             emptyTipsConfig () {
                 return {
                     title: this.$t('暂时没有成员'),
-                    desc: this.$t('可以新增插件的管理人员或开发人员'),
+                    desc: this.$t('可以新增镜像的管理人员或开发人员'),
                     btns: [
                         {
                             type: 'primary',
@@ -103,6 +102,7 @@
                 }
             }
         },
+
         async mounted () {
             await this.init()
         },
@@ -113,7 +113,7 @@
             },
 
             desFormatter (row, column, cellValue, index) {
-                return cellValue === 'ADMIN' ? this.$t('插件开发 版本发布 审批 成员管理 可见范围 私有配置') : this.$t('插件开发 版本发布 私有配置')
+                return cellValue === 'ADMIN' ? this.$t('镜像发布 审批 成员管理 可见范围') : this.$t('镜像发布')
             },
 
             async init () {
@@ -135,9 +135,7 @@
             },
             async requestList () {
                 try {
-                    const res = await this.$store.dispatch('store/requestMemberList', {
-                        atomCode: this.atomCode
-                    })
+                    const res = await this.$store.dispatch('store/requestImageMemList', this.imageCode)
                     this.memberList.splice(0, this.memberList.length)
                     if (res) {
                         this.memberCount = res.length
@@ -165,21 +163,16 @@
             async confirmHandle (params) {
                 let message, theme
                 try {
-                    const res = await this.$store.dispatch('store/addAtomMember', {
-                        params: Object.assign(params, { storeCode: this.atomCode })
-                    })
+                    await this.$store.dispatch('store/requestAddImageMem', Object.assign(params, { storeCode: this.imageCode }))
 
-                    if (res) {
-                        message = this.$t('新增成功')
-                        theme = 'success'
-                        this.requestList()
-                        this.cancelHandle()
-                    }
+                    message = this.$t('新增成功')
+                    theme = 'success'
+                    this.requestList()
+                    this.cancelHandle()
                 } catch (err) {
                     message = message = err.message ? err.message : err
                     theme = 'error'
                 } finally {
-                    this.showDialog = false
                     this.$bkMessage({
                         message,
                         theme
@@ -194,9 +187,9 @@
             async requestDeleteMember (id) {
                 let message, theme
                 try {
-                    await this.$store.dispatch('store/requestDeleteMember', {
-                        atomCode: this.atomCode,
-                        id: id
+                    await this.$store.dispatch('store/requestDeleteImageMem', {
+                        imageCode: this.imageCode,
+                        id
                     })
 
                     message = this.$t('删除成功')
@@ -220,7 +213,7 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('确定删除成员')}（${row.userName}）？`)
+                }, `${this.$t('确定删除成员')}(${row.userName})？`)
 
                 this.$bkInfo({
                     title: this.$t('删除'),
