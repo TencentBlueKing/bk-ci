@@ -47,7 +47,7 @@ data class CodeccExecuteConfig(
     val timeOut: Long = 4 * 3600 // 4小时
 ) {
     data class RepoItem(
-        val repositoryConfig: RepositoryConfig,
+        val repositoryConfig: RepositoryConfig?,
         val type: String,
         val relPath: String = "", // 代码路径
         val relativePath: String = "", // 代码相对路径
