@@ -42,5 +42,7 @@ data class CheckImageInitPipelineReq(
     @ApiModelProperty("仓库用户名", required = false)
     val registryUser: String? = null,
     @ApiModelProperty("仓库密码", required = false)
-    val registryPwd: String? = null
+    val registryPwd: String? = null,
+    @ApiModelProperty("是否发送通知", required = false)
+    val sendNotify: Boolean? = true
 )

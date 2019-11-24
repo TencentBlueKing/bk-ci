@@ -1,58 +1,46 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.tencent.devops.store.dao.image
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TImage
+import com.tencent.devops.model.store.tables.TImageAgentType
 import com.tencent.devops.model.store.tables.TImageCategoryRel
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageLabelRel
 import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TLabel
+import com.tencent.devops.model.store.tables.TStoreDeptRel
+import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TImageRecord
+import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_ID
 import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
 import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_WEIGHT
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_ICON
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_ID
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_LATEST_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_LOGO_URL
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_NAME
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_RD_TYPE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_NAME
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_URL
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SIZE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SOURCE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SUMMARY
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
 import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
 import com.tencent.devops.store.dao.image.Constants.KEY_PUBLISHER
@@ -60,29 +48,39 @@ import com.tencent.devops.store.dao.image.Constants.KEY_PUB_TIME
 import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.dao.image.Constants.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.exception.image.ClassifyNotExistException
+import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
-import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
-import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.enums.OpImageSortTypeEnum
+import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
+import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
+import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
+import com.tencent.devops.store.service.image.SupportService
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record17
+import org.jooq.Record18
 import org.jooq.Record2
+import org.jooq.Record21
 import org.jooq.Result
 import org.jooq.SelectHavingStep
+import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.groupConcat
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Repository
-class MarketImageDao {
+class MarketImageDao @Autowired constructor(
+    private val supportService: SupportService
+) {
     /**
      * 镜像市场搜索结果 总数
      * 参与Join的表：TImage,TImageLabelRel,TImageLabelRel结果临时表
@@ -92,6 +90,7 @@ class MarketImageDao {
         imageName: String?,
         classifyCodeList: List<String>?,
         labelCodeList: List<String>?,
+        rdType: ImageRDTypeEnum?,
         score: Int?,
         imageSourceType: ImageType?
     ): Int {
@@ -99,6 +98,7 @@ class MarketImageDao {
             imageName = imageName,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
+            rdType = rdType,
             dslContext = dslContext
         )
 
@@ -126,6 +126,7 @@ class MarketImageDao {
                 .where(tas.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
                 .asTable("t")
             baseStep.leftJoin(t).on(tImage.IMAGE_CODE.eq(t.field("STORE_CODE", String::class.java)))
+                .join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
             conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
         }
         return baseStep.where(conditions).fetchOne(0, Int::class.java)
@@ -142,6 +143,7 @@ class MarketImageDao {
         imageName: String?,
         imageSourceType: ImageType?,
         classifyCodeList: List<String>?,
+        rdType: ImageRDTypeEnum?,
         dslContext: DSLContext
     ): Triple<TImage, TImageFeature, MutableList<Condition>> {
         val tImage = TImage.T_IMAGE.`as`("tImage")
@@ -165,6 +167,9 @@ class MarketImageDao {
                 .fetchOne(0, String::class.java)
             conditions.add(tImage.CLASSIFY_ID.eq(classifyId))
         }
+        if (null != rdType) {
+            conditions.add(tImageFeature.IMAGE_TYPE.eq(rdType.type.toByte()))
+        }
         return Triple(tImage, tImageFeature, conditions)
     }
 
@@ -180,9 +185,13 @@ class MarketImageDao {
         // 镜像名称，模糊匹配
         imageName: String?,
         // 分类代码，精确匹配
-        classifyCode: List<String>?,
+        classifyCodeList: List<String>?,
         // 标签，精确匹配
         labelCodeList: List<String>?,
+        // 范畴：精确匹配
+        categoryCodeList: List<String>?,
+        // 研发来源：精确匹配
+        rdType: ImageRDTypeEnum?,
         // 评分大于等于score的镜像
         score: Int?,
         // 来源，精确匹配
@@ -193,13 +202,20 @@ class MarketImageDao {
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
-    ): Result<Record17<String, String, String, String, String, String, String, String, String, Boolean, Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
-        val (tImage, tImageFeature, conditions) = formatConditions(imageName, imageSourceType, classifyCode, dslContext)
+    ): Result<Record18<String, String, String, Byte, String, String, String, String, String, String, Boolean, Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
+        val (tImage, tImageFeature, conditions) = formatConditions(
+            imageName = imageName,
+            imageSourceType = imageSourceType,
+            classifyCodeList = classifyCodeList,
+            rdType = rdType,
+            dslContext = dslContext
+        )
 
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
             tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
+            tImageFeature.IMAGE_TYPE.`as`(Constants.KEY_IMAGE_RD_TYPE),
             tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
             tImage.IMAGE_SIZE.`as`(KEY_IMAGE_SIZE),
             tImage.CLASSIFY_ID.`as`(KEY_CLASSIFY_ID),
@@ -226,6 +242,17 @@ class MarketImageDao {
             val tilr = TImageLabelRel.T_IMAGE_LABEL_REL.`as`("tilr")
             baseStep.leftJoin(tilr).on(tImage.ID.eq(tilr.IMAGE_ID))
             conditions.add(tilr.LABEL_ID.`in`(labelIdList))
+        }
+        // 根据范畴标签筛选
+        if (categoryCodeList != null && categoryCodeList.isNotEmpty()) {
+            val c = TCategory.T_CATEGORY.`as`("c")
+            val categoryIdList = dslContext.select(c.ID)
+                .from(c)
+                .where(c.CATEGORY_CODE.`in`(categoryCodeList)).and(c.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+                .fetch().map { it["ID"] as String }
+            val ticr = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("ticr")
+            baseStep.leftJoin(ticr).on(tImage.ID.eq(ticr.IMAGE_ID))
+            conditions.add(ticr.CATEGORY_ID.`in`(categoryIdList))
         }
         if (score != null) {
             val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
@@ -327,6 +354,7 @@ class MarketImageDao {
         userId: String,
         imageId: String,
         imageSize: String,
+        iconData: String?,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
@@ -339,12 +367,14 @@ class MarketImageDao {
                 .set(IMAGE_NAME, marketImageUpdateRequest.imageName)
                 .set(CLASSIFY_ID, classifyId)
                 .set(LOGO_URL, marketImageUpdateRequest.logoUrl)
+                .set(ICON, iconData)
                 .set(IMAGE_STATUS, ImageStatusEnum.COMMITTING.status.toByte())
                 .set(IMAGE_SIZE, imageSize)
                 .set(IMAGE_SOURCE_TYPE, marketImageUpdateRequest.imageSourceType.type)
                 .set(IMAGE_REPO_URL, marketImageUpdateRequest.imageRepoUrl)
                 .set(IMAGE_REPO_NAME, marketImageUpdateRequest.imageRepoName)
                 .set(IMAGE_TAG, marketImageUpdateRequest.imageTag)
+                .set(AGENT_TYPE_SCOPE, JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope))
                 .set(SUMMARY, marketImageUpdateRequest.summary)
                 .set(DESCRIPTION, marketImageUpdateRequest.description)
                 .set(PUBLISHER, marketImageUpdateRequest.publisher)
@@ -361,6 +391,7 @@ class MarketImageDao {
         userId: String,
         imageId: String,
         imageSize: String,
+        iconData: String?,
         imageRecord: TImageRecord,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
@@ -382,7 +413,9 @@ class MarketImageDao {
                 IMAGE_REPO_URL,
                 IMAGE_REPO_NAME,
                 IMAGE_TAG,
+                AGENT_TYPE_SCOPE,
                 LOGO_URL,
+                ICON,
                 SUMMARY,
                 DESCRIPTION,
                 PUBLISHER,
@@ -403,7 +436,9 @@ class MarketImageDao {
                     marketImageUpdateRequest.imageRepoUrl,
                     marketImageUpdateRequest.imageRepoName,
                     marketImageUpdateRequest.imageTag,
+                    JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope),
                     marketImageUpdateRequest.logoUrl,
+                    iconData,
                     marketImageUpdateRequest.summary,
                     marketImageUpdateRequest.description,
                     marketImageUpdateRequest.publisher,
@@ -546,39 +581,71 @@ class MarketImageDao {
     fun updateImageBaseInfo(
         dslContext: DSLContext,
         userId: String,
-        imageId: String,
+        imageIdList: List<String>,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ) {
         with(TImage.T_IMAGE) {
             val baseStep = dslContext.update(this)
-            val imageName = imageBaseInfoUpdateRequest.imageName
-            if (null != imageName) {
-                baseStep.set(IMAGE_NAME, imageName)
-            }
-            val summary = imageBaseInfoUpdateRequest.summary
-            if (null != summary) {
-                baseStep.set(SUMMARY, summary)
-            }
-            val description = imageBaseInfoUpdateRequest.description
-            if (null != description) {
-                baseStep.set(DESCRIPTION, description)
-            }
-            val logoUrl = imageBaseInfoUpdateRequest.logoUrl
-            if (null != logoUrl) {
-                baseStep.set(LOGO_URL, logoUrl)
-            }
-            val publisher = imageBaseInfoUpdateRequest.publisher
-            if (null != publisher) {
-                baseStep.set(PUBLISHER, publisher)
-            }
-            val imageSize = imageBaseInfoUpdateRequest.imageSize
-            if (null != imageSize) {
-                baseStep.set(IMAGE_SIZE, imageSize)
-            }
+            setUpdateImageBaseInfo(imageBaseInfoUpdateRequest, baseStep)
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(imageId))
+                .where(ID.`in`(imageIdList))
                 .execute()
+        }
+    }
+
+    fun updateImageBaseInfoByCode(
+        dslContext: DSLContext,
+        userId: String,
+        imageCode: String,
+        imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
+    ) {
+        with(TImage.T_IMAGE) {
+            val baseStep = dslContext.update(this)
+            setUpdateImageBaseInfo(imageBaseInfoUpdateRequest, baseStep)
+            baseStep.set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(IMAGE_CODE.eq(imageCode))
+                .execute()
+        }
+    }
+
+    private fun TImage.setUpdateImageBaseInfo(
+        imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest,
+        baseStep: UpdateSetFirstStep<TImageRecord>
+    ) {
+        val imageName = imageBaseInfoUpdateRequest.imageName
+        if (!imageName.isNullOrBlank()) {
+            baseStep.set(IMAGE_NAME, imageName)
+        }
+        val classifyId = imageBaseInfoUpdateRequest.classifyId
+        if (!classifyId.isNullOrBlank()) {
+            baseStep.set(CLASSIFY_ID, classifyId)
+        }
+        val summary = imageBaseInfoUpdateRequest.summary
+        if (!summary.isNullOrBlank()) {
+            baseStep.set(SUMMARY, summary)
+        }
+        val description = imageBaseInfoUpdateRequest.description
+        if (null != description) {
+            baseStep.set(DESCRIPTION, description)
+        }
+        val logoUrl = imageBaseInfoUpdateRequest.logoUrl
+        if (!logoUrl.isNullOrBlank()) {
+            baseStep.set(LOGO_URL, logoUrl)
+            baseStep.set(ICON, supportService.getIconDataByLogoUrl(logoUrl!!))
+        }
+        val publisher = imageBaseInfoUpdateRequest.publisher
+        if (!publisher.isNullOrBlank()) {
+            baseStep.set(PUBLISHER, publisher)
+        }
+        val imageSize = imageBaseInfoUpdateRequest.imageSize
+        if (!imageSize.isNullOrBlank()) {
+            baseStep.set(IMAGE_SIZE, imageSize)
+        }
+        val deleteFlag = imageBaseInfoUpdateRequest.deleteFlag
+        if (null != deleteFlag) {
+            baseStep.set(DELETE_FLAG, deleteFlag)
         }
     }
 
@@ -720,6 +787,7 @@ class MarketImageDao {
             tImageFeature.PUBLIC_FLAG.`as`(KEY_IMAGE_FEATURE_PUBLIC_FLAG),
             tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG),
             tImageFeature.WEIGHT.`as`(KEY_IMAGE_FEATURE_WEIGHT),
+            tImageFeature.IMAGE_TYPE.`as`(KEY_IMAGE_RD_TYPE),
             tImage.CREATOR.`as`(KEY_CREATOR),
             tImage.CREATE_TIME.`as`(KEY_CREATE_TIME),
             tImage.MODIFIER.`as`(KEY_MODIFIER),
@@ -892,6 +960,572 @@ class MarketImageDao {
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
+    }
+
+    // 硬性过滤条件
+    fun genBaseConditions(
+        dslContext: DSLContext,
+        inImageCodes: Collection<String>?,
+        notInImageCodes: Collection<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?
+    ): MutableList<Condition> {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val conditions = mutableListOf<Condition>()
+        if (inImageCodes != null && inImageCodes.isNotEmpty()) {
+            conditions.add(tImage.IMAGE_CODE.`in`(inImageCodes))
+        }
+        if (notInImageCodes != null && notInImageCodes.isNotEmpty()) {
+            conditions.add(tImage.IMAGE_CODE.notIn(notInImageCodes))
+        }
+        if (recommendFlag != null) {
+            conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
+        }
+        if (!imageNamePart.isNullOrBlank()) {
+            conditions.add(tImage.IMAGE_NAME.contains(imageNamePart))
+        }
+        if (!classifyId.isNullOrBlank()) {
+            conditions.add(tImage.CLASSIFY_ID.eq(classifyId))
+        }
+        if (!categoryCode.isNullOrBlank()) {
+            conditions.add(tCategory.CATEGORY_CODE.eq(categoryCode))
+        }
+        conditions.add(tImage.DELETE_FLAG.eq(false)) // 只查没有被删除的镜像
+        return conditions
+    }
+
+    /**
+     * 查询未安装、可安装镜像
+     */
+    fun listCanInstallJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        installedImageCodes: List<String>,
+        visibleImageCodes: List<String>,
+        offset: Int? = 0,
+        limit: Int? = -1
+    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val extraConditions = mutableListOf<Condition>()
+        extraConditions.add(tImageFeature.IMAGE_CODE.`in`(visibleImageCodes.subtract(installedImageCodes)))
+        return listJobMarketImagesWithExtraConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType,
+            extraConditions = extraConditions,
+            offset = offset,
+            limit = limit
+        )
+    }
+
+    /**
+     * 查询未安装、可安装镜像数量
+     */
+    fun countCanInstallJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        installedImageCodes: List<String>,
+        visibleImageCodes: List<String>
+    ): Int {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val extraConditions = mutableListOf<Condition>()
+        extraConditions.add(tImageFeature.IMAGE_CODE.`in`(visibleImageCodes.subtract(installedImageCodes)))
+        return countJobMarketImagesWithExtraConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType,
+            extraConditions = extraConditions
+        )
+    }
+
+    /**
+     * 查询已安装镜像
+     */
+    fun listInstalledJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        installedImageCodes: List<String>,
+        offset: Int? = 0,
+        limit: Int? = -1
+    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val extraConditions = mutableListOf<Condition>()
+        extraConditions.add(tImageFeature.IMAGE_CODE.`in`(installedImageCodes))
+        return listJobMarketImagesWithExtraConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType,
+            extraConditions = extraConditions,
+            offset = offset,
+            limit = limit
+        )
+    }
+
+    /**
+     * 查询已安装镜像数量
+     */
+    fun countInstalledJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        installedImageCodes: List<String>
+    ): Int {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val extraConditions = mutableListOf<Condition>()
+        extraConditions.add(tImageFeature.IMAGE_CODE.`in`(installedImageCodes))
+        return countJobMarketImagesWithExtraConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType,
+            extraConditions = extraConditions
+        )
+    }
+
+    /**
+     * 查询不可见镜像
+     */
+    fun listNoVisibleJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        visibleImageCodes: List<String>,
+        offset: Int? = 0,
+        limit: Int? = -1
+    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val extraConditions = mutableListOf<Condition>()
+        extraConditions.add(tImageFeature.IMAGE_CODE.notIn(visibleImageCodes))
+        return listJobMarketImagesWithExtraConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType,
+            extraConditions = extraConditions,
+            offset = offset,
+            limit = limit
+        )
+    }
+
+    /**
+     * 查询不可见镜像数量
+     */
+    fun countNoVisibleJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        visibleImageCodes: List<String>,
+        offset: Int? = 0,
+        limit: Int? = -1
+    ): Int {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val extraConditions = mutableListOf<Condition>()
+        extraConditions.add(tImageFeature.IMAGE_CODE.notIn(visibleImageCodes))
+        return countJobMarketImagesWithExtraConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType,
+            extraConditions = extraConditions
+        )
+    }
+
+    /**
+     * 查询调试中镜像
+     */
+    fun listTestingJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: Collection<String>?,
+        notInImageCodes: Collection<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        offset: Int? = 0,
+        limit: Int? = -1
+    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+        val validOffset = if (offset == null || offset < 0) 0 else offset
+        val validLimit = if (limit == null || limit <= 0) null else limit
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
+        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val conditions = genBaseConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType
+        )
+        conditions.add(
+            tImage.IMAGE_STATUS.`in`(setOf(
+                ImageStatusEnum.TESTING.status.toByte(),
+                ImageStatusEnum.AUDITING.status.toByte()
+            ))
+        )
+        // 隐含条件：已发布的镜像中最晚的一个
+        val baseQuery = dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
+            tImageFeature.IMAGE_TYPE.`as`(KEY_IMAGE_RD_TYPE),
+            tImage.LOGO_URL.`as`(KEY_IMAGE_LOGO_URL),
+            tImage.ICON.`as`(KEY_IMAGE_ICON),
+            tImage.SUMMARY.`as`(KEY_IMAGE_SUMMARY),
+            tImageFeature.WEIGHT.`as`(KEY_IMAGE_FEATURE_WEIGHT),
+            tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
+            tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
+            tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
+            tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tCategory.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
+            tCategory.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
+            tImage.PUBLISHER.`as`(KEY_PUBLISHER),
+            tImage.MODIFIER.`as`(KEY_MODIFIER),
+            tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+            tImageFeature.PUBLIC_FLAG.`as`(KEY_IMAGE_FEATURE_PUBLIC_FLAG),
+            tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG),
+            tImageFeature.CERTIFICATION_FLAG.`as`(KEY_IMAGE_FEATURE_CERTIFICATION_FLAG),
+            groupConcat(tImageAgentType.AGENT_TYPE).`as`(KEY_IMAGE_AGENT_TYPE_SCOPE)
+        ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+            .join(tImageCategoryRel).on(tImage.ID.eq(tImageCategoryRel.IMAGE_ID))
+            .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
+            .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
+            .where(conditions)
+            .groupBy(tImageFeature.IMAGE_CODE)
+            .orderBy(tImageFeature.WEIGHT.desc(), tImage.IMAGE_NAME.asc())
+        val finalQuery = if (validLimit != null) {
+            baseQuery.offset(validOffset).limit(validLimit)
+        } else {
+            baseQuery.offset(validOffset)
+        }
+        logger.info(finalQuery.getSQL(true))
+        return finalQuery.fetch()
+    }
+
+    /**
+     * 查询调试中镜像数量
+     */
+    fun countTestingJobMarketImages(
+        dslContext: DSLContext,
+        inImageCodes: Collection<String>?,
+        notInImageCodes: Collection<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?
+    ): Int {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
+        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val conditions = genBaseConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType
+        )
+        conditions.add(
+            tImage.IMAGE_STATUS.`in`(setOf(
+                ImageStatusEnum.TESTING.status.toByte(),
+                ImageStatusEnum.AUDITING.status.toByte()
+            ))
+        )
+        // 隐含条件：已发布的镜像中最晚的一个
+        val baseQuery = dslContext.select(
+            tImage.IMAGE_CODE.countDistinct()
+        ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+            .join(tImageCategoryRel).on(tImage.ID.eq(tImageCategoryRel.IMAGE_ID))
+            .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
+            .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
+            .where(conditions)
+        logger.info(baseQuery.getSQL(true))
+        return baseQuery.fetchOne(0, Int::class.java)
+    }
+
+    fun listJobMarketImagesWithExtraConditions(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        extraConditions: List<Condition>?,
+        offset: Int? = 0,
+        limit: Int? = -1
+    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+        val validOffset = if (offset == null || offset < 0) 0 else offset
+        val validLimit = if (limit == null || limit <= 0) null else limit
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
+        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val baseConditions = genBaseConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType
+        )
+        val conditions = if (extraConditions != null && extraConditions.isNotEmpty()) {
+            baseConditions.plus(extraConditions)
+        } else {
+            baseConditions
+        }
+        // 隐含条件：已发布的镜像中最晚的一个
+        val latestReleasedImage = dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
+        ).from(tImage).where(
+            tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
+        ).groupBy(tImage.IMAGE_CODE).asTable("latestReleasedImage")
+        val baseQuery = dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
+            tImageFeature.IMAGE_TYPE.`as`(KEY_IMAGE_RD_TYPE),
+            tImage.LOGO_URL.`as`(KEY_IMAGE_LOGO_URL),
+            tImage.ICON.`as`(KEY_IMAGE_ICON),
+            tImage.SUMMARY.`as`(KEY_IMAGE_SUMMARY),
+            tImageFeature.WEIGHT.`as`(KEY_IMAGE_FEATURE_WEIGHT),
+            tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
+            tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
+            tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
+            tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tCategory.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
+            tCategory.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
+            tImage.PUBLISHER.`as`(KEY_PUBLISHER),
+            tImage.MODIFIER.`as`(KEY_MODIFIER),
+            tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+            tImageFeature.PUBLIC_FLAG.`as`(KEY_IMAGE_FEATURE_PUBLIC_FLAG),
+            tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG),
+            tImageFeature.CERTIFICATION_FLAG.`as`(KEY_IMAGE_FEATURE_CERTIFICATION_FLAG),
+            groupConcat(tImageAgentType.AGENT_TYPE).`as`(KEY_IMAGE_AGENT_TYPE_SCOPE)
+        ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+            .join(tImageCategoryRel).on(tImage.ID.eq(tImageCategoryRel.IMAGE_ID))
+            .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
+            .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
+            .join(latestReleasedImage).on(
+                tImage.ID.eq(latestReleasedImage.field(KEY_IMAGE_ID, String::class.java)).and(
+                    tImage.CREATE_TIME.eq(latestReleasedImage.field(KEY_CREATE_TIME, LocalDateTime::class.java))
+                )
+            )
+            .where(conditions)
+            .groupBy(tImageFeature.IMAGE_CODE)
+            .orderBy(tImageFeature.WEIGHT.desc(), tImage.IMAGE_NAME.asc())
+        val finalQuery = if (validLimit != null) {
+            baseQuery.offset(validOffset).limit(validLimit)
+        } else {
+            baseQuery.offset(validOffset)
+        }
+        logger.info(finalQuery.getSQL(true))
+        return finalQuery.fetch()
+    }
+
+    fun countJobMarketImagesWithExtraConditions(
+        dslContext: DSLContext,
+        inImageCodes: List<String>?,
+        notInImageCodes: List<String>?,
+        recommendFlag: Boolean?,
+        imageNamePart: String?,
+        classifyId: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
+        extraConditions: List<Condition>?
+    ): Int {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
+        val tClassify = TClassify.T_CLASSIFY.`as`("tClassify")
+        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val baseConditions = genBaseConditions(
+            dslContext = dslContext,
+            inImageCodes = inImageCodes,
+            notInImageCodes = notInImageCodes,
+            recommendFlag = recommendFlag,
+            imageNamePart = imageNamePart,
+            classifyId = classifyId,
+            categoryCode = categoryCode,
+            rdType = rdType
+        )
+        val conditions = if (extraConditions != null && extraConditions.isNotEmpty()) {
+            baseConditions.plus(extraConditions)
+        } else {
+            baseConditions
+        }
+        // 隐含条件：已发布的镜像中最晚的一个
+        val latestReleasedImage = dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
+        ).from(tImage).where(
+            tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
+        ).groupBy(tImage.IMAGE_CODE).asTable("latestReleasedImage")
+        val baseQuery = dslContext.select(
+            tImage.IMAGE_CODE.countDistinct()
+        ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+            .join(tClassify).on(tImage.CLASSIFY_ID.eq(tClassify.ID))
+            .join(tImageCategoryRel).on(tImage.ID.eq(tImageCategoryRel.IMAGE_ID))
+            .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
+            .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
+            .join(latestReleasedImage).on(
+                tImage.ID.eq(latestReleasedImage.field(KEY_IMAGE_ID, String::class.java)).and(
+                    tImage.CREATE_TIME.eq(latestReleasedImage.field(KEY_CREATE_TIME, LocalDateTime::class.java))
+                )
+            )
+            .where(conditions)
+        logger.info(baseQuery.getSQL(true))
+        return baseQuery.fetchOne(0, Int::class.java)
+    }
+
+    /**
+     * 查询项目已安装的镜像Code
+     */
+    fun getInstalledImageCodes(
+        dslContext: DSLContext,
+        projectCode: String
+    ): List<String> {
+        logger.info("Input:projectCode:$projectCode")
+        // 已安装的
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val installedImageCodes = dslContext.select(tStoreProjectRel.STORE_CODE).from(tStoreProjectRel)
+            .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+            .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            .and(
+                tStoreProjectRel.TYPE.`in`(
+                    setOf(
+                        StoreProjectTypeEnum.COMMON.type.toByte(),
+                        StoreProjectTypeEnum.TEST.type.toByte()
+                    )
+                )
+            )
+            .fetch()?.map {
+                it.value1()
+            } ?: emptyList()
+        logger.info("Output:installedImageCodes:$installedImageCodes")
+        return installedImageCodes
+    }
+
+    /**
+     * 根据用户部门信息获取可见镜像Code
+     */
+    fun getVisibleImageCodes(
+        dslContext: DSLContext,
+        projectCode: String,
+        userDeptList: List<Int>
+    ): List<String> {
+        logger.info("Input:userDeptList:$userDeptList")
+        // 可安装的
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tStoreDeptRel = TStoreDeptRel.T_STORE_DEPT_REL.`as`("tStoreDeptRel")
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val visibleImageCodes = dslContext.select(tImageFeature.IMAGE_CODE).from(tImageFeature)
+            .leftJoin(tStoreDeptRel).on(tImageFeature.IMAGE_CODE.eq(tStoreDeptRel.STORE_CODE))
+            // 审核通过
+            .where(tStoreDeptRel.STATUS.eq(ApproveStatusEnum.getValue(ApproveStatusEnum.PASS)))
+            // 腾讯公司可见或可见范围与用户组织架构重叠
+            .and(tStoreDeptRel.DEPT_ID.eq(0).or(tStoreDeptRel.DEPT_ID.`in`(userDeptList)))
+            // 镜像类型
+            .and(tStoreDeptRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            // 非公共
+            .and(tImageFeature.PUBLIC_FLAG.eq(false))
+            .union(
+                dslContext.select(tImageFeature.IMAGE_CODE).from(tImageFeature)
+                    // 公共
+                    .where(tImageFeature.PUBLIC_FLAG.eq(true))
+            ).union(
+                // 自己项目下的调试镜像
+                dslContext.select(tStoreProjectRel.STORE_CODE).from(tStoreProjectRel)
+                    .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+                    .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            )
+            .fetch()?.map {
+                it.value1()
+            } ?: emptyList()
+        logger.info("Output:visibleImageCodes:$visibleImageCodes")
+        return visibleImageCodes
     }
 
     private val logger = LoggerFactory.getLogger(MarketImageDao::class.java)
