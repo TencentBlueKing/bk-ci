@@ -82,18 +82,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.awt.AlphaComposite
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Font
-import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.ArrayList
-import java.util.Random
 import java.util.regex.Pattern
-import javax.imageio.ImageIO
 import javax.ws.rs.NotFoundException
 
 @Service

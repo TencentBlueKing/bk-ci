@@ -11,7 +11,6 @@ object CodeccEnvHelper {
 
     private val ENV_FILES = arrayOf("result.log", "result.ini")
 
-
     fun getCodeccEnv(workspace: File): MutableMap<String, String> {
         val result = mutableMapOf<String, String>()
         ENV_FILES.map { result.putAll(readScriptEnv(workspace, it)) }

@@ -198,5 +198,4 @@ object SvnUtil {
             return SvnCredential(repository.userName, privateKey, passPhrase)
         }
     }
-
 }

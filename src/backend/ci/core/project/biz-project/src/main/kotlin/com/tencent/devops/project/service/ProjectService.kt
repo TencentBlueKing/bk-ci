@@ -89,5 +89,4 @@ interface ProjectService {
     fun grayProjectSet(): Set<String>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
-
 }

@@ -28,7 +28,6 @@ package com.tencent.devops.plugin.worker.pojo
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import java.io.File

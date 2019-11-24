@@ -53,5 +53,4 @@ object ProjectUtils {
             enableExternal = tProjectRecord.enableExternal
         )
     }
-
 }

@@ -72,5 +72,4 @@ class LinuxCodeCCScriptTask : ITask() {
         // 写入环境变量
         addEnv(CodeccEnvHelper.getCodeccEnv(workspace))
     }
-
 }

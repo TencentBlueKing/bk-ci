@@ -19,7 +19,7 @@ class ProjectS3Service @Autowired constructor(
     private val projectDao: ProjectDao,
     private val tofService: TOFService,
     private val dslContext: DSLContext
-){
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectS3Service::class.java)
@@ -57,5 +57,4 @@ class ProjectS3Service @Autowired constructor(
         logger.info("create public scan project successfully!")
         return packagingBean(publicScanProject!!, setOf())
     }
-
 }

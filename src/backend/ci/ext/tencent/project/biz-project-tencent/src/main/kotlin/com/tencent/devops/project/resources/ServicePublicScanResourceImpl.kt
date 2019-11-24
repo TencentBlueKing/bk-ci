@@ -6,7 +6,6 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectS3Service
-import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

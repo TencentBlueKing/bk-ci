@@ -1,7 +1,6 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.scm.GitService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
