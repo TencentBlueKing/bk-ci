@@ -23,6 +23,8 @@ object Constants {
     const val KEY_IMAGE_REPO_NAME = "imageRepoName"
     const val KEY_IMAGE_VERSION = "imageVersion"
     const val KEY_IMAGE_TAG = "imageTag"
+    const val KEY_IMAGE_TICKET_ID = "imageTicketId"
+    const val KEY_IMAGE_INIT_PROJECT = "imageInitProject"
     const val KEY_IMAGE_SIZE = "imageSize"
     const val KEY_IMAGE_STATUS = "imageStatus"
     const val KEY_IMAGE_LOGO_URL = "imageLogoUrl"

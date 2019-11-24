@@ -17,19 +17,9 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
-import com.tencent.devops.store.dao.common.SensitiveConfDao
-import com.tencent.devops.store.dao.common.StoreApproveDao
-import com.tencent.devops.store.dao.common.StoreCommentDao
-import com.tencent.devops.store.dao.common.StoreCommentPraiseDao
-import com.tencent.devops.store.dao.common.StoreCommentReplyDao
-import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
-import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
-import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.dao.image.Constants
 import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_ICON_URL
@@ -83,6 +73,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.enums.LabelTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
+import com.tencent.devops.store.pojo.image.exception.UnknownImageSourceType
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.ImageFeatureUpdateRequest
 import com.tencent.devops.store.pojo.image.request.ImageUpdateRequest
@@ -98,8 +89,8 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreUserService
-import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -135,33 +126,11 @@ abstract class ImageService @Autowired constructor(
     @Autowired
     lateinit var imageLabelRelDao: ImageLabelRelDao
     @Autowired
-    lateinit var storeVisibleDeptService: StoreVisibleDeptService
-    @Autowired
-    lateinit var storeApproveDao: StoreApproveDao
-    @Autowired
-    lateinit var storeCommentDao: StoreCommentDao
-    @Autowired
-    lateinit var storeCommentPraiseDao: StoreCommentPraiseDao
-    @Autowired
-    lateinit var storeCommentReplyDao: StoreCommentReplyDao
-    @Autowired
-    lateinit var storeDeptRelDao: StoreDeptRelDao
-    @Autowired
     lateinit var storeMemberDao: StoreMemberDao
-    @Autowired
-    lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
-    @Autowired
-    lateinit var storePipelineRelDao: StorePipelineRelDao
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
-    lateinit var storeReleaseDao: StoreReleaseDao
-    @Autowired
-    lateinit var storeSensitiveConfDao: SensitiveConfDao
-    @Autowired
     lateinit var storeStatisticDao: StoreStatisticDao
-    @Autowired
-    lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
     lateinit var imageCommonService: ImageCommonService
     @Autowired
@@ -624,15 +593,51 @@ abstract class ImageService @Autowired constructor(
                     message = "image is null,projectCode=$projectCode,imageCode=$imageCode,imageVersion=$imageVersion",
                     params = arrayOf(imageCode, imageVersion ?: "")
                 )
+        return getImageRepoInfoByRecord(imageRecord)
+    }
+
+    fun getImageRepoInfoByRecord(imageRecord: Record): ImageRepoInfo {
+        val id = imageRecord.get(KEY_IMAGE_ID) as String
+        val sourceType = ImageType.getType(imageRecord.get(KEY_IMAGE_SOURCE_TYPE) as String)
+        val repoUrl = imageRecord.get(KEY_IMAGE_REPO_URL) as String? ?: ""
+        val repoName = imageRecord.get(KEY_IMAGE_REPO_NAME) as String? ?: ""
+        val tag = imageRecord.get(KEY_IMAGE_TAG) as String? ?: ""
+        val ticketId = imageRecord.get(Constants.KEY_IMAGE_TICKET_ID) as String? ?: ""
+        val ticketProject = imageRecord.get(Constants.KEY_IMAGE_INIT_PROJECT) as String? ?: ""
+        var completeImageName = ""
+        val cleanImageRepoUrl = repoUrl.trimEnd { ch ->
+            ch == '/'
+        }
+        val cleanImageRepoName = repoName.trimStart { ch ->
+            ch == '/'
+        }
+        if (ImageType.BKDEVOPS == sourceType) {
+            //蓝盾项目源镜像
+            completeImageName = cleanImageRepoName
+        } else if (ImageType.THIRD == sourceType) {
+            //第三方源镜像
+            completeImageName = "${cleanImageRepoUrl}/${cleanImageRepoName}"
+            //dockerhub镜像名称不带斜杠前缀
+            if (cleanImageRepoUrl.isBlank()) {
+                completeImageName = completeImageName.removePrefix("/")
+            }
+        } else {
+            throw UnknownImageSourceType(
+                "imageId=${id},imageSourceType=${sourceType.name}",
+                StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
+            )
+        }
+        completeImageName += if (!tag.isBlank()) {
+            ":$tag"
+        } else {
+            ":latest"
+        }
+        logger.info("getImageRepoInfoByRecord:Output($completeImageName)")
         return ImageRepoInfo(
-            id = imageRecord.id,
-            code = imageRecord.imageCode,
-            name = imageRecord.imageName,
-            sourceType = ImageType.getType(imageRecord.imageSourceType).name,
-            repoUrl = imageRecord.imageRepoUrl ?: "",
-            repoName = imageRecord.imageRepoName ?: "",
-            tag = imageRecord.imageTag ?: "",
-            ticketId = imageRecord.ticketId ?: ""
+            sourceType = sourceType,
+            completeImageName = completeImageName,
+            ticketId = ticketId,
+            ticketProject = ticketProject
         )
     }
 

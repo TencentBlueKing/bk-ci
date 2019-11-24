@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
+import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import com.tencent.devops.image.service.ImageArtifactoryService
 import org.slf4j.LoggerFactory
@@ -87,6 +88,15 @@ class ServiceImageResourceImpl @Autowired constructor(
         val vSearchKey = searchKey ?: ""
         val (vStart, vLimit) = pair(start, limit)
         return Result(artifactoryService.listProjectImages(projectId, vSearchKey, vStart, vLimit))
+    }
+
+
+    override fun listAllPublicImages(userId: String, searchKey: String?): Result<ImageListResp> {
+        return Result(artifactoryService.listAllPublicImages(searchKey))
+    }
+
+    override fun listAllProjectImages(userId: String, projectId: String, searchKey: String?): Result<ImageListResp> {
+        return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
     }
 
     override fun getImageInfo(userId: String, imageRepo: String, tagStart: Int?, tagLimit: Int?): Result<DockerRepo?> {

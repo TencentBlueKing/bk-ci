@@ -11,7 +11,7 @@ data class ImageUpdateRequest(
     @ApiModelProperty("所属分类ID", required = true)
     val classifyId: String,
     @ApiModelProperty("功能标签", required = false)
-    val labelList: List<String>,
+    val labelIdList: List<String>?,
     @ApiModelProperty("镜像所属范畴CATEGORY_CODE", required = false)
     val category: String?,
     @ApiModelProperty("镜像适用的构建机类型", required = true)

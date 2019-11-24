@@ -174,20 +174,32 @@ class ImageDao {
         imageCode: String,
         imageStatusSet: Set<Byte>,
         baseVersion: String?
-    ): TImageRecord? {
-        with(TImage.T_IMAGE) {
-            val conditions = mutableSetOf<Condition>()
-            val baseStep = dslContext.selectFrom(this)
-            conditions.add(IMAGE_CODE.eq(imageCode))
-            conditions.add(IMAGE_STATUS.`in`(imageStatusSet))
-            if (null != baseVersion) {
-                conditions.add(VERSION.like("$baseVersion%"))
-            }
-            return baseStep.where(conditions)
-                .orderBy(VERSION.desc())
-                .limit(1)
-                .fetchOne()
+    ): Record9<String, String, String, String, String, String, String, String, String>? {
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val conditions = mutableSetOf<Condition>()
+        conditions.add(tImage.IMAGE_CODE.eq(imageCode))
+        conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet))
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        conditions.add(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+        if (null != baseVersion) {
+            conditions.add(tImage.VERSION.like("$baseVersion%"))
         }
+        val baseStep = dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
+            tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
+            tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
+            tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
+            tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tImage.TICKET_ID.`as`(Constants.KEY_IMAGE_TICKET_ID),
+            tStoreProjectRel.PROJECT_CODE.`as`(Constants.KEY_IMAGE_INIT_PROJECT)
+        ).from(tImage).join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
+        return baseStep.where(conditions)
+            .orderBy(tImage.VERSION.desc())
+            .limit(1)
+            .fetchOne()
     }
 
     fun getImage(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
