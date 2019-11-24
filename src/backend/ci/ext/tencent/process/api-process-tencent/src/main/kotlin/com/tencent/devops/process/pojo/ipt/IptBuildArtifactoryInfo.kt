@@ -1,13 +1,8 @@
 package com.tencent.devops.process.pojo.ipt
 
-import com.tencent.devops.common.pipeline.enums.artifactory.SourceType
+import com.tencent.devops.artifactory.pojo.FileInfo
 
 data class IptBuildArtifactoryInfo (
-    val buildId: String,
-    val pkgList: List<PkgInfo>
-) {
-    data class PkgInfo(
-        val name: String,
-        val sourceType: SourceType
-    )
-}
+    val buildId: String = "",
+    val pkgList: List<FileInfo> = listOf()
+)

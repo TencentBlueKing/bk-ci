@@ -36,6 +36,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -150,4 +151,16 @@ interface ServiceRepositoryResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>>
+
+    @ApiOperation("根据提交的ID获取对应构建记录")
+    @GET
+    @Path("pipeline/{pipelineId}/commit/{commitId}/getBuildIdByCommit")
+    fun getBuildIdByCommit(
+            @ApiParam(value = "流水线的id", required = true)
+            @PathParam("pipelineId")
+            pipelineId: String,
+            @ApiParam(value = "提交的id", required = true)
+            @PathParam("commitId")
+            commitId: String
+    ): Result<String>
 }
