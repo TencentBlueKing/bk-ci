@@ -1,29 +1,3 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -32,10 +6,9 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.gitci.pojo.yaml.MergeRequest
-import com.tencent.devops.gitci.pojo.yaml.Trigger
+import com.tencent.devops.common.ci.yaml.MergeRequest
+import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
@@ -76,27 +49,27 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
             return false
         }
         // exclude
-        if (trigger.branches?.exclude != null && trigger.branches.exclude.isNotEmpty()) {
-            trigger.branches.exclude.forEach {
+        if (trigger.branches?.exclude != null && trigger.branches!!.exclude!!.isNotEmpty()) {
+            trigger.branches!!.exclude!!.forEach {
                 if (isBranchMatch(it, eventBranch)) {
                     logger.info("The exclude branch($it) exclude the git branch ($eventBranch)")
                     return false
                 }
             }
         }
-        if (trigger.tags?.exclude != null && trigger.tags.exclude.isNotEmpty()) {
-            trigger.tags.exclude.forEach {
+        if (trigger.tags?.exclude != null && trigger.tags!!.exclude!!.isNotEmpty()) {
+            trigger.tags!!.exclude!!.forEach {
                 if (isTagMatch(it, eventTag)) {
                     logger.info("The exclude tag($it) exclude the git tag ($eventBranch)")
                     return false
                 }
             }
         }
-        if (trigger.paths?.exclude != null && trigger.paths.exclude.isNotEmpty()) {
+        if (trigger.paths?.exclude != null && trigger.paths!!.exclude!!.isNotEmpty()) {
             logger.info("Exclude path set ($trigger.paths.exclude)")
             (event as GitPushEvent).commits.forEach { commit ->
                 commit.added?.forEach { path ->
-                    trigger.paths.exclude.forEach { excludePath ->
+                    trigger.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
                             return false
@@ -104,7 +77,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
                     }
                 }
                 commit.modified?.forEach { path ->
-                    trigger.paths.exclude.forEach { excludePath ->
+                    trigger.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
                             return false
@@ -112,7 +85,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
                     }
                 }
                 commit.removed?.forEach { path ->
-                    trigger.paths.exclude.forEach { excludePath ->
+                    trigger.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
                             return false
@@ -124,10 +97,10 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
 
         // include
         var branchIncluded = false
-        if (trigger.branches?.include != null && trigger.branches.include.isNotEmpty()) {
-            logger.info("Include branch set(${trigger.branches.include})")
+        if (trigger.branches?.include != null && trigger.branches!!.include!!.isNotEmpty()) {
+            logger.info("Include branch set(${trigger.branches!!.include})")
             run outside@{
-                trigger.branches.include.forEach {
+                trigger.branches!!.include!!.forEach {
                     if (isBranchMatch(it, eventBranch)) {
                         logger.info("The include branch($it) include the git update one($eventBranch)")
                         branchIncluded = true
@@ -137,10 +110,10 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
             }
         }
         var tagIncluded = false
-        if (trigger.tags?.include != null && trigger.tags.include.isNotEmpty()) {
-            logger.info("Include tags set(${trigger.tags.include})")
+        if (trigger.tags?.include != null && trigger.tags!!.include!!.isNotEmpty()) {
+            logger.info("Include tags set(${trigger.tags!!.include})")
             run outside@{
-                trigger.tags.include.forEach {
+                trigger.tags!!.include!!.forEach {
                     if (isBranchMatch(it, eventTag)) {
                         logger.info("The include tags($it) include the git update one($eventTag)")
                         tagIncluded = true
@@ -150,12 +123,12 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
             }
         }
         var pathIncluded = false
-        if (trigger.paths?.include != null && trigger.paths.include.isNotEmpty()) {
-            logger.info("Include path set(${trigger.paths.include})")
+        if (trigger.paths?.include != null && trigger.paths!!.include!!.isNotEmpty()) {
+            logger.info("Include path set(${trigger.paths!!.include})")
             run outside@{
                 (event as GitPushEvent).commits.forEach { commit ->
                     commit.added?.forEach { path ->
-                        trigger.paths.include.forEach { includePath ->
+                        trigger.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -164,7 +137,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
                         }
                     }
                     commit.modified?.forEach { path ->
-                        trigger.paths.include.forEach { includePath ->
+                        trigger.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -173,7 +146,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
                         }
                     }
                     commit.removed?.forEach { path ->
-                        trigger.paths.include.forEach { includePath ->
+                        trigger.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -205,9 +178,9 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
             return false
         }
         // exclude branch of mr
-        if (mr.branches?.exclude != null && mr.branches.exclude.isNotEmpty()) {
-            logger.info("Exclude branch set(${mr.branches.exclude})")
-            mr.branches.exclude.forEach {
+        if (mr.branches?.exclude != null && mr.branches!!.exclude!!.isNotEmpty()) {
+            logger.info("Exclude branch set(${mr.branches!!.exclude})")
+            mr.branches!!.exclude!!.forEach {
                 if (isBranchMatch(it, eventBranch)) {
                     logger.info("The exclude branch($it) exclude the git update one($eventBranch)")
                     return false
@@ -217,9 +190,9 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         // mr 没有path？
 
         // include branch of mr
-        if (mr.branches?.include != null && mr.branches.include.isNotEmpty()) {
-            logger.info("Include branch set(${mr.branches.include})")
-            mr.branches.include.forEach {
+        if (mr.branches?.include != null && mr.branches!!.include!!.isNotEmpty()) {
+            logger.info("Include branch set(${mr.branches!!.include})")
+            mr.branches!!.include!!.forEach {
                 if (isBranchMatch(it, eventBranch)) {
                     logger.info("The include branch($it) include the git update one($eventBranch)")
                     return true
@@ -351,7 +324,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
             is GitMergeRequestEvent -> event.object_attributes.target.ssh_url
             else -> ""
         }
-        return GitUtils.getProjectName(sshUrl)
+        return sshUrl.removePrefix("git@git.code.oa.com:").removeSuffix(".git")
     }
 
     fun getBranchName(): String {

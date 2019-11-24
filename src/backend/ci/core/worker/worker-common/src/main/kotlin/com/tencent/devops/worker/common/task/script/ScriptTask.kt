@@ -93,6 +93,7 @@ open class ScriptTask : ITask() {
                 continueNoneZero.toBoolean()
             )
         } catch (t: Throwable) {
+            logger.warn("Fail to run the script task", t)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
                 LoggerService.addYellowLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
                 val count = ArchiveUtils.archivePipelineFiles(archiveFileIfExecFail!!, workspace, buildVariables)

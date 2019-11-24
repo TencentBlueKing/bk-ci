@@ -26,17 +26,13 @@
 
 package com.tencent.devops.worker.common.task.script.shell
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.task.script.ICommand
 import com.tencent.devops.worker.common.utils.ShellUtil
 import java.io.File
 
 class CommandShellImpl(
-    override val outerCommandFunc:
-    ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?
-) :
-    ICommand {
+) : ICommand {
 
     override fun execute(
         buildId: String,
@@ -49,6 +45,6 @@ class CommandShellImpl(
         continueNoneZero: Boolean
     ) {
         val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables))
-        ShellUtil.execute(buildId, realCommand, dir, buildEnvs, runtimeVariables, outerCommandFunc, continueNoneZero)
+        ShellUtil.execute(realCommand, dir, buildEnvs, runtimeVariables, continueNoneZero)
     }
 }

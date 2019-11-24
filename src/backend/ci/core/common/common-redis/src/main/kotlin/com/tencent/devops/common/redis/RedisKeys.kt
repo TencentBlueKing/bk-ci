@@ -26,10 +26,6 @@
 
 package com.tencent.devops.common.redis
 
-/**
- * deng
- * 2019-04-19
- */
 object RedisKeys {
     const val CONTAINER_STARTUP_PREFIX = "container:startup:"
 

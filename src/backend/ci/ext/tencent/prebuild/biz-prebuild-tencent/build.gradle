@@ -29,10 +29,12 @@ dependencies {
     compile project(":core:common:common-service")
     compile project(":core:common:common-api")
     compile project(":ext:tencent:common:common-devcloud")
+    compile project(":ext:tencent:common:common-pipeline-tencent")
     compile project(":core:common:common-notify")
     compile project(":ext:tencent:prebuild:api-prebuild-tencent")
     compile project(":core:dispatch:api-dispatch-docker")
     compile project(":core:process:api-process")
+    compile project(":core:project:api-project")
     compile project(":core:plugin:codecc-plugin:api-codecc")
     compile project(":ext:tencent:plugin:api-plugin-tencent")
     compile group: 'com.github.docker-java', name: 'docker-java', version: '3.1.1'

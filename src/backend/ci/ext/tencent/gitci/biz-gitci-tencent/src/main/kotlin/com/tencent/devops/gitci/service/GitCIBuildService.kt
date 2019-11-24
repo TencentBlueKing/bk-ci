@@ -1,33 +1,11 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package com.tencent.devops.gitci.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
+import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -36,31 +14,32 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
-import com.tencent.devops.common.pipeline.enums.CodePullStrategy
-import com.tencent.devops.common.pipeline.enums.GitPullModeType
-import com.tencent.devops.gitci.OBJECT_KIND_MERGE_REQUEST
-import com.tencent.devops.gitci.OBJECT_KIND_PUSH
-import com.tencent.devops.gitci.OBJECT_KIND_TAG_PUSH
-import com.tencent.devops.gitci.OBJECT_KIND_MANUAL
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitProjectPipelineDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
+import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.task.DockerRunDevCloudTask
-import com.tencent.devops.gitci.pojo.task.GitCiCodeRepoInput
-import com.tencent.devops.gitci.pojo.task.GitCiCodeRepoTask
-import com.tencent.devops.gitci.pojo.yaml.CIBuildYaml
-import com.tencent.devops.gitci.pojo.yaml.Credential
-import com.tencent.devops.gitci.pojo.yaml.Pool
+import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
+import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
+import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
+import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.ci.yaml.Credential
+import com.tencent.devops.common.ci.yaml.Pool
+import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.enums.CodePullStrategy
+import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -75,10 +54,12 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIBuildService @Autowired constructor(
     private val client: Client,
+    private val scmClient: ScmClient,
     private val dslContext: DSLContext,
     private val gitProjectPipelineDao: GitProjectPipelineDao,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitServicesConfDao: GitCIServicesConfDao,
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper
 ) {
@@ -124,10 +105,25 @@ class GitCIBuildService @Autowired constructor(
         }
 
         logger.info("pipelineId: $pipelineId")
+
         // 启动构建
         val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, mapOf(), channelCode).data!!.id
         gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
         logger.info("buildId: $buildId")
+
+        // 推送启动构建消息,当人工触发时不推送构建消息
+        if (event.objectKind != OBJECT_KIND_MANUAL) {
+            scmClient.pushCommitCheck(
+                event.commitId,
+                event.description ?: "",
+                event.mergeRequestId ?: 0L,
+                buildId,
+                event.userId,
+                "pending",
+                gitProjectConf
+            )
+        }
+
         return BuildId(buildId)
     }
 
@@ -135,6 +131,7 @@ class GitCIBuildService @Autowired constructor(
         // 先安装插件市场的插件
         installMarketAtom(gitProjectConf, event.userId, GitCiCodeRepoTask.atomCode)
         installMarketAtom(gitProjectConf, event.userId, DockerRunDevCloudTask.atomCode)
+        installMarketAtom(gitProjectConf, event.userId, ServiceJobDevCloudTask.atomCode)
 
         val stageList = mutableListOf<Stage>()
 
@@ -145,8 +142,11 @@ class GitCIBuildService @Autowired constructor(
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
-        // 第二个stage，拉代码
-        addGitCodeStage(event, gitProjectConf, stageList)
+//        // 第二个stage，拉代码
+//        addGitCodeStage(event, gitProjectConf, stageList)
+
+        // 第三个stage，services初始化
+        addServicesStage(yaml, stageList)
 
         // 其他的stage
         yaml.stages!!.forEachIndexed { stageIndex, stage ->
@@ -154,8 +154,11 @@ class GitCIBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
+                //每个job的第一个插件都是拉代码
+                elementList.add(createGitCodeElement(event, gitProjectConf))
+
                 job.job.steps.forEach {
-                    val element = it.covertToElement(buildConfig)
+                    val element = it.covertToElement(getCiBuildConf(buildConfig))
                     elementList.add(element)
                     if (element is MarketBuildAtomElement) {
                         logger.info("install market atom: ${element.getAtomCode()}")
@@ -167,11 +170,11 @@ class GitCIBuildService @Autowired constructor(
                 } else {
                     // TODO password decrypt
 
-                    Pool(job.job.pool.container, Credential(job.job.pool.credential?.user ?: "", job.job.pool.credential?.password ?: ""))
+                    Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
                 }
                 val vmContainer = VMBuildContainer(
                         id = null,
-                        name = job.job.name ?: "stage${stageIndex + 2}-${jobIndex + 1}",
+                        name = job.job.name ?: "stage${stageIndex + 3}-${jobIndex + 1}",
                         elements = elementList,
                         status = null,
                         startEpoch = null,
@@ -209,28 +212,9 @@ class GitCIBuildService @Autowired constructor(
             logger.error("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
-//        try {
-//            client.get(ServiceMarketAtomResource::class).installAtom(
-//                    userId,
-//                    channelCode,
-//                    InstallAtomReq(projectCodes, GitCiCodeRepoTask.atomCode))
-//        } catch (e: Throwable) {
-//            logger.error("install atom failed, exception:", e)
-//            // 可能之前安装过，继续执行不退出
-//        }
-//
-//        try {
-//            client.get(ServiceMarketAtomResource::class).installAtom(
-//                    userId,
-//                    channelCode,
-//                    InstallAtomReq(projectCodes, DockerRunDevCloudTask.atomCode))
-//        } catch (e: Throwable) {
-//            logger.error("install atom failed, exception:", e)
-//            // 可能之前安装过，继续执行不退出
-//        }
     }
 
-    private fun addGitCodeStage(event: GitRequestEvent, gitProjectConf: GitRepositoryConf, stageList: MutableList<Stage>) {
+    private fun createGitCodeElement(event: GitRequestEvent, gitProjectConf: GitRepositoryConf): Element {
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectConf.gitProjectId).data!!
         logger.info("get token from scm success, gitToken: $gitToken")
         val gitCiCodeRepoInput = when (event.objectKind) {
@@ -290,7 +274,7 @@ class GitCIBuildService @Autowired constructor(
             }
         }
 
-        val gitScmElement = MarketBuildAtomElement(
+        return MarketBuildAtomElement(
                 "拉代码",
                 null,
                 null,
@@ -298,30 +282,48 @@ class GitCIBuildService @Autowired constructor(
                 "1.*",
                 mapOf("input" to gitCiCodeRepoInput!!)
         )
-        val container = Pool(buildConfig.registryImage, Credential(buildConfig.registryUserName!!, buildConfig.registryPassword!!))
-        val codeContainer = VMBuildContainer(
+    }
+
+    private fun addServicesStage(yaml: CIBuildYaml, stageList: MutableList<Stage>) {
+        if (yaml.services == null || yaml.services!!.isEmpty()) {
+            return
+        }
+        yaml.services!!.forEachIndexed { index, it ->
+            // 判断镜像格式是否合法
+            val (imageName, imageTag) = it.parseImage()
+            val record = gitServicesConfDao.get(dslContext, imageName, imageTag) ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
+            if (!record.enable) {
+                throw RuntimeException("镜像版本不可用")
+            }
+            val serviceJobDevCloudInput = it.getServiceInput(record.repoUrl, record.repoUsername, record.repoPwd, record.env)
+
+            val servicesElement = MarketBuildAtomElement(
+                "创建${it.getType()}服务",
+                null,
+                null,
+                ServiceJobDevCloudTask.atomCode,
+                "1.*",
+                mapOf("input" to serviceJobDevCloudInput, "namespace" to it.getServiceParamNameSpace())
+            )
+
+            val servicesContainer = NormalContainer(
+                containerId = null,
                 id = null,
-                name = "拉代码",
-                elements = listOf(gitScmElement),
+                name = "创建${it.getType()}服务",
+                elements = listOf(servicesElement),
                 status = null,
                 startEpoch = null,
                 systemElapsed = null,
                 elementElapsed = null,
-                baseOS = VMBaseOS.LINUX,
-                vmNames = setOf(),
-                maxQueueMinutes = 60,
-                maxRunningMinutes = 900,
-                buildEnv = null,
-                customBuildEnv = null,
-                thirdPartyAgentId = null,
-                thirdPartyAgentEnvId = null,
-                thirdPartyWorkspace = null,
-                dockerBuildVersion = null,
-                tstackAgentId = null,
-                dispatchType = GitCIDispatchType(objectMapper.writeValueAsString(container))
-        )
-        val stage2 = Stage(listOf(codeContainer), "stage-2")
-        stageList.add(stage2)
+                enableSkip = false,
+                conditions = null,
+                canRetry = true,
+                jobControlOption = null,
+                mutexGroup = null
+            )
+            val stage = Stage(listOf(servicesContainer), "stage-service-job-$index")
+            stageList.add(stage)
+        }
     }
 
     private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): List<BuildFormProperty> {
@@ -359,5 +361,23 @@ class GitCIBuildService @Autowired constructor(
             ))
         }
         return result
+    }
+
+    private fun getCiBuildConf(buildConf: BuildConfig): CiBuildConfig {
+        return CiBuildConfig(
+                buildConf.codeCCSofwarePath,
+                buildConf.registryHost,
+                buildConf.registryUserName,
+                buildConf.registryPassword,
+                buildConf.registryImage,
+                buildConf.cpu,
+                buildConf.memory,
+                buildConf.disk,
+                buildConf.volume,
+                buildConf.activeDeadlineSeconds,
+                buildConf.devCloudAppId,
+                buildConf.devCloudToken,
+                buildConf.devCloudUrl
+        )
     }
 }
