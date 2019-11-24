@@ -29,12 +29,27 @@ package com.tencent.devops.common.pipeline.type.docker
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
 
-data class DockerDispatchType(@JsonProperty("value") var dockerBuildVersion: String, var imageType: ImageType? = ImageType.BKDEVOPS, val credentialId: String? = "") : DispatchType(dockerBuildVersion) {
-    override fun replaceField(variables: Map<String, String>) {
-        dockerBuildVersion = EnvUtils.parseEnv(dockerBuildVersion, variables)
+
+data class DockerDispatchType(
+    @JsonProperty("value") override var dockerBuildVersion: String?,
+    override var imageType: ImageType? = ImageType.BKDEVOPS,
+    override var credentialId: String? = "",
+    override var credentialProject: String? = "",
+    // 商店镜像代码
+    override var imageCode: String? = "",
+    // 商店镜像版本
+    override var imageVersion: String? = "",
+    // 商店镜像名称
+    override var imageName: String? = ""
+) : StoreDispatchType(if (dockerBuildVersion.isNullOrBlank())
+    imageCode else dockerBuildVersion, null, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    override fun buildType(): BuildType {
+        return BuildType.DOCKER
     }
 
-    override fun buildType() = BuildType.DOCKER
+    override fun replaceField(variables: Map<String, String>) {
+        dockerBuildVersion = EnvUtils.parseEnv(dockerBuildVersion!!, variables)
+    }
 }
