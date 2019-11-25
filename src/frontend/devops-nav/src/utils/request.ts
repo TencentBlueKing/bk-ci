@@ -79,8 +79,8 @@ const injectCSRFTokenToHeaders = () => {
 const getCurrentPid = () => {
     try {
         // @ts-ignore
-        const lsPid = localStorage.getItem('projectId')
-        return window.GLOBAL_PID || lsPid
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        return window.GLOBAL_PID || cookiePid
     } catch (e) {
         return undefined
     }

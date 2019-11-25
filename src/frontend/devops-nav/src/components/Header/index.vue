@@ -87,7 +87,6 @@
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
-    import * as cookie from 'js-cookie'
     import { urlJoin } from '../../utils/util'
 
     @Component({
@@ -210,11 +209,7 @@
                     }
                 })
             }
-
-            cookie.set(X_DEVOPS_PROJECT_ID, id, {
-                domain: 'oa.com',
-                path: '/'
-            })
+            window.setProjectIdCookie(id)
 
             if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
                 localStorage.setItem('projectId', id)
