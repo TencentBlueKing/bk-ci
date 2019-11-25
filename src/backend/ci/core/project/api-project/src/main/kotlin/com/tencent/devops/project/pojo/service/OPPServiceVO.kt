@@ -35,6 +35,8 @@ data class OPPServiceVO(
     val id: Long,
     @ApiModelProperty("服务名称", required = true)
     val name: String,
+    @ApiModelProperty("英文名称", required = true)
+    val englishName: String,
     @ApiModelProperty("服务类型ID", required = true)
     val serviceTypeId: Long,
     @ApiModelProperty("是否在页面显示")
