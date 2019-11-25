@@ -88,6 +88,4 @@ interface ProjectService {
     fun grayProjectSet(): Set<String>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
-
-    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO
 }
