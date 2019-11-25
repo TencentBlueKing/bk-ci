@@ -267,19 +267,4 @@ interface ServicePipelineResource {
         @ApiParam("构建id", required = true)
         buildIds: Set<String>
     ): Result<Map<String/*buildId*/, String/*buildNo*/>>
-
-    @ApiOperation("原子市场初始化流水线")
-    @POST
-    // @Path("/projects/{projectId}/initMarketPipeline")
-    @Path("/market/pipeline/init/{projectCode}")
-    fun initAtomMarketPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("原子市场初始化流水线请求报文体", required = true)
-        atomMarketInitPipelineReq: AtomMarketInitPipelineReq
-    ): Result<AtomMarketInitPipelineResp>
 }
