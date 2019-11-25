@@ -10,7 +10,7 @@
                 <div>
                     <div class="form-group">
                         <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
-                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" :placeholder="$t('filterByNameTips')"
+                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" :placeholder="$t('newlist.filterByNameTips')"
                             v-validate.initial="'max:40'"
                             :class="{
                                 'is-danger': errors.has('pipelineName')

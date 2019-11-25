@@ -30,7 +30,7 @@
                         authList: this.pipelineAuthority.role,
                         projectGroupAndUsers: this.projectGroupAndUsers,
                         setType: 'role_code',
-                        titleName: 'role_name',
+                        titleName: this.$i18n.locale === 'en-US' ? 'role_code' : 'role_name',
                         handleUpdate: this.generateUpdateAuthCb('role'),
                         isLoading: !this.pipelineAuthority.role
                     }
@@ -42,7 +42,7 @@
                         authList: this.pipelineAuthority.policy,
                         projectGroupAndUsers: this.projectGroupAndUsers,
                         setType: 'policy_code',
-                        titleName: 'policy_name',
+                        titleName: this.$i18n.locale === 'en-US' ? 'policy_code' : 'policy_name',
                         handleUpdate: this.generateUpdateAuthCb('policy'),
                         isLoading: !this.pipelineAuthority.policy
                     }

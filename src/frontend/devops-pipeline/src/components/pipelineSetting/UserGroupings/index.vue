@@ -17,7 +17,7 @@
             </div>
             <div class="setting-content" v-if="isContentShow">
                 <bk-form :style="{ 'width': computeWidth, 'max-width': computeMaxWidth }">
-                    <bk-form-item :label-width="80" :label="inputLabel">
+                    <bk-form-item :label-width="90" :label="inputLabel">
                         <staff-input :handle-change="handleChange" name="users" :value="pipelineSettingUser"></staff-input>
                         <div class="setting-extra" v-if="extraUserList.length">
                             <bk-popover placement="bottom-start">
@@ -31,7 +31,7 @@
                     </bk-form-item>
                 </bk-form>
                 <bk-form :style="{ 'width': computeWidth, 'max-width': computeMaxWidth }">
-                    <bk-form-item :label-width="80" :label="selectLabel">
+                    <bk-form-item :label-width="90" :label="selectLabel">
                         <bk-select :multiple="multiSelect" :value="selected" @change="selectedChange" searchable>
                             <bk-option v-for="item in list" :key="item[settingKey]" :id="item[settingKey]" :name="item[selectKeyText]">
                             </bk-option>

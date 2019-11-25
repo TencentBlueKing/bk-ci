@@ -26,7 +26,7 @@
                 <textarea name="desc" v-model="subscription.content" class="bk-form-textarea"></textarea>
             </bk-form-item>
             <bk-form-item>
-                <atom-checkbox style="width: 300px;"
+                <atom-checkbox style="width: auto"
                     :handle-change="updateSubscription"
                     name="detailFlag"
                     :text="$t('settings.pipelineLink')"
@@ -36,6 +36,7 @@
             </bk-form-item>
             <bk-form-item>
                 <atom-checkbox
+                    style="width: auto"
                     name="wechatGroupFlag"
                     :text="$t('settings.enableGroup')"
                     :desc="groupIdDesc"
