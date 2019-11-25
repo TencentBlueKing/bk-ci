@@ -60,7 +60,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class NotifyMessageTemplateServiceImpl @Autowired constructor(
+class TencentNotifyMessageTemplateServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
     private val commonNotifyMessageTemplateDao: CommonNotifyMessageTemplateDao,
@@ -69,7 +69,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val wechatService: WechatService
 ) : NotifyMessageTemplateService {
 
-    private val logger = LoggerFactory.getLogger(NotifyMessageTemplateServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(TencentNotifyMessageTemplateServiceImpl::class.java)
 
     /**
      * 根据查找到的消息通知模板主体信息来获取具体信息
