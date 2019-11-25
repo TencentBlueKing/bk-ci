@@ -280,6 +280,9 @@ class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMap
 
                 val jFrogAQLFileInfoList =
                     objectMapper.readValue<JFrogAQLResponse<JFrogAQLFileInfo>>(responseContent).results
+
+                logger.info("searchByProperty $jFrogAQLFileInfoList")
+
                 return jFrogAQLFileInfoList.map {
                     JFrogAQLFileInfo(
                         "/${it.path.removePrefix(relativeParentPath)}/${it.name}",
