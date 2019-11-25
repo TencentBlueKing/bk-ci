@@ -33,6 +33,7 @@ import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -298,5 +299,22 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .execute()
         }
+    }
+
+    /**
+     * 获取项目的调试组件
+     */
+    fun getTestImageCodes(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Record1<String>>? {
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        return dslContext.select(tStoreProjectRel.STORE_CODE)
+            .from(tStoreProjectRel)
+            .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+            .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            .fetch()
     }
 }

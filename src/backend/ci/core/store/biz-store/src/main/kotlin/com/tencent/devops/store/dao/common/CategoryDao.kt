@@ -61,6 +61,33 @@ class CategoryDao {
         }
     }
 
+    fun add(
+        dslContext: DSLContext,
+        id: String,
+        categoryCode: String,
+        categoryName: String,
+        iconUrl: String,
+        type: Byte
+    ) {
+        with(TCategory.T_CATEGORY) {
+            dslContext.insertInto(
+                this,
+                ID,
+                CATEGORY_CODE,
+                CATEGORY_NAME,
+                ICON_URL,
+                TYPE
+            )
+                .values(
+                    id,
+                    categoryCode,
+                    categoryName,
+                    iconUrl,
+                    type
+                ).execute()
+        }
+    }
+
     fun countByName(dslContext: DSLContext, categoryName: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectCount().from(this).where(CATEGORY_NAME.eq(categoryName).and(TYPE.eq(type)))
@@ -99,6 +126,15 @@ class CategoryDao {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
+    fun getCategoryByCodeAndType(dslContext: DSLContext, categoryCode: String, type: Byte): TCategoryRecord? {
+        with(TCategory.T_CATEGORY) {
+            return dslContext.selectFrom(this)
+                .where(CATEGORY_CODE.eq(categoryCode))
+                .and(TYPE.eq(type))
                 .fetchOne()
         }
     }
