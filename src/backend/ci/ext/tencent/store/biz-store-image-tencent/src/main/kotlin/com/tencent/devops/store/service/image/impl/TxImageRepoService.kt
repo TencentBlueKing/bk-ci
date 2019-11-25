@@ -14,12 +14,12 @@ import org.springframework.stereotype.Service
 import java.net.URLDecoder
 
 @Service
-class ImageRepoService @Autowired constructor(
+class TxImageRepoService @Autowired constructor(
     private val dslContext: DSLContext,
     private val imageDao: ImageDao,
     private val client: Client
 ) {
-    private val logger = LoggerFactory.getLogger(ImageRepoService::class.java)
+    private val logger = LoggerFactory.getLogger(TxImageRepoService::class.java)
 
     /**
      * 查找蓝盾仓库关联镜像信息

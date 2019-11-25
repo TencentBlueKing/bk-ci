@@ -18,14 +18,14 @@ import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.image.ImageReleaseService
 import com.tencent.devops.store.service.image.ImageService
 import com.tencent.devops.store.service.image.OpImageService
-import com.tencent.devops.store.service.image.impl.ImageRepoService
+import com.tencent.devops.store.service.image.impl.TxImageRepoService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpImageResourceImpl @Autowired constructor(
     private val imageService: ImageService,
     private val imageReleaseService: ImageReleaseService,
-    private val imageRepoService: ImageRepoService,
+    private val imageRepoService: TxImageRepoService,
     private val opImageService: OpImageService,
     private val storeVisibleDeptService: StoreVisibleDeptService
 ) : OpImageResource {
