@@ -102,13 +102,13 @@ class CurrentBuildService @Autowired constructor(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
-        val url = client.get(UserArtifactoryResource::class).downloadUrl(
+
+        return client.get(UserArtifactoryResource::class).downloadUrl(
             userId,
             conf.projectCode!!,
             artifactoryType,
             userId
         ).data!!
-        return url
     }
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
@@ -116,8 +116,7 @@ class CurrentBuildService @Autowired constructor(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
-        val reportDetail =
-            client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId).data!!
-        return reportDetail
+
+        return client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId).data!!
     }
 }
