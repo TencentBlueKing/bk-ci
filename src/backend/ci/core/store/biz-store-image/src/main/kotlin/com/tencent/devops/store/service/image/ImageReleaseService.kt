@@ -1,21 +1,7 @@
 package com.tencent.devops.store.service.image
 
-import com.tencent.devops.common.api.constant.APPROVE
-import com.tencent.devops.common.api.constant.BEGIN
-import com.tencent.devops.common.api.constant.CHECK
-import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.LATEST
-import com.tencent.devops.common.api.constant.NUM_FIVE
-import com.tencent.devops.common.api.constant.NUM_FOUR
-import com.tencent.devops.common.api.constant.NUM_ONE
-import com.tencent.devops.common.api.constant.NUM_SIX
-import com.tencent.devops.common.api.constant.NUM_THREE
-import com.tencent.devops.common.api.constant.NUM_TWO
-import com.tencent.devops.common.api.constant.SUCCESS
-import com.tencent.devops.common.api.constant.TEST
-import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
@@ -68,25 +54,41 @@ import java.time.LocalDateTime
 import java.util.Base64
 
 @Service
-abstract class ImageReleaseService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val storeProjectRelDao: StoreProjectRelDao,
-    private val imageDao: ImageDao,
-    private val imageAgentTypeDao: ImageAgentTypeDao,
-    private val marketImageDao: MarketImageDao,
-    private val imageCategoryRelDao: ImageCategoryRelDao,
-    private val marketImageFeatureDao: MarketImageFeatureDao,
-    private val marketImageVersionLogDao: MarketImageVersionLogDao,
-    private val imageLabelRelDao: ImageLabelRelDao,
-    private val storeMemberDao: StoreMemberDao,
-    private val storePipelineRelDao: StorePipelineRelDao,
-    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
-    private val storeReleaseDao: StoreReleaseDao,
-    private val storeCommonService: StoreCommonService,
-    private val imageNotifyService: ImageNotifyService,
-    private val supportService: SupportService,
-    private val client: Client
-) {
+abstract class ImageReleaseService {
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var storeProjectRelDao: StoreProjectRelDao
+    @Autowired
+    lateinit var imageDao: ImageDao
+    @Autowired
+    lateinit var imageAgentTypeDao: ImageAgentTypeDao
+    @Autowired
+    lateinit var marketImageDao: MarketImageDao
+    @Autowired
+    lateinit var imageCategoryRelDao: ImageCategoryRelDao
+    @Autowired
+    lateinit var marketImageFeatureDao: MarketImageFeatureDao
+    @Autowired
+    lateinit var marketImageVersionLogDao: MarketImageVersionLogDao
+    @Autowired
+    lateinit var imageLabelRelDao: ImageLabelRelDao
+    @Autowired
+    lateinit var storeMemberDao: StoreMemberDao
+    @Autowired
+    lateinit var storePipelineRelDao: StorePipelineRelDao
+    @Autowired
+    lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
+    @Autowired
+    lateinit var storeReleaseDao: StoreReleaseDao
+    @Autowired
+    lateinit var storeCommonService: StoreCommonService
+    @Autowired
+    lateinit var imageNotifyService: ImageNotifyService
+    @Autowired
+    lateinit var supportService: SupportService
+    @Autowired
+    lateinit var client: Client
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
 
     fun addMarketImage(
@@ -628,7 +630,7 @@ abstract class ImageReleaseService @Autowired constructor(
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = getNormalUpgradeFlag(imageCode, status)
             logger.info("getProcessInfo isNormalUpgrade: $isNormalUpgrade")
-            val processInfo = handleProcessInfo(isNormalUpgrade,status)
+            val processInfo = handleProcessInfo(isNormalUpgrade, status)
 
             val storeProcessInfo = storeCommonService.generateStoreProcessInfo(
                 userId = userId,
