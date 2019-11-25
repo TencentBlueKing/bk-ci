@@ -56,6 +56,7 @@ import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -486,7 +487,8 @@ class ArtifactoryService @Autowired constructor(
         projectId: String,
         jFrogAQLFileInfoList: List<JFrogAQLFileInfo>,
         pipelineHasPermissionList: List<String>,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        channelCode: ChannelCode ?= ChannelCode.BS
     ): List<FileInfo> {
         val startTimestamp = System.currentTimeMillis()
 
@@ -524,6 +526,11 @@ class ArtifactoryService @Autowired constructor(
                     val url =
                         "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
                     val shortUrl = shortUrlApi.getShortUrl(url, 300)
+
+                    // gitci请求跳过auth检测
+                    if (channelCode == ChannelCode.GIT) {
+                        pipelineHasPermissionList.plus(pipelineId)
+                    }
 
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)

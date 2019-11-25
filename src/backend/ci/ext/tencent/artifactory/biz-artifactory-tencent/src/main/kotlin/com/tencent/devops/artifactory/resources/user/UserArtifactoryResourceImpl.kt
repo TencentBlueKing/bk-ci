@@ -47,6 +47,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
@@ -91,7 +92,7 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
-    override fun search(userId: String, projectId: String, page: Int?, pageSize: Int?, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
+    override fun search(userId: String, projectId: String, page: Int?, pageSize: Int?, channelCode: ChannelCode?, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
         checkParameters(userId, projectId)
         return if (repoGray.isGray(projectId, redisOperation)) {
             val pageNotNull = page ?: 0
@@ -102,7 +103,7 @@ class UserArtifactoryResourceImpl @Autowired constructor(
             val pageNotNull = page ?: 0
             val pageSizeNotNull = pageSize ?: -1
             val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
-            val result = artifactorySearchService.search(userId, projectId, searchProps, offset, pageSizeNotNull)
+            val result = artifactorySearchService.search(userId, projectId, searchProps, offset, pageSizeNotNull, channelCode)
             return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
         }
     }

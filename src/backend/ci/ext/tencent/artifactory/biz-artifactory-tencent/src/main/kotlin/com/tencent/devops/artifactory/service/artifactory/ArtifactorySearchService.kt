@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_FILE_NAME
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -54,7 +55,8 @@ class ArtifactorySearchService @Autowired constructor(
         projectId: String,
         searchProps: SearchProps,
         offset: Int,
-        limit: Int
+        limit: Int,
+        channelCode: ChannelCode ?= ChannelCode.BS
     ): Pair<Long, List<FileInfo>> {
         logger.info("Search file. [ProjectId=$projectId, Props=$searchProps]")
 
@@ -63,7 +65,12 @@ class ArtifactorySearchService @Autowired constructor(
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
 
         val relativePathSet = setOf(pipelinePathPrefix, customDirPathPrefix)
-        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
+        // gitci请求跳过auth检测
+        val pipelineHasPermissionList = if (channelCode == ChannelCode.GIT) {
+            mutableListOf()
+        } else {
+            pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
+        }
 
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
@@ -91,7 +98,7 @@ class ArtifactorySearchService @Autowired constructor(
             finalLimit
         )
         val fileInfoList =
-            artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, pipelineHasPermissionList)
+            artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, pipelineHasPermissionList, true, channelCode)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 

@@ -88,6 +88,7 @@ class CurrentBuildService @Autowired constructor(
             conf.projectCode!!,
             page,
             pageSize,
+            ChannelCode.GIT,
             searchProps
         ).data!!
     }

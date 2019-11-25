@@ -39,6 +39,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -112,6 +113,9 @@ interface UserArtifactoryResource {
         @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
+        @ApiParam("渠道", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?,
         @ApiParam("元数据", required = true)
         searchProps: SearchProps
     ): Result<FileInfoPage<FileInfo>>
