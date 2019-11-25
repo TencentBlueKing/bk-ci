@@ -38,7 +38,7 @@ if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
 end
 
 -- defect服务不做频率限制
-if ngx.var.service == 'defect' then
+if ngx.var.service == 'report' then
   access_util = nil
 end
 
