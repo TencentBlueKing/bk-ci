@@ -466,12 +466,10 @@
                 margin-bottom: 10px;
             }
             .devops-empty-tips .content {
-                width: 250px;
                 height: 60px;
-                margin: 0 auto;
                 line-height: 20px;
                 font-size: 14px;
-                text-align: left;
+                text-align: center;
             }
             .bk-dialog-body .form-group{
                 label {

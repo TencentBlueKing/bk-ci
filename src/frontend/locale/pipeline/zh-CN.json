@@ -121,7 +121,8 @@
         "labelTips": "标签不能为空",
         "addConditions": "添加视图条件",
         "typeTips": "项目视图仅能由项目管理员添加、编辑、删除",
-        "conditionEmpty": "视图条件不能为空"
+        "conditionEmpty": "视图条件不能为空",
+        "deleteViewTips": "是否确认删除 ( {0} ) ? "
     },
     "atomManage": {
         "installedAtom": "已安装插件",
@@ -295,8 +296,7 @@
         "reset": "清空",
         "cardLayout": "卡片视图",
         "tableLayout": "列表视图",
-        "numPrefix": "共",
-        "numSuffix": "条流水线",
+        "sumPipelinesTips": "共 {0} 条流水线",
         "applyPerm": "申请权限",
         "temp": "模",
         "multipleBuilds": "正在同时运行多个构建任务",

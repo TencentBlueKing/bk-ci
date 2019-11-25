@@ -221,9 +221,9 @@
              */
             deleteView (view) {
                 if ((this.isManagerUser && view.projected) || !view.projected) {
-                    const content = `${this.$t('delete')}${view.name}`
+                    const content = `${this.$t('deleteViewTips', [view.name])}`
 
-                    navConfirm({ title: this.$t('confirm'), content })
+                    navConfirm({ type: 'warning', content })
                         .then(() => {
                             this.deletePipelineView(view)
                         }).catch(() => {})

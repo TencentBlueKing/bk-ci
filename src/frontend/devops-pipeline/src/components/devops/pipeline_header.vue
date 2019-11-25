@@ -74,7 +74,7 @@
         }
         &-right {
             flex: 1;
-            max-width: 80px;
+            max-width: fit-content;
             height: 100%;
             align-items: center;
             text-align: right;

@@ -96,10 +96,11 @@ function iframeUtil (router: any) {
         send(target, 'leaveCancelOrder', '')
     }
 
-    utilMap.leaveConfirm = function ({ title = '确认要离开', content = '离开后，新编辑的数据将丢失', type, subHeader }):void {
+    utilMap.leaveConfirm = function ({ title, content = '离开后，新编辑的数据将丢失', type, subHeader, theme }):void {
         const iframeBox: any = document.getElementById('iframe-box')
         eventBus.$bkInfo({
             type,
+            theme: theme || type,
             title,
             subTitle: content,
             subHeader: subHeader ? eventBus.$createElement('p', {

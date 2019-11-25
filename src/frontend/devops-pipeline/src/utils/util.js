@@ -561,13 +561,13 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
     }
 }
 
-export function navConfirm ({ content, title }) {
+export function navConfirm ({ content, title, ...restProps }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
             reject(new Error('')); return
         }
 
-        window.globalVue.$leaveConfirm({ content, title })
+        window.globalVue.$leaveConfirm({ content, title, ...restProps })
 
         window.globalVue.$once('order::leaveConfirm', resolve)
 
