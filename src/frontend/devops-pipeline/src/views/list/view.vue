@@ -6,7 +6,7 @@
         <template v-if="showContent && viewList.length">
             <div class="view-list-content">
                 <div class="info-header">
-                    <bk-button theme="primary" @click="createView()">{{ $t("view.addView") }}</bk-button>
+                    <bk-button theme="primary" icon="bk-icon icon-plus" @click="createView()">{{ $t("view.addView") }}</bk-button>
                 </div>
                 <div class="view-table-wrapper">
                     <bk-table
