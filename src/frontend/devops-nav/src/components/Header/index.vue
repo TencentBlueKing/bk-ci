@@ -126,8 +126,7 @@
             return this.$route.params.projectId
         }
         get title (): string {
-            console.log(this.currentPage)
-            return this.currentPage.name
+            return this.currentPage && this.currentPage.name ? this.currentPage.name : ''
         }
         get serviceLogo (): string {
             return this.$route.meta.logo

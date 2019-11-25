@@ -2,7 +2,7 @@
     "environment": "Environment",
     "node": "Node",
     "project": "Project",
-    "environmentManage": "Environment Management",
+    "environmentManage": "Environment",
     "environmentList": "Environment list",
     "createEnvrionment": "Create envrionment",
     "environmentDetail": "Environment detail",
