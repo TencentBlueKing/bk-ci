@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.api.external
+package com.tencent.devops.openapi.api.external.measure
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
@@ -35,6 +35,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
@@ -51,6 +52,29 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceMeasureResource {
+
+    @ApiOperation("流水线构建查询接口，含详情与质量红线信息")
+    @GET
+    @Path("/pipeline/builds")
+    fun getBuildList(
+        @ApiParam(value = "开始时间(时间戳形式)", required = true)
+        @QueryParam(value = "beginDate")
+        beginDate: Long,
+        @ApiParam(value = "结束时间(时间戳形式)", required = true)
+        @QueryParam(value = "endDate")
+        endDate: Long,
+        @ApiParam(value = "事业群ID", required = true)
+        @QueryParam(value = "bgId")
+        bgId: String,
+        @ApiParam(value = "偏移量", required = true, defaultValue = "0")
+        @QueryParam(value = "offset")
+        @DefaultValue("0")
+        offset: Int = 0,
+        @ApiParam(value = "查询数量", required = true, defaultValue = "10")
+        @QueryParam(value = "limit")
+        @DefaultValue("10")
+        limit: Int = 10
+    ): Result<List<PipelineBuildResponseData>>
 
     @ApiOperation("获取流水线构建结果统计数据")
     @GET
