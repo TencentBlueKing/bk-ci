@@ -25,9 +25,11 @@
  */
 package com.tencent.devops.openapi.service.v2
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.api.external.measure.PipelineBuildResponseData
 import com.tencent.devops.openapi.api.external.measure.ServiceMeasureResource
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -46,6 +48,7 @@ class ApigwBuildServiceV2(private val client: Client) {
     }
 
     fun getBuildList(
+        userId: String,
         beginDate: Long,
         endDate: Long,
         bgId: String,
@@ -53,7 +56,15 @@ class ApigwBuildServiceV2(private val client: Client) {
         limit: Int,
         interfaceName: String? = "ApigwBuildServiceV2"
     ): List<PipelineBuildResponseData>? {
-        logger.info("$interfaceName:getBuildList:Input($beginDate,$endDate,$bgId,$offset,$limit)")
+        logger.info("$interfaceName:getBuildList:Input($userId,$beginDate,$endDate,$bgId,$offset,$limit)")
+        //权限校验
+        val userDeptInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+        if (userDeptInfo == null || userDeptInfo.bgId.trim() != userId.trim()) {
+            logger.warn("$interfaceName:PermissionForbidden:userDeptInfo.bgId=${userDeptInfo?.bgId},userId=${userId}")
+            throw PermissionForbiddenException(
+                message = "$userId doesn't have perssion to access data of bg(bgId=$bgId)"
+            )
+        }
         val watch = StopWatch()
         watch.start("get buildList from measure")
         val buildList = client.get(ServiceMeasureResource::class).getBuildList(

@@ -72,6 +72,9 @@ interface ApigwBuildResourceV2 {
     @GET
     @Path("/detail/list")
     fun getBuildList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam(value = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "beginDate")
         beginDate: Long,
