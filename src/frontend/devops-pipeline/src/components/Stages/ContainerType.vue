@@ -43,7 +43,7 @@
                         }
                         break
                     case isTriggerContainer(container):
-                        return <i>{elements.length}{this.$t('settings.item')}</i>
+                        return <i>{elements.length} {this.$t('settings.item')}</i>
                 }
                 return <i {...iconProps}></i>
             }

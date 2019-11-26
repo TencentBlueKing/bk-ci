@@ -31,7 +31,7 @@
                         v-model="setting.value"
                         id="templateName"
                         name="templateName"
-                        v-validate="&quot;required|max:30&quot;"
+                        v-validate="'required|max:30'"
                     />
                 </form-field>
             </div>

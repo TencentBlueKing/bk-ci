@@ -97,7 +97,7 @@
                             </form-field>
 
                             <form-field style="margin-bottom: 10px;">
-                                <atom-checkbox style="width: 300px;"
+                                <atom-checkbox style="width: auto"
                                     :handle-change="toggleEnable"
                                     name="detailFlag"
                                     :text="$t('settings.pipelineLink')"
@@ -106,7 +106,7 @@
                                 </atom-checkbox>
                             </form-field>
                             <form-field style="margin-bottom: 10px;">
-                                <atom-checkbox style="width: 200px;"
+                                <atom-checkbox style="width: auto"
                                     :handle-change="toggleEnable"
                                     name="wechatGroupFlag"
                                     :text="$t('settings.enableGroup')"

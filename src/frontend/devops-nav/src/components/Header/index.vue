@@ -128,7 +128,7 @@
             return this.currentPage && this.currentPage.name ? this.currentPage.name : ''
         }
         get serviceLogo (): string {
-            return this.$route.meta.logo
+            return this.currentPage && this.currentPage.logoUrl ? this.currentPage.logoUrl : 'placeholder'
         }
         get selectProjectList (): Project[] {
             return this.enableProjectList.map(project => ({
