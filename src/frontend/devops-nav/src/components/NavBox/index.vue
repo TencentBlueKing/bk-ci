@@ -21,7 +21,7 @@
                         @click.prevent="gotoPage(child)"
                     >
                         <i
-                            v-if="serviceIcon(child.name) === &quot;logo-bcs&quot;"
+                            v-if="serviceIcon(child.logoUrl) === &quot;logo-bcs&quot;"
                             class="bk-icon service-icon icon-logo-bcs"
                         >
                             <span
@@ -34,9 +34,9 @@
                             v-else
                             class="bk-icon service-icon"
                             :size="20"
-                            :name="serviceIcon(child.name)"
+                            :name="serviceIcon(child.logoUrl)"
                         />
-                        <span class="service-name">{{ serviceName(child.name) }}</span>
+                        <span class="service-name">{{ child.name }}</span>
                         <span class="service-id">{{ serviceId(child.name) }}</span>
                         <span
                             v-if="child.status === &quot;new&quot;"
@@ -87,37 +87,6 @@
         @Prop({ default: true })
         withHover: boolean
 
-       iconMap: ObjectMap = {
-           'Teamwork': 'tapd',
-           'Cloud Drive': '',
-           'Code': 'code',
-           'Pipeline': 'pipeline',
-           'Exp': 'experience',
-           'Artifactory': 'artifactory',
-           'OSIS': '',
-           'CodeCC': 'codecc',
-           'WeTest': 'wetest',
-           'BCS': 'bcs',
-           'Eagle': '',
-           'SOP': '',
-           'AD': '',
-           'Job': 'job',
-           'Env': 'environment',
-           'Monitor': 'monitor',
-           'LogSearch': '',
-           'KingKong': '',
-           'Scan': '',
-           'Apk': 'apk',
-           'Vs': 'vs',
-           'Measure': 'measure',
-           'Perm': 'perm',
-           'Ticket': 'ticket',
-           'Gate': 'gate',
-           'Turbo': 'turbo',
-           'Store': 'store',
-           'xinghai': 'xinghai'
-       }
-
        gotoPage ({ link_new: linkNew }) {
            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
            const nAlias = getServiceAliasByPath(linkNew)
@@ -138,17 +107,12 @@
            return typeof this.toggleCollect === 'function'
        }
 
-       serviceName (name): string {
-           return name.slice(0, name.indexOf('('))
-       }
-
        serviceId (name): string {
            return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
        }
 
-       serviceIcon (name): string {
-           const iconName = this.iconMap[this.serviceId(name)]
-           return iconName ? `logo-${iconName}` : 'placeholder'
+       serviceIcon (logoUrl): string {
+           return logoUrl ? `logo-${logoUrl}` : 'placeholder'
        }
     }
 </script>

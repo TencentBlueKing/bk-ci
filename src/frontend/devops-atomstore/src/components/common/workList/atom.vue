@@ -2,7 +2,7 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <button class="bk-button bk-primary" @click.native="createNewAtom"> {{ $t('新增插件') }} </button>
+                <button class="bk-button bk-primary" @click="createNewAtom"> {{ $t('新增插件') }} </button>
             </div>
             <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
                 <input class="g-input-border" type="text" :placeholder="$t('请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />

@@ -1007,7 +1007,7 @@
                 const curPipeline = this.pipelineList.find(item => item.pipelineId === pipelineId)
                 const content = `${this.$t('newlist.deletePipeline')}: ${curPipeline.pipelineName}?`
 
-                navConfirm({ title: this.$t('confirm'), content })
+                navConfirm({ type: 'warning', content })
                     .then(() => {
                         let message, theme
                         const {

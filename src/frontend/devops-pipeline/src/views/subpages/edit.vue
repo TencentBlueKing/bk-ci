@@ -220,7 +220,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, title: this.confirTitle })
+                        navConfirm({ content: this.confirmMsg, type: 'warning' })
                             .then(() => {
                                 next(true)
                                 this.leaving = false
