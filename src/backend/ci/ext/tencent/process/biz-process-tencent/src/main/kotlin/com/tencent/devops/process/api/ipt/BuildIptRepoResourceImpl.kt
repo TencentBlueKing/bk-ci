@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildIptRepoResourceImpl @Autowired constructor(
         private val client: Client
 ): BuildIptRepoResource {
-    override fun getCommitBuildCommitInfo(projectId: String, pipelineId: String, commitId: String): IptBuildCommitInfo {
+    override fun getCommitBuildInfo(projectId: String, pipelineId: String, commitId: String): IptBuildCommitInfo {
         val buildId = client.get(ServiceRepositoryResource::class).getBuildIdByCommit(pipelineId, commitId).data
                 ?: return IptBuildCommitInfo()
         return IptBuildCommitInfo(buildId, "")

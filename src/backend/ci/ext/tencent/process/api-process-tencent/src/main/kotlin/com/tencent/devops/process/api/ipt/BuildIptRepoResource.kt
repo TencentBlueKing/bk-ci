@@ -16,7 +16,7 @@ interface BuildIptRepoResource {
     @ApiOperation("")
     @GET
     @Path("/project/{projectId}/pipeline/{pipelineId}/commit/{commitId}/buildCommitInfo")
-    fun getCommitBuildCommitInfo(
+    fun getCommitBuildInfo(
         @PathParam("projectId")
         projectId: String,
         @PathParam("pipelineId")
