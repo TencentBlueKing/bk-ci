@@ -208,6 +208,7 @@
             return {
                 DOCS_URL_PREFIX,
                 showImageSelector: false,
+                isVersionLoading: false,
                 imageTypeList: [
                     {
                         label: this.$t('editPage.fromList'),
