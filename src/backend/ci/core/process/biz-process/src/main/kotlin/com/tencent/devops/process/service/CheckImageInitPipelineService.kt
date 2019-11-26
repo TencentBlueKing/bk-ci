@@ -151,7 +151,7 @@ class CheckImageInitPipelineService @Autowired constructor(
         // 保存流水线信息
         val pipelineId = pipelineService.createPipeline(userId, projectCode, model, ChannelCode.AM)
         if (false == checkImageInitPipelineReq.sendNotify) {
-            //不发送通知
+            // 不发送通知
             val settingRecord = pipelineSettingService.getSetting(pipelineId)!!
             val setting = PipelineSetting(
                 projectId = projectCode,
