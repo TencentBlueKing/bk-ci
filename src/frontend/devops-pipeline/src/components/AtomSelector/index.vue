@@ -368,7 +368,7 @@
         width: 600px;
         height: calc(100% - 20px);
         background: white;
-        z-index: 2000;
+        z-index: 2500;
         border: 1px solid $borderColor;
         border-radius: 5px;
         top: 0;
