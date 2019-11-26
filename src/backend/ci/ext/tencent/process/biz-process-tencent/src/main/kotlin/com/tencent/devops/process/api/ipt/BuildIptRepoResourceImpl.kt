@@ -16,8 +16,7 @@ class BuildIptRepoResourceImpl @Autowired constructor(
     override fun getCommitBuildCommitInfo(projectId: String, pipelineId: String, commitId: String): IptBuildCommitInfo {
         val buildId = client.get(ServiceRepositoryResource::class).getBuildIdByCommit(pipelineId, commitId).data
                 ?: return IptBuildCommitInfo()
-        // git merge-base
-        TODO()
+        return IptBuildCommitInfo(buildId, "")
     }
 
     override fun getCommitBuildArtifactorytInfo(projectId: String, pipelineId: String, commitId: String): IptBuildArtifactoryInfo {
