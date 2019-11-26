@@ -49,14 +49,14 @@ class ApigwBuildServiceV2(private val client: Client) {
 
     fun getBuildList(
         userId: String,
+        bgId: String,
         beginDate: Long,
         endDate: Long,
-        bgId: String,
         offset: Int,
         limit: Int,
         interfaceName: String? = "ApigwBuildServiceV2"
     ): List<PipelineBuildResponseData>? {
-        logger.info("$interfaceName:getBuildList:Input($userId,$beginDate,$endDate,$bgId,$offset,$limit)")
+        logger.info("$interfaceName:getBuildList:Input($userId,$bgId,$beginDate,$endDate,$offset,$limit)")
         //权限校验
         val userDeptInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
         if (userDeptInfo == null || userDeptInfo.bgId.trim() != userId.trim()) {

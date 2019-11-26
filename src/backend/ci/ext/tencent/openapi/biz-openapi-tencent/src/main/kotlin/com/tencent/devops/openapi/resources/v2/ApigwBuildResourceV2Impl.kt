@@ -42,12 +42,12 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
     private val client: Client,
     private val apigwBuildServiceV2: ApigwBuildServiceV2
 ) : ApigwBuildResourceV2 {
-    override fun getBuildList(userId: String, beginDate: Long, endDate: Long, bgId: String, offset: Int, limit: Int): Result<List<PipelineBuildResponseData>?> {
+    override fun getBuildList(bgId: String, userId: String, beginDate: Long, endDate: Long, offset: Int, limit: Int): Result<List<PipelineBuildResponseData>?> {
         return Result(apigwBuildServiceV2.getBuildList(
             userId = userId,
+            bgId = bgId,
             beginDate = beginDate,
             endDate = endDate,
-            bgId = bgId,
             offset = offset,
             limit = limit,
             interfaceName = "/{apigw:apigw-user|apigw-app|apigw}/v2/builds/detail/list"

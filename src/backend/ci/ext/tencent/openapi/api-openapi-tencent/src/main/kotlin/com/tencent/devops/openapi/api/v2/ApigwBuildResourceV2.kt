@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.openapi.api.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -75,15 +76,15 @@ interface ApigwBuildResourceV2 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "事业群ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        bgId: String,
         @ApiParam(value = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "beginDate")
         beginDate: Long,
         @ApiParam(value = "结束时间(时间戳形式)", required = true)
         @QueryParam(value = "endDate")
         endDate: Long,
-        @ApiParam(value = "事业群ID", required = true)
-        @QueryParam(value = "bgId")
-        bgId: String,
         @ApiParam(value = "偏移量", required = true, defaultValue = "0")
         @QueryParam(value = "offset")
         @DefaultValue("0")
