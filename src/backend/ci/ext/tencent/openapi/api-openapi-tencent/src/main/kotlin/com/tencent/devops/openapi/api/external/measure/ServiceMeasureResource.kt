@@ -25,8 +25,6 @@
  */
 package com.tencent.devops.openapi.api.external.measure
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_APIGW_JWT
-import com.tencent.devops.common.api.auth.AUTH_HEADER_APIGW_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -62,12 +60,6 @@ interface ServiceMeasureResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "jwt", required = true)
-        @HeaderParam(AUTH_HEADER_APIGW_JWT)
-        jwt: String,
-        @ApiParam(value = "网关类型", required = true)
-        @HeaderParam(AUTH_HEADER_APIGW_TYPE)
-        apigwType: String,
         @ApiParam(value = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "beginDate")
         beginDate: Long,

@@ -44,8 +44,6 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
 ) : ApigwBuildResourceV2 {
     override fun getBuildListByBG(
         userId: String,
-        jwt: String,
-        apigwType: String,
         bgId: String,
         beginDate: Long?,
         endDate: Long?,
@@ -54,8 +52,6 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
     ): Result<List<PipelineBuildResponseData>?> {
         return Result(apigwBuildServiceV2.getBuildList(
             userId = userId,
-            jwt = jwt,
-            apigwType = apigwType,
             bgId = bgId,
             beginDate = beginDate,
             endDate = endDate,

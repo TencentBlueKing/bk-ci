@@ -70,7 +70,7 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
 
     override fun buildStatistics(userId: String, organizationType: String, organizationId: Int, deptName: String?, centerName: String?, beginTime: String?, endTime: String?, type: String?): Result<BuildStatisticsResponse> {
         // 1.直接调Measure微服务查询流水线构建统计数据
-        return client.getWithoutRetry(ServiceMeasureResource::class).buildStatistics(
+        return client.getExternalServiceWithoutRetry("measure", ServiceMeasureResource::class).buildStatistics(
             userId = userId,
             organizationType = organizationType,
             organizationId = organizationId,
