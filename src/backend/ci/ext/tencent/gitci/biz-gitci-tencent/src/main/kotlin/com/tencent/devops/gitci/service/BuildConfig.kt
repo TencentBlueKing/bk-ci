@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component
 @Component
 class BuildConfig {
 
+    @Value("\${codeCC.clientImage:#{null}}")
+    val codeCCSofwareClientImage: String? = null
+
     @Value("\${codeCC.softwarePath}")
     val codeCCSofwarePath: String? = null
 

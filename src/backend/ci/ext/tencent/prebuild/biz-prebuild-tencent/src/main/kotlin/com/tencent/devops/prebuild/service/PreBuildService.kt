@@ -301,6 +301,7 @@ class PreBuildService @Autowired constructor(
 
     private fun getCiBuildConf(buildConf: PreBuildConfig): CiBuildConfig {
         return CiBuildConfig(
+                buildConf.codeCCSofwareClientImage,
                 buildConf.codeCCSofwarePath,
                 buildConf.registryHost,
                 buildConf.registryUserName,
