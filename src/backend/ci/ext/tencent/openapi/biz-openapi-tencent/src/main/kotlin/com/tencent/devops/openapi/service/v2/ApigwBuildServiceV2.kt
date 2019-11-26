@@ -50,6 +50,8 @@ class ApigwBuildServiceV2(private val client: Client) {
 
     fun getBuildList(
         userId: String,
+        jwt: String,
+        apigwType: String,
         bgId: String,
         beginDate: Long?,
         endDate: Long?,
@@ -69,6 +71,9 @@ class ApigwBuildServiceV2(private val client: Client) {
         val watch = StopWatch()
         watch.start("get buildList from measure")
         val buildList = client.get(ServiceMeasureResource::class).getBuildList(
+            userId = userId,
+            jwt = jwt,
+            apigwType = apigwType,
             beginDate = beginDate ?: 1,
             endDate = endDate ?: DateTime.now().millis,
             bgId = bgId,
