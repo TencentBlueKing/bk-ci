@@ -101,7 +101,7 @@
                         <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('请输入镜像标识')"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
-                        <bk-radio-group v-model="relateImageData.form.imageSourceType" class="mt6">
+                        <bk-radio-group v-model="relateImageData.form.imageSourceType">
                             <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('蓝盾源') }} </bk-radio>
                             <bk-radio value="THIRD"> {{ $t('第三方源') }} </bk-radio>
                         </bk-radio-group>
@@ -109,9 +109,9 @@
                     <bk-form-item :label="$t('调试项目')" :required="true" property="projectCode" :desc="$t('在发布过程中，可以在该项目下调试镜像')" :rules="[requireRule]">
                         <bk-select v-model="relateImageData.form.projectCode" searchable :placeholder="$t('请选择项目')" @change="toggleProjectList">
                             <bk-option v-for="option in projectList"
-                                :key="option.project_code"
-                                :id="option.project_code"
-                                :name="option.project_name">
+                                :key="option.projectCode"
+                                :id="option.projectCode"
+                                :name="option.projectName">
                             </bk-option>
                             <a href="/console/pm" slot="extension" target="_blank"> {{ $t('新增项目') }} </a>
                         </bk-select>

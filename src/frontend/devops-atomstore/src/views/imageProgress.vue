@@ -30,8 +30,9 @@
                                     :title="permissionMsg"
                                     v-if="(entry.code === 'check' && entry.status === 'fail') || (entry.code === 'check' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')"
                                     @click.stop="reCheck"
-                                > {{ $t('重新验证') }} <i class="col-line"></i>
+                                > {{ $t('重新验证') }} <i class="col-line" v-if="!isEnterprise"></i>
                                 </span>
+                                <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo' && !isEnterprise" @click.stop="readLog"> {{ $t('日志') }} </span>
                                 <span class="test-btn" v-if="entry.code === 'test' && entry.status === 'doing'">
                                     <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}/list`"> {{ $t('测试') }} </a>
                                 </span>
@@ -63,16 +64,40 @@
                 </div>
             </div>
         </main>
+
+        <bk-sideslider
+            class="build-side-slider"
+            :is-show.sync="sideSliderConfig.show"
+            :title="sideSliderConfig.title"
+            :quick-close="sideSliderConfig.quickClose"
+            :width="sideSliderConfig.width">
+            <template slot="content">
+                <div style="width: 100%; height: 100%"
+                    v-bkloading="{
+                        isLoading: sideSliderConfig.loading.isLoading,
+                        title: sideSliderConfig.loading.title
+                    }">
+                    <build-log v-if="currentBuildNo"
+                        :project-id="currentProjectId"
+                        :pipeline-id="currentPipelineId"
+                        :build-no="currentBuildNo"
+                        :log-url="`log/api/user/logs/${currentProjectId}/${currentPipelineId}`"
+                    />
+                </div>
+            </template>
+        </bk-sideslider>
     </article>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
+    import BuildLog from '@/components/Log'
     import detailInfo from '../components/detailInfo'
 
     export default {
         components: {
-            detailInfo
+            detailInfo,
+            BuildLog
         },
 
         data () {
@@ -85,7 +110,18 @@
                 permission: true,
                 currentProjectId: '',
                 currentBuildNo: '',
-                currentPipelineId: ''
+                currentPipelineId: '',
+                sideSliderConfig: {
+                    show: false,
+                    title: '查看日志',
+                    quickClose: true,
+                    width: 820,
+                    value: '',
+                    loading: {
+                        isLoading: false,
+                        title: ''
+                    }
+                }
             }
         },
 
@@ -99,6 +135,20 @@
             isOver () {
                 const lastProgress = this.progressStatus[this.progressStatus.length - 1] || {}
                 return lastProgress.status === 'success'
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
+            }
+        },
+
+        watch: {
+            'sideSliderConfig.show' (val) {
+                if (!val) {
+                    this.currentProjectId = ''
+                    this.currentBuildNo = ''
+                    this.currentPipelineId = ''
+                }
             }
         },
 
@@ -119,6 +169,13 @@
                 'requestImagePassTest',
                 'requestRecheckImage'
             ]),
+
+            readLog () {
+                this.sideSliderConfig.show = true
+                this.currentProjectId = this.storeBuildInfo.projectCode
+                this.currentBuildNo = this.storeBuildInfo.buildId
+                this.currentPipelineId = this.storeBuildInfo.pipelineId
+            },
 
             initData () {
                 Promise.all([this.getImageDetail(), this.getImageProcess()]).catch((err) => {

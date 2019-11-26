@@ -39,21 +39,16 @@
             showExport: {
                 type: Boolean,
                 default: false
+            },
+            logUrl: {
+                type: String,
+                required: true
             }
         },
         data () {
             return {
                 showTime: false
                 // sodaLog: require()
-            }
-        },
-        computed: {
-            logUrl () {
-                return `${GW_URL_PREFIX}/store/api/user/market/atom/logs/${this.projectId}/${this.pipelineId}`
-            },
-            downloadUrl () {
-                // const { logUrl, buildNo, buildTag } = this
-                // return `${logUrl}/${buildNo}/download${buildTag ? `?tag=${buildTag}` : ''}`
             }
         },
         watch: {
@@ -78,7 +73,7 @@
         },
         methods: {
             renderLog (buildNo) {
-                this.SodaLog.render(this.$refs.logContainer, this.logUrl, buildNo, this.showTime, this.buildTag)
+                this.SodaLog.render(this.$refs.logContainer, `${GW_URL_PREFIX}/${this.logUrl}`, buildNo, this.showTime, this.buildTag)
             },
             _destroyLog () {
                 this.SodaLog.unMount(this.$refs.logContainer)
