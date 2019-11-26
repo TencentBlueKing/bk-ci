@@ -688,6 +688,50 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
+    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
+        val projectCode = "git_$gitProjectId"
+        var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
+        if (gitCiProject != null) {
+            return packagingBean(gitCiProject, setOf())
+        }
+
+        val projectCreateInfo = ProjectCreateInfo(
+                projectCode,
+                projectCode,
+                ProjectTypeEnum.SUPPORT_PRODUCT.index,
+                "git ci project for git projectId: $gitProjectId",
+                0L,
+                "",
+                0L,
+                "",
+                0L,
+                "",
+                false,
+                0
+        )
+
+        try {
+            // 随机生成图片
+            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
+            try {
+                // 发送服务器
+                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户组织架构信息
+                projectDao.create(dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail, projectCode, ProjectChannelCode.BS)
+            } finally {
+                if (logoFile.exists()) {
+                    logoFile.delete()
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("Create project failed,", e)
+            throw e
+        }
+
+        gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
+        return packagingBean(gitCiProject!!, setOf())
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
         const val PROJECT_LIST = "project_list"

@@ -101,8 +101,4 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun getV2(englishName: String): Result<ProjectVO?> {
         return Result(projectService.getByEnglishName(englishName))
     }
-
-    override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
-        TODO("can be remove")
-    }
 }
