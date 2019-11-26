@@ -71,8 +71,8 @@ interface ApigwBuildResourceV2 {
 
     @ApiOperation("流水线构建查询接口，含详情与质量红线信息")
     @GET
-    @Path("/detail/list")
-    fun getBuildList(
+    @Path("/detail/listByBG")
+    fun getBuildListByBG(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -81,18 +81,18 @@ interface ApigwBuildResourceV2 {
         bgId: String,
         @ApiParam(value = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "beginDate")
-        beginDate: Long,
+        beginDate: Long?,
         @ApiParam(value = "结束时间(时间戳形式)", required = true)
         @QueryParam(value = "endDate")
-        endDate: Long,
+        endDate: Long?,
         @ApiParam(value = "偏移量", required = true, defaultValue = "0")
         @QueryParam(value = "offset")
         @DefaultValue("0")
-        offset: Int = 0,
+        offset: Int? = 0,
         @ApiParam(value = "查询数量", required = true, defaultValue = "10")
         @QueryParam(value = "limit")
         @DefaultValue("10")
-        limit: Int = 10
+        limit: Int? = 10
     ): Result<List<PipelineBuildResponseData>?>
 
     @ApiOperation("构建详情")

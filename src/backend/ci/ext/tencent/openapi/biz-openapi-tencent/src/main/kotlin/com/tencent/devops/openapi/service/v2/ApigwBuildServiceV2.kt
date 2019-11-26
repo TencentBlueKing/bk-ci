@@ -31,6 +31,7 @@ import com.tencent.devops.openapi.api.external.measure.PipelineBuildResponseData
 import com.tencent.devops.openapi.api.external.measure.ServiceMeasureResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
+import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
@@ -50,10 +51,10 @@ class ApigwBuildServiceV2(private val client: Client) {
     fun getBuildList(
         userId: String,
         bgId: String,
-        beginDate: Long,
-        endDate: Long,
-        offset: Int,
-        limit: Int,
+        beginDate: Long?,
+        endDate: Long?,
+        offset: Int?,
+        limit: Int?,
         interfaceName: String? = "ApigwBuildServiceV2"
     ): List<PipelineBuildResponseData>? {
         logger.info("$interfaceName:getBuildList:Input($userId,$bgId,$beginDate,$endDate,$offset,$limit)")
@@ -68,11 +69,11 @@ class ApigwBuildServiceV2(private val client: Client) {
         val watch = StopWatch()
         watch.start("get buildList from measure")
         val buildList = client.get(ServiceMeasureResource::class).getBuildList(
-            beginDate = beginDate,
-            endDate = endDate,
+            beginDate = beginDate ?: 1,
+            endDate = endDate ?: DateTime.now().millis,
             bgId = bgId,
-            offset = offset,
-            limit = limit
+            offset = offset ?: 0,
+            limit = limit ?: 10
         ).data
         watch.stop()
         buildList?.forEach {
