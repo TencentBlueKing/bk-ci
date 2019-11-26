@@ -52,9 +52,9 @@
                                         v-if="(entry.code === 'build' && entry.status === 'fail') ||
                                             (entry.code === 'build' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')"
                                         @click.stop="rebuild"
-                                    > {{ $t('重新构建') }} <i class="col-line"></i></span>
+                                    > {{ $t('重新构建') }} <i class="col-line" v-if="!isEnterprise"></i></span>
                                     <span class="log-btn"
-                                        v-if="entry.code === 'build' && entry.status !== 'undo'"
+                                        v-if="entry.code === 'build' && entry.status !== 'undo' && !isEnterprise"
                                         @click.stop="readLog"
                                     > {{ $t('日志') }} </span>
                                 </div>

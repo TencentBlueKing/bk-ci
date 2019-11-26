@@ -62,6 +62,7 @@
                         :toolbars="toolbars"
                         :external-link="false"
                         :box-shadow="false"
+                        preview-background="#fff"
                         @imgAdd="uploadimg"
                     />
                 </bk-form-item>
@@ -431,6 +432,7 @@
         margin: 20px auto;
         position: relative;
         .image-remark-input {
+            border: 1px solid #c4c6cc;
             height: 263px;
             &.fullscreen {
                 height: auto;

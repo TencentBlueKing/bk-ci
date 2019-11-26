@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "axios": "^0.18.1",
-    "bk-magic-vue": "2.1.6-beta.3",
+    "bk-magic-vue": "2.1.7",
     "brace": "^0.10.0",
     "clipboard": "^1.7.1",
     "cookie": "^0.3.1",
