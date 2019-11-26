@@ -122,7 +122,7 @@
         }
         &:hover {
             background: #fafbfd;
-            .card-link, /deep/ .tippy-popper {
+            .card-link, &.disable /deep/ .tippy-popper {
                 display: block;
             }
         }
