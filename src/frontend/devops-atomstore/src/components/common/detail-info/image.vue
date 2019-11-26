@@ -57,13 +57,14 @@
 
         filters: {
             imageTypeFilter (val) {
+                const local = window.devops || {}
                 let res = ''
                 switch (val) {
                     case 'THIRD':
-                        res = this.$t('第三方源')
+                        res = local.$t('第三方源')
                         break
                     case 'BKDEVOPS':
-                        res = this.$t('蓝盾源')
+                        res = local.$t('蓝盾源')
                         break
                 }
                 return res
