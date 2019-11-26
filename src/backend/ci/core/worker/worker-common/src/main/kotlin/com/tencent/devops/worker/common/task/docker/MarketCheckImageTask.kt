@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.docker.DockerSDKApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException

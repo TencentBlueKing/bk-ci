@@ -8,10 +8,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.image.enums.OpImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
 import com.tencent.devops.store.pojo.image.request.ImageUpdateRequest
+import com.tencent.devops.store.pojo.image.request.OpImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.OpImageResp
 import io.swagger.annotations.Api

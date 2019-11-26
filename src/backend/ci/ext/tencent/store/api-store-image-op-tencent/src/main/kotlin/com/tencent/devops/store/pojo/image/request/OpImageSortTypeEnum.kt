@@ -1,4 +1,4 @@
-package com.tencent.devops.store.pojo.image.enums
+package com.tencent.devops.store.pojo.image.request
 
 enum class OpImageSortTypeEnum(val sortType: String) {
     imageCode("IMAGE_CODE"),
