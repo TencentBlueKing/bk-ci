@@ -260,9 +260,9 @@
 
             deleteTemplate (row) {
                 if (!this.isManagerUser) return
-                const content = `${this.$t('delete')}${row.name}`
+                const content = `${this.$t('template.deleteTemplateTips', [row.name])}`
 
-                navConfirm({ title: this.$t('confirm'), content })
+                navConfirm({ type: 'warning', content })
                     .then(() => {
                         this.confirmDeleteTemplate(row)
                     }).catch(() => {})

@@ -453,7 +453,7 @@
                             const failCount = res.failurePipelines.length
 
                             if (successCount && !failCount) {
-                                message = `${this.$t('submitSucPrefix')}${successCount}${this.$t('submitSucSuffix')}`
+                                message = this.$t('template.submitSucTips', [successCount])
                                 theme = 'success'
 
                                 this.$showTips({

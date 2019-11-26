@@ -52,9 +52,9 @@
             message () {
                 let msg
                 if (this.successList.length) {
-                    msg = `${this.successList.length}${this.$t('template.instantiationSucTips')}，${this.failList.length}${this.$t('template.instantiationFailTips')}`
+                    msg = `${this.$t('template.instantiationSucTips', [this.successList.length])}${this.$t('template.instantiationFailTips', [this.failList.length])}`
                 } else if (!this.successList.length) {
-                    msg = `${this.failList.length}${this.$t('template.instantiationFailTips')}`
+                    msg = this.$t('template.instantiationFailTips', [this.failList.length])
                 }
                 return msg
             }
