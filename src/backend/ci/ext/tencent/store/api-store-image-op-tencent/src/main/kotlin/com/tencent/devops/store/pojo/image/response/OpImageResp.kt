@@ -1,6 +1,5 @@
 package com.tencent.devops.store.pojo.image.response
 
-import com.tencent.devops.store.pojo.image.response.OpImageItem
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

@@ -68,7 +68,7 @@ class OpImageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val imageDao: ImageDao,
     private val marketImageDao: MarketImageDao,
-    private val opImageDao:OpImageDao,
+    private val opImageDao: OpImageDao,
     private val imageFeatureDao: ImageFeatureDao,
     private val imageAgentTypeDao: ImageAgentTypeDao,
     private val imageCategoryRelDao: ImageCategoryRelDao,
