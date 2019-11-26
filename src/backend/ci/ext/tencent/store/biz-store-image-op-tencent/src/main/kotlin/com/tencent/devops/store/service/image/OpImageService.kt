@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.records.TImageRecord
+import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.dao.image.Constants
 import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
@@ -48,11 +49,11 @@ import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.pojo.image.enums.OpImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
+import com.tencent.devops.store.pojo.image.request.OpImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.response.OpImageItem
 import com.tencent.devops.store.pojo.image.response.OpImageResp
 import org.jooq.DSLContext
@@ -67,6 +68,7 @@ class OpImageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val imageDao: ImageDao,
     private val marketImageDao: MarketImageDao,
+    private val opImageDao:OpImageDao,
     private val imageFeatureDao: ImageFeatureDao,
     private val imageAgentTypeDao: ImageAgentTypeDao,
     private val imageCategoryRelDao: ImageCategoryRelDao,
@@ -170,7 +172,7 @@ class OpImageService @Autowired constructor(
         val validPage = PageUtil.getValidPage(page)
         val validPageSize = pageSize ?: -1
 
-        val images = marketImageDao.listOpImages(
+        val images = opImageDao.listOpImages(
             dslContext = dslContext,
             imageName = imageName,
             imageType = imageSourceType,
@@ -185,7 +187,7 @@ class OpImageService @Autowired constructor(
             interfaceName = interfaceName
         )
 
-        val count = marketImageDao.countOpImages(
+        val count = opImageDao.countOpImages(
             dslContext = dslContext,
             imageName = imageName,
             imageType = imageSourceType,
