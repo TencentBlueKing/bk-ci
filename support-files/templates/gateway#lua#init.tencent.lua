@@ -93,6 +93,10 @@ config = {
   },
   bkrepo = {
     domain = "__BKREPO_HOST__"
+  },
+  prebuild = {
+    domain = "__BKCI_PREBUILD_FQDN__",
+    port = "__BKCI_PREBUILD_PORT__"
   }
 }
   
