@@ -215,6 +215,7 @@
         data () {
             return {
                 DOCS_URL_PREFIX,
+                showImageSelector: false,
                 imageTypeList: [
                     {
                         label: this.$t('editPage.fromList'),
