@@ -528,11 +528,12 @@ class ArtifactoryService @Autowired constructor(
                     val shortUrl = shortUrlApi.getShortUrl(url, 300)
 
                     // gitci请求跳过auth检测
+                    var pipelineHasPermission = pipelineHasPermissionList.contains(pipelineId)
                     if (channelCode == ChannelCode.GIT) {
-                        pipelineHasPermissionList.plus(pipelineId)
+                        pipelineHasPermission = true
                     }
 
-                    if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
+                    if ((!checkPermission || pipelineHasPermission) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
                         val pipelineName = pipelineIdToNameMap[pipelineId]!!
