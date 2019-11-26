@@ -306,9 +306,9 @@ function convertToEn (time) {
     if (sec <= 60) {
         res = 'less than one minute'
     } else if (sec <= 60 * 60) {
-        res = `${Math.floor(sec / 60)}minutes and ${(Math.floor(sec % 60))}seconds`
+        res = `${Math.floor(sec / 60)}m and ${(Math.floor(sec % 60))}s`
     } else if (time <= 60 * 60 * 24) {
-        res = `${Math.floor(sec / 3600)}hours and ${Math.floor(sec % 60 / 60)}minutes`
+        res = `${Math.floor(sec / 3600)}h and ${Math.floor(sec % 60 / 60)}m`
     } else {
         res = `more than ${Math.floor(sec / 86400)} days`
     }
@@ -561,13 +561,13 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
     }
 }
 
-export function navConfirm ({ content, title }) {
+export function navConfirm ({ content, title, ...restProps }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
             reject(new Error('')); return
         }
 
-        window.globalVue.$leaveConfirm({ content, title })
+        window.globalVue.$leaveConfirm({ content, title, ...restProps })
 
         window.globalVue.$once('order::leaveConfirm', resolve)
 

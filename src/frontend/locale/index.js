@@ -51,7 +51,6 @@ export default (r) => {
 
 
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
-        
         const localeModuleId = getLocalModuleId(module, locale)
         if (loadedModule[localeModuleId]) {
             return

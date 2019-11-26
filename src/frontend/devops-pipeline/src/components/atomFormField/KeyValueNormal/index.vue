@@ -8,7 +8,7 @@
                             :data-vv-scope="`param-${index}`"
                             :disabled="disabled || editValueOnly"
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
-                            v-validate.initial="`required|unique:${paramList.map(p => p.key).join(&quot;,&quot;)}|max: 30|${snonVarRule}`"
+                            v-validate.initial="`required|unique:${paramList.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
                             name="key"
                             :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                             :value="param.key" />

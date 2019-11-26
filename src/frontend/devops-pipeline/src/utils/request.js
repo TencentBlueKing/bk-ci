@@ -37,19 +37,27 @@ function errorHandler (error) {
     return Promise.reject(error)
 }
 
+function isAbsoluteURL (url = '') {
+    return /^https?:\/\//i.test(url)
+}
+
 request.interceptors.request.use(config => {
-    if (/(\/?ms\/backend|\/?backend)/.test(config.url)) {
-        return config
+    const url = isAbsoluteURL(config.url) ? new window.URL(config.url) : {
+        host: config.baseURL,
+        pathname: config.url
     }
 
-    const routePid = getCurrentPid()
-    return {
-        ...config,
-        headers: routePid ? {
-            ...(config.headers || {}),
-            'X-DEVOPS-PROJECT-ID': routePid
-        } : config.headers
+    if (/(devops|gw\.open)\.oa\.com$/i.test(url.host) || !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
+        const routePid = getCurrentPid()
+        return {
+            ...config,
+            headers: routePid ? {
+                ...(config.headers || {}),
+                'X-DEVOPS-PROJECT-ID': routePid
+            } : config.headers
+        }
     }
+    return config
 }, function (error) {
     return Promise.reject(error)
 })

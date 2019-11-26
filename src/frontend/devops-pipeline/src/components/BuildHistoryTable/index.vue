@@ -41,7 +41,7 @@
                     <template v-if="props.row.hasArtifactories">
                         <div class="artifact-list-cell">
                             <qrcode v-if="props.row.active && props.row.shortUrl" :text="props.row.shortUrl" :size="76">{{props.row.shortUrl}}</qrcode>
-                            <p class="artifact-entry history-text-link" @click.stop="e => showArtifactoriesPopup(e, props.row.index)">{{props.row.artifactList.length }}{{ $t('history.fileUnit') }}（{{props.row.sumSize}}）</p>
+                            <p class="artifact-entry history-text-link" @click.stop="e => showArtifactoriesPopup(e, props.row.index)">{{ $t('history.fileUnit', [props.row.artifactList.length]) }}（{{props.row.sumSize}}）</p>
                         </div>
                     </template>
                     <span v-else>--</span>

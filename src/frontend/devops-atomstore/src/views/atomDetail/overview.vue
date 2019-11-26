@@ -42,34 +42,36 @@
                                 <div class="info-label"> {{ $t('开发语言：') }} </div>
                                 <div class="info-value">{{ codeForm.language }}</div>
                             </div>
-                            <div class="code-form-item">
-                                <div class="info-label"> {{ $t('已托管至：') }} </div>
-                                <div class="info-value link-text" @click="toLink()"> {{ $t('工蜂') }} </div>
-                            </div>
-                            <div class="code-form-item codelib-form-item">
-                                <div class="info-label"> {{ $t('代码库：') }} </div>
-                                <div class="info-value codelib-url">
-                                    <span class="codelib-text">{{ codeForm.codeSrc }}</span>
-                                    <span class="link-text copy-btn" :data-clipboard-text="codeForm.codeSrc" @click="copyUrl"> {{ $t('复制') }} </span>
+                            <template v-if="!isEnterprise">
+                                <div class="code-form-item">
+                                    <div class="info-label"> {{ $t('已托管至：') }} </div>
+                                    <div class="info-value link-text" @click="toLink()"> {{ $t('工蜂') }} </div>
                                 </div>
-                            </div>
-                            <div class="code-form-item codelib-form-item">
-                                <div class="info-label"> {{ $t('授权人：') }} </div>
-                                <div class="info-value codelib-url">
-                                    {{codeForm.repositoryAuthorizer}}
-                                    <bk-popover placement="top">
-                                        <i class="bk-icon icon-info-circle"></i>
-                                        <template slot="content">
-                                            <p> {{ $t('在发布插件时，使用授权人的身份拉取插件代码自动构建打包，或设置插件可见范围') }} </p>
-                                        </template>
-                                    </bk-popover>
-                                    <span class="link-text repo-outh"
-                                        @click="modifyRepoMemInfo"
-                                        :title="$t('将使用你的身份进行插件代码库相关操作')"
-                                        v-if="userInfo.isProjectAdmin && userInfo.userName !== codeForm.repositoryAuthorizer"
-                                    > {{ $t('重置授权') }} </span>
+                                <div class="code-form-item codelib-form-item">
+                                    <div class="info-label"> {{ $t('代码库：') }} </div>
+                                    <div class="info-value codelib-url">
+                                        <span class="codelib-text">{{ codeForm.codeSrc }}</span>
+                                        <span class="link-text copy-btn" :data-clipboard-text="codeForm.codeSrc" @click="copyUrl"> {{ $t('复制') }} </span>
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="code-form-item codelib-form-item">
+                                    <div class="info-label"> {{ $t('授权人：') }} </div>
+                                    <div class="info-value codelib-url">
+                                        {{codeForm.repositoryAuthorizer}}
+                                        <bk-popover placement="top">
+                                            <i class="bk-icon icon-info-circle"></i>
+                                            <template slot="content">
+                                                <p> {{ $t('在发布插件时，使用授权人的身份拉取插件代码自动构建打包，或设置插件可见范围') }} </p>
+                                            </template>
+                                        </bk-popover>
+                                        <span class="link-text repo-outh"
+                                            @click="modifyRepoMemInfo"
+                                            :title="$t('将使用你的身份进行插件代码库相关操作')"
+                                            v-if="userInfo.isProjectAdmin && userInfo.userName !== codeForm.repositoryAuthorizer"
+                                        > {{ $t('重置授权') }} </span>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
                     <div class="atom-latest-news">
@@ -118,6 +120,9 @@
             },
             atomCode () {
                 return this.$route.params.atomCode
+            },
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
         created () {

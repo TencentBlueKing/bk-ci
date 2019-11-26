@@ -60,6 +60,24 @@
                         </bk-select>
                     </div>
                 </div>
+                <template v-if="userInfo.isProjectAdmin && !isEnterprise">
+                    <div class="bk-form-item is-required is-open" ref="openSourceError">
+                        <label class="bk-label"> {{ $t('是否开源') }} </label>
+                        <div class="bk-form-content atom-item-content">
+                            <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
+                                <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{entry.label}}</bk-radio>
+                            </bk-radio-group>
+                            <div v-if="formErrors.openSourceError" class="error-tips"> {{ $t('字段有误，请重新选择') }} </div>
+                        </div>
+                    </div>
+                    <div class="bk-form-item is-required is-open" v-if="atomForm.visibilityLevel === 'PRIVATE'">
+                        <label class="bk-label"> {{ $t('不开源原因') }} </label>
+                        <div class="bk-form-content atom-item-content">
+                            <bk-input type="textarea" v-model="atomForm.privateReason" @input="formErrors.privateReasonError = false"></bk-input>
+                            <div v-if="formErrors.privateReasonError" class="error-tips"> {{ $t('不开源原因不能为空') }} </div>
+                        </div>
+                    </div>
+                </template>
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label"> {{ $t('简介') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
@@ -90,6 +108,8 @@
                             v-model="atomForm.description"
                             :toolbars="toolbarOptions"
                             :external-link="false"
+                            :box-shadow="false"
+                            preview-background="#fff"
                             @imgAdd="addImage"
                         />
                         <bk-popover placement="left">
@@ -115,37 +135,20 @@
                         <p :class="errors.has('publisher') ? 'error-tips' : 'normal-tips'">{{ errors.first("publisher") }}</p>
                     </div>
                 </div>
-                <div class="atom-logo-box" :class="{ 'no-img': atomForm.logoUrl, 'img-Error': formErrors.logoUrlError }" @click="uploadLogo" ref="logoUrlError">
-                    <section v-if="atomForm.logoUrl">
-                        <img :src="atomForm.logoUrl">
-                    </section>
-                    <section v-else>
-                        <i class="bk-icon icon-plus"></i>
-                        <p> {{ $t('上传LOGO') }} </p>
-                        <p v-if="formErrors.logoUrlError" class="error-msg"> {{ $t('logo必填') }} </p>
-                    </section>
-                </div>
+                <select-logo :form="atomForm" type="ATOM" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
             </form>
             <bk-button :loading="isSaving" theme="primary" class="edit-atom" @click="saveAtom"> {{ $t('保存') }} </bk-button>
         </section>
-        <atom-logo :show-dialog="showlogoDialog"
-            :to-confirm-logo="toConfirmLogo"
-            :to-close-dialog="toCloseDialog"
-            :file-change="fileChange"
-            :selected-url="selectedUrl"
-            type="ATOM"
-        >
-        </atom-logo>
     </article>
 </template>
 
 <script>
     import { mapGetters } from 'vuex'
-    import atomLogo from '@/components/common/selectLogo'
+    import selectLogo from '@/components/common/selectLogo'
 
     export default {
         components: {
-            atomLogo
+            selectLogo
         },
 
         data () {
@@ -163,14 +166,22 @@
                 atomForm: JSON.parse(JSON.stringify(this.$store.state.store.currentAtom)),
                 hasChange: false,
                 showlogoDialog: false,
-                selectedUrl: ''
+                selectedUrl: '',
+                isOpenSource: [
+                    { label: '是', value: 'LOGIN_PUBLIC' },
+                    { label: '否', value: 'PRIVATE' }
+                ]
             }
         },
 
         computed: {
             ...mapGetters('store', {
                 'userInfo': 'getUserInfo'
-            })
+            }),
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
+            }
         },
 
         watch: {
@@ -187,7 +198,7 @@
                 this.$bkInfo({
                     title: this.$t('确定离开？'),
                     subTitle: this.$t('有修改的数据未保存，是否离开当前页面'),
-                    confirmFn: next
+                    confirmFn: () => next()
                 })
             } else {
                 next()
@@ -233,6 +244,16 @@
 
                 if (!this.atomForm.classifyCode) {
                     this.formErrors.sortError = true
+                    isGood = false
+                }
+
+                if (!this.isEnterprise && this.isOpenSource.findIndex((x) => x.value === this.atomForm.visibilityLevel) <= -1) {
+                    this.formErrors.openSourceError = true
+                    isGood = false
+                }
+
+                if (this.atomForm.visibilityLevel === 'PRIVATE' && !this.atomForm.privateReason) {
+                    this.formErrors.privateReasonError = true
                     isGood = false
                 }
 
@@ -424,6 +445,169 @@
             .edit-atom {
                 margin: 20px 110px;
             }
+        }
+    }
+
+    .edit-atom-wrapper {
+        height: 100%;
+        .edit-atom-form {
+            position: relative;
+            width: 1200px;
+            .bk-label {
+                width: 110px;
+                font-weight: normal;
+            }
+            .bk-form-content {
+                margin-left: 0;
+                .bk-form-checkbox {
+                    margin: 10px 21px 20px 0;
+                    &:first-child {
+                        margin-left: 110px;
+                    }
+                }
+            }
+            .env-error {
+                margin: -10px 0 20px 110px;
+            }
+            .introduction-form-item {
+                display: block;
+                .error-tips {
+                    margin-left: 110px;
+                }
+            }
+            .bk-selector .bk-form-checkbox {
+                display: block;
+                padding: 12px 0;
+            }
+            .atom-classify-content {
+                .bk-selector {
+                    width: 40%;
+                }
+            }
+            .name-form-item,
+            .introduction-form-item,
+            .remark-form-item,
+            .publish-form-item,
+            .version-num-form-item {
+                .bk-tooltip {
+                    margin-top: 10px;
+                    margin-left: 10px;
+                    color: $fontLigtherColor;
+                    p {
+                        max-width: 400px;
+                        text-align: left;
+                        white-space: normal;
+                        word-break: break-all;
+                        font-weight: 400;
+                    }
+                }
+            }
+            .is-tooltips {
+                display: flex;
+            }
+            .introduction-form-item,
+            .remark-form-item,
+            .publish-form-item,
+            .version-num-form-item {
+                .bk-tooltip {
+                    left: 101%;
+                }
+            }
+            .atom-introduction-input,
+            .atom-remark-input {
+                min-width: 100%;
+                border: 1px solid #c4c6cc;
+            }
+            .version-num-form-item {
+                .version-num-content {
+                    top: 8px;
+                    color: #333C48;
+                    display: flex;
+                    align-items: center;
+                }
+                .version-prompt {
+                    margin-left: 20px;
+                    color: $fontWeightColor;
+                }
+                .version-modify {
+                    margin-left: 10px;
+                    cursor: pointer;
+                    color: $primaryColor;
+                }
+            }
+            .bk-radio-text {
+                color: #333C48;
+            }
+            .atom-remark-input {
+                height: 263px;
+                &.fullscreen {
+                    height: auto;
+                }
+            }
+            .atom-logo-box {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100px;
+                height: 100px;
+                border: 1px dashed $lineColor;
+                background: #fff;
+                text-align: center;
+                cursor: pointer;
+                .icon-plus {
+                    display: inline-block;
+                    margin-top: 30px;
+                    font-size: 19px;
+                    color: #979BA5;
+                }
+                p {
+                    margin-top: 4px;
+                    font-size: 12px;
+                }
+                img {
+                    position: relative;
+                    width: 100px;
+                    height: 100px;
+                    // border-radius: 50%;
+                    z-index: 99;
+                    object-fit: cover;
+                }
+            }
+            .no-img {
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                &:hover {
+                    &:after {
+                        content: '\66F4\6362logo';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        z-index: 100;
+                        line-height: 25px;
+                        text-align: center;
+                        color: #fff;
+                        background: black;
+                        opacity: 0.7;
+                    }
+                }
+            }
+            .img-Error {
+                border: 1px dashed $dangerColor;
+                .error-msg {
+                    color: $dangerColor;
+                }
+            }
+        }
+        .op-image {
+            .dropdown-item:first-child,
+            .dropdown-images {
+                display: none;
+            }
+        }
+        .auto-textarea-wrapper {
+            min-height: 200px;
         }
     }
 </style>

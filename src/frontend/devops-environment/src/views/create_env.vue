@@ -3,7 +3,7 @@
         <content-header class="env-header">
             <div slot="left" class="title">
                 <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
-                <span class="header-text">{{ `${$t('environment.new')}${$t('environment.environment')}` }}</span>
+                <span class="header-text">{{$t('environment.createEnvTitle')}}</span>
             </div>
         </content-header>
 
@@ -44,8 +44,8 @@
                 <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
                     <bk-radio-group v-model="createEnvForm.envType">
                         <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
-                        <bk-radio :value="'DEV'">{{ $t('environment.envInfo.devEnvType') }}</bk-radio>
-                        <bk-radio :value="'PROD'">{{ $t('environment.envInfo.testEnvType') }}</bk-radio>
+                        <bk-radio :value="'DEV'" v-if="isExtendTx">{{ $t('environment.envInfo.devEnvType') }}</bk-radio>
+                        <bk-radio :value="'PROD'" v-if="isExtendTx">{{ $t('environment.envInfo.testEnvType') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
@@ -215,6 +215,9 @@
             },
             curUserInfo () {
                 return window.userInfo
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -269,7 +272,7 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
+                const url = this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment` : PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
             /**

@@ -102,6 +102,9 @@
                     case 'ide':
                         res = bkLocale.$t('IDE插件')
                         break
+                    case 'image':
+                        res = bkLocale.$t('镜像')
+                        break
                     default:
                         res = bkLocale.$t('流水线插件')
                         break
@@ -138,7 +141,8 @@
                 storeTypes: [
                     { type: 'atom', des: this.$t('流水线插件') },
                     { type: 'template', des: this.$t('流水线模板') },
-                    { type: 'ide', des: this.$t('IDE插件') }
+                    { type: 'ide', des: this.$t('IDE插件') },
+                    { type: 'image', des: this.$t('容器镜像') }
                 ]
             }
         },
@@ -181,6 +185,10 @@
             }
         },
 
+        created () {
+            if (VERSION_TYPE === 'ee') this.storeTypes.pop()
+        },
+
         methods: {
             ...mapActions('store', [
                 'requestAtomClassifys',
@@ -192,6 +200,9 @@
                 'requestIDEClassifys',
                 'requestIDECategorys',
                 'requestIDELabel',
+                'requestImageClassifys',
+                'requestImageCategorys',
+                'requestImageLabel',
                 'setMarketQuery'
             ]),
 
@@ -287,7 +298,8 @@
                 const fun = {
                     atom: () => this.getAtomClassifys(),
                     template: () => this.getTemplateClassifys(),
-                    ide: () => this.getIDEClassifys()
+                    ide: () => this.getIDEClassifys(),
+                    image: () => this.getImageClassifys()
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const method = fun[type]
@@ -339,6 +351,16 @@
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('适用IDE'), data: categorys })
                     if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('按分类'), data: classify })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('按功能'), data: lables })
+                    return res
+                })
+            },
+
+            getImageClassifys () {
+                return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
                     return res
                 })
             },

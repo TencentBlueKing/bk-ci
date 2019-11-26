@@ -35,17 +35,20 @@
                 modifyCommentGenerator: {
                     atom: (data) => this.requestAtomModifyComment(data),
                     template: (data) => this.requestTemplateModifyComment(data),
-                    ide: (data) => this.requestIDEModifyComment(data)
+                    ide: (data) => this.requestIDEModifyComment(data),
+                    image: (data) => this.requestImageModifyComment(data)
                 },
                 addCommentGenerator: {
                     atom: (postData) => this.requestAddAtomComment(postData),
                     template: (postData) => this.requestAddTemplateComment(postData),
-                    ide: (postData) => this.requestAddIDEComment(postData)
+                    ide: (postData) => this.requestAddIDEComment(postData),
+                    image: (postData) => this.requestAddImageComment(postData)
                 },
                 getCommentGenerator: {
                     atom: () => this.requestAtomUserComment(this.commentId),
                     template: () => this.requestTemplateUserComment(this.commentId),
-                    ide: () => this.requestIDEUserComment(this.commentId)
+                    ide: () => this.requestIDEUserComment(this.commentId),
+                    image: () => this.requestImageUserComment(this.commentId)
                 }
             }
         },
@@ -70,7 +73,10 @@
                 'requestAtomModifyComment',
                 'requestAtomUserComment',
                 'requestIDEModifyComment',
-                'requestIDEUserComment'
+                'requestIDEUserComment',
+                'requestAddImageComment',
+                'requestImageModifyComment',
+                'requestImageUserComment'
             ]),
 
             getComment () {

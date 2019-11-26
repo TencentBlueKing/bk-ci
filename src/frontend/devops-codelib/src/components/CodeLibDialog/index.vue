@@ -15,7 +15,7 @@
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                        <label class="bk-label">{{ `${codelibConfig.label} ${$t('codelib.codelibUrl')}` }}:</label>
                         <div class="bk-form-content">
                             <bk-select v-model="codelibUrl"
                                 searchable
@@ -70,7 +70,7 @@
                 </div>
                 <!-- 源代码地址 start -->
                 <div class="bk-form-item is-required">
-                    <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                    <label class="bk-label">{{ `${codelibConfig.label} ${$t('codelib.codelibUrl')}` }}:</label>
                     <div class="bk-form-content">
                         <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" v-validate="&quot;required&quot;" :class="{ &quot;is-danger&quot;: urlErrMsg || errors.has(&quot;codelibUrl&quot;) }">
                         <span class="error-tips" v-if="urlErrMsg || errors.has(&quot;codelibUrl&quot;)">
@@ -127,7 +127,7 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig, isSvn, isGit, isGithub, isTGit } from '../../config/'
-    import { parsePathAlias, parsePathRegion } from '../../utils'
+    import { parsePathAlias, extendParsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
         props: {
@@ -228,7 +228,7 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')}${this.codelibConfig.label || ''}${this.$t('codelib.codelib')}`
+                return `${this.codelibConfig.label} ${this.$t('codelib.repo')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)
@@ -251,6 +251,9 @@
             credentialTypes () {
                 return this.codelibConfig.credentialTypes
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             credentialId: {
                 get () {
                     return this.codelib.credentialId
@@ -268,12 +271,9 @@
                 },
                 set (url) {
                     const { codelib, codelibTypeName } = this
-                    const { alias, msg } = parsePathAlias(
-                        codelibTypeName,
-                        url,
-                        codelib.authType,
-                        codelib.svnType
-                    )
+                    const { alias, msg } = this.isExtendTx
+                        ? extendParsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
+                        : parsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
                     if (msg) {
                         this.urlErrMsg = msg
                     }
@@ -408,13 +408,13 @@
                                     option: repositoryHashId ? this.$t('codelib.edit') : this.$t('codelib.create')
                                 }
                             ],
-                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                            applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
                                 projectId
                             }&service_code=code&${
                                 repositoryHashId
                                     ? `role_manager=repertory`
                                     : 'role_creator=repertory'
-                            }`
+                            }` : PERM_URL_PREFIX
                         })
                     } else {
                         this.$bkMessage({

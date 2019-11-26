@@ -6,7 +6,7 @@
         <template v-if="showContent && viewList.length">
             <div class="view-list-content">
                 <div class="info-header">
-                    <bk-button theme="primary" @click="createView()">{{ $t("view.addView") }}</bk-button>
+                    <bk-button theme="primary" icon="bk-icon icon-plus" @click="createView()">{{ $t("view.addView") }}</bk-button>
                 </div>
                 <div class="view-table-wrapper">
                     <bk-table
@@ -221,9 +221,9 @@
              */
             deleteView (view) {
                 if ((this.isManagerUser && view.projected) || !view.projected) {
-                    const content = `${this.$t('delete')}${view.name}`
+                    const content = `${this.$t('deleteViewTips', [view.name])}`
 
-                    navConfirm({ title: this.$t('confirm'), content })
+                    navConfirm({ type: 'warning', content })
                         .then(() => {
                             this.deletePipelineView(view)
                         }).catch(() => {})

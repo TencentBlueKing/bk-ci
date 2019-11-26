@@ -47,7 +47,7 @@ const customeRules = {
     },
     varRule: {
         validate: function (value, args) {
-            return /^[a-z_][a-z_\d]+$/g.test(value)
+            return /^[a-z_][a-z_\d]*$/gi.test(value)
         }
     },
     excludeEmptyCapital: {

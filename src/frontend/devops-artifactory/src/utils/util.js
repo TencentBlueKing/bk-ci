@@ -477,14 +477,6 @@ export function getWindowHeight () {
  * @return {string}
  */
 export function getCheckEnvPrefix () {
-    const prefix = 'http://devgw.devops.oa.com'
-    // const hostName = window.location.hostname
-    // if (hostName === 'dev.devops.oa.com') {
-    //     prefix = 'http://dev.devgw.devops.oa.com'
-    // } else if (hostName === 'test.devops.oa.com') {
-    //     prefix = 'http://test.devgw.devops.oa.com'
-    // } else if (hostName === 'devops.oa.com') {
-    //     prefix = 'http://devgw.devops.oa.com'
-    // }
+    const prefix = CHECK_ENV_URL
     return prefix
 }

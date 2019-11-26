@@ -65,7 +65,8 @@
                 const urls = {
                     atom: 'store/requestAtomHome',
                     template: 'store/requestTemplateHome',
-                    ide: 'store/requestIDEHome'
+                    ide: 'store/requestIDEHome',
+                    image: 'store/requestImageHome'
                 }
                 const type = this.$route.query.pipeType || 'atom'
                 const url = urls[type]

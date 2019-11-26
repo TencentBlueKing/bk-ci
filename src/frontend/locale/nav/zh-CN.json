@@ -119,6 +119,7 @@
     "notFindProject": "未找到您参与的项目",
     "notFindProjectTips": "您可以创建自己的项目，然后针对自己的项目进行相应用户和权限管理，也可以申请加入已有的项目",
     "applyProject": "申请加入项目",
+    "apply": "申请加入",
     "disableProjectConfirm": "确定要停用项目",
     "enableProjectConfirm": "确定要启用项目",
     "projectSuccess": "项目成功",

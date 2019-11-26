@@ -159,7 +159,7 @@ export default {
             const content = `${this.$t('newlist.deletePipeline')}: ${pipelineName}`
 
             try {
-                await navConfirm({ title: this.$t('subpage.confirmDelete'), content })
+                await navConfirm({ type: 'warning', content })
 
                 await this.removePipeline({
                     projectId: this.projectId,

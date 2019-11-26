@@ -1,6 +1,6 @@
 {
   "name": "devops-nav",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "devops common",
   "main": "index.ts",
   "scripts": {
@@ -71,7 +71,7 @@
   "dependencies": {
     "@types/js-cookie": "^2.1.0",
     "axios": "^0.18.0",
-    "bk-magic-vue": "2.1.6-beta.3",
+    "bk-magic-vue": "2.1.7",
     "bluebird": "^3.5.1",
     "js-cookie": "^2.2.0",
     "popper.js": "^1.14.4",
@@ -83,5 +83,6 @@
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1",
     "vuex-class": "^0.3.0"
-  }
+  },
+  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
 }

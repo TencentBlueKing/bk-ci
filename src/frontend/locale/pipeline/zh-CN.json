@@ -83,7 +83,8 @@
     "atomDebug": {
         "title": "研发商店插件前端task.json在线调试",
         "inputTips": "请在此输入正确的task.json内容...",
-        "outputErrTips": "task.json格式错误"
+        "outputErrTips": "task.json格式错误",
+        "taskJsonEmpty": "task.json内容为空"
     },
     "group": {
         "labelInputTips": "请输入标签名称,按Enter键确定",
@@ -120,13 +121,13 @@
         "labelTips": "标签不能为空",
         "addConditions": "添加视图条件",
         "typeTips": "项目视图仅能由项目管理员添加、编辑、删除",
-        "conditionEmpty": "视图条件不能为空"
+        "conditionEmpty": "视图条件不能为空",
+        "deleteViewTips": "是否确认删除 ( {0} ) ? "
     },
     "atomManage": {
         "installedAtom": "已安装插件",
         "moreAtom": "发现更多插件",
-        "relatedNumPrefix": "关联",
-        "relatedNumSuffix": "条流水线",
+        "relatedNumTips": "关联{0}条流水线",
         "noPermToUninstall": "无权限卸载",
         "uninstall": "卸载",
         "uninstallReason": "请选择卸载原因",
@@ -248,12 +249,12 @@
         "templateConst": "模板常量",
         "buildNumErrTips": "构建号不能为空",
         "submitErrTips": "请添加流水线实例名称",
-        "submitSucPrefix": "你已成功实例化",
-        "submitSucSuffix": "条流水线",
+        "submitSucTips": "你已成功实例化{0}条流水线",
         "nameExists": "流水线名称已存在",
         "instantiationFailMsg": "以下是实例化失败的流水线名称和失败原因",
         "instantiationSucTips": "条流水线实例化成功",
-        "instantiationFailTips": "条流水线实例化失败"
+        "instantiationFailTips": "条流水线实例化失败",
+        "deleteTemplateTips": "是否删除模板 ( {0} ) ?"
     },
     "newlist": {
         "defaultViews": "我的常用视图",
@@ -294,8 +295,7 @@
         "reset": "清空",
         "cardLayout": "卡片视图",
         "tableLayout": "列表视图",
-        "numPrefix": "共",
-        "numSuffix": "条流水线",
+        "sumPipelinesTips": "共 {0} 条流水线",
         "applyPerm": "申请权限",
         "temp": "模",
         "multipleBuilds": "正在同时运行多个构建任务",
@@ -375,7 +375,7 @@
         },
         "filterNullTips": "搜索结果为空",
         "stopBuild": "终止构建",
-        "fileUnit": "个文件",
+        "fileUnit": "{0}个文件",
         "completedLog": "完整日志",
         "artifactList": "构件列表",
         "showAll": "显示全部"
@@ -457,6 +457,30 @@
         }
     },
     "editPage": {
+        "by": "由",
+        "devnet": "Devnet 物理机",
+        "onlySupport": "仅支持",
+        "notWorkAtCur": "在当前构建资源类型下不可用",
+        "knowMore": "了解更多",
+        "noInstallRight": "暂无权限安装该镜像",
+        "install": "安装",
+        "all": "全部",
+        "store": "研发商店",
+        "unInstalled": "未安装",
+        "installed": "已安装",
+        "unRecomReason": "因设计缺陷，或实现方式变更，不再建议使用的 CI 镜像，后续将下架。此类 CI 镜像一般都已提供替换用的 CI 镜像，请使用新 CI 镜像",
+        "unRecommend": "不推荐使用",
+        "enterSearch": "输入后回车搜索",
+        "selectImage": "请选择一个CI镜像",
+        "addCredentials": "添加相应凭据",
+        "fromHand": "手动输入",
+        "fromList": "从列表选择",
+        "reElection": "重选",
+        "chooseImage": "待选择镜像",
+        "imageErrMgs": "镜像源和版本不能为空",
+        "imageSource": "镜像源",
+        "devopsImg": "蓝盾自有镜像",
+        "thirdImg": "第三方镜像",
         "baseSetting": "基础设置",
         "saving": "正在保存",
         "selectJob": "请选择Job类型",
@@ -517,6 +541,7 @@
         "svnParams": "请选择svn代码库",
         "relativePath": "代码库相对目录",
         "relativePathTips": "请填写代码库相对目录,如为空则会拉取所选代码库的根路径下的子目录",
+        "gitRepo": "请选择git代码库",
         "codelibParams": "请选择代码库类型",
         "buildEnv": "请选择构建环境",
         "buildResType": "请选择构建资源类型",
@@ -640,6 +665,7 @@
         "enum": "单选框",
         "multiple": "复选框",
         "svntag": "SVN分支或TAG",
+        "gitref": "GIT分支或TAG",
         "codelib": "代码库",
         "buildResource": "构建资源",
         "artifactory": "版本仓库过滤器",

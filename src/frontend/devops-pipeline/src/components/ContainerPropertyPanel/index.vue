@@ -47,17 +47,39 @@
                     <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}<a target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/流水线/用户指南/publicBuild.html`">{{ $t('editPage.seeMore') }}</a></span>
                 </form-field>
 
-                <form-field :label="$t('editPage.imageType')" v-if="buildResourceType === 'DOCKER'">
-                    <enum-input
-                        name="imageType"
-                        :list="imageTypeList"
-                        :disabled="!editable"
-                        :handle-change="changeBuildResource"
-                        :value="buildImageType">
-                    </enum-input>
-                </form-field>
+                <section v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)">
+                    <form-field :label="$t('editPage.imageType')">
+                        <enum-input
+                            name="imageType"
+                            :list="imageTypeList"
+                            :disabled="!editable"
+                            :handle-change="changeBuildResource"
+                            :value="buildImageType">
+                        </enum-input>
+                    </form-field>
 
-                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
+                    <form-field :is-error="errors.has(&quot;buildImageVersion&quot;)" :error-msg="$t('editPage.imageErrMgs')"
+                        :label="$t('editPage.imageSource')"
+                        :required="true"
+                        v-if="buildImageType === 'BKSTORE'">
+                        <section class="bk-image">
+                            <section class="image-name">
+                                <span :class="[{ disable: !editable }, 'image-named']" :title="buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
+                                <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
+                            </section>
+                            <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
+                                <bk-option v-for="option in versionList"
+                                    :key="option.versionValue"
+                                    :id="option.versionValue"
+                                    :name="option.versionName"
+                                >
+                                </bk-option>
+                            </bk-select>
+                        </section>
+                    </form-field>
+                </section>
+
+                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId && !(['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && buildImageType === 'BKSTORE')" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
                     <container-env-node :disabled="!editable"
                         :os="container.baseOS"
                         :container-id="containerModalId"
@@ -139,6 +161,12 @@
                     </job-mutual>
                 </div>
             </div>
+
+            <image-selector :is-show.sync="showImageSelector"
+                :code="buildImageCode"
+                :build-resource-type="buildResourceType"
+                @choose="choose"
+            ></image-selector>
         </section>
     </bk-sideslider>
 </template>
@@ -158,6 +186,7 @@
     import JobOption from './JobOption'
     import JobMutual from './JobMutual'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import ImageSelector from '@/components/AtomSelector/imageSelector'
 
     export default {
         name: 'container-property-panel',
@@ -173,7 +202,8 @@
             JobOption,
             JobMutual,
             Selector,
-            AtomCheckbox
+            AtomCheckbox,
+            ImageSelector
         },
         props: {
             containerIndex: Number,
@@ -185,13 +215,14 @@
         data () {
             return {
                 DOCS_URL_PREFIX,
+                showImageSelector: false,
                 imageTypeList: [
                     {
-                        label: '蓝盾自有镜像',
-                        value: 'BKDEVOPS'
+                        label: this.$t('editPage.fromList'),
+                        value: 'BKSTORE'
                     },
                     {
-                        label: '第三方镜像',
+                        label: this.$t('editPage.fromHand'),
                         value: 'THIRD'
                     }
                 ]
@@ -286,7 +317,16 @@
                 return this.container.dispatchType.value
             },
             buildImageType () {
-                return this.container.dispatchType.imageType || 'BKDEVOPS'
+                return this.container.dispatchType.imageType
+            },
+            buildImageCode () {
+                return this.container.dispatchType && this.container.dispatchType.imageCode
+            },
+            buildImageVersion () {
+                return this.container.dispatchType.imageVersion
+            },
+            buildImageName () {
+                return this.container.dispatchType && this.container.dispatchType.imageName
             },
             buildImageCreId () {
                 return this.container.dispatchType.credentialId || ''
@@ -320,7 +360,7 @@
                     paramName: 'credentialId',
                     url: `/ticket/api/user/credentials/${this.projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000&credentialTypes=USERNAME_PASSWORD`,
                     hasAddItem: true,
-                    itemText: '添加相应凭据',
+                    itemText: this.$t('editPage.addCredentials'),
                     itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
                 }
             }
@@ -355,6 +395,20 @@
                     agentType: 'ID'
                 }))
             }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode) {
+                if (/\$\{/.test(this.buildResource)) {
+                    this.changeBuildResource('imageType', 'THIRD')
+                } else {
+                    this.changeBuildResource('imageType', 'BKSTORE')
+                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
+                        this.changeBuildResource('imageCode', res.code)
+                        this.changeBuildResource('imageName', res.name)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err }))
+                }
+            }
+            if (this.container.dispatchType && this.container.dispatchType.imageCode) {
+                this.getVersionList(this.container.dispatchType.imageCode)
+            }
         },
         methods: {
             ...mapActions('atom', [
@@ -366,6 +420,42 @@
                 'getContainerInfoByBuildId',
                 'startDebugTstack'
             ]),
+            ...mapActions('pipelines', [
+                'requestImageVersionlist',
+                'requestImageHistory'
+            ]),
+
+            changeImageVersion (value) {
+                this.changeBuildResource('imageVersion', value)
+            },
+
+            choose (card) {
+                this.changeBuildResource('imageCode', card.code)
+                this.changeBuildResource('imageName', card.name)
+                return this.getVersionList(card.code).then(() => {
+                    const firstVersion = this.versionList[0] || {}
+                    this.changeBuildResource('imageVersion', firstVersion.versionValue)
+                })
+            },
+
+            getVersionList (imageCode) {
+                this.isVersionLoading = true
+                const data = {
+                    projectCode: this.projectId,
+                    imageCode
+                }
+                return this.requestImageVersionlist(data).then((res) => {
+                    this.versionList = res.data || []
+                }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => {
+                    this.isVersionLoading = false
+                })
+            },
+
+            chooseImage (event) {
+                event.preventDefault()
+                this.showImageSelector = !this.showImageSelector
+            },
+
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
 
@@ -526,6 +616,36 @@
     }
     .container-property-panel {
         font-size: 14px;
+        .bk-image {
+            display: flex;
+            align-items: center;
+            .image-name {
+                width: 44%;
+                display: flex;
+                align-items: center;
+                .image-named {
+                    border: 1px solid #c4c6cc;
+                    flex: 1;
+                    height: 32px;
+                    line-height: 32px;
+                    font-size: 12px;
+                    color: $fontWeightColor;
+                    line-height: 32px;
+                    padding-left: 10px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    &.disable {
+                        color: #c4c6cc;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+            .image-tag {
+                width: 44%;
+                margin-left: 10px;
+            }
+        }
         .container-resource-name {
             display: flex;
             align-items: center;

@@ -332,6 +332,9 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -517,7 +520,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '删除规则' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}` : PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -648,7 +651,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '编辑规则' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}` : PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -675,7 +678,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '启用和停用规则' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}` : PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }

@@ -7,21 +7,15 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des"> {{ $t('工作台') }} </span>
             </p>
-            <a class="title-work" target="_blank" :href="docLink[currentTab].link">{{ docLink[currentTab].name }}</a>
+            <a class="title-work" target="_blank" :href="tabList[currentTab].link">{{ tabList[currentTab].name }}</a>
         </h3>
         <div class="atomstore-list-content">
-            <bk-tab :active.sync="currentTab" @tab-change="changeTab" type="unborder-card">
-                <bk-tab-panel name="atom" render-directive="if">
+            <bk-tab :active.sync="currentTab" type="unborder-card">
+                <bk-tab-panel :name="key" render-directive="if" v-for="(tab, key) in tabList" :key="tab.type">
                     <template slot="label">
-                        <span class="work-label"><icon class="title-icon" :name="`store-atom`" size="16" /> {{ $t('流水线插件') }} </span>
+                        <span class="work-label"><icon class="title-icon" :name="`store-${key}`" size="16" /> {{ tab.tabName }} </span>
                     </template>
-                    <atom-list></atom-list>
-                </bk-tab-panel>
-                <bk-tab-panel name="template" render-directive="if">
-                    <template slot="label">
-                        <span class="work-label"><icon class="title-icon" :name="`store-template`" size="16" /> {{ $t('流水线模板') }} </span>
-                    </template>
-                    <template-list></template-list>
+                    <component :is="`${key}List`"></component>
                 </bk-tab-panel>
             </bk-tab>
         </div>
@@ -32,19 +26,22 @@
     import { getQueryString } from '@/utils/index'
     import atomList from '@/components/common/workList/atom'
     import templateList from '@/components/common/workList/template'
+    import imageList from '@/components/common/workList/image'
 
     export default {
         components: {
             atomList,
-            templateList
+            templateList,
+            imageList
         },
 
         data () {
             return {
                 currentTab: 'atom',
-                docLink: {
-                    atom: { name: this.$t('插件指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
-                    template: { name: this.$t('模版指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' }
+                tabList: {
+                    atom: { name: this.$t('插件指引'), tabName: this.$t('流水线插件'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
+                    template: { name: this.$t('模版指引'), tabName: this.$t('流水线模板'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' },
+                    image: { name: this.$t('镜像指引'), tabName: this.$t('容器镜像'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=22118721' }
                 }
             }
         },

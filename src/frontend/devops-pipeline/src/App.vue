@@ -12,6 +12,11 @@
 
     export default {
         name: 'app',
+        data () {
+            return {
+                stayCurrentPage: ['atomDebug', '']
+            }
+        },
         computed: {
             ...mapState([
                 'fetchError'
@@ -36,7 +41,11 @@
         created () {
             window.globalVue.$on('change::$currentProjectId', data => { // 蓝盾选择项目时切换
                 if (this.$route.params.projectId !== data.currentProjectId) {
-                    this.goHome(data.currentProjectId)
+                    if (this.stayCurrentPage.find(item => item === this.$route.name)) {
+                        this.reflashCurrentPage(data.currentProjectId)
+                    } else {
+                        this.goHome(data.currentProjectId)
+                    }
                 }
             })
             window.globalVue.$on('order::backHome', data => { // 蓝盾选择项目时切换
@@ -57,6 +66,13 @@
                 const params = projectId ? { projectId } : {}
                 this.$router.replace({
                     name: 'pipelinesList',
+                    params
+                })
+            },
+            reflashCurrentPage (projectId) {
+                const params = Object.assign({}, this.$route.params, { projectId })
+                this.$router.replace({
+                    name: this.$route.name,
                     params
                 })
             }

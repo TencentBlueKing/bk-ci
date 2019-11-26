@@ -142,7 +142,7 @@
                 showContent: false,
                 isInitEdit: false,
                 isEditing: false,
-                docsUrl: 'http://docs.devops.oa.com',
+                docsUrl: '',
                 title: '创建脚本任务指标',
                 metaTypeList: [
                     { id: 'INT', name: '整数（int）' },

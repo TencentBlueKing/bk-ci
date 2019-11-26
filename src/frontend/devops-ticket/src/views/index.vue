@@ -10,7 +10,7 @@
     export default {
         computed: {
             nav () {
-                return {
+                const navConf = {
                     icon: 'ticket',
                     title: this.$t('ticket.credentialManage'),
                     url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('ticket.credentialManage')}/summary.html`,
@@ -59,6 +59,10 @@
                         }
                     ]
                 }
+                if (VERSION_TYPE === 'ee') {
+                    navConf.menu.splice(2, 2)
+                }
+                return navConf
             }
         },
         methods: {

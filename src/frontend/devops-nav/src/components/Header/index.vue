@@ -87,7 +87,6 @@
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
-    import * as cookie from 'js-cookie'
     import { urlJoin } from '../../utils/util'
 
     @Component({
@@ -125,11 +124,11 @@
         get projectId (): string {
             return this.$route.params.projectId
         }
-        get title (): any {
-            return this.$route.meta.header ? this.$t(`subService.${this.$route.meta.header}`) : ''
+        get title (): string {
+            return this.currentPage && this.currentPage.name ? this.currentPage.name : ''
         }
         get serviceLogo (): string {
-            return this.$route.meta.logo
+            return this.currentPage && this.currentPage.logoUrl ? this.currentPage.logoUrl : 'placeholder'
         }
         get selectProjectList (): Project[] {
             return this.enableProjectList.map(project => ({
@@ -210,11 +209,7 @@
                     }
                 })
             }
-
-            cookie.set(X_DEVOPS_PROJECT_ID, id, {
-                domain: 'oa.com',
-                path: '/'
-            })
+            window.setProjectIdCookie(id)
 
             if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
                 localStorage.setItem('projectId', id)

@@ -196,7 +196,9 @@
                         pipelineId: pipelineId,
                         vmSeqId,
                         imageName: this.container.dispatchType && this.container.dispatchType.value ? this.container.dispatchType.value : this.container.dockerBuildVersion,
-                        buildEnv: this.container.buildEnv
+                        buildEnv: this.container.buildEnv,
+                        imageType: this.container.dispatchType && this.container.dispatchType.imageType ? this.container.dispatchType.imageType : 'BKDEVOPS',
+                        credentialId: this.container.dispatchType && this.container.dispatchType.credentialId ? this.container.dispatchType.credentialId : ''
                     })
                     if (res === true) {
                         url = `${WEB_URL_PIRFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&vmSeqId=${vmSeqId}`

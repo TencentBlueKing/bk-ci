@@ -156,6 +156,7 @@
                 },
                 viewTypeTips: {
                     content: this.$t('view.typeTips'),
+                    width: 200,
                     placements: ['right']
                 }
             }

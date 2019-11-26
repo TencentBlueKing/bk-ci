@@ -98,7 +98,7 @@ function isAmdModule (currentPage: subService): boolean {
     return currentPage && currentPage.inject_type === 'amd'
 }
 
-const createRouter = (store: any, dynamicLoadModule: any) => {
+const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     const router = new Router({
         mode: 'history',
         routes: routes
@@ -108,7 +108,7 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
 
     if (isAmdModule(window.currentPage)) {
         const serviceAlias = getServiceAliasByPath(window.currentPage.link_new)
-        dynamicLoadModule(serviceAlias)
+        dynamicLoadModule(serviceAlias, i18n.locale)
         loadedModule = {
             [serviceAlias]: true
         }
@@ -132,7 +132,7 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
             Promise.all([
                 importStyle(css_url, document.head),
                 importScript(js_url, document.body),
-                dynamicLoadModule(serviceAlias)
+                dynamicLoadModule(serviceAlias, i18n.locale)
             ]).then(() => {
                 const module = window.Pages[serviceAlias]
                 store.registerModule(serviceAlias, module.store)

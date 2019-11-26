@@ -36,14 +36,15 @@
                             </div>
                             <div class="group-card-tools">
                                 <i class="bk-icon icon-edit2 group-card-icon" @click="tagEdit($event, groupIndex, tagIndex)"></i>
-                                <span class="tools-ele group-card-icon bk-icon icon-close"
-                                    @click.stop="toggleTools(groupIndex, tagIndex)">
-                                    <div class="tips-content">
+                                <bk-popover ref="toolsConfigRef" placement="top" trigger="click">
+                                    <span class="tools-ele group-card-icon bk-icon icon-close" @click="toggleTools(groupIndex, tagIndex)">
+                                    </span>
+                                    <div slot="content" class="tools-config-tooltip">
                                         <a class="confirm" @click.stop="tagRemove(groupIndex, tagIndex)">{{ $t('confirm') }}</a>
                                         <span></span>
                                         <a class="cancel" @click.stop="hideTools">{{ $t('cancel') }}</a>
                                     </div>
-                                </span>
+                                </bk-popover>
                             </div>
                         </div>
 
@@ -177,14 +178,14 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            toolsConfigInstance () {
+                return this.$refs.toolsConfigRef && this.$refs.toolsConfigRef[0] && this.$refs.toolsConfigRef[0].instance ? this.$refs.toolsConfigRef[0].instance : null
             }
         },
         async created () {
             await this.init()
             this.addClickListenr()
-        },
-        mounted () {
-
         },
         methods: {
             isShowGroupBtn () {
@@ -272,7 +273,7 @@
                 // const name = this.tagGroupList[groupIndex].name
                 const { $store } = this
                 const content = this.$t('deleteReason')
-                navConfirm({ title: this.$t('confirm'), content })
+                navConfirm({ type: 'warning', content })
                     .then(async () => {
                         try {
                             await $store.dispatch('pipelines/deleteGroup', {
@@ -290,10 +291,13 @@
                     }).catch(() => {})
             },
 
-            async tagRemove (groupIndex, tagIndex) { // 标签删除
+            tagRemove (groupIndex, tagIndex) { // 标签删除
                 this.REQUEST('deleteTag', {
                     labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
                 })
+                if (this.toolsConfigInstance) {
+                    this.toolsConfigInstance.hide()
+                }
             },
             toggleTools (groupIndex, tagIndex) { // 删除提示toggle
                 const active = this.active
@@ -309,6 +313,9 @@
             },
             hideTools () { // 删除提示隐藏
                 this.active.isActiveToops = false
+                if (this.toolsConfigInstance) {
+                    this.toolsConfigInstance.hide()
+                }
             },
 
             tagEdit (e, groupIndex, tagIndex) {
@@ -466,12 +473,10 @@
                 margin-bottom: 10px;
             }
             .devops-empty-tips .content {
-                width: 250px;
                 height: 60px;
-                margin: 0 auto;
                 line-height: 20px;
                 font-size: 14px;
-                text-align: left;
+                text-align: center;
             }
             .bk-dialog-body .form-group{
                 label {
@@ -565,44 +570,6 @@
                     &.active {
                         .tips-content {
                             display: block;
-                        }
-                    }
-                    .tips-content {
-                        display: none;
-                        position: absolute;
-                        bottom: 22px;
-                        left: -38px;
-                        padding: 0 12px;
-                        width: 90px;
-                        height: 30px;
-                        line-height: 30px;
-                        border: none;
-                        border-radius: 2px;
-                        font-size: 0;
-                        color: #fff;
-                        background-color: rgba(0,0,0,0.9);
-                        z-index: 50;
-                        span {
-                            margin: 0 7px;
-                            font-size: 12px;
-                            border: 1px solid rgba(255,255,255,0.1)
-                        }
-                        a {
-                            font-size: 12px;
-                            cursor: pointer;
-                        }
-                        &:after {
-                            position: absolute;
-                            content: '';
-                            width: 6px;
-                            height: 6px;
-                            border: 1px solid #000;
-                            border-bottom: 0;
-                            border-right: 0;
-                            transform: rotate(45deg);
-                            background: rgba(0,0,0,0.9);
-                            bottom: -2px;
-                            right: 42px;
                         }
                     }
                 }
@@ -736,6 +703,21 @@
                 > a {
                     color: $primaryColor;
                 }
+            }
+        }
+    }
+
+    .tools-config-tooltip {
+        span {
+            margin: 0 7px;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.1)
+        }
+        a {
+            font-size: 12px;
+            cursor: pointer;
+            &:hover {
+                color: $primaryColor;
             }
         }
     }

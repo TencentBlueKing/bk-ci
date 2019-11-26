@@ -79,6 +79,7 @@
         var WEBSITE_URL = '__HTTP_SCHEMA__://__BKCI_STATIC_FQDN__'
         var GW_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
         var WS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/'
+        var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = 'https://bk.tencent.com/docs/ci'  // 文档中心域名
         var LOGIN_SERVICE_URL = 'http://login.o.oa.com'  // 登录域名前缀
         var DOCS_URL_PREFIX = 'http://docs.devops.oa.com'  // 文档中心域名
@@ -137,6 +138,7 @@
             try {
                 setCookie(X_DEVOPS_PROJECT_ID, '', 'oa.com')
                 setCookie(X_DEVOPS_PROJECT_ID, projectId, 'oa.com')
+                window.GLOBAL_PID = projectId
             } catch (e) {
                 console.warn('you have no project')
             }
@@ -405,7 +407,22 @@
             var scriptNode = document.createElement('script')
             scriptNode.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cbId
             document.body.appendChild(scriptNode)
-        }        
+        }
+        
+        function handleVisibilityChange () {
+            console.log(document.hidden, window.GLOBAL_PID)
+            if (!document.hidden && window.GLOBAL_PID) {
+                window.setProjectIdCookie(window.GLOBAL_PID)
+            }
+        }
+
+        (function () {
+            document.addEventListener('visibilitychange', handleVisibilityChange, false);
+        })();
+
+        window.onbeforeunload = function () {
+            document.removeEventListener('visibilitychange', handleVisibilityChange, false);
+        }
     </script>
 </body>
 </html>

@@ -31,7 +31,7 @@
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('适用Job类型') }}： </div>
+                                <div class="info-label"> {{ $t(isEnterprise ? '适用机器类型' : '适用Job类型') }}： </div>
                                 <!-- <div class="info-value" v-if="atomDetail.os">{{ atomOs(atomDetail.os) }}</div> -->
                                 <div class="info-value" v-if="atomDetail.os">{{ jobTypeMap[atomDetail.jobType] }}
                                     <span v-if="atomDetail.jobType === 'AGENT'">（
@@ -41,10 +41,14 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="detail-form-item is-open">
+                            <div class="detail-form-item is-open" v-if="!isEnterprise">
                                 <label class="info-label"> {{ $t('是否开源') }}： </label>
                                 <div class="info-value">{{ atomDetail.visibilityLevel | levelFilter }}</div>
                             </div>
+                        </div>
+                        <div class="detail-form-item" v-if="isEnterprise">
+                            <div class="info-label"> {{ $t('发布包：') }} </div>
+                            <div class="info-value">{{ atomDetail.pkgName }}</div>
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
@@ -163,6 +167,10 @@
             },
             atomStatusList () {
                 return atomStatusMap
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
 

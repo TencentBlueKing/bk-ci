@@ -48,6 +48,7 @@ module.exports = {
         'WEB_URL_PIRFIX': true,
         'BUILD_ENV': true,
         'PERM_URL_PIRFIX': true,
+        'PERM_URL_PREFIX': true,
         'PROXY_URL_PREFIX': true,
         'GW_URL_PREFIX': true,
         'WS_URL_PREFIX': true,
@@ -59,6 +60,8 @@ module.exports = {
         'ZHIYUN_URL': true,
         "CODECC_SOFWARE_URL": true,
         "JOB_URL": true,
+        "CODEGIT_URL_PREFIX": true,
+        "GITLAB_URL_PREFIX": true,
         "VERSION_TYPE": false
     },
     // add your custom rules hered

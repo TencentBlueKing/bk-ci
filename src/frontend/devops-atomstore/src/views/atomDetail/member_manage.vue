@@ -36,6 +36,8 @@
             </empty-tips>
         </section>
         <add-member-dialog :show-dialog="showDialog"
+            :project-code="currentAtom.projectCode"
+            :permission-list="permissionList"
             @confirmHandle="confirmHandle"
             @cancelHandle="cancelHandle">
         </add-member-dialog>
@@ -62,6 +64,13 @@
                     'ADMIN': 'Owner',
                     'DEVELOPER': 'Developer'
                 },
+                permissionList: [
+                    { name: this.$t('插件开发'), active: false, type: 'DEVELOPER' },
+                    { name: this.$t('版本发布'), active: false, type: 'ADMIN' },
+                    { name: this.$t('私有配置'), active: false, type: 'ADMIN' },
+                    { name: this.$t('审批'), active: false, type: 'ADMIN' },
+                    { name: this.$t('成员管理'), active: false, type: 'ADMIN' }
+                ],
                 loading: {
                     isLoading: false,
                     title: ''
@@ -70,6 +79,7 @@
         },
         computed: {
             ...mapGetters('store', {
+                'currentAtom': 'getCurrentAtom',
                 'userInfo': 'getUserInfo'
             }),
 
@@ -156,7 +166,7 @@
                 let message, theme
                 try {
                     const res = await this.$store.dispatch('store/addAtomMember', {
-                        params
+                        params: Object.assign(params, { storeCode: this.atomCode })
                     })
 
                     if (res) {
@@ -169,6 +179,7 @@
                     message = message = err.message ? err.message : err
                     theme = 'error'
                 } finally {
+                    this.showDialog = false
                     this.$bkMessage({
                         message,
                         theme

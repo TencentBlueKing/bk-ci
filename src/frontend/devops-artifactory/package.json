@@ -1,6 +1,6 @@
 {
   "name": "devops-artifactory",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "dependencies": {
     "brace": "^0.10.0",
@@ -14,11 +14,14 @@
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
+    "babel-eslint": "^8.0.1",
     "babel-loader": "^7.1.4",
     "babel-plugin-istanbul": "^4.1.6",
     "babel-plugin-lodash": "^3.3.2",
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "babel-plugin-syntax-jsx": "^6.18.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-plugin-transform-vue-jsx": "^3.7.0",
@@ -33,14 +36,11 @@
     "node-sass": "^4.11.0",
     "sass-loader": "^7.0.1",
     "url-loader": "^1.0.1",
-    "webpack": "^4.8.1",
-    "webpack-dev-server": "^3.1.4",
-    "babel-eslint": "^8.0.1",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "vue-loader": "^15.0.9",
+    "webpack": "^4.8.1",
     "webpack-bundle-analyzer": "^2.11.1",
-    "webpack-cli": "^3.1.1"
+    "webpack-cli": "^3.1.1",
+    "webpack-dev-server": "^3.1.4"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
@@ -51,7 +51,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://git.code.oa.com/bkdevops/devops-artifactory"
+    "url": ""
   },
-  "author": ""
+  "author": "",
+  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
 }
