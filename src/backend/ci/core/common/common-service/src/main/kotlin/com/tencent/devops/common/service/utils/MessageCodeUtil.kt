@@ -140,5 +140,13 @@ class MessageCodeUtil @Autowired constructor() {
                 else -> messageCodeDetail.messageDetailEn ?: "" // 英文描述
             }
         }
+
+        fun getMessageByLocale(chinese: String, english: String?): String {
+            return when (CommonUtils.getBkLocale()) {
+                "ZH_CN" -> chinese // 简体中文描述
+                "ZH_TW" -> chinese // 繁体中文描述
+                else -> english ?: "" // 英文描述
+            }
+        }
     }
 }
