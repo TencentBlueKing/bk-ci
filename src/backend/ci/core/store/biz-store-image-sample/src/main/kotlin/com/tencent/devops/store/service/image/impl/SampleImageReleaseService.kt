@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class SampleImageReleaseService @Autowired constructor() : ImageReleaseService() {
+class SampleImageReleaseService : ImageReleaseService() {
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
         //开源版不审核直接发布
         return ImageStatusEnum.RELEASED.status.toByte()
