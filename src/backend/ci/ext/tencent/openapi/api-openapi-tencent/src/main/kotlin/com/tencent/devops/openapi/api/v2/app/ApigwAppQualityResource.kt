@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.openapi.api.v2.app
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -53,6 +54,9 @@ interface ApigwAppQualityResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam(value = "事业群ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BG_ID)
+        bgId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

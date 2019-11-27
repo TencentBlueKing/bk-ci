@@ -36,13 +36,20 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwAppQualityResourceImpl @Autowired constructor(
     private val apigwQualityService: ApigwQualityService
 ) : ApigwAppQualityResource {
-    override fun getBuildQuality(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<QualityRuleIntercept>?> {
+    override fun getBuildQuality(
+        userId: String,
+        bgId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<QualityRuleIntercept>?> {
         return Result(apigwQualityService.getBuildQuality(
             userId = userId,
+            bgId = bgId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            checkPermission = false,
+            checkUserPermission = false,
             interfaceName = "/v2/quality/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}"
         ))
     }

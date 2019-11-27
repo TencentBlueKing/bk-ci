@@ -29,6 +29,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.Permission
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
 import org.slf4j.LoggerFactory
@@ -48,14 +49,23 @@ class ApigwQualityService(private val client: Client) {
 
     fun getBuildQuality(
         userId: String,
+        bgId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        checkPermission: Boolean,
+        checkUserPermission: Boolean,
         interfaceName: String? = "ApigwQualityService"
     ): List<QualityRuleIntercept>? {
-        logger.info("$interfaceName:getBuildQuality:Input($userId,$projectId,$pipelineId,$buildId,$checkPermission)")
-        if (checkPermission) {
+        logger.info("$interfaceName:getBuildQuality:Input($userId,$projectId,$pipelineId,$buildId,$checkUserPermission)")
+        //权限校验
+        val userDeptInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+        if (userDeptInfo == null || userDeptInfo.bgId.trim() != bgId.trim()) {
+            logger.warn("$interfaceName:PermissionForbidden:userDeptInfo.bgId=${userDeptInfo?.bgId},bgId=${bgId},userId=${userId}")
+            throw PermissionForbiddenException(
+                message = "$userId doesn't have perssion to access data of bg(bgId=$bgId)"
+            )
+        }
+        if (checkUserPermission) {
             //验证用户是否有流水线查看权限
             val permissionData = client.get(UserPipelineResource::class).hasPermission(
                 userId = userId,
