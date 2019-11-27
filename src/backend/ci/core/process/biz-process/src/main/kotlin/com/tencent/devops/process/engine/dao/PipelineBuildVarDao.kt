@@ -30,6 +30,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -81,6 +82,14 @@ class PipelineBuildVarDao @Autowired constructor() {
                 map[it[KEY]] = it[VALUE]
             }
             return map
+        }
+    }
+
+    fun getVarsByProjectAndPipeline(dslContext: DSLContext, projectId: String, pipelineId: String): Result<TPipelineBuildVarRecord>? {
+        return with(T_PIPELINE_BUILD_VAR) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .fetch()
         }
     }
 

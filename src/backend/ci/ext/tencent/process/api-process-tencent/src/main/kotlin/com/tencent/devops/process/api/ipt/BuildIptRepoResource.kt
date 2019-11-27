@@ -1,6 +1,7 @@
 package com.tencent.devops.process.api.ipt
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -25,5 +26,5 @@ interface BuildIptRepoResource {
         userId: String,
         @PathParam("commitId")
         commitId: String
-    ): IptBuildArtifactoryInfo
+    ): Result<IptBuildArtifactoryInfo>
 }
