@@ -35,8 +35,8 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwRepositoryResourceV2 {
 
     @ApiOperation("查询项目的代码库列表")
-    @POST
+    @GET
     @Path("/projects/{projectId}/listByProject")
     fun listByProject(
         @ApiParam(value = "组织类型", required = true)

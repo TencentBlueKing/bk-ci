@@ -23,13 +23,11 @@ interface WebIDEExResource {
     @Path("/heartBeat/{ip}")
     @ApiOperation("ide心跳上报接口")
     fun heartBeat(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @PathParam("ip")
-            @ApiParam(value = "IDE实例的ip地址", required = true)
-            ip: String
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("ip")
+        @ApiParam(value = "IDE实例的ip地址", required = true)
+        ip: String
     ): Result<Boolean>
 }
-
-

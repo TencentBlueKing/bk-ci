@@ -26,7 +26,6 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import org.slf4j.LoggerFactory

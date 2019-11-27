@@ -197,6 +197,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         }
         val latestCommit = try {
             client.get(ServiceCommitResource::class).getLatestCommit(
+                projectId,
                 pipelineId,
                 ele.id!!,
                 repositoryConfig.getRepositoryId(),
@@ -276,6 +277,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             }
         val latestCommit = try {
             client.get(ServiceCommitResource::class).getLatestCommit(
+                projectId,
                 pipelineId,
                 ele.id!!,
                 EnvUtils.parseEnv(repositoryConfig.getRepositoryId(), variables),

@@ -113,4 +113,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             Result(false)
         }
     }
+
+    override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
+        return Result(projectLocalService.createGitCIProject(userId, gitProjectId))
+    }
 }
