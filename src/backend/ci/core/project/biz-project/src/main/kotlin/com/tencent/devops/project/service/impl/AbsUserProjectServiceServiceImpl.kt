@@ -63,7 +63,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             return Result(
                 ServiceVO(
                     id = tServiceRecord.id ?: 0,
-                    name = tServiceRecord.name,
+                    name = MessageCodeUtil.getMessageByLocale(tServiceRecord.name, tServiceRecord.englishName),
                     link = tServiceRecord.link,
                     linkNew = tServiceRecord.linkNew,
                     status = tServiceRecord.status, injectType = tServiceRecord.injectType,
@@ -133,6 +133,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         return OPPServiceVO(
             id = tServiceRecord.id,
             name = tServiceRecord.name ?: "",
+            englishName = tServiceRecord.englishName ?: "",
             serviceTypeId = tServiceRecord.serviceTypeId,
             showProjectList = tServiceRecord.showProjectList,
             showNav = tServiceRecord.showNav,
@@ -206,7 +207,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
 
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
-                val typeName = serviceType.title
+                val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
                 val services = ArrayList<ServiceVO>()
 
                 val s = groupService[typeId]
@@ -217,7 +218,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     services.add(
                         ServiceVO(
                             id = it.id,
-                            name = it.name ?: "",
+                            name = MessageCodeUtil.getMessageByLocale(it.name, it.englishName),
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
                             status = status,
