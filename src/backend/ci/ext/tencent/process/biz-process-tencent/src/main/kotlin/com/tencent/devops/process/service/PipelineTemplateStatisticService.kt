@@ -87,12 +87,12 @@ class PipelineTemplateStatisticService @Autowired constructor(
             }
             else -> {
                 throw InvalidParamException(
-                    message = "organizationType not supported, only [${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG},$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT,$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER] supported",
+                    message = "organizationType not supported, only [$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG,$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT,$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER] supported",
                     params = arrayOf(organizationType)
                 )
             }
         }.data?.toSet() ?: emptySet()
-        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndId:Output:${projectIds}")
+        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndId:Output:$projectIds")
         return projectIds
     }
 

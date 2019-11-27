@@ -83,12 +83,12 @@ class OrganizationProjectService(private val client: Client) {
             }
             else -> {
                 throw InvalidParamException(
-                    message = "organizationType not supported, only [${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG},${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT},${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER}] supported",
+                    message = "organizationType not supported, only [$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG,$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT,$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER] supported",
                     params = arrayOf(organizationType)
                 )
             }
         }.data?.toSet() ?: emptySet()
-        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndId:Output:${projectIds}")
+        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndId:Output:$projectIds")
         return projectIds
     }
 
@@ -127,7 +127,7 @@ class OrganizationProjectService(private val client: Client) {
         }
         // 2.根据所有项目Id获取对应流水线
         val projectIds = projectsResult.data!!.map { it.englishName }.toSet()
-        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndName:Output:${projectIds}")
+        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndName:Output:$projectIds")
         return projectIds
     }
 }

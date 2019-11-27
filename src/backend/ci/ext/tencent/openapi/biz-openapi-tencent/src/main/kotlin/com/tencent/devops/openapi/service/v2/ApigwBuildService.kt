@@ -23,73 +23,65 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.resources.v2
+package com.tencent.devops.openapi.service.v2
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.v2.ApigwBuildResourceV2
-import com.tencent.devops.openapi.service.v2.ApigwBuildService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ApigwBuildResourceV2Impl @Autowired constructor(
+/**
+ * @Description
+ * @Date 2019/9/1
+ * @Version 1.0
+ */
+@Service
+class ApigwBuildService(
     private val client: Client,
-    private val apigwBuildService: ApigwBuildService
-) : ApigwBuildResourceV2 {
-    override fun stop(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Result<Boolean> {
-        logger.info("Stop the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
-        return client.get(ServiceBuildResource::class).manualShutdown(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            channelCode = ChannelCode.BS
-        )
+    private val organizationProjectService: OrganizationProjectService
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwBuildService::class.java)
     }
 
-    override fun detail(userId: String, projectId: String, pipelineId: String, buildId: String): Result<ModelDetail> {
-        logger.info("get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
-        return client.get(ServiceBuildResource::class).getBuildDetail(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            channelCode = ChannelCode.BS
-        )
-    }
-
-    override fun getStatusWithoutPermission(
+    fun getStatusWithoutPermission(
         userId: String,
         organizationType: String,
         organizationId: Long,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        interfaceName: String? = "ApigwBuildService"
     ): Result<BuildHistoryWithVars> {
-        logger.info("Get the build($buildId) status of project($projectId) and pipeline($pipelineId) by user($userId)")
-        return apigwBuildService.getStatusWithoutPermission(
+        logger.info("$interfaceName:getStatusWithoutPermission:Input($userId,$organizationType,$organizationId,$projectId,$pipelineId,$buildId)")
+        // 根据部门进行鉴权
+        val projectIds = organizationProjectService.getProjectIdsByOrganizationTypeAndId(
             userId = userId,
             organizationType = organizationType,
             organizationId = organizationId,
+            deptName = null,
+            centerName = null,
+            interfaceName = interfaceName
+        )
+        logger.info("$interfaceName:getStatusWithoutPermission:Inner:projectIds=$projectIds")
+        if (!projectIds.contains(projectId)) {
+            val message = "($organizationType,$organizationId) can not access project($projectId)"
+            logger.warn("$interfaceName:PermissionForbidden:$message")
+            throw PermissionForbiddenException(
+                message = message
+            )
+        }
+        return client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            interfaceName = "/v2/builds/{projectId}/{pipelineId}/{buildId}/nopermission/status"
+            channelCode = ChannelCode.BS
         )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ApigwBuildResourceV2Impl::class.java)
     }
 }
