@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `T_ACTIVITY` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `TYPE` varchar(32) NOT NULL,
   `NAME` varchar(128) NOT NULL,
+  `ENGLISH_NAME` varchar(128) DEFAULT NULL,
   `LINK` varchar(1024) NOT NULL,
   `CREATE_TIME` datetime NOT NULL,
   `STATUS` varchar(32) NOT NULL,
@@ -156,6 +157,7 @@ DROP TABLE IF EXISTS `T_SERVICE`;
 CREATE TABLE `T_SERVICE` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `name` varchar(64) DEFAULT NULL COMMENT '名称',
+  `english_name` varchar(64) DEFAULT NULL COMMENT '英文名称',
   `service_type_id` bigint(20) DEFAULT NULL,
   `link` varchar(255) DEFAULT NULL,
   `link_new` varchar(255) DEFAULT NULL,
@@ -188,6 +190,7 @@ CREATE TABLE `T_SERVICE` (
 CREATE TABLE IF NOT EXISTS `T_SERVICE_TYPE` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `title` varchar(64) DEFAULT NULL,
+  `english_title` varchar(64) DEFAULT NULL,
   `created_user` varchar(64) DEFAULT NULL,
   `created_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `updated_user` varchar(64) DEFAULT NULL,
