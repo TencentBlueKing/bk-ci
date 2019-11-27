@@ -43,10 +43,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * Created by ddlin on 2018/02/06.
- * Powered By Tencent
- */
 @Api(tags = ["SERVICE_MEASURE"], description = "服务-度量资源")
 @Path("/service")
 @Produces(MediaType.APPLICATION_JSON)
