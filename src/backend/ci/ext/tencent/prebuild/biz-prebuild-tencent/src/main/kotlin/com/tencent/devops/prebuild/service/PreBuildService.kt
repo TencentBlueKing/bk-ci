@@ -170,7 +170,7 @@ class PreBuildService @Autowired constructor(
             }
             stageList.add(Stage(containerList, "stage-${stageIndex + 3}"))
         }
-        return Model(preProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, userId)
+        return Model(preProjectId, "", stageList, emptyList(), false, userId)
     }
 
     private fun addAssociateElement(it: AbstractTask, elementList: MutableList<Element>, userId: String, preProjectId: String) {
