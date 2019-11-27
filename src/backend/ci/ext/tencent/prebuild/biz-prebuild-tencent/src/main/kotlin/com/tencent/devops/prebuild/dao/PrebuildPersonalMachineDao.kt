@@ -49,7 +49,6 @@ class PrebuildPersonalMachineDao {
         }
     }
 
-
     fun updateIp(
         dslContext: DSLContext,
         userId: String,
@@ -67,10 +66,10 @@ class PrebuildPersonalMachineDao {
     }
 
     fun updateHostname(
-            dslContext: DSLContext,
-            userId: String,
-            hostName: String,
-            ip: String
+        dslContext: DSLContext,
+        userId: String,
+        hostName: String,
+        ip: String
     ) {
         with(TPrebuildPersonalMachine.T_PREBUILD_PERSONAL_MACHINE) {
             dslContext.update(this)
