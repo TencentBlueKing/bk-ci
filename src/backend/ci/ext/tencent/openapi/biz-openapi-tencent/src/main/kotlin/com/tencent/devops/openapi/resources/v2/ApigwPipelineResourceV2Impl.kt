@@ -80,7 +80,8 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
             deptName = deptName,
             centerName = centerName,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            interfaceName = "/v2/pipelines/organizationIds"
         )
     }
 

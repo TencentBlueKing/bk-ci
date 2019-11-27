@@ -23,36 +23,32 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.process.service
+package com.tencent.devops.openapi.service.v2
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.template.TemplateDao
-import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
-import com.tencent.devops.process.pojo.statistic.PipelineAndTemplateStatistic
+import com.tencent.devops.common.tx.util.OrganizationUtil
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_INNER_SERVICE_FAIL
+import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
- * 统计流水线与模板信息
+ * @Description
+ * @Date 2019/9/1
+ * @Version 1.0
  */
 @Service
-class PipelineTemplateStatisticService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val templateDao: TemplateDao,
-    private val pipelineInfoDao: PipelineInfoDao,
-    private val templatePipelineDao: TemplatePipelineDao,
-    private val client: Client
-) {
+class OrganizationProjectService(private val client: Client) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OrganizationProjectService::class.java)
+    }
 
     fun getProjectIdsByOrganizationTypeAndId(
         userId: String,
@@ -60,7 +56,7 @@ class PipelineTemplateStatisticService @Autowired constructor(
         organizationId: Long,
         deptName: String?,
         centerName: String?,
-        interfaceName: String? = "PipelineTemplateStatisticService"
+        interfaceName: String? = "OrganizationProjectService"
     ): Set<String> {
         logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndId:Input($userId,$organizationType,$organizationId,$deptName,$centerName)")
         val projectIds = when (organizationType) {
@@ -87,7 +83,7 @@ class PipelineTemplateStatisticService @Autowired constructor(
             }
             else -> {
                 throw InvalidParamException(
-                    message = "organizationType not supported, only [${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG},$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT,$AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER] supported",
+                    message = "organizationType not supported, only [${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG},${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT},${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER}] supported",
                     params = arrayOf(organizationType)
                 )
             }
@@ -96,66 +92,42 @@ class PipelineTemplateStatisticService @Autowired constructor(
         return projectIds
     }
 
-    /**
-     * 通过组织信息获取流水线总数
-     */
-    fun getPipelineAndTemplateStatistic(
+    fun getProjectIdsByOrganizationTypeAndName(
         userId: String,
         organizationType: String,
-        organizationId: Int,
+        organizationName: String,
         deptName: String?,
         centerName: String?,
-        interfaceName: String? = "Anon interface"
-    ): PipelineAndTemplateStatistic {
-        logger.info("$interfaceName:getPipelineAndTemplateStatistic:Input:($userId,$organizationType,$organizationId,$deptName,$centerName)")
-        // 1.调用TOF接口根据ID获取部门名称
-        val projectIds = getProjectIdsByOrganizationTypeAndId(
-            userId = userId,
+        interfaceName: String? = "OrganizationProjectService"
+    ): Set<String> {
+        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndName:Input($userId,$organizationType,$organizationName,$deptName,$centerName)")
+        // 1.根据组织信息获取所有项目
+        val organization = OrganizationUtil.fillOrganization(
             organizationType = organizationType,
-            organizationId = organizationId.toLong(),
+            organizationName = organizationName,
             deptName = deptName,
-            centerName = centerName,
-            interfaceName = interfaceName
+            centerName = centerName
         )
-        // 2.根据项目id集合查询流水线数量
-        // 流水线总数
-        val pipelineNum = pipelineInfoDao.countByProjectIds(dslContext, projectIds, ChannelCode.BS)
-        // 实例化流水线总数
-        val instancedPipelineNum = templatePipelineDao.countPipelineInstancedByTemplate(dslContext, projectIds).value1()
-        // 模板总数
-        val templateNum = templateDao.countTemplateByProjectIds(
-            dslContext = dslContext,
-            projectIds = projectIds,
-            includePublicFlag = null,
-            templateType = null,
-            templateName = null,
-            storeFlag = null
+        val projectsResult = client.get(ServiceTxProjectResource::class).getProjectByGroup(
+            userId = userId,
+            bgName = organization.bgName,
+            deptName = organization.deptName,
+            centerName = organization.centerName
         )
-        // 实例化模板总数
-        val instancedTemplateNum = templatePipelineDao.countTemplateInstanced(dslContext, projectIds).value1()
-        // 原始模板总数
-        var srcTemplateIds: Set<String> = mutableSetOf()
-        templateDao.getCustomizedTemplate(dslContext, projectIds).forEach {
-            srcTemplateIds = srcTemplateIds.plus(it.value1())
+        // 项目接口内容判空
+        if (projectsResult.isNotOk()) {
+            val resultStr = JsonUtil.toJson(projectsResult)
+            val serviceInfo = "project:ServiceProjectResource:getProjectByGroup"
+            throw MicroServiceInvokeFailure(
+                serviceInterface = serviceInfo,
+                message = "projectsResult=$resultStr",
+                errorCode = ERROR_OPENAPI_INNER_SERVICE_FAIL,
+                params = arrayOf(serviceInfo)
+            )
         }
-        templateDao.getOriginalTemplate(dslContext, projectIds).forEach {
-            srcTemplateIds = srcTemplateIds.plus(it.value1())
-        }
-        val srcTemplateNum = srcTemplateIds.size
-        // 实例化原始模板总数
-        val instancedSrcTemplateNum = templatePipelineDao.countSrcTemplateInstanced(dslContext, srcTemplateIds).value1()
-        logger.info("$interfaceName:getPipelineAndTemplateStatistic:Output:($pipelineNum,$instancedPipelineNum,$templateNum,$instancedTemplateNum,$srcTemplateNum,$instancedSrcTemplateNum)")
-        return PipelineAndTemplateStatistic(
-            pipelineNum = pipelineNum,
-            instancedPipelineNum = instancedPipelineNum,
-            templateNum = templateNum,
-            instancedTemplateNum = instancedTemplateNum,
-            srcTemplateNum = srcTemplateNum,
-            instancedSrcTemplateNum = instancedSrcTemplateNum
-        )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineTemplateStatisticService::class.java)
+        // 2.根据所有项目Id获取对应流水线
+        val projectIds = projectsResult.data!!.map { it.englishName }.toSet()
+        logger.info("$interfaceName:getProjectIdsByOrganizationTypeAndName:Output:${projectIds}")
+        return projectIds
     }
 }
