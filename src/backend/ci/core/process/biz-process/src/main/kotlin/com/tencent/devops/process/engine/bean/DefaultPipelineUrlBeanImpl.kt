@@ -24,23 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.process.engine.bean
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 
-@Configuration
-class TencentAtomConfig {
+class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
+    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        return "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+    }
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
+    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        return "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+    }
 }

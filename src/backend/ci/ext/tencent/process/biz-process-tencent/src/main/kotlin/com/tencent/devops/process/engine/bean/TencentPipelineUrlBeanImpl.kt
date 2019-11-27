@@ -24,23 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.process.engine.bean
 
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import org.slf4j.LoggerFactory
 
-@Configuration
-class TencentAtomConfig {
+class TencentPipelineUrlBeanImpl constructor(
+    private val commonConfig: CommonConfig,
+    private val shortUrlApi: ShortUrlApi
+) : PipelineUrlBean {
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
+    companion object {
+        private val logger = LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
+    }
+
+    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        logger.info("[$buildId]|genBuildDetailUrl| host=${commonConfig.devopsHostGateway}")
+        return shortUrlApi.getShortUrl(
+            url = "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
+            ttl = 24 * 3600 * 3
+        )
+    }
+
+    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        logger.info("[$buildId]|genBuildDetailUrl| outHost=${commonConfig.devopsOuterHostGateWay}")
+        return shortUrlApi.getShortUrl(
+            url = "${commonConfig.devopsOuterHostGateWay}/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
+            ttl = 24 * 3600 * 3
+        )
+    }
 }
