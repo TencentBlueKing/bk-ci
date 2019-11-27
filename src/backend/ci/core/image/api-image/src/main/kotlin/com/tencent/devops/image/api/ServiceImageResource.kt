@@ -133,7 +133,6 @@ interface ServiceImageResource {
         searchKey: String?
     ): Result<ImageListResp>
 
-
     @ApiOperation("获取所有项目镜像列表")
     @Path("/{projectId}/listAllProjectImages")
     @GET

@@ -97,6 +97,7 @@ class ImageArtifactoryService @Autowired constructor(
         val repoNames = images.map { it.repo }.toSet().toList().sortedBy { it }
         val repos = repoNames.map {
             DockerRepo().apply {
+                repoUrl = dockerConfig.imagePrefix
                 repo = it
                 type = "private"
                 createdBy = "system"
@@ -194,6 +195,7 @@ class ImageArtifactoryService @Autowired constructor(
 
         val firstImage = buildImages[0]
         return DockerRepo().apply {
+            repoUrl = dockerConfig.imagePrefix
             repo = imageRepo
             type = parseType(imageRepo)
             repoType = ""
@@ -246,6 +248,7 @@ class ImageArtifactoryService @Autowired constructor(
 
         val firstImage = devImages[0]
         return DockerRepo().apply {
+            repoUrl = dockerConfig.imagePrefix
             repo = imageRepo
             type = parseType(imageRepo)
             repoType = ""
