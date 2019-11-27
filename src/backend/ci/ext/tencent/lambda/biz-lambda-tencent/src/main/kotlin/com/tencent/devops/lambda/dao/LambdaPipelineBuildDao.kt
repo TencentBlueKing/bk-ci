@@ -31,7 +31,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineBuildDao {
+class LambdaPipelineBuildDao {
 
     fun getBuildInfo(
         dslContext: DSLContext,

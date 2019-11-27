@@ -28,7 +28,7 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
 import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
@@ -38,10 +38,10 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceScmResourceImpl @Autowired constructor(
+class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildWebhookService,
     private val rabbitTemplate: RabbitTemplate
-) : ServiceScmResource {
+) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
         return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(rabbitTemplate, GithubWebhookEvent(githubWebhook = webhook)))
     }

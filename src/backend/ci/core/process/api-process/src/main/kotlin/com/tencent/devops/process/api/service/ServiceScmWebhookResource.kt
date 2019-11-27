@@ -44,7 +44,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/scm")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceScmResource {
+interface ServiceScmWebhookResource {
 
     @ApiOperation("Github仓库提交")
     @POST
