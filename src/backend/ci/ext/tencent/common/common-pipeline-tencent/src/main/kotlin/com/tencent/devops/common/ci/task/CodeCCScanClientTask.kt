@@ -60,11 +60,11 @@ open class CodeCCScanClientTask(
             "\${WORKSPACE}/${inputs.path!!.removePrefix("/")}"
         }
         return if (inputs.scanType == "all") { // 全量
-            "echo /data/landun/workspace > /tmp/scan_file_list.txt \r\n" +
-            "docker run -t --rm -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:/data/landun/workspace ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=/data/landun/workspace' \r\n"
+            "echo \${WORKSPACE} > /tmp/scan_file_list.txt \r\n" +
+            "docker run -t --rm -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
         } else {
-            "echo /data/landun/workspace > /tmp/scan_file_list.txt \r\n" +
-            "docker run -t --rm -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:/data/landun/workspace ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=/data/landun/workspace' \r\n"
+            "echo \${WORKSPACE} > /tmp/scan_file_list.txt \r\n" +
+            "docker run -t --rm -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
         }
     }
 }
