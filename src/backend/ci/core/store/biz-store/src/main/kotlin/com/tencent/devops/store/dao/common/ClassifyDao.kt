@@ -124,12 +124,11 @@ class ClassifyDao {
 
     fun convert(record: TClassifyRecord): Classify {
         with(record) {
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(classifyCode)
             return Classify(
                 id = id,
                 classifyCode = classifyCode,
                 // 分类信息名称没有配置国际化信息则取分类表里面的名称
-                classifyName = if (classifyLanName == classifyCode) classifyName else classifyLanName,
+                classifyName = MessageCodeUtil.getMessageByLocale(classifyName, classifyCode),
                 classifyType = StoreTypeEnum.getStoreType(type.toInt()),
                 weight = weight,
                 createTime = createTime.timestampmilli(),
