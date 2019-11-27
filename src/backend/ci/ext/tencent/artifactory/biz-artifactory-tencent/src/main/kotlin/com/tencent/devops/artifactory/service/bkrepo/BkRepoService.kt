@@ -157,7 +157,7 @@ class BkRepoService @Autowired constructor(
 
     fun transferFileInfo(
         projectId: String1,
-        fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>,
+        fileList: List<NodeInfo>,
         pipelineHasPermissionList: List<String1>,
         checkPermission: Boolean = true
     ): List<FileInfo> {
@@ -263,7 +263,7 @@ class BkRepoService @Autowired constructor(
         val matchers = globs.map {
             FileSystems.getDefault().getPathMatcher("glob:$it")
         }
-        val matchedFiles = mutableListOf<com.tencent.bkrepo.generic.pojo.FileInfo>()
+        val matchedFiles = mutableListOf<NodeInfo>()
         matchers.forEach { matcher ->
             allFiles.forEach {
                 if (matcher.matches(Paths.get(it.path.removePrefix("/")))) {
