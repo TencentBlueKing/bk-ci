@@ -105,7 +105,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         when (repo) {
             is CodeSvnRepository -> {
                 val credInfo = getCredential(projectId, repo)
-                return client.getScm(ServiceScmResource::class).getLatestRevision(
+                return client.get(ServiceScmResource::class).getLatestRevision(
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_SVN,
@@ -122,7 +122,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
                 return if (isOauth) {
                     val credInfo = getAccessToken(repo.userName)
-                    client.getScm(ServiceScmOauthResource::class).getLatestRevision(
+                    client.get(ServiceScmOauthResource::class).getLatestRevision(
                         projectName = repo.projectName,
                         url = repo.url,
                         type = ScmType.CODE_GIT,
@@ -136,7 +136,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     )
                 } else {
                     val credInfo = getCredential(projectId, repo)
-                    client.getScm(ServiceScmResource::class).getLatestRevision(
+                    client.get(ServiceScmResource::class).getLatestRevision(
                         projectName = repo.projectName,
                         url = repo.url,
                         type = ScmType.CODE_GIT,
@@ -152,7 +152,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
             is CodeGitlabRepository -> {
                 val credInfo = getCredential(projectId, repo)
-                return client.getScm(ServiceScmResource::class).getLatestRevision(
+                return client.get(ServiceScmResource::class).getLatestRevision(
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_GITLAB,
@@ -214,7 +214,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         when (repo) {
             is CodeSvnRepository -> {
                 val credInfo = getCredential(projectId, repo)
-                return client.getScm(ServiceScmResource::class).listBranches(
+                return client.get(ServiceScmResource::class).listBranches(
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_SVN,
@@ -229,7 +229,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
                 return if (isOauth) {
                     val credInfo = getAccessToken(repo.userName)
-                    client.getScm(ServiceScmOauthResource::class).listBranches(
+                    client.get(ServiceScmOauthResource::class).listBranches(
                         projectName = repo.projectName,
                         url = repo.url,
                         type = ScmType.CODE_GIT,
@@ -241,7 +241,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     )
                 } else {
                     val credInfo = getCredential(projectId, repo)
-                    client.getScm(ServiceScmResource::class).listBranches(
+                    client.get(ServiceScmResource::class).listBranches(
                         projectName = repo.projectName,
                         url = repo.url,
                         type = ScmType.CODE_GIT,
@@ -255,7 +255,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
             is CodeGitlabRepository -> {
                 val credInfo = getCredential(projectId, repo)
-                return client.getScm(ServiceScmResource::class).listBranches(
+                return client.get(ServiceScmResource::class).listBranches(
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_GITLAB,
@@ -283,13 +283,13 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
                 return if (isOauth) {
                     val credInfo = getAccessToken(repo.userName)
-                    client.getScm(ServiceScmOauthResource::class).listTags(
+                    client.get(ServiceScmOauthResource::class).listTags(
                         projectName = repo.projectName, url = repo.url, type = ScmType.CODE_GIT,
                         token = credInfo.first, userName = repo.userName
                     )
                 } else {
                     val credInfo = getCredential(projectId, repo)
-                    client.getScm(ServiceScmResource::class).listTags(
+                    client.get(ServiceScmResource::class).listTags(
                         projectName = repo.projectName, url = repo.url, type = ScmType.CODE_GIT,
                         token = credInfo.privateKey, userName = credInfo.username
                     )
@@ -297,7 +297,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
             is CodeGitlabRepository -> {
                 val credInfo = getCredential(projectId, repo)
-                return client.getScm(ServiceScmResource::class).listTags(
+                return client.get(ServiceScmResource::class).listTags(
                     projectName = repo.projectName, url = repo.url, type = ScmType.CODE_GITLAB,
                     token = credInfo.privateKey, userName = credInfo.username
                 )
@@ -323,7 +323,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
         logger.info("Add git web hook event($event)")
         if (isOauth) {
-            client.getScm(ServiceScmOauthResource::class).addWebHook(
+            client.get(ServiceScmOauthResource::class).addWebHook(
                 projectName = repo.projectName,
                 url = repo.url,
                 type = ScmType.CODE_GIT,
@@ -335,7 +335,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 event = event
             )
         } else {
-            client.getScm(ServiceScmResource::class).addWebHook(
+            client.get(ServiceScmResource::class).addWebHook(
                 projectName = repo.projectName,
                 url = repo.url,
                 type = ScmType.CODE_GIT,
@@ -356,7 +356,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
             ?: throw OperationException("不是Gitlab 代码仓库")
         val token = getCredential(projectId, repo).privateKey
-        client.getScm(ServiceScmResource::class).addWebHook(
+        client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
             type = ScmType.CODE_GITLAB,
@@ -374,7 +374,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository ?: throw OperationException("不是SVN 代码仓库")
         val credential = getCredential(projectId, repo)
-        client.getScm(ServiceScmResource::class).addWebHook(
+        client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
             type = ScmType.CODE_SVN,
