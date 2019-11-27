@@ -26,7 +26,7 @@
 
 dependencies {
     compile project(":core:notify:biz-notify") // 开源版实现
-    compile project(":core:notify:biz-notify-blueking") // 对接蓝鲸实现
+//    compile project(":core:notify:biz-notify-blueking") // 对接蓝鲸实现
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

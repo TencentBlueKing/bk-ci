@@ -28,6 +28,8 @@ dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-web")
     compile project(":core:common:common-util")
+    compile project(":core:quality:api-quality")
+    compile project(":core:plugin:codecc-plugin:common-codecc")
     //compile project(":ext:tencent:openapi:api-openapi")
     compile project(":core:store:api-store")
     compile project(":ext:tencent:store:api-store-tencent")
