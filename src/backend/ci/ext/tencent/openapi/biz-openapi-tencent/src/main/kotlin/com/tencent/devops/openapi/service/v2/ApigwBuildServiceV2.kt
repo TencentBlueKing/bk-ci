@@ -58,10 +58,10 @@ class ApigwBuildServiceV2(private val client: Client) {
         interfaceName: String? = "ApigwBuildServiceV2"
     ): List<PipelineBuildResponseData>? {
         logger.info("$interfaceName:getBuildList:Input($userId,$bgId,$beginDate,$endDate,$offset,$limit)")
-        //权限校验
+        // 权限校验
         val userDeptInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
         if (userDeptInfo == null || userDeptInfo.bgId.trim() != bgId.trim()) {
-            logger.warn("$interfaceName:PermissionForbidden:userDeptInfo.bgId=${userDeptInfo?.bgId},bgId=${bgId},userId=${userId}")
+            logger.warn("$interfaceName:PermissionForbidden:userDeptInfo.bgId=${userDeptInfo?.bgId},bgId=$bgId,userId=$userId")
             throw PermissionForbiddenException(
                 message = "$userId doesn't have perssion to access data of bg(bgId=$bgId)"
             )
