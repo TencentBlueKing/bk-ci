@@ -25,6 +25,10 @@
  */
 package com.tencent.devops.openapi.service.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -48,6 +52,53 @@ class ApigwPipelineServiceV2(private val client: Client) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwPipelineServiceV2::class.java)
+    }
+
+    fun getListByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
+        logger.info("getListByOrganizationId|$userId,$organizationType,$organizationId,$deptName,$centerName,$page,$pageSize")
+        val projectIds = when (organizationType) {
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> {
+                client.get(ServiceTxProjectResource::class).getProjectEnNamesByOrganization(
+                    userId = userId,
+                    bgId = organizationId,
+                    deptName = deptName,
+                    centerName = centerName
+                )
+            }
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> {
+                client.get(ServiceTxProjectResource::class).getProjectEnNamesByDeptIdAndCenterName(
+                    userId = userId,
+                    deptId = organizationId,
+                    centerName = centerName
+                )
+            }
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> {
+                client.get(ServiceTxProjectResource::class).getProjectEnNamesByCenterId(
+                    userId = userId,
+                    centerId = organizationId
+                )
+            }
+            else -> {
+                throw InvalidParamException(
+                    message = "organizationType not supported, only [${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG},${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT},${AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER}] supported",
+                    params = arrayOf(organizationType)
+                )
+            }
+        }.data?.toSet() ?: emptySet()
+        return getPipelinesByProjectIds(
+            userId = userId,
+            projectIds = projectIds,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     fun getListByOrganization(
@@ -86,6 +137,21 @@ class ApigwPipelineServiceV2(private val client: Client) {
         }
         // 2.根据所有项目Id获取对应流水线
         val projectIds = projectsResult.data!!.map { it.englishName }.toSet()
+
+        return getPipelinesByProjectIds(
+            userId = userId,
+            projectIds = projectIds,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    fun getPipelinesByProjectIds(
+        userId: String,
+        projectIds: Set<String>,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
         val pipelinesResult = client.getWithoutRetry(ServiceProjectPipelineResource::class).listPipelinesByProjectIds(
             userId = userId,
             page = if (page == null || page <= 0) 1 else page,

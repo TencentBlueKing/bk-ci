@@ -43,6 +43,34 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectPermissionService: TxProjectPermissionService,
     private val projectLocalService: ProjectLocalService
 ) : ServiceTxProjectResource {
+    override fun getProjectEnNamesByCenterId(
+        userId: String,
+        centerId: Long?
+    ): Result<List<String>> {
+        return Result(
+            projectLocalService.getProjectEnNamesByCenterId(
+                userId = userId,
+                centerId = centerId,
+                interfaceName = "/service/projects/enNames/center"
+            )
+        )
+    }
+
+    override fun getProjectEnNamesByDeptIdAndCenterName(
+        userId: String,
+        deptId: Long?,
+        centerName: String?
+    ): Result<List<String>> {
+        return Result(
+            projectLocalService.getProjectEnNamesByOrganization(
+                userId = userId,
+                deptId = deptId,
+                centerName = centerName,
+                interfaceName = "/service/projects/enNames/dept"
+            )
+        )
+    }
+
     override fun getProjectEnNamesByOrganization(
         userId: String,
         bgId: Long,
@@ -67,6 +95,15 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         centerName: String?
     ): Result<List<ProjectVO>> {
         return Result(projectLocalService.getProjectByGroup(userId, bgName, deptName, centerName))
+    }
+
+    override fun getProjectByGroupId(
+        userId: String,
+        bgId: Long?,
+        deptId: Long?,
+        centerId: Long?
+    ): Result<List<ProjectVO>> {
+        return Result(projectLocalService.getProjectByGroupId(userId, bgId, deptId, centerId))
     }
 
     override fun list(accessToken: String): Result<List<ProjectVO>> {

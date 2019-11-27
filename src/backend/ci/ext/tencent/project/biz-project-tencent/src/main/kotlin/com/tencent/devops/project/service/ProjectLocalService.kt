@@ -223,6 +223,50 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
+    fun getProjectEnNamesByCenterId(
+        userId: String,
+        centerId: Long?,
+        interfaceName: String?
+    ): List<String> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val list = projectDao.listByGroupId(
+                dslContext = dslContext,
+                bgId = null,
+                deptId = null,
+                centerId = centerId
+            )?.filter { it.enabled == null || it.enabled }?.map { it.englishName }?.toList() ?: emptyList()
+            success = true
+            return list
+        } finally {
+            jmxApi.execute("getProjectEnNamesByOrganization", System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list project EnNames,userName:$userId")
+        }
+    }
+
+    fun getProjectEnNamesByOrganization(
+        userId: String,
+        deptId: Long?,
+        centerName: String?,
+        interfaceName: String?
+    ): List<String> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val list = projectDao.listByOrganization(
+                dslContext = dslContext,
+                deptId = deptId,
+                centerName = centerName
+            )?.filter { it.enabled == null || it.enabled }?.map { it.englishName }?.toList() ?: emptyList()
+            success = true
+            return list
+        } finally {
+            jmxApi.execute("getProjectEnNamesByOrganization", System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list project EnNames,userName:$userId")
+        }
+    }
+
     fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
@@ -338,6 +382,24 @@ class ProjectLocalService @Autowired constructor(
             val grayProjectSet = grayProjectSet()
             val list = ArrayList<ProjectVO>()
             projectDao.listByGroup(dslContext, bgName, deptName, centerName).filter { it.enabled == null || it.enabled }
+                .map {
+                    list.add(packagingBean(it, grayProjectSet))
+                }
+            success = true
+            return list
+        } finally {
+            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects,userName:$userId")
+        }
+    }
+
+    fun getProjectByGroupId(userId: String, bgId: Long?, deptId: Long?, centerId: Long?): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val grayProjectSet = grayProjectSet()
+            val list = ArrayList<ProjectVO>()
+            projectDao.listByGroupId(dslContext, bgId, deptId, centerId).filter { it.enabled == null || it.enabled }
                 .map {
                     list.add(packagingBean(it, grayProjectSet))
                 }
