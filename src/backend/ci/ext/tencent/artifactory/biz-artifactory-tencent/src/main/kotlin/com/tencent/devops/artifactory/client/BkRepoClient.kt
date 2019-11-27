@@ -6,14 +6,14 @@ import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_USER_ID
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.generic.pojo.FileInfo
-import com.tencent.bkrepo.generic.pojo.operate.FileCopyRequest
-import com.tencent.bkrepo.generic.pojo.operate.FileMoveRequest
-import com.tencent.bkrepo.generic.pojo.operate.FileRenameRequest
 import com.tencent.bkrepo.generic.pojo.operate.FileSearchRequest
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
+import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
+import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
+import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
@@ -163,7 +163,7 @@ class BkRepoClient @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Page<NodeInfo> {
-        val url = "$BKREPO_URL/api/generic/search"
+        val url = "$BKREPO_URL/generic/search"
         val requestData = FileSearchRequest(
             projectId = projectId,
             repoNameList = repoNames,
@@ -201,7 +201,7 @@ class BkRepoClient @Autowired constructor(
 
     fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream) {
         logger.info("upload file, projectId: $projectId, repoName: $repoName, path: $path")
-        val url = "$BKREPO_URL/api/generic/upload/simple/$projectId/$repoName/$path"
+        val url = "$BKREPO_URL/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
             override fun writeTo(sink: BufferedSink?) {
                 val source = Okio.source(inputStream)
@@ -230,11 +230,11 @@ class BkRepoClient @Autowired constructor(
     }
 
     fun downloadFile(userId: String, projectId: String, repo: String, path: String) {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") 
     }
 
     fun delete(userId: String, projectId: String, repo: String, path: String) {
-        val url = "$BKREPO_URL/api/generic/delete/$projectId/$repo/$path"
+        val url = "$BKREPO_URL/repository/api/node/$projectId/$repo/$path"
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
@@ -252,14 +252,14 @@ class BkRepoClient @Autowired constructor(
     fun move(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
         logger.info("move, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath, toPath: $toPath")
-        val url = "$BKREPO_URL/api/generic/move"
-        val requestData = FileMoveRequest(
-            projectId,
-            repoName,
-            fromPath,
-            projectId,
-            repoName,
-            toPath,
+        val url = "$BKREPO_URL/repository/api/node/move"
+        val requestData = UserNodeMoveRequest(
+            srcProjectId = projectId,
+            srcRepoName = repoName,
+            srcFullPath = fromPath,
+            destProjectId = projectId,
+            destRepoName = repoName,
+            destPath = toPath,
             overwrite = true
         )
         val request = Request.Builder()
@@ -291,14 +291,14 @@ class BkRepoClient @Autowired constructor(
     ) {
         // todo 校验path参数
         logger.info("copy, userId: $userId, fromProject: $fromProject, fromRepo: $fromRepo, fromPath: $fromPath, toProject: $toProject, toRepo: $toRepo, toPath: $toPath")
-        val url = "$BKREPO_URL/api/generic/copy"
-        val requestData = FileCopyRequest(
-            fromProject,
-            fromRepo,
-            fromPath,
-            toProject,
-            toRepo,
-            toPath,
+	val url = "$BKREPO_URL/repository/api/node/copy"
+        val requestData = UserNodeCopyRequest(
+            srcProjectId = fromProject,
+            srcRepoName = fromRepo,
+            srcFullPath = fromPath,
+            destProjectId = toProject,
+            destRepoName = toRepo,
+            destPath = toPath,
             overwrite = true
         )
         val request = Request.Builder()
@@ -322,8 +322,8 @@ class BkRepoClient @Autowired constructor(
     fun rename(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
         logger.info("rename, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath, toPath: $toPath")
-        val url = "$BKREPO_URL/api/generic/rename"
-        val requestData = FileRenameRequest(projectId, repoName, fromPath, toPath)
+	val url = "$BKREPO_URL/repository/api/node/rename"
+        val requestData = UserNodeRenameRequest(projectId, repoName, fromPath, toPath)
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
@@ -344,7 +344,7 @@ class BkRepoClient @Autowired constructor(
 
     fun mkdir(userId: String, projectId: String, repoName: String, path: String) {
         logger.info("mkdir, path: $path")
-        val url = "$BKREPO_URL/api/generic/create/$projectId/$repoName/$path"
+        val url = "$BKREPO_URL/repository/api/node/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
@@ -361,7 +361,7 @@ class BkRepoClient @Autowired constructor(
 
     fun getFileDetail(userId: String, projectId: String, repoName: String, path: String): NodeDetail? {
         logger.info("getFileInfo, projectId:$projectId, repoName: $repoName, path: $path")
-        val url = "$BKREPO_URL/api/generic/detail/$projectId/$repoName/$path"
+        val url = "$BKREPO_URL/repository/api/node/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
@@ -389,7 +389,7 @@ class BkRepoClient @Autowired constructor(
 
     fun getFileContent(userId: String, projectId: String, repoName: String, path: String): Pair<ByteArray, MediaType> {
         logger.info("getFileContent, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
-        val url = "$BKREPO_URL/api/generic/$projectId/$repoName/$path"
+        val url = "$BKREPO_URL/generic/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
             .header(AUTH_HEADER_USER_ID, "admin")
@@ -420,7 +420,7 @@ class BkRepoClient @Autowired constructor(
             "downloadUser: $downloadUser, ttl: $ttl, directed: $directed")
         throw OperationException("TODO")
         // import com.tencent.bkrepo.generic.pojo.devops.ExternalUrlRequest
-//        val url = "$BKREPO_URL/api/generic/devops/createExternalUrl"
+//        val url = "$BKREPO_URL/generic/devops/createExternalUrl"
 //        val requestData = ExternalUrlRequest(
 //            projectId = projectId,
 //            repoName = repoName,
