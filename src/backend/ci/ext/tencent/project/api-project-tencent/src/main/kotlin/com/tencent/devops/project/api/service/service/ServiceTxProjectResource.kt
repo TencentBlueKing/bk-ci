@@ -172,7 +172,7 @@ interface ServiceTxProjectResource {
         @ApiParam("用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("中心名称", required = true)
+        @ApiParam("中心ID", required = true)
         @QueryParam("centerId")
         centerId: Long?
     ): Result<List<String>>
