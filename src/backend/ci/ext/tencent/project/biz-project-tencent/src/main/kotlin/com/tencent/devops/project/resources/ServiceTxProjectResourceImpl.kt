@@ -97,6 +97,23 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.getProjectByGroup(userId, bgName, deptName, centerName))
     }
 
+    override fun getProjectByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?
+    ): Result<List<ProjectVO>> {
+        return Result(projectLocalService.getProjectByOrganizationId(
+            userId = userId,
+            organizationType = organizationType,
+            organizationId = organizationId,
+            deptName = deptName,
+            centerName = centerName,
+            interfaceName = "/service/project/tx/getProjectByOrganizationId"
+        ))
+    }
+
     override fun getProjectByGroupId(
         userId: String,
         bgId: Long?,

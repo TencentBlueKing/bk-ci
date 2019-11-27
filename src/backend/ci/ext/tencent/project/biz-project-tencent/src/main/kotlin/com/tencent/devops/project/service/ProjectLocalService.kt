@@ -29,6 +29,9 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -180,12 +183,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
                     ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = projectId,
-                        retryCount = 0,
-                        projectCreateInfo = projectCreateInfo
-                    )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = projectId,
+                    retryCount = 0,
+                    projectCreateInfo = projectCreateInfo
+                )
                 )
                 success = true
                 return projectId
@@ -204,7 +207,7 @@ class ProjectLocalService @Autowired constructor(
         bgId: Long?,
         deptName: String?,
         centerName: String?,
-        interfaceName: String?
+        interfaceName: String? = "ProjectLocalService"
     ): List<String> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -226,7 +229,7 @@ class ProjectLocalService @Autowired constructor(
     fun getProjectEnNamesByCenterId(
         userId: String,
         centerId: Long?,
-        interfaceName: String?
+        interfaceName: String? = "ProjectLocalService"
     ): List<String> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -249,7 +252,7 @@ class ProjectLocalService @Autowired constructor(
         userId: String,
         deptId: Long?,
         centerName: String?,
-        interfaceName: String?
+        interfaceName: String? = "ProjectLocalService"
     ): List<String> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -333,33 +336,33 @@ class ProjectLocalService @Autowired constructor(
                 }
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
                 try {
-                projectDao.create(
-                    dslContext = dslContext,
-                    userId = userId,
-                    logoAddress = logoAddress,
-                    projectCreateInfo = projectCreateInfo,
-                    userDeptDetail = userDeptDetail,
-                    projectId = projectId,
-                    channelCode = ProjectChannelCode.BS
-                )
-            } catch (e: DuplicateKeyException) {
-                logger.warn("Duplicate project $projectCreateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-            } catch (t: Throwable) {
-                logger.warn("Fail to create the project ($projectCreateInfo)", t)
-                deleteProjectFromAuth(projectId, accessToken)
-                throw t
-            }
+                    projectDao.create(
+                        dslContext = dslContext,
+                        userId = userId,
+                        logoAddress = logoAddress,
+                        projectCreateInfo = projectCreateInfo,
+                        userDeptDetail = userDeptDetail,
+                        projectId = projectId,
+                        channelCode = ProjectChannelCode.BS
+                    )
+                } catch (e: DuplicateKeyException) {
+                    logger.warn("Duplicate project $projectCreateInfo", e)
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                } catch (t: Throwable) {
+                    logger.warn("Fail to create the project ($projectCreateInfo)", t)
+                    deleteProjectFromAuth(projectId, accessToken)
+                    throw t
+                }
 
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
                     ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = projectId,
-                        retryCount = 0,
-                        projectCreateInfo = projectCreateInfo
-                    )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = projectId,
+                    retryCount = 0,
+                    projectCreateInfo = projectCreateInfo
+                )
                 )
                 success = true
             } finally {
@@ -383,6 +386,45 @@ class ProjectLocalService @Autowired constructor(
             val list = ArrayList<ProjectVO>()
             projectDao.listByGroup(dslContext, bgName, deptName, centerName).filter { it.enabled == null || it.enabled }
                 .map {
+                    list.add(packagingBean(it, grayProjectSet))
+                }
+            success = true
+            return list
+        } finally {
+            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects,userName:$userId")
+        }
+    }
+
+    fun getProjectByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?,
+        interfaceName: String? = "ProjectLocalService"
+    ): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val grayProjectSet = grayProjectSet()
+            val list = ArrayList<ProjectVO>()
+            val records = when (organizationType) {
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> {
+                    projectDao.listByOrganization(dslContext, organizationId, deptName, centerName)
+                }
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> {
+                    projectDao.listByOrganization(dslContext, organizationId, centerName)
+                }
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> {
+                    projectDao.listByGroupId(dslContext, null, null, organizationId)
+                }
+                else -> {
+                    null
+                }
+            }
+            records?.filter { it.enabled == null || it.enabled }
+                ?.map {
                     list.add(packagingBean(it, grayProjectSet))
                 }
             success = true
@@ -495,12 +537,12 @@ class ProjectLocalService @Autowired constructor(
             rabbitTemplate.convertAndSend(
                 EXCHANGE_PAASCC_PROJECT_UPDATE,
                 ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
-                    userId = userId,
-                    accessToken = accessToken,
-                    projectId = projectId,
-                    retryCount = 0,
-                    projectUpdateInfo = projectUpdateInfo
-                )
+                userId = userId,
+                accessToken = accessToken,
+                projectId = projectId,
+                retryCount = 0,
+                projectUpdateInfo = projectUpdateInfo
+            )
             )
             success = true
         } catch (e: DuplicateKeyException) {
@@ -529,12 +571,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_UPDATE_LOGO,
                     ROUTE_PAASCC_PROJECT_UPDATE_LOGO, PaasCCUpdateProjectLogo(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = project.projectId,
-                        retryCount = 0,
-                        projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
-                    )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = project.projectId,
+                    retryCount = 0,
+                    projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
+                )
                 )
                 return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {

@@ -82,6 +82,27 @@ interface ServiceTxProjectResource {
     ): Result<List<ProjectVO>>
 
     @GET
+    @Path("/getProjectByOrganizationId")
+    @ApiOperation("根据组织架构查询所有项目")
+    fun getProjectByOrganizationId(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
+        @ApiParam("deptName", required = false)
+        @QueryParam("deptName")
+        deptName: String?,
+        @ApiParam("centerName", required = false)
+        @QueryParam("centerName")
+        centerName: String?
+    ): Result<List<ProjectVO>>
+
+    @GET
     @Path("/getProjectByGroupId")
     @ApiOperation("根据组织架构查询所有项目")
     fun getProjectByGroupId(
