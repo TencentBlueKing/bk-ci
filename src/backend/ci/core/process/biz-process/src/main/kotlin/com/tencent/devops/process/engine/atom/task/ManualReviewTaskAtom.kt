@@ -38,15 +38,10 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.config.ConfigurableBeanFactory
-import org.springframework.context.annotation.Scope
-import org.springframework.stereotype.Component
 
 /**
  * 人工审核插件
  */
-@Component
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class ManualReviewTaskAtom(private val rabbitTemplate: RabbitTemplate) : IAtomTask<ManualReviewUserTaskElement> {
 
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
