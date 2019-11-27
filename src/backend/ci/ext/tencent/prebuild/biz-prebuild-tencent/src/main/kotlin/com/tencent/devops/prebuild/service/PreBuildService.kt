@@ -285,12 +285,19 @@ class PreBuildService @Autowired constructor(
         preAgents.forEach {
             if (it.hostName == hostName) {
                 logger.info("Get user personal vm, hostName: $hostName")
+                if (it.ip != ip) { // IP 有变更
+                    prebuildPersonalMachineDao.updateIp(dslContext, userId, hostName, ip)
+                }
+
                 return it
             }
         }
         preAgents.forEach {
             if (it.ip == ip) {
                 logger.info("Get user personal vm, ip: $ip")
+                if (it.hostName != hostName) { // hostname 有变更
+                    prebuildPersonalMachineDao.updateHostname(dslContext, userId, hostName, ip)
+                }
                 return it
             }
         }

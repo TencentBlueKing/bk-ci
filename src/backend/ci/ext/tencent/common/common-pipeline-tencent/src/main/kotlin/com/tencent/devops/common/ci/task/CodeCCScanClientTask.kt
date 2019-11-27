@@ -10,7 +10,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("CodeCC代码检查任务(客户端)")
 open class CodeCCScanClientTask(
     @ApiModelProperty("id", required = false)
-    override var displayName: String,
+    override var displayName: String?,
     @ApiModelProperty("入参", required = true)
     override val inputs: CodeCCScanClientInput,
     @ApiModelProperty("执行条件", required = true)
@@ -26,7 +26,7 @@ open class CodeCCScanClientTask(
 
     override fun covertToElement(config: CiBuildConfig): LinuxScriptElement {
         return LinuxScriptElement(
-                displayName,
+                displayName ?: "codecc",
                 null,
                 null,
                 BuildScriptType.SHELL,
