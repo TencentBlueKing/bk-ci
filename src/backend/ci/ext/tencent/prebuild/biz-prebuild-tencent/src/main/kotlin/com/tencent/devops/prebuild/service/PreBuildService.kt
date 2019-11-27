@@ -4,7 +4,10 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.task.AbstractTask
+import com.tencent.devops.common.ci.task.CodeCCScanClientTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -12,6 +15,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -132,6 +136,8 @@ class PreBuildService @Autowired constructor(
                         logger.info("install market atom: ${element.getAtomCode()}")
 //                        installMarketAtom(getUserProjectId(userId), userId, element.getAtomCode())
                     }
+
+                    addAssociateElement(it, elementList, userId, preProjectId)
                 }
                 val dispatchType = ThirdPartyAgentIDDispatchType(
                         displayName = agentInfo.agentId,
@@ -165,6 +171,33 @@ class PreBuildService @Autowired constructor(
             stageList.add(Stage(containerList, "stage-${stageIndex + 3}"))
         }
         return Model(preProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, userId)
+    }
+
+    private fun addAssociateElement(it: AbstractTask, elementList: MutableList<Element>, userId: String, preProjectId: String) {
+        if (it.getTaskType() == CodeCCScanClientTask.taskType) { // 如果yaml里面写的是codecc检查任务，则需要增加一个归档报告的插件
+            elementList.add(ReportArchiveElement(
+                    "reportArchive",
+                    null,
+                    null,
+                    "/tmp/codecc_$preProjectId/",
+                    "index.html",
+                    "PreBuild Report",
+                    true,
+                    setOf(userId),
+                    "【\${pipeline.name}】 #\${pipeline.build.num} PreBuild报告已归档"
+            ))
+            elementList.add(SendRTXNotifyElement(
+                    "sendRTXNotify",
+                    null,
+                    null,
+                    setOf(userId),
+                    "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成通知",
+                    "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成\n",
+                    false,
+                    null,
+                    true
+            ))
+        }
     }
 
     fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
