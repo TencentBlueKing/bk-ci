@@ -23,14 +23,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.api.external
+package com.tencent.devops.openapi.api.v2.app
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.openapi.pojo.BuildStatisticsResponse
+import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -38,47 +37,34 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * Created by ddlin on 2018/02/06.
- * Powered By Tencent
- */
-@Api(tags = ["SERVICE_MEASURE"], description = "服务-度量资源")
-@Path("/service")
+@Api(tags = ["OPEN_API_V2_QUALITY"], description = "OPEN-API-V2-质量红线资源")
+@Path("/apigw-app/v2/quality")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceMeasureResource {
+interface ApigwAppQualityResource {
 
-    @ApiOperation("获取流水线构建结果统计数据")
+    @ApiOperation("获取某次构建的质量红线数据")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @GET
-    @Path("/pipelines/builds/statistics")
-    fun buildStatistics(
+    fun getBuildQuality(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "组织类型", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
-        organizationType: String,
-        @ApiParam(value = "组织ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
-        organizationId: Int,
-        @ApiParam("部门名称", required = false, defaultValue = "")
-        @QueryParam("deptName")
-        deptName: String? = "",
-        @ApiParam("中心名称", required = false, defaultValue = "")
-        @QueryParam("centerName")
-        centerName: String? = "",
-        @ApiParam("起始时间", required = false, defaultValue = "")
-        @QueryParam("beginTime")
-        beginTime: String? = "",
-        @ApiParam("截止时间", required = false, defaultValue = "")
-        @QueryParam("endTime")
-        endTime: String? = "",
-        @ApiParam("类型（ALL/CONTAINS_SCRIPT/CONTAINS_CODECC）", required = false, defaultValue = "ALL")
-        @QueryParam("type")
-        type: String? = ""
-    ): Result<BuildStatisticsResponse>
+        @ApiParam(value = "事业群ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BG_ID)
+        bgId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<List<QualityRuleIntercept>?>
 }

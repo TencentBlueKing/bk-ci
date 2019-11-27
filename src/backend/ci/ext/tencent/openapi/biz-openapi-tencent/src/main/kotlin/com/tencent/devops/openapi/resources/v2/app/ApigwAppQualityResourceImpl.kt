@@ -23,19 +23,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.v2.app
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-util")
-    compile project(":core:quality:api-quality")
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    //compile project(":ext:tencent:openapi:api-openapi")
-    compile project(":core:store:api-store")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":core:process:api-process")
-    compile project(":ext:tencent:process:api-process-tencent")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:project:api-project-tencent")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.v2.app.ApigwAppQualityResource
+import com.tencent.devops.openapi.service.v2.ApigwQualityService
+import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwAppQualityResourceImpl @Autowired constructor(
+    private val apigwQualityService: ApigwQualityService
+) : ApigwAppQualityResource {
+    override fun getBuildQuality(
+        userId: String,
+        bgId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<QualityRuleIntercept>?> {
+        return Result(apigwQualityService.getBuildQuality(
+            userId = userId,
+            bgId = bgId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            checkUserPermission = false,
+            interfaceName = "/v2/quality/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}"
+        ))
+    }
 }
-

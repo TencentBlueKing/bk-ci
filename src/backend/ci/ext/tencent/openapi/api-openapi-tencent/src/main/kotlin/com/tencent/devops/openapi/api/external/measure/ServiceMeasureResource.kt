@@ -23,14 +23,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.api.v2
+package com.tencent.devops.openapi.api.external.measure
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.openapi.api.external.measure.PipelineBuildResponseData
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.openapi.pojo.BuildStatisticsResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -38,78 +38,70 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_V2_BUILD"], description = "OPEN-API-V2-构建资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/builds")
+@Api(tags = ["SERVICE_MEASURE"], description = "服务-度量资源")
+@Path("/service")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ApigwBuildResourceV2 {
-
-    @ApiOperation("停止构建")
-    @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
-    fun stop(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<Boolean>
+interface ServiceMeasureResource {
 
     @ApiOperation("流水线构建查询接口，含详情与质量红线信息")
     @GET
-    @Path("/detail/listByBG")
-    fun getBuildListByBG(
+    @Path("/pipeline/builds")
+    fun getBuildList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "事业群ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
-        bgId: String,
         @ApiParam(value = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "beginDate")
-        beginDate: Long?,
+        beginDate: Long,
         @ApiParam(value = "结束时间(时间戳形式)", required = true)
         @QueryParam(value = "endDate")
-        endDate: Long?,
+        endDate: Long,
+        @ApiParam(value = "事业群ID", required = true)
+        @QueryParam(value = "bgId")
+        bgId: String,
         @ApiParam(value = "偏移量", required = true, defaultValue = "0")
         @QueryParam(value = "offset")
         @DefaultValue("0")
-        offset: Int? = 0,
+        offset: Int = 0,
         @ApiParam(value = "查询数量", required = true, defaultValue = "10")
         @QueryParam(value = "limit")
         @DefaultValue("10")
-        limit: Int? = 10
-    ): Result<List<PipelineBuildResponseData>?>
+        limit: Int = 10
+    ): Result<List<PipelineBuildResponseData>>
 
-    @ApiOperation("构建详情")
+    @ApiOperation("获取流水线构建结果统计数据")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
-    fun detail(
+    @Path("/pipelines/builds/statistics")
+    fun buildStatistics(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<ModelDetail>
+        @ApiParam(value = "组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Int,
+        @ApiParam("部门名称", required = false, defaultValue = "")
+        @QueryParam("deptName")
+        deptName: String? = "",
+        @ApiParam("中心名称", required = false, defaultValue = "")
+        @QueryParam("centerName")
+        centerName: String? = "",
+        @ApiParam("起始时间", required = false, defaultValue = "")
+        @QueryParam("beginTime")
+        beginTime: String? = "",
+        @ApiParam("截止时间", required = false, defaultValue = "")
+        @QueryParam("endTime")
+        endTime: String? = "",
+        @ApiParam("类型（ALL/CONTAINS_SCRIPT/CONTAINS_CODECC）", required = false, defaultValue = "ALL")
+        @QueryParam("type")
+        type: String? = ""
+    ): Result<BuildStatisticsResponse>
 }
