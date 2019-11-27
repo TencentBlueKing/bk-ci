@@ -19,6 +19,7 @@ import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectHavingStep
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -203,24 +204,20 @@ class OpImageDao @Autowired constructor() {
             baseStep = baseStep.join(tImageLabelRel).on(tImage.ID.eq(tImageLabelRel.IMAGE_ID))
             conditions.add(tImageLabelRel.LABEL_ID.`in`(labelIdList))
         }
-        val conditionStep = if (null != sortType) {
-            // 排序字段，只提供IMAGE_NAME与CREATE_TIME两种排序字段
-            val realSortType = tImage.field(sortType.sortType)
-
-            // 排序
+        if (null != sortType) {
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(DSL.field(sortType.sortType).desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(DSL.field(sortType.sortType).asc())
             }
         } else {
             baseStep.where(conditions)
         }
         // 分页
         val limitStep = if (page != null && page > 0 && pageSize != null && pageSize > 0) {
-            conditionStep.limit((page - 1) * pageSize, pageSize)
+            baseStep.limit((page - 1) * pageSize, pageSize)
         } else {
-            conditionStep
+            baseStep
         }
         logger.info("$interfaceName:listOpImages:SQL:${limitStep.getSQL(true)}")
         return limitStep.fetch()
