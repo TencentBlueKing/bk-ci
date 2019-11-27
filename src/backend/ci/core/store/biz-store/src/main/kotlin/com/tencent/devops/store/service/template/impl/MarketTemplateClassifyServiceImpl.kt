@@ -26,7 +26,7 @@
 
 package com.tencent.devops.store.service.template.impl
 
-import com.tencent.devops.store.dao.template.TemplateDao
+import com.tencent.devops.store.dao.template.StoreTemplateDao
 import com.tencent.devops.store.service.common.AbstractClassifyService
 import com.tencent.devops.store.service.template.MarketTemplateClassifyService
 import org.jooq.DSLContext
@@ -43,7 +43,7 @@ class MarketTemplateClassifyServiceImpl @Autowired constructor() : MarketTemplat
     lateinit var dslContext: DSLContext
 
     @Autowired
-    lateinit var templateDao: TemplateDao
+    lateinit var templateDao: StoreTemplateDao
 
     override fun getDeleteClassifyFlag(classifyId: String): Boolean {
         // 允许删除分类是条件：1、该分类下的模板都不处于上架状态 2、该分类下的模板如果处于已下架状态但已经没人在用
