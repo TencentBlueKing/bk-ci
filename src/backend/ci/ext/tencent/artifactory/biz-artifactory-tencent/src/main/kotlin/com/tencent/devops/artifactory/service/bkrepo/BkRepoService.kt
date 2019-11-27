@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.devops.artifactory.client.BkRepoClient
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
