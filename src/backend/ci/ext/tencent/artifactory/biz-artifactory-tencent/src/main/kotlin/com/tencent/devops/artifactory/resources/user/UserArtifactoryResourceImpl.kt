@@ -111,10 +111,10 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         checkParameters(userId, projectId)
         return if (repoGray.isGray(projectId, redisOperation)) {
             val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
-            return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
+            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
         } else {
             val result = artifactorySearchService.searchFileAndProperty(userId, projectId, searchProps)
-            return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
+            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
         }
     }
 

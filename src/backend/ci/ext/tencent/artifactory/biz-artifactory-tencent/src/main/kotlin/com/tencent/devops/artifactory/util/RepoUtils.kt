@@ -1,5 +1,7 @@
 package com.tencent.devops.artifactory.util
 
+import com.tencent.bkrepo.repository.pojo.node.NodeDetail
+import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -28,11 +30,11 @@ object RepoUtils {
         }
     }
 
-    fun isPipelineFile(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): Boolean {
-        return fileInfo.repoName == PIPELINE_REPO
+    fun isPipelineFile(nodeInfo: NodeInfo): Boolean {
+        return nodeInfo.repoName == PIPELINE_REPO
     }
 
-    fun toFileInfo(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): FileInfo {
+    fun toFileInfo(fileInfo: NodeInfo): FileInfo {
         val fullPath = refineFullPath(fileInfo)
         return FileInfo(
             name = fileInfo.name,
@@ -46,18 +48,34 @@ object RepoUtils {
         )
     }
 
-    fun toFileDetail(fileDetail: com.tencent.bkrepo.generic.pojo.FileDetail): FileDetail {
-        return FileDetail(
-            name = fileDetail.fileInfo.name,
-            path = fileDetail.fileInfo.path,
-            fullName = fileDetail.fileInfo.fullPath,
-            fullPath = fileDetail.fileInfo.fullPath,
-            size = fileDetail.fileInfo.size,
-            createdTime = LocalDateTime.parse(fileDetail.fileInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            modifiedTime = LocalDateTime.parse(fileDetail.fileInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            checksums = FileChecksums(fileDetail.fileInfo.sha256, "", ""),
-            meta = fileDetail.metadata // todo  元数据补充 pipelineName
+    fun toFileInfo(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): FileInfo {
+        val fullPath = refineFullPath(fileInfo)
+        return FileInfo(
+            name = fileInfo.name,
+            fullName = fullPath,
+            path = fileInfo.path,
+            fullPath = fullPath,
+            size = if (fileInfo.folder) -1 else fileInfo.size,
+            folder = fileInfo.folder,
+            modifiedTime = LocalDateTime.parse(fileInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            artifactoryType = ArtifactoryType.CUSTOM_DIR
         )
+    }
+
+    fun toFileDetail(nodeDetail: NodeDetail): FileDetail {
+        with(nodeDetail) {
+            return FileDetail(
+                name = nodeInfo.name,
+                path = nodeInfo.path,
+                fullName = nodeInfo.fullPath,
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                createdTime = LocalDateTime.parse(nodeInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                checksums = FileChecksums(nodeInfo.sha256, "", ""),
+                meta = mapOf() // todo  元数据补充 pipelineName
+            )
+        }
     }
 
     private fun refineFullPath(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): String {
@@ -65,6 +83,14 @@ object RepoUtils {
             fileInfo.fullPath + "/"
         } else {
             fileInfo.fullPath
+        }
+    }
+
+    private fun refineFullPath(nodeInfo: NodeInfo): String {
+        return if (nodeInfo.folder && !nodeInfo.fullPath.endsWith("/")) {
+            nodeInfo.fullPath + "/"
+        } else {
+            nodeInfo.fullPath
         }
     }
 }

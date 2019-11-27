@@ -173,8 +173,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
         }
 
         val properties = mapOf(
-                "userId" to userId,
-                "projectId" to projectId
+            "userId" to userId,
+            "projectId" to projectId
         )
         jFrogService.deploy(realPath, inputStream, properties)
     }
