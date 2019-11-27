@@ -1,5 +1,6 @@
 package com.tencent.devops.process.api.ipt
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import com.tencent.devops.process.pojo.ipt.IptBuildCommitInfo
 import io.swagger.annotations.Api
@@ -15,24 +16,14 @@ interface BuildIptRepoResource {
 
     @ApiOperation("")
     @GET
-    @Path("/project/{projectId}/pipeline/{pipelineId}/commit/{commitId}/buildCommitInfo")
-    fun getCommitBuildInfo(
-        @PathParam("projectId")
-        projectId: String,
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @PathParam("commitId")
-        commitId: String
-    ): IptBuildCommitInfo
-
-    @ApiOperation("")
-    @GET
-    @Path("/project/{projectId}/pipeline/{pipelineId}/commit/{commitId}/artifactorytInfo")
+    @Path("/pipeline/{pipelineId}/commit/{commitId}/artifactorytInfo")
     fun getCommitBuildArtifactorytInfo(
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String,
+        @QueryParam("userId")
+        userId: String,
         @PathParam("commitId")
         commitId: String
     ): IptBuildArtifactoryInfo
