@@ -33,7 +33,6 @@ import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.repository.api.AppRepositoryResource
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.service.CommitService
-import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
