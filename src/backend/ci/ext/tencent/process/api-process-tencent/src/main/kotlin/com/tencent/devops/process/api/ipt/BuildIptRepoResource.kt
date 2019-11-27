@@ -2,7 +2,6 @@ package com.tencent.devops.process.api.ipt
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
-import com.tencent.devops.process.pojo.ipt.IptBuildCommitInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import javax.ws.rs.*
