@@ -60,15 +60,11 @@ open class CodeCCScanClientTask(
             "\${WORKSPACE}/${inputs.path!!.removePrefix("/")}"
         }
         return if (inputs.scanType == "all") { // 全量
-            "cd \${WORKSPACE} \r\n" +
-            "echo $path > /tmp/scan_file_list.txt \r\n" +
-//            "python ${config.codeCCSofwarePath} \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE} \r\n"
-            "docker run -it -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:/data/landun/workspace ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
+            "echo /data/landun/workspace > /tmp/scan_file_list.txt \r\n" +
+            "docker run -it -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:/data/landun/workspace ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=/data/landun/workspace' \r\n"
         } else {
-            "cd \${WORKSPACE} \r\n" +
-            "echo $path > /tmp/scan_file_list.txt \r\n" +
-//            "python ${config.codeCCSofwarePath} \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE} \r\n"
-            "docker run -it -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:/data/landun/workspace ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
+            "echo /data/landun/workspace > /tmp/scan_file_list.txt \r\n" +
+            "docker run -it -v /tmp/scan_file_list.txt:/tmp/scan_file_list.txt -v \${WORKSPACE}:/data/landun/workspace ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=/data/landun/workspace' \r\n"
         }
     }
 }
