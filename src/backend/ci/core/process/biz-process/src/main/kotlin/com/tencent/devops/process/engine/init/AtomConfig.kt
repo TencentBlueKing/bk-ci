@@ -26,8 +26,12 @@
 
 package com.tencent.devops.process.engine.init
 
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.engine.atom.task.ManualReviewTaskAtom
 import com.tencent.devops.process.engine.atom.task.SubPipelineCallAtom
+import com.tencent.devops.process.engine.bean.DefaultPipelineUrlBeanImpl
+import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -41,8 +45,11 @@ import org.springframework.context.annotation.Configuration
 class AtomConfig {
 
     @Bean
-    fun manualReviewTaskAtom(@Autowired rabbitTemplate: RabbitTemplate) =
-        ManualReviewTaskAtom(rabbitTemplate = rabbitTemplate)
+    fun pipelineUrlBean(@Autowired commonConfig: CommonConfig) = DefaultPipelineUrlBeanImpl(commonConfig)
+
+    @Bean
+    fun manualReviewTaskAtom(@Autowired client: Client, @Autowired rabbitTemplate: RabbitTemplate, @Autowired pipelineUrlBean: PipelineUrlBean) =
+        ManualReviewTaskAtom(client = client, rabbitTemplate = rabbitTemplate, pipelineUrlBean = pipelineUrlBean)
 
     @Bean
     fun subPipelineCallAtom(
