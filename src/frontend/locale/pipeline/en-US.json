@@ -571,7 +571,7 @@
         "loadingData": "Loading data",
         "failToGetData": " Failed to get data",
         "badLink": " The format of this link is incorrect",
-        "repoConflict": ", several codes in the current pipeline are pulling the same plug-in, you need to set this field to settle this clash",
+        "repoConflict": "There are multiple code pull plugins in the current pipeline. You need to set this field to resolve conflicts.",
         "svnVersionTips": " SVN pulls the version number specified by code plug-ins",
         "certInstallTips": " The third-party building machine doesn't support the plug-in of installing IOS certificate at the moment",
         "atomOutput": " Output of plug-ins ",
