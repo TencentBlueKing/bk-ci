@@ -13,7 +13,7 @@ enum class ImageRDTypeEnum(val type: Int) {
                     return it
                 }
             }
-            //默认第三方
+            // 默认第三方
             return THIRD_PARTY
         }
 

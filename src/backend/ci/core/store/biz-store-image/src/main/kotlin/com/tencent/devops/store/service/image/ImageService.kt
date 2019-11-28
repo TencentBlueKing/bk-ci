@@ -101,8 +101,7 @@ import java.time.LocalDateTime
 import kotlin.math.ceil
 
 @Service
-abstract class ImageService @Autowired constructor(
-) {
+abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var dslContext: DSLContext
     @Autowired
@@ -612,18 +611,18 @@ abstract class ImageService @Autowired constructor(
             ch == '/'
         }
         if (ImageType.BKDEVOPS == sourceType) {
-            //蓝盾项目源镜像
+            // 蓝盾项目源镜像
             completeImageName = cleanImageRepoName
         } else if (ImageType.THIRD == sourceType) {
-            //第三方源镜像
-            completeImageName = "${cleanImageRepoUrl}/${cleanImageRepoName}"
-            //dockerhub镜像名称不带斜杠前缀
+            // 第三方源镜像
+            completeImageName = "$cleanImageRepoUrl/$cleanImageRepoName"
+            // dockerhub镜像名称不带斜杠前缀
             if (cleanImageRepoUrl.isBlank()) {
                 completeImageName = completeImageName.removePrefix("/")
             }
         } else {
             throw UnknownImageSourceType(
-                "imageId=${id},imageSourceType=${sourceType.name}",
+                "imageId=$id,imageSourceType=${sourceType.name}",
                 StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
             )
         }

@@ -18,13 +18,12 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.service.image.ImageReleaseService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SampleImageReleaseService : ImageReleaseService() {
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
-        //开源版不审核直接发布
+        // 开源版不审核直接发布
         return ImageStatusEnum.RELEASED.status.toByte()
     }
 

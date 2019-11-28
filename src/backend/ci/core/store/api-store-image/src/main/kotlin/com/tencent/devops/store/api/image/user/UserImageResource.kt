@@ -156,7 +156,6 @@ interface UserImageResource {
         imageCode: String
     ): Result<Boolean>
 
-
     @ApiOperation("更新流水线镜像信息")
     @PUT
     @Path("/baseInfo/images/{imageCode}")

@@ -37,7 +37,6 @@ interface UserMarketImageMemberResource {
         imageCode: String
     ): Result<StoreMemberItem?>
 
-
     @ApiOperation("获取镜像成员列表")
     @GET
     @Path("/list")

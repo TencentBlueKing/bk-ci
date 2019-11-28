@@ -335,6 +335,7 @@ class ImageProjectService @Autowired constructor(
             logoUrl = logoUrl,
             icon = icon,
             summary = summary,
+            docsLink = baseImageDocsLink + imageCode,
             publisher = publisher,
             pubTime = pubTime?.timestampmilli(),
             creator = creator,
