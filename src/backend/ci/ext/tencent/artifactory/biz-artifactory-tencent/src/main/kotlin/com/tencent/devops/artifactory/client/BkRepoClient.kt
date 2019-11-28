@@ -230,7 +230,7 @@ class BkRepoClient @Autowired constructor(
     }
 
     fun downloadFile(userId: String, projectId: String, repo: String, path: String) {
-        TODO("not implemented") 
+        TODO("not implemented")
     }
 
     fun delete(userId: String, projectId: String, repo: String, path: String) {
@@ -291,7 +291,7 @@ class BkRepoClient @Autowired constructor(
     ) {
         // todo 校验path参数
         logger.info("copy, userId: $userId, fromProject: $fromProject, fromRepo: $fromRepo, fromPath: $fromPath, toProject: $toProject, toRepo: $toRepo, toPath: $toPath")
-	val url = "$BKREPO_URL/repository/api/node/copy"
+        val url = "$BKREPO_URL/repository/api/node/copy"
         val requestData = UserNodeCopyRequest(
             srcProjectId = fromProject,
             srcRepoName = fromRepo,
@@ -322,7 +322,7 @@ class BkRepoClient @Autowired constructor(
     fun rename(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
         logger.info("rename, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath, toPath: $toPath")
-	val url = "$BKREPO_URL/repository/api/node/rename"
+        val url = "$BKREPO_URL/repository/api/node/rename"
         val requestData = UserNodeRenameRequest(projectId, repoName, fromPath, toPath)
         val request = Request.Builder()
             .url(url)
