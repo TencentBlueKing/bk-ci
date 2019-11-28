@@ -1,7 +1,6 @@
 package com.tencent.devops.prebuild.service
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.element.ReportArchiveElement
@@ -40,6 +39,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -77,28 +77,36 @@ class PreBuildService @Autowired constructor(
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val userProject = getUserProjectId(userId)
-
-        val preProject = prebuildProjectDao.get(dslContext, preProjectId, userId, workspace)
-        val pipelineId = if (null == preProject || preProject.pipelineId.isNullOrBlank()) {
-            val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
-            val pipelineId = client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
-            prebuildProjectDao.createOrUpdate(dslContext, preProjectId, getUserProjectId(userId), userId, yamlStr.trim(), pipelineId, workspace)
-            pipelineId
+        val pipeline = getPipelineByName(userId, preProjectId)
+        val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
+        val pipelineId = if (null == pipeline) {
+            client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
         } else {
-            if (userId != preProject.owner) {
-                logger.error("No permission to operate, userId: $userId")
-                throw PermissionForbiddenException("用户${userId}没有操作权限")
-            }
-            val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
-            client.get(ServicePipelineResource::class).edit(userId, userProject, preProject.pipelineId, model, channelCode)
-            prebuildProjectDao.update(dslContext, preProjectId, workspace, userId, yamlStr.trim(), preProject.pipelineId)
-            preProject.pipelineId
+            client.get(ServicePipelineResource::class).edit(userId, userProject, pipeline.pipelineId, model, channelCode)
+            pipeline.pipelineId
         }
+        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, yamlStr.trim(), pipelineId, workspace)
+
         logger.info("pipelineId: $pipelineId")
 
         // 启动构建
         val buildId = client.get(ServiceBuildResource::class).manualStartup(userId, userProject, pipelineId, mapOf(), channelCode).data!!.id
         return BuildId(buildId)
+    }
+
+    private fun getPipelineByName(userId: String, preProjectId: String): Pipeline? {
+        try {
+            val pipelineList = client.get(ServicePipelineResource::class).list(userId, getUserProjectId(userId), 1, 1000).data!!.records
+            pipelineList.forEach {
+                if (it.pipelineName == preProjectId) {
+                    return it
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("List pipeline failed, exception:", e)
+        }
+
+        return null
     }
 
     fun shutDown(
@@ -170,7 +178,7 @@ class PreBuildService @Autowired constructor(
             }
             stageList.add(Stage(containerList, "stage-${stageIndex + 3}"))
         }
-        return Model(preProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, userId)
+        return Model(preProjectId, "", stageList, emptyList(), false, userId)
     }
 
     private fun addAssociateElement(it: AbstractTask, elementList: MutableList<Element>, userId: String, preProjectId: String) {
