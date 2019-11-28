@@ -54,7 +54,7 @@ interface ApigwPipelineResourceV2 {
     @ApiOperation("获取组织的流水线列表")
     @GET
     @Path("/organization")
-    fun getListByOrganization(
+    fun getListByOrganizationName(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -64,6 +64,33 @@ interface ApigwPipelineResourceV2 {
         @ApiParam(value = "组织名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organizationName: String,
+        @ApiParam("部门名称", required = false, defaultValue = "")
+        @QueryParam("deptName")
+        deptName: String? = "",
+        @ApiParam("中心名称", required = false, defaultValue = "")
+        @QueryParam("centerName")
+        centerName: String? = "",
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int? = null,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int? = null
+    ): Result<Page<Pipeline>>
+
+    @ApiOperation("获取组织的流水线列表")
+    @GET
+    @Path("/organizationIds")
+    fun getListByOrganizationId(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
         @ApiParam("部门名称", required = false, defaultValue = "")
         @QueryParam("deptName")
         deptName: String? = "",

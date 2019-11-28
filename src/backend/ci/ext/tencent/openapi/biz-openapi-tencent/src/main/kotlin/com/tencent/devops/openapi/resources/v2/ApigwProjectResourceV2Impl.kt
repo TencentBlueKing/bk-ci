@@ -23,15 +23,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.v2
 
-package com.tencent.devops.dispatch.utils
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.v2.ApigwProjectResourceV2
+import com.tencent.devops.openapi.service.v2.ApigwProjectService
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-object DockerUtils {
-    fun parseShortImage(image: String): String {
-        return if (image.contains("/")) {
-            image.substring(image.lastIndexOf("/") + 1)
-        } else {
-            image
-        }
+@RestResource
+class ApigwProjectResourceV2Impl @Autowired constructor(
+    private val apigwProjectService: ApigwProjectService
+) : ApigwProjectResourceV2 {
+    override fun getProjectByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?
+    ): Result<List<ProjectVO>?> {
+        return Result(apigwProjectService.getListByOrganizationId(
+            userId = userId,
+            organizationType = organizationType,
+            organizationId = organizationId,
+            deptName = deptName,
+            centerName = centerName,
+            interfaceName = "/v2/projects/getProjectByOrganizationId"
+        ))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwProjectResourceV2Impl::class.java)
     }
 }

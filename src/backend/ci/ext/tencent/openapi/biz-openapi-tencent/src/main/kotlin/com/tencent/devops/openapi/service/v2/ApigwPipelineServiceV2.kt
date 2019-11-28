@@ -29,12 +29,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.tx.util.OrganizationUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_INNER_SERVICE_FAIL
 import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.process.api.v2.ServiceProjectPipelineResource
 import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -44,10 +42,39 @@ import org.springframework.stereotype.Service
  * @Version 1.0
  */
 @Service
-class ApigwPipelineServiceV2(private val client: Client) {
+class ApigwPipelineServiceV2(
+    private val client: Client,
+    private val organizationProjectService: OrganizationProjectService
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwPipelineServiceV2::class.java)
+    }
+
+    fun getListByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?,
+        page: Int?,
+        pageSize: Int?,
+        interfaceName: String? = "ApigwPipelineServiceV2"
+    ): Result<Page<Pipeline>> {
+        logger.info("$interfaceName:getListByOrganizationId:Input($userId,$organizationType,$organizationId,$deptName,$centerName,$page,$pageSize)")
+        val projectIds = organizationProjectService.getProjectIdsByOrganizationTypeAndId(
+            userId = userId,
+            organizationType = organizationType,
+            organizationId = organizationId,
+            deptName = deptName,
+            centerName = centerName
+        )
+        return getPipelinesByProjectIds(
+            userId = userId,
+            projectIds = projectIds,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     fun getListByOrganization(
@@ -57,35 +84,35 @@ class ApigwPipelineServiceV2(private val client: Client) {
         deptName: String?,
         centerName: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        interfaceName: String? = "ApigwPipelineServiceV2"
     ): Result<Page<Pipeline>> {
-        logger.info("getListByOrganization|$userId,$organizationType,$organizationName,$deptName,$centerName,$page,$pageSize")
+        logger.info("$interfaceName:getListByOrganization:Input($userId,$organizationType,$organizationName,$deptName,$centerName,$page,$pageSize)")
         // 1.根据组织信息获取所有项目
-        val organization = OrganizationUtil.fillOrganization(
+        val projectIds = organizationProjectService.getProjectIdsByOrganizationTypeAndName(
+            userId = userId,
             organizationType = organizationType,
             organizationName = organizationName,
             deptName = deptName,
-            centerName = centerName
+            centerName = centerName,
+            interfaceName = interfaceName
         )
-        val projectsResult = client.get(ServiceTxProjectResource::class).getProjectByGroup(
-            userId = userId,
-            bgName = organization.bgName,
-            deptName = organization.deptName,
-            centerName = organization.centerName
-        )
-        // 项目接口内容判空
-        if (projectsResult.isNotOk()) {
-            val resultStr = JsonUtil.toJson(projectsResult)
-            val serviceInfo = "project:ServiceProjectResource:getProjectByGroup"
-            throw MicroServiceInvokeFailure(
-                serviceInterface = serviceInfo,
-                message = "projectsResult=$resultStr",
-                errorCode = ERROR_OPENAPI_INNER_SERVICE_FAIL,
-                params = arrayOf(serviceInfo)
-            )
-        }
+
         // 2.根据所有项目Id获取对应流水线
-        val projectIds = projectsResult.data!!.map { it.englishName }.toSet()
+        return getPipelinesByProjectIds(
+            userId = userId,
+            projectIds = projectIds,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    fun getPipelinesByProjectIds(
+        userId: String,
+        projectIds: Set<String>,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
         val pipelinesResult = client.getWithoutRetry(ServiceProjectPipelineResource::class).listPipelinesByProjectIds(
             userId = userId,
             page = if (page == null || page <= 0) 1 else page,
