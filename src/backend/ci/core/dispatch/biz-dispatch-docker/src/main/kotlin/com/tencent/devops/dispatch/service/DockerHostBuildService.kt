@@ -144,7 +144,7 @@ class DockerHostBuildService @Autowired constructor(
                 when (dispatchType.dockerBuildVersion) {
                     DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
                     DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                    else -> "$dockerBuildImagePrefix/bkdevops/${dispatchType.dockerBuildVersion}"
+                    else -> "$dockerBuildImagePrefix/${dispatchType.dockerBuildVersion}"
                 }
             }
             logger.info("Docker images is: $dockerImage")
