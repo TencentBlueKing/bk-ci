@@ -266,7 +266,7 @@ class BkRepoClient @Autowired constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_USER_ID, userId)
-            .put(
+            .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
                     objectMapper.writeValueAsString(requestData)
@@ -305,7 +305,7 @@ class BkRepoClient @Autowired constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_USER_ID, userId)
-            .put(
+            .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
                     objectMapper.writeValueAsString(requestData)
@@ -328,7 +328,7 @@ class BkRepoClient @Autowired constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_USER_ID, userId)
-            .put(
+            .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
                     objectMapper.writeValueAsString(requestData)
