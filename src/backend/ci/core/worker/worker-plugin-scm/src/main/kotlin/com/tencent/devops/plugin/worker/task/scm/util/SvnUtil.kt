@@ -137,11 +137,7 @@ object SvnUtil {
         repository: CodeSvnRepository
     ): SvnCredential {
         return if (credentialType == CredentialType.USERNAME_PASSWORD) {
-            if (credentials.size <= 1) {
-                logger.warn("Fail to get the username($credentials) of the svn repo $repository")
-                SvnCredential(repository.userName, credentials[0], null)
-            } else
-                SvnCredential(credentials[0], credentials[1], null)
+            getSvnCredential(repository, credentials, credentialType)
         } else {
             SvnCredential(repository.userName, credentials[0], null)
         }
@@ -172,6 +168,34 @@ object SvnUtil {
                 stmt.execute("delete from WC_LOCK")
                 stmt.execute("delete from WORK_QUEUE")
             }
+        }
+    }
+
+    fun getSvnCredential(repository: CodeSvnRepository, credentials: List<String>, credentialType: CredentialType): SvnCredential {
+        if (repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+            // 兼容老的数据，老的数据是用的是password, 新的是username_password
+            return if (credentialType == CredentialType.USERNAME_PASSWORD) {
+                if (credentials.size <= 1) {
+                    logger.warn("Fail to get the username($credentials) of the svn repo $repository")
+                    SvnCredential(repository.userName, credentials[0], null)
+                } else
+                    SvnCredential(credentials[0], credentials[1], null)
+            } else {
+                SvnCredential(repository.userName, credentials[0], null)
+            }
+        } else {
+            val privateKey = credentials[0]
+            val passPhrase = if (credentials.size > 1) {
+                val p = credentials[1]
+                if (p.isEmpty()) {
+                    null
+                } else {
+                    p
+                }
+            } else {
+                null
+            }
+            return SvnCredential(repository.userName, privateKey, passPhrase)
         }
     }
 }

@@ -31,7 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.dao.PipelineBuildDao
+import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.log.utils.LogUtils
@@ -50,7 +50,7 @@ import javax.ws.rs.NotFoundException
 class PipelineDispatchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao,
+    private val dispatchPipelineBuildDao: DispatchPipelineBuildDao,
     private val logService: LogService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val rabbitTemplate: RabbitTemplate
@@ -139,11 +139,11 @@ class PipelineDispatchService @Autowired constructor(
     }
 
     fun queryPipelineByBuildAndSeqId(buildId: String, vmSeqId: String): PipelineBuild {
-        val list = pipelineBuildDao.getPipelineByBuildIdOrNull(dslContext, buildId, vmSeqId)
+        val list = dispatchPipelineBuildDao.getPipelineByBuildIdOrNull(dslContext, buildId, vmSeqId)
         if (list.isEmpty()) {
             throw throw NotFoundException("VM pipeline[$buildId,$vmSeqId] is not exist")
         }
-        return pipelineBuildDao.convert(list[0])
+        return dispatchPipelineBuildDao.convert(list[0])
     }
 
     companion object {

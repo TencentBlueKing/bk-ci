@@ -70,6 +70,7 @@ import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.service.job.SynProjectService.Companion.ENGLISH_NAME_PATTERN
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
+import com.tencent.devops.project.util.ImageUtil.drawImage
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -81,18 +82,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.awt.AlphaComposite
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Font
-import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.ArrayList
-import java.util.Random
 import java.util.regex.Pattern
-import javax.imageio.ImageIO
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -507,62 +501,6 @@ class ProjectLocalService @Autowired constructor(
             jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
-    }
-
-    private fun drawImage(logoStr: String): File {
-        val logoBackgroundColor = arrayOf("#FF5656", "#FFB400", "#30D878", "#3C96FF")
-        val max = logoBackgroundColor.size - 1
-        val min = 0
-        val random = Random()
-        val backgroundIndex = random.nextInt(max) % (max - min + 1) + min
-        val width = 128
-        val height = 128
-        // 创建BufferedImage对象
-        val bi = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        // 获取Graphics2D
-        val g2d = bi.createGraphics()
-        // 设置透明度
-        g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1.0f)
-
-        when (backgroundIndex) {
-            0 -> {
-                g2d.background = Color.RED
-            }
-            1 -> {
-                g2d.background = Color.YELLOW
-            }
-            2 -> {
-                g2d.background = Color.GREEN
-            }
-            3 -> {
-                g2d.background = Color.BLUE
-            }
-        }
-        g2d.clearRect(0, 0, width, height)
-        g2d.color = Color.WHITE
-        g2d.stroke = BasicStroke(1.0f)
-        val font = Font("宋体", Font.PLAIN, 64)
-        g2d.font = font
-        val fontMetrics = g2d.fontMetrics
-        val heightAscent = fontMetrics.ascent
-
-        val context = g2d.fontRenderContext
-        val stringBounds = font.getStringBounds(logoStr, context)
-        val fontWidth = stringBounds.width.toFloat()
-
-        g2d.drawString(
-            logoStr,
-            (width / 2 - fontWidth / 2),
-            (height / 2 + heightAscent / 2).toFloat()
-        )
-        // 透明度设置 结束
-        g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
-        // 释放对象
-        g2d.dispose()
-        // 保存文件
-        val logo = Files.createTempFile("default_", ".png").toFile()
-        ImageIO.write(bi, "png", logo)
-        return logo
     }
 
     fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
