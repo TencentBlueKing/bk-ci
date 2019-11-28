@@ -38,7 +38,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
-
 object SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)
