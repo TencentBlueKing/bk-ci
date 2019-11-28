@@ -3,46 +3,46 @@
         <div class="content-header">
             <div class="atom-total-row">
                 <button class="bk-button bk-primary" @click="relateImage">
-                    <span style="margin-left: 0;"> {{ $t('关联镜像') }} </span>
+                    <span style="margin-left: 0;"> {{ $t('store.关联镜像') }} </span>
                 </button>
             </div>
             <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
-                <input class="g-input-border" type="text" :placeholder="$t('请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
+                <input class="g-input-border" type="text" :placeholder="$t('store.请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
                 <i class="bk-icon icon-search" v-if="!searchName"></i>
                 <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
             </section>
         </div>
-        <bk-table style="margin-top: 15px;" :empty-text="$t('暂时没有镜像')"
+        <bk-table style="margin-top: 15px;" :empty-text="$t('store.暂时没有镜像')"
             :data="renderList"
             :pagination="pagination"
             @page-change="pageChanged"
             @page-limit-change="pageCountChanged"
             v-bkloading="{ isLoading }"
         >
-            <bk-table-column :label="$t('镜像名称')" width="200">
+            <bk-table-column :label="$t('store.镜像名称')" width="200">
                 <template slot-scope="props">
                     <span class="atom-name" :title="props.row.imageName" @click="goToImageDetail(props.row.imageCode)">{{ props.row.imageName }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('镜像来源')" prop="imageSourceType" :formatter="sourceTypeFormatter" width="150"></bk-table-column>
-            <bk-table-column :label="$t('镜像')" prop="imageRepoUrl">
+            <bk-table-column :label="$t('store.镜像来源')" prop="imageSourceType" :formatter="sourceTypeFormatter" width="150"></bk-table-column>
+            <bk-table-column :label="$t('store.镜像')" prop="imageRepoUrl">
                 <template slot-scope="props">
                     <span :title="(props.row.imageRepoUrl ? props.row.imageRepoUrl + '/' : '') + props.row.imageRepoName + ':' + props.row.imageTag">
                         {{ props.row.imageRepoUrl + props.row.imageRepoName + props.row.imageTag ? (props.row.imageRepoUrl ? props.row.imageRepoUrl + '/' : '') + props.row.imageRepoName + ':' + props.row.imageTag : '-' }}
                     </span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('镜像大小')" prop="imageSize" width="150">
+            <bk-table-column :label="$t('store.镜像大小')" prop="imageSize" width="150">
                 <template slot-scope="props">
                     <span>{{ props.row.imageSize || '-' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('版本号')" prop="version" width="150">
+            <bk-table-column :label="$t('store.版本号')" prop="version" width="150">
                 <template slot-scope="props">
                     <span>{{ props.row.version || '-' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('状态')" width="220">
+            <bk-table-column :label="$t('store.状态')" width="220">
                 <template slot-scope="props">
                     <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
                         v-if="['AUDITING', 'COMMITTING', 'CHECKING', 'CHECK_FAIL', 'UNDERCARRIAGING', 'TESTING'].includes(props.row.imageStatus)">
@@ -62,28 +62,28 @@
                     <span>{{ imageStatusList[props.row.imageStatus] }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('修改人')" prop="modifier" width="180"></bk-table-column>
-            <bk-table-column :label="$t('修改时间')" prop="updateTime" width="180" :formatter="timeFormatter"></bk-table-column>
-            <bk-table-column :label="$t('操作')" width="250" class-name="handler-btn">
+            <bk-table-column :label="$t('store.修改人')" prop="modifier" width="180"></bk-table-column>
+            <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="180" :formatter="timeFormatter"></bk-table-column>
+            <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
                 <template slot-scope="props">
                     <span class="shelf-btn"
                         v-if="props.row.imageStatus === 'INIT' || props.row.imageStatus === 'UNDERCARRIAGED'
                             || props.row.imageStatus === 'GROUNDING_SUSPENSION' || props.row.imageStatus === 'AUDIT_REJECT'"
-                        @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"> {{ $t('上架') }} </span>
+                        @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"> {{ $t('store.上架') }} </span>
                     <span class="shelf-btn"
                         v-if="props.row.imageStatus === 'RELEASED'"
-                        @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"> {{ $t('升级') }} </span>
+                        @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"> {{ $t('store.升级') }} </span>
                     <span class="shelf-btn"
                         v-if="props.row.imageStatus === 'RELEASED'"
-                        @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'atomList' } })"> {{ $t('安装') }} </span>
+                        @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'atomList' } })"> {{ $t('store.安装') }} </span>
                     <span class="schedule-btn"
                         v-if="['AUDITING', 'COMMITTING', 'CHECKING', 'CHECK_FAIL', 'UNDERCARRIAGING', 'TESTING'].includes(props.row.imageStatus)"
-                        @click="$router.push({ name: 'imageProgress', params: { imageId: props.row.imageId } })"> {{ $t('进度') }} </span>
+                        @click="$router.push({ name: 'imageProgress', params: { imageId: props.row.imageId } })"> {{ $t('store.进度') }} </span>
                     <span class="obtained-btn"
                         v-if="props.row.imageStatus === 'RELEASED' || (props.row.imageStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
                         @click="offline(props.row)"
-                    > {{ $t('下架') }} </span>
-                    <span @click="deleteImage(props.row.imageCode)" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.imageStatus)"> {{ $t('删除') }} </span>
+                    > {{ $t('store.下架') }} </span>
+                    <span @click="deleteImage(props.row.imageCode)" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.imageStatus)"> {{ $t('store.删除') }} </span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -94,41 +94,41 @@
             :width="relateImageData.width">
             <template slot="content">
                 <bk-form ref="relateForm" class="relate-form" label-width="100" :model="relateImageData.form" v-bkloading="{ isLoading: relateImageData.isLoading }">
-                    <bk-form-item :label="$t('镜像名称')" :required="true" property="imageName" :desc="$t('镜像在研发商店中的别名')" :rules="[requireRule]">
-                        <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('请输入镜像名称')"></bk-input>
+                    <bk-form-item :label="$t('store.镜像名称')" :required="true" property="imageName" :desc="$t('store.镜像在研发商店中的别名')" :rules="[requireRule]">
+                        <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称')"></bk-input>
                     </bk-form-item>
-                    <bk-form-item :label="$t('镜像标识')" :required="true" property="imageCode" :desc="$t('镜像在研发商店中的唯一标识')" :rules="[requireRule, alpRule]">
-                        <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('请输入镜像标识')"></bk-input>
+                    <bk-form-item :label="$t('store.镜像标识')" :required="true" property="imageCode" :desc="$t('store.镜像在研发商店中的唯一标识')" :rules="[requireRule, alpRule]">
+                        <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识')"></bk-input>
                     </bk-form-item>
-                    <bk-form-item :label="$t('镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
+                    <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
                         <bk-radio-group v-model="relateImageData.form.imageSourceType">
-                            <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('蓝盾源') }} </bk-radio>
-                            <bk-radio value="THIRD"> {{ $t('第三方源') }} </bk-radio>
+                            <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('store.蓝盾源') }} </bk-radio>
+                            <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
-                    <bk-form-item :label="$t('调试项目')" :required="true" property="projectCode" :desc="$t('在发布过程中，可以在该项目下调试镜像')" :rules="[requireRule]">
-                        <bk-select v-model="relateImageData.form.projectCode" searchable :placeholder="$t('请选择项目')" @change="toggleProjectList">
+                    <bk-form-item :label="$t('store.调试项目')" :required="true" property="projectCode" :desc="$t('store.在发布过程中，可以在该项目下调试镜像')" :rules="[requireRule]">
+                        <bk-select v-model="relateImageData.form.projectCode" searchable :placeholder="$t('store.请选择项目')" @change="toggleProjectList">
                             <bk-option v-for="option in projectList"
                                 :key="option.projectCode"
                                 :id="option.projectCode"
                                 :name="option.projectName">
                             </bk-option>
-                            <a href="/console/pm" slot="extension" target="_blank"> {{ $t('新增项目') }} </a>
+                            <a href="/console/pm" slot="extension" target="_blank"> {{ $t('store.新增项目') }} </a>
                         </bk-select>
                     </bk-form-item>
-                    <bk-form-item :label="$t('凭证')" property="ticketId" :desc="$t('若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')" v-if="relateImageData.form.imageSourceType === 'THIRD'">
-                        <bk-select v-model="relateImageData.form.ticketId" searchable :placeholder="$t('请选择凭证')" :loading="relateImageData.isLoadingTicketList">
+                    <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')" v-if="relateImageData.form.imageSourceType === 'THIRD'">
+                        <bk-select v-model="relateImageData.form.ticketId" searchable :placeholder="$t('store.请选择凭证')" :loading="relateImageData.isLoadingTicketList">
                             <bk-option v-for="option in ticketList"
                                 :key="option.credentialId"
                                 :id="option.credentialId"
                                 :name="option.credentialId">
                             </bk-option>
-                            <a v-if="relateImageData.form.projectCode" :href="`/console/ticket/${relateImageData.form.projectCode}/createCredential/USERNAME_PASSWORD/true`" slot="extension" target="_blank"> {{ $t('新增凭证') }} </a>
+                            <a v-if="relateImageData.form.projectCode" :href="`/console/ticket/${relateImageData.form.projectCode}/createCredential/USERNAME_PASSWORD/true`" slot="extension" target="_blank"> {{ $t('store.新增凭证') }} </a>
                         </bk-select>
                     </bk-form-item>
                     <bk-form-item>
-                        <bk-button theme="primary" @click.native="submitRelateImage"> {{ $t('提交') }} </bk-button>
-                        <bk-button @click.native="cancelRelateImage"> {{ $t('取消') }} </bk-button>
+                        <bk-button theme="primary" @click.native="submitRelateImage"> {{ $t('store.提交') }} </bk-button>
+                        <bk-button @click.native="cancelRelateImage"> {{ $t('store.取消') }} </bk-button>
                     </bk-form-item>
                 </bk-form>
             </template>
@@ -140,14 +140,14 @@
             :width="offlineImageData.width">
             <template slot="content">
                 <bk-form ref="offlineForm" class="relate-form" label-width="100" :model="offlineImageData.form" v-bkloading="{ isLoading: offlineImageData.isLoading }">
-                    <bk-form-item :label="$t('镜像名称')" property="imageName">
+                    <bk-form-item :label="$t('store.镜像名称')" property="imageName">
                         <span class="lh30">{{offlineImageData.form.imageName}}</span>
                     </bk-form-item>
-                    <bk-form-item :label="$t('镜像标识')" property="imageCode">
+                    <bk-form-item :label="$t('store.镜像标识')" property="imageCode">
                         <span class="lh30">{{offlineImageData.form.imageCode}}</span>
                     </bk-form-item>
-                    <bk-form-item :label="$t('镜像版本')" property="version">
-                        <bk-select v-model="offlineImageData.form.version" searchable :placeholder="$t('请选择镜像版本')">
+                    <bk-form-item :label="$t('store.镜像版本')" property="version">
+                        <bk-select v-model="offlineImageData.form.version" searchable :placeholder="$t('store.请选择镜像版本')">
                             <bk-option v-for="option in offlineImageData.versionList"
                                 :key="option.version"
                                 :id="option.version"
@@ -155,12 +155,12 @@
                             </bk-option>
                         </bk-select>
                     </bk-form-item>
-                    <bk-form-item :label="$t('下架原因')" :required="true" property="reason" :rules="[requireRule]">
-                        <bk-input type="textarea" v-model="offlineImageData.form.reason" :placeholder="$t('请输入下架原因')"></bk-input>
+                    <bk-form-item :label="$t('store.下架原因')" :required="true" property="reason" :rules="[requireRule]">
+                        <bk-input type="textarea" v-model="offlineImageData.form.reason" :placeholder="$t('store.请输入下架原因')"></bk-input>
                     </bk-form-item>
                     <bk-form-item>
-                        <bk-button theme="primary" @click.native="submitOfflineImage"> {{ $t('提交') }} </bk-button>
-                        <bk-button @click.native="cancelOfflineImage"> {{ $t('取消') }} </bk-button>
+                        <bk-button theme="primary" @click.native="submitOfflineImage"> {{ $t('store.提交') }} </bk-button>
+                        <bk-button @click.native="cancelOfflineImage"> {{ $t('store.取消') }} </bk-button>
                     </bk-form-item>
                 </bk-form>
             </template>
@@ -186,7 +186,7 @@
                     limit: 10
                 },
                 relateImageData: {
-                    title: this.$t('关联镜像'),
+                    title: this.$t('store.关联镜像'),
                     quickClose: true,
                     width: 565,
                     isLoading: false,
@@ -201,7 +201,7 @@
                     }
                 },
                 offlineImageData: {
-                    title: this.$t('下架镜像'),
+                    title: this.$t('store.下架镜像'),
                     quickClose: true,
                     width: 565,
                     isLoading: false,
@@ -216,12 +216,12 @@
                 },
                 requireRule: {
                     required: true,
-                    message: this.$t('必填项'),
+                    message: this.$t('store.必填项'),
                     trigger: 'blur'
                 },
                 alpRule: {
                     validator: (val) => (/^[a-zA-Z0-9-_]+$/.test(val)),
-                    message: this.$t('标识需要是大小写字母、数字、中划线或下划线'),
+                    message: this.$t('store.标识需要是大小写字母、数字、中划线或下划线'),
                     trigger: 'blur'
                 }
             }
@@ -249,7 +249,7 @@
                     }).catch((err) => {
                         this.$bkMessage({ message: err.message || err, theme: 'error' })
                     }).finally(() => (this.offlineImageData.isLoading = false))
-                }).catch(() => this.$bkMessage({ message: this.$t('校验失败，请修改再试'), theme: 'error' }))
+                }).catch(() => this.$bkMessage({ message: this.$t('store.校验失败，请修改再试'), theme: 'error' }))
             },
 
             goToImageDetail (imageCode) {
@@ -298,7 +298,9 @@
                     }).finally(() => (this.isLoading = false))
                 }
                 this.$bkInfo({
-                    title: this.$t('确认要删除？'),
+                    title: this.$t('store.确认要删除？'),
+                    type: 'warning',
+                    theme: 'warning',
                     confirmFn
                 })
             },
@@ -319,7 +321,7 @@
                         }).finally(() => (this.relateImageData.isLoading = false))
                     }
                 }).catch(() => {
-                    this.$bkMessage({ message: this.$t('校验不通过，请修改后再试'), theme: 'error' })
+                    this.$bkMessage({ message: this.$t('store.校验不通过，请修改后再试'), theme: 'error' })
                 })
             },
 
@@ -399,10 +401,10 @@
                 let res = ''
                 switch (cellValue) {
                     case 'BKDEVOPS':
-                        res = this.$t('蓝盾')
+                        res = this.$t('store.蓝盾')
                         break
                     default:
-                        res = this.$t('第三方')
+                        res = this.$t('store.第三方')
                         break
                 }
                 return res

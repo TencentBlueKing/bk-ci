@@ -1,7 +1,7 @@
 <template>
     <div class="visible-range-wrapper">
         <div class="inner-header">
-            <div class="title"> {{ $t('可见范围') }} </div>
+            <div class="title"> {{ $t('store.可见范围') }} </div>
         </div>
 
         <section
@@ -12,8 +12,8 @@
             }">
             <div class="visible-range-content" v-if="showContent && visibleList.length">
                 <div class="handle-row">
-                    <button class="bk-button bk-primary add-button" type="button" @click="addHandle()"> {{ $t('添加') }} </button>
-                    <button class="bk-button bk-default" type="button" @click="bitchrRemove()"> {{ $t('批量删除') }} </button>
+                    <button class="bk-button bk-primary add-button" type="button" @click="addHandle()"> {{ $t('store.添加') }} </button>
+                    <button class="bk-button bk-default" type="button" @click="bitchrRemove()"> {{ $t('store.批量删除') }} </button>
                 </div>
                 <div class="visible-dept">
                     <bk-table style="margin-top: 15px;"
@@ -22,17 +22,17 @@
                         @select-all="selectAll"
                     >
                         <bk-table-column type="selection" width="60" align="center"></bk-table-column>
-                        <bk-table-column :label="$t('可见对象')" prop="deptName"></bk-table-column>
-                        <bk-table-column :label="$t('状态')">
+                        <bk-table-column :label="$t('store.可见对象')" prop="deptName"></bk-table-column>
+                        <bk-table-column :label="$t('store.状态')">
                             <template slot-scope="props">
                                 <span>{{ statusMap[props.row.status] }}</span>
-                                <span class="audit-tips" v-if="props.row.status === 'APPROVING'"><i class="bk-icon icon-info-circle"></i> {{ $t('由蓝盾管理员审核') }} </span>
+                                <span class="audit-tips" v-if="props.row.status === 'APPROVING'"><i class="bk-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </span>
                                 <span class="audit-tips" v-else>{{ props.row.comment }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('操作')" width="120" class-name="handler-btn">
+                        <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
                             <template slot-scope="props">
-                                <span class="update-btn" @click="handleDelete(props.row)"> {{ $t('删除') }} </span>
+                                <span class="update-btn" @click="handleDelete(props.row)"> {{ $t('store.删除') }} </span>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -73,23 +73,23 @@
                 showDialog: false,
                 visibleList: [],
                 statusMap: {
-                    'APPROVED': this.$t('审核通过'),
-                    'APPROVING': this.$t('待审核'),
-                    'REJECT': this.$t('审核驳回')
+                    'APPROVED': this.$t('store.审核通过'),
+                    'APPROVING': this.$t('store.待审核'),
+                    'REJECT': this.$t('store.审核驳回')
                 },
                 loading: {
                     isLoading: false,
                     title: ''
                 },
                 emptyTipsConfig: {
-                    title: this.$t('暂时没有设置可见范围'),
-                    desc: this.$t('未设置可见对象时，仅模板成员可以安装到名下项目中使用。设置可见对象后，对应用户可以在Store中查看并安装使用。'),
+                    title: this.$t('store.暂时没有设置可见范围'),
+                    desc: this.$t('store.未设置可见对象时，仅模板成员可以安装到名下项目中使用。设置可见对象后，对应用户可以在Store中查看并安装使用。'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.addHandle(),
-                            text: this.$t('添加')
+                            text: this.$t('store.添加')
                         }
                     ]
                 }
@@ -106,7 +106,7 @@
         methods: {
             async init () {
                 this.loading.isLoading = true
-                this.loading.title = this.$t('数据加载中，请稍候')
+                this.loading.title = this.$t('store.数据加载中，请稍候')
 
                 try {
                     await this.requestList()
@@ -162,7 +162,7 @@
                 })
                 if (!target.length) {
                     this.$bkMessage({
-                        message: this.$t('请至少选择一个可见对象'),
+                        message: this.$t('store.请至少选择一个可见对象'),
                         theme: 'error',
                         limit: 1
                     })
@@ -172,10 +172,10 @@
                         style: {
                             textAlign: 'center'
                         }
-                    }, this.$t('确定删除选中的可见对象？'))
+                    }, this.$t('store.确定删除选中的可见对象？'))
 
                     this.$bkInfo({
-                        title: this.$t('删除'),
+                        title: this.$t('store.删除'),
                         subHeader,
                         confirmFn: async () => {
                             const deptIds = target.map(val => val.deptId).join(',')
@@ -203,7 +203,7 @@
                         deptIds
                     })
 
-                    message = this.$t('删除成功')
+                    message = this.$t('store.删除成功')
                     theme = 'success'
                     this.requestList()
                 } catch (err) {
@@ -222,10 +222,10 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('确定删除')}(${row.deptName})？`)
+                }, `${this.$t('store.确定删除')}(${row.deptName})？`)
 
                 this.$bkInfo({
-                    title: this.$t('删除'),
+                    title: this.$t('store.删除'),
                     subHeader,
                     confirmFn: async () => {
                         this.deleteTplVisiable(row.deptId)

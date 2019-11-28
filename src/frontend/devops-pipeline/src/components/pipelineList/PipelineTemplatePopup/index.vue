@@ -459,7 +459,7 @@
             .icon-refresh {
                 position: absolute;
                 top: 15px;
-                left: 80px;
+                padding-left: 10px;
                 font-size: 18px;
             }
         }

@@ -1,7 +1,7 @@
 <template>
     <div class="atom-overview-wrapper">
         <div class="inner-header">
-            <div class="title"> {{ $t('插件概览') }} </div>
+            <div class="title"> {{ $t('store.插件概览') }} </div>
         </div>
 
         <section
@@ -13,7 +13,7 @@
             <div class="atom-overview-container" v-if="showContent">
                 <div class="info-content info-content-left">
                     <div class="overview-statistics">
-                        <div class="info-title"> {{ $t('总体统计') }} </div>
+                        <div class="info-title"> {{ $t('store.总体统计') }} </div>
                         <div class="atom-statistic">
                             <div class="total-item" v-for="(entry, index) in statisticList" :key="index">
                                 <div class="item-value" :class="{ 'blue-theme': entry.name === 'commentCnt' || entry.name === 'score' }">{{ entry.value }}</div>
@@ -22,63 +22,63 @@
                         </div>
                     </div>
                     <div class="trend-chart">
-                        <div class="info-title"> {{ $t('趋势图') }} </div>
+                        <div class="info-title"> {{ $t('store.趋势图') }} </div>
                         <div class="chart-content">
                             <div class="info-tab">
-                                <span class="tab-item"> {{ $t('安装量') }} </span>
+                                <span class="tab-item"> {{ $t('store.安装量') }} </span>
                             </div>
                             <div class="chart-item">
                                 <img :src="image">
-                                <p>{{ $t('功能正在建设中') }}···</p>
+                                <p>{{ $t('store.功能正在建设中') }}···</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="info-content info-content-right">
                     <div class="atom-code-card">
-                        <div class="card-title"> {{ $t('插件代码') }} </div>
+                        <div class="card-title"> {{ $t('store.插件代码') }} </div>
                         <div class="card-content">
                             <div class="code-form-item">
-                                <div class="info-label"> {{ $t('开发语言：') }} </div>
+                                <div class="info-label"> {{ $t('store.开发语言：') }} </div>
                                 <div class="info-value">{{ codeForm.language }}</div>
                             </div>
                             <template v-if="!isEnterprise">
                                 <div class="code-form-item">
-                                    <div class="info-label"> {{ $t('已托管至：') }} </div>
-                                    <div class="info-value link-text" @click="toLink()"> {{ $t('工蜂') }} </div>
+                                    <div class="info-label"> {{ $t('store.已托管至：') }} </div>
+                                    <div class="info-value link-text" @click="toLink()"> {{ $t('store.工蜂') }} </div>
                                 </div>
                                 <div class="code-form-item codelib-form-item">
-                                    <div class="info-label"> {{ $t('代码库：') }} </div>
+                                    <div class="info-label"> {{ $t('store.代码库：') }} </div>
                                     <div class="info-value codelib-url">
                                         <span class="codelib-text">{{ codeForm.codeSrc }}</span>
-                                        <span class="link-text copy-btn" :data-clipboard-text="codeForm.codeSrc" @click="copyUrl"> {{ $t('复制') }} </span>
+                                        <span class="link-text copy-btn" :data-clipboard-text="codeForm.codeSrc" @click="copyUrl"> {{ $t('store.复制') }} </span>
                                     </div>
                                 </div>
                                 <div class="code-form-item codelib-form-item">
-                                    <div class="info-label"> {{ $t('授权人：') }} </div>
+                                    <div class="info-label"> {{ $t('store.授权人：') }} </div>
                                     <div class="info-value codelib-url">
                                         {{codeForm.repositoryAuthorizer}}
                                         <bk-popover placement="top">
                                             <i class="bk-icon icon-info-circle"></i>
                                             <template slot="content">
-                                                <p> {{ $t('在发布插件时，使用授权人的身份拉取插件代码自动构建打包，或设置插件可见范围') }} </p>
+                                                <p> {{ $t('store.在发布插件时，使用授权人的身份拉取插件代码自动构建打包，或设置插件可见范围') }} </p>
                                             </template>
                                         </bk-popover>
                                         <span class="link-text repo-outh"
                                             @click="modifyRepoMemInfo"
-                                            :title="$t('将使用你的身份进行插件代码库相关操作')"
+                                            :title="$t('store.将使用你的身份进行插件代码库相关操作')"
                                             v-if="userInfo.isProjectAdmin && userInfo.userName !== codeForm.repositoryAuthorizer"
-                                        > {{ $t('重置授权') }} </span>
+                                        > {{ $t('store.重置授权') }} </span>
                                     </div>
                                 </div>
                             </template>
                         </div>
                     </div>
                     <div class="atom-latest-news">
-                        <div class="info-title"> {{ $t('最新动态') }} </div>
+                        <div class="info-title"> {{ $t('store.最新动态') }} </div>
                         <div class="news-content">
                             <img :src="image">
-                            <p>{{ $t('功能正在建设中') }}···</p>
+                            <p>{{ $t('store.功能正在建设中') }}···</p>
                         </div>
                     </div>
                 </div>
@@ -99,10 +99,10 @@
                 factoryUrl: 'https://git.code.oa.com/',
                 image: imgBuilding,
                 statisticList: [
-                    { name: 'downloads', label: this.$t('安装量'), value: 0 },
-                    { name: 'pipelineCnt', label: this.$t('流水线个数'), value: 0 },
-                    { name: 'commentCnt', label: this.$t('评论数'), value: 0 },
-                    { name: 'score', label: this.$t('评分'), value: 0 }
+                    { name: 'downloads', label: this.$t('store.安装量'), value: 0 },
+                    { name: 'pipelineCnt', label: this.$t('store.流水线个数'), value: 0 },
+                    { name: 'commentCnt', label: this.$t('store.评论数'), value: 0 },
+                    { name: 'score', label: this.$t('store.评分'), value: 0 }
                 ],
                 loading: {
                     isLoading: false,

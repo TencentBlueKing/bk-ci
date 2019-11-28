@@ -1,19 +1,19 @@
 <template>
     <article class="image-detail-home" v-bkloading="{ isLoading }">
         <div class="inner-header">
-            <div class="title"> {{ $t('镜像详情') }} </div>
-            <span @click="goToEditImage" :class="[{ 'disable': !showEdit }, 'header-edit']" :title="!showEdit && $t('只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息')"> {{ $t('编辑') }} </span>
+            <div class="title"> {{ $t('store.镜像详情') }} </div>
+            <span @click="goToEditImage" :class="[{ 'disable': !showEdit }, 'header-edit']" :title="!showEdit && $t('store.只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息')"> {{ $t('store.编辑') }} </span>
         </div>
         <main class="detail-main">
             <detail-info :detail="currentImage"></detail-info>
             <section class="version-content" v-if="!isLoading">
                 <div class="version-info-header">
-                    <div class="info-title"> {{ $t('版本列表') }} </div>
+                    <div class="info-title"> {{ $t('store.版本列表') }} </div>
                     <button class="bk-button bk-primary"
                         type="button"
                         :disabled="upgradeStatus.indexOf(versionList[0].imageStatus) === -1"
                         @click="$router.push({ name: 'editImage', params: { imageId: versionList[0].imageId } })"
-                    > {{ $t('新增版本') }} </button>
+                    > {{ $t('store.新增版本') }} </button>
                 </div>
                 <bk-table style="margin-top: 15px;"
                     :data="versionList"
@@ -21,21 +21,21 @@
                     @page-change="pageChanged"
                     @page-limit-change="pageCountChanged"
                 >
-                    <bk-table-column :label="$t('版本')" prop="version"></bk-table-column>
-                    <bk-table-column :label="$t('状态')" prop="imageStatus" :formatter="statusFormatter"></bk-table-column>
-                    <bk-table-column :label="$t('创建人')" prop="creator"></bk-table-column>
-                    <bk-table-column :label="$t('创建时间')" prop="createTime" :formatter="convertTime"></bk-table-column>
-                    <bk-table-column :label="$t('操作')" width="120" class-name="handler-btn">
+                    <bk-table-column :label="$t('store.版本')" prop="version"></bk-table-column>
+                    <bk-table-column :label="$t('store.状态')" prop="imageStatus" :formatter="statusFormatter"></bk-table-column>
+                    <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
+                    <bk-table-column :label="$t('store.创建时间')" prop="createTime" :formatter="convertTime"></bk-table-column>
+                    <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
                         <template slot-scope="props">
                             <section v-show="!index">
                                 <span class="update-btn"
                                     v-if="props.row.imageStatus === 'INIT'"
                                     @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"
-                                > {{ $t('上架') }} </span>
+                                > {{ $t('store.上架') }} </span>
                                 <span class="update-btn"
                                     v-if="progressStatus.indexOf(props.row.imageStatus) > -1"
                                     @click="$router.push({ name: 'imageProgress', params: { imageId: props.row.imageId } })"
-                                > {{ $t('进度') }} </span>
+                                > {{ $t('store.进度') }} </span>
                             </section>
                         </template>
                     </bk-table-column>

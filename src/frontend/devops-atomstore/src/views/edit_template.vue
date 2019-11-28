@@ -3,22 +3,22 @@
         <div class="info-header">
             <div class="title first-level" @click="toAtomStore">
                 <logo :name="&quot;store&quot;" size="30" class="nav-icon" />
-                <div class="title first-level"> {{ $t('研发商店') }} </div>
+                <div class="title first-level"> {{ $t('store.研发商店') }} </div>
             </div>
             <i class="right-arrow"></i>
-            <div class="title secondary" @click="toAtomList"> {{ $t('工作台') }} </div>
+            <div class="title secondary" @click="toAtomList"> {{ $t('store.工作台') }} </div>
             <i class="right-arrow"></i>
-            <div class="title third-level"> {{ $t('上架模板') }} </div>
+            <div class="title third-level"> {{ $t('store.上架模板') }} </div>
             <a class="develop-guide-link" target="_blank"
-                :href="docsLink"> {{ $t('模板指引') }} </a>
+                :href="docsLink"> {{ $t('store.模板指引') }} </a>
         </div>
         <div class="edit-template-content" v-if="showContent">
             <form class="bk-form edit-template-form">
                 <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label"> {{ $t('名称') }} </label>
+                    <label class="bk-label"> {{ $t('store.名称') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
                         <div style="min-width: 40%;">
-                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('请输入中英文名称')"
+                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('store.请输入中英文名称')"
                                 ref="templateName"
                                 name="templateName"
                                 v-model="templateForm.templateName"
@@ -32,13 +32,13 @@
                         <bk-popover placement="right">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('模板名称不超过20个字符') }} </p>
+                                <p> {{ $t('store.模板名称不超过20个字符') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                 </div>
                 <div class="bk-form-item is-required" ref="sortError">
-                    <label class="bk-label"> {{ $t('分类') }} </label>
+                    <label class="bk-label"> {{ $t('store.分类') }} </label>
                     <div class="bk-form-content template-item-content template-category-content">
                         <bk-select v-model="templateForm.classifyCode" style="width: 40%;" searchable>
                             <bk-option v-for="(option, index) in sortList"
@@ -46,15 +46,15 @@
                                 :id="option.classifyCode"
                                 :name="option.classifyName"
                                 @click.native="changeClassify"
-                                :placeholder="$t('请选择分类')"
+                                :placeholder="$t('store.请选择分类')"
                             >
                             </bk-option>
                         </bk-select>
-                        <div v-if="formErrors.sortError" class="error-tips"> {{ $t('分类不能为空') }} </div>
+                        <div v-if="formErrors.sortError" class="error-tips"> {{ $t('store.分类不能为空') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item is-required" ref="categoryError">
-                    <label class="bk-label env-label"> {{ $t('应用范畴') }} </label>
+                    <label class="bk-label env-label"> {{ $t('store.应用范畴') }} </label>
                     <div class="bk-form-content template-item-content category">
                         <bk-checkbox-group v-model="templateForm.categoryIdList">
                             <bk-checkbox :value="entry.id" v-for="entry in categoryList" :key="entry.id">
@@ -62,27 +62,27 @@
                                 <span class="bk-checkbox-text" :style="{ 'margin-left': entry.iconUrl ? '24px' : '0' }">{{ entry.categoryName }}</span>
                             </bk-checkbox>
                         </bk-checkbox-group>
-                        <div v-if="formErrors.categoryError" class="error-tips"> {{ $t('应用范畴不能为空') }} </div>
+                        <div v-if="formErrors.categoryError" class="error-tips"> {{ $t('store.应用范畴不能为空') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item">
-                    <label class="bk-label"> {{ $t('功能标签') }} </label>
+                    <label class="bk-label"> {{ $t('store.功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
                         <bk-select v-model="templateForm.labelIdList" searchable multiple show-select-all>
                             <bk-option v-for="(option, index) in labelList"
                                 :key="index"
                                 :id="option.id"
                                 :name="option.labelName"
-                                :placeholder="$t('请选择功能标签')"
+                                :placeholder="$t('store.请选择功能标签')"
                             >
                             </bk-option>
                         </bk-select>
                     </div>
                 </div>
                 <div class="bk-form-item introduction-form-item is-required">
-                    <label class="bk-label"> {{ $t('简介') }} </label>
+                    <label class="bk-label"> {{ $t('store.简介') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
-                        <input type="text" class="bk-form-input template-introduction-input" :placeholder="$t('展示在模板市场上的文本简介，不超过70个字符。')"
+                        <input type="text" class="bk-form-input template-introduction-input" :placeholder="$t('store.展示在模板市场上的文本简介，不超过70个字符。')"
                             name="introduction"
                             maxlength="70"
                             v-model="templateForm.summary"
@@ -94,14 +94,14 @@
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('模版一句话简介，不超过70个字符，展示在模版市场上') }} </p>
+                                <p> {{ $t('store.模版一句话简介，不超过70个字符，展示在模版市场上') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                     <p :class="errors.has('introduction') ? 'error-tips' : 'normal-tips'">{{ errors.first("introduction") }}</p>
                 </div>
                 <div class="bk-form-item remark-form-item is-required" ref="descError">
-                    <label class="bk-label"> {{ $t('详细描述') }} </label>
+                    <label class="bk-label"> {{ $t('store.详细描述') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
                         <mavon-editor class="template-remark-input"
                             :placeholder="descTemplate"
@@ -117,21 +117,21 @@
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('展示在模版市场查看模版详情页面，帮助用户快速了解模版功能和使用场景') }} </p>
+                                <p> {{ $t('store.展示在模版市场查看模版详情页面，帮助用户快速了解模版功能和使用场景') }} </p>
                             </template>
                         </bk-popover>
                     </div>
-                    <p v-if="formErrors.descError" class="error-tips" style="margin-left: 100px;margin-top:4px;"> {{ $t('详细描述不能为空') }} </p>
+                    <p v-if="formErrors.descError" class="error-tips" style="margin-left: 100px;margin-top:4px;"> {{ $t('store.详细描述不能为空') }} </p>
                 </div>
                 <div class="version-msg">
-                    <p class="form-title"> {{ $t('发布信息') }} </p>
+                    <p class="form-title"> {{ $t('store.发布信息') }} </p>
                     <hr class="cut-line">
                 </div>
                 <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label"> {{ $t('发布者') }} </label>
+                    <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content template-item-content">
                         <div style="width: 40%;">
-                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('请输入')"
+                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('store.请输入')"
                                 name="publisher"
                                 v-model="templateForm.publisher"
                                 v-validate="{
@@ -144,7 +144,7 @@
                     </div>
                 </div>
                 <div class="bk-form-item versionlog-form-item">
-                    <label class="bk-label"> {{ $t('发布描述') }} </label>
+                    <label class="bk-label"> {{ $t('store.发布描述') }} </label>
                     <div class="bk-form-content template-item-content">
                         <textarea type="text" class="bk-form-input template-versionlog-input"
                             placeholder=""
@@ -153,8 +153,8 @@
                     </div>
                 </div>
                 <div class="form-footer">
-                    <button class="bk-button bk-primary" type="button" @click="submit()"> {{ $t('提交') }} </button>
-                    <button class="bk-button bk-default" type="button" @click="toAtomList()"> {{ $t('取消') }} </button>
+                    <button class="bk-button bk-primary" type="button" @click="submit()"> {{ $t('store.提交') }} </button>
+                    <button class="bk-button bk-default" type="button" @click="toAtomList()"> {{ $t('store.取消') }} </button>
                 </div>
                 <select-logo :form="templateForm" type="TEMPLATE" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
             </form>
@@ -196,7 +196,7 @@
                     categoryIdList: [],
                     labelIdList: [],
                     summary: '',
-                    description: `#### ${this.$t('模板功能')}\n\n#### ${this.$t('适用场景')}\n\n#### ${this.$t('使用限制和受限解决方案[可选]')}\n\n#### ${this.$t('常见的失败原因和解决方案')}`,
+                    description: `#### ${this.$t('store.模板功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`,
                     publisher: '',
                     pubDescription: '',
                     logoUrl: ''
@@ -435,7 +435,7 @@
                             params: params
                         })
 
-                        message = this.$t('提交成功')
+                        message = this.$t('store.提交成功')
                         theme = 'success'
                         if (res) {
                             this.toPublishProgress(res)
@@ -446,7 +446,7 @@
 
                             this.$bkInfo({
                                 type: 'error',
-                                title: this.$t('提交失败'),
+                                title: this.$t('store.提交失败'),
                                 showFooter: false,
                                 subHeader: h('p', {
                                     style: {

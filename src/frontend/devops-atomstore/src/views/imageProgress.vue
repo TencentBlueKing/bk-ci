@@ -3,19 +3,19 @@
         <h3 class="market-home-title">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <span class="back-home" @click="toAtomStore"> {{ $t('研发商店') }} </span>
+                <span class="back-home" @click="toAtomStore"> {{ $t('store.研发商店') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des back-home" @click="toImageList"> {{ $t('工作台') }} </span>
+                <span class="banner-des back-home" @click="toImageList"> {{ $t('store.工作台') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">({{$t('上架/升级镜像') + imageDetail.imageName}})</span>
+                <span class="banner-des">({{$t('store.上架/升级镜像') + imageDetail.imageName}})</span>
             </p>
-            <a class="title-work" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=22118721"> {{ $t('镜像指引') }} </a>
+            <a class="title-work" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </h3>
         <main v-if="!isLoading" class="image-progress-main">
             <section class="image-progress-section">
                 <h3>
-                    <span> {{ $t('发布进度') }} </span>
-                    <span @click="cancelRelease" :class="[{ disable: !permission }, 'cancel-release']" :title="permissionMsg"> {{ $t('取消发布') }} </span>
+                    <span> {{ $t('store.发布进度') }} </span>
+                    <span @click="cancelRelease" :class="[{ disable: !permission }, 'cancel-release']" :title="permissionMsg"> {{ $t('store.取消发布') }} </span>
                 </h3>
                 <div class="progress-step">
                     <div class="step-line-box">
@@ -30,11 +30,11 @@
                                     :title="permissionMsg"
                                     v-if="(entry.code === 'check' && entry.status === 'fail') || (entry.code === 'check' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')"
                                     @click.stop="reCheck"
-                                > {{ $t('重新验证') }} <i class="col-line" v-if="!isEnterprise"></i>
+                                > {{ $t('store.重新验证') }} <i class="col-line" v-if="!isEnterprise"></i>
                                 </span>
-                                <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo' && !isEnterprise" @click.stop="readLog"> {{ $t('日志') }} </span>
+                                <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo' && !isEnterprise" @click.stop="readLog"> {{ $t('store.日志') }} </span>
                                 <span class="test-btn" v-if="entry.code === 'test' && entry.status === 'doing'">
-                                    <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}/list`"> {{ $t('测试') }} </a>
+                                    <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
                                 </span>
                             </div>
                             <bk-button class="pass-btn"
@@ -45,22 +45,22 @@
                                 @click.native="passTest"
                                 :loading="isTestLoading"
                                 :title="permissionMsg"
-                            > {{ $t('继续') }} </bk-button>
+                            > {{ $t('store.继续') }} </bk-button>
                             <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing'">
-                                <i class="bk-icon icon-info-circle"></i> {{ $t('由蓝盾管理员审核') }} </div>
+                                <i class="bk-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </div>
                         </div>
                     </div>
                 </div>
             </section>
             <section class="image-progress-section" v-if="!isOver">
-                <h3> {{ $t('版本详情') }} </h3>
+                <h3> {{ $t('store.版本详情') }} </h3>
                 <detail-info :detail="imageDetail"></detail-info>
             </section>
             <div class="released-tips" v-else>
-                <h3> {{ $t('恭喜，成功发布到商店!') }} </h3>
+                <h3> {{ $t('store.恭喜，成功发布到商店!') }} </h3>
                 <div class="handle-btn">
-                    <bk-button class="bk-button bk-primary" size="small" @click.native="toImageList"> {{ $t('工作台') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click.native="toAtomStore"> {{ $t('研发商店') }} </bk-button>
+                    <bk-button class="bk-button bk-primary" size="small" @click.native="toImageList"> {{ $t('store.工作台') }} </bk-button>
+                    <bk-button class="bk-button bk-default" size="small" @click.native="toAtomStore"> {{ $t('store.研发商店') }} </bk-button>
                 </div>
             </div>
         </main>
@@ -128,7 +128,7 @@
         computed: {
             permissionMsg () {
                 let str = ''
-                if (!this.permission) str = this.$t('只有镜像管理员或当前流程创建者可以操作')
+                if (!this.permission) str = this.$t('store.只有镜像管理员或当前流程创建者可以操作')
                 return str
             },
 
@@ -191,7 +191,7 @@
                 const params = this.$route.params || {}
                 const imageId = params.imageId || ''
                 this.requestRecheckImage(imageId).then(() => {
-                    this.$bkMessage({ message: this.$t('发起重新验证成功'), theme: 'success' })
+                    this.$bkMessage({ message: this.$t('store.发起重新验证成功'), theme: 'success' })
                     this.getImageProcess()
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
@@ -218,14 +218,14 @@
                     const params = this.$route.params || {}
                     const imageId = params.imageId || ''
                     this.requestCancelRelease(imageId).then(() => {
-                        this.$bkMessage({ message: this.$t('取消发布成功'), theme: 'success' })
+                        this.$bkMessage({ message: this.$t('store.取消发布成功'), theme: 'success' })
                         this.toImageList()
                     }).catch((err) => {
                         this.$bkMessage({ message: err.message || err, theme: 'error' })
                     }).finally(() => (this.isLoading = false))
                 }
                 this.$bkInfo({
-                    title: this.$t('确认要取消发布吗？'),
+                    title: this.$t('store.确认要取消发布吗？'),
                     confirmFn
                 })
             },

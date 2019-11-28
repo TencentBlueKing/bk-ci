@@ -42,7 +42,7 @@
                             {
                                 id: 'tplOverview',
                                 selectId: ['tplOverview'],
-                                name: this.$t('概览'),
+                                name: this.$t('store.概览'),
                                 icon: 'icon-overview',
                                 showChildren: false
                             },
@@ -55,7 +55,7 @@
                             {
                                 id: 'tplSettings',
                                 selectId: ['tplSettings'],
-                                name: this.$t('设置'),
+                                name: this.$t('store.设置'),
                                 icon: 'icon-cog',
                                 isOpen: false,
                                 showChildren: true,
@@ -68,7 +68,7 @@
                                     {
                                         id: 'tplVisible',
                                         selectId: ['tplVisible'],
-                                        name: this.$t('可见范围'),
+                                        name: this.$t('store.可见范围'),
                                         icon: ''
                                     }
                                 ]

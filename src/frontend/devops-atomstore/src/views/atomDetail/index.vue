@@ -28,28 +28,28 @@
                             {
                                 id: 'overview',
                                 selectId: ['overview'],
-                                name: this.$t('概览'),
+                                name: this.$t('store.概览'),
                                 icon: 'icon-overview',
                                 showChildren: false
                             },
                             {
                                 id: 'detail',
                                 selectId: ['detail', 'edit'],
-                                name: this.$t('详情'),
+                                name: this.$t('store.详情'),
                                 icon: 'icon-txt',
                                 showChildren: false
                             },
                             {
                                 id: 'approval',
                                 selectId: ['approval'],
-                                name: this.$t('审批'),
+                                name: this.$t('store.审批'),
                                 icon: 'icon-panel-permission',
                                 showChildren: false
                             },
                             {
                                 id: 'settings',
                                 selectId: ['settings'],
-                                name: this.$t('设置'),
+                                name: this.$t('store.设置'),
                                 icon: 'icon-cog',
                                 isOpen: false,
                                 showChildren: true,
@@ -57,19 +57,19 @@
                                     {
                                         id: 'member',
                                         selectId: ['member'],
-                                        name: this.$t('成员管理'),
+                                        name: this.$t('store.成员管理'),
                                         icon: ''
                                     },
                                     {
                                         id: 'visible',
                                         selectId: ['visible'],
-                                        name: this.$t('可见范围'),
+                                        name: this.$t('store.可见范围'),
                                         icon: ''
                                     },
                                     {
                                         id: 'private',
                                         selectId: ['private'],
-                                        name: this.$t('私有配置'),
+                                        name: this.$t('store.私有配置'),
                                         icon: ''
                                     }
                                 ]

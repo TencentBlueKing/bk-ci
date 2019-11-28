@@ -3,59 +3,59 @@
         <div class="info-header">
             <div class="title first-level" @click="toAtomStore">
                 <logo :name="&quot;store&quot;" size="30" class="nav-icon" />
-                <div class="title first-level"> {{ $t('研发商店') }} </div>
+                <div class="title first-level"> {{ $t('store.研发商店') }} </div>
             </div>
             <i class="right-arrow"></i>
-            <div class="title secondary" @click="toImageList"> {{ $t('工作台') }} </div>
+            <div class="title secondary" @click="toImageList"> {{ $t('store.工作台') }} </div>
             <i class="right-arrow"></i>
-            <div class="title third-level">({{$t('上架/升级镜像') + form.imageName}})</div>
-            <a class="develop-guide-link" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=22118721"> {{ $t('镜像指引') }} </a>
+            <div class="title third-level">({{$t('store.上架/升级镜像') + form.imageName}})</div>
+            <a class="develop-guide-link" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </div>
         <main v-bkloading="{ isLoading }" class="edit-content">
             <bk-form ref="imageForm" class="edit-image" label-width="125" :model="form" v-show="!isLoading">
-                <bk-form-item class="wt660" :label="$t('镜像名称')" :required="true" property="imageName" :rules="[requireRule]" ref="imageName">
-                    <bk-input v-model="form.imageName" :placeholder="$t('请输入镜像名称')"></bk-input>
+                <bk-form-item class="wt660" :label="$t('store.镜像名称')" :required="true" property="imageName" :rules="[requireRule]" ref="imageName">
+                    <bk-input v-model="form.imageName" :placeholder="$t('store.请输入镜像名称')"></bk-input>
                 </bk-form-item>
-                <bk-form-item class="wt660" :label="$t('范畴')" property="category" :required="true" :rules="[requireRule]" ref="category">
+                <bk-form-item class="wt660" :label="$t('store.范畴')" property="category" :required="true" :rules="[requireRule]" ref="category">
                     <bk-select v-model="form.category" searchable>
                         <bk-option v-for="(option, index) in categoryList"
                             :key="index"
                             :id="option.categoryCode"
                             :name="option.categoryName"
-                            :placeholder="$t('请选择范畴')"
+                            :placeholder="$t('store.请选择范畴')"
                         >
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item class="wt660" :label="$t('分类')" :required="true" property="classifyCode" :rules="[requireRule]" ref="classifyCode">
+                <bk-form-item class="wt660" :label="$t('store.分类')" :required="true" property="classifyCode" :rules="[requireRule]" ref="classifyCode">
                     <bk-select v-model="form.classifyCode" searchable>
                         <bk-option v-for="(option, index) in classifys"
                             :key="index"
                             :id="option.classifyCode"
                             :name="option.classifyName"
-                            :placeholder="$t('请选择分类')"
+                            :placeholder="$t('store.请选择分类')"
                         >
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('标签')" property="labelIdList">
-                    <bk-tag-input v-model="form.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('请选择标签')"></bk-tag-input>
+                <bk-form-item :label="$t('store.标签')" property="labelIdList">
+                    <bk-tag-input v-model="form.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('store.请选择标签')"></bk-tag-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('适用机器')" property="agentTypeScope" :required="true" :rules="[requireRule]" ref="agentTypeScope">
+                <bk-form-item :label="$t('store.适用机器')" property="agentTypeScope" :required="true" :rules="[requireRule]" ref="agentTypeScope">
                     <bk-select v-model="form.agentTypeScope" searchable multiple show-select-all>
                         <bk-option v-for="(option, index) in agentTypes"
                             :key="index"
                             :id="option.id"
                             :name="option.name"
-                            :placeholder="$t('请选择适用机器')"
+                            :placeholder="$t('store.请选择适用机器')"
                         >
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('简介')" property="summary" :required="true" :rules="[requireRule]" ref="summary">
-                    <bk-input v-model="form.summary" :placeholder="$t('请输入简介')"></bk-input>
+                <bk-form-item :label="$t('store.简介')" property="summary" :required="true" :rules="[requireRule]" ref="summary">
+                    <bk-input v-model="form.summary" :placeholder="$t('store.请输入简介')"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('描述')" property="description">
+                <bk-form-item :label="$t('store.描述')" property="description">
                     <mavon-editor class="image-remark-input"
                         ref="mdHook"
                         v-model="form.description"
@@ -67,91 +67,91 @@
                     />
                 </bk-form-item>
                 <div class="version-msg">
-                    <p class="form-title"> {{ $t('镜像信息') }} </p>
+                    <p class="form-title"> {{ $t('store.镜像信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]" ref="imageSourceType" v-if="VERSION_TYPE !== 'ee'">
+                <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]" ref="imageSourceType" v-if="VERSION_TYPE !== 'ee'">
                     <bk-radio-group v-model="form.imageSourceType" @change="clearRepo">
-                        <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('蓝盾源') }} </bk-radio>
-                        <bk-radio value="THIRD"> {{ $t('第三方源') }} </bk-radio>
+                        <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('store.蓝盾源') }} </bk-radio>
+                        <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <template v-if="form.imageSourceType === 'BKDEVOPS'">
-                    <bk-form-item :label="$t('源镜像')" :required="true" property="imageRepoName" :rules="[requireRule]" ref="imageRepoName">
+                    <bk-form-item :label="$t('store.源镜像')" :required="true" property="imageRepoName" :rules="[requireRule]" ref="imageRepoName">
                         <bk-select v-model="form.imageRepoName" searchable>
                             <bk-option v-for="(option, index) in imageList"
                                 :key="index"
                                 :id="option.repo"
                                 :name="option.repo"
-                                :placeholder="$t('请选择源镜像')"
+                                :placeholder="$t('store.请选择源镜像')"
                                 @click.native="getImageTagList(option)"
                             >
                             </bk-option>
                         </bk-select>
                     </bk-form-item>
-                    <bk-form-item :label="$t('源镜像Tag')" :desc="$t('请选择源镜像Tag，注意已发布过的Tag不能重复发布，请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" property="imageTag" :rules="[requireRule]" ref="imageTag">
+                    <bk-form-item :label="$t('store.源镜像Tag')" :desc="$t('store.请选择源镜像Tag，注意已发布过的Tag不能重复发布，请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" property="imageTag" :rules="[requireRule]" ref="imageTag">
                         <bk-select v-model="form.imageTag" searchable :loading="isLoadingTag">
                             <bk-option v-for="(option, index) in imageVersionList"
                                 :key="index"
                                 :id="option.tag"
                                 :name="option.tag"
                                 :disabled="option.storeFlag"
-                                :placeholder="$t('请选择源镜像Tag')"
+                                :placeholder="$t('store.请选择源镜像Tag')"
                             >
                             </bk-option>
                         </bk-select>
                     </bk-form-item>
                 </template>
                 <template v-else>
-                    <bk-form-item :label="$t('源镜像库地址')" property="imageRepoUrl" :desc="$t('请输入源镜像库地址。若源为 docker hub，可留空不填')">
-                        <bk-input v-model="form.imageRepoUrl" :placeholder="$t('请输入源镜像库地址，如 csighub.tencentyun.com')"></bk-input>
+                    <bk-form-item :label="$t('store.源镜像库地址')" property="imageRepoUrl" :desc="$t('store.请输入源镜像库地址。若源为 docker hub，可留空不填')">
+                        <bk-input v-model="form.imageRepoUrl" :placeholder="$t('store.请输入源镜像库地址，如 csighub.tencentyun.com')"></bk-input>
                     </bk-form-item>
-                    <bk-form-item :label="$t('源镜像名称')" property="imageRepoName" :required="true" :rules="[requireRule]" ref="imageRepoName">
-                        <bk-input v-model="form.imageRepoName" :placeholder="$t('请输入源镜像名称，如 XXX/XXXX')"></bk-input>
+                    <bk-form-item :label="$t('store.源镜像名称')" property="imageRepoName" :required="true" :rules="[requireRule]" ref="imageRepoName">
+                        <bk-input v-model="form.imageRepoName" :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"></bk-input>
                     </bk-form-item>
-                    <bk-form-item :label="$t('源镜像Tag')" property="imageTag" :desc="$t('请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule, latestRule]" ref="imageTag">
-                        <bk-input v-model="form.imageTag" :placeholder="$t('请输入源镜像Tag，如 enterprise-6.0.3')"></bk-input>
+                    <bk-form-item :label="$t('store.源镜像Tag')" property="imageTag" :desc="$t('store.请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule, latestRule]" ref="imageTag">
+                        <bk-input v-model="form.imageTag" :placeholder="$t('store.请输入源镜像Tag，如 enterprise-6.0.3')"></bk-input>
                     </bk-form-item>
-                    <bk-form-item :label="$t('凭证')" property="ticketId" :desc="$t('若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
-                        <bk-select v-model="form.ticketId" searchable :placeholder="$t('请选择凭证')">
+                    <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
+                        <bk-select v-model="form.ticketId" searchable :placeholder="$t('store.请选择凭证')">
                             <bk-option v-for="option in ticketList"
                                 :key="option.credentialId"
                                 :id="option.credentialId"
                                 :name="option.credentialId">
                             </bk-option>
-                            <a v-if="form.projectCode" :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`" slot="extension" target="_blank"> {{ $t('新增凭证') }} </a>
+                            <a v-if="form.projectCode" :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`" slot="extension" target="_blank"> {{ $t('store.新增凭证') }} </a>
                         </bk-select>
                     </bk-form-item>
                 </template>
                 <div class="version-msg">
-                    <p class="form-title"> {{ $t('版本信息') }} </p>
+                    <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('发布类型')" :required="true" property="releaseType" class="h32" :rules="[requireRule]" ref="releaseType" v-if="form.releaseType !== 'CANCEL_RE_RELEASE'">
+                <bk-form-item :label="$t('store.发布类型')" :required="true" property="releaseType" class="h32" :rules="[requireRule]" ref="releaseType" v-if="form.releaseType !== 'CANCEL_RE_RELEASE'">
                     <bk-radio-group v-model="form.releaseType">
-                        <bk-radio value="NEW" class="mr12" v-if="form.imageStatus === 'INIT'"> {{ $t('新上架') }} </bk-radio>
+                        <bk-radio value="NEW" class="mr12" v-if="form.imageStatus === 'INIT'"> {{ $t('store.新上架') }} </bk-radio>
                         <template v-else>
-                            <bk-radio value="INCOMPATIBILITY_UPGRADE" class="mr12"> {{ $t('非兼容升级') }} </bk-radio>
-                            <bk-radio value="COMPATIBILITY_UPGRADE" class="mr12"> {{ $t('兼容式功能更新') }} </bk-radio>
-                            <bk-radio value="COMPATIBILITY_FIX"> {{ $t('兼容式问题修正') }} </bk-radio>
+                            <bk-radio value="INCOMPATIBILITY_UPGRADE" class="mr12"> {{ $t('store.非兼容升级') }} </bk-radio>
+                            <bk-radio value="COMPATIBILITY_UPGRADE" class="mr12"> {{ $t('store.兼容式功能更新') }} </bk-radio>
+                            <bk-radio value="COMPATIBILITY_FIX"> {{ $t('store.兼容式问题修正') }} </bk-radio>
                         </template>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item :label="$t('版本号')" property="version" class="lh30" :required="true">
-                    <span>{{form.version + $t('（主版本号.次版本号.修正号）')}}</span>
-                    <span class="version-modify" @click="form.releaseType = 'COMPATIBILITY_FIX'" v-if="form.releaseType === 'CANCEL_RE_RELEASE'"> {{ $t('修改') }} </span>
+                <bk-form-item :label="$t('store.版本号')" property="version" class="lh30" :required="true">
+                    <span>{{$t('store.semverType', [form.version])}}</span>
+                    <span class="version-modify" @click="form.releaseType = 'COMPATIBILITY_FIX'" v-if="form.releaseType === 'CANCEL_RE_RELEASE'"> {{ $t('store.修改') }} </span>
                 </bk-form-item>
-                <bk-form-item :label="$t('发布者')" :required="true" property="publisher" :rules="[requireRule]" ref="publisher">
-                    <bk-input v-model="form.publisher" :placeholder="$t('请输入发布者')"></bk-input>
+                <bk-form-item :label="$t('store.发布者')" :required="true" property="publisher" :rules="[requireRule]" ref="publisher">
+                    <bk-input v-model="form.publisher" :placeholder="$t('store.请输入发布者')"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('版本日志')" :required="true" property="versionContent" :rules="[requireRule]" ref="versionContent">
-                    <bk-input type="textarea" v-model="form.versionContent" :placeholder="$t('请输入版本日志')"></bk-input>
+                <bk-form-item :label="$t('store.版本日志')" :required="true" property="versionContent" :rules="[requireRule]" ref="versionContent">
+                    <bk-input type="textarea" v-model="form.versionContent" :placeholder="$t('store.请输入版本日志')"></bk-input>
                 </bk-form-item>
                 <select-logo ref="selectLogo" label="Logo" :form="form" type="IMAGE" :is-err="logoErr" right="25"></select-logo>
             </bk-form>
             <section class="edit-image button-padding" v-show="!isLoading">
-                <bk-button theme="primary" @click="submitImage"> {{ $t('提交') }} </bk-button>
-                <bk-button @click="toImageList"> {{ $t('取消') }} </bk-button>
+                <bk-button theme="primary" @click="submitImage"> {{ $t('store.提交') }} </bk-button>
+                <bk-button @click="toImageList"> {{ $t('store.取消') }} </bk-button>
             </section>
         </main>
     </article>
@@ -196,7 +196,7 @@
                 labelList: [],
                 categoryList: [],
                 agentTypes: [
-                    { name: this.$t('Devnet 物理机'), id: 'DOCKER' },
+                    { name: this.$t('store.Devnet 物理机'), id: 'DOCKER' },
                     { name: 'IDC CVM', id: 'IDC' },
                     { name: 'DevCloud', id: 'PUBLIC_DEVCLOUD' }
                 ],
@@ -207,14 +207,14 @@
                 originVersion: '',
                 requireRule: {
                     required: true,
-                    message: this.$t('必填项'),
+                    message: this.$t('store.必填项'),
                     trigger: 'blur'
                 },
                 latestRule: {
                     validator (val) {
                         return val !== 'latest'
                     },
-                    message: this.$t('镜像tag不能是latest'),
+                    message: this.$t('store.镜像tag不能是latest'),
                     trigger: 'blur'
                 },
                 logoErr: false,
@@ -271,7 +271,7 @@
                     }
                     this.isLoading = true
                     this.requestReleaseImage(this.form).then((imageId) => {
-                        this.$bkMessage({ message: this.$t('提交成功'), theme: 'success' })
+                        this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
                         this.$router.push({ name: 'imageProgress', params: { imageId } })
                     }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                         this.isLoading = false
@@ -279,7 +279,7 @@
                 }).catch((validate) => {
                     const field = validate.field
                     const label = this.$refs[field].label
-                    this.$bkMessage({ message: `${label + this.$t('是必填项，请填写以后重试')}`, theme: 'error' })
+                    this.$bkMessage({ message: `${label + this.$t('store.是必填项，请填写以后重试')}`, theme: 'error' })
                 })
             },
 
@@ -311,7 +311,7 @@
                 this.requestImageDetail(imageId).then((res) => {
                     Object.assign(this.form, res)
                     this.form.imageTag = ''
-                    this.form.description = this.form.description || this.$t('### 功能简介\n\n### 如何使用\n\n### 注意事项\n\n### License')
+                    this.form.description = this.form.description || this.$t('store.imageMdDesc')
                     this.originVersion = res.version
                     this.form.labelIdList = res.labelList.map(x => x.id)
                     switch (res.imageStatus) {

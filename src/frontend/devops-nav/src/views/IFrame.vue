@@ -71,6 +71,8 @@
         leaveConfirm (to, from, next) {
             this.leaving = true
             this.$bkInfo({
+                type: 'warning',
+                theme: 'warning',
                 title: this.$t('leaveConfirmTitle'),
                 subTitle: this.$t('leaveConfirmMsg'),
                 confirmFn: () => {

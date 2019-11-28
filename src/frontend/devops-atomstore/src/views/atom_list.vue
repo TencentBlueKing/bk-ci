@@ -3,9 +3,9 @@
         <h3 class="market-home-title banner-nav">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <span class="back-home" @click="toAtomStore"> {{ $t('研发商店') }} </span>
+                <span class="back-home" @click="toAtomStore"> {{ $t('store.研发商店') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des"> {{ $t('工作台') }} </span>
+                <span class="banner-des"> {{ $t('store.工作台') }} </span>
             </p>
             <a class="title-work" target="_blank" :href="tabList[currentTab].link">{{ tabList[currentTab].name }}</a>
         </h3>
@@ -39,9 +39,9 @@
             return {
                 currentTab: 'atom',
                 tabList: {
-                    atom: { name: this.$t('插件指引'), tabName: this.$t('流水线插件'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
-                    template: { name: this.$t('模版指引'), tabName: this.$t('流水线模板'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' },
-                    image: { name: this.$t('镜像指引'), tabName: this.$t('容器镜像'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=22118721' }
+                    atom: { name: this.$t('store.插件指引'), tabName: this.$t('store.流水线插件'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
+                    template: { name: this.$t('store.模版指引'), tabName: this.$t('store.流水线模板'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' },
+                    image: { name: this.$t('store.镜像指引'), tabName: this.$t('store.容器镜像'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=22118721' }
                 }
             }
         },
