@@ -191,7 +191,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         srcPath.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
-	if (isRepoGray) {
+            if (isRepoGray) {
                 val fileList = matchBkRepoFile(path, projectId, pipelineId, buildId, isCustom)
                 val repoName = if (isCustom) "custom" else "pipeline"
                 fileList.forEach { bkrepoFile ->
