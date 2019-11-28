@@ -38,7 +38,7 @@
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
                                 </span></div>
-                                <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
+                            <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addImage') }}</span>
                             </div>
