@@ -458,6 +458,9 @@
         }
     },
     "editPage": {
+        "provideInfo": "Provided by {0}, modified {1} on {2}",
+        "officialCertification": "Official Certification",
+        "thirdImageHolder": "Please Input Image, eg:Java：11.0.5",
         "by": "by",
         "devnet": "Devnet Physical Machine",
         "onlySupport": "Only supported",
@@ -478,7 +481,7 @@
         "fromList": "Select from list",
         "reElection": "Re-election",
         "chooseImage": "Select Image",
-        "imageErrMgs": "Docker and Version cannot be empty",
+        "imageErrMgs": "Cannot be empty",
         "imageSource": "Docker Source",
         "devopsImg": " mirroring on Blue Shield",
         "thirdImg": "third-party mirroring",

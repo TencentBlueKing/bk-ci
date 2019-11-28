@@ -7,7 +7,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des back-home" @click="toImageList"> {{ $t('工作台') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">({{$t('上架/升级镜像') + imageDetail.imageName}})</span>
+                <span class="banner-des">{{$t('上架/升级镜像')}}（{{imageDetail.imageName}}）</span>
             </p>
             <a class="title-work" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('镜像指引') }} </a>
         </h3>
