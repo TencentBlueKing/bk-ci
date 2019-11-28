@@ -457,6 +457,9 @@
         }
     },
     "editPage": {
+        "provideInfo": "由 {0} 提供，{1} 修改于 {2}",
+        "officialCertification": "官方认证",
+        "thirdImageHolder": "请输入Image，如Java：11.0.5",
         "by": "由",
         "devnet": "Devnet 物理机",
         "onlySupport": "仅支持",

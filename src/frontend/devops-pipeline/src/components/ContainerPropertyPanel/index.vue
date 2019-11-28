@@ -26,7 +26,7 @@
                 <form-field :label="$t('editPage.resourceType')">
                     <selector
                         :disabled="!editable"
-                        :handle-change="changeBuildResource"
+                        :handle-change="changeResourceType"
                         :list="buildResourceTypeList"
                         :value="buildResourceType"
                         :clearable="false"
@@ -38,7 +38,7 @@
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
                                 </span></div>
-                            <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
+                                <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addImage') }}</span>
                             </div>
@@ -47,39 +47,34 @@
                     <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}<a target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/流水线/用户指南/publicBuild.html`">{{ $t('editPage.seeMore') }}</a></span>
                 </form-field>
 
-                <section v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)">
-                    <form-field :label="$t('editPage.imageType')">
-                        <enum-input
-                            name="imageType"
-                            :list="imageTypeList"
-                            :disabled="!editable"
-                            :handle-change="changeBuildResource"
-                            :value="buildImageType">
-                        </enum-input>
-                    </form-field>
+                <form-field label="image" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+                    <enum-input
+                        name="imageType"
+                        :list="imageTypeList"
+                        :disabled="!editable"
+                        :handle-change="changeBuildResource"
+                        :value="buildImageType">
+                    </enum-input>
 
-                    <form-field :is-error="errors.has(&quot;buildImageVersion&quot;)" :error-msg="$t('editPage.imageErrMgs')"
-                        :label="$t('editPage.imageSource')"
-                        :required="true"
-                        v-if="buildImageType === 'BKSTORE'">
-                        <section class="bk-image">
-                            <section class="image-name">
-                                <span :class="[{ disable: !editable }, 'image-named']" :title="buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
-                                <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
-                            </section>
-                            <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
-                                <bk-option v-for="option in versionList"
-                                    :key="option.versionValue"
-                                    :id="option.versionValue"
-                                    :name="option.versionName"
-                                >
-                                </bk-option>
-                            </bk-select>
+                    <section v-if="buildImageType === 'BKSTORE'" class="bk-image">
+                        <section class="image-name">
+                            <span :class="[{ disable: !editable }, 'image-named']" :title="buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
+                            <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
                         </section>
-                    </form-field>
-                </section>
+                        <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
+                            <bk-option v-for="option in versionList"
+                                :key="option.versionValue"
+                                :id="option.versionValue"
+                                :name="option.versionName"
+                            >
+                            </bk-option>
+                        </bk-select>
+                    </section>
 
-                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId && !(['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && buildImageType === 'BKSTORE')" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
+                    <bk-input v-else @change="changeThirdImage" :value="buildResource" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
+                </form-field>
+
+                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
                     <container-env-node :disabled="!editable"
                         :os="container.baseOS"
                         :container-id="containerModalId"
@@ -426,8 +421,21 @@
                 'requestImageHistory'
             ]),
 
+            changeResourceType (name, val) {
+                this.changeBuildResource('imageVersion', '')
+                this.changeBuildResource('value', '')
+                this.changeBuildResource('imageCode', '')
+                this.changeBuildResource('imageName', '')
+                this.changeBuildResource(name, val)
+            },
+
+            changeThirdImage (val) {
+                this.changeBuildResource('value', val)
+            },
+
             changeImageVersion (value) {
                 this.changeBuildResource('imageVersion', value)
+                this.changeBuildResource('value', this.buildImageCode)
             },
 
             choose (card) {
@@ -436,6 +444,7 @@
                 return this.getVersionList(card.code).then(() => {
                     const firstVersion = this.versionList[0] || {}
                     this.changeBuildResource('imageVersion', firstVersion.versionValue)
+                    this.changeBuildResource('value', card.code)
                 })
             },
 
@@ -620,6 +629,7 @@
         .bk-image {
             display: flex;
             align-items: center;
+            margin-top: 15px;
             .image-name {
                 width: 44%;
                 display: flex;

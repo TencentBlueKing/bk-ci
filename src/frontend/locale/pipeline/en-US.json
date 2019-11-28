@@ -457,6 +457,9 @@
         }
     },
     "editPage": {
+        "provideInfo": "Provided by {0}, modified {1} on {2}",
+        "officialCertification": "Official Certification",
+        "thirdImageHolder": "Please Input Image, eg:Java：11.0.5",
         "by": "by",
         "devnet": "Devnet Physical Machine",
         "onlySupport": "Only supported",
