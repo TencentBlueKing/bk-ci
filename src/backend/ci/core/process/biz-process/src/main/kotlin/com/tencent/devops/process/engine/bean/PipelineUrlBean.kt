@@ -24,48 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.process.engine.bean
 
-import com.tencent.devops.model.process.tables.TBuildStartupParam
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+interface PipelineUrlBean {
 
-@Repository
-class BuildStartupParamDao {
+    /**
+     * 生成构建详情访问链接
+     */
+    fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
 
-    fun add(dslContext: DSLContext, buildId: String, param: String, projectId: String, pipelineId: String) {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.insertInto(
-                this,
-                BUILD_ID,
-                PARAM,
-                PROJECT_ID,
-                PIPELINE_ID
-            )
-                .values(
-                    buildId,
-                    param,
-                    projectId,
-                    pipelineId
-                ).onDuplicateKeyUpdate()
-                .set(PARAM, param)
-                .execute()
-        }
-    }
-
-    fun get(dslContext: DSLContext, buildId: String): String? {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            val record = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-            return record?.param
-        }
-    }
-
-    fun deletePipelineBuildParams(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        return with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId)).execute()
-        }
-    }
+    /**
+     * 生成手机侧的构建详情访问链接
+     */
+    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
 }

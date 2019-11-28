@@ -24,48 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.process.engine.bean
 
-import com.tencent.devops.model.process.tables.TBuildStartupParam
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.service.config.CommonConfig
 
-@Repository
-class BuildStartupParamDao {
-
-    fun add(dslContext: DSLContext, buildId: String, param: String, projectId: String, pipelineId: String) {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.insertInto(
-                this,
-                BUILD_ID,
-                PARAM,
-                PROJECT_ID,
-                PIPELINE_ID
-            )
-                .values(
-                    buildId,
-                    param,
-                    projectId,
-                    pipelineId
-                ).onDuplicateKeyUpdate()
-                .set(PARAM, param)
-                .execute()
-        }
+class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
+    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        return "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }
 
-    fun get(dslContext: DSLContext, buildId: String): String? {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            val record = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-            return record?.param
-        }
-    }
-
-    fun deletePipelineBuildParams(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        return with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId)).execute()
-        }
+    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        return "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }
 }

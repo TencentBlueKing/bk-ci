@@ -37,9 +37,23 @@ class BuildStartupParamService @Autowired constructor(
     private val buildStartupParamDao: BuildStartupParamDao
 ) {
 
-    fun addParam(buildId: String, param: String) =
-        buildStartupParamDao.add(dslContext, buildId, param)
+    fun addParam(projectId: String, pipelineId: String, buildId: String, param: String) =
+        buildStartupParamDao.add(
+            dslContext = dslContext,
+            buildId = buildId,
+            param = param,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
 
     fun getParam(buildId: String) =
         buildStartupParamDao.get(dslContext, buildId)
+
+    fun deletePipelineBuildParam(projectId: String, pipelineId: String) {
+        buildStartupParamDao.deletePipelineBuildParams(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
 }

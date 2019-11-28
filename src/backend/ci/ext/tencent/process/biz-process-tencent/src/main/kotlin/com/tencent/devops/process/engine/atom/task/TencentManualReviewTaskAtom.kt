@@ -26,13 +26,14 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -40,7 +41,6 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -50,15 +50,18 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import java.text.SimpleDateFormat
 import java.util.Date
 
 /**
  * 人工审核插件
+ * 提供短链接等通知
  */
-class ManualReviewTaskAtom(
+class TencentManualReviewTaskAtom(
+    private val commonConfig: CommonConfig,
     private val client: Client,
     private val rabbitTemplate: RabbitTemplate,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val shortUrlApi: ShortUrlApi
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
@@ -131,10 +134,17 @@ class ManualReviewTaskAtom(
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
 
-        val reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectCode, pipelineId, buildId)
-        val reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectCode, pipelineId, buildId)
+        val reviewUrl = shortUrlApi.getShortUrl(
+            "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
+            24 * 3600 * 3
+        )
+        val reviewAppUrl = shortUrlApi.getShortUrl(
+            "${commonConfig.devopsOuteApiHostGateWay}/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
+            24 * 3600 * 3
+        )
 
-        val date = DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss")
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val date = simpleDateFormat.format(Date())
 
         val projectName = client.get(ServiceProjectResource::class).get(projectCode).data!!.projectName
 
@@ -143,8 +153,8 @@ class ManualReviewTaskAtom(
             addAllReceivers(reviewUsers.split(",").toSet())
             format = EnumEmailFormat.HTML
             body = NotifyTemplateUtils.getReviewEmailBody(reviewUrl, date, projectName, pipelineName, buildNo)
-            title = "【蓝盾流水线审核通知】[BKDevOps Pipeline Review Notice]"
-            sender = "DevOps"
+            title = "【蓝盾流水线审核通知】"
+            sender = "蓝鲸助手"
         }
         logger.info("[$buildId]|START|taskId=$taskId|Start to send the email message to $reviewUsers")
         val result = client.get(ServiceNotifyResource::class).sendEmailNotify(message)
@@ -160,7 +170,7 @@ class ManualReviewTaskAtom(
         val rtxMessage = RtxNotifyMessage().apply {
             addAllReceivers(reviewUsers.split(",").toSet())
             body = bodyMessage
-            title = "【蓝盾流水线审核通知】[BKDevOps Pipeline Review Notice]"
+            title = "【蓝盾流水线审核通知】"
             sender = "DevOps"
         }
 
@@ -182,6 +192,6 @@ class ManualReviewTaskAtom(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ManualReviewTaskAtom::class.java)
+        private val logger = LoggerFactory.getLogger(TencentManualReviewTaskAtom::class.java)
     }
 }

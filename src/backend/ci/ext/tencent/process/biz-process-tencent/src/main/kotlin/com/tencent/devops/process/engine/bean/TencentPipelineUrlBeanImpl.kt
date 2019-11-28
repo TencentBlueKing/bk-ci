@@ -24,48 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.process.engine.bean
 
-import com.tencent.devops.model.process.tables.TBuildStartupParam
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.common.service.config.CommonConfig
+import org.slf4j.LoggerFactory
 
-@Repository
-class BuildStartupParamDao {
+class TencentPipelineUrlBeanImpl constructor(
+    private val commonConfig: CommonConfig,
+    private val shortUrlApi: ShortUrlApi
+) : PipelineUrlBean {
 
-    fun add(dslContext: DSLContext, buildId: String, param: String, projectId: String, pipelineId: String) {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.insertInto(
-                this,
-                BUILD_ID,
-                PARAM,
-                PROJECT_ID,
-                PIPELINE_ID
-            )
-                .values(
-                    buildId,
-                    param,
-                    projectId,
-                    pipelineId
-                ).onDuplicateKeyUpdate()
-                .set(PARAM, param)
-                .execute()
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
     }
 
-    fun get(dslContext: DSLContext, buildId: String): String? {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            val record = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-            return record?.param
-        }
+    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        logger.info("[$buildId]|genBuildDetailUrl| host=${commonConfig.devopsHostGateway}")
+        return shortUrlApi.getShortUrl(
+            url = "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
+            ttl = 24 * 3600 * 3
+        )
     }
 
-    fun deletePipelineBuildParams(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        return with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId)).execute()
-        }
+    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        logger.info("[$buildId]|genBuildDetailUrl| outHost=${commonConfig.devopsOuterHostGateWay}")
+        return shortUrlApi.getShortUrl(
+            url = "${commonConfig.devopsOuterHostGateWay}/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
+            ttl = 24 * 3600 * 3
+        )
     }
 }
