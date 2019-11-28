@@ -140,5 +140,4 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val result = repositoryService.listByProject(projectId, repositoryType, limit.offset, limit.limit)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
-
 }
