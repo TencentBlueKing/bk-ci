@@ -9,7 +9,7 @@ import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_IPT_REPO_RESOURCE"], description = "IPT插件构建资源")
-@Path("/build/ipt/repo/repositories")
+@Path("/build/ipt/repo")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildIptRepoResource {

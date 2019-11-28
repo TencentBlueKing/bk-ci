@@ -31,7 +31,7 @@ class IptRepoService @Autowired constructor(
         logger.info("get commit build artifactory info: $projectId, $pipelineId, $userId, $commitId")
         checkPermission(projectId, pipelineId, userId)
 
-        val buildId = getBuildByCommitId(projectId, pipelineId) ?:
+        val buildId = getBuildByCommitId(projectId, pipelineId, commitId) ?:
             throw RuntimeException("can not find build for commit")
 
         val searchProperty = listOf(Property("buildId", buildId), Property("pipelineId", pipelineId))
@@ -40,10 +40,10 @@ class IptRepoService @Autowired constructor(
         return IptBuildArtifactoryInfo(buildId, fileList)
     }
 
-    private fun getBuildByCommitId(projectId: String, pipelineId: String): String? {
-        val headCommit = pipelineBuildVarDao.
+    private fun getBuildByCommitId(projectId: String, pipelineId: String, commitId: String): String? {
+        val headCommits = pipelineBuildVarDao.
             getVarsByProjectAndPipeline(dslContext, projectId, pipelineId, "DEVOPS_GIT_REPO_HEAD_COMMIT_ID")
-        return headCommit?.firstOrNull()?.buildId
+        return headCommits?.firstOrNull { it.value == commitId }?.buildId
     }
 
     private fun checkPermission(projectId: String, pipelineId: String, userId: String) {
