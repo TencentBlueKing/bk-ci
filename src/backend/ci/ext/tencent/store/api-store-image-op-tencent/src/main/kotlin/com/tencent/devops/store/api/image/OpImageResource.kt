@@ -189,7 +189,7 @@ interface OpImageResource {
         labelCodes: Set<String>?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
-        sortType: OpImageSortTypeEnum? = OpImageSortTypeEnum.updateTime,
+        sortType: OpImageSortTypeEnum?,
         @ApiParam("是否降序", required = false)
         @QueryParam("desc")
         desc: Boolean?,

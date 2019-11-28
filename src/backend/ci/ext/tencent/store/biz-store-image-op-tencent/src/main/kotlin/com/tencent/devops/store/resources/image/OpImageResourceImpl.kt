@@ -130,7 +130,7 @@ class OpImageResourceImpl @Autowired constructor(
             classifyCode = classifyCode,
             categoryCodes = categoryCodes,
             labelCodes = labelCodes,
-            sortType = sortType,
+            sortType =  sortType ?: OpImageSortTypeEnum.updateTime,
             desc = desc,
             page = page,
             pageSize = pageSize,
