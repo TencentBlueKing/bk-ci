@@ -23,38 +23,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.service.v2
 
-package com.tencent.devops.dispatch.api
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+/**
+ * @Description
+ * @Date 2019/9/1
+ * @Version 1.0
+ */
+@Service
+class ApigwProjectService(
+    private val client: Client,
+    private val organizationProjectService: OrganizationProjectService
+) {
 
-@Api(tags = ["OP_DOCKER_BUILD"], description = "流水线启用docker构建")
-@Path("/op/dockerBuild")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpDockerBuildResource {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwProjectService::class.java)
+    }
 
-    @ApiOperation("启用Docker当构建机")
-    @POST
-    @Path("/")
-    fun enable(
-        @ApiParam(value = "流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "vmSeqId", required = false)
-        @QueryParam("vmSeqId")
-        vmSeqId: Int?,
-        @ApiParam(value = "enable", required = true)
-        @QueryParam("enable")
-        enable: Boolean
-    ): Result<Boolean>
+    fun getListByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?,
+        interfaceName: String? = "ApigwProjectService"
+    ): List<ProjectVO>? {
+        logger.info("$interfaceName:getListByOrganizationId:Input($userId,$organizationType,$organizationId,$deptName,$centerName)")
+        return client.get(ServiceTxProjectResource::class).getProjectByOrganizationId(
+            userId = userId,
+            organizationType = organizationType,
+            organizationId = organizationId,
+            deptName = deptName?.trim(),
+            centerName = centerName?.trim()
+        ).data
+    }
 }

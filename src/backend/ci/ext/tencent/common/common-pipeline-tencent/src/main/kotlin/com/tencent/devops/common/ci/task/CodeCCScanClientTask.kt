@@ -7,12 +7,12 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("CodeCC代码检查任务(离线版)")
-open class CodeCCScanTask(
+@ApiModel("CodeCC代码检查任务(客户端)")
+open class CodeCCScanClientTask(
     @ApiModelProperty("id", required = false)
     override var displayName: String?,
     @ApiModelProperty("入参", required = true)
-    override val inputs: CodeCCScanInput,
+    override val inputs: CodeCCScanClientInput,
     @ApiModelProperty("执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
@@ -20,7 +20,7 @@ open class CodeCCScanTask(
     override fun getTaskType() = taskType
 
     companion object {
-        const val taskType = "codeCCScanOffline"
+        const val taskType = "codeCCScanClient"
         const val taskVersion = "@latest"
     }
 
@@ -54,37 +54,31 @@ open class CodeCCScanTask(
             " -DSKIP_PATHS=${inputs.skipPath!!.trim()} "
         }
 
-        return if (inputs.scanType == 0) { // 全量
-            val path = if (inputs.path == null) {
-                "\${WORKSPACE} "
-            } else {
-                "\${WORKSPACE}/${inputs.path}"
-            }
-            "cd \${WORKSPACE} \r\n" +
-                    "if [ -d \"/data/codecc_software\" ];then echo mount codecc software success ; else ln -s /tools/codecc_software/ /data/codecc_software;  fi \r\n" +
-                    "export PATH=/data/codecc_software/python3.5/bin/:\$PATH \r\n" +
-                    "echo $path > /tmp/scan_file_list.txt \r\n" +
-                    "python ${config.codeCCSofwarePath} \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE} \r\n"
+        val path = if (inputs.path.isNullOrBlank()) {
+            "\${WORKSPACE} "
         } else {
-            "cd \${WORKSPACE} \r\n" +
-                    "if [ -d \"/data/codecc_software\" ];then echo mount codecc software success ; else ln -s /tools/codecc_software/ /data/codecc_software;  fi \r\n" +
-                    "export PATH=/data/codecc_software/python3.5/bin/:\$PATH \r\n" +
-                    "if [ -f \"scan_file_list.txt\" ];then mv scan_file_list.txt /tmp/ ; else echo '\${WORKSPACE}' > /tmp/scan_file_list.txt ; fi \r\n" +
-                    "python ${config.codeCCSofwarePath} \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE} \r\n"
+            "\${WORKSPACE}/${inputs.path!!.removePrefix("/")}"
+        }
+        return if (inputs.scanType == "all") { // 全量
+            "echo \${WORKSPACE} > /tmp/scan_file_list.txt \r\n" +
+            "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
+        } else {
+            "echo $path > /tmp/scan_file_list.txt \r\n" +
+            "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
         }
     }
 }
 
 @ApiModel("CodeCC代码检查任务(客户端)")
-open class CodeCCScanInput(
-    @ApiModelProperty("扫描类型（0：全量, 1：增量）", required = false)
-    open var scanType: Int? = 0,
+open class CodeCCScanClientInput(
+    @ApiModelProperty("扫描类型（all：全量, updated：增量）", required = false)
+    open var scanType: String? = "all",
     @ApiModelProperty("工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
     var tools: String,
     @ApiModelProperty("要扫描的代码路径，默认为整个workspace", required = false)
     var path: String?,
-    @ApiModelProperty("规则集,分隔", required = false)
+    @ApiModelProperty("规则集,逗号分隔", required = false)
     var rules: String?,
-    @ApiModelProperty("排除的目录,分隔", required = false)
+    @ApiModelProperty("排除的目录,逗号分隔", required = false)
     var skipPath: String?
 ) : AbstractInput()

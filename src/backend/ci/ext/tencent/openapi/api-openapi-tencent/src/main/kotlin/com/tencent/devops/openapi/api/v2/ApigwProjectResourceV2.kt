@@ -23,38 +23,49 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.v2
 
-package com.tencent.devops.dispatch.api
-
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import io.swagger.annotations.ApiResponse
-import io.swagger.annotations.ApiResponses
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
-@Api(tags = ["BUILD_DOCKER"], description = "构建-构建执行DOCKER资源")
-@Path("/build/dockers")
+@Api(tags = ["OPEN_API_PROJECT_V2"], description = "OPEN-API-项目资源V2")
+@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildDockerResource {
+interface ApigwProjectResourceV2 {
 
-    @ApiOperation("下载构建执行器")
     @GET
-    @Path("/")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @ApiResponses(
-            ApiResponse(code = 304, message = "本地的构建执行器已是最新，无需下载")
-    )
-    fun download(
-        @ApiParam("本地eTag标签", required = false)
-        @QueryParam("eTag")
-        eTag: String?
-    ): Response
+    @Path("/getProjectByOrganizationId")
+    @ApiOperation("根据组织架构查询所有项目")
+    fun getProjectByOrganizationId(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
+        @ApiParam("deptName", required = false)
+        @QueryParam("deptName")
+        deptName: String?,
+        @ApiParam("centerName", required = false)
+        @QueryParam("centerName")
+        centerName: String?
+    ): Result<List<ProjectVO>?>
 }
