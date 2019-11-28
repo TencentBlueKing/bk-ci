@@ -1,6 +1,7 @@
 package com.tencent.devops.common.ci
 
 data class CiBuildConfig(
+    val codeCCSofwareClientImage: String?,
     val codeCCSofwarePath: String?,
     val registryHost: String?,
     val registryUserName: String?,

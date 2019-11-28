@@ -365,6 +365,7 @@ class GitCIBuildService @Autowired constructor(
 
     private fun getCiBuildConf(buildConf: BuildConfig): CiBuildConfig {
         return CiBuildConfig(
+                buildConf.codeCCSofwareClientImage,
                 buildConf.codeCCSofwarePath,
                 buildConf.registryHost,
                 buildConf.registryUserName,

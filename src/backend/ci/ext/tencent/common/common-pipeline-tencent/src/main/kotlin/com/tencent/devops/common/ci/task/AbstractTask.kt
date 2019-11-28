@@ -10,6 +10,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 @JsonSubTypes(
     JsonSubTypes.Type(value = BashTask::class, name = BashTask.taskType + BashTask.taskVersion),
     JsonSubTypes.Type(value = CodeCCScanTask::class, name = CodeCCScanTask.taskType + CodeCCScanTask.taskVersion),
+    JsonSubTypes.Type(value = CodeCCScanClientTask::class, name = CodeCCScanClientTask.taskType + CodeCCScanClientTask.taskVersion),
     JsonSubTypes.Type(value = DockerRunDevCloudTask::class, name = DockerRunDevCloudTask.taskType + DockerRunDevCloudTask.taskVersion),
     JsonSubTypes.Type(value = DockerBuildAndPushImageTask::class, name = DockerBuildAndPushImageTask.taskType + DockerBuildAndPushImageTask.taskVersion),
     JsonSubTypes.Type(value = MarketBuildTask::class, name = MarketBuildTask.taskType + MarketBuildTask.taskVersion)
