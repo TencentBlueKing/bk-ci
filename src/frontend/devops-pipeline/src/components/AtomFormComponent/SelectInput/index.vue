@@ -239,10 +239,12 @@
             },
 
             async getOptionList () {
+                if (this.isLackParam) { // 缺少参数时，选择列表置空
+                    if (this.value !== '') this.displayName = this.value
+                    this.optionList = []
+                    return
+                }
                 try {
-                    if (this.isLackParam) { // 缺少参数时，选择列表置空
-                        throw Error('lack of param')
-                    }
                     this.loading = true
                     const { mergedOptionsConf: { url, paramId, paramName, dataPath }, queryParams, urlParse, getResponseData } = this
                     const reqUrl = urlParse(url, queryParams)
@@ -296,8 +298,6 @@
                     console.error(e)
                 } finally {
                     this.loading = false
-                    if (this.value !== '') this.displayName = this.value
-                    this.optionList = []
                 }
             }
         }

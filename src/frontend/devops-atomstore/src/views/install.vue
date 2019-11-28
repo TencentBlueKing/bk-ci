@@ -161,7 +161,7 @@
                     image: 'store/requestRelativeImageProject'
                 }
 
-                this.$store.dispatch(methods[this.type], this.code).then((res) => {
+                return this.$store.dispatch(methods[this.type], this.code).then((res) => {
                     this.installedProject = res
                 })
             },

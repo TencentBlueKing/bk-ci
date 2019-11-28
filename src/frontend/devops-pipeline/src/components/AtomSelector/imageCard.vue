@@ -3,11 +3,16 @@
         <section class="card-info">
             <img :src="card.logoUrl" class="info-pic">
             <p class="info-main">
-                <span class="main-name">{{card.name}}<logo class="bk-icon" name="LDImage" size="13" v-if="card.certificationFlag" /></span>
+                <span class="main-name">
+                    {{card.name}}
+                    <span :title="$t('editPage.officialCertification')" class="icon-title">
+                        <logo class="bk-icon" name="LDImage" size="13" v-if="card.certificationFlag" />
+                    </span>
+                </span>
                 <span class="main-summary" :title="card.summary">{{card.summary}}</span>
-                <span class="main-repo" :title="`${card.imageRepoUrl}/${card.imageRepoName}:${card.imageTag}`">
+                <span class="main-repo" :title="`${card.imageRepoUrl}${card.imageRepoUrl ? '/' : ''}${card.imageRepoName}:${card.imageTag}`">
                     <logo class="bk-icon" name="imagedocker" size="10" />
-                    {{card.imageRepoUrl}}/{{card.imageRepoName}}:{{card.imageTag}}
+                    {{card.imageRepoUrl}}{{card.imageRepoUrl ? '/' : ''}}{{card.imageRepoName}}:{{card.imageTag}}
                 </span>
                 <ul class="main-label" v-if="card.labelNames">
                     <li v-for="label in card.labelNames.split(',')" :key="label">{{ label }}</li>
@@ -23,7 +28,7 @@
             </template>
         </section>
         <p class="card-link">
-            <span class="link-pub">{{ $t('editPage.by') + card.publisher + $t('editPage.provided')}}</span>
+            <span class="link-pub">{{ $t('editPage.provideInfo', [card.publisher, card.modifier, convertTime(card.updateTime)])}}</span>
             <a class="link-more" :href="card.docsLink" target="_blank">{{ $t('editPage.knowMore') }}</a>
         </p>
     </li>
@@ -31,6 +36,7 @@
 
 <script>
     import logo from '@/components/Logo'
+    import { convertTime } from '@/utils/util.js'
 
     export default {
         components: {
@@ -83,6 +89,10 @@
         },
 
         methods: {
+            convertTime (val) {
+                return convertTime(val)
+            },
+
             clickItem () {
                 this.$emit('update:currentItem', this.card.code)
             },
@@ -183,6 +193,10 @@
                 margin-bottom: 2px;
                 .bk-icon {
                     margin-left: 4px;
+                }
+                .icon-title {
+                    display: flex;
+                    align-items: center;
                 }
             }
             .main-summary {

@@ -781,7 +781,7 @@
                 font-size: 12px;
                 font-weight: normal;
                 color: $primaryColor;
-                // cursor: pointer;
+                cursor: pointer;
                 text-align: center;
                 a,
                 a:hover {
@@ -809,7 +809,7 @@
             .pass-btn {
                 position: absolute;
                 top: 17px;
-                left: 140px;
+                left: 100px;
                 padding: 0 10px;
                 font-weight: normal;
             }
@@ -919,10 +919,10 @@
                 margin-top: 40px;
             }
         }
-        .bk-sideslider-wrapper {
+        /deep/ .bk-sideslider-wrapper {
             top: 0;
             padding-bottom: 0;
-             .bk-sideslider-content {
+            .bk-sideslider-content {
                 height: calc(100% - 50px);
             }
         }

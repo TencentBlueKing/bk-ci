@@ -7,7 +7,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{filterData.pipeType|pipeTypeFilter}}</span>
             </p>
-            <router-link :to="{ name: 'atomList', params: { type: 'atom' } }" class="title-work"> {{ $t('store.工作台') }} </router-link>
+            <router-link :to="{ name: 'atomList', params: { type: filterData.pipeType || 'atom' } }" class="title-work" v-if="filterData.pipeType !== 'ide'"> {{ $t('store.工作台') }} </router-link>
         </h3>
 
         <main class="store-main" @scroll.passive="mainScroll">
