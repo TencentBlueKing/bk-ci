@@ -59,8 +59,8 @@ class ApigwProjectService(
             userId = userId,
             organizationType = organizationType,
             organizationId = organizationId,
-            deptName = deptName,
-            centerName = centerName
+            deptName = deptName?.trim(),
+            centerName = centerName?.trim()
         ).data
     }
 }

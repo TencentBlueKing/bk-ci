@@ -42,7 +42,7 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         organizationType: String,
         organizationId: Long,
         deptName: String?,
-        centerName: String
+        centerName: String?
     ): Result<List<ProjectVO>?> {
         return Result(apigwProjectService.getListByOrganizationId(
             userId = userId,

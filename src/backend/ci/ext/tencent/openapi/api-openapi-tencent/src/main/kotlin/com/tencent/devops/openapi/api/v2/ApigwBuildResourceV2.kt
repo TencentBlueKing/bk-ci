@@ -86,7 +86,6 @@ interface ApigwBuildResourceV2 {
         buildId: String
     ): Result<ModelDetail>
 
-
     @ApiOperation("查看构建状态信息（平台方调用，不鉴权）")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/nopermission/status")
