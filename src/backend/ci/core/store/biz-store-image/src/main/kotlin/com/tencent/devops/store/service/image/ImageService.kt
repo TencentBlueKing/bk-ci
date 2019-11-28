@@ -311,7 +311,7 @@ class ImageService @Autowired constructor(
                 result.add(
                     MarketImageMain(
                         key = code,
-                        label = it.classifyName,
+                        label = MessageCodeUtil.getMessageByLocale(it.classifyName, it.classifyCode),
                         records = doList(
                             userId = userId,
                             userDeptList = userDeptList,
