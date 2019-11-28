@@ -66,6 +66,6 @@ interface ApigwProjectResourceV2 {
         deptName: String?,
         @ApiParam("centerName", required = false)
         @QueryParam("centerName")
-        centerName: String
+        centerName: String?
     ): Result<List<ProjectVO>?>
 }
