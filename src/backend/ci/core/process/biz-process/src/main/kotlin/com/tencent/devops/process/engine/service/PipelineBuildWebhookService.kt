@@ -45,7 +45,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
-import com.tencent.devops.process.api.service.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
@@ -375,7 +375,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         matcher.getCodeType()
                     )
                     val buildId =
-                        client.getGateway(ServiceScmResource::class).webhookCommit(projectId, webhookCommit).data
+                        client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
 
                     logger.info("[$pipelineId]| webhook trigger(atom(${element.name}) of repo(${matcher.getRepoName()})) build($buildId)")
                 } catch (e: Exception) {

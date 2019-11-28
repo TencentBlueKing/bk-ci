@@ -29,8 +29,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.external.measure.PipelineBuildResponseData
 import com.tencent.devops.openapi.api.v2.ApigwBuildResourceV2
 import com.tencent.devops.openapi.service.v2.ApigwBuildService
+import com.tencent.devops.openapi.service.v2.ApigwBuildServiceV2
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -40,8 +42,28 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwBuildResourceV2Impl @Autowired constructor(
     private val client: Client,
-    private val apigwBuildService: ApigwBuildService
+    private val apigwBuildService: ApigwBuildService,
+    private val apigwBuildServiceV2: ApigwBuildServiceV2
 ) : ApigwBuildResourceV2 {
+    override fun getBuildListByBG(
+        userId: String,
+        bgId: String,
+        beginDate: Long?,
+        endDate: Long?,
+        offset: Int?,
+        limit: Int?
+    ): Result<List<PipelineBuildResponseData>?> {
+        return Result(apigwBuildServiceV2.getBuildList(
+            userId = userId,
+            bgId = bgId,
+            beginDate = beginDate,
+            endDate = endDate,
+            offset = offset,
+            limit = limit,
+            interfaceName = "/{apigw:apigw-user|apigw-app|apigw}/v2/builds/detail/list"
+        ))
+    }
+
     override fun stop(
         userId: String,
         projectId: String,

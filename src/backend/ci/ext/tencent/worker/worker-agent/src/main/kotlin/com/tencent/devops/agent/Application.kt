@@ -49,7 +49,7 @@ fun main(args: Array<String>) {
                     val workspace = System.getProperty("devops_workspace")
 
                     val dir = if (workspace.isNullOrBlank()) {
-                        File("/data/devops/workspace")
+                        File("/data/landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
                     } else {
                         File(workspace)
                     }

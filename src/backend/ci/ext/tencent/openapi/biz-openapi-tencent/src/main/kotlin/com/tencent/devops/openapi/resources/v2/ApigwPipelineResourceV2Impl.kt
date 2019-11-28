@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.external.ServiceMeasureResource
+import com.tencent.devops.openapi.api.external.measure.ServiceMeasureResource
 import com.tencent.devops.openapi.api.v2.ApigwPipelineResourceV2
 import com.tencent.devops.openapi.pojo.BuildStatisticsResponse
 import com.tencent.devops.openapi.service.v2.ApigwPipelineServiceV2
@@ -114,7 +114,7 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
         type: String?
     ): Result<BuildStatisticsResponse> {
         // 1.直接调Measure微服务查询流水线构建统计数据
-        return client.getWithoutRetry(ServiceMeasureResource::class).buildStatistics(
+        return client.getExternalServiceWithoutRetry("measure", ServiceMeasureResource::class).buildStatistics(
             userId = userId,
             organizationType = organizationType,
             organizationId = organizationId,

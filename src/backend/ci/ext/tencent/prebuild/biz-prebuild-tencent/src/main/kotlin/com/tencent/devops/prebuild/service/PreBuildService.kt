@@ -28,7 +28,6 @@ import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.codecc.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
-import com.tencent.devops.prebuild.dao.PrebuildPersonalVmDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.HistoryResponse
