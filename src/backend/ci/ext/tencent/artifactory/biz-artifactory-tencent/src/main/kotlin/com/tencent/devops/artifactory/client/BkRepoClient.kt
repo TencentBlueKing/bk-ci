@@ -8,12 +8,12 @@ import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.generic.pojo.FileDetail
 import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.bkrepo.generic.pojo.FileSizeInfo
-import com.tencent.bkrepo.generic.pojo.devops.ExternalUrlRequest
 import com.tencent.bkrepo.generic.pojo.operate.FileCopyRequest
 import com.tencent.bkrepo.generic.pojo.operate.FileMoveRequest
 import com.tencent.bkrepo.generic.pojo.operate.FileRenameRequest
 import com.tencent.bkrepo.generic.pojo.operate.FileSearchRequest
-import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataUpsertRequest
+import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -71,7 +71,7 @@ class BkRepoClient @Autowired constructor(
     fun setMetadata(userId: String, projectId: String, repoName: String, path: String, metadata: Map<String, String>) {
         logger.info("setMetadata, projectId: $projectId, repo: $repoName, path: $path, metadata: $metadata")
         val url = "$BKREPO_URL/api/repository/user/metadata/$projectId/$repoName/$path"
-        val requestData = UserMetadataUpsertRequest(
+        val requestData = UserMetadataSaveRequest(
             metadata = metadata
         )
         val request = Request.Builder()
@@ -423,38 +423,40 @@ class BkRepoClient @Autowired constructor(
     ): String {
         logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, " +
             "downloadUser: $downloadUser, ttl: $ttl, directed: $directed")
-        val url = "$BKREPO_URL/api/generic/devops/createExternalUrl"
-        val requestData = ExternalUrlRequest(
-            projectId = projectId,
-            repoName = repoName,
-            path = path,
-            downloadUser = downloadUser,
-            ttl = ttl,
-            directed = directed
-        )
-        val request = Request.Builder()
-            .url(url)
-            .header(AUTH_HEADER_USER_ID, userId)
-            // .header("Authorization", makeCredential())
-            .post(
-                RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    objectMapper.writeValueAsString(requestData)
-                )
-            )
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.bytes()
-            if (!response.isSuccessful) {
-                logger.error("create external download url failed, requestUrl: $url, responseContent: $responseContent")
-                throw RuntimeException("create external download url failed")
-            }
-            val responseData = objectMapper.readValue<Response<String>>(responseContent)
-            if (responseData.isNotOk()) {
-                throw RuntimeException("create external download url failed: ${responseData.message}")
-            }
-            return responseData.data!!
-        }
+        throw OperationException("TODO")
+        // import com.tencent.bkrepo.generic.pojo.devops.ExternalUrlRequest
+//        val url = "$BKREPO_URL/api/generic/devops/createExternalUrl"
+//        val requestData = ExternalUrlRequest(
+//            projectId = projectId,
+//            repoName = repoName,
+//            path = path,
+//            downloadUser = downloadUser,
+//            ttl = ttl,
+//            directed = directed
+//        )
+//        val request = Request.Builder()
+//            .url(url)
+//            .header(AUTH_HEADER_USER_ID, userId)
+//            // .header("Authorization", makeCredential())
+//            .post(
+//                RequestBody.create(
+//                    MediaType.parse("application/json; charset=utf-8"),
+//                    objectMapper.writeValueAsString(requestData)
+//                )
+//            )
+//            .build()
+//        OkhttpUtils.doHttp(request).use { response ->
+//            val responseContent = response.body()!!.bytes()
+//            if (!response.isSuccessful) {
+//                logger.error("create external download url failed, requestUrl: $url, responseContent: $responseContent")
+//                throw RuntimeException("create external download url failed")
+//            }
+//            val responseData = objectMapper.readValue<Response<String>>(responseContent)
+//            if (responseData.isNotOk()) {
+//                throw RuntimeException("create external download url failed: ${responseData.message}")
+//            }
+//            return responseData.data!!
+//        }
     }
 
     companion object {
