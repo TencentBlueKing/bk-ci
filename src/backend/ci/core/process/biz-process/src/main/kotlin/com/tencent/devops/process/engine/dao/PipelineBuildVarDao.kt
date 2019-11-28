@@ -85,10 +85,13 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
-    fun getVarsByProjectAndPipeline(dslContext: DSLContext, projectId: String, pipelineId: String): Result<TPipelineBuildVarRecord>? {
+    fun getVarsByProjectAndPipeline(dslContext: DSLContext, projectId: String, pipelineId: String, key: String? = null): Result<TPipelineBuildVarRecord>? {
         return with(T_PIPELINE_BUILD_VAR) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+            val condition = PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId))
+            if (!key.isNullOrBlank()) condition.and(KEY.eq(key))
+
+            return dslContext.selectFrom(this)
+                .where(condition)
                 .fetch()
         }
     }

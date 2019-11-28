@@ -41,9 +41,8 @@ class IptRepoService @Autowired constructor(
     }
 
     private fun getBuildByCommitId(projectId: String, pipelineId: String): String? {
-        val headCommit = pipelineBuildVarDao.getVarsByProjectAndPipeline(dslContext, projectId, pipelineId)?.filter {
-            it.key == "DEVOPS_GIT_REPO_HEAD_COMMIT_ID"
-        }
+        val headCommit = pipelineBuildVarDao.
+            getVarsByProjectAndPipeline(dslContext, projectId, pipelineId, "DEVOPS_GIT_REPO_HEAD_COMMIT_ID")
         return headCommit?.firstOrNull()?.buildId
     }
 
