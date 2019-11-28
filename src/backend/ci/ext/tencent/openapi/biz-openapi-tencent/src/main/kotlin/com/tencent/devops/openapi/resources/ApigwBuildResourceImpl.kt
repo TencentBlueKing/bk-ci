@@ -40,7 +40,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwBuildResourceImpl @Autowired constructor(private val client: Client) : ApigwBuildResource {
+class ApigwBuildResourceImpl @Autowired constructor(
+    private val client: Client
+) : ApigwBuildResource {
     override fun manualStartupInfo(
         userId: String,
         projectId: String,

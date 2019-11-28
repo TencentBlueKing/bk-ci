@@ -177,12 +177,17 @@ class DockerHostDebugService @Autowired constructor(
         if (null == debugTask) {
             logger.warn("The debug task not exists, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
             val msg = redisUtils.getRedisDebugMsg(pipelineId, vmSeqId)
-            return Result(1, "登录调试失败,请检查镜像是否合法或重试。" + if (!msg.isNullOrBlank()) { "错误信息: $msg" } else { "" })
+            return Result(1, "登录调试失败,请检查镜像是否合法或重试。" + if (!msg.isNullOrBlank()) {
+                "错误信息: $msg"
+            } else {
+                ""
+            })
         }
 
         return Result(0, "success", ContainerInfo(debugTask.projectId, debugTask.pipelineId, debugTask.vmSeqId,
-                debugTask.status, debugTask.imageName, debugTask.containerId ?: "", debugTask.hostTag ?: "", "", debugTask.buildEnv,
-                debugTask.registryUser, debugTask.registryPwd, debugTask.imageType))
+            debugTask.status, debugTask.imageName, debugTask.containerId ?: "", debugTask.hostTag
+            ?: "", "", debugTask.buildEnv,
+            debugTask.registryUser, debugTask.registryPwd, debugTask.imageType))
     }
 
     fun startDebug(hostTag: String): Result<ContainerInfo>? {
@@ -209,7 +214,7 @@ class DockerHostDebugService @Autowired constructor(
                 logger.info("Start the docker debug (${debug.pipelineId}) seq(${debug.vmSeqId})")
                 pipelineDockerDebugDao.updateStatusAndTag(dslContext, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 return Result(0, "success", ContainerInfo(debug.projectId, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING.status, debug.imageName,
-                        "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
+                    "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
             } else {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
                 var debugTask = pipelineDockerDebugDao.getQueueDebugExcludeProj(dslContext, grayProjectSet, hostTag)
@@ -226,7 +231,7 @@ class DockerHostDebugService @Autowired constructor(
                 logger.info("Start the docker debug (${debug.pipelineId}) seq(${debug.vmSeqId})")
                 pipelineDockerDebugDao.updateStatusAndTag(dslContext, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 return Result(0, "success", ContainerInfo(debug.projectId, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING.status, debug.imageName,
-                        "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
+                    "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
             }
         } finally {
             redisLock.unlock()
@@ -265,17 +270,17 @@ class DockerHostDebugService @Autowired constructor(
             val dockerHost = pipelineDockerHostDao.getHost(dslContext, debugTask.projectId)
             if (null != dockerHost) {
                 logger.info("DockerHost is not null, rollback failed, shutdown the build! projectId: ${debugTask.projectId}, " +
-                        "pipelineId: ${debugTask.pipelineId}, vmSeqId: ${debugTask.vmSeqId}")
+                    "pipelineId: ${debugTask.pipelineId}, vmSeqId: ${debugTask.vmSeqId}")
 
                 AlertUtils.doAlert(AlertLevel.HIGH, "Docker构建机启动调试异常", "固定的Docker构建机启动调试异常，IP：${dockerHost.hostIp}, " +
-                        "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
+                    "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
                 return Result(0, "Rollback task finished")
             }
 
             if (debugTask.status == PipelineTaskStatus.RUNNING.status) {
                 pipelineDockerDebugDao.updateStatusAndTag(dslContext, pipelineId, vmSeqId, PipelineTaskStatus.QUEUE, "")
                 AlertUtils.doAlert(AlertLevel.LOW, "Docker构建机启动调试异常", "Docker构建机启动调试异常，任务已重试，异常ip: ${debugTask.hostTag}, " +
-                        "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
+                    "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
             }
         } finally {
             redisLock.unlock()
@@ -296,7 +301,7 @@ class DockerHostDebugService @Autowired constructor(
             logger.info("End the docker debug(${debug.pipelineId}) seq(${debug.vmSeqId})")
             pipelineDockerDebugDao.deleteDebug(dslContext, debug.id)
             return Result(0, "success", ContainerInfo(debug.projectId, debug.pipelineId, debug.vmSeqId,
-                    debug.status, debug.imageName, debug.containerId, debug.hostTag, debug.token, debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
+                debug.status, debug.imageName, debug.containerId, debug.hostTag, debug.token, debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
         } finally {
             redisLock.unlock()
         }

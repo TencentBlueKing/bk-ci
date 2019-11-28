@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.external.ServiceMeasureResource
+import com.tencent.devops.openapi.api.external.measure.ServiceMeasureResource
 import com.tencent.devops.openapi.api.v2.ApigwPipelineResourceV2
 import com.tencent.devops.openapi.pojo.BuildStatisticsResponse
 import com.tencent.devops.openapi.service.v2.ApigwPipelineServiceV2
@@ -44,7 +44,15 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
     private val apigwPipelineResourceService: ApigwPipelineServiceV2
 ) : ApigwPipelineResourceV2 {
 
-    override fun getListByOrganization(userId: String, organizationType: String, organizationName: String, deptName: String?, centerName: String?, page: Int?, pageSize: Int?): Result<Page<Pipeline>> {
+    override fun getListByOrganizationName(
+        userId: String,
+        organizationType: String,
+        organizationName: String,
+        deptName: String?,
+        centerName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
         return apigwPipelineResourceService.getListByOrganization(
             userId = userId,
             organizationType = organizationType,
@@ -56,7 +64,34 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
         )
     }
 
-    override fun getListByBuildResource(userId: String, buildResourceType: String, buildResourceValue: String?, page: Int?, pageSize: Int?): Result<Page<Pipeline>> {
+    override fun getListByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
+        return apigwPipelineResourceService.getListByOrganizationId(
+            userId = userId,
+            organizationType = organizationType,
+            organizationId = organizationId,
+            deptName = deptName,
+            centerName = centerName,
+            page = page,
+            pageSize = pageSize,
+            interfaceName = "/v2/pipelines/organizationIds"
+        )
+    }
+
+    override fun getListByBuildResource(
+        userId: String,
+        buildResourceType: String,
+        buildResourceValue: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
         // 1.直接调Process微服务根据构建资源查流水线接口获取结果返回
         return client.getWithoutRetry(ServicePipelineResourceV2::class).listPipelinesByBuildResource(
             userId = userId,
@@ -68,9 +103,18 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
         )
     }
 
-    override fun buildStatistics(userId: String, organizationType: String, organizationId: Int, deptName: String?, centerName: String?, beginTime: String?, endTime: String?, type: String?): Result<BuildStatisticsResponse> {
+    override fun buildStatistics(
+        userId: String,
+        organizationType: String,
+        organizationId: Int,
+        deptName: String?,
+        centerName: String?,
+        beginTime: String?,
+        endTime: String?,
+        type: String?
+    ): Result<BuildStatisticsResponse> {
         // 1.直接调Measure微服务查询流水线构建统计数据
-        return client.getWithoutRetry(ServiceMeasureResource::class).buildStatistics(
+        return client.getExternalServiceWithoutRetry("measure", ServiceMeasureResource::class).buildStatistics(
             userId = userId,
             organizationType = organizationType,
             organizationId = organizationId,
