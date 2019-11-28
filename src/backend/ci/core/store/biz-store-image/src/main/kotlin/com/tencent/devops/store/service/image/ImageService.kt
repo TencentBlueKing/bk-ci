@@ -195,6 +195,33 @@ abstract class ImageService @Autowired constructor() {
     ): Boolean
 
     @Suppress("UNCHECKED_CAST")
+    fun count(
+        userId: String,
+        userDeptList: List<Int>,
+        imageName: String?,
+        classifyCodeList: List<String>?,
+        categoryCodeList: List<String>?,
+        rdType: ImageRDTypeEnum?,
+        labelCode: String?,
+        score: Int?,
+        imageSourceType: ImageType?,
+        interfaceName: String? = "Anon interface"
+    ): Int {
+        // 获取镜像
+        val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
+        return marketImageDao.count(
+            dslContext = dslContext,
+            imageName = imageName,
+            classifyCodeList = classifyCodeList,
+            categoryCodeList = categoryCodeList,
+            rdType = rdType,
+            labelCodeList = labelCodeList,
+            score = score,
+            imageSourceType = imageSourceType
+        )
+    }
+
+    @Suppress("UNCHECKED_CAST")
     fun doList(
         userId: String,
         userDeptList: List<Int>,
@@ -323,7 +350,17 @@ abstract class ImageService @Autowired constructor() {
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:searchImage:Inner:userDeptList=$userDeptList")
         val result = MarketImageResp(
-            count = 0,
+            count = count(
+                userId = userId,
+                userDeptList = userDeptList,
+                imageName = imageName,
+                classifyCodeList = if (null != classifyCode) listOf(classifyCode) else null,
+                categoryCodeList = if (null != categoryCode) listOf(categoryCode) else null,
+                rdType = rdType,
+                labelCode = labelCode,
+                score = score,
+                imageSourceType = imageSourceType
+            ),
             page = page,
             pageSize = pageSize,
             records = doList(
