@@ -291,7 +291,12 @@ class BuildStartControl @Autowired constructor(
                     it.id to it.defaultValue
                 }
             }.toMap())
-            buildStartupParamService.addParam(buildId, JsonUtil.getObjectMapper().writeValueAsString(params))
+            buildStartupParamService.addParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            )
         }
     }
 
