@@ -63,7 +63,6 @@ object Tools {
         )
     }
 
-
     fun createSimpleMessageListenerContainerByAdapter(
         connectionFactory: ConnectionFactory,
         queue: Queue,
