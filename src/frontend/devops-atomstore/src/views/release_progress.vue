@@ -690,7 +690,7 @@
             .pass-btn {
                 position: absolute;
                 top: 17px;
-                left: 140px;
+                left: 100px;
                 padding: 0 10px;
                 font-weight: normal;
             }

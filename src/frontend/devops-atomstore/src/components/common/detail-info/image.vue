@@ -92,8 +92,8 @@
 
             buttonInfo () {
                 const info = {}
-                info.disable = this.detail.defaultFlag || !this.detail.flag
-                if (this.detail.defaultFlag) info.des = `${this.$t('通用镜像，所有项目默认可用，无需安装')}`
+                info.disable = this.detail.publicFlag || !this.detail.flag
+                if (this.detail.publicFlag) info.des = `${this.$t('通用镜像，所有项目默认可用，无需安装')}`
                 if (!this.detail.flag) info.des = `${this.$t('你没有该镜像的安装权限，请联系镜像发布者')}`
                 return info
             }
