@@ -149,7 +149,8 @@
         }
 
         serviceName (name): string {
-            return name.slice(0, name.indexOf('('))
+            const charPos = name.indexOf('(')
+            return charPos > -1 ? name.slice(0, charPos) : name
         }
 
         getServiceLogoByPath (link: string): string {

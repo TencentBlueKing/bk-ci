@@ -21,7 +21,7 @@
                                     :name="service.key"
                                     size="16"
                                 />
-                                {{ service.name }}
+                                {{ serviceName(service.name) }}
                             </router-link>
                         </template>
                         <p
@@ -208,6 +208,11 @@
 
         addConsole (link: string): string {
             return urlJoin('/console/', link)
+        }
+
+        serviceName (name): string {
+            const charPos = name.indexOf('(')
+            return charPos > -1 ? name.slice(0, charPos) : name
         }
 
         created () {

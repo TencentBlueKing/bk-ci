@@ -125,7 +125,9 @@
             return this.$route.params.projectId
         }
         get title (): string {
-            return this.currentPage && this.currentPage.name ? this.currentPage.name : ''
+            const name = this.currentPage && this.currentPage.name ? this.currentPage.name : ''
+            const charPos = name.indexOf('(')
+            return charPos > -1 ? name.slice(0, charPos) : name
         }
         get serviceLogo (): string {
             return this.currentPage && this.currentPage.logoUrl ? this.currentPage.logoUrl : 'placeholder'

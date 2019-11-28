@@ -1,6 +1,6 @@
 {
     "store": "Store",
-    "构建中": "Under Construction",
+    "构建中": "Building",
     "构建失败": "Build Failure",
     "上架中止": "Suspended",
     "下架中": "In the shelf",
@@ -297,7 +297,7 @@
     "成员名称：": "Member name:",
     "成员名称不能为空": "Member name cannot be empty",
     "角色：": "Role:",
-    "权限列表：": "Permission list",
+    "权限列表：": "Permissions",
     "插件开发": "Development",
     "版本发布": "Release",
     "全部组织架构": "Structure of all organizations",
