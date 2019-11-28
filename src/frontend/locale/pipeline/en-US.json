@@ -481,7 +481,7 @@
         "fromList": "Select from list",
         "reElection": "Re-election",
         "chooseImage": "Select Image",
-        "imageErrMgs": "Docker and Version cannot be empty",
+        "imageErrMgs": "Cannot be empty",
         "imageSource": "Docker Source",
         "devopsImg": " mirroring on Blue Shield",
         "thirdImg": "Third-party mirroring",
