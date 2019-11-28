@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.image
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.MessageCodeDetail
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -311,7 +312,7 @@ class ImageService @Autowired constructor(
                 result.add(
                     MarketImageMain(
                         key = code,
-                        label = it.classifyName,
+                        label = MessageCodeUtil.getMessageByLocale(it.classifyName, it.classifyCode),
                         records = doList(
                             userId = userId,
                             userDeptList = userDeptList,
