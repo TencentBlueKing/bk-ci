@@ -35,6 +35,8 @@ data class OPActivityVO(
     val id: Long,
     @ApiModelProperty("名称")
     val name: String,
+    @ApiModelProperty("英文名称")
+    val englishName: String,
     @ApiModelProperty("链接")
     val link: String,
     @ApiModelProperty("类型")

@@ -27,7 +27,6 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory

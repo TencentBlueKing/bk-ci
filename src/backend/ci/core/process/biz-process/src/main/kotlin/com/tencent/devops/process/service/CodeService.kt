@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.service.scm.ScmService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.CodeSvnRepository
@@ -51,7 +51,7 @@ import kotlin.math.min
 
 @Service
 class CodeService @Autowired constructor(
-    private val scmService: ScmService,
+    private val scmProxyService: ScmProxyService,
     private val client: Client
 ) {
     fun getSvnDirectories(projectId: String, repoHashId: String?, relativePath: String?): List<String> {
@@ -97,8 +97,8 @@ class CodeService @Autowired constructor(
     fun getGitRefs(projectId: String, repoHashId: String?): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
         val result = mutableListOf<String>()
-        val branches = scmService.listBranches(projectId, repositoryConfig).data ?: listOf()
-        val tags = scmService.listTags(projectId, repositoryConfig).data ?: listOf()
+        val branches = scmProxyService.listBranches(projectId, repositoryConfig).data ?: listOf()
+        val tags = scmProxyService.listTags(projectId, repositoryConfig).data ?: listOf()
         // 取前100
         result.addAll(branches.subList(0, min(branches.size, 100)))
         result.addAll(tags.subList(0, min(tags.size, 100)))
