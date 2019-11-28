@@ -283,11 +283,13 @@ class MarketImageDao @Autowired constructor(
             baseStep.where(conditions)
         }
         // 分页
-        return if (page != null && page > 0 && pageSize != null && pageSize > 0) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        val finalStep = if (page != null && page > 0 && pageSize != null && pageSize > 0) {
+            baseStep.limit((page - 1) * pageSize, pageSize)
         } else {
-            baseStep.fetch()
+            baseStep
         }
+        logger.info(finalStep.getSQL(true))
+        return finalStep.fetch()
     }
 
     fun count(
@@ -351,6 +353,7 @@ class MarketImageDao @Autowired constructor(
             baseStep.leftJoin(t).on(tImage.IMAGE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
         }
+        logger.info(baseStep.getSQL(true))
         return baseStep.fetchOne(0, Int::class.java)!!
     }
 

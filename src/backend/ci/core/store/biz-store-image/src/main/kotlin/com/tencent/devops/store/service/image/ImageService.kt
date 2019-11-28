@@ -485,8 +485,8 @@ abstract class ImageService @Autowired constructor() {
                             labelCode = null,
                             score = null,
                             imageSourceType = null,
-                            sortType = MarketImageSortTypeEnum.NAME,
-                            desc = false,
+                            sortType = MarketImageSortTypeEnum.DOWNLOAD_COUNT,
+                            desc = true,
                             page = page,
                             pageSize = pageSize,
                             interfaceName = interfaceName
