@@ -61,7 +61,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         val normalizeDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
         if (combinationPath.srcPaths.size > 1) {
             val destFileInfo = bkRepoClient.getFileDetail("", projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
-            if (destFileInfo != null && !destFileInfo.fileInfo.folder) {
+            if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
                 throw OperationException("目标路径应为文件夹")
             }
         }
