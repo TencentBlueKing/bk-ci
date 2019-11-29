@@ -373,7 +373,7 @@ abstract class ImageService @Autowired constructor() {
                 labelCode = labelCode,
                 score = score,
                 imageSourceType = imageSourceType,
-                sortType = MarketImageSortTypeEnum.NAME,
+                sortType = MarketImageSortTypeEnum.getSortTypeEnum(sortType),
                 desc = false,
                 page = page,
                 pageSize = pageSize,
