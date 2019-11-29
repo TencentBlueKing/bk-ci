@@ -221,7 +221,7 @@
              */
             deleteView (view) {
                 if ((this.isManagerUser && view.projected) || !view.projected) {
-                    const content = `${this.$t('deleteViewTips', [view.name])}`
+                    const content = `${this.$t('view.deleteViewTips', [view.name])}`
 
                     navConfirm({ type: 'warning', content })
                         .then(() => {
