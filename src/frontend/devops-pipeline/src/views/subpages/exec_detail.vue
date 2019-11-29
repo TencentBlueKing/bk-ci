@@ -366,7 +366,7 @@
         }
 
          .pipeline-info {
-            width: 360px;
+            width: 480px;
             display: flex;
             height: 100%;
             align-items: center;
