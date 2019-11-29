@@ -687,8 +687,7 @@
         "continueWhenFailed": "Continue on error",
         "atomTimeout": "Timeout",
         "timeoutDesc": "All the integers between 0 and 10080 with 0 indicating the maximum timeout allowed by the system",
-        "timeoutPlaceholder": "Specifies the maximum time, in minutes, that a task is allowed to execute before being canceled by server.
-        A zero value indicates an infinite timeout.",
+        "timeoutPlaceholder": "Specifies the maximum time, in minutes, that a task is allowed to execute before being canceled by server. A zero value indicates an infinite timeout.",
         "atomRunCondition": "Run this task",
         "atomPreSuc": "Only when all previous tasks have succeeded",
         "atomEvenFail": "Even if a previous task has failed, unless the build was canceled",
