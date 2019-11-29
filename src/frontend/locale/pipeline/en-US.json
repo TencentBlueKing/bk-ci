@@ -70,7 +70,7 @@
     "buildNum": "buildNo.",
     "propertyBar": "Property",
     "pipelineNameInputTips": "Please enter a name for this pipeline within 40 letters",
-    "pipelineDescInputTips": " Please describe this pipeline within 100 letters",
+    "pipelineDescInputTips": "Please describe this pipeline within 100 letters",
     "nameInputTips": "Please enter a name",
     "loadingTips": "Data is Loading, Please wait",
     "timeMap": {
@@ -89,15 +89,15 @@
     "group": {
         "labelInputTips": "Please input a name for this label and confirm it by pressing Enter",
         "addLabel": "New label",
-        "labelLimitTips": " Add a maximum of 10 labels under a group",
+        "labelLimitTips": "At most 10 labels under a group",
         "addGroup": "New group",
         "groupName": "Group name",
         "groupInputTips": "Please enter a name for this group",
         "emptyTips": {
             "title": "Create a group for labels",
-            "desc": " Having the right labels for pipelines would help to quickly locate and better manage them. Please be aware of the rules below: ",
-            "contentOne": "1. Add a maximum of three groups under a project",
-            "contentTwo": "2. Add a maximum of 10 labels under a group "
+            "desc": "Using reasonable labels would be helpful for easier locating and better managing pipelines. Please be aware of the rules below: ",
+            "contentOne": "1. At most three groups under a project",
+            "contentTwo": "2. At most 10 labels under a group "
         },
         "deleteReason": " Are you sure you want to delete this group?"
     },
@@ -105,8 +105,8 @@
         "addView": "Add",
         "editView": "Edit",
         "emptyTitle": "Create your first view",
-        "emptyDesc": " Having the right view would help you quickly locate the pipeline you want",
-        "deleteSucTips": "Successfully deleted ",
+        "emptyDesc": "Setting reasonable views would be helpful for easier locating your desire pipelines",
+        "deleteSucTips": "Successfully deleted",
         "projectView": "Project view",
         "personalView": "Personal view",
         "nameInputTips": "Please enter a name for this view",
@@ -119,8 +119,8 @@
         "nameTips": "Support glob match",
         "creatorTips": " 'creator' must be filled",
         "labelTips": " 'label' must be filled",
-        "addConditions": " Add view conditions",
-        "typeTips": "Project views can only be added, edited or deleted by the admin",
+        "addConditions": "Add view conditions",
+        "typeTips": "Project views can only be added, edited or deleted by administrators",
         "conditionEmpty": "View conditions must be filled",
         "deleteViewTips": "Delete ( {0} ) ? "
     },
