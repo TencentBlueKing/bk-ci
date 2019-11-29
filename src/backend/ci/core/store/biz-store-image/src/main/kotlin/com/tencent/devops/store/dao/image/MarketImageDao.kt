@@ -353,6 +353,7 @@ class MarketImageDao @Autowired constructor(
             baseStep.leftJoin(t).on(tImage.IMAGE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
         }
+        baseStep.where(conditions)
         logger.info(baseStep.getSQL(true))
         return baseStep.fetchOne(0, Int::class.java)!!
     }
