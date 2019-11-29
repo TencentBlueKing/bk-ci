@@ -66,6 +66,7 @@ interface UserImageResource {
         @QueryParam("categoryCode")
         categoryCode: String?,
         @ApiParam("镜像研发来源", required = false)
+        @QueryParam("rdType")
         rdType: ImageRDTypeEnum?,
         @ApiParam("镜像标签代码", required = false)
         @QueryParam("labelCode")
