@@ -149,7 +149,7 @@ import java.time.temporal.TemporalAccessor
 class PipelineRuntimeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val websocketService: WebsocketService,
+    private val pipelineWebsocketService: PipelineWebsocketService,
     private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
@@ -204,6 +204,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId
             )
         }
+        buildStartupParamService.deletePipelineBuildParam(projectId = projectId, pipelineId = pipelineId)
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
@@ -1140,8 +1141,8 @@ class PipelineRuntimeService @Autowired constructor(
         )
 
         webSocketDispatcher.dispatch(
-            websocketService.buildHistoryMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId),
-            websocketService.buildDetailMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId)
+            pipelineWebsocketService.buildHistoryMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId),
+            pipelineWebsocketService.buildDetailMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId)
         )
 
         return buildId
@@ -1506,19 +1507,19 @@ class PipelineRuntimeService @Autowired constructor(
         }
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
         webSocketDispatcher.dispatch(
-            websocketService.buildHistoryMessage(
+            pipelineWebsocketService.buildHistoryMessage(
                 pipelineBuildInfo.buildId,
                 pipelineBuildInfo.projectId,
                 pipelineBuildInfo.pipelineId,
                 pipelineBuildInfo.startUser
             ),
-            websocketService.buildDetailMessage(
+            pipelineWebsocketService.buildDetailMessage(
                 pipelineBuildInfo.buildId,
                 pipelineBuildInfo.projectId,
                 pipelineBuildInfo.pipelineId,
                 pipelineBuildInfo.startUser
             ),
-            websocketService.buildStatusMessage(
+            pipelineWebsocketService.buildStatusMessage(
                 pipelineBuildInfo.buildId,
                 pipelineBuildInfo.projectId,
                 pipelineBuildInfo.pipelineId,
@@ -1595,19 +1596,19 @@ class PipelineRuntimeService @Autowired constructor(
             )
             val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
             webSocketDispatcher.dispatch(
-                websocketService.buildHistoryMessage(
+                pipelineWebsocketService.buildHistoryMessage(
                     pipelineBuildInfo.buildId,
                     pipelineBuildInfo.projectId,
                     pipelineBuildInfo.pipelineId,
                     pipelineBuildInfo.startUser
                 ),
-                websocketService.buildDetailMessage(
+                pipelineWebsocketService.buildDetailMessage(
                     pipelineBuildInfo.buildId,
                     pipelineBuildInfo.projectId,
                     pipelineBuildInfo.pipelineId,
                     pipelineBuildInfo.startUser
                 ),
-                websocketService.buildStatusMessage(
+                pipelineWebsocketService.buildStatusMessage(
                     pipelineBuildInfo.buildId,
                     pipelineBuildInfo.projectId,
                     pipelineBuildInfo.pipelineId,
@@ -1760,7 +1761,7 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.updateCurrentBuildTask(transactionContext, latestRunningBuild)
         }
         webSocketDispatcher.dispatch(
-            websocketService.buildStatusMessage(
+            pipelineWebsocketService.buildStatusMessage(
                 buildId = latestRunningBuild.buildId,
                 projectId = task.projectId,
                 pipelineId = latestRunningBuild.pipelineId,

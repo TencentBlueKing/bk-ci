@@ -27,6 +27,7 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -153,11 +154,12 @@ object OkhttpUtils {
         return doHttp(request)
     }
 
-    fun downloadFile(url: String, destPath: File) {
-        val request = Request.Builder()
-            .url(url)
-            .get()
-            .build()
+    fun downloadFile(url: String, destPath: File, headers: Map<String, String>? = null) {
+        val request = if (headers == null) {
+            Request.Builder().url(url).get().build()
+        } else {
+            Request.Builder().url(url).headers(Headers.of(headers)).get().build()
+        }
         longHttpClient.newCall(request).execute().use { response ->
             if (response.code() == 404) {
                 logger.warn("The file $url is not exist")

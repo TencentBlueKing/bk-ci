@@ -154,7 +154,7 @@ class GitCIBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
-                //每个job的第一个插件都是拉代码
+                // 每个job的第一个插件都是拉代码
                 elementList.add(createGitCodeElement(event, gitProjectConf))
 
                 job.job.steps.forEach {
@@ -365,6 +365,7 @@ class GitCIBuildService @Autowired constructor(
 
     private fun getCiBuildConf(buildConf: BuildConfig): CiBuildConfig {
         return CiBuildConfig(
+                buildConf.codeCCSofwareClientImage,
                 buildConf.codeCCSofwarePath,
                 buildConf.registryHost,
                 buildConf.registryUserName,

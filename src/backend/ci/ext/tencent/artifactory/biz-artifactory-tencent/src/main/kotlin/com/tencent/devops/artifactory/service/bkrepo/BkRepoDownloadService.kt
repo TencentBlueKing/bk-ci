@@ -81,8 +81,8 @@ class BkRepoDownloadService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val repo = RepoUtils.getRepoByType(artifactoryType)
         return Url(
-            "$DEVNET_GATEWAY_URL/bkrepo/api/user/generic/download/simple/$projectId/$repo$normalizedPath",
-            "$IDC_GATEWAY_URL/bkrepo/api/user/generic/download/simple/$projectId/$repo$normalizedPath"
+            "$DEVNET_GATEWAY_URL/bkrepo/api/user/generic/$projectId/$repo$normalizedPath",
+            "$IDC_GATEWAY_URL/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
         )
     }
 

@@ -92,13 +92,13 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     private fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
         return {
             val fakeList = mutableListOf<String>()
-            repositoryDao.listByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                repositoryType = null
-            ).forEach {
-                fakeList.add(it.repositoryId.toString())
-            }
+//            repositoryDao.listByProject(
+//                dslContext = dslContext,
+//                projectId = projectId,
+//                repositoryType = null
+//            ).forEach {
+//                fakeList.add(it.repositoryId.toString())
+//            }
             fakeList
         }
     }

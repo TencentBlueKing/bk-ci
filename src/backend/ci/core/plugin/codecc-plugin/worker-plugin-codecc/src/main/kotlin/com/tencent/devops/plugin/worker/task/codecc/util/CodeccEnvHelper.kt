@@ -1,8 +1,8 @@
 package com.tencent.devops.plugin.worker.task.codecc.util
 
-import com.tencent.devops.plugin.worker.api.CodeccSDKApi
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.codecc.CodeccSDKApi
 import java.io.File
 
 object CodeccEnvHelper {
@@ -10,7 +10,6 @@ object CodeccEnvHelper {
     private val api = ApiFactory.create(CodeccSDKApi::class)
 
     private val ENV_FILES = arrayOf("result.log", "result.ini")
-
 
     fun getCodeccEnv(workspace: File): MutableMap<String, String> {
         val result = mutableMapOf<String, String>()

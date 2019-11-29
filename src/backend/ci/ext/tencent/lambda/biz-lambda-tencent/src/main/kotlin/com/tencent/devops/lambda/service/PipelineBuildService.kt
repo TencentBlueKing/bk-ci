@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.dao.BuildTaskDao
-import com.tencent.devops.lambda.dao.PipelineBuildDao
+import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.PipelineResDao
 import com.tencent.devops.lambda.dao.PipelineTemplateDao
 import com.tencent.devops.lambda.pojo.BuildData
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao,
+    private val lambdaPipelineBuildDao: LambdaPipelineBuildDao,
     private val pipelineResDao: PipelineResDao,
     private val pipelineTemplateDao: PipelineTemplateDao,
     private val buildTaskDao: BuildTaskDao,
@@ -161,7 +161,7 @@ class PipelineBuildService @Autowired constructor(
         )
 
     private fun getBuildInfo(buildId: String): BuildInfo? {
-        return convert(pipelineBuildDao.getBuildInfo(dslContext, buildId))
+        return convert(lambdaPipelineBuildDao.getBuildInfo(dslContext, buildId))
     }
 
     private fun getModel(pipelineId: String, version: Int): String? {

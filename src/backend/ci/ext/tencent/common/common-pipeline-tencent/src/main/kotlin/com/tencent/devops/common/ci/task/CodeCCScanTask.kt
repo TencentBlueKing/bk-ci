@@ -7,10 +7,10 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("CodeCC代码检查任务(客户端)")
+@ApiModel("CodeCC代码检查任务(离线版)")
 open class CodeCCScanTask(
     @ApiModelProperty("id", required = false)
-    override var displayName: String,
+    override var displayName: String?,
     @ApiModelProperty("入参", required = true)
     override val inputs: CodeCCScanInput,
     @ApiModelProperty("执行条件", required = true)
@@ -20,13 +20,13 @@ open class CodeCCScanTask(
     override fun getTaskType() = taskType
 
     companion object {
-        const val taskType = "codeCCScan"
+        const val taskType = "codeCCScanOffline"
         const val taskVersion = "@latest"
     }
 
     override fun covertToElement(config: CiBuildConfig): LinuxScriptElement {
         return LinuxScriptElement(
-                displayName,
+                displayName ?: "codecc",
                 null,
                 null,
                 BuildScriptType.SHELL,

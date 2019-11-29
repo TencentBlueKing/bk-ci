@@ -82,9 +82,9 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         return JFrogUtil.sort(fileInfoList)
     }
 
-    override fun show(projectId: String, path: String): FileDetail {
-        logger.info("[$projectId|[$path]] the method of being done is: show")
-        val path = JFrogUtil.normalize(path)
+    override fun show(projectId: String, argPath: String): FileDetail {
+        logger.info("[$projectId|[$argPath]] the method of being done is: show")
+        val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")

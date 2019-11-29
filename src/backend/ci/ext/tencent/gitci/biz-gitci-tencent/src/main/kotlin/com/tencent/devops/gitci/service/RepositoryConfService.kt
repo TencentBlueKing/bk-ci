@@ -3,7 +3,7 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +46,7 @@ class RepositoryConfService @Autowired constructor(
         logger.info("save git ci conf, repositoryConf: $repositoryConf")
         val gitRepoConf = gitCISettingDao.getSetting(dslContext, repositoryConf.gitProjectId)
         val projectCode = if (gitRepoConf?.projectCode == null) {
-            val projectResult = client.get(ServiceProjectResource::class).createGitCIProject(repositoryConf.gitProjectId, userId)
+            val projectResult = client.get(ServiceTxProjectResource::class).createGitCIProject(repositoryConf.gitProjectId, userId)
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }

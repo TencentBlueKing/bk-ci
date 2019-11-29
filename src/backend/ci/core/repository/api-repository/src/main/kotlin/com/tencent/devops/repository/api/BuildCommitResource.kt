@@ -28,6 +28,7 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.commit.CommitData
@@ -61,6 +62,9 @@ interface BuildCommitResource {
     @GET
     @Path("/getLatestCommit")
     fun getLatestCommit(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,

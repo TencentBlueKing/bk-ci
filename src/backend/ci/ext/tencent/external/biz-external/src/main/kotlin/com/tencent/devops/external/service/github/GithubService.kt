@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.external.pojo.GithubRepository
-import com.tencent.devops.process.api.service.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
@@ -72,7 +72,7 @@ class GithubService @Autowired constructor(
                 return
             }
 
-            client.get(ServiceScmResource::class).webHookCodeGithubCommit(GithubWebhook(event, guid, removePrefixSignature, body))
+            client.get(ServiceScmWebhookResource::class).webHookCodeGithubCommit(GithubWebhook(event, guid, removePrefixSignature, body))
         } catch (t: Throwable) {
             logger.info("Github webhook exception", t)
         }

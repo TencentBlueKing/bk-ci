@@ -82,5 +82,4 @@ object CodeccExecuteHelper {
             return Pair(runCoverity, runTools)
         }
     }
-
 }
