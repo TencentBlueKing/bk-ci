@@ -37,7 +37,7 @@
                             :name="serviceIcon(child.logoUrl)"
                         />
                         <span class="service-name">{{ serviceName(child.name) }}</span>
-                        <span class="service-id">{{ serviceId(child.name) }}</span>
+                        <!-- <span class="service-id">{{ serviceId(child.name) }}</span> -->
                         <span
                             v-if="child.status === &quot;new&quot;"
                             class="new-service-icon"
@@ -187,10 +187,10 @@
                     .service-name {
                         @include ellipsis();
                     }
-                    .service-id {
-                        margin-left: 5px;
-                        @include ellipsis();
-                    }
+                    // .service-id {
+                    //     margin-left: 5px;
+                    //     @include ellipsis();
+                    // }
                     .collect-icon {
                         color: #abb4c3;
                         padding: 10px;
