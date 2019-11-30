@@ -36,6 +36,8 @@ class UserImageResourceImpl @Autowired constructor(
         imageCode: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean> {
+        //用户不可更新镜像大小信息
+        imageBaseInfoUpdateRequest.imageSize = null
         return imageService.updateImageBaseInfo(
             userId = userId,
             imageCode = imageCode,

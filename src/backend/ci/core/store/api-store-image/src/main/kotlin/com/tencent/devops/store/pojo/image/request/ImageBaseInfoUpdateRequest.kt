@@ -22,7 +22,7 @@ data class ImageBaseInfoUpdateRequest(
     @ApiModelProperty("发布者", required = false)
     val publisher: String? = null,
     @ApiModelProperty(value = "镜像大小", required = false)
-    val imageSize: String? = null,
+    var imageSize: String? = null,
     @ApiModelProperty("删除标识", required = false)
     val deleteFlag: Boolean? = null
 )
