@@ -267,10 +267,18 @@ class MarketImageDao @Autowired constructor(
             }
 
             // 排序字段
-            val realSortType = if (sortType == MarketImageSortTypeEnum.DOWNLOAD_COUNT) {
-                DSL.field(MarketImageSortTypeEnum.getSortType(sortType.name))
-            } else {
-                tImage.field(MarketImageSortTypeEnum.getSortType(sortType.name))
+            val realSortType = when (sortType) {
+                MarketImageSortTypeEnum.DOWNLOAD_COUNT -> {
+                    DSL.field(MarketImageSortTypeEnum.getSortType(sortType.name))
+                }
+                MarketImageSortTypeEnum.CREATE_TIME -> {
+                    //创建时间按照tImageFeature表计算
+                    tImageFeature.field(MarketImageSortTypeEnum.getSortType(sortType.name))
+                }
+                else -> {
+                    //更新时间按照tImage表计算
+                    tImage.field(MarketImageSortTypeEnum.getSortType(sortType.name))
+                }
             }
 
             // 排序

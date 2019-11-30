@@ -374,7 +374,7 @@ abstract class ImageService @Autowired constructor() {
                 score = score,
                 imageSourceType = imageSourceType,
                 sortType = MarketImageSortTypeEnum.getSortTypeEnum(sortType),
-                desc = false,
+                desc = true,
                 page = page,
                 pageSize = pageSize,
                 interfaceName = interfaceName
