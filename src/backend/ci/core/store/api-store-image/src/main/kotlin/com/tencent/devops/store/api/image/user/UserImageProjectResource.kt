@@ -4,12 +4,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.request.InstallImageReq
 import com.tencent.devops.store.pojo.image.response.JobImageItem
 import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
-import com.tencent.devops.store.pojo.image.response.ProjectSimpleInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -50,10 +50,13 @@ interface UserImageProjectResource {
         @ApiParam("token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("模版代码", required = true)
         @PathParam("imageCode")
         imageCode: String
-    ): Result<List<ProjectSimpleInfo?>>
+    ): Result<List<InstalledProjRespItem>>
 
     @ApiOperation("根据项目标识获取可用镜像列表（公共+已安装）")
     @GET
