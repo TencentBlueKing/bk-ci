@@ -82,9 +82,14 @@ class StoreProjectServiceImpl @Autowired constructor(
         if (projectList?.count() == 0) {
             return Result(mutableListOf())
         }
+        watch.start("projectCodeMap")
         val projectCodeMap = projectList?.map { it.projectCode to it }?.toMap()!!
+        watch.stop()
+        watch.start("getInstalledProject")
         val records =
             storeProjectRelDao.getInstalledProject(dslContext, storeCode, storeType.type.toByte(), projectCodeMap.keys)
+        watch.stop()
+        watch.start("generate InstalledProjRespItem")
         val result = mutableListOf<InstalledProjRespItem>()
         records?.forEach {
             result.add(
@@ -96,6 +101,8 @@ class StoreProjectServiceImpl @Autowired constructor(
                 )
             )
         }
+        watch.stop()
+        logger.info("getInstalledProjects:watch:$watch")
         return Result(result)
     }
 
