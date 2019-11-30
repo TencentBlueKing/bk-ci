@@ -48,16 +48,44 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun stat() {
         var storeType = StoreTypeEnum.ATOM.type.toByte()
-        calculateAndStorage(storeType, storeStatisticDao.batchGetStatisticByStoreCode(dslContext, listOf(), storeType))
+        calculateAndStorage(
+            storeType = storeType,
+            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
+                dslContext = dslContext,
+                storeCodeList = listOf(),
+                storeType = storeType
+            )
+        )
 
         storeType = StoreTypeEnum.TEMPLATE.type.toByte()
-        calculateAndStorage(storeType, storeStatisticDao.batchGetStatisticByStoreCode(dslContext, listOf(), storeType))
+        calculateAndStorage(
+            storeType = storeType,
+            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
+                dslContext = dslContext,
+                storeCodeList = listOf(),
+                storeType = storeType
+            )
+        )
+
+        storeType = StoreTypeEnum.IMAGE.type.toByte()
+        calculateAndStorage(
+            storeType = storeType,
+            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
+                dslContext = dslContext,
+                storeCodeList = listOf(),
+                storeType = storeType
+            )
+        )
     }
 
     override fun updateStoreTotalStatisticByCode(storeCode: String, storeType: Byte) {
         calculateAndStorage(
             storeType,
-            storeStatisticDao.batchGetStatisticByStoreCode(dslContext, listOf(storeCode), storeType)
+            storeStatisticDao.batchGetStatisticByStoreCode(
+                dslContext = dslContext,
+                storeCodeList = listOf(storeCode),
+                storeType = storeType
+            )
         )
     }
 
@@ -72,13 +100,13 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val code = it.value4().toString()
             val scoreAverage: Double = if (score > 0 && comments > 0) score.div(comments) else 0.toDouble()
             storeStatisticTotalDao.updateStatisticData(
-                dslContext,
-                code,
-                storeType,
-                downloads,
-                comments,
-                score.toInt(),
-                scoreAverage
+                dslContext = dslContext,
+                storeCode = code,
+                storeType = storeType,
+                downloads = downloads,
+                comments = comments,
+                score = score.toInt(),
+                scoreAverage = scoreAverage
             )
         }
     }
