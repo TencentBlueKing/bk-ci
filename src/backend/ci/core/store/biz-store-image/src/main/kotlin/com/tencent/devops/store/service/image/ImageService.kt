@@ -1075,7 +1075,7 @@ abstract class ImageService @Autowired constructor() {
                 imageBaseInfoUpdateRequest = imageBaseInfoUpdateRequest
             )
             // 更新标签信息
-            val labelIdList = imageBaseInfoUpdateRequest.labelList
+            val labelIdList = imageBaseInfoUpdateRequest.labelIdList
             if (null != labelIdList) {
                 imageIdList.forEach {
                     imageLabelRelDao.deleteByImageId(context, it)
