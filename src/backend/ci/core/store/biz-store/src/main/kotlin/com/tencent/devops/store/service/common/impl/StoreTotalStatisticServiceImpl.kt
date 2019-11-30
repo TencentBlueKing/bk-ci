@@ -33,6 +33,7 @@ import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -44,9 +45,14 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticTotalDao: StoreStatisticTotalDao
 ) : StoreTotalStatisticService {
+    companion object {
+        private val logger = LoggerFactory.getLogger(StoreTotalStatisticServiceImpl::class.java)
+    }
 
     @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun stat() {
+        val taskName = "StoreTotalStatisticTask"
+        logger.info("$taskName:stat:start")
         var storeType = StoreTypeEnum.ATOM.type.toByte()
         calculateAndStorage(
             storeType = storeType,
@@ -54,7 +60,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 storeCodeList = listOf(),
                 storeType = storeType
-            )
+            ),
+            interfaceName = taskName
         )
 
         storeType = StoreTypeEnum.TEMPLATE.type.toByte()
@@ -64,7 +71,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 storeCodeList = listOf(),
                 storeType = storeType
-            )
+            ),
+            interfaceName = taskName
         )
 
         storeType = StoreTypeEnum.IMAGE.type.toByte()
@@ -74,14 +82,16 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 storeCodeList = listOf(),
                 storeType = storeType
-            )
+            ),
+            interfaceName = taskName
         )
+        logger.info("ScheduledTask:stat:end")
     }
 
     override fun updateStoreTotalStatisticByCode(storeCode: String, storeType: Byte) {
         calculateAndStorage(
-            storeType,
-            storeStatisticDao.batchGetStatisticByStoreCode(
+            storeType = storeType,
+            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
                 dslContext = dslContext,
                 storeCodeList = listOf(storeCode),
                 storeType = storeType
@@ -91,14 +101,20 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
 
     private fun calculateAndStorage(
         storeType: Byte,
-        statistics: Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>>
+        statistics: Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>>,
+        interfaceName: String? = "Anon"
     ) {
         statistics.forEach {
+            //下载量
             val downloads = it.value1().toInt()
+            //评论数量
             val comments = it.value2().toInt()
+            //评论总分
             val score = it.value3().toDouble()
             val code = it.value4().toString()
+            //评论均分
             val scoreAverage: Double = if (score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+            logger.info("$interfaceName:updateStatisticData(${StoreTypeEnum.getStoreType(storeType.toInt())},$code,$downloads,$comments,$score,$scoreAverage)")
             storeStatisticTotalDao.updateStatisticData(
                 dslContext = dslContext,
                 storeCode = code,
