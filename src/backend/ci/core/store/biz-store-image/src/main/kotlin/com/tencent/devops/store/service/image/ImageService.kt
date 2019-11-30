@@ -328,6 +328,19 @@ abstract class ImageService @Autowired constructor() {
 
     abstract fun batchGetVisibleDept(imageCodeList: List<String>, image: StoreTypeEnum): HashMap<String, MutableList<Int>>?
 
+    private fun getDefaultDescTypeBySortType(sortType: MarketImageSortTypeEnum?): Boolean {
+        return when (sortType) {
+            //名称与发布者升序
+            MarketImageSortTypeEnum.NAME, MarketImageSortTypeEnum.PUBLISHER -> {
+                false
+            }
+            //其他含数量意义的指标降序
+            else -> {
+                true
+            }
+        }
+    }
+
     /**
      * 镜像市场搜索镜像
      */
@@ -340,7 +353,7 @@ abstract class ImageService @Autowired constructor() {
         rdType: ImageRDTypeEnum?,
         labelCode: String?,
         score: Int?,
-        sortType: String?,
+        sortType: MarketImageSortTypeEnum?,
         page: Int?,
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
@@ -373,8 +386,8 @@ abstract class ImageService @Autowired constructor() {
                 labelCode = labelCode,
                 score = score,
                 imageSourceType = imageSourceType,
-                sortType = MarketImageSortTypeEnum.getSortTypeEnum(sortType),
-                desc = true,
+                sortType = sortType,
+                desc = getDefaultDescTypeBySortType(sortType),
                 page = page,
                 pageSize = pageSize,
                 interfaceName = interfaceName

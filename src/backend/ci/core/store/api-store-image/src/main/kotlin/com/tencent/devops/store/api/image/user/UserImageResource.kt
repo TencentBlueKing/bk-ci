@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
@@ -76,7 +77,7 @@ interface UserImageResource {
         score: Int?,
         @ApiParam("镜像排序字段", required = false)
         @QueryParam("sortType")
-        sortType: String?,
+        sortType: MarketImageSortTypeEnum?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,

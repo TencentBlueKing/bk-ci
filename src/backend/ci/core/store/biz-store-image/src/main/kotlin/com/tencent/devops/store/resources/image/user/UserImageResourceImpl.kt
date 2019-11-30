@@ -7,6 +7,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.user.UserImageResource
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
@@ -70,7 +71,7 @@ class UserImageResourceImpl @Autowired constructor(
         rdType: ImageRDTypeEnum?,
         labelCode: String?,
         score: Int?,
-        sortType: String?,
+        sortType: MarketImageSortTypeEnum?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketImageResp> {
