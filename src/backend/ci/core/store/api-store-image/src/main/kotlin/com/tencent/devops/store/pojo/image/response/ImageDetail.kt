@@ -97,6 +97,9 @@ data class ImageDetail(
     @ApiModelProperty("Label数组", required = true)
     val labelList: List<Label>,
 
+    @ApiModelProperty("需要指定Agent类型的范畴code")
+    var needAgentTypeCategorys: List<String>,
+
     @ApiModelProperty("范畴code", required = true)
     val category: String,
 

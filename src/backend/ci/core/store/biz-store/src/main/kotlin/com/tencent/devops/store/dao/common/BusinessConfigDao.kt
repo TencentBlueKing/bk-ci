@@ -26,8 +26,8 @@ class BusinessConfigDao {
                 DESCRIPTION
             )
                 .values(
-                    request.business,
-                    request.feature,
+                    request.business.name,
+                    request.feature.name,
                     request.businessValue,
                     request.configValue,
                     request.description
@@ -40,8 +40,8 @@ class BusinessConfigDao {
             return dslContext.update(this)
                 .set(CONFIG_VALUE, request.configValue)
                 .set(DESCRIPTION, request.description)
-                .where(BUSINESS.eq(request.business))
-                .and(FEATURE.eq(request.feature))
+                .where(BUSINESS.eq(request.business.name))
+                .and(FEATURE.eq(request.feature.name))
                 .and(BUSINESS_VALUE.eq(request.businessValue))
                 .execute()
         }
@@ -72,6 +72,19 @@ class BusinessConfigDao {
                 .and(FEATURE.eq(feature))
                 .and(BUSINESS_VALUE.eq(businessValue))
                 .fetchOne()
+        }
+    }
+
+    /**
+     * 查询业务下的哪些取值具有指定的特性
+     */
+    fun list(dslContext: DSLContext, business: String, feature: String, configValue: String): Result<TBusinessConfigRecord>? {
+        with(TBusinessConfig.T_BUSINESS_CONFIG) {
+            return dslContext.selectFrom(this)
+                .where(BUSINESS.eq(business))
+                .and(FEATURE.eq(feature))
+                .and(CONFIG_VALUE.eq(configValue))
+                .fetch()
         }
     }
 
