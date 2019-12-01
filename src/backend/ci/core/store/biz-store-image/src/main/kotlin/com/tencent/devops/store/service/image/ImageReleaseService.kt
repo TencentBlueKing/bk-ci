@@ -2,6 +2,7 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.LATEST
+import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
@@ -228,9 +229,14 @@ abstract class ImageReleaseService {
             // 判断用户发布的镜像是否是自已名下有权限操作的镜像
             val projectCode =
                 storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
+                    ?: throw DataConsistencyException(
+                        srcData = "(IMAGE,$userId,$imageCode)",
+                        targetData = "TestProjectCode",
+                        message = "Cannot find testproject record"
+                    )
             val listProjectImagesResult = client.get(ServiceImageResource::class).listAllProjectImages(
                 userId = userId,
-                projectId = projectCode!!,
+                projectId = projectCode,
                 searchKey = imageRepoName
             )
             logger.info("the listProjectImagesResult is :$listProjectImagesResult")

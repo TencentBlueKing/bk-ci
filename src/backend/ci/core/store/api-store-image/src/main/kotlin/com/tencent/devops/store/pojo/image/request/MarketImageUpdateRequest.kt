@@ -44,4 +44,4 @@ data class MarketImageUpdateRequest(
     val versionContent: String,
     @ApiModelProperty("发布者", required = true)
     val publisher: String
-    )
+)

@@ -24,14 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-pipeline")
-    compile project(":core:environment:api-environment")
-    compile project(":core:repository:api-repository")
-    compile project(":core:log:api-log")
-}
+package com.tencent.devops.store.pojo.common.enums
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+enum class BusinessFeatureValueEnum {
+    NEED_AGENT_TYPE_TRUE,      // 需要指定AgentType
+    NEED_AGENT_TYPE_FALSE      // 不需要指定AgentType
+}

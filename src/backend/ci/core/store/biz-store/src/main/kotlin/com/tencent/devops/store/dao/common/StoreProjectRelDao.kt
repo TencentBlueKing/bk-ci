@@ -35,11 +35,14 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class StoreProjectRelDao {
+
+    private val logger = LoggerFactory.getLogger(StoreProjectRelDao::class.java)
 
     fun addStoreProjectRel(dslContext: DSLContext, userId: String, storeCode: String, projectCode: String, type: Byte, storeType: Byte) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
@@ -235,16 +238,17 @@ class StoreProjectRelDao {
     ): String? {
         val a = TStoreMember.T_STORE_MEMBER.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
-        return dslContext.select(b.PROJECT_CODE)
+        val finalStep = dslContext.select(b.PROJECT_CODE)
             .from(a)
             .join(b)
             .on(a.STORE_CODE.eq(b.STORE_CODE).and(a.STORE_TYPE.eq(b.STORE_TYPE)))
-            .and(a.USERNAME.eq(userId))
+            .where(a.USERNAME.eq(userId))
             .and(b.STORE_CODE.eq(storeCode))
             .and(b.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .and(b.CREATOR.eq(userId))
             .and(a.STORE_TYPE.eq(storeType.type.toByte()))
-            .fetchOne(0, String::class.java)
+        logger.info(finalStep.getSQL(true))
+        return finalStep.fetchOne(0, String::class.java)
     }
 
     /**

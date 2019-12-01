@@ -5,18 +5,21 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.user.UserImageProjectResource
+import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.request.InstallImageReq
 import com.tencent.devops.store.pojo.image.response.JobImageItem
 import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
-import com.tencent.devops.store.pojo.image.response.ProjectSimpleInfo
+import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.image.ImageProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserImageProjectResourceImpl @Autowired constructor(
-    private val imageProjectService: ImageProjectService
+    private val imageProjectService: ImageProjectService,
+    private val storeProjectService: StoreProjectService
 ) : UserImageProjectResource {
 
     override fun installImage(accessToken: String, userId: String, installImageReq: InstallImageReq): Result<Boolean> {
@@ -30,12 +33,8 @@ class UserImageProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getInstalledProjects(accessToken: String, imageCode: String): Result<List<ProjectSimpleInfo?>> {
-        return imageProjectService.getInstalledProjects(
-            accessToken,
-            imageCode,
-            interfaceName = "/user/market/image/install"
-        )
+    override fun getInstalledProjects(accessToken: String, userId: String, imageCode: String): Result<List<InstalledProjRespItem>> {
+        return storeProjectService.getInstalledProjects(accessToken, userId, imageCode, StoreTypeEnum.IMAGE)
     }
 
     override fun getAvailableImagesByProjectCode(

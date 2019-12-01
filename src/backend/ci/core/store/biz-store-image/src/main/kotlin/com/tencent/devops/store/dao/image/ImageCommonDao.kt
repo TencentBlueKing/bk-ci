@@ -10,11 +10,11 @@ import org.springframework.stereotype.Repository
 @Repository(value = "IMAGE_COMMON_DAO")
 class ImageCommonDao : AbstractStoreCommonDao() {
     override fun getNewestStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun getStoreNameById(dslContext: DSLContext, storeId: String): String? {

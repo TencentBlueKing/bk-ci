@@ -43,6 +43,9 @@ data class JobImageItem(
     @ApiModelProperty("镜像简介", required = false)
     val summary: String?,
 
+    @ApiModelProperty("镜像说明文档链接", required = false)
+    val docsLink: String?,
+
     @ApiModelProperty("发布者", required = false)
     val publisher: String?,
 

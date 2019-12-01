@@ -14,5 +14,14 @@ enum class MarketImageSortTypeEnum() {
                 else -> type ?: CREATE_TIME.name
             }
         }
+
+        fun getSortTypeEnum(type: String?): MarketImageSortTypeEnum {
+            values().forEach {
+                if (it.name.toLowerCase() == type?.toLowerCase()) {
+                    return it
+                }
+            }
+            return NAME
+        }
     }
 }
