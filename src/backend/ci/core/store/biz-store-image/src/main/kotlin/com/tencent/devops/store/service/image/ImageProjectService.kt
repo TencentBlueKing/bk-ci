@@ -54,7 +54,6 @@ import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.JobImageItem
 import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
 import com.tencent.devops.store.pojo.image.response.Label
-import com.tencent.devops.store.pojo.image.response.ProjectSimpleInfo
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.MultiSourceDataPaginator
@@ -1043,43 +1042,5 @@ class ImageProjectService @Autowired constructor(
             publicFlag = imageFeature.publicFlag,
             channelCode = channelCode
         )
-    }
-
-    /**
-     * 根据商城组件标识获取已安装的项目列表
-     */
-    fun getInstalledProjects(
-        accessToken: String,
-        imageCode: String,
-        interfaceName: String? = "Anon interface"
-    ): Result<List<ProjectSimpleInfo>> {
-        logger.info("$interfaceName:getInstalledProjects:Input:($accessToken,$imageCode)")
-        // 获取用户有权限的项目列表
-        val projectList = client.get(ServiceProjectResource::class).list(accessToken).data
-        val projectCodeList = projectList?.map { it.englishName }
-        logger.info("$interfaceName:getInstalledProjects:Inner:projectList=$projectCodeList")
-        if (projectList?.count() == 0) {
-            return Result(mutableListOf())
-        }
-        val projectCodeMap = projectList?.map { it.projectCode to it }?.toMap()!!
-        val records =
-            storeProjectRelDao.getInstalledProject(
-                dslContext,
-                imageCode,
-                StoreTypeEnum.IMAGE.type.toByte(),
-                projectCodeMap.keys
-            )
-        val result = mutableListOf<ProjectSimpleInfo>()
-        records?.forEach {
-            result.add(
-                ProjectSimpleInfo(
-                    projectCode = it.projectCode,
-                    projectName = projectCodeMap[it.projectCode]?.projectName!!,
-                    creator = projectCodeMap[it.projectCode]?.creator,
-                    createTime = projectCodeMap[it.projectCode]?.createdAt
-                )
-            )
-        }
-        return Result(result)
     }
 }
