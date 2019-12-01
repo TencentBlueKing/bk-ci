@@ -10,7 +10,7 @@ data class ImageBaseInfoUpdateRequest(
     @ApiModelProperty("所属分类ID", required = false)
     val classifyId: String? = null,
     @ApiModelProperty("功能标签", required = false)
-    val labelList: List<String>? = null,
+    val labelIdList: List<String>? = null,
     @ApiModelProperty("镜像所属范畴CATEGORY_CODE", required = false)
     val category: String? = null,
     @ApiModelProperty("镜像简介", required = false)
@@ -22,7 +22,7 @@ data class ImageBaseInfoUpdateRequest(
     @ApiModelProperty("发布者", required = false)
     val publisher: String? = null,
     @ApiModelProperty(value = "镜像大小", required = false)
-    val imageSize: String? = null,
+    var imageSize: String? = null,
     @ApiModelProperty("删除标识", required = false)
     val deleteFlag: Boolean? = null
 )

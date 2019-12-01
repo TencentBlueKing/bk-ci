@@ -27,12 +27,8 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.digest.enc.DigestFactory
-import org.slf4j.LoggerFactory
 
 object SecurityUtil {
-
-    private val logger = LoggerFactory.getLogger(SecurityUtil::class.java)
-
     private val digest = DigestFactory.getDigest("SecurityUtil")
 
     fun encrypt(content: String): String {
@@ -40,12 +36,7 @@ object SecurityUtil {
     }
 
     fun decrypt(content: String): String {
-        return try {
-            digest.decrypt(encryptString = content)
-        } catch (ignored: Throwable) {
-            logger.warn("fail to decrypt: $content")
-            content
-        }
+        return digest.decrypt(encryptString = content)
     }
 
     fun encrypt(key: String, content: String): String {
@@ -53,12 +44,7 @@ object SecurityUtil {
     }
 
     fun decrypt(key: String, content: String): String {
-        return try {
-            digest.decrypt(key = key, encryptString = content)
-        } catch (ignored: Throwable) {
-            logger.warn("fail to decrypt: $content")
-            content
-        }
+        return digest.decrypt(key = key, encryptString = content)
     }
 
     fun encrypt(key: String, content: ByteArray): ByteArray {

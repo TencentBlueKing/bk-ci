@@ -13,6 +13,6 @@ class SampleImageNotifyService : ImageNotifyService {
      * @param auditType 审核类型
      */
     override fun sendImageReleaseAuditNotifyMessage(imageId: String, auditType: AuditTypeEnum) {
-        //开源版本不发送通知
+        // 开源版本不发送通知
     }
 }
