@@ -2,6 +2,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.model.store.tables.TBusinessConfig
 import com.tencent.devops.model.store.tables.records.TBusinessConfigRecord
+import com.tencent.devops.store.pojo.common.BusinessConfigRequest
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class BusinessConfigDao {
 
-    fun add(dslContext: DSLContext, record: TBusinessConfigRecord) {
+    fun add(dslContext: DSLContext, request: BusinessConfigRequest) {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             dslContext.insertInto(
                 this,
@@ -25,23 +26,23 @@ class BusinessConfigDao {
                 DESCRIPTION
             )
                 .values(
-                    record.business,
-                    record.feature,
-                    record.businessValue,
-                    record.configValue,
-                    record.description
+                    request.business,
+                    request.feature,
+                    request.businessValue,
+                    request.configValue,
+                    request.description
                 ).execute()
         }
     }
 
-    fun update(dslContext: DSLContext, record: TBusinessConfigRecord): Int {
+    fun update(dslContext: DSLContext, request: BusinessConfigRequest): Int {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.update(this)
-                .set(CONFIG_VALUE, record.configValue)
-                .set(DESCRIPTION, record.description)
-                .where(BUSINESS.eq(record.business))
-                .and(FEATURE.eq(record.feature))
-                .and(BUSINESS_VALUE.eq(record.businessValue))
+                .set(CONFIG_VALUE, request.configValue)
+                .set(DESCRIPTION, request.description)
+                .where(BUSINESS.eq(request.business))
+                .and(FEATURE.eq(request.feature))
+                .and(BUSINESS_VALUE.eq(request.businessValue))
                 .execute()
         }
     }
@@ -56,12 +57,28 @@ class BusinessConfigDao {
         }
     }
 
+    fun delete(dslContext: DSLContext, id: Int): Int {
+        with(TBusinessConfig.T_BUSINESS_CONFIG) {
+            return dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
     fun get(dslContext: DSLContext, business: String, feature: String, businessValue: String): TBusinessConfigRecord? {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
                 .where(BUSINESS.eq(business))
                 .and(FEATURE.eq(feature))
                 .and(BUSINESS_VALUE.eq(businessValue))
+                .fetchOne()
+        }
+    }
+
+    fun get(dslContext: DSLContext, id: Int): TBusinessConfigRecord? {
+        with(TBusinessConfig.T_BUSINESS_CONFIG) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
                 .fetchOne()
         }
     }
