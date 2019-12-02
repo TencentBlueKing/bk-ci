@@ -246,7 +246,6 @@ function goNext(to, store, next) {
 
     // @ts-ignore
     window.setProjectIdCookie(getProjectId(store, to.params))
-    console.log(newPath, to.path)
     if (to.path !== newPath) {
         next({
             path: newPath,
