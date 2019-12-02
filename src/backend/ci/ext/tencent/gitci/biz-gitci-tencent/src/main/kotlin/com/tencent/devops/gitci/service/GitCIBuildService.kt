@@ -188,7 +188,7 @@ class GitCIBuildService @Autowired constructor(
     private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>,
                                     stageIndex: Int, jobIndex: Int) {
         val containerPool = if (job.job.pool?.container == null) {
-            Pool(buildConfig.registryImage, Credential(buildConfig.registryUserName!!, buildConfig.registryPassword!!))
+            Pool(buildConfig.registryImage, Credential("", ""))
         } else {
             Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
         }
