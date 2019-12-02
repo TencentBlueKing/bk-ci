@@ -331,7 +331,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     storePipelineBuildRelDao.add(context, atomId, atomMarketInitPipelineResp.pipelineId, buildId)
                 }
                 // 通过websocket推送状态变更消息
-                websocketService.sendWebsocketMessage(userId, atomId)
+                storeWebsocketService.sendWebsocketMessage(userId, atomId)
             }
         } else {
             // 触发执行流水线
@@ -363,7 +363,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 ) // 构建失败
             }
             // 通过websocket推送状态变更消息
-            websocketService.sendWebsocketMessage(userId, atomId)
+            storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
         return true
     }

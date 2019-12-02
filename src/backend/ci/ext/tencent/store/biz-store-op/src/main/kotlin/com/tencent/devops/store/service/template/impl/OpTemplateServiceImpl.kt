@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.template.MarketTemplateDao
-import com.tencent.devops.store.dao.template.TemplateDao
+import com.tencent.devops.store.dao.template.StoreTemplateDao
 import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
@@ -59,7 +59,7 @@ import java.time.LocalDateTime
 @Service
 class OpTemplateServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val templateDao: TemplateDao,
+    private val storeTemplateDao: StoreTemplateDao,
     private val marketTemplateDao: MarketTemplateDao,
     private val templateLabelService: TemplateLabelService,
     private val templateCategoryService: TemplateCategoryService,
@@ -86,9 +86,9 @@ class OpTemplateServiceImpl @Autowired constructor(
     ): Result<OpTemplateResp> {
         val categoryList = if (category.isNullOrEmpty()) listOf() else category?.split(",")
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-        val count = templateDao.count(dslContext, templateName, templateStatus?.status?.toByte(),
+        val count = storeTemplateDao.count(dslContext, templateName, templateStatus?.status?.toByte(),
             templateType?.type?.toByte(), classifyCode, categoryList, labelCodeList, latestFlag)
-        val templates = templateDao.list(
+        val templates = storeTemplateDao.list(
             dslContext, templateName, templateStatus?.status?.toByte(), templateType?.type?.toByte(), classifyCode,
             categoryList, labelCodeList, latestFlag, sortType?.sortType, desc, page, pageSize)
         val classifyListTemp = templateClassifyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte()).data

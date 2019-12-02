@@ -161,7 +161,6 @@ open class CodeccApi constructor(
         taskExecution(body, "$deletePath/$taskId", headers, "DELETE")
     }
 
-
     fun getRuleSets(projectId: String, userId: String, toolName: String): Result<Map<String, Any>> {
         val headers = mapOf(
             AUTH_HEADER_DEVOPS_USER_ID to userId,
