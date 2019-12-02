@@ -35,8 +35,8 @@ import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
-import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -87,8 +87,15 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listTemplate(userId: String, projectId: String, templateId: String): Result<TemplateInstances> {
-        return Result(listTemplateInstanceService.listTemplateInstances(projectId, userId, templateId))
+    override fun listTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchKey: String?
+    ): Result<TemplateInstancePage> {
+        return Result(templateService.listTemplateInstancesInPage(projectId, userId, templateId, page, pageSize, searchKey))
     }
 
     override fun listTemplateInstancesParams(
