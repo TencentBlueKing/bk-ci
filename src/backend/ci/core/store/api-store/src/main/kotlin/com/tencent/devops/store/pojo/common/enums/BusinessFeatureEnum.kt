@@ -26,6 +26,6 @@
 
 package com.tencent.devops.store.pojo.common.enums
 
-enum class BusinessFeatureEnum {
-    NEED_AGENT_TYPE      // 需要指定AgentType
+enum class BusinessFeatureEnum constructor(val value: String) {
+    NEED_AGENT_TYPE("needAgentType")      // 需要指定AgentType
 }
