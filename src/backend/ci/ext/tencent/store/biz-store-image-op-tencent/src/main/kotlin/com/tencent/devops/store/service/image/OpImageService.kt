@@ -204,6 +204,7 @@ class OpImageService @Autowired constructor(
                     category.get(KEY_CATEGORY_ID) as String,
                     category.get(KEY_CATEGORY_CODE) as String,
                     category.get(KEY_CATEGORY_NAME) as String,
+                    HashMap(),
                     category.get(KEY_CATEGORY_ICON_URL) as String,
                     CategoryTypeEnum.getCategoryType((category.get(KEY_CATEGORY_TYPE) as Byte).toInt()),
                     (category.get(KEY_CREATE_TIME) as LocalDateTime).timestampmilli(),
