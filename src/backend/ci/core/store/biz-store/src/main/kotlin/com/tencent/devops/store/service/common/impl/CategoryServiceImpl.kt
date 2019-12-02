@@ -70,7 +70,9 @@ class CategoryServiceImpl @Autowired constructor(
                 feature = BusinessFeatureEnum.NEED_AGENT_TYPE.value,
                 businessValue = category.categoryCode
             )
-            category.settings[BusinessFeatureEnum.NEED_AGENT_TYPE.value] = businessConfig?.configValue!!
+            if (businessConfig != null && !businessConfig.configValue.isNullOrBlank()) {
+                category.settings[BusinessFeatureEnum.NEED_AGENT_TYPE.value] = businessConfig.configValue
+            }
             category
         }
         return Result(atomCategoryList)
