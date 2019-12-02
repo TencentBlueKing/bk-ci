@@ -120,7 +120,7 @@ class CategoryDao {
                 id = id,
                 categoryCode = categoryCode,
                 // 范畴信息名称没有配置国际化信息则取范畴表里面的名称
-                categoryName = if (categoryLanName == categoryCode) categoryName else categoryLanName,
+                categoryName = MessageCodeUtil.getMessageByLocale(categoryLanName, categoryCode),
                 iconUrl = iconUrl,
                 categoryType = StoreTypeEnum.getStoreType(type.toInt()),
                 createTime = createTime.timestampmilli(),

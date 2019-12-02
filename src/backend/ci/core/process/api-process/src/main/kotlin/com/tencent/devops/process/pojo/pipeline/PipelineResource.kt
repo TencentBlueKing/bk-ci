@@ -26,10 +26,6 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-/**
- * deng
- * 2019-03-05
- */
 data class PipelineResource(
     val pipelineId: String,
     val version: Int,
