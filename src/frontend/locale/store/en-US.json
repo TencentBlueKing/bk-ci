@@ -1,5 +1,7 @@
 {
     "store": "R&D store",
+    "该分类下暂无容器镜像": "No container image under this category",
+    "新增容器镜像": "Add Container Image",
     "适用IDE": "support IDE",
     "IDE插件": "IDE plugin",
     "查看源码": "view source code",
