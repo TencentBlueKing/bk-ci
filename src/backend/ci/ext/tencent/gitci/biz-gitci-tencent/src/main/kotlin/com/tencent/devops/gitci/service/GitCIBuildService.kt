@@ -36,6 +36,7 @@ import com.tencent.devops.common.ci.yaml.Credential
 import com.tencent.devops.common.ci.yaml.Pool
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
@@ -142,10 +143,7 @@ class GitCIBuildService @Autowired constructor(
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
-//        // 第二个stage，拉代码
-//        addGitCodeStage(event, gitProjectConf, stageList)
-
-        // 第三个stage，services初始化
+        // 第二个stage，services初始化
         addServicesStage(yaml, stageList)
 
         // 其他的stage
@@ -154,50 +152,79 @@ class GitCIBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
-                // 每个job的第一个插件都是拉代码
-                elementList.add(createGitCodeElement(event, gitProjectConf))
-
-                job.job.steps.forEach {
-                    val element = it.covertToElement(getCiBuildConf(buildConfig))
-                    elementList.add(element)
-                    if (element is MarketBuildAtomElement) {
-                        logger.info("install market atom: ${element.getAtomCode()}")
-                        installMarketAtom(gitProjectConf, event.userId, element.getAtomCode())
-                    }
-                }
-                val containerPool = if (job.job.pool?.container == null) {
-                    Pool(buildConfig.registryImage, Credential(buildConfig.registryUserName!!, buildConfig.registryPassword!!))
+                // 根据job类型创建构建容器或者无构建环境容器，构建环境容器每个job的第一个插件都是拉代码
+                if (job.job.type != "normal") {
+                    elementList.add(createGitCodeElement(event, gitProjectConf))
+                    makeElementList(job, elementList, gitProjectConf, event.userId)
+                    addVmBuildContainer(job, elementList, containerList, stageIndex, jobIndex)
                 } else {
-                    // TODO password decrypt
-
-                    Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
+                    makeElementList(job, elementList, gitProjectConf, event.userId)
+                    addNormalContainer(elementList, containerList)
                 }
-                val vmContainer = VMBuildContainer(
-                        id = null,
-                        name = job.job.name ?: "stage${stageIndex + 3}-${jobIndex + 1}",
-                        elements = elementList,
-                        status = null,
-                        startEpoch = null,
-                        systemElapsed = null,
-                        elementElapsed = null,
-                        baseOS = VMBaseOS.LINUX,
-                        vmNames = setOf(),
-                        maxQueueMinutes = 60,
-                        maxRunningMinutes = 900,
-                        buildEnv = null,
-                        customBuildEnv = null,
-                        thirdPartyAgentId = null,
-                        thirdPartyAgentEnvId = null,
-                        thirdPartyWorkspace = null,
-                        dockerBuildVersion = null,
-                        tstackAgentId = null,
-                        dispatchType = GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
-                )
-                containerList.add(vmContainer)
             }
             stageList.add(Stage(containerList, "stage-${stageIndex + 3}"))
         }
         return Model("git_" + gitProjectConf.gitProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, event.userId)
+    }
+
+    private fun addNormalContainer(elementList: List<Element>, containerList: MutableList<Container>) {
+        containerList.add(NormalContainer(
+            containerId = null,
+            id = null,
+            name = "无编译环境",
+            elements = elementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            enableSkip = false,
+            conditions = null,
+            canRetry = false,
+            jobControlOption = null,
+            mutexGroup = null
+        ))
+    }
+
+    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>,
+                                    stageIndex: Int, jobIndex: Int) {
+        val containerPool = if (job.job.pool?.container == null) {
+            Pool(buildConfig.registryImage, Credential(buildConfig.registryUserName!!, buildConfig.registryPassword!!))
+        } else {
+            Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
+        }
+        val vmContainer = VMBuildContainer(
+            id = null,
+            name = job.job.name ?: "stage${stageIndex + 3}-${jobIndex + 1}",
+            elements = elementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            baseOS = VMBaseOS.LINUX,
+            vmNames = setOf(),
+            maxQueueMinutes = 60,
+            maxRunningMinutes = 900,
+            buildEnv = null,
+            customBuildEnv = null,
+            thirdPartyAgentId = null,
+            thirdPartyAgentEnvId = null,
+            thirdPartyWorkspace = null,
+            dockerBuildVersion = null,
+            tstackAgentId = null,
+            dispatchType = GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+        )
+        containerList.add(vmContainer)
+    }
+
+    private fun makeElementList(job: Job, elementList: MutableList<Element>, gitProjectConf: GitRepositoryConf, userId: String) {
+        job.job.steps.forEach {
+            val element = it.covertToElement(getCiBuildConf(buildConfig))
+            elementList.add(element)
+            if (element is MarketBuildAtomElement) {
+                logger.info("install market atom: ${element.getAtomCode()}")
+                installMarketAtom(gitProjectConf, userId, element.getAtomCode())
+            }
+        }
     }
 
     private fun installMarketAtom(gitProjectConf: GitRepositoryConf, userId: String, atomCode: String) {
