@@ -146,14 +146,20 @@
 
         created () {
             eventBus.$on('show-project-menu', () => {
-                const ele = this.$refs.projectDropdown.$el
-                ele && ele.click()
+                const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
+                if (ele) {
+                    const triggerEle = ele.querySelector('.bk-select-name')
+                    triggerEle && triggerEle.click()
+                }
             })
 
             eventBus.$on('hide-project-menu', () => {
                 if (this.isDropdownMenuVisible) {
-                    const ele = this.$refs.projectDropdown.$el
-                    ele && ele.click()
+                    const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
+                    if (ele) {
+                        const triggerEle = ele.querySelector('.bk-select-name')
+                        triggerEle && triggerEle.click()
+                    }
                 }
             })
 
@@ -367,6 +373,12 @@
         cursor: pointer;
         &:hover {
             color: $primaryColor;
+            .text {
+                color: $primaryColor;
+            }
+        }
+        &:first-child {
+            border-top: 0
         }
     }
 </style>
