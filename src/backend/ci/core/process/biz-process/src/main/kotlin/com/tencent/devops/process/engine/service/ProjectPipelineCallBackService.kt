@@ -24,48 +24,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.model.process.tables.TBuildStartupParam
+import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
+import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Repository
-class BuildStartupParamDao {
+@Service
+class ProjectPipelineCallBackService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectPipelineCallbackDao: ProjectPipelineCallbackDao
+) {
 
-    fun add(dslContext: DSLContext, buildId: String, param: String, projectId: String, pipelineId: String) {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.insertInto(
-                this,
-                BUILD_ID,
-                PARAM,
-                PROJECT_ID,
-                PIPELINE_ID
+    fun createCallBack(userId: String, projectPipelineCallBack: ProjectPipelineCallBack) {
+        projectPipelineCallbackDao.save(
+            dslContext = dslContext,
+            projectId = projectPipelineCallBack.projectId,
+            events = projectPipelineCallBack.events,
+            userId = userId,
+            callbackUrl = projectPipelineCallBack.callBackUrl,
+            secretToken = projectPipelineCallBack.secretToken
+        )
+    }
+
+    fun listProjectCallBack(projectId: String): List<ProjectPipelineCallBack> {
+        val list = mutableListOf<ProjectPipelineCallBack>()
+        val records = projectPipelineCallbackDao.listProjectCallback(dslContext, projectId)
+        records.forEach {
+            list.add(
+                ProjectPipelineCallBack(
+                    projectId = it.projectId,
+                    callBackUrl = it.callbackUrl,
+                    events = it.events,
+                    secretToken = it.secretToken
+                )
             )
-                .values(
-                    buildId,
-                    param,
-                    projectId,
-                    pipelineId
-                ).onDuplicateKeyUpdate()
-                .set(PARAM, param)
-                .execute()
         }
-    }
-
-    fun get(dslContext: DSLContext, buildId: String): String? {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            val record = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-            return record?.param
-        }
-    }
-
-    fun deletePipelineBuildParams(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        return with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId)).execute()
-        }
+        return list
     }
 }

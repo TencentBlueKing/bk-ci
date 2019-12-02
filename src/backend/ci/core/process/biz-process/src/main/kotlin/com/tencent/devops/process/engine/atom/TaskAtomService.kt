@@ -28,7 +28,9 @@ package com.tencent.devops.process.engine.atom
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
@@ -175,6 +177,28 @@ class TaskAtomService @Autowired(required = false) constructor(
         } catch (ignored: Throwable) {
             logger.error("Fail to post the task($task): ${ignored.message}")
         }
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildTaskFinishBroadCastEvent(
+                source = "build-element-${task.taskId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = "",
+                buildId = task.buildId,
+                taskId = task.taskId,
+                errorType = if (task.errorType == null) null else task.errorType!!.name,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            ),
+            PipelineBuildStatusBroadCastEvent(
+                source = "task-end-${task.taskId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = task.starter,
+                taskId = task.taskId,
+                buildId = task.buildId,
+                actionType = ActionType.END
+            )
+        )
         LogUtils.stopLog(rabbitTemplate, task.buildId, task.taskId, task.containerHashId)
     }
 
@@ -223,19 +247,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
-                )
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildElementFinishBroadCastEvent(
-                        source = "build-element-${task.taskId}",
-                        projectId = task.projectId,
-                        pipelineId = task.pipelineId,
-                        userId = "",
-                        buildId = task.buildId,
-                        elementId = task.taskId,
-                        errorType = if (task.errorType == null) null else task.errorType!!.name,
-                        errorCode = task.errorCode,
-                        errorMsg = task.errorMsg
-                    )
                 )
             }
             return atomResponse
