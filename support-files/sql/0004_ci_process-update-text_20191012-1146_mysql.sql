@@ -1,6 +1,21 @@
 USE devops_ci_process;
 SET NAMES utf8mb4;
 
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_PIPELINE_CALLBACK` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `PROJECT_ID` varchar(64) NOT NULL,
+  `EVENTS` varchar(255) DEFAULT NULL,
+  `CALLBACK_URL` varchar(255) NOT NULL,
+  `CREATOR` varchar(64) NOT NULL,
+  `UPDATOR` varchar(64) NOT NULL,
+  `CREATED_TIME` datetime NOT NULL,
+  `UPDATED_TIME` datetime NOT NULL,
+  `SECRET_TOKEN` text DEFAULT NULL COMMENT 'Send to your with http header: X-DEVOPS-WEBHOOK-TOKEN',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `IDX_PROJECT_CALLBACK` (`PROJECT_ID`, `CALLBACK_URL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DROP PROCEDURE IF EXISTS ci_process_schema_update;
 
 DELIMITER <CI_UBF>
@@ -293,9 +308,9 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
-                    AND INDEX_NAME = 'IDX_DEL') THEN
+                    AND INDEX_NAME = 'IDX_SEARCH_BUILDID') THEN
         ALTER TABLE T_PIPELINE_BUILD_VAR
-            ADD INDEX `IDX_DEL` (`PROJECT_ID`,`PIPELINE_ID`);
+            ADD INDEX `IDX_SEARCH_BUILD_ID` (`PROJECT_ID`,`PIPELINE_ID`, `KEY`);
     END IF;
 
 
@@ -366,6 +381,36 @@ BEGIN
                     AND COLUMN_NAME = 'ERROR_MSG') THEN
         ALTER TABLE T_PIPELINE_BUILD_HISTORY
             ADD COLUMN `ERROR_MSG` text DEFAULT NULL AFTER `ERROR_CODE`;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
+                    AND COLUMN_NAME = 'PROJECT_ID') THEN
+        ALTER TABLE T_BUILD_STARTUP_PARAM
+            ADD COLUMN `PROJECT_ID` varchar(64) DEFAULT NULL;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
+                    AND COLUMN_NAME = 'PIPELINE_ID') THEN
+        ALTER TABLE T_BUILD_STARTUP_PARAM
+            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
+                    AND INDEX_NAME = 'IDX_DEL') THEN
+        ALTER TABLE T_BUILD_STARTUP_PARAM
+            ADD INDEX IDX_DEL (`PROJECT_ID`,`PIPELINE_ID`);
     END IF;
 
     COMMIT;

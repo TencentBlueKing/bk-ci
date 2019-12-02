@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
@@ -39,13 +38,14 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_S
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE

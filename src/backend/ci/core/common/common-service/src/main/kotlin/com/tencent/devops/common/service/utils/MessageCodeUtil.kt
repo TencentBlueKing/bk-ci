@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import java.text.MessageFormat
 
 /**
@@ -42,8 +40,7 @@ import java.text.MessageFormat
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-@Component
-class MessageCodeUtil @Autowired constructor() {
+class MessageCodeUtil {
     companion object {
 
         private val logger = LoggerFactory.getLogger(MessageCodeUtil::class.java)

@@ -32,10 +32,6 @@ import com.tencent.devops.common.event.pojo.measure.MeasureRequest
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-/**
- * deng
- * 2019-05-15
- */
 class MeasureEventDispatcher constructor(
     private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<MeasureRequest> {
