@@ -51,8 +51,10 @@ data class VMBuildContainer(
     @ApiModelProperty("预指定VM名称列表", required = true)
     val vmNames: Set<String> = setOf(),
     @ApiModelProperty("排队最长时间(分钟)", required = true)
+    @Deprecated(message = "do not use")
     val maxQueueMinutes: Int? = 60,
     @ApiModelProperty("运行最长时间(分钟)", required = true)
+    @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 480,
     @ApiModelProperty("构建机环境变量", required = false)
     val buildEnv: Map<String, String>?,
