@@ -272,15 +272,18 @@ class OpImageDataTransferService @Autowired constructor(
                     agentTypeScope = agentTypeList,
                     version = "1.0.0",
                     releaseType = ReleaseTypeEnum.NEW,
-                    versionContent = "系统根据已拷贝的构建镜像自动生成",
+                    versionContent = "容器镜像商店上线，历史镜像数据自动生成",
                     imageSourceType = ImageType.BKDEVOPS,
                     imageRepoUrl = it.image!!.split("/")[0],
                     imageRepoName = it.repo!!,
                     ticketId = null,
                     imageTag = imageTag,
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/svg/random_15743238090598324219558197710739.svg?v=1574323809",
-                    summary = "系统根据已拷贝的构建镜像自动生成",
-                    description = "系统根据已拷贝的构建镜像自动生成，可在项目流水线中选择使用，初始状态为仅本关联项目可见，拷贝的原始构建镜像地址与版本为：${it.image}",
+                    summary = "旧版的构建镜像，通过拷贝为构建镜像入口生成。\n" +
+                        "已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。",
+                    description = "旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。\n" +
+                        "容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。\n" +
+                        "项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。",
                     publisher = creator,
                     labelIdList = null
                 ),
