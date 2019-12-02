@@ -72,8 +72,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                         gitProjectConf
                     )
                 }
-            } else {
-                logger.error("No event record about build(${buildFinishEvent.buildId}), ignore push commit check.")
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
