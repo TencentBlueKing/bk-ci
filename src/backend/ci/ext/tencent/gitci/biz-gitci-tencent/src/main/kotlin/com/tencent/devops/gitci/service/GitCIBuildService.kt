@@ -35,6 +35,8 @@ import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Credential
 import com.tencent.devops.common.ci.yaml.Pool
 import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.NORMAL_JOB
+import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -152,12 +154,13 @@ class GitCIBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
-                // 根据job类型创建构建容器或者无构建环境容器，构建环境容器每个job的第一个插件都是拉代码
-                if (job.job.type != "normal") {
+                // 根据job类型创建构建容器或者无构建环境容器，默认vmBuild
+                if (job.job.type == null || job.job.type == VM_JOB) {
+                    // 构建环境容器每个job的第一个插件都是拉代码
                     elementList.add(createGitCodeElement(event, gitProjectConf))
                     makeElementList(job, elementList, gitProjectConf, event.userId)
                     addVmBuildContainer(job, elementList, containerList, stageIndex, jobIndex)
-                } else {
+                } else if (job.job.type == NORMAL_JOB) {
                     makeElementList(job, elementList, gitProjectConf, event.userId)
                     addNormalContainer(elementList, containerList)
                 }
