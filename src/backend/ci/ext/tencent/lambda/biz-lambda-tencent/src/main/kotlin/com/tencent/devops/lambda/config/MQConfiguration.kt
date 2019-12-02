@@ -27,7 +27,7 @@ package com.tencent.devops.lambda.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.lambda.listener.BuildElementFinishListener
+import com.tencent.devops.lambda.listener.BuildTaskFinishListener
 import com.tencent.devops.lambda.listener.BuildFinishListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -121,7 +121,7 @@ class MQConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildElementFinishLambdaQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildElementFinishListener: BuildElementFinishListener,
+        @Autowired buildTaskFinishListener: BuildTaskFinishListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
@@ -130,7 +130,7 @@ class MQConfiguration {
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)
 
-        val adapter = MessageListenerAdapter(buildElementFinishListener, buildElementFinishListener::execute.name)
+        val adapter = MessageListenerAdapter(buildTaskFinishListener, buildTaskFinishListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container

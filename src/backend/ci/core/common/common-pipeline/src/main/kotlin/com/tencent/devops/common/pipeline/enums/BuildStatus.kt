@@ -52,9 +52,19 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     TRY_FINALLY("补偿任务", false), // 16 不可见的后台状态（新）为前面失败的任务做补偿的任务的原子状态，执行中如果前面有失败，则该种状态的任务才会执行。
     QUEUE_TIMEOUT("排队超时", true), // 17 排队超时
     EXEC_TIMEOUT("执行超时", true), // 18 执行超时
-    QUEUE_CACHE("队列待处理", true); // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
+    QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
+    UNKNOWN("未知状态", false); // 99
 
     companion object {
+
+        fun parse(statusName: String?): BuildStatus {
+            return try {
+                if (statusName == null) UNKNOWN else valueOf(statusName)
+            } catch (fail: Exception) {
+                UNKNOWN
+            }
+        }
+
         fun isFailure(status: BuildStatus) = status == FAILED || isCancel(status) || isTimeout(status)
 
         fun isFinish(status: BuildStatus) = isFailure(status) || isSuccess(status)

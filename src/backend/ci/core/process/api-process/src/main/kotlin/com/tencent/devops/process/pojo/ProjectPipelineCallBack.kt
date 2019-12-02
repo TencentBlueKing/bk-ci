@@ -24,25 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.event
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import io.swagger.annotations.ApiModel
 
-/**
- * 流水线Setting变化事件
- *
- * @version 1.0
- */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT)
-data class PipelineSettingChangeEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    val pipelineName: String
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+@ApiModel("项目的流水线回调配置")
+data class ProjectPipelineCallBack(
+    val projectId: String,
+    val callBackUrl: String,
+    val events: String,
+    val secretToken: String?
+)
