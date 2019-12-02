@@ -235,7 +235,7 @@ export default {
         if (newContainer) {
             const { name, required, typeList, type, baseOS, defaultBuildType, defaultPublicBuildResource = '', ...restProps } = newContainer
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = baseOS === 'WINDOWS'
+            const isError = ['WINDOWS', 'LINUX'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {

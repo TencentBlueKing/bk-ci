@@ -8,7 +8,7 @@
             <i class="right-arrow"></i>
             <div class="title secondary" @click="toImageList"> {{ $t('工作台') }} </div>
             <i class="right-arrow"></i>
-            <div class="title third-level">({{$t('上架/升级镜像') + form.imageName}})</div>
+            <div class="title third-level">{{$t('上架/升级镜像')}}（{{form.imageCode}}）</div>
             <a class="develop-guide-link" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('镜像指引') }} </a>
         </div>
         <main v-bkloading="{ isLoading }" class="edit-content">
