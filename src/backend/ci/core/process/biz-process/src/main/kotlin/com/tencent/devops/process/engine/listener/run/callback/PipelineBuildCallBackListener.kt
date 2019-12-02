@@ -23,23 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
+
+package com.tencent.devops.process.engine.listener.run.callback
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
-import com.tencent.devops.lambda.service.PipelineBuildService
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.process.engine.control.CallBackControl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
+/**
+ *  MQ实现的流水线插件任务状态回调事件
+ *
+ * @version 1.0
+ */
 @Component
-class BuildElementFinishListener @Autowired constructor(
-    private val pipelineBuildService: PipelineBuildService,
+class PipelineBuildCallBackListener @Autowired constructor(
+    private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildElementFinishBroadCastEvent>(pipelineEventDispatcher) {
+) : BaseListener<PipelineBuildStatusBroadCastEvent>(pipelineEventDispatcher) {
 
-    override fun run(event: PipelineBuildElementFinishBroadCastEvent) {
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
-        pipelineBuildService.onBuildElementFinish(event)
+    override fun run(event: PipelineBuildStatusBroadCastEvent) {
+        callBackControl.callBackBuildEvent(event)
     }
 }
