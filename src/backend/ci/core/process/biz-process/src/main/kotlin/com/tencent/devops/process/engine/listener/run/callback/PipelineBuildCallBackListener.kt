@@ -24,26 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
+package com.tencent.devops.process.engine.listener.run.callback
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.process.engine.control.CallBackControl
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 /**
- * 构建结束的广播事件，用于通知等
+ *  MQ实现的流水线插件任务状态回调事件
+ *
+ * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT, MQ.ROUTE_PIPELINE_BUILD_ELEMENT_FINISH)
-data class PipelineBuildElementFinishBroadCastEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val elementId: String,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    val errorType: String? = null,
-    val errorCode: Int? = null,
-    val errorMsg: String? = null
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+@Component
+class PipelineBuildCallBackListener @Autowired constructor(
+    private val callBackControl: CallBackControl,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildStatusBroadCastEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildStatusBroadCastEvent) {
+        callBackControl.callBackBuildEvent(event)
+    }
+}

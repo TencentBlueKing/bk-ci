@@ -71,7 +71,6 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_QUEUE_FULL = 2101049 // 流水线队列满
     const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = 2101050 // 第三方构建机状态异常
 
-
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = 2101989 // 重试3次失败
     const val ERROR_UPDATE_FAILED = 2101990 // 更新失败: {0}
