@@ -274,7 +274,8 @@
             },
 
             setClassifyValue (key) {
-                const categories = this.categories[1] || {}
+                let categories = this.categories[2] || {}
+                if (this.filterData.pipeType === 'atom') categories = this.categories[1] || {}
                 const selected = (categories.children || []).find((category) => category.classifyCode === key) || {}
                 this.filterData.classifyValue = selected.classifyValue
                 this.filterData.classifyKey = 'classifyCode'
