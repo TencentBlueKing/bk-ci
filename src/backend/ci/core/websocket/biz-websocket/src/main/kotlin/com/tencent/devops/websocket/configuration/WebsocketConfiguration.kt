@@ -86,8 +86,7 @@ class WebsocketConfiguration {
     fun pipelineWebSocketQueue(): Queue {
         val hostIp = HostUtils.getHostIp(devopsGateway)
         logger.info("Get the host ip: $hostIp")
-        return Queue(MQ.QUEUE_WEBSOCKET_TMP_EVENT + "." + hostIp)
-//        return QueueBuilder.nonDurable().autoDelete().exclusive().build()
+        return Queue(MQ.QUEUE_WEBSOCKET_TMP_EVENT + "." + hostIp, true, false, true)
     }
 
     @Bean
