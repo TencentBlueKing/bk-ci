@@ -24,25 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.event
+package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
 /**
- * 流水线Setting变化事件
- *
- * @version 1.0
+ * 构建结束的广播事件，用于通知等
  */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT)
-data class PipelineSettingChangeEvent(
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT)
+data class PipelineBuildTaskFinishBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
     override val userId: String,
+    val buildId: String,
+    val taskId: String,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
-    val pipelineName: String
+    val errorType: String? = null,
+    val errorCode: Int? = null,
+    val errorMsg: String? = null
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
