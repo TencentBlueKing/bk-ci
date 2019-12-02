@@ -24,21 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket
+package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
-@Event(MQ.EXCHANGE_PIPELINE_STATUS_CHANGE_TMP_FANOUT, MQ.ROUTE_PIPELINE_STATUS_CHANGE_TMP_EVENT)
-data class PipelineStatusChangeEvent(
+/**
+ * 构建状态的广播事件，用于通知等
+ */
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT)
+data class PipelineBuildStatusBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
     override val userId: String,
-    val changeType: ChangeType,
     val buildId: String,
-    override var actionType: ActionType = ActionType.START,
+    val taskId: String? = null,
+    override var actionType: ActionType,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

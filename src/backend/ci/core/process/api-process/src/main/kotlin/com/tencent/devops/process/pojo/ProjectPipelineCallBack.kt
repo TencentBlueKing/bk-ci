@@ -24,14 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket
+package com.tencent.devops.process.pojo
 
-/**
- * 状态变化类型
- * @version 1.0
- */
-enum class ChangeType {
-    STATUS, // 状态，首页
-    HISTORY, // 历史页
-    DETAIL // 详情页
-}
+import io.swagger.annotations.ApiModel
+
+@ApiModel("项目的流水线回调配置")
+data class ProjectPipelineCallBack(
+    val projectId: String,
+    val callBackUrl: String,
+    val events: String,
+    val secretToken: String?
+)

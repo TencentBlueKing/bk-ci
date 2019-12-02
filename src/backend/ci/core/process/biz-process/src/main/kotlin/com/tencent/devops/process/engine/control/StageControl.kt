@@ -53,20 +53,20 @@ class StageControl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
-    fun handle(event: PipelineBuildStageEvent): Boolean {
+    fun handle(event: PipelineBuildStageEvent) {
         with(event) {
 
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
                 ?: run {
                     logger.info("[$buildId]|STAGE_$actionType| have not build detail!")
-                    return true
+                    return
                 }
 
             // 当前构建整体的状态，可能是运行中，也可能已经失败
             // 已经结束的构建，不再受理，抛弃消息
             if (BuildStatus.isFinish(buildInfo.status)) {
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_REPEAT_EVENT|event=$event")
-                return true
+                return
             }
 
             val stages = pipelineRuntimeService.listStages(buildId)
@@ -95,7 +95,6 @@ class StageControl @Autowired constructor(
             }
 
             var nextStage = false
-//            var send = false
             run outer@{
                 stages.forEach { stage ->
                     if (stageId == stage.stageId || nextStage) {
@@ -118,7 +117,7 @@ class StageControl @Autowired constructor(
                 sendFinishEvent("FINALLY", buildStatus)
             }
         }
-        return true
+        return
     }
 
     /**
@@ -192,7 +191,7 @@ class StageControl @Autowired constructor(
         return buildStatus
     }
 
-    private fun PipelineBuildStageEvent.sendTerminateEvent(buildStatus: BuildStatus): Boolean {
+    private fun PipelineBuildStageEvent.sendTerminateEvent(buildStatus: BuildStatus) {
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
                 source = javaClass.simpleName,
@@ -203,7 +202,6 @@ class StageControl @Autowired constructor(
                 status = buildStatus
             )
         )
-        return true
     }
 
     private fun PipelineBuildStageEvent.sendFinishEvent(source: String, buildStatus: BuildStatus) {

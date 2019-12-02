@@ -1379,7 +1379,12 @@ class PipelineBuildService(
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, params)
             if (startParams.isNotEmpty()) {
-                buildStartupParamService.addParam(buildId, JsonUtil.toJson(startParams))
+                buildStartupParamService.addParam(
+                    projectId = readyToBuildPipelineInfo.projectId,
+                    pipelineId = readyToBuildPipelineInfo.pipelineId,
+                    buildId = buildId,
+                    param = JsonUtil.toJson(startParams)
+                )
             }
 
             logger.info("[${readyToBuildPipelineInfo.pipelineId}]|START_PIPELINE|startType=$startType|startParams=$startParams")
