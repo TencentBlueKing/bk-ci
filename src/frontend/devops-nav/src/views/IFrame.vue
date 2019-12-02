@@ -109,7 +109,7 @@
                 project_name: item.projectName,
                 cc_app_id: item.ccAppId,
                 cc_app_name: item.ccAppName,
-                is_offlined: item.offlined,
+                is_offlined: !item.enabled,
                 bg_id: item.bgId,
                 approval_status: item.approvalStatus
             }))
