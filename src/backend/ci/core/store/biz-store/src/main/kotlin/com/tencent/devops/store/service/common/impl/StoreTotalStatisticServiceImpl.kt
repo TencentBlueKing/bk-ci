@@ -49,7 +49,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StoreTotalStatisticServiceImpl::class.java)
     }
 
-    @Scheduled(cron = "0 * * * * ?") // 每分钟执行一次
+    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
     fun stat() {
         val taskName = "StoreTotalStatisticTask"
         logger.info("$taskName:stat:start")
