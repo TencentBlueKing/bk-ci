@@ -7,7 +7,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des back-home" @click="toImageList"> {{ $t('store.工作台') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">{{$t('store.上架/升级镜像')}}（{{imageDetail.imageName}}）</span>
+                <span class="banner-des">{{$t('store.上架/升级镜像')}}（{{imageDetail.imageCode}}）</span>
             </p>
             <a class="title-work" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </h3>

@@ -457,9 +457,10 @@
         }
     },
     "editPage": {
+        "image": "镜像",
         "provideInfo": "由 {0} 提供，{1} 修改于 {2}",
         "officialCertification": "官方认证",
-        "thirdImageHolder": "请输入Image，如Java：11.0.5",
+        "thirdImageHolder": "请输入镜像，如Java：11.0.5",
         "by": "由",
         "devnet": "Devnet 物理机",
         "onlySupport": "仅支持",
@@ -479,7 +480,7 @@
         "fromHand": "手动输入",
         "fromList": "从列表选择",
         "reElection": "重选",
-        "chooseImage": "待选择镜像",
+        "chooseImage": "请选择镜像",
         "imageErrMgs": "字段不能为空",
         "imageSource": "镜像源",
         "devopsImg": "蓝盾自有镜像",

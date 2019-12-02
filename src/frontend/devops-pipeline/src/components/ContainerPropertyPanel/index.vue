@@ -47,7 +47,7 @@
                     <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}<a target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/流水线/用户指南/publicBuild.html`">{{ $t('editPage.seeMore') }}</a></span>
                 </form-field>
 
-                <form-field label="image" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
                     <enum-input
                         name="imageType"
                         :list="imageTypeList"
@@ -391,7 +391,7 @@
                     agentType: 'ID'
                 }))
             }
-            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode) {
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
                 if (/\$\{/.test(this.buildResource)) {
                     this.changeBuildResource('imageType', 'THIRD')
                 } else {
