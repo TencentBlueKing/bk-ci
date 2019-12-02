@@ -29,10 +29,6 @@ package com.tencent.devops.common.event.pojo.measure
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-/**
- * deng
- * 2019-05-15
- */
 @Event(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, MQ.ROUTE_MEASURE_REQUEST_EVENT)
 data class MeasureRequest(
     val projectId: String,

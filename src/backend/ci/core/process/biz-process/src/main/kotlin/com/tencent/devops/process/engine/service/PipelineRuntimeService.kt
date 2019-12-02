@@ -204,6 +204,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId
             )
         }
+        buildStartupParamService.deletePipelineBuildParam(projectId = projectId, pipelineId = pipelineId)
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
