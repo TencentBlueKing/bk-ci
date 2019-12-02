@@ -9,5 +9,3 @@ const val SERVICE_TYPE = "type"
 
 const val NORMAL_JOB = "normal"
 const val VM_JOB = "vmBuild"
-
-
