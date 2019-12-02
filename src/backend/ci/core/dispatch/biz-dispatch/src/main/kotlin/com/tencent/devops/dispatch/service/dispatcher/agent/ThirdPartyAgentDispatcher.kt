@@ -121,7 +121,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 rabbitTemplate = rabbitTemplate,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "Build agent status (${agentResult.agentStatus})"
+                errorMessage = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
             )
             return
         }
@@ -131,7 +131,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 rabbitTemplate = rabbitTemplate,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "Fail to get build agent($dispatchType) because of ${agentResult.message}"
+                errorMessage = "获取第三方构建机失败/Fail to get build agent($dispatchType) because of ${agentResult.message}"
             )
             return
         }
@@ -141,7 +141,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 rabbitTemplate = rabbitTemplate,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "Can not found agent by type($dispatchType)"
+                errorMessage = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
             )
             return
         }
@@ -152,7 +152,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 rabbitTemplate = rabbitTemplate,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "Load build agent（${dispatchType.displayName}）fail!"
+                errorMessage = "获取第三方构建机失败/Load build agent（${dispatchType.displayName}）fail!"
             )
         }
     }
@@ -233,7 +233,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             }
         }
 
-        val errorMessage = "Load build agent（${dispatchType.envName}）fail!"
+        val errorMessage = "获取第三方构建机环境（${dispatchType.envName}）失败/Load build agent（${dispatchType.envName}）fail!"
         if (agentsResult.isNotOk()) {
             logger.warn("Fail to get the agents by env($dispatchType) because of ${agentsResult.message}")
             retry(
@@ -265,7 +265,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 rabbitTemplate = rabbitTemplate,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "The build agent（${dispatchType.envName}）have no node id"
+                errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空/The build agent (${dispatchType.envName}) have no node id"
             )
             return
         }
