@@ -391,7 +391,7 @@
                     agentType: 'ID'
                 }))
             }
-            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode) {
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
                 if (/\$\{/.test(this.buildResource)) {
                     this.changeBuildResource('imageType', 'THIRD')
                 } else {
