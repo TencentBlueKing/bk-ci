@@ -19,7 +19,7 @@ open class CodeCCScanInContainerTask(
     override fun getTaskType() = taskType
 
     companion object {
-        const val taskType = "codeCCScanInContainer"
+        const val taskType = "codeCCScanInDocker"
         const val taskVersion = "@latest"
         const val atomCode = "DockerRun"
     }
