@@ -8,11 +8,14 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.pojo.common.ClassifyRequest
+import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
@@ -31,7 +34,8 @@ class OpImageDataTransferService @Autowired constructor(
     private val imageDao: ImageDao,
     private val classifyDao: ClassifyDao,
     private val categoryDao: CategoryDao,
-    private val opImageService: OpImageService
+    private val opImageService: OpImageService,
+    private val imageMemberService: ImageMemberService
 ) {
     companion object {
         const val CLASSIFYCODE_OTHER = "OTHER"
@@ -294,6 +298,11 @@ class OpImageDataTransferService @Autowired constructor(
             ).data
             logger.info("$interfaceName:transferImage:Inner:imageId=$imageId")
             logger.info("$interfaceName:transferImage:Output:Start validating")
+            //将项目所有管理员添加为镜像管理员
+            val managers = client.get(ServiceTxProjectResource::class).getProjectManagers(projectCode).data
+            if (managers != null) {
+                imageMemberService.add(creator, StoreMemberReq(managers, StoreMemberTypeEnum.ADMIN, imageCode), StoreTypeEnum.IMAGE)
+            }
         }
         return changedCount
     }

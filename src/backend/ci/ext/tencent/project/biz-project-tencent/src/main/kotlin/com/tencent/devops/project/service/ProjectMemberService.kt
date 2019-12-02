@@ -24,10 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:store:api-store")
-    compile project(":core:store:api-store-image")
-    compile project(":ext:tencent:project:api-project-tencent")
-}
+package com.tencent.devops.project.service
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class ProjectMemberService @Autowired constructor(
+    private val bsAuthProjectApi: BSAuthProjectApi,
+    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+) {
+
+    fun getProjectManagers(projectCode: String): List<String> {
+        return bsAuthProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)
+    }
+
+}
