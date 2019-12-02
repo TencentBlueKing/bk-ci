@@ -69,10 +69,8 @@ object HostUtils {
             socket.connect(InetAddress.getByName(gatewayHost), 10002)
             return socket.localAddress.hostAddress
         }
-
     }
 
     private const val DEFAULT_IP = "127.0.0.1"
     private val logger = LoggerFactory.getLogger(javaClass)
-
 }
