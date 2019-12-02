@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -140,6 +141,14 @@ class BuildEndControl @Autowired constructor(
                 startTime = buildInfo.startTime, endTime = buildInfo.endTime, triggerType = buildInfo.trigger,
                 errorType = if (buildInfo.errorType == null) null else buildInfo.errorType!!.name,
                 errorCode = buildInfo.errorCode, errorMsg = buildInfo.errorMsg
+            ),
+            PipelineBuildStatusBroadCastEvent(
+                source = source,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                actionType = ActionType.END
             )
         )
     }
