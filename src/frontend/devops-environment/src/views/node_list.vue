@@ -489,7 +489,7 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`)
+                }, `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`)
 
                 this.$bkInfo({
                     theme: 'warning',
@@ -738,7 +738,7 @@
                     this.constructToolConf.importText = this.$t('environment.comfirm')
                     this.switchConstruct(node)
                 } else if (['CC', 'CMDB'].includes(node.nodeType)) {
-                    const url = `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/installGseAgentGuide.html`
+                    const url = `${DOCS_URL_PREFIX}/x/WtMrAg`
                     window.open(url, '_blank')
                 }
             },

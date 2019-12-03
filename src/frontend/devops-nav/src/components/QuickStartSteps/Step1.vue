@@ -2,11 +2,6 @@
     <div class="step-wrapper">
         <p class="step-desc">
             {{ $t('quickStart.projectDescription') }}
-            <a
-                :href="`${DOCS_URL_PREFIX}`"
-                class="text-link"
-                target="_blank"
-            >{{ $t("quickStart.learnMore") }}</a>
         </p>
         <form>
             <label>{{ $t('quickStart.selectProject') }}</label>
@@ -69,7 +64,6 @@
         @Prop({ default: false })
         isError: boolean = false
         errorTip: number = 1
-        DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
 
         selectedProjectId: string = this.demo ? this.demo.projectId : ''
 

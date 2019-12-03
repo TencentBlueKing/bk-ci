@@ -90,7 +90,7 @@
                     list: [],
                     hasLink: true,
                     linkTitle: '了解更多编译加速',
-                    linkHref: `${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%BC%96%E8%AF%91%E5%8A%A0%E9%80%9F/quick-start.html`
+                    linkHref: `${DOCS_URL_PREFIX}/x/nobm`
                 },
                 emptyInfo: {
                     title: '创建第一个编译加速任务',
