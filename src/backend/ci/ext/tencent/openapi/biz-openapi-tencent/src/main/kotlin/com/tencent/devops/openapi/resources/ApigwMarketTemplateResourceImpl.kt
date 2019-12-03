@@ -31,12 +31,20 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwMarketTemplateResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.MarketItem
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwMarketTemplateResourceImpl @Autowired constructor(private val client: Client) : ApigwMarketTemplateResource {
+class ApigwMarketTemplateResourceImpl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResource {
+
+    override fun installTemplateFromStore(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
     override fun list(userId: String): Result<List<MarketItem?>> {
         logger.info("get user'd market template, user($userId)")
         val marketTemplateResp = client.get(ServiceTemplateResource::class).list(userId)
