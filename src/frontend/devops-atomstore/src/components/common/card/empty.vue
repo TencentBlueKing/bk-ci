@@ -24,7 +24,7 @@
                 const emptyMap = {
                     atom: { str: this.$t('该分类下暂无流水线插件'), tip: this.$t('新增流水线插件') },
                     template: { str: this.$t('该分类下暂无流水线模板'), tip: this.$t('新增流水线模板') },
-                    image: { str: this.$t('该分类下暂无容器镜像'), tip: this.$t('新增容器镜像') }
+                    image: { str: this.$t('该分类下暂无容器镜像'), tip: this.$t('发布容器镜像') }
                 }
                 const tipObj = emptyMap[type]
                 return Object.assign({ type }, tipObj)
