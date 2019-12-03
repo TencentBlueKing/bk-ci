@@ -115,12 +115,11 @@ class CategoryDao {
 
     fun convert(record: TCategoryRecord): Category {
         with(record) {
-            val categoryLanName = MessageCodeUtil.getCodeLanMessage(categoryCode)
             return Category(
                 id = id,
                 categoryCode = categoryCode,
                 // 范畴信息名称没有配置国际化信息则取范畴表里面的名称
-                categoryName = if (categoryLanName == categoryCode) categoryName else categoryLanName,
+                categoryName = MessageCodeUtil.getMessageByLocale(categoryName, categoryCode),
                 iconUrl = iconUrl,
                 categoryType = StoreTypeEnum.getStoreType(type.toInt()),
                 createTime = createTime.timestampmilli(),

@@ -28,7 +28,9 @@ package com.tencent.devops.process.engine.atom
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
@@ -83,17 +85,24 @@ class TaskAtomService @Autowired(required = false) constructor(
             }
         } catch (t: BuildTaskException) {
             LogUtils.addRedLine(
-                rabbitTemplate, task.buildId, "当前原子执行出现异常: " +
-                    "${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "Task [${task.taskName}] has exception: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", t)
-        } catch (ignored: Throwable) {
+            logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", t)
+        } catch (t: Throwable) {
             LogUtils.addRedLine(
-                rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: " +
-                    "${ignored.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "Task [${task.taskName}] has exception: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", ignored)
+            logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", t)
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
@@ -175,6 +184,28 @@ class TaskAtomService @Autowired(required = false) constructor(
         } catch (ignored: Throwable) {
             logger.error("Fail to post the task($task): ${ignored.message}")
         }
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildTaskFinishBroadCastEvent(
+                source = "build-element-${task.taskId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = "",
+                buildId = task.buildId,
+                taskId = task.taskId,
+                errorType = if (task.errorType == null) null else task.errorType!!.name,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            ),
+            PipelineBuildStatusBroadCastEvent(
+                source = "task-end-${task.taskId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = task.starter,
+                taskId = task.taskId,
+                buildId = task.buildId,
+                actionType = ActionType.END
+            )
+        )
         LogUtils.stopLog(rabbitTemplate, task.buildId, task.taskId, task.containerHashId)
     }
 
@@ -192,17 +223,28 @@ class TaskAtomService @Autowired(required = false) constructor(
             log(atomResponse, task, force)
         } catch (t: BuildTaskException) {
             LogUtils.addRedLine(
-                rabbitTemplate, task.buildId, "Fail to execute the task atom: ${t.message}",
-                task.taskId, task.containerHashId, task.executeCount ?: 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "Task [${task.taskName}] has exception: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", t)
-        } catch (ignored: Throwable) {
+            logger.warn("[${task.buildId}]|Fail to execute the task[${task.taskName}]", t)
+            atomResponse.errorType = ErrorType.SYSTEM
+            atomResponse.errorMsg = t.message
+        } catch (t: Throwable) {
             LogUtils.addRedLine(
-                rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${ignored.message}",
-                task.taskId, task.containerHashId, task.executeCount ?: 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "Task [${task.taskName}] has exception: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", ignored)
+            logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", t)
+            atomResponse.errorType = ErrorType.SYSTEM
+            atomResponse.errorMsg = t.message
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
@@ -224,19 +266,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
                 )
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildElementFinishBroadCastEvent(
-                        source = "build-element-${task.taskId}",
-                        projectId = task.projectId,
-                        pipelineId = task.pipelineId,
-                        userId = "",
-                        buildId = task.buildId,
-                        elementId = task.taskId,
-                        errorType = if (task.errorType == null) null else task.errorType!!.name,
-                        errorCode = task.errorCode,
-                        errorMsg = task.errorMsg
-                    )
-                )
             }
             return atomResponse
         }
@@ -249,14 +278,22 @@ class TaskAtomService @Autowired(required = false) constructor(
     ) {
         if (BuildStatus.isFinish(atomResponse.buildStatus)) {
             LogUtils.addLine(
-                rabbitTemplate, task.buildId, "当前原子执行结束",
-                task.taskId, task.containerHashId, task.executeCount ?: 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
         } else {
             if (force) {
                 LogUtils.addLine(
-                    rabbitTemplate, task.buildId, "尝试强制终止当前原子未成功，重试中...",
-                    task.taskId, task.containerHashId, task.executeCount ?: 1
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = task.buildId,
+                    message = "Try to Stop Task [${task.taskName}]...",
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
             }
         }

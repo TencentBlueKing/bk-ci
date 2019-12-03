@@ -58,7 +58,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = CodeSvnElement::class, name = CodeSvnElement.classType),
     JsonSubTypes.Type(value = LinuxScriptElement::class, name = LinuxScriptElement.classType),
     JsonSubTypes.Type(value = WindowsScriptElement::class, name = WindowsScriptElement.classType),
-    JsonSubTypes.Type(value = ManualReviewUserTaskElement::class, name = ManualReviewUserTaskElement.classType),
     JsonSubTypes.Type(value = ManualTriggerElement::class, name = ManualTriggerElement.classType),
     JsonSubTypes.Type(value = RemoteTriggerElement::class, name = RemoteTriggerElement.classType),
     JsonSubTypes.Type(value = TimerTriggerElement::class, name = TimerTriggerElement.classType),

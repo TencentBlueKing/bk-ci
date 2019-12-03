@@ -32,4 +32,4 @@ package com.tencent.devops.common.event.annotation
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Event(val exchange: String = "", val routeKey: String, val delayMills: Int = 0)
+annotation class Event(val exchange: String, val routeKey: String = "", val delayMills: Int = 0)
