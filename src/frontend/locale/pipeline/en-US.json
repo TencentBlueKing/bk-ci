@@ -258,8 +258,8 @@
     },
     "newlist": {
         "defaultViews": "My views",
-        "copyPipeline": "Duplicate pipelines",
-        "saveAsTemp": "Save as Template",
+        "copyPipeline": "Copy",
+        "saveAsTemp": "Templated",
         "totalAtomNums": "Plugins",
         "execTimes": "Duration",
         "known": "OK",

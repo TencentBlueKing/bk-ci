@@ -85,7 +85,7 @@
     "enableLabel": "Enable",
     "waitforReview": "Pending review, no access to operate",
     "editLabel": "Edit",
-    "userManage": "User management",
+    "userManage": "Users",
     "addProject": "Add project",
     "disableProjectTips": "You have {disableProjectNum} disabled projects，please click \"display disabled project\" or create project on the upper-right corner",
     "searchTips": "Search",
