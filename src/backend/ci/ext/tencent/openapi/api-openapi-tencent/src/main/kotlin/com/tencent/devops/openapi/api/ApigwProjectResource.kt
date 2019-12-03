@@ -27,25 +27,38 @@ package com.tencent.devops.openapi.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
-import com.tencent.devops.project.pojo.Result
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_PROJECT"], description = "OPEN-API-项目资源")
 @Path("/{apigw:apigw-user|apigw-app|apigw}/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwProjectResource {
+
+    @POST
+    @Path("/newProject")
+    @ApiOperation("创建项目")
+    fun create(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectCreateInfo: ProjectCreateInfo
+    ): Result<String>
 
     @ApiOperation("获取单个项目信息")
     @GET

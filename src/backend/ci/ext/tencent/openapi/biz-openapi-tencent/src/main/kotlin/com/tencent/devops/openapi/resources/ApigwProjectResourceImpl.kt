@@ -30,18 +30,25 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwProjectResourceImpl @Autowired constructor(private val client: Client) : ApigwProjectResource {
+
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+        return client.get(ServiceTxProjectResource::class).create(userId, projectCreateInfo)
+    }
+
     override fun getProjectByGroup(
         userId: String,
         bgName: String?,
         deptName: String?,
         centerName: String
-    ): com.tencent.devops.project.pojo.Result<List<ProjectVO>> {
+    ): Result<List<ProjectVO>> {
         logger.info("Get  projects info by group ,userId:$userId,bgName:$bgName,deptName:$deptName,centerName:$centerName")
         return client.get(ServiceTxProjectResource::class).getProjectByGroup(
             userId = userId,
@@ -51,12 +58,12 @@ class ApigwProjectResourceImpl @Autowired constructor(private val client: Client
         )
     }
 
-    override fun getProject(userId: String, projectId: String): com.tencent.devops.project.pojo.Result<ProjectVO?> {
+    override fun getProject(userId: String, projectId: String): Result<ProjectVO?> {
         logger.info("Get a project info ,projectId:$projectId")
         return client.get(ServiceProjectResource::class).get(projectId)
     }
 
-    override fun getProjectByUser(userId: String): com.tencent.devops.project.pojo.Result<List<ProjectVO>> {
+    override fun getProjectByUser(userId: String): Result<List<ProjectVO>> {
         logger.info("Get user's project info ,userId:$userId")
         return client.get(ServiceProjectResource::class).getProjectByUser(userId)
     }
