@@ -689,7 +689,7 @@
         "atomPreSuc": " Run it when all the pre-plugins are run successfully",
         "atomEvenFail": "Unless cancelled, run it even when it is failed to run the pre-plugins",
         "atomOnlyFail": " Run it only when it is failed to run some pre-plugin(s)",
-        "varMatch": " Run it only when it is failed to run some pre-plugin(s)",
+        "varMatch": " Run it when all the custom variables are macthed",
         "varNotMatch": "Don‘t run it when all the custom variables are macthed",
         "customVar": "Custom variables",
         "enableJob": "Enable this Job",
