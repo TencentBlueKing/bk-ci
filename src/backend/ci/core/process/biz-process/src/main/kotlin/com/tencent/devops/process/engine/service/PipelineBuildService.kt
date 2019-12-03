@@ -1117,13 +1117,17 @@ class PipelineBuildService(
 
     fun getHistoryConditionStatus(userId: String, projectId: String, pipelineId: String): List<IdValue> {
         checkPermission(
-            userId,
-            projectId,
-            pipelineId,
-            AuthPermission.VIEW,
-            "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW,
+            message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
-        return BuildStatus.getStatusMap()
+        val result = mutableListOf<IdValue>()
+        BuildStatus.values().filter { it.visiable }.forEach {
+            result.add(IdValue(it.name, MessageCodeUtil.getMessageByLocale(it.statusName, it.name)))
+        }
+        return result
     }
 
     fun getHistoryConditionTrigger(userId: String, projectId: String, pipelineId: String): List<IdValue> {
