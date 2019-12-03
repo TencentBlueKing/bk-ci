@@ -40,7 +40,6 @@
                                 <div slot="content" style="white-space: normal;">
                                     <div>
                                         {{ getTypeDesc(localConfig.credentialType) }}
-                                        <a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/${$t('allService')}/${$t('ticket.credentialManage')}/summary.html`">{{ $t('ticket.learnMore') }}</a>
                                     </div>
                                 </div>
                             </bk-popover>
@@ -132,7 +131,6 @@
         },
         data () {
             return {
-                DOCS_URL_PREFIX: DOCS_URL_PREFIX,
                 CODEGIT_URL_PREFIX: CODEGIT_URL_PREFIX,
                 GITLAB_URL_PREFIX: GITLAB_URL_PREFIX,
                 showContent: false,

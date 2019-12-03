@@ -15,7 +15,7 @@
                     <p class="quote-text">1、若你的makefile是由cmake自动生成的，需先修改cmake并加上编译加速任务ID参数。cmake改为bk-cmake -p ${turbo.task.id} {{ extraParam() }}</p>
                     <p class="quote-text">2、使用bk-make来替代make，并加上编译加速任务ID和流水线当前构建ID参数。make改为bk-make -p ${turbo.task.id} -b ${pipeline.build.id} {{ extraParam() }}</p>
                     <p class="quote-text">
-                        <a :href="`${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%BC%96%E8%AF%91%E5%8A%A0%E9%80%9F/%E7%94%A8%E6%88%B7%E6%8C%87%E5%8D%97/%E6%B5%81%E6%B0%B4%E7%BA%BF%E5%85%B3%E8%81%94%E7%BC%96%E8%AF%91%E5%8A%A0%E9%80%9F%E4%BB%BB%E5%8A%A1.html`" target="_blank" class="bk-text-primary">其它情况请查看更多修改示例&gt;&gt;</a>
+                        <a :href="docsURL" target="_blank" class="bk-text-primary">其它情况请查看更多修改示例&gt;&gt;</a>
                     </p>
                 </template>
                 <template v-if="task.toolType === '2'">
@@ -33,7 +33,7 @@
                     <br />
                     <p class="quote-text">-a 用于传递原始blade命令后面带的参数</p>
                     <p class="quote-text">
-                        <a :href="`${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%BC%96%E8%AF%91%E5%8A%A0%E9%80%9F/%E7%94%A8%E6%88%B7%E6%8C%87%E5%8D%97/%E6%B5%81%E6%B0%B4%E7%BA%BF%E5%85%B3%E8%81%94%E7%BC%96%E8%AF%91%E5%8A%A0%E9%80%9F%E4%BB%BB%E5%8A%A1.html`" target="_blank" class="bk-text-primary">其它情况请查看更多修改示例&gt;&gt;</a>
+                        <a :href="docsURL" target="_blank" class="bk-text-primary">其它情况请查看更多修改示例&gt;&gt;</a>
                     </p>
                 </template>
                 <template v-if="task.toolType === '3'">
@@ -50,7 +50,7 @@
                     <br />
                     <p class="quote-text">-a 用于传递原始bazel命令后面带的参数</p>
                     <p class="quote-text">
-                        <a :href="`${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%BC%96%E8%AF%91%E5%8A%A0%E9%80%9F/%E7%94%A8%E6%88%B7%E6%8C%87%E5%8D%97/%E6%B5%81%E6%B0%B4%E7%BA%BF%E5%85%B3%E8%81%94%E7%BC%96%E8%AF%91%E5%8A%A0%E9%80%9F%E4%BB%BB%E5%8A%A1.html`" target="_blank" class="bk-text-primary">其它情况请查看更多修改示例&gt;&gt;</a>
+                        <a :href="docsURL" target="_blank" class="bk-text-primary">其它情况请查看更多修改示例&gt;&gt;</a>
                     </p>
                 </template>
                 <div class="quote-item">
@@ -127,7 +127,7 @@
         },
         data () {
             return {
-                DOCS_URL_PREFIX,
+                docsURL: `${DOCS_URL_PREFIX}/x/tYbm`,
                 linkUrl: `${CHECK_ENV_URL}/turbo-client/bazel.zip`
             }
         },

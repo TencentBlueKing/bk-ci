@@ -2,11 +2,6 @@
     <div class="step-wrapper">
         <p class="step-desc">
             {{ $t('quickStart.pipelineStepDesc') }}
-            <a
-                :href="`${DOCS_URL_PREFIX}/所有服务/代码库/summary.html`"
-                class="text-link"
-                target="_blank"
-            >{{ $t('quickStart.learnMore') }}</a>
         </p>
         <form>
             <label>{{ $t('quickStart.codelib') }}</label>
@@ -35,7 +30,6 @@
 
     @Component
     export default class Step2 extends Vue {
-        DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
     }
 </script>
 

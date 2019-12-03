@@ -14,7 +14,7 @@
     "new": "New",
     "createEnvTitle": "New pools",
     "create": "Create",
-    "deleteConfirmTips": "Delete pool {0}",
+    "deleteConfirmTips": "Delete pool {0} ?",
     "delete": "Delete",
     "remove": "Remove",
     "operation": "Operation",
