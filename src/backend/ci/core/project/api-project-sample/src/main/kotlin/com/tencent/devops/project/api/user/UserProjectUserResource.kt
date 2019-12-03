@@ -24,10 +24,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project-sample")
-    compile project(":core:common:common-auth:common-auth-sample")
-}
+package com.tencent.devops.project.api.user
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["USER_PROJECT_USER"], description = "项目列表用户接口")
+@Path("/user/users")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserProjectUserResource {
+
+    @GET
+    @Path("/")
+    @ApiOperation("查询用户基本信息")
+    fun get(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<ProjectUser>
+
+    @GET
+    @Path("/detail")
+    @ApiOperation("查询用户详细信息")
+    fun getDetail(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<UserDeptDetail>
+}
