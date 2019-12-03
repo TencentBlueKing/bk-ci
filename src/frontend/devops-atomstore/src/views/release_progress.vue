@@ -64,7 +64,7 @@
                                         <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>
-                                <bk-button class="pass-btn"
+                                <bk-button :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"
                                     theme="primary"
                                     size="small"
                                     v-if="entry.code === 'test'"
@@ -812,6 +812,9 @@
                 left: 100px;
                 padding: 0 10px;
                 font-weight: normal;
+                &.small-left {
+                    left: 80px;
+                }
             }
         }
         .version-detail-title {

@@ -23,6 +23,7 @@
                             :id="option.categoryCode"
                             :name="option.categoryName"
                             :placeholder="$t('store.请选择范畴')"
+                            @click.native="changeShowAgentType(option)"
                         >
                         </bk-option>
                     </bk-select>
@@ -41,7 +42,7 @@
                 <bk-form-item :label="$t('store.标签')" property="labelIdList">
                     <bk-tag-input v-model="form.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('store.请选择标签')"></bk-tag-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.适用机器')" property="agentTypeScope" :required="true" :rules="[requireRule]" ref="agentTypeScope">
+                <bk-form-item :label="$t('store.适用机器')" property="agentTypeScope" :required="true" :rules="[requireRule]" ref="agentTypeScope" v-if="needAgentType">
                     <bk-select v-model="form.agentTypeScope" searchable multiple show-select-all>
                         <bk-option v-for="(option, index) in agentTypes"
                             :key="index"
@@ -58,11 +59,11 @@
                 <bk-form-item :label="$t('store.描述')" property="description">
                     <mavon-editor class="image-remark-input"
                         ref="mdHook"
+                        preview-background="#fff"
                         v-model="form.description"
                         :toolbars="toolbars"
                         :external-link="false"
                         :box-shadow="false"
-                        preview-background="#fff"
                         @imgAdd="uploadimg"
                     />
                 </bk-form-item>
@@ -204,6 +205,7 @@
                 imageVersionList: [],
                 isLoading: false,
                 isLoadingTag: false,
+                needAgentType: false,
                 originVersion: '',
                 requireRule: {
                     required: true,
@@ -262,6 +264,11 @@
                 'requestReleaseImage'
             ]),
 
+            changeShowAgentType (option) {
+                const settings = option.settings || {}
+                this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
+            },
+
             submitImage () {
                 this.$refs.imageForm.validate().then(() => {
                     if (!this.form.logoUrl) {
@@ -279,7 +286,7 @@
                 }).catch((validate) => {
                     const field = validate.field
                     const label = this.$refs[field].label
-                    this.$bkMessage({ message: `${label + this.$t('store.是必填项，请填写以后重试')}`, theme: 'error' })
+                    this.$bkMessage({ message: `${label + this.$t('store.输入不正确，请确认修改后再试')}`, theme: 'error' })
                 })
             },
 
@@ -310,7 +317,7 @@
                 this.isLoading = true
                 this.requestImageDetail(imageId).then((res) => {
                     Object.assign(this.form, res)
-                    this.form.imageTag = ''
+                    if (res.imageStatus === 'RELEASED') this.form.imageTag = ''
                     this.form.description = this.form.description || this.$t('store.imageMdDesc')
                     this.originVersion = res.version
                     this.form.labelIdList = res.labelList.map(x => x.id)
