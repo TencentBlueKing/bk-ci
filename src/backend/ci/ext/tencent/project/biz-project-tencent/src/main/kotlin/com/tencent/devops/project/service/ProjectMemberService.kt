@@ -41,5 +41,4 @@ class ProjectMemberService @Autowired constructor(
     fun getProjectManagers(projectCode: String): List<String> {
         return bsAuthProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)
     }
-
 }
