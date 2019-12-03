@@ -689,7 +689,7 @@
         "atomPreSuc": "所有前置插件运行成功时运行",
         "atomEvenFail": "即使前面有插件运行失败也运行，除非被取消才不运行",
         "atomOnlyFail": "只有前面有插件运行失败时才运行",
-        "varMatch": "只有前面有插件运行失败时才运行",
+        "varMatch": "自定义变量全部满足时才运行",
         "varNotMatch": "自定义变量全部满足时不运行",
         "customVar": "自定义变量",
         "enableJob": "启用本Job",
