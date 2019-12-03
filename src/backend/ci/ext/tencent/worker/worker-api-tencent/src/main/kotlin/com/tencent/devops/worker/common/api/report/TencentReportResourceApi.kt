@@ -91,7 +91,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         return objectMapper.readValue(responseContent)
     }
 
-    private fun updateJfrogReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables){
+    private fun updateJfrogReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
         val url = StringBuilder("/report/result/$taskId/${relativePath.removePrefix("/")}")
         with(buildVariables) {
             url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
@@ -113,7 +113,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
     }
 
-    private fun updateBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables){
+    private fun updateBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
         val url = StringBuilder("/bkrepo/api/build/generic/${buildVariables.projectId}/report/${buildVariables.pipelineId}/${buildVariables.buildId}/$elementId/${relativePath.removePrefix("/")}")
         val header = mutableMapOf<String, String>()
         with(buildVariables) {
@@ -139,12 +139,12 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     }
 
     override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
-        if(isRepoGrey()){
+        if (isRepoGrey()) {
             LoggerService.addNormalLine("user bkrepo: true")
-            updateBkRepoReport(file,taskId, relativePath, buildVariables)
+            updateBkRepoReport(file, taskId, relativePath, buildVariables)
         } else {
             LoggerService.addNormalLine("user bkrepo: false")
-            updateJfrogReport(file,taskId, relativePath, buildVariables)
+            updateJfrogReport(file, taskId, relativePath, buildVariables)
         }
     }
 }
