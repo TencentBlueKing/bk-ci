@@ -436,7 +436,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             elementName = task.taskName,
             type = task.taskType,
             params = task.taskParams.map {
-                it.key to parseEnv(JsonUtil.toJson(it.value), buildVariable)
+                it.key to parseEnv(command = JsonUtil.toJson(it.value), data = buildVariable, isEscape = true)
             }.filter {
                 !it.first.startsWith("@type")
             }.toMap(),
