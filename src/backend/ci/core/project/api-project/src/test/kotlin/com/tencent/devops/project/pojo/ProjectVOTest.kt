@@ -70,7 +70,11 @@ class ProjectVOTest {
             gray = false,
             enabled = true,
             enableExternal = true,
-            hybridCcAppId = 0
+            hybridCcAppId = 0,
+            project_code = "job",
+            project_name = "定时任务",
+            cc_app_id = 123,
+            cc_app_name = "XXG"
         )
         val message = JsonUtil.toJson(p)
         println(message)
