@@ -36,7 +36,7 @@ data class NormalContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
-    override val name: String = "",
+    override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
     override val elements: List<Element> = listOf(),
     @ApiModelProperty("容器状态", required = false, hidden = true)
@@ -44,7 +44,7 @@ data class NormalContainer(
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var startEpoch: Long? = null,
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件运行时间", required = false, hidden = true)
+    @ApiModelProperty("原子运行时间", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("允许可跳过", required = false)
     val enableSkip: Boolean?,
@@ -53,11 +53,11 @@ data class NormalContainer(
     @ApiModelProperty("是否可重试", required = false, hidden = true)
     override var canRetry: Boolean? = false,
     override var containerId: String? = null,
-//    @ApiModelProperty("操作系统(默认Docker)", required = false)
-//    val baseOS: VMBaseOS = VMBaseOS.LINUX,
     @ApiModelProperty("无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
+    @Deprecated(message = "do not use")
     val maxQueueMinutes: Int = 60,
     @ApiModelProperty("无构建环境-运行最长时间(分钟)", required = false)
+    @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 1440,
     @ApiModelProperty("流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var

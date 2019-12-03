@@ -23,11 +23,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.listener
 
-package com.tencent.devops.process.engine.pojo
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
+import com.tencent.devops.lambda.service.PipelineBuildService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-object Timeout {
-    const val MAX_MINUTES = 7 * 60 * 24 // 2 * 24 * 60 = 2880 分钟 = 最多超时2天
-    const val MAX_MILLS = MAX_MINUTES * 60 * 1000 + 1 // 毫秒+1
-    const val DEFAULT_TIMEOUT_MIN = 900
+@Component
+class BuildTaskFinishListener @Autowired constructor(
+    private val pipelineBuildService: PipelineBuildService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
+        pipelineBuildService.onBuildTaskFinish(event)
+    }
 }

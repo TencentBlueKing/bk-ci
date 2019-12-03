@@ -120,22 +120,27 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
 
     fun listPipelineInPage(
         dslContext: DSLContext,
+        projectId: String,
         templateId: String,
         page: Int? = null,
         pageSize: Int? = null,
         searchKey: String? = null
     ): SQLPage<TTemplatePipelineRecord> {
-        if (searchKey != null) {
-            var nameLikedPipelineIds: Set<String> = mutableSetOf()
-            with(TPipelineSetting.T_PIPELINE_SETTING) {
-                val nameLikedPipeline = dslContext.selectFrom(this)
-                    .where(NAME.like("%$searchKey%"))
-                    .fetch()
-                nameLikedPipelineIds = nameLikedPipeline.map { it.pipelineId }.toSet()
-            }
+        if (!searchKey.isNullOrBlank()) {
+            val nameLikedPipelineIds =
+                with(TPipelineSetting.T_PIPELINE_SETTING) {
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(IS_TEMPLATE.eq(false))
+                        .and(NAME.like("%$searchKey%"))
+                        .fetch()
+                        .map { it.pipelineId }
+                        .toSet()
+                }
             with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
                 val baseStep = dslContext.selectFrom(this)
-                    .where(TEMPLATE_ID.eq(templateId), PIPELINE_ID.`in`(nameLikedPipelineIds))
+                    .where(TEMPLATE_ID.eq(templateId))
+                    .and(PIPELINE_ID.`in`(nameLikedPipelineIds))
                 val allCount = baseStep.count()
                 val records = if (null != page && null != pageSize) {
                     baseStep.limit((page - 1) * pageSize, pageSize).fetch()

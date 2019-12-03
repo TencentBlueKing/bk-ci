@@ -28,11 +28,14 @@ package com.tencent.devops.process.engine.atom
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.Timeout
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -45,7 +48,7 @@ import java.util.concurrent.TimeUnit
 interface IAtomTask<T> {
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(this::class.java)!!
     }
 
     /**
@@ -94,21 +97,38 @@ interface IAtomTask<T> {
         val atomResponse = tryFinish(task, param, runVariables, force)
         // 未结束？检查是否超时
         if (!BuildStatus.isFinish(atomResponse.buildStatus)) {
-            if (param is Element) {
-                val startTime = task.startTime?.timestampmilli() ?: 0L
-                val additionalOptions = param.additionalOptions
-                var timeoutMins = additionalOptions?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN.toLong()
-                if (timeoutMins == 0L) {
-                    timeoutMins = Timeout.MAX_MINUTES.toLong()
-                }
-                val timeoutMills = TimeUnit.MINUTES.toMillis(timeoutMins)
-                if (System.currentTimeMillis() - startTime >= timeoutMills) {
-                    logger.info(
-                        "[${task.buildId}]|TIME_OUT|" +
-                            "startTime=$startTime|timeoutMills=$timeoutMills|current=${System.currentTimeMillis()}"
+            val startTime = task.startTime?.timestampmilli() ?: 0L
+            val timeoutMills: Long =
+                if (param is Element) {
+                    val additionalOptions = param.additionalOptions
+                    var timeoutMinutes = additionalOptions?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN.toLong()
+                    if (timeoutMinutes == 0L) {
+                        timeoutMinutes = Timeout.MAX_MINUTES.toLong()
+                    }
+                    TimeUnit.MINUTES.toMillis(timeoutMinutes)
+                } else if (param is NormalContainer) {
+                    TimeUnit.MINUTES.toMillis(
+                        (param.jobControlOption?.prepareTimeout ?: Timeout.DEFAULT_PREPARE_MINUTES).toLong()
                     )
-                    return AtomResponse(BuildStatus.EXEC_TIMEOUT)
+                } else if (param is VMBuildContainer) {
+                    // docker 构建机要求10分钟内超时
+                    if (param.dispatchType is DockerDispatchType || !param.dockerBuildVersion.isNullOrBlank()) {
+                        TimeUnit.MINUTES.toMillis(
+                            (param.jobControlOption?.prepareTimeout ?: Timeout.DEFAULT_PREPARE_MINUTES).toLong()
+                        )
+                    } else {
+                        TimeUnit.MINUTES.toMillis((param.jobControlOption?.timeout ?: Timeout.MAX_MINUTES).toLong())
+                    }
+                } else {
+                    0L
                 }
+
+            if (timeoutMills > 0 && System.currentTimeMillis() - startTime >= timeoutMills) {
+                logger.info(
+                    "[${task.buildId}]|TIME_OUT|" +
+                        "startTime=$startTime|timeoutMills=$timeoutMills|current=${System.currentTimeMillis()}"
+                )
+                return AtomResponse(BuildStatus.EXEC_TIMEOUT)
             }
         }
         return atomResponse

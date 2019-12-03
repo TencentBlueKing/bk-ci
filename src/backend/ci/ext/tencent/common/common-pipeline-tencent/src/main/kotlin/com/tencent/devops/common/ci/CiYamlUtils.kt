@@ -113,7 +113,19 @@ object CiYamlUtils {
         val defaultMr = originYaml.mr ?: MergeRequest(disable = false, autoCancel = true, branches = MatchRule(listOf("*"), null), paths = null)
         val variable = originYaml.variables
         val services = originYaml.services
-        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", Pool(null, null), originYaml.steps!!, null)))))
+        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", VM_JOB, Pool(null, null), originYaml.steps!!, null)))))
+
+        // 校验job类型
+        stages.forEach {
+            it.stage.forEach { job ->
+                run {
+                    val type = job.job.type
+                    if (type != null && type != "" && type != VM_JOB && type != NORMAL_JOB) {
+                        throw CustomException(Response.Status.BAD_REQUEST, "非法的job类型")
+                    }
+                }
+            }
+        }
 
         return CIBuildYaml(defaultTrigger, defaultMr, variable, services, stages, null)
     }
@@ -124,7 +136,7 @@ object CiYamlUtils {
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
 
-        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", Pool(null, null), originYaml.steps!!, null)))))
+        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", "vmBuild", Pool(null, null), originYaml.steps!!, null)))))
 
         return CIBuildYaml(null, null, null, null, stages, null)
     }
