@@ -95,4 +95,37 @@ interface BuildSubPipelineResource {
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
     ): Result<ProjectBuildId>
+
+    @ApiOperation("从构建机启动子流水线")
+    @POST
+    // @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
+    @Path("/pipelines/{callProjectId}/{callPipelineId}/{atomCode}/startByPipeline")
+    fun callOtherProjectPipelineStartup(
+        @ApiParam(value = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("当前流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        parentPipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam("要启动的流水线ID", required = true)
+        @PathParam("callProjectId")
+        callProjectId: String,
+        @ApiParam("要启动的流水线ID", required = true)
+        @PathParam("callPipelineId")
+        callPipelineId: String,
+        @ApiParam("插件标识", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("插件ID", required = true)
+        @QueryParam("taskId")
+        taskId: String,
+        @ApiParam("运行方式", required = true)
+        @QueryParam("runMode")
+        runMode: String,
+        @ApiParam("启动参数", required = true)
+        values: Map<String, String>
+    ): Result<ProjectBuildId>
 }
