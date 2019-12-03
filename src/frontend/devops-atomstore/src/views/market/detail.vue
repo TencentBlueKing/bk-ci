@@ -101,7 +101,7 @@
                         res = bkLocale.$t('store.IDE插件')
                         break
                     case 'image':
-                        res = bkLocale.$t('store.镜像')
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
                         res = bkLocale.$t('store.流水线插件')

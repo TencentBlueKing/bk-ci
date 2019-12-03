@@ -444,10 +444,10 @@
         }
     }
 
-    .bk-sideslider-wrapper {
+    /deep/ .bk-sideslider-wrapper {
         top: 0;
         padding-bottom: 0;
-            .bk-sideslider-content {
+        .bk-sideslider-content {
             height: calc(100% - 50px);
         }
     }
