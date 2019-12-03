@@ -97,7 +97,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                     result.add(bkrepoFile.fullPath)
                 }
             }
-
         } else {
             val data = jfrogResourceApi.getAllFiles(buildId, pipelineId, buildId)
             LoggerService.addNormalLine("scan file($customFilePath) in repo...")
