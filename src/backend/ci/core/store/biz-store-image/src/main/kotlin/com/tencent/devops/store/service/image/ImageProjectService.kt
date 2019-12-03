@@ -1,6 +1,5 @@
 package com.tencent.devops.store.service.image
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -9,8 +8,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
@@ -95,15 +92,15 @@ class ImageProjectService @Autowired constructor(
         userId: String,
         projectCode: String
     ) {
-        val result =
-            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                accessToken = accessToken,
-                projectCode = projectCode,
-                userId = userId
-            )
-        if (result.isNotOk()) {
-            throw ErrorCodeException(StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID, null)
-        }
+//        val result =
+//            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+//                accessToken = accessToken,
+//                projectCode = projectCode,
+//                userId = userId
+//            )
+//        if (result.isNotOk()) {
+//            throw ErrorCodeException(StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID, null)
+//        }
     }
 
     /**
@@ -939,8 +936,9 @@ class ImageProjectService @Autowired constructor(
         val rdType = ImageRDTypeEnum.getImageRDType((it.get(KEY_IMAGE_RD_TYPE) as Byte).toInt())
 
         // 单独查询agentTypeScope
-        val agentTypeScopeStr = it.get(KEY_IMAGE_AGENT_TYPE_SCOPE) as String
-        val agentTypeScope = agentTypeScopeStr.split(",").map { ImageAgentTypeEnum.getImageAgentType(it)!! }.toList()
+        val agentTypeScopeStr = it.get(KEY_IMAGE_AGENT_TYPE_SCOPE) as String?
+        val agentTypeScope = agentTypeScopeStr?.split(",")?.map { ImageAgentTypeEnum.getImageAgentType(it)!! }?.toList()
+            ?: emptyList()
 
         val logoUrl = it.get(KEY_IMAGE_LOGO_URL) as String?
         val icon = it.get(KEY_IMAGE_ICON) as String?
