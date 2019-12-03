@@ -24,69 +24,65 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.service.ProjectService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
-interface ProjectService {
+@RestResource
+class UserProjectResourceImpl @Autowired constructor(
+    private val projectService: ProjectService
+) : UserProjectResource {
 
-    /**
-     * 校验项目名称/英文名称是否合法
-     */
-    fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null)
+    override fun list(userId: String): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId))
+    }
 
-    /**
-     * 创建项目信息
-     */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
+        // 创建项目
+        projectService.create(userId, projectCreateInfo)
 
-    /**
-     * 根据项目ID/英文ID获取项目信息对象
-     * @param englishName projectCode 英文ID
-     * @return ProjectVO 如果没有则为null
-     */
-    fun getByEnglishName(englishName: String): ProjectVO?
+        return Result(true)
+    }
 
-    /**
-     * 修改项目信息
-     */
-    fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean
+    override fun update(
+        userId: String,
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo
+    ): Result<Boolean> {
+        return Result(projectService.update(userId, projectId, projectUpdateInfo))
+    }
 
-        /**
-     * 更新Logo
-     */
-    fun updateLogo(
+    override fun updateLogo(
         userId: String,
         projectId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean>
+    ): Result<Boolean> {
+        return projectService.updateLogo(userId, projectId, inputStream, disposition)
+    }
 
-    /**
-     * 获取所有项目信息
-     */
-    fun list(userId: String): List<ProjectVO>
+    override fun validate(
+        userId: String,
+        validateType: ProjectValidateType,
+        name: String,
+        projectId: String?
+    ): Result<Boolean> {
+        projectService.validate(validateType, name, projectId)
+        return Result(true)
+    }
 
-    fun list(projectCodes: Set<String>): List<ProjectVO>
-
-    fun list(projectCodes: List<String>): List<ProjectVO>
-
-    fun getAllProject(): List<ProjectVO>
-
-    /**
-     * 获取用户已的可访问项目列表=
-     */
-    fun getProjectByUser(userName: String): List<ProjectVO>
-
-    fun getNameByCode(projectCodes: String): HashMap<String, String>
-
-    fun grayProjectSet(): Set<String>
-
-    fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+    override fun get(projectId: String): Result<ProjectVO> {
+        return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
+    }
 }

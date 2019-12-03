@@ -24,10 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project-sample")
-    compile project(":core:common:common-auth:common-auth-sample")
-}
+package com.tencent.devops.project.resources
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.user.UserProjectUserResource
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.UserCacheService
+import com.tencent.devops.project.service.UserService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserProjectUserResourceImpl @Autowired constructor(
+    private val userService: UserService,
+    private val userCacheService: UserCacheService
+) : UserProjectUserResource {
+
+    override fun get(userId: String): Result<ProjectUser> {
+
+        val staff = userService.getStaffInfo(userId)
+        return Result(
+            ProjectUser(
+                chineseName = staff.chineseName,
+                avatarUrl = "",
+                username = staff.username
+            )
+        )
+    }
+
+    override fun getDetail(userId: String): Result<UserDeptDetail> {
+        return Result(userCacheService.getDetailFromCache(userId))
+    }
+}
