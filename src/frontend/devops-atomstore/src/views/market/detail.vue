@@ -96,7 +96,7 @@
                         res = bkLocale.$t('流水线模板')
                         break
                     case 'image':
-                        res = bkLocale.$t('镜像')
+                        res = bkLocale.$t('容器镜像')
                         break
                     default:
                         res = bkLocale.$t('流水线插件')
