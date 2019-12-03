@@ -23,6 +23,7 @@
                             :id="option.categoryCode"
                             :name="option.categoryName"
                             :placeholder="$t('请选择范畴')"
+                            @click.native="changeShowAgentType(option)"
                         >
                         </bk-option>
                     </bk-select>
@@ -41,7 +42,7 @@
                 <bk-form-item :label="$t('标签')" property="labelIdList">
                     <bk-tag-input v-model="form.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('请选择标签')"></bk-tag-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('适用机器')" property="agentTypeScope" :required="true" :rules="[requireRule]" ref="agentTypeScope">
+                <bk-form-item :label="$t('适用机器')" property="agentTypeScope" :required="true" :rules="[requireRule]" ref="agentTypeScope" v-if="needAgentType">
                     <bk-select v-model="form.agentTypeScope" searchable multiple show-select-all>
                         <bk-option v-for="(option, index) in agentTypes"
                             :key="index"
@@ -58,6 +59,7 @@
                 <bk-form-item :label="$t('描述')" property="description">
                     <mavon-editor class="image-remark-input"
                         ref="mdHook"
+                        preview-background="#fff"
                         v-model="form.description"
                         :toolbars="toolbars"
                         :external-link="false"
@@ -203,6 +205,7 @@
                 imageVersionList: [],
                 isLoading: false,
                 isLoadingTag: false,
+                needAgentType: false,
                 originVersion: '',
                 requireRule: {
                     required: true,
@@ -261,6 +264,11 @@
                 'requestReleaseImage'
             ]),
 
+            changeShowAgentType (option) {
+                const settings = option.settings || {}
+                this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
+            },
+
             submitImage () {
                 this.$refs.imageForm.validate().then(() => {
                     if (!this.form.logoUrl) {
@@ -278,7 +286,7 @@
                 }).catch((validate) => {
                     const field = validate.field
                     const label = this.$refs[field].label
-                    this.$bkMessage({ message: `${label + this.$t('是必填项，请填写以后重试')}`, theme: 'error' })
+                    this.$bkMessage({ message: `${label + this.$t('输入不正确，请确认修改后再试')}`, theme: 'error' })
                 })
             },
 
@@ -309,7 +317,7 @@
                 this.isLoading = true
                 this.requestImageDetail(imageId).then((res) => {
                     Object.assign(this.form, res)
-                    this.form.imageTag = ''
+                    if (res.imageStatus === 'RELEASED') this.form.imageTag = ''
                     this.form.description = this.form.description || this.$t('### 功能简介\n\n### 如何使用\n\n### 注意事项\n\n### License')
                     this.originVersion = res.version
                     this.form.labelIdList = res.labelList.map(x => x.id)
@@ -430,6 +438,7 @@
         margin: 20px auto;
         position: relative;
         .image-remark-input {
+            border: 1px solid #c4c6cc;
             height: 263px;
             &.fullscreen {
                 height: auto;

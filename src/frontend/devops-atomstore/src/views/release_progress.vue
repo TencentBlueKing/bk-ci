@@ -20,7 +20,7 @@
             </div>
             <div class="sub_header_right">
                 <a class="develop-guide-link" target="_blank"
-                    :href="docsLink">插件指引</a>
+                    :href="docsLink"> {{ $t('插件指引') }} </a>
             </div>
         </div>
         <div class="release-progress-content" v-show="showContent">
@@ -52,7 +52,7 @@
                                         <a target="_blank" :href="`/console/pipeline/${versionDetail.projectCode}/list`"> {{ $t('测试') }} </a>
                                     </span>
                                 </div>
-                                <bk-button class="pass-btn"
+                                <bk-button :class="[{ 'small-left': progressStatus.length === 6 }, 'pass-btn']"
                                     theme="primary"
                                     size="small"
                                     v-if="entry.code === 'test'"
@@ -693,6 +693,9 @@
                 left: 100px;
                 padding: 0 10px;
                 font-weight: normal;
+                &.small-left {
+                    left: 80px;
+                }
             }
         }
         .version-detail-title {
