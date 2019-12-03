@@ -53,7 +53,7 @@ object ProjectUtils {
                 DateTimeUtil.toDateTime(tProjectRecord.updatedAt, "yyyy-MM-dd")
             },
             useBk = tProjectRecord.useBk,
-            enabled = tProjectRecord.enabled,
+            enabled = tProjectRecord.enabled ?: true,
             gray = grayProjectSet.contains(tProjectRecord.englishName),
             hybridCcAppId = tProjectRecord.hybridCcAppId,
             enableExternal = tProjectRecord.enableExternal
