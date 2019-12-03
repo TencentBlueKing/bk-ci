@@ -54,6 +54,7 @@ include ":core:common:common-util"
 
 include ":core:project"
 include ":core:project:api-project"
+include ":core:project:api-project-sample"
 include ":core:project:biz-project"
 include ":core:project:biz-project-sample"
 include ":core:project:boot-project"
