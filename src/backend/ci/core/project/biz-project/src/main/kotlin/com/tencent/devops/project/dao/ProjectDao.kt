@@ -200,6 +200,65 @@ class ProjectDao {
     }
 
     /**
+     * 根据组织架构来查询name
+     */
+    fun listByGroupId(
+        dslContext: DSLContext,
+        bgId: Long?,
+        deptId: Long?,
+        centerId: Long?
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (bgId != null) {
+                conditions.add(
+                    BG_ID.eq(bgId)
+                )
+            }
+            if (deptId != null) {
+                conditions.add(
+                    DEPT_ID.eq(deptId)
+                )
+            }
+            if (centerId != null) {
+                conditions.add(
+                    CENTER_ID.eq(centerId)
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    /**
+     * 根据deptId+centerName来查询
+     */
+    fun listByOrganization(
+        dslContext: DSLContext,
+        deptId: Long?,
+        centerName: String?
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            if (deptId != null) {
+                conditions.add(
+                    DEPT_ID.eq(deptId)
+                )
+            }
+            if (!centerName.isNullOrBlank()) {
+                conditions.add(
+                    CENTER_NAME.like(
+                        "%" + URLDecoder.decode(
+                            centerName,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+            }
+            return dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    /**
      * 根据bgId+deptName+centerName来查询
      */
     fun listByOrganization(
