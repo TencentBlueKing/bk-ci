@@ -38,6 +38,8 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -45,13 +47,16 @@ import org.springframework.context.annotation.Configuration
 class AtomConfig {
 
     @Bean
+    @ConditionalOnMissingBean(PipelineUrlBean::class)
     fun pipelineUrlBean(@Autowired commonConfig: CommonConfig) = DefaultPipelineUrlBeanImpl(commonConfig)
 
     @Bean
+    @ConditionalOnMissingBean(ManualReviewTaskAtom::class)
     fun manualReviewTaskAtom(@Autowired client: Client, @Autowired rabbitTemplate: RabbitTemplate, @Autowired pipelineUrlBean: PipelineUrlBean) =
         ManualReviewTaskAtom(client = client, rabbitTemplate = rabbitTemplate, pipelineUrlBean = pipelineUrlBean)
 
     @Bean
+    @ConditionalOnMissingBean(SubPipelineCallAtom::class)
     fun subPipelineCallAtom(
         @Autowired rabbitTemplate: RabbitTemplate,
         @Autowired pipelineRuntimeService: PipelineRuntimeService,
