@@ -30,7 +30,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -100,17 +100,17 @@ class PipelineBuildService @Autowired constructor(
         esService.build(data)
     }
 
-    fun onBuildElementFinish(event: PipelineBuildElementFinishBroadCastEvent) {
-        val task = buildTaskDao.getTask(dslContext, event.buildId, event.elementId)
+    fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
+        val task = buildTaskDao.getTask(dslContext, event.buildId, event.taskId)
         if (task == null) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.elementId}] Fail to get the build task")
+            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task")
             return
         }
         val data = ElementData(
             projectId = event.projectId,
             pipelineId = event.pipelineId,
             buildId = event.buildId,
-            elementId = event.elementId,
+            elementId = event.taskId,
             elementName = task.taskName ?: "",
             status = BuildStatus.values()[task.status ?: 0].name,
             beginTime = task.startTime?.timestampmilli() ?: 0,

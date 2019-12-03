@@ -206,9 +206,9 @@ class OpImageDao @Autowired constructor() {
         }
         if (null != sortType) {
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(DSL.field(sortType.sortType).desc())
+                baseStep.where(conditions).orderBy(DSL.field(sortType.name).desc())
             } else {
-                baseStep.where(conditions).orderBy(DSL.field(sortType.sortType).asc())
+                baseStep.where(conditions).orderBy(DSL.field(sortType.name).asc())
             }
         } else {
             baseStep.where(conditions)

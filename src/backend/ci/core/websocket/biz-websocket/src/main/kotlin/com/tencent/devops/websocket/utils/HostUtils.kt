@@ -23,23 +23,54 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildElementFinishBroadCastEvent
-import com.tencent.devops.lambda.service.PipelineBuildService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+package com.tencent.devops.websocket.utils
 
-@Component
-class BuildElementFinishListener @Autowired constructor(
-    private val pipelineBuildService: PipelineBuildService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildElementFinishBroadCastEvent>(pipelineEventDispatcher) {
+import org.slf4j.LoggerFactory
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.URL
 
-    override fun run(event: PipelineBuildElementFinishBroadCastEvent) {
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
-        pipelineBuildService.onBuildElementFinish(event)
+object HostUtils {
+
+    fun getHostIp(gateway: String?): String {
+        try {
+            val localHost = InetAddress.getLocalHost()
+            return if (localHost.isLoopbackAddress) {
+                getFromUDP(gateway) ?: DEFAULT_IP
+            } else {
+                localHost.hostAddress
+            }
+        } catch (e: Throwable) {
+            logger.warn("Fail to get local host ip", e)
+            try {
+                return getFromUDP(gateway) ?: DEFAULT_IP
+            } catch (t: Throwable) {
+                logger.warn("Fail to use socket to get the localhost host")
+            }
+        }
+        return "127.0.0.1"
     }
+
+    private fun getFromUDP(gateway: String?): String? {
+        if (gateway.isNullOrBlank()) {
+            return null
+        }
+
+        val gatewayHost = try {
+            val url = URL(gateway)
+            url.host
+        } catch (t: Throwable) {
+            logger.warn("Fail to get the gateway host", t)
+            return null
+        }
+
+        DatagramSocket().use { socket ->
+            socket.connect(InetAddress.getByName(gatewayHost), 10002)
+            return socket.localAddress.hostAddress
+        }
+    }
+
+    private const val DEFAULT_IP = "127.0.0.1"
+    private val logger = LoggerFactory.getLogger(javaClass)
 }

@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -47,6 +48,7 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
@@ -63,5 +65,6 @@ class MQPipelineUpdateListener @Autowired constructor(
         val pipelineId = event.pipelineId
         pipelineGroupService.updatePipelineLabel(event.userId, pipelineId, model.labels)
         pipelineUserService.update(pipelineId, event.userId)
+        callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
     }
 }
