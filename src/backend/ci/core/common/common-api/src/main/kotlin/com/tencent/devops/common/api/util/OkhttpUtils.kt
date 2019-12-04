@@ -52,6 +52,8 @@ object OkhttpUtils {
 
     private val logger = LoggerFactory.getLogger(OkhttpUtils::class.java)
 
+    val jsonMediaType = MediaType.parse("application/json")
+
     private val octetStream = MediaType.parse("application/octet-stream")
 
     private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
