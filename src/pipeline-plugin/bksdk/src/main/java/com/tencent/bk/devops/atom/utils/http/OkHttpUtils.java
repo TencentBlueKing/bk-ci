@@ -4,7 +4,15 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -29,12 +37,43 @@ public class OkHttpUtils {
             finalWriteTimeout = writeTimeout;
         if (readTimeout > 0)
             finalReadTimeout = readTimeout;
+        builder.sslSocketFactory(sslSocketFactory(), trustAllCerts[0]);
         builder.writeTimeout(finalConnectTimeout, TimeUnit.SECONDS);
         builder.writeTimeout(finalWriteTimeout, TimeUnit.SECONDS);
         builder.readTimeout(finalReadTimeout, TimeUnit.SECONDS);
         return builder.build();
     }
 
+    private static X509TrustManager[] trustAllCerts = new X509TrustManager[1];
+
+    static {
+        trustAllCerts[0] = new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+        };
+    }
+
+    private static SSLSocketFactory sslSocketFactory() {
+        try {
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new SecureRandom());
+            return sslContext.getSocketFactory();
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+        throw new RuntimeException("fail to create sslSocketFactory");
+    }
 
     private static Request.Builder getBuilder(String url, Map<String, String> headers) {
         Request.Builder builder = new Request.Builder();
