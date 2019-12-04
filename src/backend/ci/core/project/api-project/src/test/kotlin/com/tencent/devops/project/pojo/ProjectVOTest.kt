@@ -71,6 +71,8 @@ class ProjectVOTest {
             enabled = true,
             enableExternal = true,
             hybridCcAppId = 0,
+            hybrid_cc_app_id = 0,
+            project_id = "job",
             project_code = "job",
             project_name = "定时任务",
             cc_app_id = 123,
