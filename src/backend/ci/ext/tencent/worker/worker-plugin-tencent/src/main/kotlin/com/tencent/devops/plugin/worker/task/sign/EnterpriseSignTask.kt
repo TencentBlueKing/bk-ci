@@ -3,6 +3,7 @@ package com.tencent.devops.plugin.worker.task.sign
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_IPA_SIGN_STATUS
+import com.tencent.devops.common.pipeline.element.IosEnterpriseSignElement
 import com.tencent.devops.plugin.worker.api.sgin.IOSSignApi
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -11,6 +12,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
+import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.IosUtils
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -21,6 +23,7 @@ import java.io.File
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
+@TaskClassType(classTypes = [IosEnterpriseSignElement.classType])
 class EnterpriseSignTask : ITask() {
 
     companion object {
