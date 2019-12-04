@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
@@ -70,6 +71,8 @@ class BuildArchiveGetTask : ITask() {
 
             logger.info("[$buildId]|pipelineId=$pipelineId|srcPath=$srcPath")
             val fileList = archiveGetResourceApi.getFileDownloadUrls(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables.projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 fileType = FileTypeEnum.BK_ARCHIVE,
@@ -86,10 +89,12 @@ class BuildArchiveGetTask : ITask() {
                 }
                 LoggerService.addNormalLine("find the file($fileUrl) in repo!")
                 archiveGetResourceApi.downloadPipelineFile(
-                    pipelineId,
-                    buildId,
-                    fileUrl,
-                    file
+                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                    projectId = buildVariables.projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    uri = fileUrl,
+                    destPath = file
                 )
                 count++
             }

@@ -57,7 +57,6 @@ class ReportArchiveTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("the buildTask is:$buildTask,buildVariables is:$buildVariables,workspace is:${workspace.absolutePath}")
         val taskParams = buildTask.params ?: mapOf()
-        buildTask.buildId
         val elementId = taskParams["id"] ?: taskParams["elementId"]
         ?: throw ParamBlankException("param [elementId] is empty")
         val reportNameParam = taskParams["reportName"] ?: throw ParamBlankException("param [reportName] is empty")

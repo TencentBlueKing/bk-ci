@@ -23,14 +23,37 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
 
-@MicroService
-@ComponentScan("com.tencent.devops.notify")
-class Application
+package com.tencent.devops.project.resources
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.user.UserProjectUserResource
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.UserCacheService
+import com.tencent.devops.project.service.UserService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserProjectUserResourceImpl @Autowired constructor(
+    private val userService: UserService,
+    private val userCacheService: UserCacheService
+) : UserProjectUserResource {
+
+    override fun get(userId: String): Result<ProjectUser> {
+
+        val staff = userService.getStaffInfo(userId)
+        return Result(
+            ProjectUser(
+                chineseName = staff.chineseName,
+                avatarUrl = "",
+                username = staff.username
+            )
+        )
+    }
+
+    override fun getDetail(userId: String): Result<UserDeptDetail> {
+        return Result(userCacheService.getDetailFromCache(userId))
+    }
 }
