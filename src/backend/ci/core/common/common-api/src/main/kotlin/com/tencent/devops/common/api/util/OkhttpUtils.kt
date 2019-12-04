@@ -27,6 +27,7 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -34,6 +35,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
+import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
@@ -45,6 +47,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import javax.servlet.http.HttpServletResponse
 
 @SuppressWarnings("ALL")
 object OkhttpUtils {
@@ -155,11 +158,12 @@ object OkhttpUtils {
         return doHttp(request)
     }
 
-    fun downloadFile(url: String, destPath: File) {
-        val request = Request.Builder()
-            .url(url)
-            .get()
-            .build()
+    fun downloadFile(url: String, destPath: File, headers: Map<String, String>? = null) {
+        val request = if (headers == null) {
+            Request.Builder().url(url).get().build()
+        } else {
+            Request.Builder().url(url).headers(Headers.of(headers)).get().build()
+        }
         longHttpClient.newCall(request).execute().use { response ->
             if (response.code() == 404) {
                 logger.warn("The file $url is not exist")
@@ -203,6 +207,36 @@ object OkhttpUtils {
                 }
             }
         }
+    }
+
+    fun downloadFile(url: String, response: HttpServletResponse) {
+        logger.info("downloadFile url is:$url")
+        val httpResponse = getFileHttpResponse(url)
+        FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
+    }
+
+    fun downloadFile(url: String): javax.ws.rs.core.Response {
+        val httpResponse = getFileHttpResponse(url)
+        val fileName: String?
+        try {
+            fileName = URLEncoder.encode(File(url).name, "UTF-8")
+        } catch (e: UnsupportedEncodingException) {
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build()
+        }
+        return javax.ws.rs.core.Response
+            .ok(httpResponse.body()!!.byteStream(), javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("Content-disposition", "attachment;filename=" + fileName!!)
+            .header("Cache-Control", "no-cache").build()
+    }
+
+    private fun getFileHttpResponse(url: String): Response {
+        val request = Request.Builder().url(url).get().build()
+        val httpResponse = doLongHttp(request)
+        if (!httpResponse.isSuccessful) {
+            logger.error("FAIL|Download file from $url| message=${httpResponse.message()}| code=${httpResponse.code()}")
+            throw RemoteServiceException(httpResponse.message())
+        }
+        return httpResponse
     }
 
     private fun sslSocketFactory(): SSLSocketFactory {
