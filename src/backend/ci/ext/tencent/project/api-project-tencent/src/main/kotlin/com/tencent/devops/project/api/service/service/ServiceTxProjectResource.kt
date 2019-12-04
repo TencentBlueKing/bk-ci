@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_DEPT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -245,4 +246,15 @@ interface ServiceTxProjectResource {
         @PathParam("userId")
         userId: String
     ): Result<ProjectVO>
+
+    @POST
+    @Path("/addManager")
+    @ApiOperation(" 为项目添加管理员")
+    fun addManagerForProject(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("管理员", required = true)
+        addManagerRequest: AddManagerRequest
+    ): Result<Boolean>
 }
