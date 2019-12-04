@@ -35,6 +35,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
+import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
@@ -46,11 +47,14 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import javax.servlet.http.HttpServletResponse
 
 @SuppressWarnings("ALL")
 object OkhttpUtils {
 
     private val logger = LoggerFactory.getLogger(OkhttpUtils::class.java)
+
+    val jsonMediaType = MediaType.parse("application/json")
 
     private val octetStream = MediaType.parse("application/octet-stream")
 
@@ -203,6 +207,36 @@ object OkhttpUtils {
                 }
             }
         }
+    }
+
+    fun downloadFile(url: String, response: HttpServletResponse) {
+        logger.info("downloadFile url is:$url")
+        val httpResponse = getFileHttpResponse(url)
+        FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
+    }
+
+    fun downloadFile(url: String): javax.ws.rs.core.Response {
+        val httpResponse = getFileHttpResponse(url)
+        val fileName: String?
+        try {
+            fileName = URLEncoder.encode(File(url).name, "UTF-8")
+        } catch (e: UnsupportedEncodingException) {
+            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build()
+        }
+        return javax.ws.rs.core.Response
+            .ok(httpResponse.body()!!.byteStream(), javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("Content-disposition", "attachment;filename=" + fileName!!)
+            .header("Cache-Control", "no-cache").build()
+    }
+
+    private fun getFileHttpResponse(url: String): Response {
+        val request = Request.Builder().url(url).get().build()
+        val httpResponse = doLongHttp(request)
+        if (!httpResponse.isSuccessful) {
+            logger.error("FAIL|Download file from $url| message=${httpResponse.message()}| code=${httpResponse.code()}")
+            throw RemoteServiceException(httpResponse.message())
+        }
+        return httpResponse
     }
 
     private fun sslSocketFactory(): SSLSocketFactory {
