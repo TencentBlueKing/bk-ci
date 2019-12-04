@@ -38,8 +38,9 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.JFrogFileInfo
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.BkAuthPermissionApi
+import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -52,11 +53,11 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class PipelineService @Autowired constructor(
-    private val authPermissionApi: AuthPermissionApi,
+    private val bkAuthPermissionApi: BkAuthPermissionApi,
     private val jFrogPropertiesApi: JFrogPropertiesApi,
     private val jFrogService: JFrogService,
     private val client: Client,
-    private val serviceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: BkPipelineAuthServiceCode
 ) {
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
 
@@ -433,9 +434,9 @@ class PipelineService @Autowired constructor(
         pipelineId: String,
         bkAuthPermission: AuthPermission
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        return bkAuthPermissionApi.validateUserResourcePermission(
             user = user,
-            serviceCode = serviceCode,
+            serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
             permission = bkAuthPermission
@@ -445,9 +446,9 @@ class PipelineService @Autowired constructor(
     fun filterPipeline(user: String, projectId: String, bkAuthPermission: AuthPermission): List<String> {
         val startTimestamp = System.currentTimeMillis()
         try {
-            return authPermissionApi.getUserResourceByPermission(
+            return bkAuthPermissionApi.getUserResourceByPermission(
                 user = user,
-                serviceCode = serviceCode,
+                serviceCode = pipelineAuthServiceCode,
                 resourceType = resourceType,
                 projectCode = projectId,
                 permission = bkAuthPermission,
