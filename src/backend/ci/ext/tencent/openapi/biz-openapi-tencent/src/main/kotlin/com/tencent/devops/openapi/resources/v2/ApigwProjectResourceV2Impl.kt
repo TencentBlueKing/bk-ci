@@ -42,8 +42,9 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     private val apigwProjectService: ApigwProjectService
 ) : ApigwProjectResourceV2 {
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        return client.get(ServiceTxProjectResource::class).create(userId, projectCreateInfo)
+    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+        logger.info("v2/projects/newProject:create:Input($userId,$accessToken,$projectCreateInfo)")
+        return client.get(ServiceTxProjectResource::class).create(userId, accessToken, projectCreateInfo)
     }
 
     override fun getProjectByOrganizationId(

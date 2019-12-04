@@ -136,8 +136,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     // TODO
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        return Result(projectLocalService.create(userId, "", projectCreateInfo))
+    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+        return Result(projectLocalService.create(userId, accessToken, projectCreateInfo))
     }
 
     override fun verifyUserProjectPermission(

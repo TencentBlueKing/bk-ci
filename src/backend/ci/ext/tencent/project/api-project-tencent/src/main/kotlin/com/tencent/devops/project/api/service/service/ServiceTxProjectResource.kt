@@ -197,6 +197,9 @@ interface ServiceTxProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @ApiParam("PAAS_CC Token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
         @ApiParam(value = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<String>
