@@ -30,7 +30,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.ApigwProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
@@ -38,10 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwProjectResourceImpl @Autowired constructor(private val client: Client) : ApigwProjectResource {
-
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        return client.get(ServiceTxProjectResource::class).create(userId, projectCreateInfo)
-    }
 
     override fun getProjectByGroup(
         userId: String,
