@@ -24,36 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task
+package com.tencent.devops.plugin.worker.task.scm
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.plugin.worker.task.scm.SCM
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.task.ITask
-import org.slf4j.LoggerFactory
-import java.io.File
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
+import com.tencent.devops.worker.common.task.TaskClassType
 
-abstract class CodePullTask constructor(private val scmType: ScmType) : ITask() {
-
-    override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        val taskParams = buildTask.params ?: mapOf()
-        logger.info("[${buildVariables.buildId}]| Start to pull the code: $taskParams")
-
-        val env = SCM.getPullCodeSetting(
-            scmType = scmType,
-            pipelineId = buildVariables.pipelineId,
-            buildId = buildVariables.buildId,
-            workspace = workspace,
-            taskParams = taskParams,
-            variables = buildVariables.variables
-        ).pullCode()
-        if (env != null) {
-            addEnv(env)
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CodePullTask::class.java)
-    }
-}
+@TaskClassType(classTypes = [CodeGitlabElement.classType])
+class CodeGitlabPullTask : CodePullTask(ScmType.CODE_GITLAB)
