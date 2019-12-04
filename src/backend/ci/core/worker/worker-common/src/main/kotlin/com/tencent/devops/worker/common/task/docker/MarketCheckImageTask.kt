@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.process.pojo.AtomErrorCode
@@ -43,12 +44,14 @@ import com.tencent.devops.worker.common.api.docker.DockerSDKApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
+import com.tencent.devops.worker.common.task.TaskClassType
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.io.File
 
+@TaskClassType(classTypes = [MarketCheckImageElement.classType])
 class MarketCheckImageTask : ITask() {
 
     private val logger = LoggerFactory.getLogger(MarketCheckImageTask::class.java)
