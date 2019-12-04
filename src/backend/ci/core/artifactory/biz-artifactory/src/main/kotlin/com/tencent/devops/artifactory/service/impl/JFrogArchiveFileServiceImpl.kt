@@ -26,14 +26,15 @@
 
 package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.artifactory.client.JfrogService
+import com.tencent.devops.artifactory.client.JFrogServiceClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
-import com.tencent.devops.artifactory.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -62,7 +63,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
     lateinit var jFrogService: JFrogService
 
     @Autowired
-    lateinit var jFrogServiceClient: JfrogService
+    lateinit var jFrogServiceClient: JFrogServiceClient
 
     override fun uploadFileToRepo(destPath: String, file: File) {
         jFrogService.deploy(destPath, file.inputStream())

@@ -1,6 +1,6 @@
 package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -80,8 +80,8 @@ class ArtifactoryPipelineDirService @Autowired constructor(
             val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
             jFrogPropertiesMap[ARCHIVE_PROPS_PIPELINE_NAME] = pipelineName
         }
-
-        return if (jFrogFileInfo.checksums == null) {
+        val checksums = jFrogFileInfo.checksums
+        return if (checksums == null) {
             FileDetail(
                 pipelineService.getDirectoryName(projectId, path),
                 path,
@@ -103,9 +103,9 @@ class ArtifactoryPipelineDirService @Autowired constructor(
                 LocalDateTime.parse(jFrogFileInfo.created, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 LocalDateTime.parse(jFrogFileInfo.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 FileChecksums(
-                    jFrogFileInfo.checksums.sha256,
-                    jFrogFileInfo.checksums.sha1,
-                    jFrogFileInfo.checksums.md5
+                    checksums.sha256,
+                    checksums.sha1,
+                    checksums.md5
                 ),
                 jFrogPropertiesMap
             )

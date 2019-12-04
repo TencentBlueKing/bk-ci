@@ -27,7 +27,7 @@
 package com.tencent.devops.artifactory.client
 
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -37,10 +37,10 @@ import org.springframework.beans.factory.annotation.Value
 import java.io.File
 import java.nio.file.Paths
 
-class JfrogService {
+class JFrogServiceClient {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(JfrogService::class.java)
+        private val logger = LoggerFactory.getLogger(JFrogServiceClient::class.java)
     }
 
     @Value("\${devopsGateway.api:#{null}}")
