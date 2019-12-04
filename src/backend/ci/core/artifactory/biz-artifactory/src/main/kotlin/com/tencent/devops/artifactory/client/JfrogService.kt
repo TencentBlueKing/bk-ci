@@ -24,11 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.client
+package com.tencent.devops.artifactory.client
 
 import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody

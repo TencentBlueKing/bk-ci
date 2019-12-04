@@ -24,14 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.pojo
+package com.tencent.devops.artifactory.pojo
 
-import com.tencent.devops.common.archive.api.pojo.CheckSums
-
-data class JFrogFileDetail(
-    val path: String,
+data class JFrogFileInfo(
+    val uri: String,
     val size: Long,
-    val created: String,
     val lastModified: String,
-    val checksums: CheckSums?
+    val folder: Boolean
 )

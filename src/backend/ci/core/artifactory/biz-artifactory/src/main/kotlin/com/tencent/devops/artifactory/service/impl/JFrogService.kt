@@ -24,13 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.service.pojo.JFrogFileDetail
-import com.tencent.devops.artifactory.service.pojo.JFrogFileInfo
-import com.tencent.devops.artifactory.service.pojo.JFrogFileInfoList
+import com.tencent.devops.artifactory.pojo.JFrogFileDetail
+import com.tencent.devops.artifactory.pojo.JFrogFileInfo
+import com.tencent.devops.artifactory.pojo.JFrogFileInfoList
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.Credentials
 import okhttp3.MediaType

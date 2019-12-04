@@ -24,10 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.api.pojo
+package com.tencent.devops.artifactory.pojo
 
-data class CheckSums(
-    val sha256: String?,
-    val sha1: String,
-    val md5: String
+data class ArtifactorySearchParam(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val regexPath: String,
+    val custom: Boolean,
+    val executeCount: Int = 1, // 打印日志用到
+    val elementId: String = "", // 打印日志用到
+    val containerId: String = "" // 打印日志用到
 )

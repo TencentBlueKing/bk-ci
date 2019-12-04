@@ -35,7 +35,7 @@ import com.tencent.devops.artifactory.service.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.ArtifactoryService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.client.JfrogService
+import com.tencent.devops.artifactory.client.JfrogService
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
