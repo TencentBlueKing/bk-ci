@@ -28,6 +28,7 @@ class IOSSignApi : AbstractBuildResourceApi() {
         val request = buildPost(path, requestBody)
         val timeout = (1 + file.length() / 1024 / 1024 / 1024) * 14 // 每G给14分钟，再增加14分钟做签名。
         val response = request(request, "企业签名失败", 100, timeout * 60, timeout * 60)
+        LoggerService.addRedLine("response:$response")
         if (response.trim() != "success") {
             LoggerService.addRedLine("Enterprise sign ($file) fail in domain:$gatewayDomain")
             throw RuntimeException("Enterprise sign ($file) fail in domain:$gatewayDomain")
