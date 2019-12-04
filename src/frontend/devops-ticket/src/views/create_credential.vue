@@ -389,6 +389,11 @@
     .credential-setting {
         width: 100%;
         max-width: initial;
+        
+        .text-link {
+            color: $primaryColor;
+        }
+
         .bk-form-wrapper {
             max-width: 750px;
         }

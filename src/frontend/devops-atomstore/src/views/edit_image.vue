@@ -232,13 +232,13 @@
                             this.form.version = '1.0.0'
                             break
                         case 'INCOMPATIBILITY_UPGRADE':
-                            this.form.version = this.originVersion.replace(/(.)\.(.)\.(.)/, (a, b, c, d) => (`${+b + 1}.0.0`))
+                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${+b + 1}.0.0`))
                             break
                         case 'COMPATIBILITY_UPGRADE':
-                            this.form.version = this.originVersion.replace(/(.)\.(.)\.(.)/, (a, b, c, d) => (`${b}.${+c + 1}.0`))
+                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${b}.${+c + 1}.0`))
                             break
                         case 'COMPATIBILITY_FIX':
-                            this.form.version = this.originVersion.replace(/(.)\.(.)\.(.)/, (a, b, c, d) => (`${b}.${c}.${+d + 1}`))
+                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${b}.${c}.${+d + 1}`))
                             break
                         default:
                             break
