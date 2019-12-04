@@ -89,33 +89,28 @@ class RepositoryDao {
 
     fun countByProject(
         dslContext: DSLContext,
-        projectId: String,
+        projectIds: Collection<String>,
         repositoryType: ScmType?,
         aliasName: String?,
-        repositoryIds: Set<Long>
+        repositoryIds: Set<Long>?
     ): Long {
         with(TRepository.T_REPOSITORY) {
+            val step = dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.`in`(projectIds))
+                .and(IS_DELETED.eq(false))
+            if (repositoryIds != null) {
+                step.and(REPOSITORY_ID.`in`(repositoryIds))
+            }
+            if (!aliasName.isNullOrBlank()) {
+                step.and(ALIAS_NAME.like("%$aliasName%"))
+            }
             return when (repositoryType) {
                 null -> {
-                    val step = dslContext.selectCount()
-                        .from(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(IS_DELETED.eq(false))
-                        .and(REPOSITORY_ID.`in`(repositoryIds))
-                    if (!aliasName.isNullOrBlank()) {
-                        step.and(ALIAS_NAME.like("%$aliasName%"))
-                    }
                     step.fetchOne(0, Long::class.java)
                 }
                 else -> {
-                    val step = dslContext.selectCount()
-                        .from(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(TYPE.eq(repositoryType.name))
-                        .and(IS_DELETED.eq(false))
-                    if (!aliasName.isNullOrBlank()) {
-                        step.and(ALIAS_NAME.like("%$aliasName%"))
-                    }
+                    step.and(TYPE.eq(repositoryType.name))
                     step.fetchOne(0, Long::class.java)
                 }
             }
@@ -190,18 +185,18 @@ class RepositoryDao {
 
     fun listByProject(
         dslContext: DSLContext,
-        projectId: String,
+        projectIds: Collection<String>,
         repositoryType: ScmType?,
-        repositoryIds: Set<Long>,
+        repositoryIds: Set<Long>?,
         offset: Int,
         limit: Int
     ): Result<TRepositoryRecord> {
         return with(TRepository.T_REPOSITORY) {
             val query = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.`in`(projectIds))
                 .and(IS_DELETED.eq(false))
 
-            if (repositoryIds.isNotEmpty()) {
+            if (repositoryIds != null && repositoryIds.isNotEmpty()) {
                 query.and(REPOSITORY_ID.`in`(repositoryIds))
             }
             if (repositoryType != null) {
@@ -219,41 +214,34 @@ class RepositoryDao {
         projectId: String,
         repositoryType: ScmType?,
         aliasName: String?,
-        repositoryIds: Set<Long>,
+        repositoryIds: Set<Long>?,
         offset: Int,
         limit: Int
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
-            return when (repositoryType) {
-                null -> {
-                    val step = dslContext.selectFrom(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(IS_DELETED.eq(false))
-                        .and(REPOSITORY_ID.`in`(repositoryIds))
+            val step = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_DELETED.eq(false))
+            if (repositoryIds != null) {
+                step.and(REPOSITORY_ID.`in`(repositoryIds))
+            }
 
-                    if (!aliasName.isNullOrBlank()) {
-                        step.and(ALIAS_NAME.like("%$aliasName%"))
-                    }
-                    step.orderBy(REPOSITORY_ID.desc())
-                        .offset(offset)
-                        .limit(limit)
-                        .fetch()
+            if (!aliasName.isNullOrBlank()) {
+                step.and(ALIAS_NAME.like("%$aliasName%"))
+            }
+
+            when (repositoryType) {
+                null -> {
                 }
                 else -> {
-                    val step = dslContext.selectFrom(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(TYPE.eq(repositoryType.name))
-                        .and(REPOSITORY_ID.`in`(repositoryIds))
-                        .and(IS_DELETED.eq(false))
-                    if (!aliasName.isNullOrBlank()) {
-                        step.and(ALIAS_NAME.like("%$aliasName%"))
-                    }
-                    step.orderBy(REPOSITORY_ID.desc())
-                        .offset(offset)
-                        .limit(limit)
-                        .fetch()
+                    step.and(TYPE.eq(repositoryType.name))
                 }
             }
+
+            return step.orderBy(REPOSITORY_ID.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch()
         }
     }
 
