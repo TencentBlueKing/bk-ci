@@ -58,7 +58,7 @@
                     </div>
 
                     <div class="quality-setting-tips" v-if="showSetRuleTips">
-                        <div>
+                        <div class="quality-setting-desc">
                             {{ $t('details.quality.canSet') }}
                             <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
                                 <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
@@ -680,6 +680,10 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 10px;
+        align-items: center;
+        .quality-setting-desc {
+            flex: 3;
+        }
         .quality-rule-link {
             // margin-left: -6px;
             color: $primaryColor;
@@ -688,11 +692,13 @@
         .refresh-btn {
             color: $primaryColor;
             cursor: pointer;
+            flex: 1;
         }
         .executing-job {
             position: relative;
             top: 2px;
             margin-right: 20px;
+            flex: 1;
             &:before {
                 display: inline-block;
                 animation: rotating infinite .6s linear;
