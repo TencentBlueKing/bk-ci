@@ -23,8 +23,7 @@ CREATE TABLE IF NOT EXISTS `T_ACTIVITY` (
 -- ----------------------------
 -- Table structure for T_MESSAGE_CODE_DETAIL
 -- ----------------------------
-DROP TABLE IF EXISTS `T_MESSAGE_CODE_DETAIL`;
-CREATE TABLE `T_MESSAGE_CODE_DETAIL` (
+CREATE TABLE IF NOT EXISTS `T_MESSAGE_CODE_DETAIL` (
   `ID` varchar(32) NOT NULL COMMENT '主键',
   `MESSAGE_CODE` varchar(128) NOT NULL COMMENT 'code码',
   `MODULE_CODE` char(2) NOT NULL COMMENT '模块代码',
@@ -39,8 +38,7 @@ CREATE TABLE `T_MESSAGE_CODE_DETAIL` (
 -- ----------------------------
 -- Table structure for T_USER
 -- ----------------------------
-DROP TABLE IF EXISTS `T_USER`;
-CREATE TABLE `T_USER` (
+CREATE TABLE IF NOT EXISTS `T_USER` (
   `USER_ID` varchar(64) NOT NULL,
   `NAME` varchar(64) NOT NULL,
   `BG_ID` int(11) NOT NULL,
@@ -59,8 +57,7 @@ CREATE TABLE `T_USER` (
 -- ----------------------------
 -- Table structure for T_USER_DAILY_FIRST_AND_LAST_LOGIN
 -- ----------------------------
-DROP TABLE IF EXISTS `T_USER_DAILY_FIRST_AND_LAST_LOGIN`;
-CREATE TABLE `T_USER_DAILY_FIRST_AND_LAST_LOGIN` (
+CREATE TABLE IF NOT EXISTS `T_USER_DAILY_FIRST_AND_LAST_LOGIN` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `USER_ID` varchar(64) NOT NULL,
   `DATE` date NOT NULL,
@@ -74,8 +71,7 @@ CREATE TABLE `T_USER_DAILY_FIRST_AND_LAST_LOGIN` (
 -- ----------------------------
 -- Table structure for T_USER_DAILY_LOGIN
 -- ----------------------------
-DROP TABLE IF EXISTS `T_USER_DAILY_LOGIN`;
-CREATE TABLE `T_USER_DAILY_LOGIN` (
+CREATE TABLE IF NOT EXISTS `T_USER_DAILY_LOGIN` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `USER_ID` varchar(64) NOT NULL,
   `DATE` date NOT NULL,
@@ -90,8 +86,7 @@ CREATE TABLE `T_USER_DAILY_LOGIN` (
 -- ----------------------------
 -- Table structure for T_FAVORITE
 -- ----------------------------
-DROP TABLE IF EXISTS `T_FAVORITE`;
-CREATE TABLE `T_FAVORITE` (
+CREATE TABLE IF NOT EXISTS `T_FAVORITE` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
   `service_id` bigint(20) DEFAULT NULL COMMENT '服务id',
   `username` varchar(64) DEFAULT NULL COMMENT '用户',
@@ -153,8 +148,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
 -- ----------------------------
 -- Table structure for T_SERVICE
 -- ----------------------------
-DROP TABLE IF EXISTS `T_SERVICE`;
-CREATE TABLE `T_SERVICE` (
+CREATE TABLE IF NOT EXISTS `T_SERVICE` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `name` varchar(64) DEFAULT NULL COMMENT '名称',
   `english_name` varchar(64) DEFAULT NULL COMMENT '英文名称',
@@ -162,9 +156,9 @@ CREATE TABLE `T_SERVICE` (
   `link` varchar(255) DEFAULT NULL,
   `link_new` varchar(255) DEFAULT NULL,
   `inject_type` varchar(64) DEFAULT NULL,
-  `iframe_url` varchar(4096) DEFAULT NULL,
-  `css_url` varchar(4096) DEFAULT NULL,
-  `js_url` varchar(4096) DEFAULT NULL,
+  `iframe_url` varchar(255) DEFAULT NULL,
+  `css_url` varchar(255) DEFAULT NULL,
+  `js_url` varchar(255) DEFAULT NULL,
   `show_project_list` bit(1) DEFAULT NULL,
   `show_nav` bit(1) DEFAULT NULL,
   `project_id_type` varchar(64) DEFAULT NULL,
@@ -174,11 +168,12 @@ CREATE TABLE `T_SERVICE` (
   `updated_user` varchar(64) DEFAULT NULL,
   `updated_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `deleted` bit(1) DEFAULT NULL,
-  `gray_css_url` varchar(4096) DEFAULT NULL,
-  `gray_js_url` varchar(4096) DEFAULT NULL,
+  `gray_css_url` varchar(255) DEFAULT NULL,
+  `gray_js_url` varchar(255) DEFAULT NULL,
   `logo_url` varchar(256) DEFAULT NULL COMMENT 'logo地址',
   `web_socket` text COMMENT '支持webSocket的页面',
   `weight` int(11) DEFAULT NULL,
+  `gray_iframe_url` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `service_name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;
