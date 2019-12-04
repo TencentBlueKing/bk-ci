@@ -64,6 +64,7 @@ interface ServiceImageManageResource {
     @ApiOperation("上传图片")
     @POST
     @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadImage(
         @ApiParam("userId", required = true)
         @QueryParam("userId")
@@ -73,5 +74,5 @@ interface ServiceImageManageResource {
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition
-        ): Result<String?>
+    ): Result<String?>
 }
