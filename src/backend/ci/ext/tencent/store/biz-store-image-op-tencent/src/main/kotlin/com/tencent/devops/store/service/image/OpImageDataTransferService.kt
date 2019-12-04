@@ -298,7 +298,7 @@ class OpImageDataTransferService @Autowired constructor(
             ).data
             logger.info("$interfaceName:transferImage:Inner:imageId=$imageId")
             logger.info("$interfaceName:transferImage:Output:Start validating")
-            //将项目所有管理员添加为镜像管理员
+            // 将项目所有管理员添加为镜像管理员
             val managers = client.get(ServiceTxProjectResource::class).getProjectManagers(projectCode).data
             if (managers != null) {
                 imageMemberService.add(creator, StoreMemberReq(managers, StoreMemberTypeEnum.ADMIN, imageCode), StoreTypeEnum.IMAGE)

@@ -71,8 +71,7 @@ interface OpBusinessConfigResource {
     @ApiOperation("获取所有业务配置信息")
     @GET
     @Path("/list")
-    fun listAllBusinessConfigs(
-    ): Result<List<BusinessConfigResponse>?>
+    fun listAllBusinessConfigs(): Result<List<BusinessConfigResponse>?>
 
     @ApiOperation("根据ID获取业务配置信息")
     @GET
