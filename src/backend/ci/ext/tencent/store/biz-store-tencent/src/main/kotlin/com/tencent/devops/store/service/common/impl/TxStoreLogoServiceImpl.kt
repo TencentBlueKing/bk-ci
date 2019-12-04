@@ -45,7 +45,7 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
     override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceImageManageResource::class)
         val serviceUrl =
-            "$serviceUrlPrefix/service/image/manage/upload"
+            "$serviceUrlPrefix/service/image/manage/upload?userId=$userId"
         logger.info("uploadStoreLogo serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()
