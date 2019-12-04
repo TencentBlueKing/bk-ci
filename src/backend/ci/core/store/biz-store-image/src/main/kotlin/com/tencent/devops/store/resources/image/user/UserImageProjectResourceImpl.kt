@@ -46,7 +46,6 @@ class UserImageProjectResourceImpl @Autowired constructor(
 
     override fun installImage(accessToken: String, userId: String, installImageReq: InstallImageReq): Result<Boolean> {
         return imageProjectService.installImage(
-            accessToken = accessToken,
             userId = userId,
             projectCodeList = installImageReq.projectCodeList,
             imageCode = installImageReq.imageCode,
