@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.docker
+package com.tencent.devops.plugin.worker.task.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Result
