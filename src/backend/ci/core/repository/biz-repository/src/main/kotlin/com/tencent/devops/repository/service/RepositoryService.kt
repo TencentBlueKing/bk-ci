@@ -853,7 +853,7 @@ class RepositoryService @Autowired constructor(
         val count =
             repositoryDao.countByProject(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectIds = setOf(projectId),
                 repositoryType = repositoryType,
                 aliasName = aliasName,
                 repositoryIds = hasListPermissionRepoList.toSet()
@@ -908,7 +908,7 @@ class RepositoryService @Autowired constructor(
 
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
-            projectId = projectId,
+            projectIds = setOf(projectId),
             repositoryType = repositoryType,
             aliasName = null,
             repositoryIds = hasPermissionList.toSet()
@@ -920,6 +920,41 @@ class RepositoryService @Autowired constructor(
                 repositoryType = repositoryType,
                 aliasName = null,
                 repositoryIds = hasPermissionList.toSet(),
+                offset = offset,
+                limit = limit
+            )
+        val repositoryList = repositoryRecordList.map {
+            RepositoryInfo(
+                repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                aliasName = it.aliasName,
+                url = it.url,
+                type = ScmType.valueOf(it.type),
+                updatedTime = it.updatedTime.timestamp()
+            )
+        }
+        return SQLPage(count, repositoryList)
+    }
+
+    fun listByProject(
+        projectIds: Collection<String>,
+        repositoryType: ScmType?,
+        offset: Int,
+        limit: Int
+    ): SQLPage<RepositoryInfo> {
+
+        val count = repositoryDao.countByProject(
+            dslContext = dslContext,
+            projectIds = projectIds,
+            repositoryType = repositoryType,
+            aliasName = null,
+            repositoryIds = null
+        )
+        val repositoryRecordList =
+            repositoryDao.listByProject(
+                dslContext = dslContext,
+                projectIds = projectIds,
+                repositoryType = repositoryType,
+                repositoryIds = null,
                 offset = offset,
                 limit = limit
             )
