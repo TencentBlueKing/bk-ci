@@ -35,6 +35,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreLogoDao
 import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
@@ -46,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import javax.imageio.ImageIO
@@ -57,11 +60,16 @@ import javax.imageio.ImageIO
  */
 @Service
 @RefreshScope
-class StoreLogoServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val storeLogoDao: StoreLogoDao,
-    private val client: Client
-) : StoreLogoService {
+abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService {
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var storeLogoDao: StoreLogoDao
+
+    @Autowired
+    lateinit var client: Client
 
     @Value("\${logo.allowUploadLogoTypes}")
     private lateinit var allowUploadLogoTypes: String
@@ -85,7 +93,7 @@ class StoreLogoServiceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        logger.info("the upload file info is:$disposition")
+        logger.info("uploadStoreLogo upload file info is:$disposition")
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1).toLowerCase()
@@ -141,9 +149,12 @@ class StoreLogoServiceImpl @Autowired constructor(
                 output.close()
             }
         }
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        return CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, file, WEB_SHOW.name)
+        val logoUrl = uploadStoreLogo(userId, file)
+        logger.info("uploadStoreLogo logoUrl is:$logoUrl")
+        return logoUrl
     }
+
+    abstract fun uploadStoreLogo(userId: String, file: File): Result<String?>
 
     /**
      * 获取logo列表

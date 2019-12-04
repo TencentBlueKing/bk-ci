@@ -29,13 +29,15 @@ package com.tencent.devops.support.resources.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.service.ServiceImageManageResource
-import com.tencent.devops.support.model.image.UploadImageRequest
 import com.tencent.devops.support.services.AwsClientService
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.commons.codec.binary.Base64
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 import java.net.URL
+import java.nio.charset.Charset
 import java.nio.file.Files
 
 @RestResource
@@ -64,11 +66,19 @@ class ServiceImageManageResourceImpl @Autowired constructor(private val awsClien
         return Result(data)
     }
 
-    override fun uploadImage(userId: String, uploadImageRequest: UploadImageRequest): Result<String?> {
-        val bytes = Base64.decodeBase64(uploadImageRequest.imageContentStr)
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".${uploadImageRequest.imageType}").toFile()
+    override fun uploadImage(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
+        val index = fileName.lastIndexOf(".")
+        val fileSuffix = fileName.substring(index + 1)
+        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".$fileSuffix").toFile()
+        file.outputStream().use {
+            inputStream.copyTo(it)
+        }
         try {
-            file.writeBytes(bytes)
             return awsClientService.uploadFile(file)
         } finally {
             file.delete()

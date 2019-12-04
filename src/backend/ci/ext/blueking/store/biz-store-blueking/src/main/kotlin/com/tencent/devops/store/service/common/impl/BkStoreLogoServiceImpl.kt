@@ -24,39 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
+import com.tencent.devops.common.service.utils.CommonUtils
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import java.io.File
 
-@RestResource
-class ServiceFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
-    ServiceFileResource {
+@Service
+class BkStoreLogoServiceImpl : StoreLogoServiceImpl() {
 
-    override fun uploadFile(
-        userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        projectCode: String?,
-        fileChannelType: FileChannelTypeEnum
-    ): Result<String?> {
-        return archiveFileService.uploadFile(
-            userId = userId,
-            inputStream = inputStream,
-            disposition = disposition,
-            projectId = projectCode,
-            fileChannelType = fileChannelType
-        )
-    }
-
-    override fun downloadFile(filePath: String, response: HttpServletResponse) {
-        archiveFileService.downloadFile(filePath, response)
+    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
+        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+        return CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, file, FileChannelTypeEnum.WEB_SHOW.name)
     }
 }
