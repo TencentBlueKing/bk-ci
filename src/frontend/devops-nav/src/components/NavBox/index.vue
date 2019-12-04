@@ -36,8 +36,8 @@
                             :size="20"
                             :name="serviceIcon(child.logoUrl)"
                         />
-                        <span class="service-name">{{ child.name }}</span>
-                        <span class="service-id">{{ serviceId(child.name) }}</span>
+                        <span class="service-name">{{ serviceName(child.name) }}</span>
+                        <!-- <span class="service-id">{{ serviceId(child.name) }}</span> -->
                         <span
                             v-if="child.status === &quot;new&quot;"
                             class="new-service-icon"
@@ -106,6 +106,11 @@
        get showCollectStar (): boolean {
            return typeof this.toggleCollect === 'function'
        }
+
+        serviceName (name): string {
+            const charPos = name.indexOf('(')
+            return charPos > -1 ? name.slice(0, charPos) : name
+        }
 
        serviceId (name): string {
            return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
@@ -182,10 +187,10 @@
                     .service-name {
                         @include ellipsis();
                     }
-                    .service-id {
-                        margin-left: 5px;
-                        @include ellipsis();
-                    }
+                    // .service-id {
+                    //     margin-left: 5px;
+                    //     @include ellipsis();
+                    // }
                     .collect-icon {
                         color: #abb4c3;
                         padding: 10px;

@@ -156,10 +156,12 @@
 
         watch: {
             buildResourceType (val) {
-                this.isLoading = true
-                this.searchKey = ''
-                this.clearData()
-                this.initData()
+                if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(val)) {
+                    this.isLoading = true
+                    this.searchKey = ''
+                    this.clearData()
+                    this.initData()
+                }
             },
 
             isShow (val) {

@@ -146,7 +146,7 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.deleteConfirmTips', [row.name])}？`)
+                }, `${this.$t('environment.deleteConfirmTips', [row.name])}`)
 
                 this.$bkInfo({
                     subHeader: content,

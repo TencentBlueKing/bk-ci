@@ -59,7 +59,7 @@
                               &quot;is-success&quot;: (atom.status === &quot;SUCCEED&quot; || atom.status === &quot;REVIEW_PROCESSED&quot;),
                               &quot;is-fail&quot;: (atom.status === &quot;QUALITY_CHECK_FAIL&quot; || atom.status === &quot;REVIEW_ABORT&quot;) }"
                     v-if="atom['@type'] === 'qualityGateInTask' || atom['@type'] === 'qualityGateOutTask'">
-                    <span class="atom-title">{{ $t('editPage.quality.quality') }}</span>
+                    <span class="atom-title">{{ $t('details.quality.quality') }}</span>
                     <span class="handler-list" :class="{ 'disabled-review': atom.status === 'REVIEWING' && userInfo && !isCurrentUser(atom.reviewUsers) }"
                         v-if="atom.status === 'REVIEWING' && !reviewLoading">
                         <span class="revire-btn continue-excude" @click.stop="reviewExcude(atom, 'PROCESS', atom.reviewUsers)">{{ $t('resume') }}</span>

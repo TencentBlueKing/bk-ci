@@ -4,28 +4,28 @@
             <bk-col :span="9">
                 <bk-row>
                     <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('名称') }} :</span>
+                        <span class="progress-label">{{ $t('store.名称') }} :</span>
                         <span class="progress-content">{{detail.imageName}}</span>
                     </bk-col>
                     <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('标识') }} :</span>
+                        <span class="progress-label">{{ $t('store.标识') }} :</span>
                         <span class="progress-content">{{detail.imageCode}}</span>
                     </bk-col>
                 </bk-row>
                 <bk-row>
                     <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('范畴') }} :</span>
+                        <span class="progress-label">{{ $t('store.范畴') }} :</span>
                         <span class="progress-content">{{detail.categoryName}}</span>
                     </bk-col>
                     
                     <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('分类') }} :</span>
+                        <span class="progress-label">{{ $t('store.分类') }} :</span>
                         <span class="progress-content">{{detail.classifyName}}</span>
                     </bk-col>
                 </bk-row>
                 <bk-row>
                     <bk-col :span="9" class="progress-item">
-                        <span class="progress-label">{{ $t('功能标签') }} :</span>
+                        <span class="progress-label">{{ $t('store.功能标签') }} :</span>
                         <section class="progress-content label-list">
                             <span class="label-card" v-for="(label, index) in detail.labelList" :key="index">{{ label.labelName }}</span>
                         </section>
@@ -38,7 +38,7 @@
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('适用机器') }} :</span>
+                <span class="progress-label">{{ $t('store.适用机器') }} :</span>
                 <section class="progress-content label-list">
                     <span class="label-card" v-for="(agent, index) in detail.agentTypeScope" :key="index">{{ agent | agentFilter }}</span>
                 </section>
@@ -46,13 +46,13 @@
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('简介') }} :</span>
+                <span class="progress-label">{{ $t('store.简介') }} :</span>
                 <span class="progress-content">{{detail.summary}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('详细描述') }} :</span>
+                <span class="progress-label">{{ $t('store.详细描述') }} :</span>
                 <section class="progress-content">
                     <p :class="{ 'overflow': !isDropdownShow }" ref="edit">
                         <mavon-editor class="image-remark-input"
@@ -66,7 +66,7 @@
                             preview-back-ground="#fafbfd"
                         />
                     </p>
-                    <span class="toggle-btn" v-if="isOverflow" @click="isDropdownShow = !isDropdownShow">{{ isDropdownShow ? $t('收起') : $t('展开') }}
+                    <span class="toggle-btn" v-if="isOverflow" @click="isDropdownShow = !isDropdownShow">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
                         <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                     </span>
                 </section>
@@ -74,37 +74,37 @@
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('镜像') }} :</span>
+                <span class="progress-label">{{ $t('store.镜像') }} :</span>
                 <span class="progress-content">{{(detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + detail.imageRepoName + ':' + detail.imageTag}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('镜像凭证') }} :</span>
+                <span class="progress-label">{{ $t('store.镜像凭证') }} :</span>
                 <span class="progress-content">{{detail.ticketId}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('发布者') }} :</span>
+                <span class="progress-label">{{ $t('store.发布者') }} :</span>
                 <span class="progress-content">{{detail.publisher}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('发布类型') }} :</span>
+                <span class="progress-label">{{ $t('store.发布类型') }} :</span>
                 <span class="progress-content">{{detail.releaseType|releaseFilter}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('版本') }} :</span>
+                <span class="progress-label">{{ $t('store.版本') }} :</span>
                 <span class="progress-content">{{detail.version}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
             <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('发布描述') }} :</span>
+                <span class="progress-label">{{ $t('store.发布描述') }} :</span>
                 <span class="progress-content">{{detail.versionContent}}</span>
             </bk-col>
         </bk-row>
@@ -119,7 +119,7 @@
                 let res = ''
                 switch (value) {
                     case 'DOCKER':
-                        res = local.$t('Devnet 物理机')
+                        res = local.$t('store.Devnet 物理机')
                         break
                     case 'IDC':
                         res = 'IDC CVM'
@@ -136,16 +136,16 @@
                 let res = ''
                 switch (value) {
                     case 'NEW':
-                        res = local.$t('初始化')
+                        res = local.$t('store.初始化')
                         break
                     case 'INCOMPATIBILITY_UPGRADE':
-                        res = local.$t('非兼容升级')
+                        res = local.$t('store.非兼容升级')
                         break
                     case 'COMPATIBILITY_UPGRADE':
-                        res = local.$t('兼容式功能更新')
+                        res = local.$t('store.兼容式功能更新')
                         break
                     case 'COMPATIBILITY_FIX':
-                        res = local.$t('兼容式问题修正')
+                        res = local.$t('store.兼容式问题修正')
                         break
                 }
                 return res

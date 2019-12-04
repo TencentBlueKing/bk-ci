@@ -1,11 +1,11 @@
 <template>
     <article class="add-comment" @click.self="cancle">
         <section class="add-main" v-bkloading="{ isLoading }">
-            <h3 class="add-title">为{{name}} {{ $t('评分') }} </h3>
+            <h3 class="add-title">为{{name}} {{ $t('store.评分') }} </h3>
             <comment-rate class="add-rate" :edit="true" :rate="rate" :height="24" :width="23" @chooseRate="chooseRate"></comment-rate>
-            <textarea class="add-content g-input-border" v-model="comment" :placeholder="$t('请输入你的评论内容（字数上限为500字）')" ref="commentText"></textarea>
+            <textarea class="add-content g-input-border" v-model="comment" :placeholder="$t('store.请输入你的评论内容（字数上限为500字）')" ref="commentText"></textarea>
             <h3 class="g-confirm-buttom">
-                <button @click="cancle"> {{ $t('取消') }} </button><button @click="confirm"> {{ $t('确定') }} </button>
+                <button @click="cancle"> {{ $t('store.取消') }} </button><button @click="confirm"> {{ $t('store.确定') }} </button>
             </h3>
         </section>
     </article>
@@ -105,12 +105,12 @@
 
             confirm () {
                 if (this.rate <= 0) {
-                    this.$bkMessage({ message: this.$t('请先评分，再发布评价'), theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('store.请先评分，再发布评价'), theme: 'warning' })
                     return
                 }
 
                 if (this.comment.length >= 500) {
-                    this.$bkMessage({ message: this.$t('字数不能超过500字，请修改后再评价'), theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('store.字数不能超过500字，请修改后再评价'), theme: 'warning' })
                     return
                 }
 
@@ -121,7 +121,7 @@
                 const type = this.commentId ? 'modify' : 'add'
 
                 confirmGenerator[type]().then((res) => {
-                    this.$bkMessage({ message: this.$t('评论成功'), theme: 'success' })
+                    this.$bkMessage({ message: this.$t('store.评论成功'), theme: 'success' })
                     this.$emit('freshComment', res)
                     this.$emit('closeDialog')
                 }).catch((err) => {

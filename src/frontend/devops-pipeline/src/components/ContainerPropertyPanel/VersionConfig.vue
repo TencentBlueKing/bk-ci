@@ -12,7 +12,7 @@
                 <template slot="header">
                     <span>
                         {{ $t('preview.introVersion') }}
-                        <bk-popover placement="right">
+                        <bk-popover placement="right" :max-width="200">
                             <i style="display:block;" class="bk-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
                                 <div> {{ $t('editPage.introVersionTips') }} </div>

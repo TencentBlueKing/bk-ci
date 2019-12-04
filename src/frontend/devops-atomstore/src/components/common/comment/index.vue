@@ -10,9 +10,9 @@
         >
         </reply>
         <div class="comment-reply-text" v-if="showWriteReply">
-            <textarea :placeholder="$t('请输入你的回复内容（字数上限为500字）')" v-model="reply" class="reply-content g-input-border" ref="replyText" autofocus></textarea>
+            <textarea :placeholder="$t('store.请输入你的回复内容（字数上限为500字）')" v-model="reply" class="reply-content g-input-border" ref="replyText" autofocus></textarea>
             <h3 class="g-confirm-buttom reply-button">
-                <button @click="cancleComment"> {{ $t('取消') }} </button><button @click="confirmComment"> {{ $t('发布') }} </button>
+                <button @click="cancleComment"> {{ $t('store.取消') }} </button><button @click="confirmComment"> {{ $t('store.发布') }} </button>
             </h3>
         </div>
     </section>
@@ -63,7 +63,7 @@
 
             replyComment (user) {
                 const reg = this.replyToUser ? new RegExp(`^回复@${this.replyToUser}：`) : /^/
-                const replaceStr = user ? `${this.$t('回复@')}${user}：` : ''
+                const replaceStr = user ? `${this.$t('store.回复@')}${user}：` : ''
 
                 this.replyToUser = user
                 this.reply = this.reply.replace(reg, replaceStr)
@@ -78,12 +78,12 @@
             confirmComment () {
                 let replyContent = this.reply
                 if (replyContent.trim() === '') {
-                    this.$bkMessage({ message: this.$t('请先输入回复内容'), theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('store.请先输入回复内容'), theme: 'warning' })
                     return
                 }
 
                 if (replyContent.length > 500) {
-                    this.$bkMessage({ message: this.$t('字数不能超过500字，请修改后再回复'), theme: 'warning' })
+                    this.$bkMessage({ message: this.$t('store.字数不能超过500字，请修改后再回复'), theme: 'warning' })
                     return
                 }
 

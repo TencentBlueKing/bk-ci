@@ -7,17 +7,17 @@
                 <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
                     <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
                     <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
-                    <span> {{ $t('工蜂') }} </span>
+                    <span> {{ $t('store.工蜂') }} </span>
                 </h5>
             </h3>
             <h5 class="detail-info">
-                <span> {{ $t('发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
+                <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('版本：') }} </span><span>{{detail.version || '-'}}</span>
+                <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
             </h5>
-            <h5 class="detail-info detail-score" :title="`${$t('平均评分为')}${detail.score || 0}${$t('星（总分为5星）')}，${detail.totalNum || 0}${$t('位用户评价了此项内容')}`">
-                <span> {{ $t('评分：') }} </span>
+            <h5 class="detail-info detail-score" :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])">
+                <span> {{ $t('store.评分：') }} </span>
                 <p class="score-group">
                     <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
                     <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
@@ -25,41 +25,41 @@
                 <span class="rate-num">{{detail.totalNum || 0}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('适用IDE：') }} </span><span>{{detail.categoryList|templateCategory}}</span>
+                <span> {{ $t('store.适用IDE：') }} </span><span>{{detail.categoryList|templateCategory}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
+                <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
-                <span> {{ $t('功能标签：') }} </span>
+                <span> {{ $t('store.功能标签：') }} </span>
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
                 <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
             </h5>
             <h5 class="detail-info detail-maxwidth" :title="detail.summary">
-                <span> {{ $t('简介：') }} </span><span>{{detail.summary || '-'}}</span>
+                <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
-        <button :class="[{ 'opicity-hidden': detail.categoryList.every(x => x.categoryCode !== 'VsCode') }, 'detail-install']" @click="installPlugin"> {{ $t('安装') }} </button>
+        <button :class="[{ 'opicity-hidden': detail.categoryList.every(x => x.categoryCode !== 'VsCode') }, 'detail-install']" @click="installPlugin"> {{ $t('store.安装') }} </button>
         <bk-dialog v-model="showInstallTip"
             theme="primary"
             :close-icon="false"
             header-position="center"
-            :ok-text="$t('已安装 T-extensions，继续')"
-            :title="$t('安装提示')"
+            :ok-text="$t('store.已安装 T-extensions，继续')"
+            :title="$t('store.安装提示')"
             width="700"
             class="install-tip"
             :draggable="false"
             @confirm="confirmInstall"
         >
-            <h3 class="mb10"> {{ $t('VSCode 插件安装指引：') }} </h3>
-            1. {{ $t('首先安装') }} <span class="text-tip" v-bk-tooltips="{ placements: ['top'], content: $t('T-extensions 管理公司内部的所有VSCode插件') }">T-extensions</span> {{ $t('到 VSCode。若已安装，则跳过此步') }} <br>
-            <span class="ml10">1）<a class="down-link" href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.3/t-extension-0.0.3.vsix"> {{ $t('点此下载') }} </a>  {{ $t('T-extensions 插件安装包') }} <br></span>
-            <span class="ml10">2）{{ $t('在 VSCode 扩展 =》更多功能 =》从VSIX安装，安装上一步下载的VSIX包，入口如下图所示：') }}</span>
+            <h3 class="mb10"> {{ $t('store.VSCode 插件安装指引：') }} </h3>
+            1. {{ $t('store.首先安装') }} <span class="text-tip" v-bk-tooltips="{ placements: ['top'], content: $t('store.T-extensions 管理公司内部的所有VSCode插件') }">T-extensions</span> {{ $t('store.到 VSCode。若已安装，则跳过此步') }} <br>
+            <span class="ml10">1）<a class="down-link" href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.3/t-extension-0.0.3.vsix"> {{ $t('store.点此下载') }} </a>  {{ $t('store.T-extensions 插件安装包') }} <br></span>
+            <span class="ml10">2）{{ $t('store.在 VSCode 扩展 =》更多功能 =》从VSIX安装，安装上一步下载的VSIX包，入口如下图所示：') }}</span>
             <img src="http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15705911044808382165408406563094.png?v=1570591104">
-            <span class="mt10 inb">2. {{ $t('在 T-extensions 中安装目标插件，或在蓝盾研发商店中点击目标插件详情页面的安装按钮') }}</span>
+            <span class="mt10 inb">2. {{ $t('store.在 T-extensions 中安装目标插件，或在蓝盾研发商店中点击目标插件详情页面的安装按钮') }}</span>
         </bk-dialog>
     </section>
 </template>
@@ -106,8 +106,8 @@
             },
 
             isPublicTitle () {
-                if (this.isPublic) return this.$t('查看源码')
-                else return this.$t('未开源')
+                if (this.isPublic) return this.$t('store.查看源码')
+                else return this.$t('store.未开源')
             }
         },
 
@@ -241,7 +241,8 @@
             span:nth-child(1) {
                 color: $fontWeightColor;
                 display: inline-block;
-                width: 70px;
+                width: 90px;
+                padding-right: 10px;
                 text-align: right;
             }
             span:nth-child(2) {
@@ -249,7 +250,7 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 display: inline-block;
-                width: calc(100% - 70px);
+                width: calc(100% - 90px);
             }
         }
         .title-with-img {
@@ -275,7 +276,7 @@
         }
         .detail-info.detail-label {
             width: 829px;
-            padding-left: 70px;
+            padding-left: 90px;
             display: inline-block;
             position: relative;
             span {

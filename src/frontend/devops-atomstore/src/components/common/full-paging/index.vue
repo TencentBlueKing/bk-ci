@@ -1,7 +1,7 @@
 <template>
     <div class="ci-paging clearfix">
         <div class="fl clearfix paging-settings" v-if="canChangePerCount">
-            <div class="fl paging-total-count"> {{ $t('共计') }} {{ pageCountConfig.totalCount }} {{ $t('条') }} </div>
+            <div class="fl paging-total-count"> {{ $t('store.共计') }} {{ pageCountConfig.totalCount }} {{ $t('store.条') }} </div>
             <div class="fl paging-per-page">
                 <bk-dropdown
                     :list="pageCountConfig.list"

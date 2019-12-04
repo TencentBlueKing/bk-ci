@@ -53,7 +53,7 @@ export default (r) => {
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         const localeModuleId = getLocalModuleId(module, locale)
         if (loadedModule[localeModuleId]) {
-            return
+            return Promise.resolve()
         }
         return axios.get(`${WEBSITE_URL}/${module}/${locale}.json?t=${+new Date()}`, {
             crossdomain: true
@@ -75,7 +75,6 @@ export default (r) => {
                 dynamicLoadModule(module, localeLang)
             }
         })
-        setLsLocale(localeLang)
         i18n.locale = localeLang
         setLsLocale(localeLang)
         locale.use(lang[localeLang.replace('-', '')])

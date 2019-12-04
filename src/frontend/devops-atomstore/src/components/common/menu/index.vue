@@ -42,7 +42,7 @@
         <template v-else>
             <div class="biz-no-data" style="margin-top: 100px;">
                 <i class="bk-icon icon-empty"></i>
-                <p> {{ $t('暂时没数据!') }} </p>
+                <p> {{ $t('store.暂时没数据!') }} </p>
             </div>
         </template>
     </div>

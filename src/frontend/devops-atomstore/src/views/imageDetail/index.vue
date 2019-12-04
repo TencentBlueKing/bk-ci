@@ -24,21 +24,21 @@
                             {
                                 id: 'imageOverview',
                                 selectId: ['imageOverview'],
-                                name: this.$t('概览'),
+                                name: this.$t('store.概览'),
                                 icon: 'icon-overview',
                                 showChildren: false
                             },
                             {
                                 id: 'imageDetail',
                                 selectId: ['imageDetail', 'imageEdit'],
-                                name: this.$t('详情'),
+                                name: this.$t('store.详情'),
                                 icon: 'icon-txt',
                                 showChildren: false
                             },
                             {
                                 id: 'imageSettings',
                                 selectId: ['imageSettings'],
-                                name: this.$t('设置'),
+                                name: this.$t('store.设置'),
                                 icon: 'icon-cog',
                                 isOpen: false,
                                 showChildren: true,
@@ -46,13 +46,13 @@
                                     {
                                         id: 'imageMemberManage',
                                         selectId: ['imageMemberManage'],
-                                        name: this.$t('成员管理'),
+                                        name: this.$t('store.成员管理'),
                                         icon: ''
                                     },
                                     {
                                         id: 'imageVisibleRange',
                                         selectId: ['imageVisibleRange'],
-                                        name: this.$t('可见范围'),
+                                        name: this.$t('store.可见范围'),
                                         icon: ''
                                     }
                                 ]

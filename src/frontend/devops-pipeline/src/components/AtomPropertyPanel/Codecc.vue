@@ -146,7 +146,6 @@
                     {
                         id: 'goPath',
                         name: 'Gometalinter',
-                        // item: ['goPath', 'gometalinterToolSetId', 'gociLintToolSetId']
                         item: ['goPath', 'gometalinterToolSetId']
                     },
                     {
@@ -168,6 +167,21 @@
                         id: 'occheckToolSetId',
                         name: 'OCCheck',
                         item: ['occheckToolSetId']
+                    },
+                    {
+                        id: 'horuspyToolSetId',
+                        name: '荷鲁斯高危组件',
+                        item: ['horuspyToolSetId']
+                    },
+                    {
+                        id: 'woodpeckerToolSetId',
+                        name: '啄木鸟敏感信息',
+                        item: ['woodpeckerToolSetId']
+                    },
+                    {
+                        id: 'ripsToolSetId',
+                        name: 'RIPS',
+                        item: ['ripsToolSetId']
                     },
                     {
                         id: 'sensitiveToolSetId',
@@ -324,11 +338,6 @@
                 } else {
                     this.newModel.gometalinterToolSetId.hidden = true
                 }
-                // if (value.filter(item => item === 'GOCILINT').length > 0) {
-                //     this.newModel.gociLintToolSetId.hidden = false
-                // } else {
-                //     this.newModel.gociLintToolSetId.hidden = true
-                // }
                 if (value.filter(item => item === 'GOML').length > 0 || value.filter(item => item === 'GOCILINT').length > 0) {
                     this.newModel.goPath.hidden = false
                 } else {
@@ -363,6 +372,21 @@
                     this.newModel.detektToolSetId.hidden = false
                 } else {
                     this.newModel.detektToolSetId.hidden = true
+                }
+                if (value.filter(item => item === 'HORUSPY').length > 0) {
+                    this.newModel.horuspyToolSetId.hidden = false
+                } else {
+                    this.newModel.horuspyToolSetId.hidden = true
+                }
+                if (value.filter(item => item === 'WOODPECKER_SENSITIVE').length > 0) {
+                    this.newModel.woodpeckerToolSetId.hidden = false
+                } else {
+                    this.newModel.woodpeckerToolSetId.hidden = true
+                }
+                if (value.filter(item => item === 'RIPS').length > 0) {
+                    this.newModel.ripsToolSetId.hidden = false
+                } else {
+                    this.newModel.ripsToolSetId.hidden = true
                 }
                 if (value.filter(item => item === 'SENSITIVE').length > 0) {
                     this.newModel.sensitiveToolSetId.hidden = false

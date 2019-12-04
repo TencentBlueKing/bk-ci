@@ -4,32 +4,32 @@
         <h3 class="market-home-title">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('研发商店') }} </router-link>
+                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="back-home" @click="backToStore">{{ type|typeFilter }}</span>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des back-home" @click="toBack">{{ fromFilter(from) }}</span>
                 <i class="right-arrow banner-arrow"></i>
-                <span> {{ $t('安装') }} {{ type|typeFilter }}</span>
+                <span> {{ $t('store.安装') }} {{ type|typeFilter }}</span>
             </p>
         </h3>
 
         <div class="install-atom-content" v-if="!isLoading">
             <div class="sub-view-port" v-if="!isINstallSuccess">
                 <div class="atom-name">{{ name }}</div>
-                <div class="title"> {{ $t('请选择项目：') }} </div>
-                <big-select v-model="project" :loading="projectListLoading" :searchable="true" :multiple="true" :show-select-all="true" :options="projectList" setting-key="projectCode" display-key="projectName" @selected="selectProject" :placeholder="$t('请选择')">
+                <div class="title"> {{ $t('store.请选择项目：') }} </div>
+                <big-select v-model="project" :loading="projectListLoading" :searchable="true" :multiple="true" :show-select-all="true" :options="projectList" setting-key="projectCode" display-key="projectName" @selected="selectProject" :placeholder="$t('store.请选择')">
                     <div slot="extension" style="cursor: pointer;">
-                        <a href="/console/pm" target="_blank"><i class="bk-icon icon-plus-circle" /> {{ $t('新建项目') }} </a>
+                        <a href="/console/pm" target="_blank"><i class="bk-icon icon-plus-circle" /> {{ $t('store.新建项目') }} </a>
                     </div>
                 </big-select>
-                <div v-if="installError" class="error-tips"> {{ $t('项目不能为空') }} </div>
+                <div v-if="installError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                 <div class="form-footer">
-                    <button class="bk-button bk-primary" type="button" @click="confirm"> {{ $t('安装') }} </button>
-                    <button class="bk-button bk-default" type="button" @click="toBack"> {{ $t('取消') }} </button>
+                    <button class="bk-button bk-primary" type="button" @click="confirm"> {{ $t('store.安装') }} </button>
+                    <button class="bk-button bk-default" type="button" @click="toBack"> {{ $t('store.取消') }} </button>
                 </div>
                 <section v-if="installedProject.length">
-                    <p class="project-title">该{{ isInstallAtom ? $t('流水线插件') : $t('模板') }} {{ $t('已安装至以下项目：') }} </p>
+                    <p class="project-title">该{{ isInstallAtom ? $t('store.流水线插件') : $t('store.模板') }} {{ $t('store.已安装至以下项目：') }} </p>
                     <table class="bk-table project-table">
                         <thead>
                         </thead>
@@ -43,11 +43,11 @@
             </div>
             <div class="install-success-tips" v-else>
                 <i class="bk-icon icon-check-circle"></i>
-                <h3> {{ $t('恭喜，已安装成功！') }} </h3>
+                <h3> {{ $t('store.恭喜，已安装成功！') }} </h3>
                 <div class="handle-btn">
-                    <bk-button class="bk-button bk-primary" size="small" @click="backConsole"> {{ $t('工作台') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click="backToStore"> {{ $t('研发商店') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click="toPipeline"> {{ $t('流水线') }} </bk-button>
+                    <bk-button class="bk-button bk-primary" size="small" @click="backConsole"> {{ $t('store.工作台') }} </bk-button>
+                    <bk-button class="bk-button bk-default" size="small" @click="backToStore"> {{ $t('store.研发商店') }} </bk-button>
+                    <bk-button class="bk-button bk-default" size="small" @click="toPipeline"> {{ $t('store.流水线') }} </bk-button>
                 </div>
             </div>
         </div>
@@ -64,13 +64,13 @@
                 let res = ''
                 switch (val) {
                     case 'atom':
-                        res = bkLocale.$t('流水线插件')
+                        res = bkLocale.$t('store.流水线插件')
                         break
                     case 'template':
-                        res = bkLocale.$t('流水线模板')
+                        res = bkLocale.$t('store.流水线模板')
                         break
                     default:
-                        res = bkLocale.$t('镜像')
+                        res = bkLocale.$t('store.镜像')
                         break
                 }
                 return res
@@ -117,7 +117,7 @@
                         res = this.name
                         break
                     default:
-                        res = this.$t('工作台')
+                        res = this.$t('store.工作台')
                         break
                 }
                 return res
@@ -161,7 +161,7 @@
                     image: 'store/requestRelativeImageProject'
                 }
 
-                this.$store.dispatch(methods[this.type], this.code).then((res) => {
+                return this.$store.dispatch(methods[this.type], this.code).then((res) => {
                     this.installedProject = res
                 })
             },
@@ -229,7 +229,7 @@
                 this.isLoading = true
                 methods[this.type]().then(() => {
                     this.isINstallSuccess = true
-                    this.$bkMessage({ message: this.$t('安装成功'), theme: 'success' })
+                    this.$bkMessage({ message: this.$t('store.安装成功'), theme: 'success' })
                 }).catch((err) => {
                     if (err.httpStatus === 200) {
                         const h = this.$createElement
@@ -242,7 +242,7 @@
 
                         this.$bkInfo({
                             type: 'error',
-                            title: this.$t('安装失败'),
+                            title: this.$t('store.安装失败'),
                             subHeader
                         })
                     } else {
