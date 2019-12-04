@@ -24,58 +24,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task
+package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.archive.element.BuildArchiveGetElement
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.common.archive.element.CustomizeArchiveGetElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
-import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
 
-@TaskClassType(classTypes = [BuildArchiveGetElement.classType])
-class BuildArchiveGetTask : ITask() {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildArchiveGetTask::class.java)
-    }
+@TaskClassType(classTypes = [CustomizeArchiveGetElement.classType])
+class CustomizeArchiveGetTask : ITask() {
 
     private val archiveGetResourceApi = ApiFactory.create(ArchiveSDKApi::class)
-    private val buildApi = ApiFactory.create(BuildSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val pipelineId = taskParams["pipelineId"] ?: throw ParamBlankException("pipelineId is null")
-        val buildNo = taskParams["buildNo"] ?: "-1"
-        val buildId = getBuildId(pipelineId, buildVariables, buildNo).id
         val destPath = File(workspace, taskParams["destPath"] ?: ".")
-        val srcPaths = taskParams["srcPaths"] ?: throw ParamBlankException("srcPaths can not be null")
-        val notFoundContinue = taskParams["notFoundContinue"] ?: "false"
+        val downloadPaths = taskParams["downloadPaths"] ?: throw RuntimeException("downloadPaths can not be null")
+        val notFoundContinue = taskParams["notFoundContinue"] ?: ""
         var count = 0
 
         LoggerService.addNormalLine("archive get notFoundContinue: $notFoundContinue")
-        srcPaths.split(",").map {
+        // 匹配文件
+        downloadPaths.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { srcPath ->
 
-            logger.info("[$buildId]|pipelineId=$pipelineId|srcPath=$srcPath")
             val fileList = archiveGetResourceApi.getFileDownloadUrls(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                 projectId = buildVariables.projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                fileType = FileTypeEnum.BK_ARCHIVE,
+                pipelineId = buildVariables.pipelineId,
+                buildId = buildVariables.buildId,
+                fileType = FileTypeEnum.BK_CUSTOM,
                 customFilePath = srcPath
             )
 
@@ -87,12 +74,10 @@ class BuildArchiveGetTask : ITask() {
                 } else {
                     File(destPath, decodeUrl)
                 }
-                LoggerService.addNormalLine("find the file($fileUrl) in repo!")
-                archiveGetResourceApi.downloadPipelineFile(
+                LoggerService.addNormalLine("find the file($fileUrl) in repo! [${file.name}")
+                archiveGetResourceApi.downloadCustomizeFile(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
                     uri = fileUrl,
                     destPath = file
                 )
@@ -101,15 +86,6 @@ class BuildArchiveGetTask : ITask() {
         }
 
         LoggerService.addNormalLine("total $count file(s) found")
-        if (count == 0 && notFoundContinue == "false") throw RuntimeException("0 file found in path: $srcPaths")
-    }
-
-    private fun getBuildId(pipelineId: String, buildVariables: BuildVariables, buildNo: String): BuildHistory {
-        return buildApi.getSingleHistoryBuild(
-            projectId = buildVariables.projectId,
-            pipelineId = pipelineId,
-            buildNum = buildNo,
-            channelCode = ChannelCode.BS
-        ).data ?: throw RuntimeException("no build($buildNo) history found in pipeline($pipelineId})")
+        if (count == 0 && notFoundContinue == "false") throw RuntimeException("0 file found in path: $downloadPaths")
     }
 }
