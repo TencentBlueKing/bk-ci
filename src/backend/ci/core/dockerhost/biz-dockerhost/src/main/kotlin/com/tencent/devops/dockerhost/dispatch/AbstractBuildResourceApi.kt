@@ -44,7 +44,12 @@ abstract class AbstractBuildResourceApi {
 
     companion object {
         private val gateway: String by lazy {
-            DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
+            val gateway = DockerEnv.getGatway()
+            if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
+                gateway.removePrefix("/")
+            } else {
+                "http://${gateway.removePrefix("/")}"
+            }
         }
 
         private val buildArgs: Map<String, String> by lazy {
@@ -116,7 +121,10 @@ abstract class AbstractBuildResourceApi {
     }
 
     fun getJsonRequest(data: Any): RequestBody {
-        return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(data))
+        return RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(data)
+        )
     }
 
     fun encode(parameter: String): String {
