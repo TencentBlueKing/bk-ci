@@ -489,6 +489,7 @@
         "saving": "正在保存",
         "selectJob": "请选择Job类型",
         "insert": "插入",
+        "append": "添加",
         "prepareEnv": "准备构建环境中",
         "copyJob": "复制job",
         "copyJobFail": "复制job失败",
