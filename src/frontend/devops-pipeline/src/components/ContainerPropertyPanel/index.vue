@@ -551,6 +551,8 @@
                                 projectId: this.projectId,
                                 pipelineId: this.pipelineId,
                                 vmSeqId,
+                                imageCode: this.buildImageCode,
+                                imageVersion: this.buildImageVersion,
                                 imageName: this.buildResource,
                                 buildEnv: this.container.buildEnv,
                                 imageType: this.buildImageType,
