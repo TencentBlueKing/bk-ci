@@ -58,8 +58,9 @@
                     </div>
 
                     <div class="quality-setting-tips" v-if="showSetRuleTips">
-                        <div>{{ $t('details.quality.canSet') }}
-                            <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.reflashNow') }}
+                        <div>
+                            {{ $t('details.quality.canSet') }}
+                            <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
                                 <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
                             </span>
                         </div>
@@ -680,7 +681,7 @@
         justify-content: space-between;
         margin-bottom: 10px;
         .quality-rule-link {
-            margin-left: -6px;
+            // margin-left: -6px;
             color: $primaryColor;
             cursor: pointer;
         }

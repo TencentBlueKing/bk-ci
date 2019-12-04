@@ -489,6 +489,7 @@
         "saving": "Saving",
         "selectJob": " Please select the type of job",
         "insert": "Insert",
+        "append": "Append",
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",
