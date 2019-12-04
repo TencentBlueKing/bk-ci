@@ -29,13 +29,13 @@ dependencies {
     compile project(":ext:tencent:openapi:model-openapi")
     compile project(":ext:tencent:openapi:api-openapi-tencent")
     compile project(":ext:tencent:common:common-pipeline-tencent")
+    compile project (":core:common:common-client")
     compile project(":ext:tencent:plugin:api-plugin-tencent")
-    compile project(":core:plugin:codecc-plugin:worker-plugin-codecc")
-    compile project(":core:worker:worker-plugin-scm")
-    compile project(":core:worker:worker-plugin-archive")
-    compile project(":ext:tencent:plugin:api-plugin-tencent")
-    compile project(":ext:tencent:plugin:biz-plugin-tencent")
-    compile project(":ext:tencent:worker:worker-plugin-tencent")
+//    compile project(":core:plugin:codecc-plugin:worker-plugin-codecc")
+//    compile project(":core:worker:worker-plugin-scm")
+//    compile project(":core:worker:worker-plugin-archive")
+//    compile project(":ext:tencent:plugin:biz-plugin-tencent")
+//    compile project(":ext:tencent:worker:worker-plugin-tencent")
     compile "io.jsonwebtoken:jjwt"
     compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
 }
