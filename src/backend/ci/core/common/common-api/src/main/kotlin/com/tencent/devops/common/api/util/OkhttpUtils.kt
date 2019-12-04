@@ -35,7 +35,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
-import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
@@ -47,14 +46,13 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import javax.servlet.http.HttpServletResponse
 
 @SuppressWarnings("ALL")
 object OkhttpUtils {
 
     private val logger = LoggerFactory.getLogger(OkhttpUtils::class.java)
 
-    val jsonMediaType = MediaType.parse("application/json")
+    private val octetStream = MediaType.parse("application/octet-stream")
 
     private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
         @Throws(CertificateException::class)
@@ -74,7 +72,7 @@ object OkhttpUtils {
     private const val readTimeout = 30L
     private const val writeTimeout = 30L
 
-    private val okHttpClient = okhttp3.OkHttpClient.Builder()
+    private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.SECONDS)
         .writeTimeout(writeTimeout, TimeUnit.SECONDS)
@@ -83,7 +81,7 @@ object OkhttpUtils {
         .build()!!
 
     // 下载会出现从 文件源--（耗时长）---->网关（网关全部收完才转发给用户，所以用户侧与网关存在读超时的可能)-->用户
-    private val longHttpClient = okhttp3.OkHttpClient.Builder()
+    private val longHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.MINUTES)
         .writeTimeout(readTimeout, TimeUnit.MINUTES)
@@ -121,7 +119,7 @@ object OkhttpUtils {
             .url(url)
             .get()
         if (headers.isNotEmpty()) {
-            headers.forEach { key, value ->
+            headers.forEach { (key, value) ->
                 requestBuilder.addHeader(key, value)
             }
         }
@@ -136,10 +134,10 @@ object OkhttpUtils {
     fun uploadFile(
         url: String,
         uploadFile: File,
-        headers: Map<String, String>? = null,
+        headers: Map<String, String?>? = null,
         fileFieldName: String = "file"
     ): Response {
-        val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), uploadFile)
+        val fileBody = RequestBody.create(octetStream, uploadFile)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart(fileFieldName, uploadFile.name, fileBody)
@@ -147,8 +145,10 @@ object OkhttpUtils {
         val requestBuilder = Request.Builder()
             .url(url)
             .post(requestBody)
-        headers?.forEach { key, value ->
-            requestBuilder.addHeader(key, value)
+        headers?.forEach { (key, value) ->
+            if (!value.isNullOrBlank()) {
+                requestBuilder.addHeader(key, value!!)
+            }
         }
         val request = requestBuilder.build()
         return doHttp(request)
@@ -205,52 +205,8 @@ object OkhttpUtils {
         }
     }
 
-    fun downloadFile(url: String, response: HttpServletResponse) {
-        logger.info("downloadFile url is:$url")
-        val httpResponse = getFileHttpResponse(url)
-        FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
-    }
-
-    fun downloadFile(url: String): javax.ws.rs.core.Response {
-        val httpResponse = getFileHttpResponse(url)
-        val fileName: String?
-        try {
-            fileName = URLEncoder.encode(File(url).name, "UTF-8")
-        } catch (e: UnsupportedEncodingException) {
-            return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build()
-        }
-        return javax.ws.rs.core.Response
-            .ok(httpResponse.body()!!.byteStream(), javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("Content-disposition", "attachment;filename=" + fileName!!)
-            .header("Cache-Control", "no-cache").build()
-    }
-
-    private fun getFileHttpResponse(url: String): Response {
-        val request = Request.Builder().url(url).get().build()
-        val httpResponse = doLongHttp(request)
-        if (!httpResponse.isSuccessful) {
-            logger.error("FAIL|Download file from $url| message=${httpResponse.message()}| code=${httpResponse.code()}")
-            throw RemoteServiceException(httpResponse.message())
-        }
-        return httpResponse
-    }
-
     private fun sslSocketFactory(): SSLSocketFactory {
         try {
-            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-                @Throws(CertificateException::class)
-                override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-                }
-
-                @Throws(CertificateException::class)
-                override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-                }
-
-                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
-                    return arrayOf()
-                }
-            })
-
             val sslContext = SSLContext.getInstance("SSL")
             sslContext.init(null, trustAllCerts, java.security.SecureRandom())
             return sslContext.socketFactory

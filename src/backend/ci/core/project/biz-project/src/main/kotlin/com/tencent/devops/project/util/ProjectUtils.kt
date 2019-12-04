@@ -35,10 +35,12 @@ object ProjectUtils {
     fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {
         return ProjectVO(
             /* 已经投产旧插件的使用字段兼容 */
+            project_id = tProjectRecord.projectId,
             project_name = tProjectRecord.projectName,
             project_code = tProjectRecord.englishName ?: "",
             cc_app_id = tProjectRecord.ccAppId ?: 0,
             cc_app_name = tProjectRecord.ccAppName ?: "",
+            hybrid_cc_app_id = tProjectRecord.hybridCcAppId,
 
             id = tProjectRecord.id,
             projectId = tProjectRecord.projectId ?: "",
