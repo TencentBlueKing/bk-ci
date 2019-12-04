@@ -272,6 +272,9 @@
             ...mapActions('atom', [
                 'setPipeline'
             ]),
+            ...mapActions('pipelines', [
+                'requestInstallTemplate'
+            ]),
 
             search () {
                 this.selectTemp(0)
@@ -284,8 +287,20 @@
                 }
             },
             installTemplate (temp) {
-                const href = `${WEB_URL_PIRFIX}/store/${temp.code}/install/template?projectCode=${this.projectId}#MARKET`
-                window.open(href, '_blank')
+                const postData = {
+                    projectCodeList: [this.projectId],
+                    templateCode: temp.code
+                }
+                this.isLoading = true
+                this.requestInstallTemplate(postData).then((res) => {
+                    this.requestPipelineTemplate({
+                        projectId: this.projectId
+                    })
+                }).catch((err) => {
+                    this.$showTips({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.isLoading = false
+                })
             },
             selectTempType (index) {
                 if (index === this.tempTypeList.length - 1 && !this.storeTemplate) {
