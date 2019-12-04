@@ -216,7 +216,7 @@
         data () {
             return {
                 // 用lint类报告展示的工具
-                lintReportArr: ['CPPLINT', 'PYLINT', 'ESLINT', 'CHECKSTYLE', 'STYLECOP', 'GOML', 'DETEKT', 'PHPCS', 'SENSITIVE', 'OCCHECK', 'GOCILINT'],
+                lintReportArr: ['CPPLINT', 'PYLINT', 'ESLINT', 'CHECKSTYLE', 'STYLECOP', 'GOML', 'DETEKT', 'PHPCS', 'SENSITIVE', 'OCCHECK', 'GOCILINT', 'HORUSPY', 'WOODPECKER_SENSITIVE', 'RIPS'],
                 textStyle: {
                     fontSize: '48px',
                     color: '#63656E'
