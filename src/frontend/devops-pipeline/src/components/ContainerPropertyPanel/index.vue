@@ -19,7 +19,7 @@
                 </div>
             </form-field>
 
-            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
+            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isHandleHistory }">
                 <form-field :label="$t('editPage.resourceType')">
                     <selector
                         :disabled="!editable"
@@ -204,6 +204,7 @@
                 DOCS_URL_PREFIX,
                 showImageSelector: false,
                 isVersionLoading: false,
+                isHandleHistory: false,
                 imageTypeList: [
                     {
                         label: this.$t('editPage.fromList'),
@@ -384,11 +385,12 @@
                 if (/\$\{/.test(this.buildResource)) {
                     this.changeBuildResource('imageType', 'THIRD')
                 } else {
-                    this.changeBuildResource('imageType', 'BKSTORE')
+                    this.isHandleHistory = true
                     this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
-                        this.changeBuildResource('imageCode', res.code)
-                        this.changeBuildResource('imageName', res.name)
-                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err }))
+                        const data = res.data || {}
+                        this.changeBuildResource('imageType', 'BKSTORE')
+                        this.choose(data)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isHandleHistory = false))
                 }
             }
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
