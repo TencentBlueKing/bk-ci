@@ -315,7 +315,7 @@ class ImageProjectService @Autowired constructor(
         val imageSize = it["imageSize"] as String
         val certificationFlag = it["certificationFlag"] as? Boolean
         val publicFlag = it["publicFlag"] as? Boolean
-        val imageType = it["imageType"] as Byte
+        val imageType = it["imageType"] as? Byte
         val weight = it["weight"] as? Int
         val recommendFlag = it["recommendFlag"] as? Boolean
         val labelNames = it["labelNames"] as? String
@@ -348,7 +348,7 @@ class ImageProjectService @Autowired constructor(
             imageSize = imageSize,
             certificationFlag = certificationFlag,
             publicFlag = publicFlag,
-            imageType = ImageRDTypeEnum.getImageRDType(imageType.toInt()),
+            imageType = if (null != imageType) ImageRDTypeEnum.getImageRDType(imageType.toInt()) else null,
             weight = weight,
             recommendFlag = recommendFlag,
             labelNames = labelNames,

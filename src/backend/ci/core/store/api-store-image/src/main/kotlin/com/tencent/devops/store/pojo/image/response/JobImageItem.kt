@@ -85,8 +85,8 @@ data class JobImageItem(
     @ApiModelProperty("是否为公共镜像 true：是 false：否", required = false)
     val publicFlag: Boolean?,
 
-    @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
-    val imageType: String,
+    @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = false)
+    val imageType: String?,
 
     @ApiModelProperty("权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
