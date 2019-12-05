@@ -26,14 +26,14 @@
 
 package com.tencent.devops.support.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.support.model.image.UploadImageRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -64,11 +64,15 @@ interface ServiceImageManageResource {
     @ApiOperation("上传图片")
     @POST
     @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadImage(
         @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+        @QueryParam("userId")
         userId: String,
-        @ApiParam("上传图片请求报文体", required = true)
-        uploadImageRequest: UploadImageRequest
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
     ): Result<String?>
 }

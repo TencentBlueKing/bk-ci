@@ -37,6 +37,8 @@ data class Category(
     val categoryCode: String,
     @ApiModelProperty("范畴名称", required = true)
     val categoryName: String,
+    @ApiModelProperty("范畴附加属性配置表", required = true)
+    val settings: MutableMap<String, String> = HashMap(),
     @ApiModelProperty("icon地址", required = false)
     val iconUrl: String?,
     @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)

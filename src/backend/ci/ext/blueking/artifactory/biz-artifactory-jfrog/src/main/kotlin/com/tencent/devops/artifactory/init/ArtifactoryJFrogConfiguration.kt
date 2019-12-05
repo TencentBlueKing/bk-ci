@@ -27,7 +27,7 @@
 package com.tencent.devops.artifactory.init
 
 import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.artifactory.service.JFrogArchiveFileServiceImpl
+import com.tencent.devops.artifactory.service.impl.JFrogArchiveFileServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary

@@ -27,6 +27,8 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.BuildArtifactoryResource
+import com.tencent.devops.artifactory.client.JFrogServiceClient
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.artifactory.pojo.DockerUser
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Property
@@ -35,8 +37,6 @@ import com.tencent.devops.artifactory.service.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.ArtifactoryService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.client.JfrogService
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Value
 class BuildArtifactoryResourceImpl @Autowired constructor(
     private val artifactoryService: ArtifactoryService,
     private val artifactoryDownloadService: ArtifactoryDownloadService,
-    private val jfrogService: JfrogService
+    private val JFrogServiceClient: JFrogServiceClient
 ) : BuildArtifactoryResource {
 
     @Value("\${jfrog.docker_url}")
@@ -120,7 +120,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
             artifactoryType == ArtifactoryType.CUSTOM_DIR,
             1
         )
-        return Result(jfrogService.getFileDownloadUrl(param))
+        return Result(JFrogServiceClient.getFileDownloadUrl(param))
     }
 
     private fun checkParam(projectId: String, path: String) {

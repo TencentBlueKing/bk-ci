@@ -202,6 +202,15 @@ interface ServiceTxProjectResource {
     ): Result<String>
 
     @GET
+    @Path("/projects/{projectCode}/managers")
+    @ApiOperation(" 查询项目的管理员")
+    fun getProjectManagers(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<List<String>>
+
+    @GET
     @Path("/{projectCode}/users/{userId}/verifyWithToken")
     @ApiOperation(" 校验用户是否项目成员")
     fun verifyUserProjectPermission(
