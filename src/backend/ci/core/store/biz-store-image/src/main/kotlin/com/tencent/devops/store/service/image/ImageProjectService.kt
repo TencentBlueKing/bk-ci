@@ -514,9 +514,9 @@ class ImageProjectService @Autowired constructor(
         val installImageCodes = marketImageDao.getInstalledImageCodes(dslContext, projectCode)
         var testImageCodes = storeProjectRelDao.getTestImageCodes(dslContext, projectCode, StoreTypeEnum.IMAGE)?.map { it.value1() }
             ?: emptyList()
-        testImageCodes=marketImageDao.getTestingImageCodes(dslContext,testImageCodes)?.map{
+        testImageCodes = marketImageDao.getTestingImageCodes(dslContext, testImageCodes)?.map {
             it.value1()
-        }?:emptyList()
+        } ?: emptyList()
         val visibleImageCodes = marketImageDao.getVisibleImageCodes(dslContext, projectCode, userDeptList)
         val agentTypeImageCodes = imageAgentTypeDao.getImageCodesByAgentType(dslContext, agentType)?.map { it.value1() }
             ?: emptyList()

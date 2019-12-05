@@ -98,13 +98,13 @@ class DockerHostDebugService @Autowired constructor(
             )
             credentialProject = imageRepoInfo.ticketProject
             if (credentialProject.isBlank()) {
-                logger.warn("insertDebug:credentialProject is blank,pipelineId=${pipelineId}, imageCode=${imageCode},imageVersion=${imageVersion},credentialId=${credentialId}")
+                logger.warn("insertDebug:credentialProject is blank,pipelineId=$pipelineId, imageCode=$imageCode,imageVersion=$imageVersion,credentialId=$credentialId")
             }
         }
         val dockerImage = when (imageType) {
             ImageType.THIRD -> imageName!!
             ImageType.BKSTORE -> {
-                //研发商店镜像一定含name与tag
+                // 研发商店镜像一定含name与tag
                 imageRepoInfo!!.completeImageName
             }
             else -> when (imageName) {
@@ -159,7 +159,7 @@ class DockerHostDebugService @Autowired constructor(
                 ImageType.THIRD -> imageType!!.type
                 ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
                 ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
-                else -> throw UnknownImageType("imageCode:${imageCode},imageVersion:${imageVersion},imageType:${imageType}")
+                else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
             }
         )
     }

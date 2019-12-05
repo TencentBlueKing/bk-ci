@@ -68,7 +68,7 @@ class MarketCheckImageTask : ITask() {
         val imageCode = buildVariableMap["imageCode"]
         val imageName = buildVariableMap["imageName"]
         val imageType = buildVariableMap["imageType"]
-        val checkImageRequest  = CheckImageRequest(imageType,imageName!!,registryUser,registryPwd)
+        val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
         val dockerHostIp = System.getenv("docker_host_ip")
         val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check"
         val body = RequestBody.create(
@@ -92,7 +92,6 @@ class MarketCheckImageTask : ITask() {
             )
         }
         val checkImageResult = JsonUtil.to(responseContent!!, object : TypeReference<Result<CheckImageResponse?>>() {
-
         })
         LoggerService.addNormalLine("checkImageResult: $checkImageResult")
         if (checkImageResult.isNotOk()) {
@@ -113,7 +112,7 @@ class MarketCheckImageTask : ITask() {
             imageCode = imageCode!!,
             version = imageVersion!!,
             imageBaseInfoUpdateRequest = ImageBaseInfoUpdateRequest(
-                imageSize =  checkImageResponse?.size.toString()
+                imageSize = checkImageResponse?.size.toString()
             )
         )
         logger.info("MarketCheckImageTask updateImageResult: $updateImageResult")

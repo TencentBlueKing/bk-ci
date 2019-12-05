@@ -27,5 +27,5 @@
 package com.tencent.devops.store.pojo.common.enums
 
 enum class BusinessEnum {
-    CATEGORY      // 范畴
+    CATEGORY // 范畴
 }

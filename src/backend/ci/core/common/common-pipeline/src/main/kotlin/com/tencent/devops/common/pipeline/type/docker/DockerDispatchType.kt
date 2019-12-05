@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 
-
 data class DockerDispatchType(
     @JsonProperty("value") override var dockerBuildVersion: String?,
     override var imageType: ImageType? = ImageType.BKDEVOPS,

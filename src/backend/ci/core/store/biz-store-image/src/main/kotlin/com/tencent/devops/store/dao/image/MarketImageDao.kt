@@ -273,11 +273,11 @@ class MarketImageDao @Autowired constructor(
                     DSL.field(MarketImageSortTypeEnum.getSortType(sortType.name))
                 }
                 MarketImageSortTypeEnum.CREATE_TIME -> {
-                    //创建时间按照tImageFeature表计算
+                    // 创建时间按照tImageFeature表计算
                     tImageFeature.field(MarketImageSortTypeEnum.getSortType(sortType.name))
                 }
                 else -> {
-                    //更新时间按照tImage表计算
+                    // 更新时间按照tImage表计算
                     tImage.field(MarketImageSortTypeEnum.getSortType(sortType.name))
                 }
             }
@@ -325,7 +325,7 @@ class MarketImageDao @Autowired constructor(
             rdType = rdType,
             dslContext = dslContext
         )
-        //查的是最近已发布版本，一个imageCode只有一条记录
+        // 查的是最近已发布版本，一个imageCode只有一条记录
         val baseStep = dslContext.select(
             tImage.ID.count()
         ).from(tImage).leftJoin(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))

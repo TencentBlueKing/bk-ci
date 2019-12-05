@@ -336,11 +336,11 @@ abstract class ImageService @Autowired constructor() {
 
     private fun getDefaultDescTypeBySortType(sortType: MarketImageSortTypeEnum?): Boolean {
         return when (sortType) {
-            //名称与发布者升序
+            // 名称与发布者升序
             MarketImageSortTypeEnum.NAME, MarketImageSortTypeEnum.PUBLISHER -> {
                 false
             }
-            //其他含数量意义的指标降序
+            // 其他含数量意义的指标降序
             else -> {
                 true
             }

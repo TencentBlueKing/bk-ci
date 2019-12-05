@@ -22,10 +22,10 @@ class DispatchTypeParserImpl @Autowired constructor(
 
     override fun parse(userId: String, projectId: String, dispatchType: DispatchType) {
         if (dispatchType is StoreDispatchType) {
-            //凭证项目默认初始值为当前项目
+            // 凭证项目默认初始值为当前项目
             dispatchType.credentialProject = projectId
             if (dispatchType.imageType == ImageType.BKSTORE) {
-                //从商店获取镜像真实信息
+                // 从商店获取镜像真实信息
                 val imageRepoInfo = storeImageService.getImageRepoInfo(
                     userId = userId,
                     projectId = projectId,
@@ -34,7 +34,7 @@ class DispatchTypeParserImpl @Autowired constructor(
                     defaultPrefix = ""
                 )
                 logger.info("DispatchTypeParserImpl:imageType==BKSTORE:imageBaseInfo=(${imageRepoInfo.sourceType.name},${imageRepoInfo.completeImageName},${imageRepoInfo.ticketId},${imageRepoInfo.ticketProject})")
-                //镜像来源替换为原始来源
+                // 镜像来源替换为原始来源
                 dispatchType.imageType = imageRepoInfo.sourceType
                 dispatchType.value = imageRepoInfo.completeImageName
                 dispatchType.credentialId = imageRepoInfo.ticketId
