@@ -1,5 +1,7 @@
 {
     "store": "Store",
+    "该分类下暂无容器镜像": "No container image under this category",
+    "发布容器镜像": "Release Container Image",
     "构建中": "Building",
     "构建失败": "Build Failure",
     "上架中止": "Suspended",
@@ -416,7 +418,7 @@
     "关联成功": "Successfully linked",
     "容器镜像": "Docker Image",
     "imageMdDesc": "### Introduction\n\n### Usage\n\n### Notes\n\n### License",
-    "是必填项，请填写以后重试": "Is required, please fill in and try again later",
+    "输入不正确，请确认修改后再试": "Incorrect input, please confirm and try again",
     "Devnet 物理机": "Devnet Physical Machine",
     "请输入源镜像Tag，如 enterprise-6.0.3": "Please enter the source image tag, such as enterprise-6.0.3",
     "请输入源镜像名称，如 XXX/XXXX": "Please enter a image name, such as XXX/XXXX",
@@ -495,5 +497,6 @@
     "年": "year",
     "月": "month",
     "日": "day",
-    "适用机器类型：": "Machine"
+    "适用机器类型：": "Machine",
+    "editLogo": "Edit"
 }

@@ -8,7 +8,12 @@ const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
-    'en-US': 'English'
+    'zh-cn': '中文',
+    'cn': '中文',
+    'en-US': 'English',
+    'en-us': 'English',
+    'en': 'English',
+    'us': 'English'
 }
 const localeAliasMap = {
     'zh-cn': 'zh-CN',
@@ -53,7 +58,7 @@ export default (r) => {
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         const localeModuleId = getLocalModuleId(module, locale)
         if (loadedModule[localeModuleId]) {
-            return
+            return Promise.resolve()
         }
         return axios.get(`${WEBSITE_URL}/${module}/${locale}.json?t=${+new Date()}`, {
             crossdomain: true
@@ -75,7 +80,6 @@ export default (r) => {
                 dynamicLoadModule(module, localeLang)
             }
         })
-        setLsLocale(localeLang)
         i18n.locale = localeLang
         setLsLocale(localeLang)
         locale.use(lang[localeLang.replace('-', '')])
@@ -111,10 +115,9 @@ function importAll (r) {
                 ...lang[localeKey.replace('-', '')],
                 ...mod
             }
-            
             localeList.push({
                 key: localeKey,
-                label: localeKey.split('-').pop()
+                label: localeLabelMap[localeKey]
             })
         }
         return acc

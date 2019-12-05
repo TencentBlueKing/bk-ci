@@ -80,9 +80,8 @@
         var GW_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
         var WS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/'
         var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
-        var DOCS_URL_PREFIX = 'https://bk.tencent.com/docs/ci'  // 文档中心域名
         var LOGIN_SERVICE_URL = 'http://login.o.oa.com'  // 登录域名前缀
-        var DOCS_URL_PREFIX = 'http://docs.devops.oa.com'  // 文档中心域名
+        var DOCS_URL_PREFIX = 'http://iwiki.oa.com'  // 文档中心域名
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var ENTERPRISE_VERSION = false
     </script>
@@ -228,6 +227,13 @@
                         children[j].iframe_url = children[j].iframe_url.replace('http://dev.static.devops.oa.com', WEBSITE_URL)
                     }
 
+                    if (children[j].name.indexOf('WeTest') > -1) { // hack wetest
+                        children[j] = Object.assign(children[j], {
+                            iframe_url: 'https://wetest.oa.com/devops/console',
+                            link_new: '/wetest/0/pipeline?group=bk_devops',
+                            inject_type: "iframe"
+                        })
+                    }
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
@@ -424,5 +430,7 @@
             document.removeEventListener('visibilitychange', handleVisibilityChange, false);
         }
     </script>
+
+    <script async src="https://yzf.qq.com/xv/web/static/chat_sdk/yzf_chat.min.js"></script>
 </body>
 </html>

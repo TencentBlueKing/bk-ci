@@ -22,7 +22,7 @@
                     <label class="bk-label env-item-label">
                         <!-- 地点： -->
                         <bk-popover placement="right">
-                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.model') }}</span>：
+                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.location') }}</span>：
                             <template slot="content">
                                 <p style="width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
                                     {{ $t('environment.nodeInfo.buildMachineLocationTips') }}
@@ -125,7 +125,7 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/${this.$t('environment.nodeInfo.installBuildMachineTips')}Agent.html`
+                installDocsLink: `${DOCS_URL_PREFIX}/x/ZNMrAg`
             }
         },
         methods: {

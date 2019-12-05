@@ -5,6 +5,7 @@
             :key="index"
             :class="{ 'consult-item': true, 'default-hover': index === 0 }"
             :href="entry.href"
+            :id="entry.id"
             :target="entry.target"
         >
             <icon
@@ -14,7 +15,7 @@
             />
             <div
                 class="custom-panel trans-fadeout"
-                @click.stop="prevent($event)"
+                @click.stop.prevent=""
             >
                 <div class="panel-arrow" />
                 <p>{{ entry.label }}</p>
@@ -26,13 +27,16 @@
 <script lang='ts'>
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
+    import { State } from 'vuex-class'
 
     @Component
     export default class ConsultTools extends Vue {
+        @State user
         get consultTypeList () {
             return [
                 {
                     icon: 'telephone',
+                    id: 'telephone',
                     label: this.$t('hotline') + '56000',
                     href: '#',
                     target: ''
@@ -40,11 +44,13 @@
                 {
                     icon: 'service',
                     label: this.$t('contactUs'),
-                    href: 'wxwork://message/?username=DevOps',
+                    href: 'javascript:;',
+                    id: 'contactUs',
                     target: ''
                 },
                 {
                     icon: 'feedback',
+                    id: 'feedback',
                     label: this.$t('feedback'),
                     href: 'http://tapd.oa.com/PaaS/prong/stories/stories_list',
                     target: '_blank'
@@ -52,8 +58,21 @@
             ]
         }
 
-        prevent (event) {
-            event.preventDefault()
+        mounted () {
+            // 参数说明
+            // sign：公司渠道唯一标识，复制即可，无需改动
+            // uid：用户唯一标识，如果没有则不填写，默认为空
+            // data：用于传递用户信息，最多支持5个，参数名分别为c1,c2,c3,c4,c5；默认为空
+            // selector：css选择器(document.querySelector, 如#btnid .chat-btn等)，用于替换默认的常驻客服入口
+            // callback(type, data): 回调函数,type表示事件类型， data表示事件相关数据
+            // type支持的类型：newmsg有新消息，error云智服页面发生错误， close聊天窗口关闭
+            // @ts-ignore
+            window.yzf && window.yzf.init({
+                sign: '37ef9b97d1210ac42416cce84db7b56b934ef302f69e6f6494d847d943e00fa4c8c24c7fbff6003642099e2260e29aeaecbfe7',
+                uid: this.user ? this.user.username : '',
+                selector: '#contactUs',
+                callback: function (type, data) {}
+            })
         }
     }
 </script>

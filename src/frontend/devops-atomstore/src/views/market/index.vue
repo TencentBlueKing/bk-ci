@@ -103,7 +103,7 @@
                         res = bkLocale.$t('store.IDE插件')
                         break
                     case 'image':
-                        res = bkLocale.$t('store.镜像')
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
                         res = bkLocale.$t('store.流水线插件')
@@ -274,7 +274,8 @@
             },
 
             setClassifyValue (key) {
-                const categories = this.categories[1] || {}
+                let categories = this.categories[2] || {}
+                if (this.filterData.pipeType === 'atom') categories = this.categories[1] || {}
                 const selected = (categories.children || []).find((category) => category.classifyCode === key) || {}
                 this.filterData.classifyValue = selected.classifyValue
                 this.filterData.classifyKey = 'classifyCode'

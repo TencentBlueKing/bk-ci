@@ -3,6 +3,7 @@
         <section class="select-logo" ref="selectLogo" :style="`top: ${top}px; right: ${right}px`">
             <section v-if="form.logoUrl" @click="uploadLogo" class="has-upload">
                 <img :src="form.logoUrl" :title="$t('store.选择logo')">
+                <span>{{ $t('store.editLogo') }}</span>
             </section>
             <section v-else @click="uploadLogo" :class="[{ 'logo-error': isErr }, 'un-upload']">
                 <i class="bk-icon icon-plus"></i>
@@ -218,13 +219,17 @@
             }
         }
         .has-upload {
+            position: relative;
             img {
                 height: 100px;
                 width: 100px;
             }
+            > span {
+                display: none;
+            }
             &:hover {
-                &:after {
-                    content: '\66F4\6362logo';
+                > span {
+                    display: block;
                     position: absolute;
                     bottom: 0;
                     left: 0;

@@ -258,13 +258,13 @@
     },
     "newlist": {
         "defaultViews": "My views",
-        "copyPipeline": "Duplicate pipelines",
-        "saveAsTemp": "Save as Template",
+        "copyPipeline": "Copy pipeline",
+        "saveAsTemp": "Templated",
         "totalAtomNums": "Plugins",
         "execTimes": "Duration",
         "known": "OK",
         "noExecution": "No builds",
-        "copyAs": "Duplicate",
+        "copyAs": "Copy",
         "sucToStartBuild": "Start build successfully",
         "failToStartBuild": "Failed to start build",
         "view": "View",
@@ -438,7 +438,7 @@
         "codeCheck": " CodeCC",
         "wetestReportName": "Wetest report",
         "quality": {
-            "quality": "Quality redline",
+            "quality": "Quality",
             "warning": "Warning",
             "ruleNameTips": "this plugin is subject to the quality redline ",
             "affect": "Affect",
@@ -452,11 +452,12 @@
             "toCheck": " Checked by man",
             "canSet": " Support using quality redlines to set quality requirement for this plugin so as to ensure the quality of this version",
             "settingNow": "Set now",
-            "reflashSetting": " Configured successfully. Please click here to refresh"
+            "reflashSetting": " Click here to refresh"
 
         }
     },
     "editPage": {
+        "image": "image",
         "provideInfo": "Provided by {0}, modified {1} on {2}",
         "officialCertification": "Official Certification",
         "thirdImageHolder": "Please Input Image, eg: Java:11.0.5",
@@ -488,6 +489,7 @@
         "saving": "Saving",
         "selectJob": " Please select the type of job",
         "insert": "Insert",
+        "append": "Append",
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",

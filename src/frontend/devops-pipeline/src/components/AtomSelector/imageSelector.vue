@@ -1,40 +1,92 @@
 <template>
-    <section class="selector-popup" v-bk-clickoutside="closeImageSelect" v-show="isShow">
-        <main class="selector-main">
-            <header class="selector-header">
-                <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'bk-icon', 'icon-refresh', 'fresh']" /></h3>
-                <bk-input class="search-input"
-                    ref="searchStr"
-                    :clearable="true"
-                    :placeholder="$t('editPage.enterSearch')"
-                    right-icon="bk-icon icon-search"
-                    :value="searchKey"
-                    @input="handleClear"
-                    @enter="handleSearch">
-                </bk-input>
-            </header>
-            <bk-tab v-if="!searchKey" size="small" ref="imageTab" :active.sync="currentTab" type="unborder-card" class="select-tab">
-                <bk-tab-panel
-                    v-for="tab in tabList"
-                    :key="tab.classifyCode"
-                    :name="tab.classifyCode"
-                    v-bkloading="{ isLoading }"
-                >
-                    <span slot="label" @click="getInstallImageList(tab)" class="tab-label">{{ tab.classifyName }}</span>
+    <transition name="selector-slide">
+        <section class="selector-popup" v-bk-clickoutside="closeImageSelect" v-show="isShow">
+            <main class="selector-main">
+                <header class="selector-header">
+                    <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'bk-icon', 'icon-refresh', 'fresh']" /></h3>
+                    <bk-input class="search-input"
+                        ref="searchStr"
+                        :clearable="true"
+                        :placeholder="$t('editPage.enterSearch')"
+                        right-icon="bk-icon icon-search"
+                        :value="searchKey"
+                        @input="handleClear"
+                        @enter="handleSearch">
+                    </bk-input>
+                </header>
+                <bk-tab v-if="!searchKey" size="small" ref="imageTab" :active.sync="currentTab" type="unborder-card" class="select-tab">
+                    <bk-tab-panel
+                        v-for="tab in tabList"
+                        :key="tab.classifyCode"
+                        :name="tab.classifyCode"
+                        v-bkloading="{ isLoading }"
+                    >
+                        <span slot="label" @click="getInstallImageList(tab)" class="tab-label">{{ tab.classifyName }}</span>
+                        <template v-if="!isLoading">
+                            <ul v-if="tab.recommendData.length">
+                                <card :current-item.sync="currentItem"
+                                    :card="card"
+                                    v-for="card in tab.recommendData"
+                                    :key="card"
+                                    :type="tab.classifyCode"
+                                    :code="code"
+                                    @choose="choose">
+                                </card>
+                            </ul>
+
+                            <section v-if="tab.unRecommendData.length">
+                                <h3 :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="tab.expandObtained = !tab.expandObtained">
+                                    {{ $t('editPage.unRecommend') }}（{{tab.unRecommendData.length}}）
+                                    <bk-popover placement="top">
+                                        <i class="bk-icon icon-info-circle "></i>
+                                        <div slot="content">
+                                            {{ $t('editPage.unRecomReason') }}
+                                        </div>
+                                    </bk-popover>
+                                </h3>
+                                <ul v-if="tab.expandObtained">
+                                    <card :current-item.sync="currentItem"
+                                        :card="card"
+                                        v-for="card in tab.unRecommendData"
+                                        :key="card"
+                                        :type="tab.classifyCode"
+                                        :code="code"
+                                        @choose="choose">
+                                    </card>
+                                </ul>
+                            </section>
+
+                            <p v-if="!tab.unRecommendData.length && !tab.recommendData.length" class="list-empty"></p>
+                        </template>
+                    </bk-tab-panel>
+                </bk-tab>
+
+                <section v-else class="search-result" v-bkloading="{ isLoading }">
                     <template v-if="!isLoading">
-                        <ul v-if="tab.recommendData.length">
+                        <template v-if="searchInstallList.length">
+                            <h3 class="search-title">{{ $t('editPage.installed') }}</h3>
                             <card :current-item.sync="currentItem"
                                 :card="card"
-                                v-for="card in tab.recommendData"
+                                v-for="card in searchInstallList"
                                 :key="card"
-                                :type="tab.classifyCode"
                                 :code="code"
                                 @choose="choose">
                             </card>
-                        </ul>
-
-                        <section v-if="tab.unRecommendData.length">
-                            <h3 :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="tab.expandObtained = !tab.expandObtained">
+                        </template>
+                        
+                        <template v-if="searchUninstallList.length">
+                            <h3 class="search-title gap-border">{{ $t('editPage.unInstalled') }}</h3>
+                            <card :current-item.sync="currentItem"
+                                :card="card"
+                                v-for="card in searchUninstallList"
+                                :key="card"
+                                :code="code"
+                                @choose="choose">
+                            </card>
+                        </template>
+                        
+                        <section v-if="searchUnrecomandList.length">
+                            <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
                                 {{ $t('editPage.unRecommend') }}
                                 <bk-popover placement="top">
                                     <i class="bk-icon icon-info-circle "></i>
@@ -43,74 +95,24 @@
                                     </div>
                                 </bk-popover>
                             </h3>
-                            <ul v-if="tab.expandObtained">
+                            <ul v-if="searchExpandObtained">
                                 <card :current-item.sync="currentItem"
                                     :card="card"
-                                    v-for="card in tab.unRecommendData"
+                                    v-for="card in searchUnrecomandList"
                                     :key="card"
-                                    :type="tab.classifyCode"
+                                    type="store"
                                     :code="code"
                                     @choose="choose">
                                 </card>
                             </ul>
                         </section>
 
-                        <p v-if="!tab.unRecommendData.length && !tab.recommendData.length" class="list-empty"></p>
+                        <p v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length" class="list-empty"></p>
                     </template>
-                </bk-tab-panel>
-            </bk-tab>
-
-            <section v-else class="search-result" v-bkloading="{ isLoading }">
-                <template v-if="!isLoading">
-                    <template v-if="searchInstallList.length">
-                        <h3 class="search-title">{{ $t('editPage.installed') }}</h3>
-                        <card :current-item.sync="currentItem"
-                            :card="card"
-                            v-for="card in searchInstallList"
-                            :key="card"
-                            :code="code"
-                            @choose="choose">
-                        </card>
-                    </template>
-                    
-                    <template v-if="searchUninstallList.length">
-                        <h3 class="search-title gap-border">{{ $t('editPage.unInstalled') }}</h3>
-                        <card :current-item.sync="currentItem"
-                            :card="card"
-                            v-for="card in searchUninstallList"
-                            :key="card"
-                            :code="code"
-                            @choose="choose">
-                        </card>
-                    </template>
-                    
-                    <section v-if="searchUnrecomandList.length">
-                        <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
-                            {{ $t('editPage.unRecommend') }}
-                            <bk-popover placement="top">
-                                <i class="bk-icon icon-info-circle "></i>
-                                <div slot="content">
-                                    {{ $t('editPage.unRecomReason') }}
-                                </div>
-                            </bk-popover>
-                        </h3>
-                        <ul v-if="searchExpandObtained">
-                            <card :current-item.sync="currentItem"
-                                :card="card"
-                                v-for="card in searchUnrecomandList"
-                                :key="card"
-                                type="store"
-                                :code="code"
-                                @choose="choose">
-                            </card>
-                        </ul>
-                    </section>
-
-                    <p v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length" class="list-empty"></p>
-                </template>
-            </section>
-        </main>
-    </section>
+                </section>
+            </main>
+        </section>
+    </transition>
 </template>
 
 <script>
@@ -146,7 +148,7 @@
                 searchExpandObtained: false,
                 searchKey: '',
                 currentTab: 'all',
-                currentItem: '',
+                currentItem: this.code,
                 tabList: [],
                 searchInstallList: [],
                 searchUninstallList: [],
@@ -156,10 +158,12 @@
 
         watch: {
             buildResourceType (val) {
-                this.isLoading = true
-                this.searchKey = ''
-                this.clearData()
-                this.initData()
+                if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(val)) {
+                    this.isLoading = true
+                    this.searchKey = ''
+                    this.clearData()
+                    this.initData()
+                }
             },
 
             isShow (val) {
@@ -479,5 +483,18 @@
         height: 100%;
         align-items: center;
         justify-content: center;
+    }
+    .selector-slide-enter-active, .selector-slide-leave-active {
+        transition: transform .2s linear, opacity .2s cubic-bezier(1, -0.05, .94, .17);
+    }
+
+    .selector-slide-enter {
+        -webkit-transform: translate3d(600px, 0, 0);
+        transform: translateX(600px);
+        opacity: 0;
+    }
+
+    .selector-slide-leave-active {
+        display: none;
     }
 </style>

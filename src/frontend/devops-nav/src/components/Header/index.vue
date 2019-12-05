@@ -55,6 +55,7 @@
             </h3>
         </div>
         <div class="header-right-bar">
+            <locale-switcher></locale-switcher>
             <qrcode class="feed-back-icon" />
             <span class="seperate-line">|</span>
             <!-- <feed-back class='feed-back-icon'></feed-back> -->
@@ -84,6 +85,7 @@
     import FeedBack from './FeedBack.vue'
     import Qrcode from './Qrcode.vue'
     import Logo from '../Logo/index.vue'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
@@ -97,7 +99,8 @@
             Qrcode,
             ProjectDialog,
             Logo,
-            DevopsSelect
+            DevopsSelect,
+            LocaleSwitcher
         }
     })
     export default class Header extends Vue {
@@ -146,14 +149,20 @@
 
         created () {
             eventBus.$on('show-project-menu', () => {
-                const ele = this.$refs.projectDropdown.$el
-                ele && ele.click()
+                const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
+                if (ele) {
+                    const triggerEle = ele.querySelector('.bk-select-name')
+                    triggerEle && triggerEle.click()
+                }
             })
 
             eventBus.$on('hide-project-menu', () => {
                 if (this.isDropdownMenuVisible) {
-                    const ele = this.$refs.projectDropdown.$el
-                    ele && ele.click()
+                    const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
+                    if (ele) {
+                        const triggerEle = ele.querySelector('.bk-select-name')
+                        triggerEle && triggerEle.click()
+                    }
                 }
             })
 
@@ -224,7 +233,7 @@
         }
 
         goToDocs (): void {
-            this.to('/console/docs')
+            this.to(`${DOCS_URL_PREFIX}/display/DevOps`)
         }
 
         goToPm (): void {
@@ -367,6 +376,12 @@
         cursor: pointer;
         &:hover {
             color: $primaryColor;
+            .text {
+                color: $primaryColor;
+            }
+        }
+        &:first-child {
+            border-top: 0
         }
     }
 </style>

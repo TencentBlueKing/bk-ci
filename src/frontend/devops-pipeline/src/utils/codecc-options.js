@@ -1106,5 +1106,206 @@ export default {
                 enable: true
             }
         ]
+    },
+    HORUSPY: {
+        'title': '荷鲁斯高危组件',
+        'normalLegend': [
+            {
+                'key': '告警数',
+                'value': 'newfile_total_defect_count'
+            },
+            {
+                'key': '文件数',
+                'value': 'newfile_total_count'
+            }
+        ],
+        'normalKey': '文件数',
+        'normalVal': 'newfile_total_count',
+        'normalChange': 'newfile_changed_count',
+        'activeKey': '告警数',
+        'activeVal': 'newfile_total_defect_count',
+        'activeChange': 'newfile_changed_defect_count',
+        'mainKey': '告警总数',
+        'mainVal': 'newfile_total_defect_count',
+        'hasChange': true,
+        'changeNormalVal': 'newfile_changed_count',
+        'changeActiveVal': 'newfile_changed_defect_count',
+        'charts': [
+            {
+                type: 'bar',
+                title: '待修复告警级别',
+                opts: [
+                    {
+                        key: 'total_new_serious',
+                        text: '严重'
+                    },
+                    {
+                        key: 'total_new_normal',
+                        text: '一般'
+                    },
+                    {
+                        key: 'total_new_prompt',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            },
+            {
+                type: 'bar',
+                title: '待修复告警作者',
+                opts: 'author_list',
+                xKey: 'name',
+                yKey: 'prompt_count',
+                level: [
+                    {
+                        key: 'serious_count',
+                        text: '严重'
+                    },
+                    {
+                        key: 'normal_count',
+                        text: '一般'
+                    },
+                    {
+                        key: 'prompt_count',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            }
+        ]
+    },
+    WOODPECKER_SENSITIVE: {
+        'title': '啄木鸟敏感信息',
+        'normalLegend': [
+            {
+                'key': '告警数',
+                'value': 'newfile_total_defect_count'
+            },
+            {
+                'key': '文件数',
+                'value': 'newfile_total_count'
+            }
+        ],
+        'normalKey': '文件数',
+        'normalVal': 'newfile_total_count',
+        'normalChange': 'newfile_changed_count',
+        'activeKey': '告警数',
+        'activeVal': 'newfile_total_defect_count',
+        'activeChange': 'newfile_changed_defect_count',
+        'mainKey': '告警总数',
+        'mainVal': 'newfile_total_defect_count',
+        'hasChange': true,
+        'changeNormalVal': 'newfile_changed_count',
+        'changeActiveVal': 'newfile_changed_defect_count',
+        'charts': [
+            {
+                type: 'bar',
+                title: '待修复告警级别',
+                opts: [
+                    {
+                        key: 'total_new_serious',
+                        text: '严重'
+                    },
+                    {
+                        key: 'total_new_normal',
+                        text: '一般'
+                    },
+                    {
+                        key: 'total_new_prompt',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            },
+            {
+                type: 'bar',
+                title: '待修复告警作者',
+                opts: 'author_list',
+                xKey: 'name',
+                yKey: 'prompt_count',
+                level: [
+                    {
+                        key: 'serious_count',
+                        text: '严重'
+                    },
+                    {
+                        key: 'normal_count',
+                        text: '一般'
+                    },
+                    {
+                        key: 'prompt_count',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            }
+        ]
+    },
+    RIPS: {
+        'title': 'RIPS',
+        'normalLegend': [
+            {
+                'key': '告警数',
+                'value': 'newfile_total_defect_count'
+            },
+            {
+                'key': '文件数',
+                'value': 'newfile_total_count'
+            }
+        ],
+        'normalKey': '文件数',
+        'normalVal': 'newfile_total_count',
+        'normalChange': 'newfile_changed_count',
+        'activeKey': '告警数',
+        'activeVal': 'newfile_total_defect_count',
+        'activeChange': 'newfile_changed_defect_count',
+        'mainKey': '告警总数',
+        'mainVal': 'newfile_total_defect_count',
+        'hasChange': true,
+        'changeNormalVal': 'newfile_changed_count',
+        'changeActiveVal': 'newfile_changed_defect_count',
+        'charts': [
+            {
+                type: 'bar',
+                title: '待修复告警级别',
+                opts: [
+                    {
+                        key: 'total_new_serious',
+                        text: '严重'
+                    },
+                    {
+                        key: 'total_new_normal',
+                        text: '一般'
+                    },
+                    {
+                        key: 'total_new_prompt',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            },
+            {
+                type: 'bar',
+                title: '待修复告警作者',
+                opts: 'author_list',
+                xKey: 'name',
+                yKey: 'prompt_count',
+                level: [
+                    {
+                        key: 'serious_count',
+                        text: '严重'
+                    },
+                    {
+                        key: 'normal_count',
+                        text: '一般'
+                    },
+                    {
+                        key: 'prompt_count',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            }
+        ]
     }
 }

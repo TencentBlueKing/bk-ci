@@ -454,7 +454,7 @@
             position: relative;
             width: 1200px;
             .bk-label {
-                width: 110px;
+                width: 120px;
                 font-weight: normal;
             }
             .bk-form-content {
@@ -490,7 +490,6 @@
             .publish-form-item,
             .version-num-form-item {
                 .bk-tooltip {
-                    margin-top: 10px;
                     margin-left: 10px;
                     color: $fontLigtherColor;
                     p {

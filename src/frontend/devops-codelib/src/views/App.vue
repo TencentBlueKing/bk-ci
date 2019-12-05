@@ -3,7 +3,6 @@
         <header class="devops-codelib-header">
             <logo size="32" :name="logo" />
             <span>{{title}}</span>
-            <i class="bk-icon icon-question-circle" @click="gotoDoc()"></i>
         </header>
         <main>
             <router-view></router-view>
@@ -20,15 +19,7 @@
                 return this.$route.meta.logo
             },
             title () {
-                // return this.$route.meta.title
                 return this.$t('codelib.codelib')
-            }
-        },
-
-        methods: {
-            gotoDoc () {
-                const url = window.DOCS_URL_PREFIX
-                window.open(`${url}/${this.$t('allService')}/${this.$t('codelib.codelib')}/summary.html`, '_blank')
             }
         }
     }
