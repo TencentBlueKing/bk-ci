@@ -77,6 +77,7 @@ npm run public:external
 
   ```
   MAVEN_REPO_URL=修改为你的maven私库，如果有的话,没有可用公共的源
+  MAVEN_REPO_SNAPSHOT_URL=修改为你的快照Maven私库，如果有的话,没有可用公共的源
   MAVEN_REPO_DEPLOY_URL= 这个是如果你需要将jar包deploy到你的maven私有库，则设置为你的地址
   MAVEN_REPO_USERNAME=需要deploy时才需要填写
   MAVEN_REPO_PASSWORD=需要deploy时才需要填写

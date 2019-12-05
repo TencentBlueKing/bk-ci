@@ -2,24 +2,24 @@
     <section>
         <!-- 名称 start -->
         <div class="bk-form-item is-required cert-input-item">
-            <label class="bk-label">证书名称：</label>
+            <label class="bk-label">{{ $t('ticket.cert.certName') }}：</label>
             <div class="bk-form-content">
                 <input type="text"
                     class="bk-form-input"
                     name="androidId"
                     v-validate="{ required: true, regex: /^[a-zA-Z0-9\.\_]{1,100}$/ }"
-                    placeholder="请输入证书名称"
+                    :placeholder="$t('ticket.cert.namePlaceholer')"
                     v-model="formData.certId"
                     :disabled="isEdit"
                     :class="{ 'is-danger': errors.has('androidId') }"
                 >
-                <p :class="errors.has('androidId') ? 'error-tips' : 'normal-tips'">证书名称不能为空，只支持英文大小写、数字、下划线和英文句号</p>
+                <p :class="errors.has('androidId') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.validateName') }}</p>
             </div>
         </div>
 
         <!-- jks文件 start -->
         <div class="bk-form-item is-required cert-input-item">
-            <label class="bk-label">JKS文件：</label>
+            <label class="bk-label">{{ $t('ticket.cert.jksFile') }}：</label>
             <div class="bk-form-content">
                 <input type="text"
                     class="bk-form-input"
@@ -28,22 +28,22 @@
                     v-validate="{ required: true }"
                     v-model="formData.jksFileName"
                     :class="{ 'is-danger': errors.has('jksFileName') }"
-                    placeholder="还未选择文件"
+                    :placeholder="$t('ticket.cert.emptyFile')"
                 />
-                <a href="javascript:void(0);" class="file-input" title="选择文件">
+                <a href="javascript:void(0);" class="file-input" :title="$t('ticket.cert.selectFile')">
                     <div class="file-input-wrap">
                         <input type="file" class="file-input-btn" accept=".jks,.keystore" @change="handleFileUpload" />
-                        <span>上传</span>
+                        <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.jksFileName"><i class="bk-icon icon-check-circle"></i>上传成功</span>
-                <p :class="errors.has('jksFileName') ? 'error-tips' : 'normal-tips'">请上传.jks或.keystore结尾的文件</p>
+                <span v-if="formData.jksFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <p :class="errors.has('jksFileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.filePlaceholer') }}</p>
             </div>
         </div>
 
         <!-- 证书密码凭据 start -->
         <div class="bk-form-item is-required cert-input-item">
-            <label class="bk-label">证书密码：</label>
+            <label class="bk-label">{{ $t('ticket.cert.certPassword') }}：</label>
             <div class="bk-form-content">
                 <selector name="credentialId"
                     v-model="formData.credentialId"
@@ -59,36 +59,36 @@
                     :class="{ 'is-danger': errors.has('credentialId') }"
                     :toggle-visible="refreshTicket"
                     has-add-item="true"
-                    item-text="新增凭据"
+                    :item-text="$t('ticket.createCredential')"
                     :item-url="applyCreUrl"
                     style="width: 350px"
                 >
                 </selector>
-                <p :class="errors.has('credentialId') ? 'error-tips' : 'normal-tips'">请选择和JKS证书密码关联的凭据</p>
+                <p :class="errors.has('credentialId') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.passwordPlaceholer') }}</p>
             </div>
         </div>
         <!-- 证书密码凭据 end -->
 
         <!-- 证书别名 start -->
         <div class="bk-form-item is-required cert-input-item">
-            <label class="bk-label">证书别名：</label>
+            <label class="bk-label">{{ $t('ticket.cert.certAlias') }}：</label>
             <div class="bk-form-content">
                 <input type="text"
                     class="bk-form-input"
                     name="alias"
                     v-validate="{ required: true }"
-                    placeholder="请输入证书别名"
+                    :placeholder="$t('ticket.cert.certAliasPlaceHolder')"
                     v-model="formData.alias"
                     :class="{ 'is-danger': errors.has('alias') }"
                 >
-                <p :class="errors.has('alias') ? 'error-tips' : 'normal-tips'">证书别名不能为空，只支持英文大小写、数字、下划线和英文句号</p>
+                <p :class="errors.has('alias') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.aliasPlaceHolder') }}</p>
             </div>
         </div>
         <!-- 证书别名 end -->
 
         <!-- 别名密码 start -->
         <div class="bk-form-item is-required cert-input-item">
-            <label class="bk-label">别名密码：</label>
+            <label class="bk-label">{{ $t('ticket.cert.aliasPassword') }}：</label>
             <div class="bk-form-content">
                 <selector name="aliasCredentialId"
                     v-validate="{ required: true }"
@@ -103,21 +103,21 @@
                     :toggle-visible="refreshTicket"
                     :item-selected="selectAliasCredentialId"
                     has-add-item="true"
-                    item-text="新增凭据"
+                    :item-text="$t('ticket.createCredential')"
                     :item-url="applyCreUrl"
                     style="width: 350px"
                 >
                 </selector>
-                <p :class="errors.has('aliasCredentialId') ? 'error-tips' : 'normal-tips'">请选择和别名密码关联的凭据</p>
+                <p :class="errors.has('aliasCredentialId') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.aliasPasswordPlaceholer') }}</p>
             </div>
         </div>
         <!-- 别名密码 end -->
 
         <!-- 描述 start -->
         <div class="bk-form-item cert-textarea-item">
-            <label class="bk-label">证书描述：</label>
+            <label class="bk-label">{{ $t('ticket.cert.certRemark') }}：</label>
             <div class="bk-form-content">
-                <textarea class="bk-form-textarea" placeholder="请输入证书描述" v-model="formData.remark"></textarea>
+                <textarea class="bk-form-textarea" :placeholder="$t('ticket.cert.certRemarkPlaceHolder')" v-model="formData.remark"></textarea>
             </div>
         </div>
     </section>

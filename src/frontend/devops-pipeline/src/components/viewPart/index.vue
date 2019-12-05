@@ -6,11 +6,11 @@
         }">
         <div class="part-table" v-if="showContent && partList.length">
             <div class="table-head">
-                <div class="table-part-item part-item-name">构件名称</div>
-                <div class="table-part-item part-item-path">路径</div>
-                <div class="table-part-item part-item-size">文件大小</div>
-                <div class="table-part-item part-item-type">仓库类型</div>
-                <div class="table-part-item part-item-handler">操作</div>
+                <div class="table-part-item part-item-name">{{ $t('details.artifactName') }}</div>
+                <div class="table-part-item part-item-path">{{ $t('details.path') }}</div>
+                <div class="table-part-item part-item-size">{{ $t('details.filesize') }}</div>
+                <div class="table-part-item part-item-type">{{ $t('details.repoType') }}</div>
+                <div class="table-part-item part-item-handler">{{ $t('operate') }}</div>
             </div>
             <div class="table-body">
                 <div class="table-row" v-for="(row, index) of partList" :key="index">
@@ -25,17 +25,18 @@
                         <span>{{ convertInfoItem('size', row.size) }}</span>
                     </div>
                     <div class="table-part-item part-item-type">
-                        <span v-if="row.artifactoryType === 'CUSTOM_DIR'">自定义仓库</span>
-                        <span v-if="row.artifactoryType === 'PIPELINE'">流水线仓库</span>
+                        <span v-if="row.artifactoryType === 'CUSTOM_DIR'">{{ $t('details.customRepo') }}</span>
+                        <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <i class="bk-icon icon-new-download handler-btn" v-if="hasPermission" title="下载"
+                        <!-- <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" title="到版本仓库查看"></i> -->
+                        <i class="bk-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
                             @click="requestUrl(row, 'download')"></i>
                         <span class="handler-btn-tool qrcode"
                             v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
                             <i class="bk-icon icon-qrcode handler-btn"
                                 id="partviewqrcode"
-                                title="二维码"
+                                :title="$t('details.qrcode')"
                                 @click="requestUrl(row, 'url', index)"></i>
                             <p class="qrcode-box" v-if="row.display"
                                 v-bkloading="{
@@ -48,15 +49,9 @@
                         <bk-popover placement="left" v-if="!hasPermission">
                             <i class="bk-icon icon-new-download disabled-btn"></i>
                             <template slot="content">
-                                <p> 你没有该流水线的下载构件权限，无法下载</p>
+                                <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
                         </bk-popover>
-                        <!--<bk-popover placement="left" v-if="!hasPermission">
-                            <i class="bk-icon icon-qrcode disabled-btn"></i>
-                            <template slot="content">
-                                <p> 你没有该流水线的下载构件权限，无法下载</p>
-                            </template>
-                        </bk-popover>-->
                     </div>
                 </div>
             </div>
@@ -64,7 +59,7 @@
         <div class="artifactory-empty" v-if="showContent && !partList.length">
             <div class="no-data-right">
                 <img src="../../images/box.png">
-                <p>暂时没有任何构件</p>
+                <p>{{ $t('details.noArtifact') }}</p>
             </div>
         </div>
         <bk-sideslider
@@ -79,16 +74,17 @@
                     v-bkloading="{
                         isLoading: sideSliderConfig.isLoading
                     }">
-                    <bk-tab :active="'detailInfo'" type="unborder-card">
-                        <bk-tab-panel name="detailInfo" label="基础信息">
+                    <tab :active-name="'detailInfo'">
+                        <tab-panel name="detailInfo" :title="$t('settings.baseInfo')">
                             <div class="detail-info">
                                 <div class="detail-info-label"><span>Info</span></div>
                                 <ul>
                                     <li v-for="(item, key) of sideSliderConfig.detailData.info"
-                                        v-if="!(lastClickItem.folder && item.key === 'size')"
                                         :key="`detail${key}`">
-                                        <span class="bk-lable">{{ item.name }}：</span>
-                                        <span>{{ item.key === 'name' ? (sideSliderConfig.data[item.key] || lastClickItem.name) : convertInfoItem(item.key, sideSliderConfig.data[item.key]) }}</span>
+                                        <template v-if="!(lastClickItem.folder && item.key === 'size')">
+                                            <span class="bk-lable">{{ item.name }}：</span>
+                                            <span>{{ item.key === 'name' ? (sideSliderConfig.data[item.key] || lastClickItem.name) : convertInfoItem(item.key, sideSliderConfig.data[item.key]) }}</span>
+                                        </template>
                                     </li>
                                 </ul>
                             </div>
@@ -102,13 +98,13 @@
                                     </li>
                                 </ul>
                             </div>
-                        </bk-tab-panel>
-                        <bk-tab-panel name="metaDate" label="元数据" v-if="!lastClickItem.folder">
+                        </tab-panel>
+                        <tab-panel name="metaDate" :title="$t('details.metaData')" v-if="!lastClickItem.folder">
                             <table class="bk-table has-thead-bordered has-table-striped" v-if="Object.keys(sideSliderConfig.data.meta).length">
                                 <thead>
                                     <tr>
-                                        <th>属性键</th>
-                                        <th>属性值</th>
+                                        <th>{{ $t('key') }}</th>
+                                        <th>{{ $t('value') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -120,10 +116,10 @@
                                 </tbody>
                             </table>
                             <div v-else>
-                                <div style="text-align:center;padding: 30px 0;">暂无元数据</div>
+                                <div style="text-align:center;padding: 30px 0;">{{ $t('details.noArtifact') }}</div>
                             </div>
-                        </bk-tab-panel>
-                    </bk-tab>
+                        </tab-panel>
+                    </tab>
                 </div>
             </template>
         </bk-sideslider>
@@ -143,7 +139,6 @@
                 showContent: false,
                 hasPermission: true,
                 curIndexItemUrl: '',
-                emptyTitle: 'wushuhsdjkghafjko',
                 iconExts: {
                     txt: ['.json', '.txt', '.md'],
                     zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar'],
@@ -158,7 +153,7 @@
                 lastClickItem: {},
                 sideSliderConfig: {
                     show: false,
-                    title: '查看详情',
+                    title: this.$t('details.viewDetail'),
                     quickClose: true,
                     width: 820,
                     data: {},
@@ -172,12 +167,6 @@
                         ]
                     },
                     isLoading: false
-                },
-                permissionConfig: { // 无权限
-                    isShow: false,
-                    resource: '',
-                    option: '',
-                    link: '/perm/apply-perm'
                 }
             }
         },
@@ -213,7 +202,7 @@
                 const { loading } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('loadingTips')
 
                 const params = {
                     props: {
@@ -349,8 +338,8 @@
                     if (err.code === 403) {
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: '版本仓库',
-                                option: '查看'
+                                resource: this.$t('details.artifactory'),
+                                option: this.$t('view')
                             }],
                             applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
                         })
@@ -393,9 +382,33 @@
                     return value
                 }
             },
-            isApkOrIpa (row) {
-                const type = row.name.toUpperCase().substring(row.name.lastIndexOf('.') + 1)
-                return type === 'APK' || type === 'IPA'
+            async copyToCustom (artifactory) {
+                let message, theme
+                try {
+                    const { projectId, pipelineId, buildNo } = this.$route.params
+                    const params = {
+                        files: [artifactory.name],
+                        copyAll: false
+                    }
+                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                        projectId,
+                        pipelineId,
+                        buildId: buildNo,
+                        params
+                    })
+                    if (res) {
+                        message = this.$t('saveSuc')
+                        theme = 'success'
+                    }
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    this.$showTips({
+                        message,
+                        theme
+                    })
+                }
             }
         }
     }
@@ -539,6 +552,13 @@
         .handler-btn-tool {
             position: relative;
             display: inline-block;
+        }
+        .icon-copy {
+            fill: $fontWeightColor;
+            cursor: pointer;
+            &:hover {
+                fill: $primaryColor;
+            }
         }
         .artifactory-slider-info {
             padding: 5px 50px;

@@ -27,6 +27,7 @@
 package api
 
 import (
+	"fmt"
 	"pkg/config"
 	"pkg/util/httputil"
 	"pkg/util/systemutil"
@@ -42,8 +43,8 @@ func buildUrl(url string) string {
 	}
 }
 
-func NewAgentHeartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/heartbeat")
+func Heartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error) {
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/newHeartbeat")
 
 	agentHeartbeatInfo := &AgentHeartbeatInfo{
 		MasterVersion:     config.AgentVersion,
@@ -51,7 +52,7 @@ func NewAgentHeartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult
 		HostName:          config.GAgentEnv.HostName,
 		AgentIp:           config.GAgentEnv.AgentIp,
 		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
-		AgentInstallPath:  config.GetAgentWorkdir(),
+		AgentInstallPath:  systemutil.GetExecutableDir(),
 		StartedUser:       systemutil.GetCurrentUser().Username,
 		TaskList:          buildInfos,
 	}
@@ -72,6 +73,11 @@ func FinishUpgrade(success bool) (*httputil.AgentResult, error) {
 func DownloadUpgradeFile(serverFile string, saveFile string) (fileMd5 string, err error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/upgrade/files/download?file=" + serverFile)
 	return httputil.DownloadUpgradeFile(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
+}
+
+func DownloadAgentInstallScript(saveFile string) error {
+	url := buildUrl(fmt.Sprintf("/external/agents/%s/install", config.GAgentConfig.AgentId))
+	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
 }
 
 func AgentStartup() (*httputil.DevopsResult, error) {
@@ -96,6 +102,11 @@ func GetAgentStatus() (*httputil.DevopsResult, error) {
 func GetBuild() (*httputil.AgentResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/startup")
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
+}
+
+func WorkerBuildFinish(buildInfo *ThirdPartyBuildWithStatus) (*httputil.DevopsResult, error) {
+	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/workerBuildFinish")
+	return httputil.NewHttpClient().Post(url).Body(buildInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
 func GetAgentPipeline() (*httputil.DevopsResult, error) {

@@ -1,8 +1,8 @@
 <template>
     <bk-checkbox-group :value="value" @change="handleSwitch">
-        <bk-checkbox v-for="item in list" :key="item.value" :value="item.id" :disabled="item.disabled" v-bk-tooltips="{ content: item.desc, width: 300 }" class="atom-checkbox-list-item">
-            {{ item.name }}
-            <sup v-if="item.showIntro" class="introSup"> 荐</sup>
+        <bk-checkbox v-for="item in list" :key="item.value" :value="item.id" :disabled="item.disabled" class="atom-checkbox-list-item">
+            <span v-if="item.desc" v-bk-tooltips.right="{ content: item.desc, width: 300 }" :class="{ 'disabled-color': item.disabled }">{{ item.name }}</span>
+            <span v-else :class="{ 'disabled-color': item.disabled }">{{ item.name }}</span>
         </bk-checkbox>
     </bk-checkbox-group>
 </template>
@@ -36,14 +36,9 @@
     .atom-checkbox-list-item {
         width: 170px;
         padding: 0 20px 10px 0;
-        font-weight: bold;
         overflow: hidden;
         text-overflow:ellipsis;
         white-space: nowrap;
-    }
-    .introSup {
-        color: red;
-        font-weight: normal;
     }
     .underline-text {
         border-bottom: dashed 1px #c3cdd7;

@@ -1,7 +1,13 @@
 <template>
-    <bk-form-item v-bind="$attrs" :class="{ 'is-error': isError }">
-        <slot></slot>
-        <slot v-if="isError" name="error-tips">
+    <bk-form-item
+        v-bind="$attrs"
+        :class="{ 'is-error': isError }"
+    >
+        <slot />
+        <slot
+            v-if="isError"
+            name="error-tips"
+        >
             <div class="error-tips">
                 {{ errorMsg }}
             </div>

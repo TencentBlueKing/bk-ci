@@ -48,11 +48,12 @@ const actions = {
         dispatch
     }, {
         projectId,
+        aliasName = '',
         page = 1,
         pageSize = 12
     }) {
         try {
-            const response = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}?page=${page}&pageSize=${pageSize}`)
+            const response = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/search?aliasName=${aliasName}&page=${page}&pageSize=${pageSize}`)
             commit(SET_CODELIBS_MUTATION, {
                 codelibs: response
             })
@@ -82,6 +83,7 @@ const actions = {
         permission = 'USE'
     }) {
         try {
+            if (!credentialTypes) return
             const response = await vue.$ajax.get(`${TICKET_API_URL_PREFIX}/user/credentials/${projectId}/hasPermissionList?permission=${permission}&credentialTypes=${credentialTypes}`)
             commit(SET_TICKETS_MUTATION, {
                 tickets: response.records

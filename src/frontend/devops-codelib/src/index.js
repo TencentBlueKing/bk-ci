@@ -23,7 +23,7 @@ import store from './store'
 import './assets/scss/index.scss'
 window.Pages = window.Pages || {}
 window.Pages['codelib'] = {
-    title: '代码库',
+    title: 'codelib',
     routes,
     store
 }

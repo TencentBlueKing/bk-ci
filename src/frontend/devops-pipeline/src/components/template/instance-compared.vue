@@ -10,7 +10,9 @@
         <template>
             <section class="create-pipeline-content">
                 <div class="info-header">
-                    <div class="title">差异对比</div>
+                    <div class="title">
+                        {{ $t('template.diff') }}
+                    </div>
                     <i class="bk-icon icon-close" @click="cancelHandler()"></i>
                 </div>
                 <div class="compared-content"
@@ -19,28 +21,29 @@
                     }">
                     <div class="update-version-compared">
                         <div class="update-before">
-                            更新前<i class="bk-icon icon-minus"></i>{{ curVersion }}
+                            {{ $t('template.beforeUpdate') }}
+                            <i class="bk-icon icon-minus"></i>{{ curVersion }}
                         </div>
                         <div class="update-after version-selector">
-                            <div class="label">更新后<i class="bk-icon icon-minus"></i></div>
-                            <bk-dropdown :placeholder="'请选择版本'"
-                                :list="versionList"
-                                :display-key="'versionName'"
-                                :setting-key="'version'"
-                                :searchable="true"
-                                :selected.sync="instanceVersion"
-                                @item-selected="selectedVersion">
-                            </bk-dropdown>
+                            <div class="label">
+                                {{ $t('template.afterUpdate') }}
+                                <i class="bk-icon icon-minus"></i></div>
+                            <bk-select
+                                v-model="instanceVersion"
+                                @selected="selectedVersion"
+                                style="width: 300px"
+                            >
+                                <bk-option v-for="(option, index) in versionList"
+                                    :key="index"
+                                    :id="option.version"
+                                    :name="option.versionName">
+                                </bk-option>
+                            </bk-select>
                         </div>
                     </div>
                     <section v-if="curParamsList.length || targetParamsList.length || curTplParamsList.length || targetTplParamsList.length">
                         <div class="update-version-compared compared-title">
-                            <div class="update-before">变量</div>
-                            <!-- <div class="update-after change-total">
-                                <span class="total-text modify-count">2 变更</span>
-                                <span class="total-text add-count">3 新增</span>
-                                <span class="total-text remove-count">1 删除</span>
-                            </div> -->
+                            <div class="update-before">{{ $t('var') }}</div>
                         </div>
                         <div class="update-version-compared compared-params">
                             <div class="update-before params-list">
@@ -56,12 +59,7 @@
                         </div>
                     </section>
                     <div class="update-version-compared pipeline-preview">
-                        <div class="update-before">编排预览</div>
-                        <!-- <div class="update-after change-total">
-                            <span class="total-text modify-count">2 变更</span>
-                            <span class="total-text add-count">3 新增</span>
-                            <span class="total-text remove-count">1 删除</span>
-                        </div> -->
+                        <div class="update-before">{{ $t('template.previewDiff') }}</div>
                     </div>
                     <div class="update-version-compared compared-pipeline-preview">
                         <div class="update-before previre-pipeline">
@@ -229,7 +227,7 @@
         .previre-pipeline {
             padding: 10px;
             background: #fafbfd;
-            .soda-stage-list {
+            .devops-stage-list {
                 padding-right: 0;
             }
         }
@@ -246,7 +244,7 @@
            .bk-dialog-content {
                 width: 1180px !important;
             }
-            .previre-pipeline .soda-stage-list {
+            .previre-pipeline .devops-stage-list {
                 transform: scale(0.60);
                 transform-origin: left top;
             }
@@ -255,7 +253,7 @@
            .bk-dialog-content {
                 width: 1380px !important;
             }
-            .previre-pipeline .soda-stage-list {
+            .previre-pipeline .devops-stage-list {
                 transform: scale(0.68);
                 transform-origin: left top;
             }
@@ -264,7 +262,7 @@
             .bk-dialog-content {
                 width: 1500px !important;
             }
-            .previre-pipeline .soda-stage-list {
+            .previre-pipeline .devops-stage-list {
                 transform: scale(0.75);
                 transform-origin: left top;
             }

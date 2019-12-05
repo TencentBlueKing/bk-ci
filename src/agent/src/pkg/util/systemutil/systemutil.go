@@ -27,25 +27,33 @@
 package systemutil
 
 import (
+	"fmt"
+	"github.com/astaxie/beego/logs"
+	"github.com/gofrs/flock"
 	"net"
 	"os"
 	"os/user"
+	"pkg/util/fileutil"
 	"runtime"
 	"strings"
 )
 
 var GExecutableDir string
 
-const osWindows = "windows"
-const osLinux = "linux"
-const osMacos = "darwin"
-const amd64 = "amd64"
-const osOther = "other"
+const (
+	osWindows = "windows"
+	osLinux   = "linux"
+	osMacos   = "darwin"
+	amd64     = "amd64"
+	osOther   = "other"
 
-const osNameWindows = "windows"
-const osNameLinux = "linux"
-const osNameMacos = "macos"
-const osNameOther = "other"
+	osNameWindows = "windows"
+	osNameLinux   = "linux"
+	osNameMacos   = "macos"
+	osNameOther   = "other"
+
+	TotalLock = "total-lock"
+)
 
 func IsWindows() bool {
 	return runtime.GOOS == osWindows
@@ -71,6 +79,18 @@ func GetCurrentUser() *user.User {
 func GetWorkDir() string {
 	dir, _ := os.Getwd()
 	return strings.Replace(dir, "\\", "/", -1)
+}
+
+func GetUpgradeDir() string {
+	return GetWorkDir() + "/tmp"
+}
+
+func GetRuntimeDir() string {
+	runDir := fmt.Sprintf("%s/runtime", GetWorkDir())
+	if err := os.MkdirAll(runDir, 0755); err == nil {
+		return runDir
+	}
+	return GetWorkDir()
 }
 
 func GetExecutableDir() string {
@@ -114,9 +134,10 @@ func GetHostName() string {
 }
 
 func GetAgentIp() string {
+	defaultIp := "127.0.0.1"
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return "127.0.0.1"
+		return defaultIp
 	}
 	for _, addr := range addrs {
 		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
@@ -125,9 +146,49 @@ func GetAgentIp() string {
 			}
 		}
 	}
-	return "127.0.0.1"
+	return defaultIp
 }
 
 func ExitProcess(exitCode int) {
 	os.Exit(exitCode)
+}
+
+var processLock *flock.Flock
+
+func KeepProcessAlive() {
+	runtime.KeepAlive(*processLock)
+}
+
+func CheckProcess(name string) bool {
+	processLockFile := fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), name)
+	pidFile := fmt.Sprintf("%s/%s.pid", GetRuntimeDir(), name)
+
+	processLock = flock.New(processLockFile)
+	ok, err := processLock.TryLock()
+	if err != nil {
+		logs.Error("failed to get process lock(%s), exit: %v", processLockFile, err)
+		return false
+	}
+
+	if !ok {
+		logs.Error("failed to get process lock(%s), exit: maybe already running.", processLockFile)
+		return false
+	}
+
+	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), TotalLock))
+	if err = totalLock.Lock(); err != nil {
+		logs.Error("get total lock failed, exit", err.Error())
+		return false
+	}
+	defer func() {
+		_ = totalLock.Unlock()
+	}()
+
+	if err = fileutil.WriteString(pidFile, fmt.Sprintf("%d", os.Getpid())); err != nil {
+		logs.Error("failed to save pid file(%s): %v", pidFile, err)
+		return false
+	}
+
+	logs.Info("success to get process lock and save pid")
+	return true
 }
