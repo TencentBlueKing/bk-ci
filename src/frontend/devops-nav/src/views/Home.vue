@@ -211,7 +211,7 @@
             return urlJoin('/console/', link)
         }
 
-        serviceName (name): string {
+        serviceName (name = ''): string {
             const charPos = name.indexOf('(')
             return charPos > -1 ? name.slice(0, charPos) : name
         }

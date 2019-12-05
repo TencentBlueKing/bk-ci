@@ -20,16 +20,16 @@
             </p>
             <template v-if="card.availableFlag">
                 <template v-if="type === 'store'">
-                    <bk-button size="small" class="info-button" @click="choose" v-if="card.installed">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
+                    <bk-button size="small" class="info-button" @click="choose" :disabled="code === card.code" v-if="card.installed">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
                     <bk-button size="small" class="info-button" @click="installImage" v-else-if="card.flag" :loading="isInstalling">{{ $t('editPage.install') }}</bk-button>
                     <bk-button size="small" class="info-button" v-else :disabled="true" :title="$t('editPage.noInstallRight')">{{ $t('editPage.install') }}</bk-button>
                 </template>
-                <bk-button size="small" class="info-button" @click="choose" v-else>{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
+                <bk-button size="small" class="info-button" :disabled="code === card.code" @click="choose" v-else>{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
             </template>
         </section>
         <p class="card-link">
             <span class="link-pub">{{ $t('editPage.provideInfo', [card.publisher, card.modifier, convertTime(card.updateTime)])}}</span>
-            <a class="link-more" :href="card.docsLink" target="_blank">{{ $t('editPage.knowMore') }}</a>
+            <a class="link-more" @click="goToStore">{{ $t('editPage.knowMore') }}</a>
         </p>
     </li>
 </template>
@@ -89,6 +89,10 @@
         },
 
         methods: {
+            goToStore () {
+                window.open(`${WEB_URL_PIRFIX}/store/atomStore/detail/image/${this.card.code}`, '_blank')
+            },
+
             convertTime (val) {
                 return convertTime(val)
             },
@@ -143,7 +147,7 @@
             }
         }
         &.disable {
-            .info-main, .card-link, .info-main .main-name {
+            .info-main, .card-link, .info-main .main-name,.card-info .info-main .main-label li {
                 color: #c3cdd7;
             }
         }
@@ -162,6 +166,7 @@
         .link-more {
             position: absolute;
             right: 15px;
+            width: 68px;
             color: $primaryColor;
             cursor: pointer;
         }
