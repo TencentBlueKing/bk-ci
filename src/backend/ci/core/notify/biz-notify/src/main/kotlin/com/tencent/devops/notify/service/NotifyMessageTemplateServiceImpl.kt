@@ -48,10 +48,6 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
-import com.tencent.devops.notify.service.EmailService
-import com.tencent.devops.notify.service.NotifyMessageTemplateService
-import com.tencent.devops.notify.service.RtxService
-import com.tencent.devops.notify.service.WechatService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory

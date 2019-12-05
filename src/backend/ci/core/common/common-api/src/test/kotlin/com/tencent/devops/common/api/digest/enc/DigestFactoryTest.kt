@@ -43,27 +43,27 @@ class DigestFactoryTest {
     @DigestPriority("mock", priority = 0)
     class MockSecurityDigest : SecurityDigest {
         override fun encrypt(content: String): String {
-            TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+            TODO("not implemented")
         }
 
         override fun decrypt(encryptString: String): String {
-            TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+            TODO("not implemented")
         }
 
         override fun encrypt(key: String, content: String): String {
-            TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+            TODO("not implemented")
         }
 
         override fun decrypt(key: String, encryptString: String): String {
-            TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+            TODO("not implemented")
         }
 
         override fun encrypt(key: String, bytes: ByteArray): ByteArray {
-            TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+            TODO("not implemented")
         }
 
         override fun decrypt(key: String, encryptBytes: ByteArray): ByteArray {
-            TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+            TODO("not implemented")
         }
     }
 }

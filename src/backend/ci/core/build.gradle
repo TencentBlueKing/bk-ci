@@ -24,14 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket
-
-import com.tencent.devops.common.websocket.IPath
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
-
-class HistoryPageBuild : IPath {
-    override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        var page = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/history"
-        return page
+subprojects {
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        testCompile "junit:junit"
+        testCompile "org.springframework.boot:spring-boot-starter-test"
     }
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

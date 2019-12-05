@@ -85,10 +85,8 @@ interface ProjectService {
     fun getProjectByUser(userName: String): List<ProjectVO>
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
+
     fun grayProjectSet(): Set<String>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
-
-    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO
-
 }
