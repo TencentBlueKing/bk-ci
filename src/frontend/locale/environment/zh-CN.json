@@ -11,7 +11,7 @@
     "createNode": "新增节点",
     "nodeDetail": "节点详情",
     "pipeline": "流水线",
-    "deleteConfirmTips": "是否删除环境 {0}",
+    "deleteConfirmTips": "是否删除环境 {0} ？",
     "new": "新增",
     "createEnvTitle": "新增环境",
     "create": "创建",

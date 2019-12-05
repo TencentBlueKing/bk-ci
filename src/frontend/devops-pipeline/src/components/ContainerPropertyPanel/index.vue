@@ -44,7 +44,7 @@
                             </div>
                         </template>
                     </selector>
-                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}<a target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/流水线/用户指南/publicBuild.html`">{{ $t('editPage.seeMore') }}</a></span>
+                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
                 </form-field>
 
                 <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isHandleHistory" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
@@ -209,7 +209,6 @@
         },
         data () {
             return {
-                DOCS_URL_PREFIX,
                 showImageSelector: false,
                 isVersionLoading: false,
                 isHandleHistory: false,

@@ -32,7 +32,7 @@
         "title": "No access to this project",
         "desc": "You are not a member of the project or the project is not existed, please switch the project",
         "switchProject": "Switch project",
-        "accessDeny.projectBan": "Project banned",
+        "projectBan": "Project banned",
         "projectBanDesc": "Project banned, please switch the project or restart",
         "noOperateAccess": "No operate access",
         "noOperateAccessTip": "Rejected，no operate access"
@@ -71,7 +71,7 @@
         "getStarted": "Get the pipeline started"
                 
     },
-    "accessGuide": "Access guide",
+    "accessGuide": "User guide",
     "configProject": "Configure project",
     "configPipeline": "Configure pipeline",
     "complete": "Complete",

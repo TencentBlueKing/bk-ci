@@ -438,7 +438,7 @@
         "codeCheck": " CodeCC",
         "wetestReportName": "Wetest report",
         "quality": {
-            "quality": "Quality redline",
+            "quality": "Quality",
             "warning": "Warning",
             "ruleNameTips": "this plugin is subject to the quality redline ",
             "affect": "Affect",
@@ -452,7 +452,7 @@
             "toCheck": " Checked by man",
             "canSet": " Support using quality redlines to set quality requirement for this plugin so as to ensure the quality of this version",
             "settingNow": "Set now",
-            "reflashSetting": " Configured successfully. Please click here to refresh"
+            "reflashSetting": " Click here to refresh"
 
         }
     },
@@ -489,6 +489,7 @@
         "saving": "Saving",
         "selectJob": " Please select the type of job",
         "insert": "Insert",
+        "append": "Append",
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",

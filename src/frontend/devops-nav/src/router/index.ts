@@ -20,7 +20,7 @@ const QuickStart = () => import('../views/QuickStart.vue')
 
 const ProjectManage = () => import('../views/ProjectManage.vue')
 
-const Docs = () => import('../views/Docs.vue')
+// const Docs = () => import('../views/Docs.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
@@ -82,15 +82,6 @@ const routes = [
                 component: Maintaining
             }
         ]
-    },
-    {
-        path: '/console/docs',
-        name: 'docs',
-        component: Docs,
-        meta: {
-            showProjectList: false,
-            showNav: false
-        }
     }
 ]
 

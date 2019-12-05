@@ -230,7 +230,7 @@
         }
 
         goToDocs (): void {
-            this.to('/console/docs')
+            this.to(`${DOCS_URL_PREFIX}/display/DevOps`)
         }
 
         goToPm (): void {

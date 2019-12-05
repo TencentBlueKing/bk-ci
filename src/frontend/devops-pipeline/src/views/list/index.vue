@@ -176,7 +176,7 @@
                 }
             },
             tutorial () {
-                window.open(`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`, '_blank')
+                window.open(`${DOCS_URL_PREFIX}/x/RY6j`, '_blank')
             },
             routerToManage (type) {
                 this.$router.push({ name: type })
