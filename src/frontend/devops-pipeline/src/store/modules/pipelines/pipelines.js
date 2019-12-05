@@ -219,8 +219,8 @@ const actions = {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/imageCodes/${imageCode}/version/list`)
     },
 
-    requestMarketImage ({ commit }, { projectCode, agentType, imageNamePart, recommendFlag, id }) {
-        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages/search?projectCode=${projectCode}&imageNamePart=${imageNamePart}&agentType=${agentType}&recommendFlag=${recommendFlag}&classifyId=${id}&page=1&pageSize=1000`)
+    requestMarketImage ({ commit }, { projectCode, agentType, imageNamePart, recommendFlag }) {
+        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages/search?projectCode=${projectCode}&imageNamePart=${imageNamePart}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=1&pageSize=1000`)
     },
 
     requestImageClassifys ({ commit }) {
