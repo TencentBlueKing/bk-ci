@@ -1,48 +1,75 @@
 <template>
     <div class="devops-header">
         <div class="header-left-bar">
-            <router-link class="header-logo" to="/console/">
-                <Logo name="devops-logo" width="100" height="28" />
+            <router-link
+                class="header-logo"
+                to="/console/"
+            >
+                <Logo
+                    name="devops-logo"
+                    width="100"
+                    height="28"
+                />
             </router-link>
-            <bk-select
-                v-if="showProjectList"
-                ref="projectDropdown"
-                class="bkdevops-project-selector"
-                placeholder="请选择项目"
-                :value="projectId"
-                :clearable="false"
-                @change="handleProjectChange"
-                @toggle="handleDropdownVisible"
-                searchable>
-                <bk-option v-for="project in selectProjectList"
-                    :key="project.project_code"
-                    :id="project.project_code"
-                    :name="project.project_name">
-                </bk-option>
-                <template slot="extension">
-                    <div class="bk-selector-create-item" @click.stop.prevent="popProjectDialog()">
-                        <i class="bk-icon icon-plus-circle"></i>
-                        <span class="text">新建项目</span>
-                    </div>
-                    <div class="bk-selector-create-item" @click.stop.prevent="goToPm">
-                        <i class="bk-icon icon-apps"></i>
-                        <span class="text">项目管理</span>
-                    </div>
-                </template>
-            </bk-select>
-            <nav-menu v-if="showNav"></nav-menu>
-            <h3 v-if="title" class="service-title" @click="goHome">
-                <logo :name="serviceLogo" size="20" />
+            <template v-if="showProjectList">
+                <devops-select
+                    ref="projectDropdown"
+                    class="bkdevops-project-selector"
+                    :placeholder="$t('selectProjectPlaceholder')"
+                    :value="projectId"
+                    :clearable="false"
+                    :options="selectProjectList"
+                    :searchable="true"
+                    @selected="handleProjectChange"
+                    @toggle="handleDropdownVisible"
+                >
+                    <template slot="extension">
+                        <div
+                            class="bk-selector-create-item"
+                            @click.stop.prevent="popProjectDialog()"
+                        >
+                            <i class="bk-icon icon-plus-circle" />
+                            <span class="text">{{ $t('newProject') }}</span>
+                        </div>
+                        <div
+                            class="bk-selector-create-item"
+                            @click.stop.prevent="goToPm"
+                        >
+                            <i class="bk-icon icon-apps" />
+                            <span class="text">{{ $t('projectManage') }}</span>
+                        </div>
+                    </template>
+                </devops-select>
+            </template>
+            <nav-menu v-if="showNav" />
+            <h3
+                v-if="title"
+                class="service-title"
+                @click="goHome"
+            >
+                <logo
+                    :name="serviceLogo"
+                    size="20"
+                />
                 {{ title }}
             </h3>
         </div>
         <div class="header-right-bar">
-            <i class="bk-icon icon-helper" @click.stop="goToDocs" />
-            <User class="user-info" v-bind="user" />
+            <i
+                class="bk-icon icon-helper"
+                @click.stop="goToDocs"
+            />
+            <locale-switcher />
+            <User
+                class="user-info"
+                v-bind="user"
+            />
         </div>
 
-        <project-dialog :init-show-dialog="showProjectDialog" :title="projectDialogTitle">
-        </project-dialog>
+        <project-dialog
+            :init-show-dialog="showProjectDialog"
+            :title="projectDialogTitle"
+        />
     </div>
 </template>
 
@@ -53,7 +80,9 @@
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Logo from '../Logo/index.vue'
+    import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import eventBus from '../../utils/eventBus'
     import * as cookie from 'js-cookie'
     import { urlJoin } from '../../utils/util'
@@ -62,19 +91,20 @@
         components: {
             User,
             NavMenu,
-            // Qrcode,
             ProjectDialog,
-            Logo
+            Logo,
+            DevopsSelect,
+            LocaleSwitcher
         }
     })
     export default class Header extends Vue {
         @State user
-        @State projectList
+        @State currentPage
         @State showProjectDialog
         @State projectDialogTitle
         @State headerConfig
 
-        @Getter onlineProjectList
+        @Getter enableProjectList
 
         @Action toggleProjectDialog
         @Action togglePopupShow
@@ -91,14 +121,18 @@
         get projectId (): string {
             return this.$route.params.projectId
         }
-        get title (): string {
-            return this.$route.meta.header
+        get title (): any {
+            return this.$route.meta.header ? this.$t(`${this.serviceLogo}.${this.$route.meta.header}`) : ''
         }
         get serviceLogo (): string {
             return this.$route.meta.logo
         }
         get selectProjectList (): Project[] {
-            return this.projectList.filter(item => ((item.approval_status === 1 || item.approval_status === 2) && !item.is_offlined))
+            return this.enableProjectList.map(project => ({
+                ...project,
+                id: project.project_code,
+                name: project.project_name
+            }))
         }
 
         $refs: {
@@ -143,13 +177,12 @@
         }
 
         goHomeById (projectId: string, reload: boolean = false): void {
-            const currentPage = window.currentPage
-            const hasProjectId = currentPage.show_project_list
-            let path = urlJoin('/console', currentPage.link_new)
+            const hasProjectId = this.currentPage.show_project_list
+            let path = urlJoin('/console', this.currentPage.link_new)
             if (this.$route.name === 'codecc') { // hack todo
-                path = `/console/codecc/${projectId}/coverity/myproject`
+                path = `/console/codecc/${projectId}`
             } else if (hasProjectId) {
-                if (currentPage.project_id_type === 'path') {
+                if (this.currentPage.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
                 } else {
                     path += `?projectId=${projectId}`
@@ -204,6 +237,9 @@
                 showProjectDialog: true,
                 project
             })
+            if (this.$refs.projectDropdown && typeof this.$refs.projectDropdown.close === 'function') {
+                this.$refs.projectDropdown.close()
+            }
         }
 
         closeTooltip (): void {
@@ -225,7 +261,7 @@
         display: flex;
         align-items: center;
         position: relative;
-        z-index: 1234;
+        z-index: 1002;
         min-width: 1280px;
         background-color: $headerBgColor;
         transition: all .3s ease;

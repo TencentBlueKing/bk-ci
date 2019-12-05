@@ -16,123 +16,17 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-const path = require('path')
-const webpack = require('webpack')
-const CssExtractPlugin = require('mini-css-extract-plugin')
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
-const TerserPlugin = require('terser-webpack-plugin')
+const webpackBaseConfig = require('../webpack.base')
 
 module.exports = (env, argv) => {
-    const nodeEnv = process.env.NODE_ENV || 'dev'
-    const envPrefix = env && env.prefix ? env.prefix : nodeEnv
-    const publicPath = '/ticket/'
-    const isMaster = envPrefix === 'master'
-
-    return {
+    return webpackBaseConfig({
+        env,
+        argv,
         entry: {
             ticket: './src/index'
         },
-        output: {
-            publicPath,
-            chunkFilename: isMaster ? '[name].[chunkhash].js' : '[name].js',
-            filename: isMaster ? '[name].[contentHash].min.js' : '[name].js'
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.vue$/,
-                    include: [path.resolve('src'), path.resolve('node_modules/vue-echarts')],
-                    loader: 'vue-loader'
-                },
-                {
-                    test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('node_modules/vue-echarts')],
-                    use: [
-                        {
-                            loader: 'babel-loader'
-                        }
-                    ]
-                },
-                {
-                    test: /.scss$/,
-                    use: [CssExtractPlugin.loader, 'css-loader', 'sass-loader']
-                },
-                {
-                    test: /\.css$/,
-                    use: [
-                        'vue-style-loader',
-                        {
-                            loader: 'css-loader'
-                        }
-                    ]
-                },
-                {
-                    test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-                    loader: 'url-loader'
-                },
-                {
-                    test: /\.(js|vue)$/,
-                    loader: 'eslint-loader',
-                    enforce: 'pre',
-                    include: [path.resolve('src')],
-                    exclude: /node_modules/,
-                    options: {
-                        fix: true,
-                        formatter: require('eslint-friendly-formatter')
-                    }
-                }
-            ]
-        },
-        plugins: [
-            new VueLoaderPlugin(),
-            new webpack.optimize.LimitChunkCountPlugin({
-                // maxChunks: 5, // 必须大于或等于 1
-                minChunkSize: 1000
-            }),
-            new webpack.HashedModuleIdsPlugin(),
-            new CssExtractPlugin({
-                filename: isMaster ? '[name].[chunkHash].css' : '[name].css',
-                chunkName: '[id].css'
-            })
-            
-        ],
-        optimization: {
-            namedChunks: true,
-            minimizer: [
-                new TerserPlugin({
-                  cache: true,
-                  parallel: true,
-                  sourceMap: true, // Must be set to true if using source-maps in production
-                  terserOptions: {
-                    output: {
-                        comments: false
-                    },
-                    compress: {
-                        drop_console: true
-                    }
-                  }
-                })
-            ]
-        },
-        resolve: {
-            extensions: ['.js', '.vue', '.json'],
-            alias: {
-                '@': path.resolve('src'),
-                'vue$': 'vue/dist/vue.esm.js'
-            }
-        },
-        externals: {
-            'vue': 'Vue',
-            'vue-router': 'VueRouter',
-            'vuex': 'Vuex'
-        },
-        devServer: {
-            contentBase: path.join(__dirname, 'dist'),
-            historyApiFallback: true,
-            noInfo: false,
-            disableHostCheck: true,
-            port: 8003
-        }
-    }
+        publicPath: '/ticket/',
+        dist: '/ticket',
+        port: 8004
+    })
 }

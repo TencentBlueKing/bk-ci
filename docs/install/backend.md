@@ -72,7 +72,7 @@ rabbitmq: 3.7.15 [rabbitmq部署](rabbitmq.md)
       |- boot-project.jar  # Project微服务的SpringBoot.jar
 ```
 
-- 启动微服务： 比如项目管理 /data/bkee/bkci/project/project.sh start
+- 启动微服务： 比如项目管理 /data/bkee/ci/project/project.sh start
 
 ### 2.3 构件服务Artifactory特殊部署操作
 

@@ -1,23 +1,61 @@
 <template>
     <div :class="{ &quot;nav-box&quot;: true, &quot;with-hover&quot;: withHover }">
-        <div class="menu-column" :style="{ width: `${columnWidth}px` }" v-for="(service, index) in services" :key="index">
+        <div
+            v-for="(service, index) in services"
+            :key="index"
+            class="menu-column"
+            :style="{ width: `${columnWidth}px` }"
+        >
             <ul class="service-item">
                 <h4>
-                    {{service.title}}
+                    {{ service.title }}
                 </h4>
-                <li v-for="child in service.children" :key="child.id" class="menu-item" :disabled="child.status !== &quot;ok&quot; && child.status !== &quot;new&quot; && child.status !== &quot;hot&quot;">
-                    <a @click.prevent="gotoPage(child)" :href="addConsole(child.link_new)">
-                        <i v-if="serviceIcon(child.name) === &quot;logo-bcs&quot;" class="bk-icon service-icon icon-logo-bcs">
-                            <span v-for="key in [1,2,3,4]" :class="`path${key}`" :key="key" />
+                <li
+                    v-for="child in service.children"
+                    :key="child.id"
+                    class="menu-item"
+                    :disabled="child.status !== &quot;ok&quot; && child.status !== &quot;new&quot; && child.status !== &quot;hot&quot;"
+                >
+                    <a
+                        :href="addConsole(child.link_new)"
+                        @click.prevent="gotoPage(child)"
+                    >
+                        <i
+                            v-if="serviceIcon(child.name) === &quot;logo-bcs&quot;"
+                            class="bk-icon service-icon icon-logo-bcs"
+                        >
+                            <span
+                                v-for="key in [1,2,3,4]"
+                                :key="key"
+                                :class="`path${key}`"
+                            />
                         </i>
-                        <i v-else :class="{ &quot;bk-icon&quot;: true, &quot;service-icon&quot;: true, [`icon-${serviceIcon(child.name)}`]: true }" />
-                        {{ serviceName(child.name) }}
+                        <icon
+                            v-else
+                            class="bk-icon service-icon"
+                            :size="20"
+                            :name="serviceIcon(child.name)"
+                        />
+                        <span class="service-name">{{ serviceName(child.name) }}</span>
                         <span class="service-id">{{ serviceId(child.name) }}</span>
-                        <span class="new-service-icon" v-if="child.status === &quot;new&quot;">new</span>
+                        <span
+                            v-if="child.status === &quot;new&quot;"
+                            class="new-service-icon"
+                        >new</span>
                     </a>
                     <template v-if="showCollectStar">
-                        <i v-if="child.collected" @click.stop="toggleCollect(child, false)" title="已收藏" class="bk-icon collect-icon icon-star-shape" />
-                        <i v-else @click.stop="toggleCollect(child, true)" title="收藏" class="bk-icon collect-icon icon-star" />
+                        <i
+                            v-if="child.collected"
+                            :title="$t('collected')"
+                            class="bk-icon collect-icon icon-star-shape"
+                            @click.stop="toggleCollect(child, false)"
+                        />
+                        <i
+                            v-else
+                            :title="$t('toCollect')"
+                            class="bk-icon collect-icon icon-star"
+                            @click.stop="toggleCollect(child, true)"
+                        />
                     </template>
                 </li>
             </ul>
@@ -34,6 +72,9 @@
     @Component
     export default class NavBox extends Vue {
         readyServices: ObjectMap = {}
+
+        @Prop()
+        currentPage
         @Prop({ required: true })
         services
 
@@ -73,15 +114,16 @@
            'Ticket': 'ticket',
            'Gate': 'gate',
            'Turbo': 'turbo',
-           'Store': 'store'
+           'Store': 'store',
+           'xinghai': 'xinghai'
        }
 
-       gotoPage ({ link_new }) {
-           const cAlias = window.currentPage && getServiceAliasByPath(window.currentPage.link_new)
-           const nAlias = getServiceAliasByPath(link_new)
-           const destUrl = this.addConsole(link_new)
+       gotoPage ({ link_new: linkNew }) {
+           const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
+           const nAlias = getServiceAliasByPath(linkNew)
+           const destUrl = this.addConsole(linkNew)
 
-           if (cAlias === nAlias && window.currentPage && window.currentPage.inject_type === 'iframe') {
+           if (cAlias === nAlias && this.currentPage && this.currentPage['inject_type'] === 'iframe') {
                eventBus.$emit('goHome')
                return
            }
@@ -172,6 +214,9 @@
                         font-size: 20px;
                         margin-right: 12px;
                         color: #6b798e;
+                    }
+                    .service-name {
+                        @include ellipsis();
                     }
                     .service-id {
                         margin-left: 5px;

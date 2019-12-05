@@ -3,54 +3,85 @@
         <section>
             <accordion>
                 <accordion-item :init-content-show="true">
-                    <span class="home-accordion-header" slot="header">
-                        最近访问服务
-                    </span>
-                    <div slot="content" class="recent-visit-service-list">
+                    <span
+                        slot="header"
+                        class="home-accordion-header"
+                    >{{ $t('recentVisiteService') }}</span>
+                    <div
+                        slot="content"
+                        class="recent-visit-service-list"
+                    >
                         <template v-if="recentVisitService.length">
-                            <router-link v-for="service in recentVisitService" :key="service.key" :to="addConsole(service.link_new)">
-                                <Logo :name="service.key" size="16" />
+                            <router-link
+                                v-for="service in recentVisitService"
+                                :key="service.key"
+                                :to="addConsole(service.link_new)"
+                            >
+                                <Logo
+                                    :name="service.key"
+                                    size="16"
+                                />
                                 {{ service.name }}
                             </router-link>
                         </template>
-                        <p class="no-recent-service" v-else>
-                            暂无最近访问服务，请查看
-                            <span @click="updateShowAllService(true)">所有服务</span>
+                        <p
+                            v-else
+                            class="no-recent-service"
+                        >
+                            {{ $t("noRecentVisiteService") }}
+                            <span @click="updateShowAllService(true)">{{ $t('allService') }}</span>
                         </p>
                     </div>
                 </accordion-item>
-                <accordion-item :init-content-show="isAllServiceListShow" @update:contentShow="updateShowAllService">
-                    <p class="all-service-header" slot="header">
-                        所有服务
-                        <span class="service-count">共{{serviceCount}}个服务</span>
+                <accordion-item
+                    :init-content-show="isAllServiceListShow"
+                    @update:contentShow="updateShowAllService"
+                >
+                    <p
+                        slot="header"
+                        class="all-service-header"
+                    >
+                        {{ $t('allService') }}
+                        
+                        <span class="service-count">{{ $t("sumService", { serviceCount }) }}</span>
                     </p>
-                    <NavBox class="all-service-list" slot="content" column-width="190px" :with-hover="false" :services="services" />
+                    <NavBox
+                        slot="content"
+                        class="all-service-list"
+                        column-width="190px"
+                        :with-hover="false"
+                        :services="services"
+                    />
                 </accordion-item>
             </accordion>
 
             <div class="bkdevops-box">
-                <h2>一站式研发解决方案</h2>
-                <span style="left: 112px;">需求</span>
-                <span style="left: 247px;">开发</span>
-                <span style="left: 382px;">测试</span>
-                <span style="left: 518px;">部署</span>
-                <span style="left: 652px;">运营</span>
-                <router-link class="bkdevops-button" :to="{ name: &quot;quickstart&quot; }">
-                    <!--<bk-button theme="primary" icon-right="angle-double-right">
-                        新手接入
-                    </bk-button>-->
-                </router-link>
+                <h2>{{ $t('slogan') }}</h2>
+                <span
+                    v-for="(item, index) in funcArray"
+                    :key="index"
+                    :style="{ left: item.left }"
+                >{{ item.label }}</span>
             </div>
 
             <div class="devops-news">
                 <header>
-                    <p class="title">最新动态</p>
+                    <p class="title">
+                        {{ $t("latestNews") }}
+                    </p>
                 </header>
 
                 <div class="devops-news-content">
-                    <p v-for="(item, index) in news" :key="item.name" class="news-item">
-                        <a target="_blank" :href="item.link">
-                            <span v-if="index === 0">[最新]</span>
+                    <p
+                        v-for="(item, index) in news"
+                        :key="item.name"
+                        class="news-item"
+                    >
+                        <a
+                            target="_blank"
+                            :href="item.link"
+                        >
+                            <span v-if="index === 0">[{{ $t("latest") }}]</span>
                             {{ item.name }}
                         </a>
                         <span>{{ item.create_time }}</span>
@@ -59,30 +90,41 @@
             </div>
         </section>
         <aside>
-
             <article>
-                <h2>蓝盾DevOps平台</h2>
+                <h2>{{ $t("bkdevopsTitle") }}</h2>
                 <p>
-                    蓝鲸团队打造的一站式DevOps研发平台，从业务安全出发，贯穿产品研发、测试和运营的全生命周期；助力业务平滑过渡到敏捷研发模式，打造一站式研发运维体系，持续快速交付高质量的产品。
-                    <a :href="DOCS_URL_PREFIX" class="more" target="_blank">了解更多</a>
+                    {{ $t("bkdevopsDesc") }}
+                    <a
+                        :href="DOCS_URL_PREFIX"
+                        class="more"
+                        target="_blank"
+                    >{{ $t("learnMore") }}</a>
                 </p>
             </article>
             <article>
-                <h2>用蓝盾流水线加速你的交付</h2>
+                <h2>{{ $t("bkdevopsTarget") }}</h2>
                 <p>
-                    持续交付强调更快、更可靠、低成本的自动化软件交付，蓝盾流水线（Pipeline）提供可视化、一键式部署服务，和持续集成无缝集成，支持并行部署。
-                    <a :href="`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`" target="_blank" class="more">了解更多</a>
+                    {{ $t("bkdevopsWay") }}
+                    <a
+                        :href="`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`"
+                        target="_blank"
+                        class="more"
+                    >{{ $t("learnMore") }}</a>
                 </p>
             </article>
             <article>
-                <h2>相关链接</h2>
+                <h2>{{ $t("relatedLink") }}</h2>
                 <div>
-                    <a v-for="item in related" :key="item.name" :href="item.link" target="_blank">
+                    <a
+                        v-for="item in related"
+                        :key="item.name"
+                        :href="item.link"
+                        target="_blank"
+                    >
                         {{ item.name }}
                     </a>
                 </div>
             </article>
-
         </aside>
     </div>
 </template>
@@ -112,6 +154,14 @@
         @Action fetchLinks
         isAllServiceListShow: boolean = false
         DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
+
+        get funcArray (): object[] {
+            const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
+            return funcArray.map((item, index) => ({
+                label: this.$t(item),
+                left: `${index * 135 + 92}px`
+            }))
+        }
 
         get recentVisitService (): object[] {
             const recentVisitService = localStorage.getItem('recentVisitService')
@@ -259,6 +309,9 @@
                     position: absolute;
                     font-size: 16px;
                     bottom: 91px;
+                    width: 73px;
+                    @include ellipsis();
+                    text-align: center;
                 }
                 .bkdevops-button {
                     position: absolute;

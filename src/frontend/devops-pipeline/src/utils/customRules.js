@@ -19,13 +19,11 @@
 
 const customeRules = {
     string: {
-        getMessage: field => `非法的${field}`,
         validate: function (value, args) {
             return /^[\w,\d,\-_\(\)]+$/i.test(value)
         }
     },
     unique: {
-        getMessage: field => `${field}不能重复`,
         validate: function (value, args) {
             let repeatNum = 0
             for (let i = 0; i < args.length; i++) {
@@ -38,37 +36,31 @@ const customeRules = {
         }
     },
     pullmode: {
-        getMessage: field => `${field}不能为空`,
         validate: function (value, args) {
             return typeof value === 'object' && value.type !== '' && value.value !== ''
         }
     },
     excludeComma: {
-        getMessage: field => `${field}不能包含英文逗号`,
         validate: function (value) {
             return !/\,/gm.test(value)
         }
     },
     varRule: {
-        getMessage: field => `${field}只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
         validate: function (value, args) {
-            return /^[a-z_][a-z_\d]+$/g.test(value)
+            return /^[a-z_][a-z_\d]*$/gi.test(value)
         }
     },
     excludeEmptyCapital: {
-        getMessage: field => `${field}字段不能为空，只支持英文小写、数字、下划线以及/`,
         validate: function (value, args) {
             return /^[a-z0-9_\/]+$/g.test(value)
         }
     },
     mutualGroup: {
-        getMessage: field => `${field}字段不能为空，只支持英文、数字`,
         validate: function (value, args) {
-            return /^[A-Za-z0-9]+$/g.test(value)
+            return /^[A-Za-z0-9]+$/g.test(value) || /^\${(.*)}$/g.test(value)
         }
     },
     nonVarRule: {
-        getMessage: field => '该字段不需要包含${}',
         validate: function (value, args) {
             return !/^\${(.*)}$/g.test(value)
         }
@@ -77,7 +69,7 @@ const customeRules = {
 
 function ExtendsCustomRules (_extends) {
     if (typeof _extends !== 'function') {
-        console.warn('VeeValidate.Validator.extend必须是一个函数！')
+        console.warn('VeeValidate.Validator.extend must be a function')
         return
     }
     for (const key in customeRules) {

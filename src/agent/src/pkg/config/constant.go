@@ -42,7 +42,9 @@ const (
 	ScriptFileStartLinux       = "start.sh"
 	ScriptFileStopWindows      = "stop.bat"
 	ScriptFileStopLinux        = "stop.sh"
-	
+)
+
+const (
 	AgentFileClientWindows = "devopsAgent.exe"
 	AgentFileClientLinux   = "devopsAgent"
 	AgentFileServerWindows = "devopsAgent.exe"

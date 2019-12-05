@@ -1,12 +1,38 @@
 <template>
     <div class="devops-quickstart">
-        <h2>新手接入蓝盾DevOps平台</h2>
-        <quick-start-steps v-bkloading="{ isLoading }" ref="step" :is-error="isError" :step-index="stepIndex" :step-list="stepList"></quick-start-steps>
+        <h2>$t('quickstartTitle')新手接入蓝盾DevOps平台</h2>
+        <quick-start-steps
+            ref="step"
+            v-bkloading="{ isLoading }"
+            :is-error="isError"
+            :step-index="stepIndex"
+            :step-list="stepList"
+        />
         <footer v-if="!done">
-            <router-link to="/console/"><bk-button>取消</bk-button></router-link>
-            <bk-button v-if="stepIndex > 0" theme="primary" @click="prev">上一步</bk-button>
-            <bk-button v-if="stepIndex < stepList.length - 1" theme="success" @click="next">下一步</bk-button>
-            <bk-button v-if="stepIndex === stepList.length - 1" theme="success" @click="doCreate">提交</bk-button>
+            <router-link to="/console/">
+                <bk-button>{{ $t('cancelText') }}</bk-button>
+            </router-link>
+            <bk-button
+                v-if="stepIndex > 0"
+                theme="primary"
+                @click="prev"
+            >
+                {{$t('form.prev')}}
+            </bk-button>
+            <bk-button
+                v-if="stepIndex < stepList.length - 1"
+                theme="success"
+                @click="next"
+            >
+                {{$t('form.next')}}
+            </bk-button>
+            <bk-button
+                v-if="stepIndex === stepList.length - 1"
+                theme="success"
+                @click="doCreate"
+            >
+                {{$t('form.submit')}}
+            </bk-button>
         </footer>
     </div>
 </template>
@@ -27,9 +53,9 @@
         done: boolean = false
         isLoading: boolean = false
         stepList: string[] = [
-            '配置项目',
-            '配置流水线',
-            '完成'
+            this.$t('configProject'),
+            this.$t('configPipeline'),
+            this.$t('complete')
         ]
         isError: boolean = false
 
@@ -62,7 +88,7 @@
         async doCreate () {
             try {
                 if (!this.demo) {
-                    throw new Error('请选择对应的项目')
+                    throw new Error(this.$t('exception.noProject'))
                 }
                 const { projectId, projectName } = this.demo
                 this.isLoading = true

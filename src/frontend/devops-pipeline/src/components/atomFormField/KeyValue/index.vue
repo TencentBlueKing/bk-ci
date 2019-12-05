@@ -8,7 +8,7 @@
                     <div><vuex-input :name="param.key" :value="param.value" :handle-change="handleParamChange" /></div>
                 </li>
             </template>
-            <li v-else class="param-item-empty"><span>参数为空</span></li>
+            <li v-else class="param-item-empty"><span>{{ $t('editPage.paramEmpty') }}</span></li>
         </ul>
     </div>
 </template>
@@ -18,6 +18,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
 
     export default {
+        name: 'key-value',
         components: {
             VuexInput
         },

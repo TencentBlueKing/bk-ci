@@ -1,0 +1,13 @@
+# 服务配置文件模板
+spring:
+  application:
+    name: defect
+    desc: Defect Service
+  data:
+    mongodb:
+      uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PORT__/db_defect?replicaSet=rs0&slaveOk=true
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 23910
+server:
+  port: __CODECC_DEFECT_PORT__ # 服务端口
+

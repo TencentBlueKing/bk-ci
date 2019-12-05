@@ -1,33 +1,55 @@
 <template>
-    <bk-dialog v-model="showDialog"
+    <bk-dialog
+        v-model="showDialog"
         class="devops-project-logo-dialog"
         :width="width"
         :close-icon="false"
-        title="修改LOGO"
+        :title="$t('changeLogo')"
         header-position="left"
     >
         <main class="project-logo-content">
             <div class="upload-content">
                 <div class="upload-box">
-                    <img :src="selectedUrl" v-if="selectedUrl">
+                    <img
+                        v-if="selectedUrl"
+                        :src="selectedUrl"
+                    >
                 </div>
                 <div class="upload-btn">
-                    <input type="file" name="file" class="inputfile" id="inputfile"
+                    <input
+                        id="inputfile"
+                        type="file"
+                        name="file"
+                        class="inputfile"
                         accept="image/png, image/jpeg"
-                        @change="fileChange">
-                    <label for="file"><i class="bk-icon icon-bk"></i>选择LOGO</label>
-                    <p class="logo-desc">只允许上传png、jpg</p>
-                    <p class="logo-desc">大小不超过2M</p>
+                        @change="fileChange"
+                    >
+                    <label for="file"><i class="bk-icon icon-bk" />{{ $t('selectLogo') }}</label>
+                    <p class="logo-desc">
+                        {{ $t('supportExtTips') }}
+                    </p>
+                    <p class="logo-desc">
+                        {{ $t("logoSizelimit") }}
+                    </p>
                 </div>
             </div>
         </main>
         <template slot="footer">
             <div class="bk-dialog-outer">
-                <bk-button theme="primary" @click="toConfirmLogo" :disabled="isUploading" :loading="isUploading">
-                    确定
+                <bk-button
+                    theme="primary"
+                    :disabled="isUploading"
+                    :loading="isUploading"
+                    @click="toConfirmLogo"
+                >
+                    {{ $t("okLabel") }}
                 </bk-button>
-                <bk-button theme="default" :disabled="isUploading" @click="toCloseDialog">
-                    取消
+                <bk-button
+                    theme="default"
+                    :disabled="isUploading"
+                    @click="toCloseDialog"
+                >
+                    {{ $t("cancelLabel") }}
                 </bk-button>
             </div>
         </template>

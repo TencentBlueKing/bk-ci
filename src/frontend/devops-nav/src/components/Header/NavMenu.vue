@@ -3,10 +3,17 @@
         v-clickoutside="hideNavMenu"
         :class="{ &quot;devops-header-nav&quot;: true, &quot;active&quot;: show }"
     >
-        <p class="nav-entry" :class="{ active: show }" @click.stop="toggleNavMenu">
-            <span>服务</span>
-            <span class="unread-icon" v-if="showNewServiveTips"></span>
-            <i class="bk-icon icon-angle-down"></i>
+        <p
+            class="nav-entry"
+            :class="{ active: show }"
+            @click.stop="toggleNavMenu"
+        >
+            <span>{{ $t('service') }}</span>
+            <span
+                v-if="showNewServiveTips"
+                class="unread-icon"
+            />
+            <i class="bk-icon icon-angle-down" />
         </p>
         <transition name="fade">
             <div
@@ -14,10 +21,16 @@
                 class="nav-menu-layout"
                 :class="{ 'showTopPrompt': showExplorerTips === 'true' && isShowPreviewTips && !chromeExplorer }"
             >
-                <div @click.stop="hideNavMenu" class="nav-menu-layout-content">
+                <div
+                    class="nav-menu-layout-content"
+                    @click.stop="hideNavMenu"
+                >
                     <div class="nav-collect">
-                        <h3>我的收藏</h3>
-                        <ul class="nav-collect-menu" v-if="collectServices.length > 0">
+                        <h3>{{ $t('collection') }}</h3>
+                        <ul
+                            v-if="collectServices.length > 0"
+                            class="nav-collect-menu"
+                        >
                             <li
                                 v-for="service in collectServices"
                                 :key="service.id"
@@ -27,25 +40,32 @@
                                     class="service-logo"
                                     :name="getServiceLogoByPath(service.link_new)"
                                     size="18"
-                                ></logo>
+                                />
                                 <a
-                                    @click.prevent="gotoPage(service)"
                                     :href="addConsole(service.link_new)"
+                                    @click.prevent="gotoPage(service)"
                                 >
-                                    {{serviceName(service.name)}}
+                                    {{ serviceName(service.name) }}
                                     <span
                                         class="service-id"
-                                    >{{serviceId(service.name)}}</span>
+                                    >{{ serviceId(service.name) }}</span>
                                 </a>
                             </li>
                         </ul>
-                        <div class="empty-collect" v-else>
+                        <div
+                            v-else
+                            class="empty-collect"
+                        >
                             <img src="../../assets/images/empty.png">
-                            <p>未收藏任何服务</p>
+                            <p>{{ $t('noCollection') }}</p>
                         </div>
                     </div>
                     <div class="nav-menu">
-                        <nav-box :services="services" :toggle-collect="toggleCollect" />
+                        <nav-box
+                            :services="services"
+                            :current-page="currentPage"
+                            :toggle-collect="toggleCollect"
+                        />
                     </div>
                 </div>
             </div>
@@ -76,6 +96,7 @@
     export default class NavMenu extends Vue {
         @Getter('getCollectServices') collectServices
         @State services
+        @State currentPage
         @State isShowPreviewTips
         @Action toggleServiceCollect
         show: boolean = false
@@ -94,7 +115,7 @@
 
         get curNewServices (): object[] {
             const newServices = []
-            window.allServices.forEach(service => {
+            this.services.forEach(service => {
                 service.children.forEach(child => {
                     if (child.status === 'new') {
                         newServices.push(child.name)
@@ -143,12 +164,12 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
-        gotoPage ({ link_new }) {
-            const cAlias = window.currentPage && getServiceAliasByPath(window.currentPage.link_new)
-            const nAlias = getServiceAliasByPath(link_new)
-            const destUrl = this.addConsole(link_new)
+        gotoPage ({ link_new: linkNew }) {
+            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
+            const nAlias = getServiceAliasByPath(linkNew)
+            const destUrl = this.addConsole(linkNew)
 
-            if (cAlias === nAlias && window.currentPage && window.currentPage.inject_type === 'iframe') {
+            if (cAlias === nAlias && this.currentPage && this.currentPage['inject_type'] === 'iframe') {
                 eventBus.$emit('goHome')
                 return
             }
@@ -167,7 +188,7 @@
             try {
                 if (isCollected && this.collectServices.length === 8) {
                     this.$bkMessage({
-                        message: '及时清除不常使用的链接，才能添加新的链接哦：）',
+                        message: this.$t('outofCollectionTips'),
                         theme: 'error'
                     })
                     return

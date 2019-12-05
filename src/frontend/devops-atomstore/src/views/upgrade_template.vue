@@ -8,11 +8,11 @@
         <h3 class="market-home-title">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <span class="back-home" @click="toAtomStore()">研发商店</span>
+                <span class="back-home" @click="toAtomStore()"> {{ $t('研发商店') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des back-home" @click="toAtomList()">工作台</span>
+                <span class="banner-des back-home" @click="toAtomList()"> {{ $t('工作台') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">上架模板</span>
+                <span class="banner-des"> {{ $t('上架模板') }} </span>
             </p>
             <a class="title-work" target="_blank" :href="docsLink">模板指引</a>
         </h3>
@@ -20,8 +20,7 @@
         <div class="upgrade-template-content" v-show="showContent">
             <div class="template-release-msg">
                 <div class="detail-title release-progress-title">
-                    <p class="form-title">发布进度
-                        <span class="cancel-release-btn" v-if="!isOver" @click="handlerCancel()">取消发布</span>
+                    <p class="form-title"> {{ $t('发布进度') }} <span class="cancel-release-btn" v-if="!isOver" @click="handlerCancel()"> {{ $t('取消发布') }} </span>
                     </p>
                     <hr class="cut-line">
                     <div class="progress-step">
@@ -29,52 +28,51 @@
                             <div class="step-card" v-for="(entry, index) in progressStatus" :key="index"
                                 :class="{
                                     'processing-status': entry.status === 'doing',
-                                    'success-status': entry.name === '结束' && entry.status === 'success',
+                                    'success-status': entry.code === 'end' && entry.status === 'success',
                                     'fail-status': entry.status === 'fail'
                                 }">
                                 <div class="card-item">
                                     <i class="bk-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
-                                <div class="audit-tips" v-if="entry.name === '审核中' && entry.status === 'doing'">
-                                    <i class="bk-icon icon-info-circle"></i>由蓝盾管理员审核
-                                </div>
+                                <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing'">
+                                    <i class="bk-icon icon-info-circle"></i> {{ $t('由蓝盾管理员审核') }} </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="detail-title version-detail-title" v-if="!isOver">
-                    <p class="form-title">版本详情</p>
+                    <p class="form-title"> {{ $t('版本详情') }} </p>
                     <hr class="cut-line">
                     <div class="template-version-detail">
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label">名称：</div>
+                                <div class="info-label"> {{ $t('名称：') }} </div>
                                 <div class="info-value">{{ templateDetail.templateName }}</div>
                             </div>
                             <div class="detail-form-item">
-                                <div class="info-label">分类：</div>
+                                <div class="info-label"> {{ $t('分类：') }} </div>
                                 <div class="info-value">{{ templateDetail.classifyName }}</div>
                             </div>
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label">应用范畴：</div>
+                                <div class="info-label"> {{ $t('应用范畴：') }} </div>
                                 <div class="info-value">{{ templateDetail.categoryList }}</div>
                             </div>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">功能标签：</div>
+                            <div class="info-label"> {{ $t('功能标签：') }} </div>
                             <div class="info-value feature-label">
                                 <div class="label-card" v-for="(label, index) in templateDetail.labels" :key="index">{{ label }}</div>
                             </div>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">简介：</div>
+                            <div class="info-label"> {{ $t('简介：') }} </div>
                             <div class="info-value">{{ templateDetail.summary }}</div>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">详细描述：</div>
+                            <div class="info-label"> {{ $t('详细描述：') }} </div>
                             <div class="info-value markdown-editor-show" ref="editor" :class="{ 'overflow': !isDropdownShow }">
                                 <mavon-editor
                                     :editable="false"
@@ -83,19 +81,21 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="templateDetail.description"
-                                />
+                                >
+                                </mavon-editor>
                             </div>
                         </div>
-                        <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? '收起' : '展开' }}
+                        <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('收起') : $t('展开') }}
                             <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">发布者：</div>
+                            <div class="info-label"> {{ $t('发布者：') }} </div>
                             <div class="info-value">{{ templateDetail.publisher }}</div>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">发布描述：</div>
+                            <div class="info-label"> {{ $t('发布描述：') }} </div>
                             <div class="info-value">{{ templateDetail.pubDescription }}</div>
                         </div>
                     </div>
@@ -105,10 +105,10 @@
                     </div>
                 </div>
                 <div class="released-tips" v-if="isOver">
-                    <h3>恭喜，成功发布到商店!</h3>
+                    <h3> {{ $t('恭喜，成功发布到商店!') }} </h3>
                     <div class="handle-btn">
-                        <bk-button class="bk-button bk-primary" size="small" @click="toAtomList()">工作台</bk-button>
-                        <bk-button class="bk-button bk-default" size="small" @click="toAtomStore(1)">研发商店</bk-button>
+                        <bk-button class="bk-button bk-primary" size="small" @click="toAtomList()"> {{ $t('工作台') }} </bk-button>
+                        <bk-button class="bk-button bk-default" size="small" @click="toAtomStore(1)"> {{ $t('研发商店') }} </bk-button>
                     </div>
                 </div>
             </div>
@@ -117,12 +117,6 @@
 </template>
 
 <script>
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
-
-    const Vue = window.Vue
-    Vue.use(mavonEditor)
-
     export default {
         data () {
             return {
@@ -130,17 +124,17 @@
                 isOverflow: false,
                 isDropdownShow: false,
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线模版/summary.html`,
+                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008944',
                 progressStatus: [{
-                    'name': '开始',
+                    'name': this.$t('开始'),
                     'step': 1,
                     'status': 'success'
                 }, {
-                    'name': '审核中',
+                    'name': this.$t('审核中'),
                     'step': 2,
                     'status': 'doing'
                 }, {
-                    'name': '结束',
+                    'name': this.$t('结束'),
                     'step': 3,
                     'status': 'undo'
                 }],
@@ -241,7 +235,7 @@
                         templateId: this.templateId
                     })
 
-                    message = '取消成功'
+                    message = this.$t('取消成功')
                     theme = 'success'
                     this.toAtomList()
                 } catch (err) {
@@ -260,8 +254,8 @@
             },
             handlerCancel () {
                 this.$bkInfo({
-                    title: `取消发布`,
-                    subTitle: '确定取消发布该模板？',
+                    title: this.$t('取消发布'),
+                    subTitle: this.$t('确定取消发布该模板？'),
                     confirmFn: async () => {
                         this.cancelRelease()
                     }
@@ -508,6 +502,14 @@
                 display: flex;
                 margin-top: 18px;
                 width: 100%;
+            }
+            .markdown-editor-show.info-value {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
+                    background: #FAFBFD;
+                }
             }
             .info-label {
                 width: 100px;

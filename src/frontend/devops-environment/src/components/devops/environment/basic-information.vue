@@ -2,30 +2,30 @@
     <div class="basic-information-wrapper">
         <div class="base-item-list">
             <div class="item-content">
-                <div class="item-label">启动用户</div>
+                <div class="item-label">{{ $t('environment.nodeInfo.startUser') }}</div>
                 <div class="item-value">{{ nodeDetails.startedUser || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">安装路径</div>
+                <div class="item-label">{{ $t('environment.nodeInfo.installPath') }}</div>
                 <div class="item-value">{{ nodeDetails.agentInstallPath || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">Agent版本</div>
+                <div class="item-label">{{ $t('environment.nodeInfo.agentVersion') }}</div>
                 <div class="item-value">{{ nodeDetails.agentVersion || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">Worker版本</div>
+                <div class="item-label">{{ $t('environment.nodeInfo.workerVersion') }}</div>
                 <div class="item-value">{{ nodeDetails.slaveVersion || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">最大构建并发数</div>
+                <div class="item-label">{{ $t('environment.nodeInfo.maxParallelTaskCount') }}</div>
                 <div class="item-value">
                     <div class="display-item" v-if="isEditCount">
                         <input type="number" class="bk-form-input parallelTaskCount-input"
-                            name="parallelTaskCount"
                             ref="parallelTaskCount"
-                            :placeholder="`请输入${nodeDetails.maxParallelTaskCount}及以下的数值， 0表示不限制`"
-                            v-validate.initial="`required|between:0,${nodeDetails.maxParallelTaskCount}|decimal:0`"
+                            name="parallelTaskCount"
+                            :placeholder="$t('environment.nodeInfo.parallelTaskCountTips')"
+                            v-validate.initial="`required|between:0,100|decimal:0`"
                             v-model="parallelTaskCount"
                             :class="{ 'is-danger': errors.has('parallelTaskCount') }">
                     </div>
@@ -33,81 +33,32 @@
                 </div>
                 <div class="handle-btn">
                     <div v-if="isEditCount">
-                        <span @click="saveHandle('parallelTaskCount')">保存</span>
-                        <span @click="editHandle('parallelTaskCount', false)">取消</span>
+                        <span @click="saveHandle('parallelTaskCount')">{{ $t('environment.save') }}</span>
+                        <span @click="editHandle('parallelTaskCount', false)">{{ $t('environment.cancel') }}</span>
                     </div>
-                    <div :class="{ 'is-disabled': !nodeDetails.canEdit }" v-else><span @click="editHandle('parallelTaskCount', true)">编辑</span></div>
+                    <div :class="{ 'is-disabled': !nodeDetails.canEdit }" v-else><span @click="editHandle('parallelTaskCount', true)">{{ $t('environment.edit') }}</span></div>
                 </div>
             </div>
             <div class="item-content">
-                <div class="item-label">状态</div>
+                <div class="item-label">{{ $t('environment.status') }}</div>
                 <div class="item-value" :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'">
-                    {{ nodeDetails.status === 'NORMAL' ? '正常' : '异常' }}
+                    {{ nodeDetails.status === 'NORMAL' ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
                 </div>
             </div>
             <div class="item-content">
-                <div class="item-label">导入时间</div>
+                <div class="item-label">{{ $t('environment.nodeInfo.importTime') }}</div>
                 <div class="item-value">{{ nodeDetails.createdTime || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">上次心跳时间</div>
+                <div class="item-label">{{ $t('environment.nodeInfo.lastActiveTime') }}</div>
                 <div class="item-value">{{ nodeDetails.lastHeartbeatTime || '--' }}</div>
             </div>
-
-            <!-- <div class="item-content">
-                <div class="item-label">Agent日志</div>
-                <div class="item-value disabled">{{ nodeDetails.agentUrl }}</div>
-                <div class="handle-btn"><span>查看</span></div>
-            </div> -->
-            <!-- <div class="item-content">
-                <div class="item-label">机器负责人</div>
-                <div class="item-value">
-                    <div class="display-item" v-if="isEditCreatedUser">
-                        <input type="text" class="bk-form-input parallelTaskCount-input"
-                            name="createdUser"
-                            v-validate="'required'"
-                            v-model="createdUser"
-                            :class="{'is-danger': errors.has('createdUser')}">
-                    </div>
-                    <div class="editing-item" v-else>{{ nodeDetails.createdUser }}</div>
-                </div>
-                <div class="handle-btn">
-                    <div v-if="isEditCreatedUser">
-                        <span @click="saveHandle('createdUser')">保存</span>
-                        <span @click="editHandle('createdUser', false)">取消</span>
-                    </div>
-                    <div v-else><span @click="editHandle('createdUser', true)">编辑</span></div>
-                </div>
-            </div>
             <div class="item-content">
-                <div class="item-label">告警通知方式</div>
-                <div class="item-value">
-                    <div class="bk-form-content notice-type-content">
-                        <label class="bk-form-checkbox notice-type-checkbox"
-                            v-for="(col, index) in noticeTypeList"
-                            :key="index">
-                            <input type="checkbox" name="checkbox"  class="type-item"
-                                :disabled="!isEditNoticeType"
-                                v-model="col.isChecked">
-                            <logo :name='col.name' size='28' class="nav-icon" />
-                        </label>
-                    </div>
-                </div>
-                <div class="handle-btn">
-                    <div v-if="isEditNoticeType">
-                        <span @click="saveHandle('noticeType')">保存</span>
-                        <span @click="editHandle('noticeType', false)">取消</span>
-                    </div>
-                    <div v-else><span @click="editHandle('noticeType', true)">编辑</span></div>
-                </div>
-            </div> -->
-            
-            <div class="item-content">
-                <div class="item-label">{{ nodeDetails.os === 'WINDOWS' ? '下载链接' : '安装命令' }}</div>
+                <div class="item-label">{{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.downloadLink') : $t('environment.nodeInfo.installCommand') }}</div>
                 <div class="item-value" :title="agentLink">{{ agentLink }}</div>
                 <div class="handle-btn">
-                    <span class="agent-url" @click="copyHandle">复制</span>
-                    <span @click="downloadHandle" v-if="nodeDetails.os === 'WINDOWS'">下载</span>
+                    <span class="agent-url" @click="copyHandle">{{ $t('environment.copy') }}</span>
+                    <span @click="downloadHandle" v-if="nodeDetails.os === 'WINDOWS'">{{ $t('environment.download') }}</span>
                 </div>
             </div>
         </div>
@@ -200,7 +151,7 @@
                         nodeHashId: this.nodeHashId,
                         parallelTaskCount
                     })
-                    message = '保存成功'
+                    message = this.$t('environment.successfullySaved')
                     theme = 'success'
                     this.requestNodeDetail()
                 } catch (err) {
@@ -238,7 +189,7 @@
                 if (copyText(this.agentLink)) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: '复制成功'
+                        message: this.$t('environment.successfullyCopyed')
                     })
                 }
             }
@@ -248,7 +199,7 @@
 
 <style lang="scss">
     @import './../../../scss/conf';
-    
+
     .basic-information-wrapper {
         padding: 20px 0;
         .base-item-list {

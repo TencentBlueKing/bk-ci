@@ -232,12 +232,12 @@ export function convertStrToNumArr (str, indicator) {
  */
 export function convertMStoString (time) {
     function getSeconds (sec) {
-        return `${sec}秒`
+        return `${sec}${window.pipelineVue.$i18n.t('timeMap.seconds')}`
     }
 
     function getMinutes (sec) {
         if (sec / 60 >= 1) {
-            return `${Math.floor(sec / 60)}分${getSeconds(sec % 60)}`
+            return `${Math.floor(sec / 60)}${window.pipelineVue.$i18n.t('timeMap.minutes')}${getSeconds(sec % 60)}`
         } else {
             return getSeconds(sec)
         }
@@ -245,7 +245,7 @@ export function convertMStoString (time) {
 
     function getHours (sec) {
         if (sec / 3600 >= 1) {
-            return `${Math.floor(sec / 3600)}小时${getMinutes(sec % 3600)}`
+            return `${Math.floor(sec / 3600)}${window.pipelineVue.$i18n.t('timeMap.hours')}${getMinutes(sec % 3600)}`
         } else {
             return getMinutes(sec)
         }
@@ -253,13 +253,13 @@ export function convertMStoString (time) {
 
     function getDays (sec) {
         if (sec / 86400 >= 1) {
-            return `${Math.floor(sec / 86400)}天${getHours(sec % 86400)}`
+            return `${Math.floor(sec / 86400)}${window.pipelineVue.$i18n.t('timeMap.days')}${getHours(sec % 86400)}`
         } else {
             return getHours(sec)
         }
     }
 
-    return time ? getDays(Math.floor(time / 1000)) : '0秒'
+    return time ? getDays(Math.floor(time / 1000)) : `0${window.pipelineVue.$i18n.t('timeMap.seconds')}`
 }
 
 /**
@@ -271,6 +271,16 @@ export function convertMStoStringByRule (time) {
     if (time < 0) {
         return '--'
     }
+    let res = ''
+    if (window.pipelineVue.$i18n && window.pipelineVue.$i18n.locale === 'en-US') {
+        res = convertToEn(time)
+    } else {
+        res = convertToCn(time)
+    }
+    return res
+}
+
+function convertToCn (time) {
     const str = convertMStoString(time)
     let res = str
     const arr = str.match(/^\d{1,}([\u4e00-\u9fa5]){1,}/)
@@ -290,6 +300,21 @@ export function convertMStoStringByRule (time) {
     return res
 }
 
+function convertToEn (time) {
+    const sec = time / 1000
+    let res = ''
+    if (sec <= 60) {
+        res = 'less than one minute'
+    } else if (sec <= 60 * 60) {
+        res = `${Math.floor(sec / 60)}minutes and ${(Math.floor(sec % 60))}seconds`
+    } else if (time <= 60 * 60 * 24) {
+        res = `${Math.floor(sec / 3600)}hours and ${Math.floor(sec % 60 / 60)}minutes`
+    } else {
+        res = `more than ${Math.floor(sec / 86400)} days`
+    }
+    return res
+}
+
 function prezero (num) {
     num = Number(num)
 
@@ -304,6 +329,12 @@ export function convertTime (ms) {
     const time = new Date(ms)
 
     return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
+}
+
+export function coverStrTimer (ms) {
+    const time = new Date(ms)
+
+    return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
 }
 
 export function convertMiniTime (ms) {
@@ -454,7 +485,7 @@ export function coverTimer (time, type) {
     function getSeconds (sec, min) {
         const m = min / 60 >= 1 ? '' : '00:'
         if (type) {
-            res = sec < 10 ? `${m}0${sec}秒` : `${m}${sec}秒`
+            res = sec < 10 ? `${m}0${sec}${window.pipelineVue.$i18n.t('timeMap.seconds')}` : `${m}${sec}${window.pipelineVue.$i18n.t('timeMap.seconds')}`
         } else {
             res = sec < 10 ? `${m}0${sec}` : `${m}${sec}`
         }
@@ -467,7 +498,7 @@ export function coverTimer (time, type) {
             let m = Math.floor(sec / 60)
             m = m < 10 ? `0${m}` : m
             if (type) {
-                res = `${m}分${getSeconds(sec % 60, sec)}`
+                res = `${m}${window.pipelineVue.$i18n.t('timeMap.minutes')}${getSeconds(sec % 60, sec)}`
             } else {
                 res = `${m}:${getSeconds(sec % 60, sec)}`
             }
@@ -483,7 +514,7 @@ export function coverTimer (time, type) {
             let h = Math.floor(sec / 3600)
             h = h < 10 ? `0${h}` : h
             if (type) {
-                res = `${h}时${getMinutes(sec % 3600)}`
+                res = `${h}${window.pipelineVue.$i18n.t('timeMap.hours')}${getMinutes(sec % 3600)}`
             } else {
                 res = `${h}:${getMinutes(sec % 3600)}`
             }
@@ -533,7 +564,7 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
 export function navConfirm ({ content, title }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
-            reject(new Error('error')); return
+            reject(new Error('')); return
         }
 
         window.globalVue.$leaveConfirm({ content, title })
@@ -552,7 +583,7 @@ export function getQueryParamList (arr = [], key) {
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
-    } else {
-        return ''
+    } else if (arr && typeof arr === 'string') {
+        return `${key}=${arr}`
     }
 }

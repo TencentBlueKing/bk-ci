@@ -1,10 +1,10 @@
 <template>
-    <section class="certificate-list">
-        <inner-header>
+    <section class="credential-certificate-content">
+        <content-header>
             <template slot="left">
-                <span class="inner-header-title">新增证书</span>
+                <span class="inner-header-title">{{ $t('ticket.createCert') }}</span>
             </template>
-        </inner-header>
+        </content-header>
 
         <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
             <empty-tips v-if="!hasPermission && showContent"
@@ -13,14 +13,18 @@
                 :btns="emptyTipsConfig.btns"
             >
             </empty-tips>
-            <div class="bk-form cert-setting" v-if="certType">
-                <div class="bk-form-wrapper" v-if="hasPermission && showContent">
+            <!-- <div class="bk-form cert-setting" v-if="certType">
+                <div class="bk-form-wrapper" v-if="hasPermission && showContent"> -->
+            <div class="cert-setting" v-if="certType">
+                <div class="bk-form" v-if="hasPermission && showContent">
                     <!-- 证书类型 start -->
                     <div class="bk-form-item is-required cert-input-item">
-                        <label class="bk-label">证书类型：</label>
+                        <label class="bk-label">{{ $t('ticket.cert.certType') }}：</label>
                         <div class="bk-form-content">
-                            <bk-radio-group v-model="certType" @change="changeType">
-                                <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit">
+                            <!-- <bk-radio-group v-model="certType" @change="changeType">
+                                <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit"> -->
+                            <bk-radio-group class="cert-type-group" v-model="certType" @change="changeType">
+                                <bk-radio class="cert-type-group-item" v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit">
                                     <i class="bk-icon" :class="item.icon"></i>
                                     {{ item.label }}
                                 </bk-radio>
@@ -68,8 +72,8 @@
                     </transition>
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">确定</bk-button>
-                        <bk-button @click="cancel">取消</bk-button>
+                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
             </div>
@@ -78,7 +82,6 @@
 </template>
 
 <script>
-    import innerHeader from '@/components/devops/inner_header'
     import emptyTips from '@/components/devops/emptyTips'
     import ios from '../components/centificate/ios'
     import android from '../components/centificate/android'
@@ -87,7 +90,6 @@
 
     export default {
         components: {
-            innerHeader,
             emptyTips,
             ios,
             android,
@@ -106,45 +108,45 @@
                 certData: {},
                 certTypeList: [
                     {
-                        label: 'iOS证书',
+                        label: this.$t('ticket.cert.iosCert'),
                         value: 'ios',
                         icon: 'icon-macos'
                     },
                     {
-                        label: 'Android证书',
+                        label: this.$t('ticket.cert.androidCert'),
                         value: 'android',
                         icon: 'icon-android-shape'
                     },
                     {
-                        label: 'SSL/TLS证书',
+                        label: this.$t('ticket.cert.sslOrTlsCert'),
                         value: 'tls',
                         icon: 'icon-personal-cert'
                     },
                     {
-                        label: 'iOS企业签名证书',
+                        label: this.$t('ticket.cert.iosCorporatesignCert'),
                         value: 'enterprise',
                         icon: 'icon-macos'
                     }
                 ],
                 loading: {
                     isLoading: true,
-                    title: '数据加载中，请稍候'
+                    title: this.$t('ticket.loadingTitle')
                 },
                 emptyTipsConfig: {
-                    title: '没有权限',
-                    desc: `你在该项目[凭证管理]下没有[创建]权限，请切换项目访问或申请`,
+                    title: this.$t('ticket.noPermission'),
+                    desc: this.$t('ticket.credential.noCreateCredPermissionTips'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('ticket.switchProject')
                         },
                         {
                             type: 'success',
                             size: 'normal',
                             handler: this.goToApplyPerm,
-                            text: '去申请权限'
+                            text: this.$t('ticket.applyPermission')
                         }
                     ]
                 }
@@ -164,7 +166,7 @@
                 return `/console/ticket/${this.projectId}/createCredential/PASSWORD/true`
             }
         },
-        
+
         watch: {
             projectId: async function () {
                 await this.requestPermission()
@@ -178,7 +180,7 @@
         methods: {
             init () {
                 const params = this.$route.params || {}
-                this.certType = params.certType || 'ios'
+                this.certType = params.certType ? params.certType.toLowerCase() : 'ios'
                 this.isEdit = this.$route.name === 'editCert'
 
                 if (this.isEdit) {
@@ -203,7 +205,7 @@
 
             async requestCertDetail (callBack) {
                 this.loading.isLoading = true
-                const certType = this.$route.params.certType
+                const certType = this.$route.params.certType.toLowerCase()
                 const certId = this.$route.params.certId
                 try {
                     this.certData = await this.$store.dispatch('ticket/requestCertDetail', {
@@ -230,7 +232,7 @@
                 // 先检验数据合法性
                 const validResult = await this.$refs[this.certType].validCertForm()
                 if (validResult) return
-                const url = `certs/${this.projectId}/${this.certType}`
+                const url = `certs/projects/${this.projectId}/types/${this.certType}`
                 const formData = this.$refs[this.certType].postData
                 const config = { headers: { } }
                 let message = ''
@@ -239,10 +241,10 @@
                 try {
                     if (this.isEdit) {
                         await this.$store.dispatch('ticket/editCert', { url, formData, config })
-                        message = '编辑证书成功'
+                        message = this.$t('ticket.cert.successfullyEditedCert')
                     } else {
                         await this.$store.dispatch('ticket/createCert', { url, formData, config })
-                        message = '新增证书成功'
+                        message = this.$t('ticket.cert.successfullyCreatedCert')
                     }
                 } catch (err) {
                     message = err.message ? err.message : err
@@ -305,10 +307,46 @@
     }
     .cert-setting {
         width: 100%;
-        max-width: initial;
-        padding: 42px 0 0 37px;
-        .bk-form-wrapper {
-            margin-top: -30px;
+        .cert-input-item {
+            .bk-form-content .bk-form-input {
+                width: 350px;
+            }
+        }
+        .file-input {
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #000;
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            height: 32px;
+            line-height: 32px;
+            box-sizing: border-box;
+            font-size: 12px;
+            vertical-align: middle;
+            margin-left: 10px;
+            .file-input-wrap {
+                width: 100%;
+                position: relative;
+                opacity: 1;
+                height: 32px;
+                overflow: hidden;
+                span {
+                    padding: 6px 24px
+                }
+                .file-input-btn {
+                    position: absolute;
+                    right: 0;
+                    opacity: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 32px;
+                }
+            }
+            &:hover {
+                border: 1px solid $primaryColor;
+            }
         }
     }
     .cert-textarea-item {
@@ -324,5 +362,15 @@
     }
     .fade-leave-active {
         display: none;
+    }
+     .cert-type-group {
+        height: 32px;
+        line-height: 32px;
+        .cert-type-group-item {
+            margin-right: 20px;
+        }
+    }
+    .cert-input-item {
+        margin-bottom: 20px;
     }
 </style>

@@ -52,7 +52,7 @@ func UninstallAgent() {
 func runUpgrader(action string) error {
 	logs.Info("start upgrader process")
 
-	scripPath := config.GetAgentWorkdir() + "/tmp/" + config.GetClientUpgraderFile()
+	scripPath := systemutil.GetUpgradeDir() + "/" + config.GetClientUpgraderFile()
 
 	if !systemutil.IsWindows() {
 		err := os.Chmod(scripPath, 0777)
@@ -67,7 +67,7 @@ func runUpgrader(action string) error {
 	}
 	args := []string{"-action=" + action}
 
-	pid, err := command.StartProcess(scripPath, args, config.GetAgentWorkdir(), nil, "")
+	pid, err := command.StartProcess(scripPath, args, systemutil.GetWorkDir(), nil, "")
 	if err != nil {
 		logs.Error("run upgrader failed: ", err.Error())
 		return errors.New("run upgrader failed")
@@ -94,14 +94,17 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
 
 	if workAgentChanged {
 		logs.Info("work agent changed, replace work agent file")
-		_, err := fileutil.CopyFile(config.GetAgentWorkdir()+"/tmp/"+config.WorkAgentFile, config.GetAgentWorkdir()+"/"+config.WorkAgentFile, true)
+		_, err := fileutil.CopyFile(
+			systemutil.GetUpgradeDir()+"/"+config.WorkAgentFile,
+			systemutil.GetWorkDir()+"/"+config.WorkAgentFile,
+			true)
 		if err != nil {
 			logs.Error("replace work agent file failed: ", err.Error())
 			return errors.New("replace work agent file failed")
 		}
 		logs.Info("relace agent file done")
 
-		config.GAgentEnv.SlaveVersion = config.DetectSlaveVersion()
+		config.GAgentEnv.SlaveVersion = config.DetectWorkerVersion()
 	}
 
 	if agentChanged {

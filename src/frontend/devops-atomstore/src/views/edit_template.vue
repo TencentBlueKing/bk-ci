@@ -1,24 +1,24 @@
 <template>
     <div class="edit-template-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
         <div class="info-header">
-            <div class="title first-level" @click="toAtomStore()">
+            <div class="title first-level" @click="toAtomStore">
                 <logo :name="&quot;store&quot;" size="30" class="nav-icon" />
-                <div class="title first-level">研发商店</div>
+                <div class="title first-level"> {{ $t('研发商店') }} </div>
             </div>
             <i class="right-arrow"></i>
-            <div class="title secondary" @click="toAtomList()">工作台</div>
+            <div class="title secondary" @click="toAtomList"> {{ $t('工作台') }} </div>
             <i class="right-arrow"></i>
-            <div class="title third-level">上架模板</div>
+            <div class="title third-level"> {{ $t('上架模板') }} </div>
             <a class="develop-guide-link" target="_blank"
                 :href="docsLink">模板指引</a>
         </div>
         <div class="edit-template-content" v-if="showContent">
             <form class="bk-form edit-template-form">
                 <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label">名称</label>
+                    <label class="bk-label"> {{ $t('名称') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
                         <div style="min-width: 40%;">
-                            <input type="text" class="bk-form-input template-name-input" placeholder="请输入中英文名称"
+                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('请输入中英文名称')"
                                 ref="templateName"
                                 name="templateName"
                                 v-model="templateForm.templateName"
@@ -32,13 +32,13 @@
                         <bk-popover placement="right">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p>模板名称不超过20个字符</p>
+                                <p> {{ $t('模板名称不超过20个字符') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
-                    <label class="bk-label">分类</label>
+                <div class="bk-form-item is-required" ref="sortError">
+                    <label class="bk-label"> {{ $t('分类') }} </label>
                     <div class="bk-form-content template-item-content template-category-content">
                         <bk-select v-model="templateForm.classifyCode" style="width: 40%;" searchable>
                             <bk-option v-for="(option, index) in sortList"
@@ -46,15 +46,15 @@
                                 :id="option.classifyCode"
                                 :name="option.classifyName"
                                 @click.native="changeClassify"
-                                :placeholder="'请选择分类'"
+                                :placeholder="$t('请选择分类')"
                             >
                             </bk-option>
                         </bk-select>
-                        <div v-if="formErrors.sortError" class="error-tips">分类不能为空</div>
+                        <div v-if="formErrors.sortError" class="error-tips"> {{ $t('分类不能为空') }} </div>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
-                    <label class="bk-label env-label">应用范畴</label>
+                <div class="bk-form-item is-required" ref="categoryError">
+                    <label class="bk-label env-label"> {{ $t('应用范畴') }} </label>
                     <div class="bk-form-content template-item-content category">
                         <bk-checkbox-group v-model="templateForm.categoryIdList">
                             <bk-checkbox :value="entry.id" v-for="entry in categoryList" :key="entry.id">
@@ -62,28 +62,27 @@
                                 <span class="bk-checkbox-text" :style="{ 'margin-left': entry.iconUrl ? '24px' : '0' }">{{ entry.categoryName }}</span>
                             </bk-checkbox>
                         </bk-checkbox-group>
-                        <div v-if="formErrors.categoryError" class="error-tips">应用范畴不能为空</div>
+                        <div v-if="formErrors.categoryError" class="error-tips"> {{ $t('应用范畴不能为空') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item">
-                    <label class="bk-label">功能标签</label>
+                    <label class="bk-label"> {{ $t('功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
                         <bk-select v-model="templateForm.labelIdList" searchable multiple show-select-all>
                             <bk-option v-for="(option, index) in labelList"
                                 :key="index"
                                 :id="option.id"
                                 :name="option.labelName"
-                                :placeholder="'请选择功能标签'"
+                                :placeholder="$t('请选择功能标签')"
                             >
                             </bk-option>
                         </bk-select>
                     </div>
                 </div>
                 <div class="bk-form-item introduction-form-item is-required">
-                    <label class="bk-label">简介</label>
+                    <label class="bk-label"> {{ $t('简介') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
-                        <input type="text" class="bk-form-input template-introduction-input"
-                            placeholder="展示在模板市场上的文本简介，不超过70个字符。"
+                        <input type="text" class="bk-form-input template-introduction-input" :placeholder="$t('展示在模板市场上的文本简介，不超过70个字符。')"
                             name="introduction"
                             maxlength="70"
                             v-model="templateForm.summary"
@@ -95,14 +94,14 @@
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p>模版一句话简介，不超过70个字符，展示在模版市场上</p>
+                                <p> {{ $t('模版一句话简介，不超过70个字符，展示在模版市场上') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                     <p :class="errors.has('introduction') ? 'error-tips' : 'normal-tips'">{{ errors.first("introduction") }}</p>
                 </div>
-                <div class="bk-form-item remark-form-item is-required">
-                    <label class="bk-label">详细描述</label>
+                <div class="bk-form-item remark-form-item is-required" ref="descError">
+                    <label class="bk-label"> {{ $t('详细描述') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
                         <mavon-editor class="template-remark-input"
                             :placeholder="descTemplate"
@@ -110,28 +109,29 @@
                             v-model="templateForm.description"
                             :toolbars="toolbarOptions"
                             :external-link="false"
+                            :box-shadow="false"
+                            preview-background="#fff"
                             @imgAdd="addImage"
                             @imgDel="delImage"
                             @change="changeData" />
                         <bk-popover placement="left">
                             <i class="bk-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p>展示在模版市场查看模版详情页面，帮助用户快速了解模版功能和使用场景</p>
+                                <p> {{ $t('展示在模版市场查看模版详情页面，帮助用户快速了解模版功能和使用场景') }} </p>
                             </template>
                         </bk-popover>
                     </div>
-                    <p v-if="formErrors.descError" class="error-tips" style="margin-left: 100px;margin-top:4px;">详细描述不能为空</p>
+                    <p v-if="formErrors.descError" class="error-tips" style="margin-left: 100px;margin-top:4px;"> {{ $t('详细描述不能为空') }} </p>
                 </div>
                 <div class="version-msg">
-                    <p class="form-title">发布信息</p>
+                    <p class="form-title"> {{ $t('发布信息') }} </p>
                     <hr class="cut-line">
                 </div>
                 <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label">发布者</label>
+                    <label class="bk-label"> {{ $t('发布者') }} </label>
                     <div class="bk-form-content template-item-content">
                         <div style="width: 40%;">
-                            <input type="text" class="bk-form-input template-name-input"
-                                placeholder="请输入"
+                            <input type="text" class="bk-form-input template-name-input" :placeholder="$t('请输入')"
                                 name="publisher"
                                 v-model="templateForm.publisher"
                                 v-validate="{
@@ -144,7 +144,7 @@
                     </div>
                 </div>
                 <div class="bk-form-item versionlog-form-item">
-                    <label class="bk-label">发布描述</label>
+                    <label class="bk-label"> {{ $t('发布描述') }} </label>
                     <div class="bk-form-content template-item-content">
                         <textarea type="text" class="bk-form-input template-versionlog-input"
                             placeholder=""
@@ -153,50 +153,28 @@
                     </div>
                 </div>
                 <div class="form-footer">
-                    <button class="bk-button bk-primary" type="button" @click="submit()">提交</button>
-                    <button class="bk-button bk-default" type="button" @click="toAtomList()">取消</button>
+                    <button class="bk-button bk-primary" type="button" @click="submit()"> {{ $t('提交') }} </button>
+                    <button class="bk-button bk-default" type="button" @click="toAtomList()"> {{ $t('取消') }} </button>
                 </div>
-                <div class="template-logo-box" :class="{ 'is-border': !templateForm.logoUrl }" @click="uploadLogo()">
-                    <section v-if="templateForm.logoUrl">
-                        <img :src="templateForm.logoUrl">
-                    </section>
-                    <section v-else>
-                        <i class="bk-icon icon-plus"></i>
-                        <p>上传LOGO</p>
-                    </section>
-                </div>
+                <select-logo :form="templateForm" type="TEMPLATE" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
             </form>
         </div>
-        <template-logo :show-dialog="showlogoDialog"
-            :to-confirm-logo="toConfirmLogo"
-            :to-close-dialog="toCloseDialog"
-            :file-change="fileChange"
-            :selected-url="selectedUrl"
-            :is-uploading="isUploading">
-        </template-logo>
     </div>
 </template>
 
 <script>
-    import templateLogo from '@/components/atom-logo'
+    import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
-
-    const Vue = window.Vue
-    Vue.use(mavonEditor)
 
     export default {
         components: {
-            templateLogo
+            selectLogo
         },
         data () {
             return {
                 showContent: false,
-                showlogoDialog: false,
-                selectedUrl: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/所有服务/流水线模版/summary.html`,
+                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008944',
                 sortList: [],
                 labelList: [],
                 categoryList: [],
@@ -207,7 +185,8 @@
                 formErrors: {
                     sortError: false,
                     categoryError: false,
-                    descError: false
+                    descError: false,
+                    logoUrlError: false
                 },
                 templateForm: {
                     templateName: '',
@@ -217,7 +196,7 @@
                     categoryIdList: [],
                     labelIdList: [],
                     summary: '',
-                    description: '- 模版功能\n\n- 适用场景\n\n- 注意事项',
+                    description: `#### ${this.$t('模板功能')}\n\n#### ${this.$t('适用场景')}\n\n#### ${this.$t('使用限制和受限解决方案[可选]')}\n\n#### ${this.$t('常见的失败原因和解决方案')}`,
                     publisher: '',
                     pubDescription: '',
                     logoUrl: ''
@@ -366,101 +345,13 @@
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
             },
-            fileChange (e) {
-                const file = e.target.files[0]
-                if (file) {
-                    if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: '请上传png、jpg格式的图片'
-                        })
-                    } else if (file.size > (2 * 1024 * 1024)) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: '请上传大小不超过2M的图片'
-                        })
-                    } else {
-                        const reader = new FileReader()
-                        reader.readAsDataURL(file)
-                        reader.onload = evts => {
-                            const img = new Image()
-                            img.src = evts.target.result
-                            img.onload = evt => {
-                                if (img.width === 512 && img.height === 512) {
-                                    this.uploadHandle(file)
-                                } else {
-                                    this.$bkMessage({
-                                        theme: 'error',
-                                        message: '请上传尺寸为512*512的图片'
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            async uploadHandle (file) {
-                const formData = new FormData()
-                const config = {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-                let message, theme
-                formData.append('logo', file)
-
-                try {
-                    const res = await this.$store.dispatch('store/uploadLogo', {
-                        formData,
-                        config
-                    })
-
-                    this.selectedUrl = res
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            uploadLogo () {
-                this.showlogoDialog = true
-                this.selectedUrl = this.templateForm.logoUrl
-            },
-            /**
-             * 清空input file的值
-             */
-            resetUploadInput () {
-                this.$nextTick(() => {
-                    const inputElement = document.getElementById('inputfile')
-                    inputElement.value = ''
-                })
-            },
+            
             autoFocus () {
                 this.$nextTick(() => {
                     this.$refs.templateName.focus()
                 })
             },
-            async toConfirmLogo () {
-                if (this.selectedUrl) {
-                    this.templateForm.logoUrl = this.selectedUrl
-                    this.showlogoDialog = false
-                } else if (!this.selectedUrl) {
-                    this.$bkMessage({
-                        message: '请选择要上传的图片',
-                        theme: 'error'
-                    })
-                }
-                this.resetUploadInput()
-            },
-            toCloseDialog () {
-                this.showlogoDialog = false
-                this.selectedFile = undefined
-                this.resetUploadInput()
-            },
+            
             toAtomList () {
                 this.$router.push({
                     name: 'atomList',
@@ -484,22 +375,34 @@
             },
             checkValid () {
                 let errorCount = 0
+                let ref = ''
+                if (!this.templateForm.logoUrl) {
+                    this.formErrors.logoUrlError = true
+                    ref = ref || 'logoUrlError'
+                    errorCount++
+                }
+
                 if (!this.templateForm.classifyCode) {
                     this.formErrors.sortError = true
+                    ref = ref || 'sortError'
                     errorCount++
                 }
 
                 if (!this.templateForm.categoryIdList.length) {
                     this.formErrors.categoryError = true
+                    ref = ref || 'categoryError'
                     errorCount++
                 }
 
                 if (!this.templateForm.description) {
                     this.formErrors.descError = true
+                    ref = ref || 'descError'
                     errorCount++
                 }
 
                 if (errorCount > 0) {
+                    const errorEle = this.$refs[ref]
+                    if (errorEle) errorEle.scrollIntoView()
                     return false
                 }
 
@@ -532,7 +435,7 @@
                             params: params
                         })
 
-                        message = '提交成功'
+                        message = this.$t('提交成功')
                         theme = 'success'
                         if (res) {
                             this.toPublishProgress(res)
@@ -543,7 +446,7 @@
 
                             this.$bkInfo({
                                 type: 'error',
-                                title: '提交失败',
+                                title: this.$t('提交失败'),
                                 showFooter: false,
                                 subHeader: h('p', {
                                     style: {
@@ -634,15 +537,15 @@
             }
         }
         .edit-template-content {
-            padding: 20px 0 40px;
-            height: calc(100% - 50px);
+            margin: 20px 0 10px;
+            height: calc(100% - 80px);
             overflow: auto;
             display: flex;
             justify-content: center;
         }
         .edit-template-form {
             position: relative;
-            margin: auto;
+            margin: 0 auto;
             width: 1200px;
             .bk-label {
                 width: 100px;
@@ -673,6 +576,11 @@
                 white-space: normal;
                 word-break: break-all;
                 font-weight: 400;
+            }
+            .introduction-form-item {
+                .error-tips {
+                    margin-left: 100px;
+                }
             }
             .name-form-item,
             .introduction-form-item,
@@ -707,6 +615,7 @@
             .template-introduction-input,
             .template-remark-input {
                 min-width: 100%;
+                border: 1px solid #c4c6cc;
             }
             .version-num-form-item {
                 .version-num-content {
@@ -742,9 +651,10 @@
                 }
             }
             .template-remark-input {
-                position: relative;
-                z-index: 1;
-                height: 178px;
+                height: 263px;
+                &.fullscreen {
+                    height: auto;
+                }
             }
             .version-msg {
                 padding: 12px 0 12px 26px;
@@ -774,6 +684,7 @@
                 width: 100px;
                 height: 100px;
                 background: #fff;
+                border: 1px dashed $lineColor;
                 text-align: center;
                 cursor: pointer;
                 .icon-plus {
@@ -794,8 +705,31 @@
                     object-fit: cover;
                 }
             }
-            .is-border {
-                border: 1px dashed $lineColor;
+            .no-img {
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                &:hover {
+                    &:after {
+                        content: '\66F4\6362logo';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        z-index: 100;
+                        line-height: 25px;
+                        text-align: center;
+                        color: #fff;
+                        background: black;
+                        opacity: 0.7;
+                    }
+                }
+            }
+            .img-Error {
+                border: 1px dashed $dangerColor;
+                .error-msg {
+                    color: $dangerColor;
+                }
             }
             .category {
                 margin-top: 5px;
