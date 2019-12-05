@@ -705,7 +705,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuffer()
-            if(defaultShowFlag!= null && defaultShowFlag) {
+            if (defaultShowFlag != null && defaultShowFlag) {
                 sb.append("h2. ${atom.name}\r\n")
                     .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
             }
@@ -783,7 +783,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             sb.append("      output: {}\r\n")
         }
-        if(defaultShowFlag!= null && defaultShowFlag) {
+        if (defaultShowFlag != null && defaultShowFlag) {
             sb.append("{code}\r\n \r\n")
         }
         return sb.toString()

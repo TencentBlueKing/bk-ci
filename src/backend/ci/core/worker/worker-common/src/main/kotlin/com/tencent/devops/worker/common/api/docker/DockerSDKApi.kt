@@ -35,7 +35,7 @@ interface DockerSDKApi : WorkerRestApiSDK {
     /**
      * 更新镜像信息
      */
-    fun updateImageInfo (
+    fun updateImageInfo(
         userId: String,
         projectCode: String,
         imageCode: String,
