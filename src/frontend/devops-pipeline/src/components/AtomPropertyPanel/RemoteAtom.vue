@@ -5,6 +5,7 @@
             id="atom-iframe"
             ref="iframeEle"
             allowfullscreen
+            height="100%"
             :src="src"
             @load="onLoad"
         />
@@ -20,7 +21,7 @@
         data () {
             return {
                 newModel: {},
-                src: 'http://dev.nav.oa.com:8001'
+                src: 'http://dev.nav.oa.com:8001?projectId=t1'
             }
         },
         mounted () {
@@ -33,8 +34,7 @@
             onLoad () {
                 console.log(55)
                 const iframe = document.getElementById('atom-iframe').contentWindow
-                iframe.postMessage({ atomValue: this.element.data.input }, '*')
-                iframe.postMessage({ atomModel: this.atomPropsModel.input }, '*')
+                iframe.postMessage({ atomPropsValue: this.element.data.input, atomPropsModel: this.atomPropsModel.input }, '*')
             }
         }
     }
