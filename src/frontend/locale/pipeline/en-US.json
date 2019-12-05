@@ -283,7 +283,7 @@
         "allEmptyDesc": "There hasn't been any pipelines under this project. Click the 'New Pipeline' button below to get it started ",
         "otherEmptyTitle": " No pipelines under this view",
         "otherEmptyDesc": " There hasn't been any pipelines under this view. Click the 'New Pipeline' button below to get it started or switch to another view ",
-        "knowMore": "Learn more",
+        "knowMore": "Detail",
         "addPipeline": "New",
         "createPipeline": "New pipeline",
         "filterAgain": "Filter again",
