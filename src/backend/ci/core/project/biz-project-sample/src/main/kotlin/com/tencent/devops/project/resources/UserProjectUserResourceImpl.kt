@@ -24,14 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket
+package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.websocket.IPath
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.user.UserProjectUserResource
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.UserCacheService
+import com.tencent.devops.project.service.UserService
+import org.springframework.beans.factory.annotation.Autowired
 
-class EditPageBuild : IPath {
-    override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val page = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/edit"
-        return page
+@RestResource
+class UserProjectUserResourceImpl @Autowired constructor(
+    private val userService: UserService,
+    private val userCacheService: UserCacheService
+) : UserProjectUserResource {
+
+    override fun get(userId: String): Result<ProjectUser> {
+
+        val staff = userService.getStaffInfo(userId)
+        return Result(
+            ProjectUser(
+                chineseName = staff.chineseName,
+                avatarUrl = "",
+                username = staff.username
+            )
+        )
+    }
+
+    override fun getDetail(userId: String): Result<UserDeptDetail> {
+        return Result(userCacheService.getDetailFromCache(userId))
     }
 }

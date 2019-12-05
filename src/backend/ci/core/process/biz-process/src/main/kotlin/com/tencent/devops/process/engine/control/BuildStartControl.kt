@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -259,6 +260,13 @@ class BuildStartControl @Autowired constructor(
                         buildId = buildId,
                         startTime = buildInfo.startTime,
                         triggerType = buildInfo.trigger
+                    ), PipelineBuildStatusBroadCastEvent(
+                        source = source,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        actionType = ActionType.START
                     )
                 )
             }
@@ -291,7 +299,12 @@ class BuildStartControl @Autowired constructor(
                     it.id to it.defaultValue
                 }
             }.toMap())
-            buildStartupParamService.addParam(buildId, JsonUtil.getObjectMapper().writeValueAsString(params))
+            buildStartupParamService.addParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            )
         }
     }
 
