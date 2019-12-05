@@ -177,6 +177,7 @@ class GitCIBuildService @Autowired constructor(
         // 其他的stage
         yaml.stages!!.forEachIndexed { stageIndex, stage ->
 
+            val nowStageIndex = stageIndex + stageList.size - 1
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
@@ -185,13 +186,14 @@ class GitCIBuildService @Autowired constructor(
                     // 构建环境容器每个job的第一个插件都是拉代码
                     elementList.add(createGitCodeElement(event, gitProjectConf))
                     makeElementList(job, elementList, gitProjectConf, event.userId)
-                    addVmBuildContainer(job, elementList, containerList, stageIndex, jobIndex)
+                    addVmBuildContainer(job, elementList, containerList, nowStageIndex, jobIndex)
                 } else if (job.job.type == NORMAL_JOB) {
                     makeElementList(job, elementList, gitProjectConf, event.userId)
                     addNormalContainer(elementList, containerList)
                 }
             }
-            stageList.add(Stage(containerList, "stage-${stageIndex + 3}"))
+
+            stageList.add(Stage(containerList, "stage-${nowStageIndex}"))
         }
         return Model("git_" + gitProjectConf.gitProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, event.userId)
     }
@@ -214,7 +216,7 @@ class GitCIBuildService @Autowired constructor(
         ))
     }
 
-    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, stageIndex: Int, jobIndex: Int) {
+    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, nowStageIndex: Int, jobIndex: Int) {
         val containerPool =
             if (job.job.pool?.container == null) {
                 Pool(buildConfig.registryImage, Credential("", ""))
@@ -223,7 +225,7 @@ class GitCIBuildService @Autowired constructor(
             }
         val vmContainer = VMBuildContainer(
             id = null,
-            name = job.job.name ?: "stage${stageIndex + 3}-${jobIndex + 1}",
+            name = job.job.name ?: "stage${nowStageIndex}-${jobIndex + 1}",
             elements = elementList,
             status = null,
             startEpoch = null,
