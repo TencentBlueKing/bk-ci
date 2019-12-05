@@ -1,41 +1,37 @@
 <template>
     <div class="atom-information-wrapper">
         <div class="inner-header">
-            <div class="title">插件详情</div>
+            <div class="title"> {{ $t('插件详情') }} </div>
+            <span @click="goToEditAtom" :class="[{ 'disable': !showEdit }, 'header-edit']" :title="!showEdit && $t('只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息')"> {{ $t('编辑') }} </span>
         </div>
 
-        <section
-            class="sub-view-port"
-            v-bkloading="{
-                isLoading: loading.isLoading,
-                title: loading.title
-            }">
-            <div class="atom-information-content" v-if="showContent">
+        <section class="sub-view-port" v-bkloading="{ isLoading: loading }">
+            <div class="atom-information-content" v-if="!loading">
                 <div class="atom-form">
                     <div class="item-form item-form-left">
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label">名称：</div>
+                                <div class="info-label"> {{ $t('名称：') }} </div>
                                 <div class="info-value">{{ atomDetail.name }}</div>
                             </div>
                             <div class="detail-form-item">
-                                <div class="info-label">标识：</div>
+                                <div class="info-label"> {{ $t('标识：') }} </div>
                                 <div class="info-value">{{ atomDetail.atomCode }}</div>
                             </div>
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label">范畴：</div>
+                                <div class="info-label"> {{ $t('范畴：') }} </div>
                                 <div class="info-value">{{ categoryMap[atomDetail.category] }}</div>
                             </div>
                             <div class="detail-form-item">
-                                <div class="info-label">分类：</div>
+                                <div class="info-label"> {{ $t('分类：') }} </div>
                                 <div class="info-value">{{ atomDetail.classifyName }}</div>
                             </div>
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label">操作系统：</div>
+                                <div class="info-label"> {{ $t('操作系统：') }} </div>
                                 <!-- <div class="info-value" v-if="atomDetail.os">{{ atomOs(atomDetail.os) }}</div> -->
                                 <div class="info-value" v-if="atomDetail.os">
                                     <span v-if="atomDetail.jobType === 'AGENT'">
@@ -47,21 +43,23 @@
                             </div>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">发布包：</div>
+                            <div class="info-label"> {{ $t('发布包：') }} </div>
                             <div class="info-value">{{ atomDetail.pkgName }}</div>
                         </div>
-                        <div class="detail-form-item">
-                            <div class="info-label">功能标签：</div>
-                            <div class="info-value feature-label">
-                                <div class="label-card" v-for="(label, index) in atomDetail.labels" :key="index">{{ label }}</div>
+                        <div class="detail-form-item multi-item">
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('功能标签：') }} </div>
+                                <div class="info-value feature-label">
+                                    <div class="label-card" v-for="(label, index) in atomDetail.labels" :key="index">{{ label }}</div>
+                                </div>
                             </div>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">简介：</div>
+                            <div class="info-label"> {{ $t('简介：') }} </div>
                             <div class="info-value">{{ atomDetail.summary }}</div>
                         </div>
                         <div class="detail-form-item">
-                            <div class="info-label">详细描述：</div>
+                            <div class="info-label"> {{ $t('详细描述：') }} </div>
                             <div class="info-value markdown-editor-show" ref="editor" :class="{ 'overflow': !isDropdownShow }">
                                 <mavon-editor
                                     :editable="false"
@@ -70,41 +68,39 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    preview-background="#fafbfd"
                                     v-model="atomDetail.description"
                                 />
                             </div>
                         </div>
-                        <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? '收起' : '展开' }}
+                        <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('收起') : $t('展开') }}
                             <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                         </div>
                     </div>
                     <div class="item-form item-form-right">
-                        <img :src="atomDetail.logoUrl" v-if="atomDetail.logoUrl">
-                        <i class="bk-icon icon-placeholder atom-logo" v-else></i>
+                        <img :src="atomDetail.logoUrl">
                     </div>
                 </div>
                 <div class="version-content">
                     <div class="version-info-header">
-                        <div class="info-title">版本列表</div>
+                        <div class="info-title"> {{ $t('版本列表') }} </div>
                         <button class="bk-button bk-primary"
                             type="button"
                             :disabled="upgradeStatus.indexOf(versionList[0].atomStatus) === -1"
                             @click="editAtom('upgradeAtom', versionList[0].atomId)"
-                        >新增版本</button>
+                        > {{ $t('新增版本') }} </button>
                     </div>
-                    <bk-table style="margin-top: 15px;"
-                        :data="versionList"
-                    >
-                        <bk-table-column label="版本" prop="version"></bk-table-column>
-                        <bk-table-column label="状态" prop="atomStatus" :formatter="statusFormatter"></bk-table-column>
-                        <bk-table-column label="创建人" prop="creator"></bk-table-column>
-                        <bk-table-column label="创建时间" prop="createTime"></bk-table-column>
-                        <bk-table-column label="操作" width="120" class-name="handler-btn">
+                    <bk-table style="margin-top: 15px;" :data="versionList">
+                        <bk-table-column :label="$t('版本')" prop="version"></bk-table-column>
+                        <bk-table-column :label="$t('状态')" prop="atomStatus" :formatter="statusFormatter"></bk-table-column>
+                        <bk-table-column :label="$t('创建人')" prop="creator"></bk-table-column>
+                        <bk-table-column :label="$t('创建时间')" prop="createTime"></bk-table-column>
+                        <bk-table-column :label="$t('操作')" width="120" class-name="handler-btn">
                             <template slot-scope="props">
                                 <section v-show="!index">
-                                    <span class="update-btn" v-if="props.row.atomStatus === 'INIT'" @click="editAtom('shelfAtom', props.row.atomId)">上架</span>
+                                    <span class="update-btn" v-if="props.row.atomStatus === 'INIT'" @click="editAtom('shelfAtom', props.row.atomId)"> {{ $t('上架') }} </span>
                                     <span class="update-btn"
-                                        v-if="progressStatus.indexOf(props.row.atomStatus) > -1" @click="routerProgress(props.row.atomId)">进度</span>
+                                        v-if="progressStatus.indexOf(props.row.atomStatus) > -1" @click="routerProgress(props.row.atomId)"> {{ $t('进度') }} </span>
                                 </section>
                             </template>
                         </bk-table-column>
@@ -117,25 +113,17 @@
 
 <script>
     import { atomStatusMap } from '@/store/constants'
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
-
-    const Vue = window.Vue
-    Vue.use(mavonEditor)
+    import { mapGetters } from 'vuex'
 
     export default {
-        filters: {
-            levelFilter (val) {
-                if (val === 'LOGIN_PUBLIC') return '是'
-                else return '否'
-            }
-        },
         data () {
             return {
                 showContent: false,
                 isDropdownShow: false,
                 isOverflow: false,
                 versionList: [],
+                loading: true,
+                showEdit: false,
                 progressStatus: ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'],
                 upgradeStatus: ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'],
                 atomDetail: {
@@ -145,23 +133,22 @@
                     'LINUX': 'Linux',
                     'WINDOWS': 'Windows',
                     'MACOS': 'macOS',
-                    'NONE': '无构建环境'
+                    'NONE': this.$t('无构建环境')
                 },
                 categoryMap: {
-                    'TASK': '流水线插件',
-                    'TRIGGER': '流水线触发器'
+                    'TASK': this.$t('流水线插件'),
+                    'TRIGGER': this.$t('流水线触发器')
                 },
                 jobTypeMap: {
-                    'AGENT': '编译环境',
-                    'AGENT_LESS': '无编译环境'
-                },
-                loading: {
-                    isLoading: false,
-                    title: ''
+                    'AGENT': this.$t('编译环境'),
+                    'AGENT_LESS': this.$t('无编译环境')
                 }
             }
         },
         computed: {
+            ...mapGetters('store', {
+                'currentAtom': 'getCurrentAtom'
+            }),
             atomCode () {
                 return this.$route.params.atomCode
             },
@@ -170,69 +157,43 @@
             }
         },
 
-        async created () {
-            await this.requestVersionList()
-            await this.requestAtomDetail()
+        created () {
+            this.initData()
         },
+
         methods: {
+            initData () {
+                this.getAtomDetail()
+                this.requestVersionList()
+            },
+
             statusFormatter (row, column, cellValue, index) {
                 return this.atomStatusList[cellValue]
             },
 
-            async requestAtomDetail () {
-                this.loading.isLoading = true
-                this.loading.title = '数据加载中，请稍候'
-
-                try {
-                    const res = await this.$store.dispatch('store/requestAtom', {
-                        atomCode: this.atomCode
-                    })
-
-                    Object.assign(this.atomDetail, res)
-                    this.atomDetail.labels = res.labelList.map(item => {
-                        return item.labelName
-                    })
-                    this.$store.dispatch('store/updateCurrentaAtom', { res })
-                    this.$nextTick(() => {
-                        setTimeout(() => {
-                            this.isOverflow = this.$refs.editor.scrollHeight > 180
-                        }, 1000)
-                    })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    setTimeout(() => {
-                        this.loading.isLoading = false
-                    }, 1000)
-                    this.showContent = true
-                }
+            getAtomDetail () {
+                Object.assign(this.atomDetail, this.currentAtom)
+                this.atomDetail.labels = this.currentAtom.labelList.map(item => {
+                    return item.labelName
+                })
             },
-            async requestVersionList () {
-                try {
-                    const res = await this.$store.dispatch('store/requestVersionList', {
-                        atomCode: this.atomCode
-                    })
-                    
-                    this.versionList.splice(0, this.versionList.length)
-                    res.records.map(item => {
-                        this.versionList.push(item)
-                    })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
 
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
+            requestVersionList () {
+                this.$store.dispatch('store/requestVersionList', {
+                    atomCode: this.atomCode
+                }).then((res) => {
+                    this.versionList = res.records || []
+                    const lastestVersion = this.versionList[0] || {}
+                    const lastestStatus = lastestVersion.atomStatus
+                    this.showEdit = ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(lastestStatus)
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.loading = false
+                    this.$nextTick(() => (this.isOverflow = this.$refs.editor.scrollHeight > 180))
+                })
             },
+
             routerProgress (id) {
                 this.$router.push({
                     name: 'releaseProgress',
@@ -242,6 +203,12 @@
                     }
                 })
             },
+
+            goToEditAtom () {
+                if (!this.showEdit) return
+                this.$router.push({ name: 'edit' })
+            },
+
             editAtom (routerName, id) {
                 this.$router.push({
                     name: routerName,
@@ -250,6 +217,7 @@
                     }
                 })
             },
+
             atomOs (os) {
                 const target = []
                 os.forEach(item => {
@@ -257,6 +225,7 @@
                 })
                 return target.join('，')
             },
+
             toggleShow () {
                 this.isDropdownShow = !this.isDropdownShow
             }
@@ -264,7 +233,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import './../../assets/scss/conf';
 
     %flex {
@@ -275,6 +244,7 @@
         overflow: auto;
         .inner-header {
             @extend %flex;
+            align-items: center;
             padding: 18px 20px;
             width: 100%;
             height: 60px;
@@ -284,16 +254,28 @@
             .title {
                 font-size: 16px;
             }
+            .header-edit {
+                font-size: 16px;
+                color: $primaryColor;
+                cursor: pointer;
+            }
         }
         .atom-information-content {
             height: 100%;
             padding: 20px;
-            padding-right: 26px;
             overflow: auto;
         }
         .atom-form {
             display: flex;
             justify-content: space-between;
+            .detail-form-item .markdown-editor-show.info-value {
+                /deep/ .v-note-panel {
+                    border: none;
+                }
+                /deep/ .v-show-content {
+                    background: #FAFBFD;
+                }
+            }
         }
         .item-form-left {
             min-width: 840px;

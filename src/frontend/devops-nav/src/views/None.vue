@@ -1,7 +1,9 @@
 <template>
 	<div class="exception-box">
 		<img src="https://magicbox.bk.tencent.com/static_api/v3/components/exception_building/images/building.png" alt="没找到页面！" />
-		<p>没找到页面！<a href='/console/'>返回蓝盾Devops首页</a></p>
+		<i18n path="exception.404" tag="p">
+			<a v-slot="action" href='/console/'>{{$t('exception.goBack')}}</a>
+		</i18n>
 	</div>
 </template>
 

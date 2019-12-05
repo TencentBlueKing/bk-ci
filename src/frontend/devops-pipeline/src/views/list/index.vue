@@ -27,8 +27,8 @@
 
             <div class="default-link-list" slot="right">
                 <div class="dropdown-trigger" @click.stop="toggleIsMoreHandler">
-                    <span class="more-handler" id="moreHeaderHandler" :class="{ 'selectde-title': dropdownTitle !== '更多' }">{{ dropdownTitle }}
-                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': toggleIsMore }, { 'selectde-title': dropdownTitle !== '更多' }]"
+                    <span class="more-handler" id="moreHeaderHandler" :class="{ 'selectde-title': dropdownTitle !== $t('more') }">{{ dropdownTitle }}
+                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': toggleIsMore }, { 'selectde-title': dropdownTitle !== $t('more') }]"
                             id="toggleHeaderIcon"></i>
                     </span>
                 </div>
@@ -37,17 +37,22 @@
                         <li>
                             <a href="javascript:;" class="text-link" id="toggleLabels"
                                 :class="{ 'selected-item': routeName === 'pipelinesGroup' }"
-                                @click="routerToManage('pipelinesGroup')">标签管理</a>
+                                @click="routerToManage('pipelinesGroup')">{{$t('labelManage')}}</a>
                         </li>
                         <li>
                             <a href="javascript:;" class="text-link" id="toggleViews"
                                 :class="{ 'selected-item': routeName === 'pipelinesView' }"
-                                @click="routerToManage('pipelinesView')">视图管理</a>
+                                @click="routerToManage('pipelinesView')">{{$t('viewManage')}}</a>
                         </li>
                         <li>
                             <a href="javascript:;" class="text-link" id="toggleTemplates"
                                 :class="{ 'selected-item': routeName === 'pipelinesTemplate' }"
-                                @click="routerToManage('pipelinesTemplate')">模板管理</a>
+                                @click="routerToManage('pipelinesTemplate')">{{$t('templateManage')}}</a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" class="text-link" id="toggleManage"
+                                :class="{ 'selected-item': routeName === 'atomManage' }"
+                                @click="routerToManage('atomManage')">{{$t('pluginManage')}}</a>
                         </li>
                     </ul>
                 </div>
@@ -78,10 +83,9 @@
                 isLoading: false,
                 toggleIsMore: false,
                 header: {
-                    title: '流水线',
+                    title: this.$t('pipeline'),
                     links: [
                         {
-                            title: '入门指南',
                             handler: this.tutorial
                         }
                     ]
@@ -100,14 +104,22 @@
             },
             dropdownTitle () {
                 let title
-                if (this.routeName === 'pipelinesGroup') {
-                    title = '标签管理'
-                } else if (this.routeName === 'pipelinesView') {
-                    title = '视图管理'
-                } else if (this.routeName === 'pipelinesTemplate') {
-                    title = '模板管理'
-                } else {
-                    title = '更多'
+                switch (this.routeName) {
+                    case 'pipelinesGroup':
+                        title = this.$t('labelManage')
+                        break
+                    case 'pipelinesView':
+                        title = this.$t('viewManage')
+                        break
+                    case 'pipelinesTemplate':
+                        title = this.$t('templateManage')
+                        break
+                    case 'atomManage':
+                        title = this.$t('pluginManage')
+                        break
+                    default:
+                        title = this.$t('more')
+                        break
                 }
                 return title
             },

@@ -21,9 +21,12 @@
             emptyData () {
                 const query = this.$route.query || {}
                 const type = query.pipeType || 'atom'
-                const str = type === 'atom' ? '该分类下暂无流水线插件' : '该分类下暂无流水线模板'
-                const tip = type === 'atom' ? '新增流水线插件' : '新增流水线模板'
-                return { type, str, tip }
+                const emptyMap = {
+                    atom: { str: this.$t('该分类下暂无流水线插件'), tip: this.$t('新增流水线插件') },
+                    template: { str: this.$t('该分类下暂无流水线模板'), tip: this.$t('新增流水线模板') }
+                }
+                const tipObj = emptyMap[type]
+                return Object.assign({ type }, tipObj)
             }
         }
     }

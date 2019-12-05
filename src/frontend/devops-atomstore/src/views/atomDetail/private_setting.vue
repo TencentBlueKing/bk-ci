@@ -1,29 +1,25 @@
 <template>
     <article class="setting-private">
-        <h3 class="private-title">私有配置</h3>
+        <h3 class="private-title"> {{ $t('私有配置') }} </h3>
 
         <section class="private-main" v-bkloading="{ isLoading }" v-if="privateList.length">
-            <bk-button theme="primary" title="新增配置" @click="showAdd = true">新增配置</bk-button>
+            <bk-button theme="primary" :title="$t('新增配置')" @click="showAdd = true"> {{ $t('新增配置') }} </bk-button>
             <bk-table style="margin-top: 15px;" :data="privateList">
-                <bk-table-column label="名称" prop="fieldName" width="180"></bk-table-column>
-                <bk-table-column label="描述" prop="fieldDesc"></bk-table-column>
-                <bk-table-column label="修改者" prop="modifier" width="180"></bk-table-column>
-                <bk-table-column label="修改时间" prop="updateTime" width="180"></bk-table-column>
-                <bk-table-column label="操作" width="120" class-name="handler-btn">
+                <bk-table-column :label="$t('名称')" prop="fieldName" width="180"></bk-table-column>
+                <bk-table-column :label="$t('描述')" prop="fieldDesc"></bk-table-column>
+                <bk-table-column :label="$t('修改者')" prop="modifier" width="180"></bk-table-column>
+                <bk-table-column :label="$t('修改时间')" prop="updateTime" width="180"></bk-table-column>
+                <bk-table-column :label="$t('操作')" width="120" class-name="handler-btn">
                     <template slot-scope="props">
-                        <span class="update-btn" @click="handleEdit(props.row)">编辑</span>
-                        <span class="update-btn" @click="handleDelete(props.row, props.$index)">删除</span>
+                        <span class="update-btn" @click="handleEdit(props.row)"> {{ $t('编辑') }} </span>
+                        <span class="update-btn" @click="handleDelete(props.row, props.$index)"> {{ $t('删除') }} </span>
                     </template>
                 </bk-table-column>
             </bk-table>
         </section>
 
-        <section class="g-empty private-empty" v-else>
-            暂无私有配置
-            <p>
-                插件级别的敏感配置信息，可以在此添加，不暴露在插件代码中。插件逻辑中用到时从输入获取即可
-            </p>
-            <button @click="showAdd = true">添加</button>
+        <section class="g-empty private-empty" v-else> {{ $t('暂无私有配置') }} <p> {{ $t('插件级别的敏感配置信息，可以在此添加，不暴露在插件代码中。插件逻辑中用到时从输入获取即可') }} </p>
+            <button @click="showAdd = true"> {{ $t('添加') }} </button>
         </section>
 
         <transition name="atom-fade">
@@ -90,16 +86,16 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `确定删除${fieldName}？`)
+                }, `${this.$t('确定删除')}${fieldName}？`)
 
                 this.$bkInfo({
-                    title: '删除',
+                    title: this.$t('删除'),
                     subHeader,
                     confirmFn: () => {
                         const data = { atomCode: this.$route.params.atomCode, id: fieldId }
                         this.deleteSensitiveConf(data).then(() => {
                             this.privateList.splice(index, 1)
-                            this.$bkMessage({ message: '删除成功', theme: 'success' })
+                            this.$bkMessage({ message: this.$t('删除成功'), theme: 'success' })
                         }).catch((err) => {
                             this.$bkMessage({ message: (err.message || err), theme: 'error' })
                         })

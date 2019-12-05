@@ -42,8 +42,8 @@ const actions = {
             return response.data
         })
     },
-    requestInstanceList (_, { projectId, templateId }) {
-        return ajax.get(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}`).then(response => {
+    requestInstanceList (_, { projectId, templateId, params }) {
+        return ajax.get(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}`, { params }).then(response => {
             return response.data
         })
     },

@@ -3,7 +3,7 @@
         <table class="bk-table report-table">
             <thead>
                 <tr>
-                    <th>名称</th>
+                    <th>{{ $t('name') }}</th>
                 </tr>
             </thead>
             <tbody v-if="reportList.length">

@@ -1,9 +1,5 @@
 <template>
-    <div class="biz-container atom-detail-wrapper"
-        v-bkloading="{
-            isLoading: loading.isLoading,
-            title: loading.title
-        }">
+    <div class="biz-container atom-detail-wrapper" v-bkloading="{ isLoading }">
         <div class="biz-side-bar">
             <side-bar
                 :nav="sideMenuNav"
@@ -11,13 +7,13 @@
                 :sub-system-name="'atomLevel'">
             </side-bar>
         </div>
-        <router-view style="width: 100%" v-show="!loading.isLoading"></router-view>
+        <router-view style="width: 100%" v-if="!isLoading"></router-view>
     </div>
 </template>
 
 <script>
-    import sideBar from '@/components/side-nav'
     import { mapGetters } from 'vuex'
+    import sideBar from '@/components/side-nav'
 
     export default {
         components: {
@@ -25,47 +21,49 @@
         },
         data () {
             return {
-                loading: {
-                    isLoading: true,
-                    title: ''
-                },
-                sideMenuNav: {
-                    backUrl: 'atomList',
-                    backType: 'atom',
-                    icon: 'atom-story',
-                    title: '',
-                    url: ''
-                },
+                isLoading: true,
                 sideMenuList: [
                     {
                         list: [
                             {
                                 id: 'overview',
-                                name: '概览',
+                                selectId: ['overview'],
+                                name: this.$t('概览'),
                                 icon: 'icon-overview',
                                 showChildren: false
                             },
                             {
                                 id: 'detail',
-                                name: '详情',
+                                selectId: ['detail', 'edit'],
+                                name: this.$t('详情'),
                                 icon: 'icon-txt',
                                 showChildren: false
                             },
                             {
+                                id: 'approval',
+                                selectId: ['approval'],
+                                name: this.$t('审批'),
+                                icon: 'icon-panel-permission',
+                                showChildren: false
+                            },
+                            {
                                 id: 'settings',
-                                name: '设置',
+                                selectId: ['settings'],
+                                name: this.$t('设置'),
                                 icon: 'icon-cog',
                                 isOpen: false,
                                 showChildren: true,
                                 children: [
                                     {
                                         id: 'member',
-                                        name: '成员管理',
+                                        selectId: ['member'],
+                                        name: this.$t('成员管理'),
                                         icon: ''
                                     },
                                     {
                                         id: 'private',
-                                        name: '私有配置',
+                                        selectId: ['private'],
+                                        name: this.$t('私有配置'),
                                         icon: ''
                                     }
                                 ]
@@ -84,22 +82,22 @@
             },
             atomCode () {
                 return this.$route.params.atomCode
+            },
+            sideMenuNav () {
+                return {
+                    backUrl: 'atomList',
+                    backType: 'atom',
+                    icon: 'atom-story',
+                    title: this.currentAtom.name,
+                    url: ''
+                }
             }
         },
-        watch: {
-            currentAtom (newVal) {
-                this.sideMenuNav.title = newVal.name
-                this.loading.isLoading = false
-            }
-        },
+
         created () {
-            if (!this.currentAtom.atomCode && this.routeName !== 'overview') {
-                this.initAtom()
-            }
-            if (this.routeName === 'visible' || this.routeName === 'member' || this.routeName === 'private') {
-                this.sideMenuList[0].list[2].isOpen = true
-            }
+            this.initData()
         },
+
         methods: {
             goBack () {
                 this.$router.push({
@@ -109,22 +107,31 @@
                     }
                 })
             },
-            async initAtom () {
-                try {
-                    const res = await this.$store.dispatch('store/requestAtom', {
-                        atomCode: this.atomCode
-                    })
-                    this.codeForm = res
-                    this.$store.dispatch('store/updateCurrentaAtom', { res })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
 
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+            initData () {
+                if (this.routeName === 'visible' || this.routeName === 'member' || this.routeName === 'private') {
+                    this.sideMenuList[0].list[3].isOpen = true
                 }
+                Promise.all([this.getMemInfo(), this.requestAtomDetail()]).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => (this.isLoading = false))
+            },
+
+            requestAtomDetail () {
+                return this.$store.dispatch('store/requestAtom', {
+                    atomCode: this.atomCode
+                }).then(res => this.$store.dispatch('store/updateCurrentaAtom', { res }))
+            },
+
+            getMemInfo () {
+                return this.$store.dispatch('store/getMemberInfo', this.atomCode).then((res = {}) => {
+                    const userInfo = {
+                        isProjectAdmin: res.type === 'ADMIN',
+                        userName: res.userName
+                    }
+                    if (!userInfo.isProjectAdmin) this.sideMenuList[0].list.splice(2, 1)
+                    this.$store.dispatch('store/updateUserInfo', userInfo)
+                })
             }
         }
     }
@@ -145,5 +152,9 @@
     .sub-view-port {
         height: calc(100% - 60px);
         overflow: auto;
+    }
+    .disable {
+        cursor: not-allowed !important;
+        color: #dfe0e5 !important;
     }
 </style>

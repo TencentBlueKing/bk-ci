@@ -1,7 +1,7 @@
 <template>
     <accordion show-checkbox :show-content="enableMutual" key="otherChoice" is-version="true">
         <header class="var-header" slot="header">
-            <span>设置互斥组</span>
+            <span>{{ $t('editPage.mutexGroup') }}</span>
             <!--<i class="bk-icon icon-angle-down" style="display:block"></i>-->
             <input class="accordion-checkbox" :disabled="disabled" :checked="enableMutual" type="checkbox" @click.stop @change="toggleMutual" />
         </header>
@@ -19,13 +19,10 @@
     import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
-    import {
-        getJobOptionDefault,
-        JOB_MUTUAL
-    } from '@/store/modules/soda/jobOptionConfig'
+    import jobOptionConfigMixin from '@/store/modules/soda/jobOptionConfigMixin'
     export default {
         name: 'job-mutual',
-        mixins: [atomMixin, validMixins],
+        mixins: [atomMixin, validMixins, jobOptionConfigMixin],
         props: {
             mutexGroup: {
                 type: Object,
@@ -42,7 +39,7 @@
         },
         computed: {
             optionModel () {
-                return JOB_MUTUAL || {}
+                return this.JOB_MUTUAL || {}
             },
             enableMutual () {
                 return this.mutexGroup && this.mutexGroup.enable
@@ -57,7 +54,6 @@
             ...mapActions('atom', [
                 'setPipelineEditing'
             ]),
-            getJobOptionDefault,
             handleUpdateJobMutual (name, value) {
                 this.setPipelineEditing(true)
                 this.updateContainerParams('mutexGroup',
@@ -70,7 +66,7 @@
             },
             initOptionConfig () {
                 if (this.mutexGroup === undefined || JSON.stringify(this.mutexGroup) === '{}') {
-                    this.updateContainerParams('mutexGroup', this.getJobOptionDefault(JOB_MUTUAL))
+                    this.updateContainerParams('mutexGroup', this.getJobOptionDefault(this.JOB_MUTUAL))
                 }
             }
         }

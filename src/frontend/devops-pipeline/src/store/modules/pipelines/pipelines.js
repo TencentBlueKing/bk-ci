@@ -220,13 +220,26 @@ const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    requestProjectGroupAndUsers: async ({ commit }, { projectId }) => {
+        try {
+            const response = await ajax.get(`/experience/api/user/groups/${projectId}/projectGroupAndUsers`)
+            commit(PROJECT_GROUP_USERS_MUTATION, {
+                projectGroupAndUsers: response.data
+            })
+        } catch (e) {
+            if (e.code === 403) {
+                e.message = ''
+            }
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
     updatePipelineSetting: ({ commit }, payload) => {
         commit(UPDATE_PIPELINE_SETTING_MUNTATION, payload)
     },
     updatePipelineAuthority: ({ commit }, payload) => {
         commit(PIPELINE_AUTHORITY_MUTATION, payload)
     },
-
+    
     requestHasCreatePermission (state, { projectId }) {
         return ajax.get(`${prefix}${projectId}/hasCreatePermission`).then(response => {
             return response.data
@@ -423,7 +436,7 @@ const actions = {
     async fetchRoleList ({ commit, state, dispatch }, { projectId, pipelineId }) {
         try {
             const { data } = await ajax.get(`${backpre}/perm/service/pipeline/mgr_resource/permission/?project_id=${projectId}&resource_type_code=pipeline&resource_code=${pipelineId}`)
-
+            
             commit(PIPELINE_AUTHORITY_MUTATION, {
                 pipelineAuthority: {
                     role: data.role.map(item => {

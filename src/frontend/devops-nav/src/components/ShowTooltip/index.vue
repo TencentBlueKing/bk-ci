@@ -7,16 +7,28 @@
         :placement="placement"
         always="isShow"
     >
-        <slot></slot>
-        <div slot="content" class="show-tooltip-content">
+        <slot />
+        <div
+            slot="content"
+            class="show-tooltip-content"
+        >
             {{ content }}
-            <div v-if="content" class="show-tooltip-footer">
-                <span class="close-tooltip-btn" @click="confirmBtn">{{ footer }}</span>
+            <div
+                v-if="content"
+                class="show-tooltip-footer"
+            >
+                <span
+                    class="close-tooltip-btn"
+                    @click="confirmBtn"
+                >{{ footer }}</span>
             </div>
         </div>
     </bk-popover>
-    <div class="show-tooltip" v-else>
-        <slot></slot>
+    <div
+        v-else
+        class="show-tooltip"
+    >
+        <slot />
     </div>
 </template>
 <script lang="ts">

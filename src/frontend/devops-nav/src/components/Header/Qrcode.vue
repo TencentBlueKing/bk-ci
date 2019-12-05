@@ -1,13 +1,30 @@
 <template>
-    <div v-clickoutside="hideOrcode" :class="{ &quot;devops-qrcode&quot;: true, &quot;active&quot;: show }">
-        <div class="qrcode-tips" @click="toggleOrcode(show)">
-            <div class="qrcode-icon"><i class="bk-icon icon-phone" /></div>
-            <div><span>手机版</span></div>
+    <div
+        v-clickoutside="hideOrcode"
+        :class="{ &quot;devops-qrcode&quot;: true, &quot;active&quot;: show }"
+    >
+        <div
+            class="qrcode-tips"
+            @click="toggleOrcode(show)"
+        >
+            <div class="qrcode-icon">
+                <i class="bk-icon icon-phone" />
+            </div>
+            <div><span>{{ $t("DevopsMobile") }}</span></div>
         </div>
-        <div class="qrcode-div" v-if="show">
+        <div
+            v-if="show"
+            class="qrcode-div"
+        >
             <div class="content">
-                <img width="120" height="120" src="./../../assets/images/devopsapp-qrcode.png" />
-                <p style="text-align: center">扫一扫下载蓝盾App</p>
+                <img
+                    width="120"
+                    height="120"
+                    src="./../../assets/images/devopsapp-qrcode.png"
+                >
+                <p style="text-align: center">
+                    {{ $t('scanToDownload') }}
+                </p>
             </div>
         </div>
     </div>
