@@ -26,12 +26,17 @@
 
 package com.tencent.devops.artifactory
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
+import com.tencent.devops.artifactory.client.JFrogServiceClient
+import com.tencent.devops.artifactory.service.impl.DiskArchiveFileServiceImpl
+import com.tencent.devops.artifactory.service.impl.JFrogArchiveFileServiceImpl
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
-@MicroService
-class Application
+@Configuration
+class BkServiceConfig {
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    @Bean
+    @Primary
+    fun archiveFileService() = JFrogArchiveFileServiceImpl()
 }

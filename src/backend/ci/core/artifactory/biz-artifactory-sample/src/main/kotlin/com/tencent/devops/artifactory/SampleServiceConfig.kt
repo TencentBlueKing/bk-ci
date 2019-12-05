@@ -38,8 +38,4 @@ class SampleServiceConfig {
     @Bean
     @Primary
     fun archiveFileService() = DiskArchiveFileServiceImpl()
-
-    @Bean
-    @Primary
-    fun jFrogServiceClient() = JFrogServiceClient()
 }

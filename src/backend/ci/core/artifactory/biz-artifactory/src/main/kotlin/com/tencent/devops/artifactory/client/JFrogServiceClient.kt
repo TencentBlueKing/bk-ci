@@ -34,9 +34,11 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import java.io.File
 import java.nio.file.Paths
 
+@Component
 class JFrogServiceClient {
 
     companion object {
