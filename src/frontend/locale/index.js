@@ -8,7 +8,12 @@ const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
-    'en-US': 'English'
+    'zh-cn': '中文',
+    'cn': '中文',
+    'en-US': 'English',
+    'en-us': 'English',
+    'en': 'English',
+    'us': 'English'
 }
 const localeAliasMap = {
     'zh-cn': 'zh-CN',
@@ -110,10 +115,9 @@ function importAll (r) {
                 ...lang[localeKey.replace('-', '')],
                 ...mod
             }
-            
             localeList.push({
                 key: localeKey,
-                label: localeKey.split('-').pop()
+                label: localeLabelMap[localeKey]
             })
         }
         return acc

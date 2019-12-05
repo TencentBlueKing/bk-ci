@@ -55,6 +55,7 @@
             </h3>
         </div>
         <div class="header-right-bar">
+            <locale-switcher></locale-switcher>
             <qrcode class="feed-back-icon" />
             <span class="seperate-line">|</span>
             <!-- <feed-back class='feed-back-icon'></feed-back> -->
@@ -84,6 +85,7 @@
     import FeedBack from './FeedBack.vue'
     import Qrcode from './Qrcode.vue'
     import Logo from '../Logo/index.vue'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
@@ -97,7 +99,8 @@
             Qrcode,
             ProjectDialog,
             Logo,
-            DevopsSelect
+            DevopsSelect,
+            LocaleSwitcher
         }
     })
     export default class Header extends Vue {
