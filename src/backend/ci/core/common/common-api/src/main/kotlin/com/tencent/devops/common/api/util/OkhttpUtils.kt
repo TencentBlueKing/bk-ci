@@ -56,6 +56,8 @@ object OkhttpUtils {
 
     val jsonMediaType = MediaType.parse("application/json")
 
+    private val octetStream = MediaType.parse("application/octet-stream")
+
     private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
         @Throws(CertificateException::class)
         override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
@@ -74,7 +76,7 @@ object OkhttpUtils {
     private const val readTimeout = 30L
     private const val writeTimeout = 30L
 
-    private val okHttpClient = okhttp3.OkHttpClient.Builder()
+    private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.SECONDS)
         .writeTimeout(writeTimeout, TimeUnit.SECONDS)
@@ -83,7 +85,7 @@ object OkhttpUtils {
         .build()!!
 
     // 下载会出现从 文件源--（耗时长）---->网关（网关全部收完才转发给用户，所以用户侧与网关存在读超时的可能)-->用户
-    private val longHttpClient = okhttp3.OkHttpClient.Builder()
+    private val longHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.MINUTES)
         .writeTimeout(readTimeout, TimeUnit.MINUTES)
@@ -121,7 +123,7 @@ object OkhttpUtils {
             .url(url)
             .get()
         if (headers.isNotEmpty()) {
-            headers.forEach { key, value ->
+            headers.forEach { (key, value) ->
                 requestBuilder.addHeader(key, value)
             }
         }
@@ -136,10 +138,10 @@ object OkhttpUtils {
     fun uploadFile(
         url: String,
         uploadFile: File,
-        headers: Map<String, String>? = null,
+        headers: Map<String, String?>? = null,
         fileFieldName: String = "file"
     ): Response {
-        val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), uploadFile)
+        val fileBody = RequestBody.create(octetStream, uploadFile)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart(fileFieldName, uploadFile.name, fileBody)
@@ -147,8 +149,10 @@ object OkhttpUtils {
         val requestBuilder = Request.Builder()
             .url(url)
             .post(requestBody)
-        headers?.forEach { key, value ->
-            requestBuilder.addHeader(key, value)
+        headers?.forEach { (key, value) ->
+            if (!value.isNullOrBlank()) {
+                requestBuilder.addHeader(key, value!!)
+            }
         }
         val request = requestBuilder.build()
         return doHttp(request)
@@ -237,20 +241,6 @@ object OkhttpUtils {
 
     private fun sslSocketFactory(): SSLSocketFactory {
         try {
-            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-                @Throws(CertificateException::class)
-                override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-                }
-
-                @Throws(CertificateException::class)
-                override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-                }
-
-                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
-                    return arrayOf()
-                }
-            })
-
             val sslContext = SSLContext.getInstance("SSL")
             sslContext.init(null, trustAllCerts, java.security.SecureRandom())
             return sslContext.socketFactory

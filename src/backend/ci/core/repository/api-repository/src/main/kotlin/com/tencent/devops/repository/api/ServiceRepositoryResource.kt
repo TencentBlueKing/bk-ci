@@ -134,15 +134,10 @@ interface ServiceRepositoryResource {
     ): Result<Page<RepositoryInfo>>
 
     @ApiOperation("获取项目代码库列表")
-    @GET
-    @Path("/projects/{projectId}/listByProject")
-    fun listByProject(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("仓库类型", required = false)
-        @QueryParam("repositoryType")
-        repositoryType: ScmType?,
+    @POST
+    @Path("/listByProjects")
+    fun listByProjects(
+        projectIds: Set<String>,
         @ApiParam("分页", required = false)
         @QueryParam("page")
         page: Int?,
