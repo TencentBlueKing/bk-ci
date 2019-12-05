@@ -55,6 +55,7 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.service.image.SupportService
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Record18
 import org.jooq.Record21
 import org.jooq.Result
@@ -1353,6 +1354,21 @@ class MarketImageDao @Autowired constructor(
             } ?: emptyList()
         logger.info("Output:visibleImageCodes:$visibleImageCodes")
         return visibleImageCodes
+    }
+
+    fun getTestingImageCodes(
+        dslContext: DSLContext,
+        projectTestImageCodes: Collection<String>
+    ): Result<Record1<String>>? {
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        with(tImage) {
+            return dslContext.selectDistinct(
+                IMAGE_CODE
+            ).from(this)
+                .where(IMAGE_STATUS.`in`(setOf(ImageStatusEnum.TESTING.status.toByte(), ImageStatusEnum.AUDITING.status.toByte())))
+                .and(IMAGE_CODE.`in`(projectTestImageCodes))
+                .fetch()
+        }
     }
 
     private val logger = LoggerFactory.getLogger(MarketImageDao::class.java)
