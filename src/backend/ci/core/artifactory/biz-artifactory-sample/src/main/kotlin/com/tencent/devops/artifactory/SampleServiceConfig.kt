@@ -24,11 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.pojo
+package com.tencent.devops.artifactory
 
-data class JFrogFileInfo(
-    val uri: String,
-    val size: Long,
-    val lastModified: String,
-    val folder: Boolean
-)
+import com.tencent.devops.artifactory.service.impl.DiskArchiveFileServiceImpl
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+
+@Configuration
+class SampleServiceConfig {
+
+    @Bean
+    @Primary
+    fun archiveFileService() = DiskArchiveFileServiceImpl()
+}

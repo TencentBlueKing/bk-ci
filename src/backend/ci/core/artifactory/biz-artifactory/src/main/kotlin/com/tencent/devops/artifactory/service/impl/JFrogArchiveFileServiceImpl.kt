@@ -24,22 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.client.JFrogServiceClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.artifactory.service.impl.ArchiveFileServiceImpl
-import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.JfrogService
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.util.JFrogUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.Request
@@ -62,7 +63,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
     lateinit var jFrogService: JFrogService
 
     @Autowired
-    lateinit var jFrogServiceClient: JfrogService
+    lateinit var jFrogServiceClient: JFrogServiceClient
 
     override fun uploadFileToRepo(destPath: String, file: File) {
         jFrogService.deploy(destPath, file.inputStream())

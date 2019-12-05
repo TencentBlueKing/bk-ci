@@ -24,10 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.api.pojo
+package com.tencent.devops.common.archive.pojo
 
-data class CheckSums(
-    val sha256: String?,
-    val sha1: String,
-    val md5: String
+data class JFrogFileInfoList(
+    val uri: String,
+    val created: String,
+    val files: List<JFrogFileInfo>
 )

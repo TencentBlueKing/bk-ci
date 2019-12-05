@@ -24,14 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.pojo
+package com.tencent.devops.artifactory
 
-import com.tencent.devops.common.archive.api.pojo.CheckSums
+import com.tencent.devops.artifactory.service.impl.JFrogArchiveFileServiceImpl
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
-data class JFrogFileDetail(
-    val path: String,
-    val size: Long,
-    val created: String,
-    val lastModified: String,
-    val checksums: CheckSums?
-)
+@Configuration
+class TencentServiceConfig {
+
+    @Bean
+    @Primary
+    fun archiveFileService() = JFrogArchiveFileServiceImpl()
+}

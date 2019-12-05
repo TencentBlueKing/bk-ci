@@ -24,23 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.client
+package com.tencent.devops.artifactory.client
 
 import com.google.gson.JsonParser
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import java.io.File
 import java.nio.file.Paths
 
-class JfrogService {
+@Component
+class JFrogServiceClient {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(JfrogService::class.java)
+        private val logger = LoggerFactory.getLogger(JFrogServiceClient::class.java)
     }
 
     @Value("\${devopsGateway.api:#{null}}")

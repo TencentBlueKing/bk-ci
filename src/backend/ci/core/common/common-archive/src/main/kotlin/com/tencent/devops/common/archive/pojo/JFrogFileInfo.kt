@@ -24,10 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.pojo
+package com.tencent.devops.common.archive.pojo
 
-data class JFrogFileInfoList(
+data class JFrogFileInfo(
     val uri: String,
-    val created: String,
-    val files: List<JFrogFileInfo>
+    val size: Long,
+    val lastModified: String,
+    val folder: Boolean
 )

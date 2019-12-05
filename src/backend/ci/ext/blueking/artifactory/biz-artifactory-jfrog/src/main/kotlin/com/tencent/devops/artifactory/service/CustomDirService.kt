@@ -112,8 +112,8 @@ class CustomDirService @Autowired constructor(
             val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
             jFrogPropertiesMap[ARCHIVE_PROPS_PIPELINE_NAME] = pipelineName
         }
-
-        return if (jFrogFileInfo.checksums == null) {
+        val checksums = jFrogFileInfo.checksums
+        return if (checksums == null) {
             FileDetail(
                 name = JFrogUtil.getFileName(path),
                 path = path,
@@ -141,9 +141,9 @@ class CustomDirService @Autowired constructor(
                     DateTimeFormatter.ISO_DATE_TIME
                 ).timestamp(),
                 checksums = FileChecksums(
-                    jFrogFileInfo.checksums.sha256,
-                    jFrogFileInfo.checksums.sha1,
-                    jFrogFileInfo.checksums.md5
+                    checksums.sha256,
+                    checksums.sha1,
+                    checksums.md5
                 ),
                 meta = jFrogPropertiesMap
             )
