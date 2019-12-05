@@ -284,7 +284,7 @@
         "otherEmptyTitle": " No pipelines under this view",
         "otherEmptyDesc": " There hasn't been any pipelines under this view. Click the 'New Pipeline' button below to get it started or switch to another view ",
         "knowMore": "Detail",
-        "addPipeline": "New",
+        "addPipeline": "New pipeline",
         "createPipeline": "New pipeline",
         "filterAgain": "Filter again",
         "orderByAlpha": "By a~z",
