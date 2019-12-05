@@ -27,7 +27,6 @@ request.interceptors.request.use(config => {
     }
     
     const routePid = getCurrentPid()
-    console.log('routePid', routePid)
     return {
         ...config,
         headers: routePid ? {
