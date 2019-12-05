@@ -227,6 +227,13 @@
                         children[j].iframe_url = children[j].iframe_url.replace('http://dev.static.devops.oa.com', WEBSITE_URL)
                     }
 
+                    if (children[j].name.indexOf('WeTest') > -1) { // hack wetest
+                        children[j] = Object.assign(children[j], {
+                            iframe_url: 'https://wetest.oa.com/devops/console',
+                            link_new: '/wetest/0/pipeline?group=bk_devops',
+                            inject_type: "iframe"
+                        })
+                    }
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
