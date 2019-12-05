@@ -233,6 +233,11 @@
         },
 
         methods: {
+            search () {
+                this.pagination.current = 1
+                this.requestList()
+            },
+
             submitOfflineImage (row) {
                 this.$refs.offlineForm.validate().then(() => {
                     const postData = {
