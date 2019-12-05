@@ -3,40 +3,23 @@
         <div class="pipeline-trigger-wrapper" @click="toggleStatus">
             <slot name="exec-bar" :isDisable="disabled">
                 <div class="pipeline-trigger-item pipeline-disable" v-if="!canManualStartup">
-                    <i class="bk-icon icon-displayable trigger-icon" title="不支持手动启动流水线"></i>
+                    <i class="bk-icon icon-displayable trigger-icon" :title="$t('newlist.cannotManual')"></i>
                 </div>
                 <div class="pipeline-trigger-item pipeline-ready" v-if="canManualStartup && status !== 'running'">
                     <i class="bk-icon icon-right-shape trigger-icon"></i>
                 </div>
                 <div class="pipeline-trigger-item pipeline-running" v-if="canManualStartup && status === 'running'">
-                    <i alt="执行中" class="bk-icon icon-circle-2-1 spin-icon"></i>
+                    <i alt="running" class="bk-icon icon-circle-2-1 spin-icon"></i>
                 </div>
             </slot>
         </div>
-
-        <bk-dialog
-            title="请输入流水线运行参数"
-            width="800"
-            :close-icon="false"
-            v-model="isDialogShow"
-            @confirm="confirmHandler"
-            @cancel="cancelHandler">
-            <section class="bk-form dialog-params-form">
-                <pipeline-params-form ref="paramsForm" :param-values="paramValues" :handle-param-change="handleParamChange" :params="paramList"></pipeline-params-form>
-            </section>
-        </bk-dialog>
     </div>
 </template>
 
 <script>
-    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import { bus } from '@/utils/bus'
     import { mapActions } from 'vuex'
-
     export default {
-        components: {
-            PipelineParamsForm
-        },
         props: {
             beforeExec: {
                 type: Function,
@@ -57,7 +40,6 @@
         },
         data () {
             return {
-                isDialogShow: false,
                 paramList: [],
                 paramValues: {},
                 disabled: false
@@ -106,6 +88,7 @@
                 if (this.disabled || this.status === 'running' || !this.canManualStartup) return
                 this.setExecuteStatus(true)
                 this.disabled = true
+                this.setExecuteStatus(true)
                 // debugger
                 if (this.beforeExec && typeof this.beforeExec === 'function') {
                     if (!await this.beforeExec(true)) {
@@ -124,7 +107,8 @@
                         })
                         if (res.canManualStartup) {
                             this.paramList = res.properties.filter(p => p.required)
-                            if (res.canElementSkip) {
+
+                            if (res.canElementSkip || this.paramList.length || (res.buildNo && res.buildNo.required)) {
                                 this.$store.commit('pipelines/updateCurAtomPrams', res)
                                 this.$router.push({
                                     name: 'pipelinesPreview',
@@ -133,27 +117,21 @@
                                         pipelineId: this.pipelineId
                                     }
                                 })
-                            } else if (this.paramList.length && !res.canElementSkip) {
-                                this.isDialogShow = true
-                                this.paramValues = this.paramList.reduce((values, param) => {
-                                    values[param.id] = param.defaultValue
-                                    return values
-                                }, {})
                             } else {
                                 await this.execPipeline()
                             }
                         } else {
-                            throw new Error('当前流水线不包含手动触发插件')
+                            throw new Error(this.$t('newlist.withoutManualAtom'))
                         }
                     } else {
-                        throw new Error('流水线参数错误')
+                        throw new Error(this.$t('newlist.paramsErr'))
                     }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: '流水线',
-                                option: '执行'
+                                resource: this.$t('pipeline'),
+                                option: this.$t('exec')
                             }],
                             applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_executor=pipeline:${this.pipelineId}`
                         })
@@ -177,7 +155,6 @@
                     pipelineId: this.pipelineId
                 })
                 this.disabled = false
-                this.setExecuteStatus(false)
             },
             /**
              *  点击确定的回调函数

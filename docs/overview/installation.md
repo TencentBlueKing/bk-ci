@@ -66,8 +66,8 @@
 
 前端构建之后生成的模板配置文件变量替换
 ```bash
-  ./render_tpl -m bkci /data/bkee/bkci/frontend/pipeline/frontend#pipeline#index.html
-  ./render_tpl -m bkci /data/bkee/bkci/frontend/console/frontend#console#index.html
+  ./render_tpl -m bkci /data/bkee/ci/frontend/pipeline/frontend#pipeline#index.html
+  ./render_tpl -m bkci /data/bkee/ci/frontend/console/frontend#console#index.html
 ```
 
 ### 3.3 后端微服务部署

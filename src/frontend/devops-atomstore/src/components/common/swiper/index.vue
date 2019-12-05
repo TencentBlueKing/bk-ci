@@ -1,6 +1,6 @@
 <template>
     <section class="swiper-home" ref="swiper">
-        <hgroup :style="{ width: `${swiperMainWith}px`, transform: `translateX(-${imageTransfer}px)` }"
+        <hgroup :style="{ width: `${swiperMainWith}px`, transform: `translateX(${imageTransfer}px)` }"
             :class="[isTransition ? 'transition' : 'no-transition', 'swiper-main']"
             @mousedown="moveStart"
             @mousemove="moveing"
@@ -10,9 +10,9 @@
         >
             <h3 v-for="(pic, index) in picList"
                 :key="index"
-                class="swiper-img"
-                :class="pic.class"
-                :style="{ 'background-color': pic.color }"
+                :class="[{ 'swiper-link': pic.link }, pic.class, 'swiper-img']"
+                :style="{ 'background-image': `url(${pic.logoUrl})` }"
+                @click="goToLink(pic.link)"
             >
             </h3>
         </hgroup>
@@ -42,6 +42,7 @@
                 currentIndex: 1, // 轮播图索引
                 isStartMove: false,
                 isTransition: false,
+                isClick: false,
                 startMovePoint: 0,
                 mouseDistance: 0,
                 loopId: ''
@@ -58,7 +59,7 @@
             imageTransfer () {
                 const indexMove = this.width * this.currentIndex
                 const imageMove = indexMove - this.mouseDistance
-                return imageMove
+                return -imageMove
             }
         },
 
@@ -82,6 +83,10 @@
             destoryStatus () {
                 this.endLoop()
                 document.removeEventListener('visibilitychange', this.visChange)
+            },
+
+            goToLink (link) {
+                if (this.isClick && link) window.open(link, '_blank')
             },
 
             visChange (event) {
@@ -118,13 +123,17 @@
             },
 
             mmoveEnd (event) {
-                this.startLoop()
-                this.isTransition = true
-                this.isStartMove = false
+                if (!this.isStartMove) return
 
                 const threshold = this.width / 3
                 const absMouseDis = Math.abs(this.mouseDistance)
+
+                this.isClick = this.isStartMove && absMouseDis < 5
                 if (absMouseDis > threshold) this.currentIndex -= absMouseDis / this.mouseDistance
+
+                this.startLoop()
+                this.isTransition = true
+                this.isStartMove = false
                 this.mouseDistance = 0
             },
 
@@ -175,17 +184,14 @@
             transition: none;
         }
         .swiper-img {
-            width: 100%;
+            width: 940px;
             height: 100%;
-            background-size: contain;
+            background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
         }
-        .first-pic {
-            background-image: url('../../../images/firstBanner.webp');
-        }
-        .second-pic {
-            background-image: url('../../../images/firstBanner.webp');
+        .swiper-link {
+            cursor: pointer;
         }
     }
     .swiper-index {

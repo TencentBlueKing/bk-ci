@@ -1,6 +1,10 @@
 <template>
-    <svg :width="size" :height="size" style="fill: currentColor">
-        <use v-bind="{ 'xlink:href': `#color-logo-${name}` }"></use>
+    <svg
+        :width="size"
+        :height="size"
+        style="fill: currentColor"
+    >
+        <use v-bind="{ 'xlink:href': `#color-logo-${name}` }" />
     </svg>
 </template>
 

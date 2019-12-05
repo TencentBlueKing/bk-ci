@@ -34,8 +34,8 @@ const routes = [
                 name: 'codelibHome',
                 component: codelibHome,
                 meta: {
-                    title: '代码库',
-                    header: '代码库',
+                    title: 'codelib',
+                    header: 'codelib',
                     logo: 'codelib',
                     to: 'codelibHome'
                 }
@@ -45,8 +45,8 @@ const routes = [
                 name: 'codelibHome',
                 component: codelibHome,
                 meta: {
-                    title: '代码库',
-                    header: '代码库',
+                    title: 'codelib',
+                    header: 'codelib',
                     logo: 'codelib',
                     to: 'codelibHome'
                 }

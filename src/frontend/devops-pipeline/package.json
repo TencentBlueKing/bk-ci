@@ -4,14 +4,16 @@
   "description": "devops-pipeline",
   "author": "",
   "scripts": {
-    "dev": "webpack-dev-server --mode development --progress --env.name=dev",
-    "allclean": "rimraf dist && rimraf cddist && rimraf cidist",
+    "dev": "webpack-dev-server --mode development --progress",
     "dll": "webpack --mode production --config webpack.dll.config.js",
     "public": "npm run dll && webpack --mode production",
-    "public:external": "npm run public -- --env.name=external"
+    "public:dev": "cross-env NODE_ENV=dev  npm run public --",
+    "public:test": "cross-env NODE_ENV=test  npm run public --",
+    "public:master": "cross-env NODE_ENV=master  npm run public --",
+    "public:external": "cross-env NODE_ENV=external npm run public --"
   },
   "dependencies": {
-    "bk-magic-vue": "2.0.8-beta.13",
+    "bk-magic-vue": "2.1.6-beta.3",
     "axios": "^0.18.1",
     "brace": "^0.10.0",
     "clipboard": "^1.7.1",
@@ -24,11 +26,11 @@
     "stompjs": "^2.3.3",
     "vee-validate": "^2.0.3",
     "vue": "^2.6.10",
-    "vue-echarts": "^2.6.0",
+    "vue-echarts": "^3.0.9",
+    "vue-json-viewer": "^2.2.5",
     "vue-router": "^2.8.1",
     "vuedraggable": "^2.16.0",
-    "vuex": "^2.4.0",
-    "xterm": "^3.1.0"
+    "vuex": "^2.4.0"
   },
   "devDependencies": {
     "add": "^2.0.6",
@@ -71,7 +73,6 @@
     "express": "^4.15.5",
     "extract-text-webpack-plugin": "^3.0.0",
     "faker": "^4.1.0",
-    "file-loader": "^0.11.2",
     "friendly-errors-webpack-plugin": "^1.6.1",
     "ghooks": "^2.0.4",
     "gulp-inject": "^4.3.1",

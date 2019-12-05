@@ -1,56 +1,94 @@
 <template>
-    <bk-dialog v-model="showDialog"
+    <bk-dialog
+        v-model="showDialog"
         class="devops-project-dialog"
         :show-footer="true"
         :width="width"
         :quick-close="false"
         :close-icon="false"
+        @after-leave="resetNewProject"
     >
-        <h3 slot="header" class="project-dialog-header">{{title}}</h3>
-        <bk-form class="biz-pm-form" :model="newProject">
-            <devops-form-item label="项目名称" :required="true" :is-error="errors.has('project_name')">
-                <bk-input maxlength="12" v-model="newProject.project_name" name="project_name" v-validate="{ required: true, min: 4, max: 12, projectNameUnique: [newProject.project_id] }" placeholder="请输入4-12字符的项目名称" />
-                <div slot="error-tips" class="project-dialog-error-tips" v-if="errors.has('project_name')">
+        <h3
+            slot="header"
+            class="project-dialog-header"
+        >
+            {{ title }}
+        </h3>
+        <bk-form
+            class="biz-pm-form"
+            :model="newProject"
+        >
+            <devops-form-item
+                :label="$t('projectName')"
+                :required="true"
+                :is-error="errors.has('project_name')"
+            >
+                <bk-input
+                    v-model="newProject.project_name"
+                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.project_id] }"
+                    maxlength="12"
+                    name="project_name"
+                    :placeholder="$t('projectNamePlaceholder')"
+                />
+                <div
+                    v-if="errors.has('project_name')"
+                    slot="error-tips"
+                    class="project-dialog-error-tips"
+                >
                     {{ errors.first('project_name') }}
-                    <span v-if="errors.first('project_name') === &quot;项目名称已存在&quot;"></span>
                 </div>
             </devops-form-item>
-            <devops-form-item label="英文缩写" :required="true" :rules="[]" property="english_name" :is-error="errors.has('english_name')" :error-msg="errors.first('english_name')">
+            <devops-form-item
+                :label="$t('englishName')"
+                :required="true"
+                :rules="[]"
+                property="english_name"
+                :is-error="errors.has('english_name')"
+                :error-msg="errors.first('english_name')"
+            >
                 <bk-input
-                    placeholder="请输入2-32字符的小写字母+数字，以小写字母开头"
+                    v-model="newProject.english_name"
+                    v-validate="{ required: true, min: 2, max: 32, projectEnglishNameReg: true, projectEnglishNameUnique: isNew }"
+                    :placeholder="$t('projectEnglishNamePlaceholder')"
                     name="english_name"
                     maxlength="32"
                     :disabled="!isNew"
-                    v-model="newProject.english_name"
-                    v-validate="{ required: true, min: 2, projectEnglishNameUnique: [newProject.project_id] }"
                 />
             </devops-form-item>
-            <bk-form-item label="项目描述" :required="true" property="description">
-                <bk-input type="textarea" maxlength="100" placeholder="请输入项目描述" v-model="newProject.description" name="description"></bk-input>
-            </bk-form-item>
-            <bk-form-item label="项目类型" :required="true" property="project_type">
-                <bk-select
-                    placeholder="选择项目类型"
-                    name="center"
-                    v-model="newProject.project_type"
-                    searchable
-                >
-                    <bk-option v-for="type in projectTypeList"
-                        :key="type.id"
-                        :id="type.id"
-                        :name="type.name">
-                    </bk-option>
-                </bk-select>
-            </bk-form-item>
+            <devops-form-item
+                :label="$t('projectDesc')"
+                :required="true"
+                property="description"
+                :is-error="errors.has('description')"
+            >
+                <bk-input
+                    v-model="newProject.description"
+                    v-validate="{ required: true }"
+                    type="textarea"
+                    maxlength="100"
+                    :placeholder="$t('projectDescPlaceholder')"
+                    name="description"
+                />
+            </devops-form-item>
         </bk-form>
                         
         <template slot="footer">
             <div class="bk-dialog-outer">
-                <bk-button theme="primary" class="bk-dialog-btn bk-dialog-btn-confirm" :disabled="isCreating" @click="saveProject" :loading="isCreating">
-                    确定
+                <bk-button
+                    theme="primary"
+                    class="bk-dialog-btn bk-dialog-btn-confirm"
+                    :disabled="isCreating"
+                    :loading="isCreating"
+                    @click="saveProject"
+                >
+                    {{ $t("okLabel") }}
                 </bk-button>
-                <bk-button class="bk-dialog-btn bk-dialog-btn-cancel" :disabled="isCreating" @click="cancelProject">
-                    取消
+                <bk-button
+                    class="bk-dialog-btn bk-dialog-btn-cancel"
+                    :disabled="isCreating"
+                    @click="cancelProject"
+                >
+                    {{ $t("cancelLabel") }}
                 </bk-button>
             </div>
         </template>
@@ -73,7 +111,7 @@
 
         descriptionLength: number = 100
         validate: object = {}
-        title: string = '新建项目'
+        title: any = ''
         isNew: boolean = true
         isCreating: boolean = false
         deptLoading: any = {
@@ -81,28 +119,6 @@
             dept: false,
             center: false
         }
-        projectTypeList: object = [
-            {
-                id: 1,
-                name: '手游'
-            },
-            {
-                id: 2,
-                name: '端游'
-            },
-            {
-                id: 3,
-                name: '页游'
-            },
-            {
-                id: 4,
-                name: '平台产品'
-            },
-            {
-                id: 5,
-                name: '支撑产品'
-            }
-        ]
 
         @State newProject
         @State showProjectDialog
@@ -113,6 +129,7 @@
         @Action ajaxUpdatePM
         @Action ajaxAddPM
         @Action getProjects
+        @Action resetNewProject
 
         handleProjectChange (e): void {
             const { name, value, type, checked } = e.target
@@ -143,7 +160,7 @@
                     this.isNew = true
                 }
                 
-                this.title = this.isEmptyProject(this.newProject) ? '新建项目' : '编辑项目'
+                this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
             }
         }
 
@@ -159,7 +176,7 @@
                 if (typeof res === 'boolean' && res) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: '项目创建成功！'
+                        message: this.$t('addProjectSuccuess')
                     })
                     this.closeDialog()
                     await this.getProjects()
@@ -167,7 +184,7 @@
                 } else {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '接口报错！'
+                        message: this.$t('exception.apiError')
                     })
                 }
                 setTimeout(() => {
@@ -176,7 +193,7 @@
             } catch (err) {
                 this.$bkMessage({
                     theme: 'error',
-                    message: err.message || '接口异常！'
+                    message: err.message || this.$t('exception.apiError')
                 })
                 setTimeout(() => {
                     this.isCreating = false
@@ -190,21 +207,21 @@
                 if (res) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: '项目修改成功！'
+                        message: this.$t('updateProjectSuccuess')
                     })
                     this.closeDialog()
                     await this.getProjects()
                 } else {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '接口报错！'
+                        message: this.$t('exception.apiError')
                     })
                 }
                 setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             } catch (err) {
-                const message = err.message || '接口异常！'
+                const message = err.message || this.$t('exception.apiError')
                 this.$bkMessage({
                     theme: 'error',
                     message
@@ -216,43 +233,9 @@
         }
 
         async saveProject () {
-            const data = this.newProject
-            console.log(data)
-            const engReg = /^[a-z][a-z0-9]{1,32}$/
-            if (data.project_name === '') {
-                this.$bkMessage({
-                    theme: 'error',
-                    message: '项目名称不能为空！'
-                })
-                return false
-            } else if (data.project_name.length <= 3 || data.project_name.length > 20) {
-                this.$bkMessage({
-                    theme: 'error',
-                    message: '项目名称长度必须大于3字符小于21字符！'
-                })
-                return false
-            }
-
-            if (!engReg.test(data.english_name)) {
-                this.$bkMessage({
-                    theme: 'error',
-                    message: '英文缩写必须由小写字母+数字组成，以小写字母开头，长度限制32字符！'
-                })
-                return false
-            }
-            if (data.description === '') {
-                this.$bkMessage({
-                    theme: 'error',
-                    message: '请输入项目描述！'
-                })
-                return false
-            }
-            if (data.project_type === '') {
-                this.$bkMessage({
-                    theme: 'error',
-                    message: '请选择项目类型！'
-                })
-                return false
+            const valid = await this.$validator.validate()
+            if (!valid) {
+                return valid
             }
             this.isCreating = true
             if (this.isNew) {
@@ -274,7 +257,7 @@
         }
 
         async created () {
-            this.title = this.isEmptyProject(this.newProject) ? '新建项目' : '编辑项目'
+            this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
         }
     }
 </script>

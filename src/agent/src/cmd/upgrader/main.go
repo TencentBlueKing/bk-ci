@@ -37,6 +37,10 @@ import (
 	"runtime"
 )
 
+const (
+	upgraderProcess = "upgrade"
+)
+
 func main() {
 	runtime.GOMAXPROCS(4)
 	initLog()
@@ -45,6 +49,11 @@ func main() {
 			logs.Error("panic: ", err)
 		}
 	}()
+
+	if ok := systemutil.CheckProcess(upgraderProcess); !ok {
+		logs.Warn("get process lock failed, exit")
+		return
+	}
 
 	action := flag.String("action", "upgrade", "action, upgrade or uninstall")
 	flag.Parse()

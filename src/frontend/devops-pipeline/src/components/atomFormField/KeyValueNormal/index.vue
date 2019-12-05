@@ -2,26 +2,26 @@
     <div class="Key-value-nomal">
         <ul>
             <template v-if="paramList.length">
-                <li class="param-item" v-for="(param, index) in paramList" :key="index" :isError="errors.any(`param-${index}`)">
-                    <form-field :is-error="errors.has(`param-${index}.key`)" :error-msg="errors.first(`param-${index}.key`)">
+                <li class="param-item" v-for="(param, index) in paramList" :key="index" :isError="!isMetadataVar && errors.any(`param-${index}`)">
+                    <form-field :is-error="!isMetadataVar && errors.has(`param-${index}.key`)" :error-msg="errors.first(`param-${index}.key`)">
                         <vuex-input
                             :data-vv-scope="`param-${index}`"
-                            :disabled="disabled"
+                            :disabled="disabled || editValueOnly"
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
-                            v-validate.initial="`required|unique:${paramList.map(p => p.key).join(&quot;,&quot;)}|max: 30|${snonVarRule}`"
+                            v-validate.initial="`required|unique:${paramList.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
                             name="key"
-                            placeholder="Key"
+                            :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                             :value="param.key" />
                     </form-field>
                     <div class="bk-form-item">
-                        <vuex-input name="value" :disabled="disabled" placeholder="Value" :value="param.value" :handle-change="(name, value) => handleParamChange(name, value, index)" />
+                        <vuex-input name="value" :disabled="disabled" :placeholder="isMetadataVar ? $t('view.value') : 'Value'" :value="param.value" :handle-change="(name, value) => handleParamChange(name, value, index)" />
                     </div>
-                    <i @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus hover-click" v-if="!disabled" />
+                    <i @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus hover-click" v-if="!disabled && !editValueOnly" />
                 </li>
             </template>
-            <a class="text-link hover-click" v-if="!disabled" @click.stop.prevent="editParam(paramList.length, true)">
+            <a class="text-link hover-click" v-if="!disabled && !editValueOnly" @click.stop.prevent="editParam(paramList.length, true)">
                 <i class="bk-icon icon-plus-circle" />
-                <span>新增变量</span>
+                <span>{{ addBtnText || defaultAddBtnText }}</span>
             </a>
         </ul>
     </div>
@@ -34,12 +34,21 @@
     import validMixins from '@/components/validMixins'
 
     export default {
+        name: 'key-value-normal',
         components: {
             VuexInput,
             FormField
         },
         mixins: [atomFieldMixin, validMixins],
         props: {
+            name: {
+                type: String,
+                default: ''
+            },
+            addBtnText: {
+                type: String,
+                default: ''
+            },
             value: {
                 type: Object,
                 default: []
@@ -60,11 +69,21 @@
             isSupportVar: {
                 type: Boolean,
                 default: false
+            },
+            isMetadataVar: {
+                type: Boolean,
+                default: false
+            },
+            // 只允许修改值，不允许增减项和修改key
+            editValueOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
             return {
-                paramList: []
+                paramList: [],
+                defaultAddBtnText: this.$t('editPage.addParams')
             }
         },
         computed: {
@@ -85,13 +104,12 @@
         },
         async created () {
             this.paramList = this.value
-            // this.paramList.push({namespace: 111, key: 1, value: 222})
         },
         methods: {
             editParam (index, isAdd) {
                 if (isAdd) {
                     const param = {
-                        key: `param${this.paramList.length + 1}`,
+                        key: `${this.isMetadataVar ? 'key' : 'param'}${this.paramList.length + 1}`,
                         value: ''
                     }
                     this.paramList.splice(index + 1, 0, param)

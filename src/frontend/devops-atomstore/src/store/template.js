@@ -223,7 +223,7 @@ export const actions = {
     /**
      * 模板安装的项目
      */
-    requestRelativeTplProject ({ commit }, { templateCode }) {
+    requestRelativeTplProject ({ commit }, templateCode) {
         return vue.$ajax.get(`${prefix}/user/market/template/installedProjects/${templateCode}`)
     },
 

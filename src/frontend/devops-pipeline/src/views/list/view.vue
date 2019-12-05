@@ -6,19 +6,19 @@
         <template v-if="showContent && viewList.length">
             <div class="view-list-content">
                 <div class="info-header">
-                    <bk-button theme="primary" @click="createView()">新建视图</bk-button>
+                    <bk-button theme="primary" @click="createView()">{{ $t("view.addView") }}</bk-button>
                 </div>
                 <div class="view-table-wrapper">
                     <bk-table
                         :data="viewList"
                         size="small">
-                        <bk-table-column label="名称" prop="name"></bk-table-column>
-                        <bk-table-column label="类型" prop="projectId" :formatter="showViewType"></bk-table-column>
-                        <bk-table-column label="描述" prop="creator"></bk-table-column>
-                        <bk-table-column label="操作" width="150">
+                        <bk-table-column :label="$t('name')" prop="name"></bk-table-column>
+                        <bk-table-column :label="$t('type')" prop="projected" :formatter="showViewType"></bk-table-column>
+                        <bk-table-column :label="$t('desc')" prop="creator"></bk-table-column>
+                        <bk-table-column :label="$t('operate')" width="150">
                             <template slot-scope="props">
-                                <bk-button theme="primary" text :disabled="!isManagerUser && props.row.projected" @click="editView(props.row)">编辑</bk-button>
-                                <bk-button theme="primary" text :disabled="!isManagerUser && props.row.projected" @click="deleteView(props.row)">删除</bk-button>
+                                <bk-button theme="primary" text :disabled="!isManagerUser && props.row.projected" @click="editView(props.row)">{{ $t('edit') }}</bk-button>
+                                <bk-button theme="primary" text :disabled="!isManagerUser && props.row.projected" @click="deleteView(props.row)">{{ $t('delete') }}</bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -55,14 +55,14 @@
                     title: ''
                 },
                 emptyTipsConfig: {
-                    title: '创建第一个视图',
-                    desc: '设置合理的视图，有助于你快速定位到自己想找的流水线',
+                    title: this.$t('view.emptyTitle'),
+                    desc: this.$t('view.emptyDesc'),
                     btns: [
                         {
                             theme: 'primary',
                             size: 'normal',
                             handler: () => this.createView(),
-                            text: '新建视图'
+                            text: this.$t('view.addView')
                         }
                     ]
                 }
@@ -160,7 +160,7 @@
                         name: '',
                         logic: 'AND',
                         filters: [
-                            { id: 'filterByName', name: '流水线名称', '@type': 'filterByName', pipelineName: '' }
+                            { id: 'filterByName', name: this.$t('pipelineName'), '@type': 'filterByName', pipelineName: '' }
                         ]
                     }
                     this.$store.commit('pipelines/updateViewForm', obj)
@@ -181,7 +181,7 @@
                     })
 
                     this.requestViewList('flag')
-                    message = '删除视图成功'
+                    message = this.$t('view.deleteSucTips')
                     theme = 'success'
                 } catch (err) {
                     message = err.message || err
@@ -199,9 +199,9 @@
              */
             deleteView (view) {
                 if ((this.isManagerUser && view.projected) || !view.projected) {
-                    const content = `删除${view.name}`
+                    const content = `${this.$t('delete')}${view.name}`
 
-                    navConfirm({ title: `确认`, content })
+                    navConfirm({ title: this.$t('confirm'), content })
                         .then(() => {
                             this.deletePipelineView(view)
                         }).catch(() => {})
@@ -213,14 +213,14 @@
                     title: '',
                     condition: 'VERSUS',
                     viewFilterList: [
-                        { id: 'filterByName', name: '流水线名称', '@type': 'filterByName', pipelineName: '' }
+                        { id: 'filterByName', name: this.$t('pipelineName'), '@type': 'filterByName', pipelineName: '' }
                     ]
                 }
                 this.$store.commit('pipelines/updateViewForm', obj)
                 this.$store.commit('pipelines/toggleViewCreateDialog', true)
             },
             showViewType (row, cell, value) {
-                return value ? '项目视图' : '个人视图'
+                return value ? this.$t('view.projectView') : this.$t('view.personalView')
             }
         }
     }

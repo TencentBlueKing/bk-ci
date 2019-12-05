@@ -3,10 +3,10 @@
         <p class="title">{{ emptyInfo.title }}</p>
         <p class="intro-prompt">{{ emptyInfo.desc }}</p>
         <div class="create-node-row" v-if="isEnv">
-            <bk-button theme="primary" class="create-env-btn" @click="toCreateNode">创建</bk-button>
+            <bk-button theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
         </div>
         <div class="create-node-row" v-else>
-            <bk-button theme="primary" class="import-node-btn" @click="toImportNode('construct')">导入节点</bk-button>
+            <bk-button theme="primary" class="import-node-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
         </div>
     </div>
 </template>
@@ -71,7 +71,7 @@
             }
 
             .import-node-btn {
-                width: 150px;
+                width: 100px;
             }
         }
     }
