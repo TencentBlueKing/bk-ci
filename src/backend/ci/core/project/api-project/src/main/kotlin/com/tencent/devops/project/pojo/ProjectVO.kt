@@ -127,12 +127,18 @@ data class ProjectVO(
     val enableExternal: Boolean?,
     @ApiModelProperty("支持IDC构建机")
     val enableIdc: Boolean? = false,
+    @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替")
+    @ApiModelProperty("混合云CC业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替)")
+    val hybrid_cc_app_id: Long?,
+    @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替")
+    @ApiModelProperty("项目ID(即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替)")
+    val project_id: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替")
     @ApiModelProperty("旧版项目名称(即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替)")
-    val project_name: String,
+    val project_name: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替")
     @ApiModelProperty("旧版项目代码(即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替)")
-    val project_code: String,
+    val project_code: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替")
     @ApiModelProperty("旧版cc业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替)")
     val cc_app_id: Long?,
