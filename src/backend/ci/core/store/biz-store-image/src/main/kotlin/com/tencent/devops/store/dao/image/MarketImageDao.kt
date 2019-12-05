@@ -1183,7 +1183,7 @@ class MarketImageDao @Autowired constructor(
         }
         // 隐含条件：已发布的镜像中最晚的一个
         val latestReleasedImage = dslContext.select(
-            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
             tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
         ).from(tImage).where(
             tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
@@ -1215,7 +1215,7 @@ class MarketImageDao @Autowired constructor(
             .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
             .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
             .join(latestReleasedImage).on(
-                tImage.ID.eq(latestReleasedImage.field(KEY_IMAGE_ID, String::class.java)).and(
+                tImage.IMAGE_CODE.eq(latestReleasedImage.field(KEY_IMAGE_CODE, String::class.java)).and(
                     tImage.CREATE_TIME.eq(latestReleasedImage.field(KEY_CREATE_TIME, LocalDateTime::class.java))
                 )
             )
@@ -1265,7 +1265,7 @@ class MarketImageDao @Autowired constructor(
         }
         // 隐含条件：已发布的镜像中最晚的一个
         val latestReleasedImage = dslContext.select(
-            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
             tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
         ).from(tImage).where(
             tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
@@ -1278,7 +1278,7 @@ class MarketImageDao @Autowired constructor(
             .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
             .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
             .join(latestReleasedImage).on(
-                tImage.ID.eq(latestReleasedImage.field(KEY_IMAGE_ID, String::class.java)).and(
+                tImage.IMAGE_CODE.eq(latestReleasedImage.field(KEY_IMAGE_CODE, String::class.java)).and(
                     tImage.CREATE_TIME.eq(latestReleasedImage.field(KEY_CREATE_TIME, LocalDateTime::class.java))
                 )
             )
