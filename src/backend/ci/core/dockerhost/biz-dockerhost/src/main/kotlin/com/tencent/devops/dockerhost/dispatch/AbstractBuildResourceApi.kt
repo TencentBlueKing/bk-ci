@@ -39,17 +39,11 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 abstract class AbstractBuildResourceApi {
-    private val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
     private val grayProject = "grayproject"
 
     companion object {
         private val gateway: String by lazy {
-            val gateway = DockerEnv.getGatway()
-            if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
-                gateway.removePrefix("/")
-            } else {
-                "http://${gateway.removePrefix("/")}"
-            }
+            DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
         }
 
         private val buildArgs: Map<String, String> by lazy {
@@ -75,13 +69,8 @@ abstract class AbstractBuildResourceApi {
             }
             return map
         }
+        private val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
     }
-
-//    protected val okHttpClient: OkHttpClient = okhttp3.OkHttpClient.Builder()
-//            .connectTimeout(5L, TimeUnit.SECONDS)
-//            .readTimeout(60L, TimeUnit.SECONDS)
-//            .writeTimeout(60L, TimeUnit.SECONDS)
-//            .build()
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
