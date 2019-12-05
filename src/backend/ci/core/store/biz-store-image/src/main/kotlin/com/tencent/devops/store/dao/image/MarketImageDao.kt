@@ -805,10 +805,10 @@ class MarketImageDao @Autowired constructor(
         val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
         val tImage = TImage.T_IMAGE.`as`("tImage")
         val conditions = mutableListOf<Condition>()
-        if (inImageCodes != null && inImageCodes.isNotEmpty()) {
+        if (inImageCodes != null) {
             conditions.add(tImage.IMAGE_CODE.`in`(inImageCodes))
         }
-        if (notInImageCodes != null && notInImageCodes.isNotEmpty()) {
+        if (notInImageCodes != null) {
             conditions.add(tImage.IMAGE_CODE.notIn(notInImageCodes))
         }
         if (recommendFlag != null) {
