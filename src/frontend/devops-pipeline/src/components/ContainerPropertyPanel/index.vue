@@ -150,6 +150,7 @@
             </div>
 
             <image-selector :is-show.sync="showImageSelector"
+                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
                 :code="buildImageCode"
                 :build-resource-type="buildResourceType"
                 @choose="choose"
