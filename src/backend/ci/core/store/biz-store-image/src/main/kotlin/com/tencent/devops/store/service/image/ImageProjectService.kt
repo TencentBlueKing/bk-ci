@@ -900,16 +900,16 @@ class ImageProjectService @Autowired constructor(
             }
         }
         val paginator = MultiSourceDataPaginator(
-            // 类型符合的调试中镜像
-            testingCurrentAgentDataSource,
             // 已安装可选择
             installedCurrentAgentDataSource,
+            // 类型符合的调试中镜像
+            testingCurrentAgentDataSource,
+            // 类型不符合的调试中镜像
+            testingOtherAgentDataSource,
             // 可安装
             canInstallCurrentAgentDataSource,
             // 类型符合但不可见
             noVisibleCurrentAgentDataSource,
-            // 类型不符合的调试中镜像
-            testingOtherAgentDataSource,
             // 已安装类型不符
             installedOtherAgentDataSource,
             // 可安装类型不符
