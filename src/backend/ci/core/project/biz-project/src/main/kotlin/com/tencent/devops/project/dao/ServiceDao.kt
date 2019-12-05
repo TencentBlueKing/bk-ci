@@ -73,7 +73,8 @@ class ServiceDao {
                 SHOW_NAV,
                 PROJECT_ID_TYPE,
                 CREATED_USER,
-                DELETED
+                DELETED,
+                GRAY_IFRAME_URL
             )
                 .values(
                     serviceVO.id,
@@ -92,7 +93,8 @@ class ServiceDao {
                     serviceVO.showNav,
                     serviceVO.projectIdType,
                     userId,
-                    false
+                    false,
+                    serviceVO.grayIframeUrl
                 )
                 .execute()
         }
@@ -120,7 +122,8 @@ class ServiceDao {
                 CREATED_TIME,
                 DELETED,
                 LOGO_URL,
-                WEB_SOCKET
+                WEB_SOCKET,
+                GRAY_IFRAME_URL
             ).values(
                 serviceCreateInfo.name,
                 serviceCreateInfo.serviceTypeId,
@@ -140,7 +143,8 @@ class ServiceDao {
                 LocalDateTime.now(),
                 false,
                 serviceCreateInfo.logoUrl,
-                serviceCreateInfo.webSocket
+                serviceCreateInfo.webSocket,
+                serviceCreateInfo.grayIframeUrl
             ).returning().fetchOne()
         }
     }
@@ -165,6 +169,7 @@ class ServiceDao {
                 .set(LINK_NEW, serviceCreateInfo.linkNew)
                 .set(INJECT_TYPE, serviceCreateInfo.injectType)
                 .set(IFRAME_URL, serviceCreateInfo.iframeUrl)
+                .set(GRAY_IFRAME_URL, serviceCreateInfo.grayIframeUrl)
                 .set(CSS_URL, serviceCreateInfo.cssUrl)
                 .set(JS_URL, serviceCreateInfo.jsUrl)
                 .set(GRAY_CSS_URL, serviceCreateInfo.grayCssUrl)

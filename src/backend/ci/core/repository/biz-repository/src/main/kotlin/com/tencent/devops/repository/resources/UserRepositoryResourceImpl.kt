@@ -50,9 +50,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserRepositoryResourceImpl @Autowired constructor(
-        private val repositoryService: RepositoryService,
-        private val commitService: CommitService,
-        private val repositoryPermissionService: RepositoryPermissionService
+    private val repositoryService: RepositoryService,
+    private val commitService: CommitService,
+    private val repositoryPermissionService: RepositoryPermissionService
 ) : UserRepositoryResource {
 
     companion object {

@@ -86,7 +86,7 @@ class DockerHostDebugService @Autowired constructor(
         logger.info("Start docker debug  pipelineId:($pipelineId), projectId:($projectId), vmSeqId:($vmSeqId), imageName:($imageName), imageType:($imageType), imageCode:($imageCode), imageVersion:($imageVersion)")
         val dockerImage = if (imageType == ImageType.THIRD) {
             imageName!!
-        }else if(imageType == ImageType.BKSTORE){
+        } else if (imageType == ImageType.BKSTORE) {
             // 调商店接口获取镜像完整名称
             storeImageService.getCompleteImageName(
                 userId = userId,

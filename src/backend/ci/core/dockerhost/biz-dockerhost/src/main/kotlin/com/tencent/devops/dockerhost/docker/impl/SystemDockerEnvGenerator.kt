@@ -41,7 +41,6 @@ import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_ID
 import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dockerhost.utils.ENV_KEY_GATEWAY
 import com.tencent.devops.dockerhost.utils.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

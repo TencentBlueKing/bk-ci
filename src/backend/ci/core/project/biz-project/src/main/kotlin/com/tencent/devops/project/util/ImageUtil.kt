@@ -40,7 +40,7 @@ object ImageUtil {
 
     private const val FontSize = 64
 
-    fun drawImage(logoStr: String, width: Int, height: Int): File {
+    fun drawImage(logoStr: String, width: Int = 128, height: Int = 128): File {
         val logoBackgroundColor = arrayOf("#FF5656", "#FFB400", "#30D878", "#3C96FF")
         val max = logoBackgroundColor.size - 1
         val min = 0

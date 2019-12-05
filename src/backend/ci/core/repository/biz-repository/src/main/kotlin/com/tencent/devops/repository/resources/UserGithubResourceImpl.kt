@@ -36,8 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGithubResourceImpl @Autowired constructor(
-        private val githubService: IGithubService,
-        private val githubTokenService: GithubTokenService
+    private val githubService: IGithubService,
+    private val githubTokenService: GithubTokenService
 ) : UserGithubResource {
     override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
         return Result(githubService.getProject(projectId, userId, repoHashId))
