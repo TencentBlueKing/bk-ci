@@ -1027,8 +1027,8 @@ abstract class ImageService @Autowired constructor() {
             val imageTag = it["imageTag"] as String
             val index = imageVersion.indexOf(".")
             val versionPrefix = imageVersion.substring(0, index + 1)
-            var versionName = "$imageVersion / tag=$imageTag"
-            var latestVersionName = "${versionPrefix}latest / tag=$imageTag"
+            var versionName = imageVersion
+            var latestVersionName = "${versionPrefix}latest"
             val imageStatus = it["imageStatus"] as Byte
             val imageVersionStatusList = listOf(
                 ImageStatusEnum.TESTING.status.toByte(),
