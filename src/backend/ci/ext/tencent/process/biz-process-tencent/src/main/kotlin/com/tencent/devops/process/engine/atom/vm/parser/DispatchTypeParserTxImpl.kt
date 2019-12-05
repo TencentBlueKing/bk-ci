@@ -31,9 +31,9 @@ class DispatchTypeParserTxImpl @Autowired constructor(
     override fun parse(userId: String, projectId: String, dispatchType: DispatchType) {
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
-                //一般性处理
+                // 一般性处理
                 commonDispatchTypeParser.parse(userId, projectId, dispatchType)
-                //腾讯内部版专有处理
+                // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
@@ -43,7 +43,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
                     }
                 } else {
-                    //第三方镜像
+                    // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
                         dispatchType.image = dispatchType.value
                     } else if (dispatchType is IDCDispatchType) {
@@ -53,12 +53,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     }
                 }
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
-                //针对非商店的旧数据处理
+                // 针对非商店的旧数据处理
                 if (dispatchType.value != DockerVersion.TLINUX1_2.value && dispatchType.value != DockerVersion.TLINUX2_2.value) {
                     dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
-                    //TLINUX1.2/2.2需要后续做特殊映射
+                    // TLINUX1.2/2.2需要后续做特殊映射
                 }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
