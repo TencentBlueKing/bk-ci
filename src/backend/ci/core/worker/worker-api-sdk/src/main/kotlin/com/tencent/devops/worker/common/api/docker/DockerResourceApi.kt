@@ -39,7 +39,7 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
     /**
      * 更新镜像市场信息
      */
-    override fun updateImageInfo (
+    override fun updateImageInfo(
         userId: String,
         projectCode: String,
         imageCode: String,

@@ -30,6 +30,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.archive.element.CustomizeArchiveGetElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -57,6 +58,8 @@ class CustomizeArchiveGetTask : ITask() {
         }.forEach { srcPath ->
 
             val fileList = archiveGetResourceApi.getFileDownloadUrls(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables.projectId,
                 pipelineId = buildVariables.pipelineId,
                 buildId = buildVariables.buildId,
                 fileType = FileTypeEnum.BK_CUSTOM,
@@ -72,7 +75,12 @@ class CustomizeArchiveGetTask : ITask() {
                     File(destPath, decodeUrl)
                 }
                 LoggerService.addNormalLine("find the file($fileUrl) in repo! [${file.name}")
-                archiveGetResourceApi.downloadCustomizeFile(fileUrl, file)
+                archiveGetResourceApi.downloadCustomizeFile(
+                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                    projectId = buildVariables.projectId,
+                    uri = fileUrl,
+                    destPath = file
+                )
                 count++
             }
         }

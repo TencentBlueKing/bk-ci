@@ -1,28 +1,3 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.tencent.devops.store.resources.image.user
 
 import com.tencent.devops.common.api.pojo.Page
@@ -31,8 +6,12 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.user.UserImageResource
 import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
+import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
+import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
 import com.tencent.devops.store.service.image.ImageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,6 +29,21 @@ class UserImageResourceImpl @Autowired constructor(
             userId = userId,
             imageCode = imageCode,
             interfaceName = "/user/market/image/imageCodes/{imageCode},delete"
+        )
+    }
+
+    override fun updateImageBaseInfo(
+        userId: String,
+        imageCode: String,
+        imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
+    ): Result<Boolean> {
+        // 用户不可更新镜像大小信息
+        imageBaseInfoUpdateRequest.imageSize = null
+        return imageService.updateImageBaseInfo(
+            userId = userId,
+            imageCode = imageCode,
+            imageBaseInfoUpdateRequest = imageBaseInfoUpdateRequest,
+            interfaceName = "/user/market/baseInfo/images/{imageCode},put"
         )
     }
 
@@ -73,17 +67,21 @@ class UserImageResourceImpl @Autowired constructor(
         imageName: String?,
         imageSourceType: ImageType?,
         classifyCode: String?,
+        categoryCode: String?,
+        rdType: ImageRDTypeEnum?,
         labelCode: String?,
         score: Int?,
-        sortType: String?,
+        sortType: MarketImageSortTypeEnum?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<MarketImageMain>> {
+    ): Result<MarketImageResp> {
         return imageService.searchImage(
             userId = userId,
             imageName = imageName,
             imageSourceType = imageSourceType,
             classifyCode = classifyCode,
+            categoryCode = categoryCode,
+            rdType = rdType,
             labelCode = labelCode,
             score = score,
             sortType = sortType,
