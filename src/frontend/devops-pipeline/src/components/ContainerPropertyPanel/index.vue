@@ -39,7 +39,7 @@
                     </selector>
                 </form-field>
 
-                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isHandleHistory" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
                     <enum-input
                         name="imageType"
                         :list="imageTypeList"
@@ -389,7 +389,7 @@
                     this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
                         const data = res.data || {}
                         this.changeBuildResource('imageType', 'BKSTORE')
-                        this.choose(data)
+                        if (data.code) this.choose(data)
                     }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isHandleHistory = false))
                 }
             }
