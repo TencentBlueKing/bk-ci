@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpImageDataTransferResourceImpl @Autowired constructor(
     private val opImageDataTransferService: OpImageDataTransferService
 ) : OpImageDataTransferResource {
+    override fun clearAllImageData(userId: String): Result<Int> {
+        return Result(0)
+    }
+
     override fun initClassifyAndCategory(
         userId: String,
         classifyCode: String?,

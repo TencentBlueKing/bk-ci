@@ -67,4 +67,13 @@ interface OpImageDataTransferResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Int>
+
+    @ApiOperation("清除所有已迁移数据")
+    @PUT
+    @Path("/clearAllImageData")
+    fun clearAllImageData(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Int>
 }
