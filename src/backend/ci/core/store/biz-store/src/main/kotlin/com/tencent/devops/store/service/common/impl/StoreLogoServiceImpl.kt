@@ -26,17 +26,12 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum.WEB_SHOW
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.atom.AtomDao
-import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreLogoDao
 import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
