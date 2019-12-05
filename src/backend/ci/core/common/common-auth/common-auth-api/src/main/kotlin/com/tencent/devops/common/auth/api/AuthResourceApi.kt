@@ -69,7 +69,6 @@ interface AuthResourceApi {
         authGroupList: List<BkAuthGroup>? = null
     )
 
-
     /**
      * 修改资源名称
      * @param serviceCode 服务模块

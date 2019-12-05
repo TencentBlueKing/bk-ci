@@ -83,5 +83,4 @@ object RepositoryMessageCode {
     const val USER_DELETE_PEM_ERROR = "2115039" // 用户{0}在工程{1}下没有代码库{2}删除权限
     const val REPO_LOCK_UN_SUPPORT = "2115040" // 代码库{0}不支持锁定
     const val REPO_TYPE_NO_NEED_CERTIFICATION = "2115041" // 代码库类型{0}无需认证
-
 }
