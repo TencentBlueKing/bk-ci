@@ -38,11 +38,15 @@ class ServiceQualityControlPointMarketResourceImpl @Autowired constructor(
     private val controlPointService: QualityControlPointService
 ) : ServiceQualityControlPointResource {
 
-    override fun set(userId: String, controlPoint: QualityControlPoint): Result<Int> {
-        return Result(controlPointService.serviceCreateOrUpdate(userId, controlPoint))
+    override fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Result<Int> {
+        return Result(controlPointService.setTestControlPoint(userId, controlPoint))
     }
 
-    override fun cleanTestProject(controlPointType: String): Result<Int> {
-        return Result(controlPointService.cleanTestProject(controlPointType))
+    override fun refreshControlPoint(elementType: String): Result<Int> {
+        return Result(controlPointService.refreshControlPoint(elementType))
+    }
+
+    override fun deleteTestControlPoint(elementType: String): Result<Int> {
+        return Result(controlPointService.deleteTestControlPoint(elementType))
     }
 }

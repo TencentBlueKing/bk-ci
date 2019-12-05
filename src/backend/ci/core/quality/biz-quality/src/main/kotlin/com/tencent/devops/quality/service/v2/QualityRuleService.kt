@@ -28,9 +28,9 @@ package com.tencent.devops.quality.service.v2
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -242,7 +242,7 @@ class QualityRuleService @Autowired constructor(
         val indicatorIds = mapRecord.indicatorIds.split(",").map { it.toLong() }
 
         // 查询控制点
-        val controlPoint = qualityControlPointService.serviceGet(record.controlPoint)
+        val controlPoint = qualityControlPointService.serviceGet(record.controlPoint, record.projectId)
         val dataControlPoint = QualityRule.RuleControlPoint(
                 HashUtil.encodeLongId(record.id),
                 record.controlPoint,
@@ -462,19 +462,19 @@ class QualityRuleService @Autowired constructor(
         return pipelineList.map { it.pipelineId to it }.toMap()
     }
 
-    private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, authPermission)
+    private fun validatePermission(userId: String, projectId: String, bkAuthPermission: AuthPermission): Boolean {
+        return bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, bkAuthPermission)
     }
 
-    private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, "*", authPermission)) {
+    private fun validatePermission(userId: String, projectId: String, bkAuthPermission: AuthPermission, message: String) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, "*", bkAuthPermission)) {
             logger.error(message)
             throw PermissionForbiddenException(message)
         }
     }
 
-    private fun validatePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId), authPermission)) {
+    private fun validatePermission(userId: String, projectId: String, ruleId: Long, bkAuthPermission: AuthPermission, message: String) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId), bkAuthPermission)) {
             logger.error(message)
             throw PermissionForbiddenException(message)
         }
@@ -492,8 +492,8 @@ class QualityRuleService @Autowired constructor(
         bkAuthResourceApi.deleteResource(serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId))
     }
 
-    private fun filterRules(userId: String, projectId: String, authPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(userId, serviceCode, RESOURCE_TYPE, projectId, authPermissionSet, null)
+    private fun filterRules(userId: String, projectId: String, bkAuthPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(userId, serviceCode, RESOURCE_TYPE, projectId, bkAuthPermissionSet, null)
         val permissionRuleMap = mutableMapOf<AuthPermission, List<Long>>()
         permissionResourceMap.forEach { permission, list ->
             permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }

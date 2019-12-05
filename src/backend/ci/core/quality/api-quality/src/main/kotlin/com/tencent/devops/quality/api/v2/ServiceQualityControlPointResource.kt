@@ -31,6 +31,7 @@ import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -44,20 +45,28 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceQualityControlPointResource {
 
-    @ApiOperation("获取控制点信息")
-    @Path("/set")
+    @ApiOperation("")
+    @Path("/setTestControlPoint")
     @POST
-    fun set(
+    fun setTestControlPoint(
         @QueryParam("userId")
         userId: String,
         controlPoint: QualityControlPoint
     ): Result<Int>
 
-    @ApiOperation("清除控制点信息")
-    @Path("/cleanTestProject")
+    @ApiOperation("刷新插件指标的指标")
+    @Path("/refreshControlPoint")
     @PUT
-    fun cleanTestProject(
-        @QueryParam("userId")
-        controlPointType: String
+    fun refreshControlPoint(
+        @QueryParam("elementType")
+        elementType: String
+    ): Result<Int>
+
+    @ApiOperation("删除插件指标的测试指标")
+    @Path("/deleteTestControlPoint")
+    @DELETE
+    fun deleteTestControlPoint(
+        @QueryParam("elementType")
+        elementType: String
     ): Result<Int>
 }
