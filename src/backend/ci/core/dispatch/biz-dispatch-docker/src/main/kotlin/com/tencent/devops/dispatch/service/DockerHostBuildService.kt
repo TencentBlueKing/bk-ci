@@ -64,6 +64,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -105,14 +106,19 @@ class DockerHostBuildService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val secretKey = ApiUtil.randomSecretKey()
-            val id = pipelineDockerBuildDao.startBuild(context,
-                event.projectId,
-                event.pipelineId,
-                event.buildId,
-                event.vmSeqId.toInt(),
-                secretKey,
-                PipelineTaskStatus.RUNNING,
-                if (null == event.zone) { Zone.SHENZHEN.name } else { event.zone!!.name })
+            val id = pipelineDockerBuildDao.startBuild(
+                dslContext = context,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId.toInt(),
+                secretKey = secretKey,
+                status = PipelineTaskStatus.RUNNING,
+                zone = if (null == event.zone) {
+                    Zone.SHENZHEN.name
+                } else {
+                    event.zone!!.name
+                })
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(
                 id, secretKey,
@@ -130,6 +136,7 @@ class DockerHostBuildService @Autowired constructor(
             logger.info("secretKey: $secretKey")
             logger.info("agentId: $agentId")
 
+            logger.info("dockerHostBuild:(${event.userId},${event.projectId},${event.pipelineId},${event.buildId},${dispatchType.imageType?.name},${dispatchType.imageCode},${dispatchType.imageVersion},${dispatchType.credentialId},${dispatchType.credentialProject})")
             // 插入dockerTask表，等待dockerHost进程过来轮询
             val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
                 dispatchType.dockerBuildVersion
@@ -137,7 +144,7 @@ class DockerHostBuildService @Autowired constructor(
                 when (dispatchType.dockerBuildVersion) {
                     DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
                     DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                    else -> "$dockerBuildImagePrefix/bkdevops/${dispatchType.dockerBuildVersion}"
+                    else -> "$dockerBuildImagePrefix/${dispatchType.dockerBuildVersion}"
                 }
             }
             logger.info("Docker images is: $dockerImage")
@@ -145,7 +152,15 @@ class DockerHostBuildService @Autowired constructor(
             var password: String? = null
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
-                    val ticketsMap = CommonUtils.getCredential(client, event.projectId, dispatchType.credentialId!!, CredentialType.USERNAME_PASSWORD)
+                    val ticketsMap = CommonUtils.getCredential(
+                        client = client,
+                        projectId = dispatchType.credentialProject ?: {
+                            logger.warn("dockerHostBuild:credentialProject=null,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
+                            event.projectId
+                        }(),
+                        credentialId = dispatchType.credentialId!!,
+                        type = CredentialType.USERNAME_PASSWORD
+                    )
                     userName = ticketsMap["v1"] as String
                     password = ticketsMap["v2"] as String
                 }
@@ -172,7 +187,8 @@ class DockerHostBuildService @Autowired constructor(
                 else -> ""
             }
 
-            pipelineDockerTaskDao.insertTask(context,
+            pipelineDockerTaskDao.insertTask(
+                dslContext = context,
                 projectId = event.projectId,
                 agentId = agentId,
                 pipelineId = event.pipelineId,
@@ -180,16 +196,21 @@ class DockerHostBuildService @Autowired constructor(
                 vmSeqId = event.vmSeqId.toInt(),
                 status = PipelineTaskStatus.QUEUE,
                 secretKey = secretKey,
-                imageName = dockerImage,
+                imageName = dockerImage!!,
                 hostTag = hostTag,
                 channelCode = event.channelCode,
-                zone = if (null == event.zone) { Zone.SHENZHEN.name } else { event.zone!!.name },
+                zone = if (null == event.zone) {
+                    Zone.SHENZHEN.name
+                } else {
+                    event.zone!!.name
+                },
                 registryUser = userName,
                 registryPwd = password,
-                imageType = if (null == dispatchType.imageType) {
-                    ImageType.BKDEVOPS.type
-                } else {
-                    dispatchType.imageType!!.type
+                imageType = when {
+                    null == dispatchType.imageType -> ImageType.BKDEVOPS.type
+                    ImageType.THIRD == dispatchType.imageType -> dispatchType.imageType!!.type
+                    ImageType.BKDEVOPS == dispatchType.imageType -> ImageType.BKDEVOPS.type
+                    else -> throw UnknownImageType("imageCode:${dispatchType.imageCode},imageVersion:${dispatchType.imageVersion},imageType:${dispatchType.imageType}")
                 }
             )
 

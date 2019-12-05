@@ -30,4 +30,14 @@ enum class ApproveStatusEnum {
     WAIT, // 待审批
     PASS, // 审批通过
     REFUSE; // 审批拒绝
+
+    companion object {
+        fun getValue(status: ApproveStatusEnum): Byte {
+            return when (status) {
+                WAIT -> 0
+                PASS -> 1
+                REFUSE -> 2
+            }
+        }
+    }
 }

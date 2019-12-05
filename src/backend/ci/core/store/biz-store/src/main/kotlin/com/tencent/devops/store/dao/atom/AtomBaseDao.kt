@@ -72,14 +72,20 @@ abstract class AtomBaseDao {
         }
     }
 
-    fun getSupportGitCiAtom(dslContext: DSLContext): Result<Record1<String>> {
+    fun getSupportGitCiAtom(dslContext: DSLContext, os: String?, classType: String?): Result<Record1<String>> {
         return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            if (!os.isNullOrBlank()) {
+                conditions.add(OS.eq(os))
+            }
+            if (!classType.isNullOrBlank()) {
+                conditions.add(CLASS_TYPE.eq(classType))
+            }
+            conditions.add(JOB_TYPE.eq(JobTypeEnum.AGENT.name))
+            conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
             dslContext.selectDistinct(ATOM_CODE)
                 .from(this)
-                .where(JOB_TYPE.eq(JobTypeEnum.AGENT.name))
-                .and(OS.like("%LINUX%"))
-                .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-                .and(CLASS_TYPE.eq("marketBuild"))
+                .where(conditions)
                 .fetch()
         }
     }
