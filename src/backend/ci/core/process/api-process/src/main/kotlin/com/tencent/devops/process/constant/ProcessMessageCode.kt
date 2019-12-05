@@ -44,24 +44,23 @@ package com.tencent.devops.process.constant
  */
 object ProcessMessageCode {
 
+    // 常量标志 对应code
+    const val SYSTEM_VIEW_LABEL = "CONST_PROCESS_VIEW_LABEL_SYSTEM" // "系统视图"
+    const val PROJECT_VIEW_LABEL = "CONST_PROCESS_VIEW_LABEL_PROJECT" // "项目视图"
+    const val PERSON_VIEW_LABEL = "CONST_PROCESS_VIEW_LABEL_PRIVATE" // "个人视图"
+    const val FAVORITE_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_FAVORITE" // "我的收藏"
+    const val MY_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_MY" // "我的流水线"
+    const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
+
     const val OK = 0
-
-    // 通用参数错误
-    const val ERROR_RETRY_3_FAILED = 2100001
-    const val ERROR_UPDATE_FAILED = 2100002 // 更新失败: {0}
-
-    const val ERROR_NO_PUBLIC_WINDOWS_BUILDER = 2101991 // Windows暂时没有公共构建机可用，请联系持续集成助手添加
-    const val ERROR_DUPLICATE_BUILD_RETRY_ACT = 2101901 // 重复的重试构建请求
-    const val ERROR_NO_PARAM_IN_JOB_CONDITION = 2101902 //  请设置Job运行的自定义变量
-    const val ERROR_TIMEOUT_IN_RUNNING = 2101903 //  {0}运行达到({1})分钟，超时结束运行!
-    const val ERROR_TIMEOUT_IN_BUILD_QUEUE = 2101904 //  排队超时，取消运行! [{0}]
-
-    const val ERROR_NO_BUILD_EXISTS_BY_ID = 2101100 // 流水线构建[{0}]不存在
-    const val ERROR_NO_PIPELINE_EXISTS_BY_ID = 2101101 // 流水线[{0}]不存在
-    const val ERROR_SUBPIPELINE_CYCLE_CALL = 2101102 // 子流水线循环调用
 
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = 2101001 // 子流水线id不存在
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS = 2101002 // 子流水线不存在
+    const val ERROR_PIPELINE_VIEW_MAX_LIMIT = 2101003 // 最多允许同时保存7个视图
+    const val ERROR_PIPELINE_VIEW_NOT_FOUND = 2101004 // 视图({0})不存在
+    const val ERROR_PIPELINE_VIEW_HAD_EXISTS = 2101005 // 视图({0})已存在
+    const val ERROR_DEL_PIPELINE_VIEW_NO_PERM = 2101006 // 用户({0})无权限删除视图({1})
+    const val ERROR_EDIT_PIPELINE_VIEW_NO_PERM = 2101007 // 用户({0})无权限编辑视图({1})
     const val ERROR_ATOM_NOT_FOUND = 2101010 // 插件不存在
     const val ERROR_PIPELINE_NOT_EXISTS = 2101038 // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = 2101039 // 流水线的模型不存在
@@ -72,8 +71,18 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_QUEUE_FULL = 2101049 // 流水线队列满
     const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = 2101050 // 第三方构建机状态异常
 
-    const val ERROR_BUILD_UNKNOWN_ERROR = 2101001 //
-    const val ERROR_BUILD_UNKNOWN_ERROR_2 = 2101002 //
+    // 通用参数错误
+    const val ERROR_RETRY_3_FAILED = 2101989 // 重试3次失败
+    const val ERROR_UPDATE_FAILED = 2101990 // 更新失败: {0}
+    const val ERROR_NO_PUBLIC_WINDOWS_BUILDER = 2101900 // Windows暂时没有公共构建机可用，请联系持续集成助手添加
+    const val ERROR_DUPLICATE_BUILD_RETRY_ACT = 2101901 // 重复的重试构建请求
+    const val ERROR_NO_PARAM_IN_JOB_CONDITION = 2101902 //  请设置Job运行的自定义变量
+    const val ERROR_TIMEOUT_IN_RUNNING = 2101903 //  {0}运行达到({1})分钟，超时结束运行!
+    const val ERROR_TIMEOUT_IN_BUILD_QUEUE = 2101904 //  排队超时，取消运行! [{0}]
+
+    const val ERROR_NO_BUILD_EXISTS_BY_ID = 2101100 // 流水线构建[{0}]不存在
+    const val ERROR_NO_PIPELINE_EXISTS_BY_ID = 2101101 // 流水线[{0}]不存在
+    const val ERROR_SUBPIPELINE_CYCLE_CALL = 2101102 // 子流水线循环调用
     // 构建时错误
     const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = 2101111 // bcsAppInstId is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = 2101112 // category is not init

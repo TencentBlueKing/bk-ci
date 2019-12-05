@@ -33,16 +33,20 @@ import org.springframework.stereotype.Repository
 @Repository
 class BuildStartupParamDao {
 
-    fun add(dslContext: DSLContext, buildId: String, param: String) {
+    fun add(dslContext: DSLContext, buildId: String, param: String, projectId: String, pipelineId: String) {
         with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
             dslContext.insertInto(
                 this,
                 BUILD_ID,
-                PARAM
+                PARAM,
+                PROJECT_ID,
+                PIPELINE_ID
             )
                 .values(
                     buildId,
-                    param
+                    param,
+                    projectId,
+                    pipelineId
                 ).onDuplicateKeyUpdate()
                 .set(PARAM, param)
                 .execute()
@@ -55,6 +59,13 @@ class BuildStartupParamDao {
                 .where(BUILD_ID.eq(buildId))
                 .fetchOne()
             return record?.param
+        }
+    }
+
+    fun deletePipelineBuildParams(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        return with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
+            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute()
         }
     }
 }

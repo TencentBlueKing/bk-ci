@@ -24,10 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.engine.listener.run.callback
 
-object Timeout {
-    const val MAX_MINUTES = 7 * 60 * 24 // 2 * 24 * 60 = 2880 分钟 = 最多超时2天
-    const val MAX_MILLS = MAX_MINUTES * 60 * 1000 + 1 // 毫秒+1
-    const val DEFAULT_TIMEOUT_MIN = 900
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.process.engine.control.CallBackControl
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+/**
+ *  MQ实现的流水线插件任务状态回调事件
+ *
+ * @version 1.0
+ */
+@Component
+class PipelineBuildCallBackListener @Autowired constructor(
+    private val callBackControl: CallBackControl,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildStatusBroadCastEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildStatusBroadCastEvent) {
+        callBackControl.callBackBuildEvent(event)
+    }
 }

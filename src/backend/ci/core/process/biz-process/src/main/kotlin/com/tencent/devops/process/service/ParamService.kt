@@ -46,10 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 
-/**
- * deng
- * 2019-03-04
- */
 @Service
 class ParamService @Autowired constructor(
     private val client: Client,

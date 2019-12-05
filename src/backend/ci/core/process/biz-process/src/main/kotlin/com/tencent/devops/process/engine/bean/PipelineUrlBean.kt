@@ -24,21 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket
+package com.tencent.devops.process.engine.bean
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+interface PipelineUrlBean {
 
-@Event(MQ.EXCHANGE_PIPELINE_STATUS_CHANGE_TMP_FANOUT, MQ.ROUTE_PIPELINE_STATUS_CHANGE_TMP_EVENT)
-data class PipelineStatusChangeEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val changeType: ChangeType,
-    val buildId: String,
-    override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+    /**
+     * 生成构建详情访问链接
+     */
+    fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+
+    /**
+     * 生成手机侧的构建详情访问链接
+     */
+    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+}

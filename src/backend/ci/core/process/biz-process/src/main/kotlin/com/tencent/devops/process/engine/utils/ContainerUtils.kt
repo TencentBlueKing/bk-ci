@@ -26,10 +26,6 @@
 
 package com.tencent.devops.process.engine.utils
 
-/**
- * deng
- * 2019-01-01
- */
 object ContainerUtils {
 
     fun getContainerStartupKey(

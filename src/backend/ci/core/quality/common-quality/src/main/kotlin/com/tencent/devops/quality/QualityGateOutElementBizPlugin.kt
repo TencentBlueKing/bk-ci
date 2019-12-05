@@ -34,12 +34,12 @@ import com.tencent.devops.process.plugin.annotation.ElementBiz
 class QualityGateOutElementBizPlugin : ElementBizPlugin<QualityGateOutElement> {
 
     override fun afterCreate(
-            element: QualityGateOutElement,
-            projectId: String,
-            pipelineId: String,
-            pipelineName: String,
-            userId: String,
-            channelCode: ChannelCode
+        element: QualityGateOutElement,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode
     ) {
     }
 
@@ -52,5 +52,4 @@ class QualityGateOutElementBizPlugin : ElementBizPlugin<QualityGateOutElement> {
     override fun elementClass(): Class<QualityGateOutElement> {
         return QualityGateOutElement::class.java
     }
-
 }

@@ -137,7 +137,6 @@ class ScmService @Autowired constructor(
             )
                 .deleteBranch(branch)
         } catch (ignored: MismatchedInputException) {
-
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to delete branches")
         }
