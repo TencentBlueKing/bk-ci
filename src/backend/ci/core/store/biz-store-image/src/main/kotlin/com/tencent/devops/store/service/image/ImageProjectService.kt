@@ -1,5 +1,6 @@
 package com.tencent.devops.store.service.image
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -8,6 +9,8 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
@@ -92,15 +95,15 @@ class ImageProjectService @Autowired constructor(
         userId: String,
         projectCode: String
     ) {
-//        val result =
-//            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-//                accessToken = accessToken,
-//                projectCode = projectCode,
-//                userId = userId
-//            )
-//        if (result.isNotOk()) {
-//            throw ErrorCodeException(StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID, null)
-//        }
+        val result =
+            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                accessToken = accessToken,
+                projectCode = projectCode,
+                userId = userId
+            )
+        if (result.isNotOk()) {
+            throw ErrorCodeException(StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID, null)
+        }
     }
 
     /**
