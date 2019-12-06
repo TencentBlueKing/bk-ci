@@ -188,8 +188,9 @@ class SubPipelineStartUpService(
                         val map = element.data
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]
+                        val subPro = msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
-                        checkSubpipeline(atomCode, msg["projectId"] as String, subPip as String, exist)
+                        checkSubpipeline(atomCode, subPro as String, subPip as String, exist)
                         existPipelines.addAll(exist)
                     } else if (element is SubPipelineCallElement) {
                         val exist = HashSet(currentExistPipelines)
