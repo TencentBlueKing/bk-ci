@@ -52,6 +52,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
+import com.tencent.devops.process.engine.atom.vm.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -80,7 +81,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val dispatchTypeParser: DispatchTypeParser
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
         return JsonUtil.mapTo(task.taskParams, VMBuildContainer::class.java)
@@ -168,6 +170,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
         val source = "vmStartupTaskAtom"
         val dispatchType = getDispatchType(projectId, pipelineId, buildId, param, param.baseOS)
+
+        // 处理dispatchType中的BKSTORE镜像信息
+        dispatchTypeParser.parse(task.starter, task.projectId, dispatchType)
+
+        dispatchType.replaceVariable(pipelineRuntimeService.getAllVariable(buildId))
+
         pipelineEventDispatcher.dispatch(
             PipelineAgentStartupEvent(
                 source = source,
@@ -218,7 +226,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
          * 新版的构建环境直接传入指定的构建机方式
          */
         if (param.dispatchType != null) {
-            param.dispatchType!!.replaceVariable(pipelineRuntimeService.getAllVariable(buildId))
             return param.dispatchType!!
         }
 
