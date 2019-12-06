@@ -26,10 +26,7 @@
 
 package com.tencent.devops.dockerhost.utils
 
-import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.AuthConfig
-import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -151,19 +148,6 @@ object CommonUtils {
             logger.error("image name invalid: $imageNameStr")
             throw Exception("image name invalid.")
         }
-    }
-
-    fun getDockerDefaultClient(dockerHostConfig: DockerHostConfig): DockerClient {
-        val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-            .withDockerHost(dockerHostConfig.dockerHost)
-            .withDockerConfig(dockerHostConfig.dockerConfig)
-            .withApiVersion(dockerHostConfig.apiVersion)
-            .withRegistryUrl(dockerHostConfig.registryUrl)
-            .withRegistryUsername(dockerHostConfig.registryUsername)
-            .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
-            .build()
-
-        return DockerClientBuilder.getInstance(config).build()
     }
 
     fun getAuthConfig(imageType: String?, dockerHostConfig: DockerHostConfig, imageName: String, registryUser: String?, registryPwd: String?): AuthConfig? {
