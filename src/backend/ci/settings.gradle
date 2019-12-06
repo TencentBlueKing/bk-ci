@@ -165,8 +165,6 @@ include ":core:worker"
 include ":core:worker:worker-agent"
 include ":core:worker:worker-common"
 include ":core:worker:worker-api-sdk"
-include ":core:worker:worker-plugin-scm"
-include ":core:worker:worker-plugin-archive"
 
 include ":core:boot-assembly"
 
