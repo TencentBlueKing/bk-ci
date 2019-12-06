@@ -36,6 +36,9 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import org.slf4j.LoggerFactory
 
 object ProcessService {
+
+    private const val PIPLELINE_PARAM_MAX_LENGTH = 4000 // 流水线参数最大长度
+
     private val logger = LoggerFactory.getLogger(ProcessService::class.java)
 
     private val buildApi = ApiFactory.create(BuildSDKApi::class)
@@ -70,6 +73,14 @@ object ProcessService {
     ) {
         logger.info("[ERRORCODE] completeTask <$taskId>[$errorType][$errorCode][$message] ")
         LoggerService.addFoldEndLine("$elementName-[$elementId]")
+        if (buildResult.isNotEmpty()) {
+            buildResult.forEach { (key, value) ->
+                if (value.length > PIPLELINE_PARAM_MAX_LENGTH) {
+                    LoggerService.addYellowLine("[$taskId]|ABANDON_DATA|len[$key]=${value.length}(max=$PIPLELINE_PARAM_MAX_LENGTH)")
+                    return@forEach
+                }
+            }
+        }
         LoggerService.flush()
         val taskResult = BuildTaskResult(
             taskId = taskId,

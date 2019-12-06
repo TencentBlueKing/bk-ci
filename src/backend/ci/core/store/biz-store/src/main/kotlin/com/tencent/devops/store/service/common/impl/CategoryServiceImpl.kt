@@ -30,9 +30,12 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.CategoryRequest
+import com.tencent.devops.store.pojo.common.enums.BusinessEnum
+import com.tencent.devops.store.pojo.common.enums.BusinessFeatureEnum
 import com.tencent.devops.store.service.common.CategoryService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -48,7 +51,8 @@ import org.springframework.stereotype.Service
 @Service
 class CategoryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val categoryDao: CategoryDao
+    private val categoryDao: CategoryDao,
+    private val businessConfigDao: BusinessConfigDao
 ) : CategoryService {
 
     private val logger = LoggerFactory.getLogger(CategoryServiceImpl::class.java)
@@ -58,7 +62,19 @@ class CategoryServiceImpl @Autowired constructor(
      * @param type
      */
     override fun getAllCategory(type: Byte): Result<List<Category>?> {
-        val atomCategoryList = categoryDao.getAllCategory(dslContext, type)?.map { categoryDao.convert(it) }
+        val atomCategoryList = categoryDao.getAllCategory(dslContext, type)?.map {
+            val category = categoryDao.convert(it)
+            val businessConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = BusinessEnum.CATEGORY.name,
+                feature = BusinessFeatureEnum.NEED_AGENT_TYPE.value,
+                businessValue = category.categoryCode
+            )
+            if (businessConfig != null && !businessConfig.configValue.isNullOrBlank()) {
+                category.settings[BusinessFeatureEnum.NEED_AGENT_TYPE.value] = businessConfig.configValue
+            }
+            category
+        }
         return Result(atomCategoryList)
     }
 
