@@ -29,9 +29,6 @@ package com.tencent.devops.scm.code.svn.api
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 /**
- * deng
- * 2018/5/19
- *
  *
  * {
  *   "status":"200",

@@ -69,19 +69,23 @@ open class PipelineTimerService @Autowired constructor(
         return if (0 < pipelineTimerDao.save(dslContext, projectId, pipelineId, userId, crontabJson, channelCode)) {
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(
-                    "saveTimer",
-                    projectId,
-                    pipelineId,
-                    userId,
-                    crontabJson
+                    source = "saveTimer",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    crontabExpressionJson = crontabJson
                 )
             )
             Result(true)
         } else { // 终止定时器
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(
-                    "saveTimer_fail", projectId, pipelineId, userId,
-                    crontabJson, ActionType.TERMINATE
+                    source = "saveTimer_fail",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    crontabExpressionJson = crontabJson,
+                    actionType = ActionType.TERMINATE
                 )
             )
             Result(ERROR_SAVE_PIPELINE_TIMER.toInt(), "添加流水线的定时触发器保存失败！可能是定时器参数过长！")
@@ -96,8 +100,12 @@ open class PipelineTimerService @Autowired constructor(
             // 终止定时器
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(
-                    "deleteTimer", timerRecord.projectId, pipelineId, userId,
-                    timerRecord.crontab, ActionType.TERMINATE
+                    source = "deleteTimer",
+                    projectId = timerRecord.projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    crontabExpressionJson = timerRecord.crontab,
+                    actionType = ActionType.TERMINATE
                 )
             )
         }
@@ -111,15 +119,15 @@ open class PipelineTimerService @Autowired constructor(
 
     private fun convert(timerRecord: TPipelineTimerRecord): PipelineTimer? {
         return PipelineTimer(
-            timerRecord.projectId,
-            timerRecord.pipelineId,
-            timerRecord.creator,
-            try {
+            projectId = timerRecord.projectId,
+            pipelineId = timerRecord.pipelineId,
+            startUser = timerRecord.creator,
+            crontabExpressions = try {
                 JsonUtil.to(timerRecord.crontab, object : TypeReference<List<String>>() {})
             } catch (ignored: Throwable) {
                 listOf(timerRecord.crontab)
             },
-            try {
+            channelCode = try {
                 ChannelCode.valueOf(timerRecord.channel)
             } catch (e: IllegalArgumentException) {
                 logger.warn("Unkown channel code", e)

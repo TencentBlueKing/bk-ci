@@ -24,13 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.client.pojo.enums
+package com.tencent.devops.process.pojo.template
 
-enum class GatewayType {
-    IDC,
-    IDC_PROXY,
-    OSS_PROXY,
-    OSS,
-    DEVNET,
-    DEVNET_PROXY
-}
+data class TemplateInstancePage(
+    val projectId: String,
+    val templateId: String,
+    val instances: List<TemplatePipeline>,
+    val latestVersion: TemplateVersion,
+    val count: Int,
+    val page: Int?,
+    val pageSize: Int?
+)

@@ -146,6 +146,28 @@ class Client @Autowired constructor(
             .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
     }
 
+    fun <T : Any> getExternalServiceWithoutRetry(serviceName: String, clz: KClass<T>): T {
+        val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
+        return Feign.builder()
+            .client(longRunClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .requestInterceptor(requestInterceptor)
+            .options(Request.Options(10 * 1000, 30 * 60 * 1000))
+            .retryer(object : Retryer {
+                override fun clone(): Retryer {
+                    return this
+                }
+
+                override fun continueOrPropagate(e: RetryableException) {
+                    throw e
+                }
+            })
+            .target(MicroServiceTarget(serviceName, clz.java, consulClient!!, tag))
+    }
+
     /**
      * 通过网关访问微服务接口
      *
