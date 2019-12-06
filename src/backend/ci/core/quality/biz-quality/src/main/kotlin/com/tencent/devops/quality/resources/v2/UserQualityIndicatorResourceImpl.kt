@@ -44,7 +44,12 @@ class UserQualityIndicatorResourceImpl @Autowired constructor(
     val indicatorService: QualityIndicatorService,
     val templateService: QualityTemplateService
 ) : UserQualityIndicatorResource {
-    override fun update(userId: String, projectId: String, indicatorId: String, indicatorCreate: IndicatorCreate): Result<Boolean> {
+    override fun update(
+        userId: String,
+        projectId: String,
+        indicatorId: String,
+        indicatorCreate: IndicatorCreate
+    ): Result<Boolean> {
         return Result(indicatorService.userUpdate(userId, projectId, indicatorId, indicatorCreate))
     }
 

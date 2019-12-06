@@ -67,7 +67,12 @@ class QualityCountService @Autowired constructor(
 
         val pipelineCount = getPipelineIdToNameMap(projectId, pipelineSet).size
         val templatePipelineCount = client.get(ServiceTemplateInstanceResource::class).countTemplateInstance(projectId, templateSet).data ?: 0
-        return CountOverviewResponse(ruleCount.toInt(), indicatorCount.toInt(), interceptCount.toInt(), pipelineCount + templatePipelineCount)
+        return CountOverviewResponse(
+            ruleCount = ruleCount.toInt(),
+            indicatoCount = indicatorCount.toInt(),
+            interceptCount = interceptCount.toInt(),
+            pipelineCount = pipelineCount + templatePipelineCount
+        )
     }
 
     fun getPipelineIntercept(userId: String, projectId: String): List<CountPipelineIntercept> {
@@ -109,7 +114,11 @@ class QualityCountService @Autowired constructor(
             } else {
                 Pair(0, 0)
             }
-            list.add(CountDailyIntercept(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), countPair.first, countPair.second))
+            list.add(CountDailyIntercept(
+                date = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                count = countPair.first,
+                pipelineExecuteCount = countPair.second
+            ))
 
             date = date.plusDays(1)
         }
@@ -135,9 +144,21 @@ class QualityCountService @Autowired constructor(
             if (!interceptResult) countInterceptDao.plusRuleInterceptCount(dslContext, interceptId)
 
             // T_COUNT_PIPELINE
-            val countPipelineRecord = countPipelineDao.getOrNull(transactionContext, projectId, pipelineId, date)
+            val countPipelineRecord = countPipelineDao.getOrNull(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                date = date
+            )
             val pipelineRecordId = if (countPipelineRecord == null) {
-                countPipelineDao.create(transactionContext, projectId, pipelineId, date, 1, createTime)
+                countPipelineDao.create(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    date = date,
+                    count = 1,
+                    lastInterceptTime = createTime
+                )
             } else {
                 countPipelineDao.plusCount(transactionContext, countPipelineRecord.id, createTime)
                 countPipelineRecord.id

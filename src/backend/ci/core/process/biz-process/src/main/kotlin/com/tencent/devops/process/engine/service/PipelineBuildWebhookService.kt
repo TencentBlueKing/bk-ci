@@ -682,15 +682,15 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         try {
             val buildId = pipelineBuildService.startPipeline(
-                userId,
-                pipelineInfo,
-                StartType.WEB_HOOK,
-                startParams,
-                pipelineInfo.channelCode,
-                false,
-                fullModel,
-                pipelineInfo.version,
-                false
+                userId = userId,
+                readyToBuildPipelineInfo = pipelineInfo,
+                startType = StartType.WEB_HOOK,
+                startParams = startParams,
+                channelCode = pipelineInfo.channelCode,
+                isMobile = false,
+                model = fullModel,
+                signPipelineVersion = pipelineInfo.version,
+                frequencyLimit = false
             )
 
             when {
