@@ -24,13 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.client.pojo.enums
+package com.tencent.devops.common.archive.pojo
 
-enum class GatewayType {
-    IDC,
-    IDC_PROXY,
-    OSS_PROXY,
-    OSS,
-    DEVNET,
-    DEVNET_PROXY
-}
+data class JFrogFileInfo(
+    val uri: String,
+    val size: Long,
+    val lastModified: String,
+    val folder: Boolean
+)
