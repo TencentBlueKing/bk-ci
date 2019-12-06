@@ -86,7 +86,7 @@ class MarketCheckImageTask : ITask() {
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response ($responseContent)")
             LoggerService.addRedLine(response.message())
             throw TaskExecuteException(
-                errorMsg = "checkImage fail: ${response.message()}",
+                errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",
                 errorType = ErrorType.SYSTEM,
                 errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
             )
