@@ -24,14 +24,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.api
+package com.tencent.devops.plugin.worker.task.codecc.util
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.pojo.Result
-import okhttp3.Response
+import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.codecc.CodeccSDKApi
+import java.io.File
 
-interface CodeccSDKApi {
-    fun saveTask(projectId: String, pipelineId: String, buildId: String): Result<String>
-    fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean = false): Response
-    fun downloadToolScript(osType: OSType, fileMd5: String): Response
+object CodeccEnvHelper {
+
+    private val api = ApiFactory.create(CodeccSDKApi::class)
+
+    private val ENV_FILES = arrayOf("result.log", "result.ini")
+
+    fun getCodeccEnv(workspace: File): MutableMap<String, String> {
+        val result = mutableMapOf<String, String>()
+        ENV_FILES.map { result.putAll(readScriptEnv(workspace, it)) }
+        return result
+    }
+
+    private fun readScriptEnv(workspace: File, file: String): Map<String, String> {
+        val f = File(workspace, file)
+        if (!f.exists()) {
+            return mapOf()
+        }
+        if (f.isDirectory) {
+            return mapOf()
+        }
+
+        val lines = f.readLines()
+        if (lines.isEmpty()) {
+            return mapOf()
+        }
+        // KEY-VALUE
+        return lines.filter { it.contains("=") }.map {
+            val split = it.split("=", ignoreCase = false, limit = 2)
+            split[0].trim() to split[1].trim()
+        }.toMap()
+    }
+
+    fun saveTask(buildVariables: BuildVariables) {
+        api.saveTask(buildVariables.projectId, buildVariables.pipelineId, buildVariables.buildId)
+    }
 }
