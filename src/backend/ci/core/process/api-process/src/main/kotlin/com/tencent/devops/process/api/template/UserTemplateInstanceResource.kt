@@ -34,8 +34,8 @@ import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
-import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -155,6 +155,15 @@ interface UserTemplateInstanceResource {
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
-        templateId: String
-    ): Result<TemplateInstances>
+        templateId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("名字搜索的关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?
+    ): Result<TemplateInstancePage>
 }
