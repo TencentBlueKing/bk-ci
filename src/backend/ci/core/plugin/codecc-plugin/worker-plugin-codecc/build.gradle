@@ -27,7 +27,6 @@
 dependencies {
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:worker:worker-common")
-    compile project(":core:worker:worker-plugin-scm")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
