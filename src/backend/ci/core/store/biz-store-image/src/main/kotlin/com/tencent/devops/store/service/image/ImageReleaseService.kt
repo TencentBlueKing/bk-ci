@@ -702,7 +702,7 @@ abstract class ImageReleaseService {
     /**
      * 检查版本发布过程中的操作权限：重新构建、确认测试完成、取消发布
      */
-    private fun checkImageVersionOptRight(
+    protected fun checkImageVersionOptRight(
         userId: String,
         imageId: String,
         status: Byte,
