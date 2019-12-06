@@ -38,6 +38,7 @@ dependencies {
     compile project(":core:log:api-log")
     compile project(":core:log:api-log")
     compile project(":core:store:api-store")
+    compile project(":core:store:api-store-image")
     compile project(":core:dispatch:api-dispatch")
     compile project(":core:project:api-project")
     compile project(":core:repository:api-repository")

@@ -168,8 +168,8 @@ class QualityIndicatorDao {
                 userId,
                 now,
                 now,
-                indicatorUpdate.elementVersion,
-                indicatorUpdate.logPrompt
+                indicatorUpdate.elementVersion ?: "1.0.0",
+                indicatorUpdate.logPrompt ?: ""
             ).returning(ID).fetchOne()
             return record.id
         }
