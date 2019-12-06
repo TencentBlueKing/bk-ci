@@ -902,7 +902,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 检查版本发布过程中的操作权限：重新构建、确认测试完成、取消发布
      */
-    private fun checkAtomVersionOptRight(userId: String, atomId: String, status: Byte): Pair<Boolean, String> {
+    protected fun checkAtomVersionOptRight(userId: String, atomId: String, status: Byte): Pair<Boolean, String> {
         val record =
             marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
         val atomCode = record.atomCode
