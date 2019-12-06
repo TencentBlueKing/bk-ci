@@ -61,13 +61,12 @@ class MarketCheckImageTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("MarketCheckImageTask buildTask: $buildTask,buildVariables: $buildVariables")
         LoggerService.addNormalLine("begin check image")
-        val taskParams = buildTask.params ?: mapOf()
-        val registryUser = taskParams["registryUser"]
-        val registryPwd = taskParams["registryPwd"]
         val buildVariableMap = buildTask.buildVariable!!
         val imageCode = buildVariableMap["imageCode"]
         val imageName = buildVariableMap["imageName"]
         val imageType = buildVariableMap["imageType"]
+        val registryUser = buildVariableMap["registryUser"]
+        val registryPwd = buildVariableMap["registryPwd"]
         val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
         val dockerHostIp = System.getenv("docker_host_ip")
         val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check"
@@ -86,7 +85,7 @@ class MarketCheckImageTask : ITask() {
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response ($responseContent)")
             LoggerService.addRedLine(response.message())
             throw TaskExecuteException(
-                errorMsg = "checkImage fail: ${response.message()}",
+                errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",
                 errorType = ErrorType.SYSTEM,
                 errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
             )
