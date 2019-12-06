@@ -551,7 +551,7 @@ abstract class ImageReleaseService {
                 startParams["registryUser"] = userName
             }
             if (null != password) {
-                startParams["password"] = password
+                startParams["registryPwd"] = password
             }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, imagePipelineRelRecord.pipelineId, startParams,
