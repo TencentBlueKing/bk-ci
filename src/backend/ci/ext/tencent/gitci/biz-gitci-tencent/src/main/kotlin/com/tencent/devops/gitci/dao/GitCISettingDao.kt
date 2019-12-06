@@ -49,7 +49,7 @@ class GitCISettingDao {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val record = context.selectFrom(this)
-                        .where(URL.eq(conf.url))
+                        .where(ID.eq(conf.gitProjectId))
                         .fetchOne()
                 val now = LocalDateTime.now()
                 if (record == null) {

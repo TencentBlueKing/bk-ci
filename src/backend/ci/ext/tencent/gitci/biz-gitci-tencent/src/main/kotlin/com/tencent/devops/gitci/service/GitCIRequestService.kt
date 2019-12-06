@@ -31,11 +31,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
-import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
@@ -48,12 +48,13 @@ import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.pojo.git.GitCommit
 import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitCommit
 import com.tencent.devops.scm.api.ServiceGitResource
+import org.joda.time.DateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -63,7 +64,6 @@ import java.io.BufferedReader
 import java.io.StringReader
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.TimeZone
 import javax.ws.rs.core.Response
 
 @Service
@@ -431,11 +431,9 @@ class GitCIRequestService @Autowired constructor(
             val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
             formatter.format(Date())
         } else {
-            val df = SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssZ")
-            val result = df.parse(commitTimeStamp)
+            val time = DateTime.parse(commitTimeStamp)
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-            sdf.timeZone = TimeZone.getTimeZone("GMT+8")
-            sdf.format(result)
+            sdf.format(time.toDate())
         }
     }
 
