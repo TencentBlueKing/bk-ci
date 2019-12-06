@@ -90,11 +90,11 @@ class CheckImageInitPipelineService @Autowired constructor(
             null, null, null, null, null, null))
         params.add(BuildFormProperty("version", true, BuildFormPropertyType.STRING, version, null, null,
             null, null, null, null, null, null))
-        params.add(BuildFormProperty("imageType", false, BuildFormPropertyType.STRING, imageType ?: "", null, null,
+        params.add(BuildFormProperty("imageType", false, BuildFormPropertyType.STRING,  "", null, null,
                 null, null, null, null, null, null))
-        params.add(BuildFormProperty("registryUser", false, BuildFormPropertyType.STRING, registryUser ?: "", null, null,
+        params.add(BuildFormProperty("registryUser", false, BuildFormPropertyType.STRING,  "", null, null,
                 null, null, null, null, null, null))
-        params.add(BuildFormProperty("registryPwd", false, BuildFormPropertyType.STRING, registryPwd ?: "", null, null,
+        params.add(BuildFormProperty("registryPwd", false, BuildFormPropertyType.STRING,  "", null, null,
                 null, null, null, null, null, null))
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
