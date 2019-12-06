@@ -24,13 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.client.pojo.enums
+package com.tencent.devops.store.pojo.common.enums
 
-enum class GatewayType {
-    IDC,
-    IDC_PROXY,
-    OSS_PROXY,
-    OSS,
-    DEVNET,
-    DEVNET_PROXY
+enum class BusinessFeatureEnum constructor(val value: String) {
+    NEED_AGENT_TYPE("needAgentType") // 需要指定AgentType
 }
