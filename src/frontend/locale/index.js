@@ -27,7 +27,7 @@ const BK_CI_DOMAIN = 'devops.oa.com'
 
 function getLsLocale () {
     try {
-        const cookieLcale = cookies.get('blueking_language') ||  DEFAULT_LOCALE
+        const cookieLcale = cookies.get(LS_KEY) ||  DEFAULT_LOCALE
         return localeAliasMap[cookieLcale.toLowerCase()] || DEFAULT_LOCALE
     } catch (error) {
         return DEFAULT_LOCALE

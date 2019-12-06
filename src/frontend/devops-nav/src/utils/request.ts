@@ -25,7 +25,7 @@ request.interceptors.request.use(config => {
     if (/(\/?ms\/backend|\/?backend)/.test(config.url)) {
         return config   
     }
-    
+    console.log(config)
     const routePid = getCurrentPid()
     return {
         ...config,

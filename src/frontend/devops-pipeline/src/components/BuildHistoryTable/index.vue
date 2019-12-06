@@ -249,7 +249,7 @@
                 }
             },
             getRemarkPopupInstance (activeRemarkIndex) {
-                return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance && this.$refs.remarkPopup[activeRemarkIndex].instance.instances && this.$refs.remarkPopup[activeRemarkIndex].instance.instances[0]
+                return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance
             },
             retryable (row) {
                 return row.pipelineVersion === this.currentPipelineVersion && ['QUEUE', 'SUCCEED', 'RUNNING'].indexOf(row.status) < 0
