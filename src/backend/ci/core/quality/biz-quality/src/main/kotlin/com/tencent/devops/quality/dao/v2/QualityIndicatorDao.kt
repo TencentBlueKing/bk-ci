@@ -38,19 +38,27 @@ import java.time.LocalDateTime
 
 @Repository
 class QualityIndicatorDao {
-    fun listByType(dslContext: DSLContext, projectId: String? = null, type: IndicatorType = IndicatorType.SYSTEM): Result<TQualityIndicatorRecord>? {
+    fun listByType(
+        dslContext: DSLContext,
+        projectId: String? = null,
+        type: IndicatorType = IndicatorType.SYSTEM
+    ): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             val sql = dslContext.selectFrom(this)
-                    .where(TYPE.eq(type.name))
+                .where(TYPE.eq(type.name))
             if (projectId != null) sql.and(INDICATOR_RANGE.like("%$projectId%").or(INDICATOR_RANGE.eq("ANY")))
             return sql.fetch()
         }
     }
 
-    fun listByProject(dslContext: DSLContext, projectId: String, keyword: String? = null): Result<TQualityIndicatorRecord>? {
+    fun listByProject(
+        dslContext: DSLContext,
+        projectId: String,
+        keyword: String? = null
+    ): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             val sql = dslContext.selectFrom(this)
-                    .where(INDICATOR_RANGE.like("%$projectId%").or(INDICATOR_RANGE.eq("ANY")))
+                .where(INDICATOR_RANGE.like("%$projectId%").or(INDICATOR_RANGE.eq("ANY")))
             if (keyword != null) sql.and(CN_NAME.like("%$keyword%"))
             return sql.fetch()
         }
@@ -59,8 +67,8 @@ class QualityIndicatorDao {
     fun listSystem(dslContext: DSLContext, page: Int? = null, pageSize: Int? = null): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             val sql = dslContext.selectFrom(this)
-                    .where(TYPE.eq(IndicatorType.SYSTEM.name))
-                    .orderBy(CREATE_TIME.desc())
+                .where(TYPE.eq(IndicatorType.SYSTEM.name))
+                .orderBy(CREATE_TIME.desc())
             if (page != null && pageSize != null) {
                 val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
                 sql.limit(sqlLimit.offset, sqlLimit.limit)
@@ -72,24 +80,28 @@ class QualityIndicatorDao {
     fun listByIds(dslContext: DSLContext, ids: Collection<Long>): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectFrom(this)
-                    .where(ID.`in`(ids))
-                    .fetch()
+                .where(ID.`in`(ids))
+                .fetch()
         }
     }
 
-    fun listByElementType(dslContext: DSLContext, elementType: String, type: IndicatorType = IndicatorType.MARKET): Result<TQualityIndicatorRecord>? {
+    fun listByElementType(
+        dslContext: DSLContext,
+        elementType: String,
+        type: IndicatorType = IndicatorType.MARKET
+    ): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectFrom(this)
-                    .where(TYPE.eq(type.name).and(ELEMENT_TYPE.eq(elementType)))
-                    .fetch()
+                .where(TYPE.eq(type.name).and(ELEMENT_TYPE.eq(elementType)))
+                .fetch()
         }
     }
 
     fun countSystem(dslContext: DSLContext): Long {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectCount().from(this)
-                    .where(TYPE.eq(IndicatorType.SYSTEM.name))
-                    .fetchOne(0, Long::class.java)
+                .where(TYPE.eq(IndicatorType.SYSTEM.name))
+                .fetchOne(0, Long::class.java)
         }
     }
 
@@ -110,54 +122,54 @@ class QualityIndicatorDao {
         val now = LocalDateTime.now()
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             val record = dslContext.insertInto(
-                    this,
-                    ELEMENT_TYPE,
-                    ELEMENT_NAME,
-                    ELEMENT_DETAIL,
-                    EN_NAME,
-                    CN_NAME,
-                    METADATA_IDS,
-                    DEFAULT_OPERATION,
-                    OPERATION_AVAILABLE,
-                    THRESHOLD,
-                    THRESHOLD_TYPE,
-                    DESC,
-                    INDICATOR_READ_ONLY,
-                    STAGE,
-                    INDICATOR_RANGE,
-                    ENABLE,
-                    TYPE,
-                    TAG,
-                    CREATE_USER,
-                    UPDATE_USER,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                    ATOM_VERSION,
-                    LOG_PROMPT
+                this,
+                ELEMENT_TYPE,
+                ELEMENT_NAME,
+                ELEMENT_DETAIL,
+                EN_NAME,
+                CN_NAME,
+                METADATA_IDS,
+                DEFAULT_OPERATION,
+                OPERATION_AVAILABLE,
+                THRESHOLD,
+                THRESHOLD_TYPE,
+                DESC,
+                INDICATOR_READ_ONLY,
+                STAGE,
+                INDICATOR_RANGE,
+                ENABLE,
+                TYPE,
+                TAG,
+                CREATE_USER,
+                UPDATE_USER,
+                CREATE_TIME,
+                UPDATE_TIME,
+                ATOM_VERSION,
+                LOG_PROMPT
             ).values(
-                    indicatorUpdate.elementType,
-                    indicatorUpdate.elementName,
-                    indicatorUpdate.elementDetail,
-                    indicatorUpdate.enName,
-                    indicatorUpdate.cnName,
-                    indicatorUpdate.metadataIds,
-                    indicatorUpdate.defaultOperation,
-                    indicatorUpdate.operationAvailable,
-                    indicatorUpdate.threshold,
-                    indicatorUpdate.thresholdType?.toUpperCase(),
-                    indicatorUpdate.desc,
-                    indicatorUpdate.readOnly,
-                    indicatorUpdate.stage,
-                    indicatorUpdate.range,
-                    indicatorUpdate.enable,
-                    indicatorUpdate.type.toString(),
-                    indicatorUpdate.tag,
-                    userId,
-                    userId,
-                    now,
-                    now,
-                    indicatorUpdate.elementVersion,
-                    indicatorUpdate.logPrompt
+                indicatorUpdate.elementType,
+                indicatorUpdate.elementName,
+                indicatorUpdate.elementDetail,
+                indicatorUpdate.enName,
+                indicatorUpdate.cnName,
+                indicatorUpdate.metadataIds,
+                indicatorUpdate.defaultOperation,
+                indicatorUpdate.operationAvailable,
+                indicatorUpdate.threshold,
+                indicatorUpdate.thresholdType?.toUpperCase(),
+                indicatorUpdate.desc,
+                indicatorUpdate.readOnly,
+                indicatorUpdate.stage,
+                indicatorUpdate.range,
+                indicatorUpdate.enable,
+                indicatorUpdate.type.toString(),
+                indicatorUpdate.tag,
+                userId,
+                userId,
+                now,
+                now,
+                indicatorUpdate.elementVersion,
+                indicatorUpdate.logPrompt
             ).returning(ID).fetchOne()
             return record.id
         }
@@ -170,8 +182,8 @@ class QualityIndicatorDao {
     fun delete(ids: Collection<Long>, dslContext: DSLContext): Int {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.deleteFrom(this)
-                    .where(ID.`in`(ids))
-                    .execute()
+                .where(ID.`in`(ids))
+                .execute()
         }
     }
 
@@ -200,26 +212,26 @@ class QualityIndicatorDao {
                 if (!logPrompt.isNullOrBlank()) update.set(LOG_PROMPT, logPrompt)
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
-                    .set(UPDATE_USER, userId)
-                    .where(ID.eq(id))
-                    .execute()
+                .set(UPDATE_USER, userId)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun appendRange(id: Long, range: String, dslContext: DSLContext): Int {
         return with(TQualityIndicator.T_QUALITY_INDICATOR) {
             dslContext.update(this)
-                    .set(INDICATOR_RANGE, INDICATOR_RANGE.concat(",$range"))
-                    .where(ID.eq(id))
-                    .execute()
+                .set(INDICATOR_RANGE, INDICATOR_RANGE.concat(",$range"))
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun get(dslContext: DSLContext, indicatorId: Long): TQualityIndicatorRecord {
         return with(TQualityIndicator.T_QUALITY_INDICATOR) {
             dslContext.selectFrom(this)
-                    .where(ID.eq(indicatorId))
-                    .fetchOne()
+                .where(ID.eq(indicatorId))
+                .fetchOne()
         }
     }
 }

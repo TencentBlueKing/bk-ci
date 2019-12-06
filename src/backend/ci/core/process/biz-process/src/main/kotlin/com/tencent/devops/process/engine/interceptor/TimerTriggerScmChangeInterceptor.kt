@@ -114,7 +114,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             !noScm -> Response(OK) // 没有开启【源代码未更新时不触发构建】, 则允许执行
             hasCodeChange -> Response(OK) //  有代码变更，【源代码未更新时不触发构建】不成立，允许执行
             !hasScmElement -> Response(OK) // 没有任何拉代码的插件，【源代码未更新时不触发构建】无效，允许执行
-            else -> Response(ERROR_PIPELINE_TIMER_SCM_NO_CHANGE, "代码没有变更，跳过执行")
+            else -> Response(ERROR_PIPELINE_TIMER_SCM_NO_CHANGE.toInt(), "代码没有变更，跳过执行")
         }
     }
 
