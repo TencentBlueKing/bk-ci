@@ -129,10 +129,10 @@ object Runner {
                                 } else {
                                     // Worker执行的错误处理
                                     logger.warn("[Worker Error] Fail to execute the task($buildTask) with system error", e)
-                                    val defaultErrorMsg = "Unknown system error has occurred with StackTrace:\n"
-                                    defaultErrorMsg.plus(e.toString())
-                                    e.stackTrace.map {
-                                        defaultErrorMsg.plus("\n    at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})")
+                                    var defaultErrorMsg = "Unknown system error has occurred with StackTrace:\n"
+                                    defaultErrorMsg += e.toString()
+                                    e.stackTrace.forEach {
+                                        defaultErrorMsg += "\n    at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})"
                                     }
                                     message = e.message ?: defaultErrorMsg
                                     errorType = ErrorType.SYSTEM.name
