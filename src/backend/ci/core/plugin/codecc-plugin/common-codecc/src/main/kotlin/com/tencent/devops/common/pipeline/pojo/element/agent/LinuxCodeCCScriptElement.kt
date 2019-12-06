@@ -104,7 +104,9 @@ open class LinuxCodeCCScriptElement(
     val phpcsToolSetId: String? = null,
     val sensitiveToolSetId: String? = null,
     val occheckToolSetId: String? = null,
-    val gociLintToolSetId: String? = null
+    val gociLintToolSetId: String? = null,
+    val woodpeckerToolSetId: String? = null,
+    val horuspyToolSetId: String? = null
 ) : Element(name, id, status) {
 
     companion object {
