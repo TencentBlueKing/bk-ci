@@ -40,4 +40,8 @@ class DataConsistencyException(
     errorCode: String = SYSTEM_ERROR,
     params: Array<String>? = null
 ) :
-    ErrorCodeException(errorCode, "srcData:$srcData,targetData:$targetData,message:$message", params)
+    ErrorCodeException(
+        errorCode = errorCode,
+        defaultMessage = "srcData:$srcData,targetData:$targetData,message:$message",
+        params = params
+    )
