@@ -79,7 +79,6 @@ class DockerHostBuildLessService(
     private val hostTag = CommonUtils.getInnerIP()
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-        .withDockerHost(dockerHostConfig.dockerHost)
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
         .withRegistryUrl(dockerHostConfig.registryUrl)
