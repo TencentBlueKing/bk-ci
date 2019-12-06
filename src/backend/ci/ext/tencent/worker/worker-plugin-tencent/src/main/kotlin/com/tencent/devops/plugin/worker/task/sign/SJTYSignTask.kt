@@ -2,7 +2,6 @@ package com.tencent.devops.plugin.worker.task.sign
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_IPA_SIGN_STATUS
 import com.tencent.devops.common.pipeline.element.IosSJTYSignElement
 import com.tencent.devops.plugin.worker.api.sgin.IOSSignApi
@@ -15,16 +14,9 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.IosUtils
-import okhttp3.MediaType
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
 import java.io.File
 import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
-
 
 @TaskClassType(classTypes = [IosSJTYSignElement.classType])
 class SJTYSignTask : ITask() {
