@@ -60,6 +60,7 @@ import com.tencent.devops.quality.pojo.enum.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RuleRange
 import com.tencent.devops.quality.util.ElementUtils
+import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -239,7 +240,9 @@ class QualityRuleService @Autowired constructor(
         logger.info("get rule data for ruleId($ruleId): $mapRecord")
 
         // 顺序遍历rule map生成每个指标实际的operation和threshold
-        val indicatorIds = mapRecord.indicatorIds.split(",").map { it.toLong() }
+        val indicatorIds = mapRecord.indicatorIds.split(",")
+            .filter { NumberUtils.isDigits(it) }
+            .map { it.toLong() }
 
         // 查询控制点
         val controlPoint = qualityControlPointService.serviceGet(record.controlPoint, record.projectId)
