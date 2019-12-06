@@ -193,7 +193,7 @@ class GitCIBuildService @Autowired constructor(
                 }
             }
 
-            stageList.add(Stage(containerList, "stage-${nowStageIndex}"))
+            stageList.add(Stage(containerList, "stage-$nowStageIndex"))
         }
         return Model("git_" + gitProjectConf.gitProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, event.userId)
     }
@@ -225,7 +225,7 @@ class GitCIBuildService @Autowired constructor(
             }
         val vmContainer = VMBuildContainer(
             id = null,
-            name = job.job.name ?: "stage${nowStageIndex}-${jobIndex + 1}",
+            name = job.job.name ?: "stage$nowStageIndex-${jobIndex + 1}",
             elements = elementList,
             status = null,
             startEpoch = null,
