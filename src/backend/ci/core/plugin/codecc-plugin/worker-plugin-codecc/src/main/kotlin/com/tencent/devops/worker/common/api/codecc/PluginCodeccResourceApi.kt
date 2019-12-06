@@ -24,12 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.api
+package com.tencent.devops.worker.common.api.codecc
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.Protocol
 import okhttp3.Response
 import org.springframework.http.HttpStatus
@@ -37,10 +38,15 @@ import org.springframework.http.HttpStatus
 class PluginCodeccResourceApi : AbstractBuildResourceApi(), CodeccSDKApi {
 
     override fun saveTask(projectId: String, pipelineId: String, buildId: String): Result<String> {
-        val path = "/ms/plugin/api/build/codecc/save/task/$projectId/$pipelineId/$buildId"
-        val request = buildPost(path)
-        val responseContent = request(request, "保存CodeCC原子信息失败")
-        return Result(responseContent)
+        try {
+            val path = "/ms/plugin/api/build/codecc/save/task/$projectId/$pipelineId/$buildId"
+            val request = buildPost(path)
+            val responseContent = request(request, "保存CodeCC原子信息失败")
+            return Result(responseContent)
+        } catch (e: Exception) {
+            LoggerService.addNormalLine("写入codecc任务失败: ${e.message}")
+        }
+        return Result("")
     }
 
     override fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean): Response {

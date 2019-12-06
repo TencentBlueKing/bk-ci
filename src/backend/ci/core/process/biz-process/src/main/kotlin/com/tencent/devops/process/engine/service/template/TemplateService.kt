@@ -1501,7 +1501,7 @@ class TemplateService @Autowired constructor(
         val templatePipelines = associatePipelines.map {
             val pipelineSetting = pipelineSettings[it.pipelineId]
             if (pipelineSetting == null || pipelineSetting.isEmpty()) {
-                throw OperationException("流水线设置配置不存在")
+                throw ErrorCodeException(defaultMessage = "流水线设置配置不存在", errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
             }
             TemplatePipeline(
                 templateId = it.templateId,

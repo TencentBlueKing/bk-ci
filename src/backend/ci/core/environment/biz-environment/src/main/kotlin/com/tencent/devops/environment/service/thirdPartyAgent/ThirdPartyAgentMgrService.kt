@@ -181,7 +181,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
-            throw ErrorCodeException(EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION)
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION)
         }
     }
 

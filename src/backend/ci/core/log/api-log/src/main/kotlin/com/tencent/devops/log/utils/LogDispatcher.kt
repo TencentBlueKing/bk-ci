@@ -31,10 +31,6 @@ import com.tencent.devops.log.model.pojo.ILogEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-/**
- * deng
- * 2019-01-23
- */
 object LogDispatcher {
 
     fun dispatch(rabbitTemplate: RabbitTemplate, event: ILogEvent) {
