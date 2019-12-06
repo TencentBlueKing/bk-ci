@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
+import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -119,6 +120,33 @@ interface ServiceImageResource {
         @QueryParam("limit")
         limit: Int?
     ): Result<ImagePageData>
+
+    @ApiOperation("获取所有公共镜像列表")
+    @Path("/listAllPublicImages")
+    @GET
+    fun listAllPublicImages(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "查询关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?
+    ): Result<ImageListResp>
+
+    @ApiOperation("获取所有项目镜像列表")
+    @Path("/{projectId}/listAllProjectImages")
+    @GET
+    fun listAllProjectImages(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "查询关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?
+    ): Result<ImageListResp>
 
     @ApiOperation("获取镜像信息")
     @Path("/getImageInfo")

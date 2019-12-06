@@ -1,33 +1,15 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.tencent.devops.store.dao.image
 
+import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
+import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TImageFeatureRecord
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -61,6 +43,7 @@ class ImageFeatureDao {
         publicFlag: Boolean?,
         recommendFlag: Boolean?,
         certificationFlag: Boolean?,
+        rdType: ImageRDTypeEnum?,
         modifier: String?,
         weight: Int? = null
     ): Int {
@@ -75,6 +58,9 @@ class ImageFeatureDao {
             if (certificationFlag != null) {
                 baseQuery = baseQuery.set(CERTIFICATION_FLAG, certificationFlag)
             }
+            if (rdType != null) {
+                baseQuery = baseQuery.set(IMAGE_TYPE, rdType.type.toByte())
+            }
             if (!modifier.isNullOrBlank()) {
                 baseQuery = baseQuery.set(MODIFIER, modifier)
             }
@@ -86,33 +72,77 @@ class ImageFeatureDao {
     }
 
     /**
-     * 带offset与limit查询公共镜像代码
+     * 带offset与limit查询公共非调试镜像代码
      */
     fun getPublicImageCodes(
         dslContext: DSLContext,
+        projectCode: String,
+        imageStatusSet: Set<ImageStatusEnum>?,
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<Record1<String>>? {
-        with(TImageFeature.T_IMAGE_FEATURE) {
-            val baseQuery = dslContext.select(IMAGE_CODE.`as`(KEY_IMAGE_CODE)).from(this)
-                .where(PUBLIC_FLAG.eq(true))
-            if (offset != null && offset >= 0) {
-                baseQuery.offset(offset)
-            }
-            if (limit != null && limit > 0) {
-                baseQuery.limit(limit)
-            }
-            return baseQuery.fetch()
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        // 先查出项目的调试项目
+        val debugImageCodes = dslContext.select(tStoreProjectRel.STORE_CODE).from(tStoreProjectRel)
+            .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+            .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            .fetch()
+        val conditions = mutableListOf<Condition>()
+        // 镜像
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        // 公共
+        conditions.add(tImageFeature.PUBLIC_FLAG.eq(true))
+        // 非调试
+        conditions.add(tStoreProjectRel.STORE_CODE.notIn(debugImageCodes))
+        if (imageStatusSet != null && imageStatusSet.isNotEmpty()) {
+            conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet.map { it.status.toByte() }))
         }
+        val baseQuery =
+            dslContext.selectDistinct(tImageFeature.IMAGE_CODE.`as`(KEY_IMAGE_CODE)).from(tImageFeature).join(tImage)
+                .on(tImageFeature.IMAGE_CODE.eq(tImage.IMAGE_CODE))
+                .join(tStoreProjectRel).on(tImageFeature.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
+                .where(conditions)
+        if (offset != null && offset >= 0) {
+            baseQuery.offset(offset)
+        }
+        if (limit != null && limit > 0) {
+            baseQuery.limit(limit)
+        }
+        return baseQuery.fetch()
     }
 
     fun countPublicImageCodes(
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        projectCode: String,
+        imageStatusSet: Set<ImageStatusEnum>?
     ): Int {
-        with(TImageFeature.T_IMAGE_FEATURE) {
-            val baseQuery = dslContext.selectCount().from(this)
-                .where(PUBLIC_FLAG.eq(true))
-            return baseQuery.fetchOne().get(0, Int::class.java)
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        // 先查出项目的调试项目
+        val debugImageCodes = dslContext.select(tStoreProjectRel.STORE_CODE).from(tStoreProjectRel)
+            .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+            .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            .fetch()
+        val conditions = mutableListOf<Condition>()
+        // 镜像
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        // 公共
+        conditions.add(tImageFeature.PUBLIC_FLAG.eq(true))
+        // 非调试
+        conditions.add(tStoreProjectRel.STORE_CODE.notIn(debugImageCodes))
+        if (imageStatusSet != null && imageStatusSet.isNotEmpty()) {
+            conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet.map { it.status.toByte() }))
         }
+        val baseQuery =
+            dslContext.select(tImageFeature.IMAGE_CODE.countDistinct()).from(tImageFeature).join(tImage)
+                .on(tImageFeature.IMAGE_CODE.eq(tImage.IMAGE_CODE))
+                .join(tStoreProjectRel).on(tImageFeature.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
+                .where(conditions)
+        return baseQuery.fetchOne().get(0, Int::class.java)
     }
 }

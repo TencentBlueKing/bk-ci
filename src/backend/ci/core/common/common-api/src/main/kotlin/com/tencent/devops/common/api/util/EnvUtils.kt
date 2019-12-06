@@ -27,7 +27,7 @@
 package com.tencent.devops.common.api.util
 
 object EnvUtils {
-    fun parseEnv(command: String, data: Map<String, String>, replaceWithEmpty: Boolean = false): String {
+    fun parseEnv(command: String, data: Map<String, String>, replaceWithEmpty: Boolean = false, isEscape: Boolean = false): String {
         if (command.isBlank()) {
             return command
         }
@@ -38,14 +38,31 @@ object EnvUtils {
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
                 index = parseVariable(command, index + 2, inside, data, replaceWithEmpty)
-                // 将动态参数值里面的双引号转义
-                newValue.append(inside.toString().replace("\"", "\\\""))
+                if (isEscape) {
+                    // 将动态参数值里面的特殊字符转义
+                    newValue.append(escapeSpecialWord(inside.toString()))
+                } else {
+                    newValue.append(inside)
+                }
             } else {
                 newValue.append(c)
                 index++
             }
         }
         return newValue.toString()
+    }
+
+    private fun escapeSpecialWord(keyword: String): String {
+        var replaceWord = keyword
+        if (keyword.isNotBlank()) {
+            val wordList = listOf("\\","\"")
+            wordList.forEach {
+                if (replaceWord.contains(it)) {
+                    replaceWord = replaceWord.replace(it, "\\" + it)
+                }
+            }
+        }
+        return replaceWord
     }
 
     private fun parseVariable(

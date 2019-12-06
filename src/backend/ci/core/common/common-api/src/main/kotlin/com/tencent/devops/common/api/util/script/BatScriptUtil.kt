@@ -67,7 +67,12 @@ object BatScriptUtil {
 
             runtimeVariables.plus(CommonEnv.getCommonEnv())
                     .forEach { name, value ->
-                        val clean = value.replace("\"", "\\\"") // 转义
+                        // 特殊保留字符转义
+                        val clean = value.replace("\"", "\\\"")
+                            .replace("&", "^&")
+                            .replace("<", "^<")
+                            .replace(">", "^>")
+                            .replace("|", "^|")
                         command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
                         command.append("set $name=%$name:~1,-1%\r\n") // 去除又引号，防止被程序读到有双引号的变量值
                     }
