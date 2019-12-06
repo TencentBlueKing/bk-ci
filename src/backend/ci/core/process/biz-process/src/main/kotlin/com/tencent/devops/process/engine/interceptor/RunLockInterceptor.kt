@@ -56,7 +56,7 @@ class RunLockInterceptor @Autowired constructor(
 
     fun checkRunLock(runLockType: PipelineRunLockType?, pipelineId: String): Response<BuildStatus> {
         val result: Response<BuildStatus> = if (checkLock(runLockType)) {
-            Response(ERROR_PIPELINE_LOCK, "当前流水线已被锁定，无法执行，请解锁后重试")
+            Response(ERROR_PIPELINE_LOCK.toInt(), "当前流水线已被锁定，无法执行，请解锁后重试")
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
             return if (buildSummaryRecord?.runningCount ?: 0 >= 1) {
