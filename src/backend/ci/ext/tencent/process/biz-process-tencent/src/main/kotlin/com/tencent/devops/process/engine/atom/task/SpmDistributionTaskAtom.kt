@@ -32,16 +32,17 @@ import com.google.common.io.Files
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.SpmDistributionElement
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.MediaType
@@ -63,11 +64,12 @@ import java.io.File
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class SpmDistributionTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val commonConfig: CommonConfig
 ) : IAtomTask<SpmDistributionElement> {
 
-    @Value("\${gateway.url:#{null}}")
-    private val gatewayUrl: String? = null
+//    @Value("\${gateway.url:#{null}}")
+//    private val gatewayUrl: String? = null
 
     @Value("\${cdntool.cmdpath}")
     private val cmdpath = "/data1/cdntool/cdntool"
@@ -99,7 +101,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: SpmDistributionElement, runVariables: Map<String, String>): AtomResponse {
         logger.info("Enter SpmDistributionDelegate run...")
-        val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
+        val searchUrl = "${commonConfig.devopsHostGateway}/jfrog/api/service/search/aql"
 
         val cmdbAppId = param.cmdbAppId
         val cmdbAppName = parseVariable(param.cmdbAppName, runVariables)
@@ -325,21 +327,12 @@ class SpmDistributionTaskAtom @Autowired constructor(
         }
     }
 
-    // 生成保存本地的路径
-    private fun getFilePath(path: String, name: String, isCustom: Boolean): String {
-        return if (isCustom) {
-            path.substring(path.indexOf("/")).removePrefix("/$projectId") + "/" + name
-        } else {
-            path.substring(path.indexOf("/")).removePrefix("/$projectId/$pipelineId/$buildId") + "/" + name
-        }
-    }
-
     // 获取jfrog传回的url
     private fun getUrl(realPath: String, isCustom: Boolean): String {
         return if (isCustom) {
-            "http://$gatewayUrl/jfrog/storage/service/custom/$realPath"
+            "${commonConfig.devopsHostGateway}/jfrog/storage/service/custom/$realPath"
         } else {
-            "http://$gatewayUrl/jfrog/storage/service/archive/$realPath"
+            "${commonConfig.devopsHostGateway}/jfrog/storage/service/archive/$realPath"
         }
     }
 

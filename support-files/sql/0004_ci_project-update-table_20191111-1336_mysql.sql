@@ -118,6 +118,21 @@ BEGIN
             ADD COLUMN `ENGLISH_NAME` varchar(128) DEFAULT NULL AFTER `NAME`;
     END IF;
 
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_SERVICE'
+                    AND COLUMN_NAME = 'gray_iframe_url') THEN
+        ALTER TABLE T_SERVICE MODIFY COLUMN `iframe_url` varchar(255) DEFAULT NULL;
+        ALTER TABLE T_SERVICE MODIFY COLUMN `css_url` varchar(255) DEFAULT NULL;
+        ALTER TABLE T_SERVICE MODIFY COLUMN `js_url` varchar(255) DEFAULT NULL;
+        ALTER TABLE T_SERVICE MODIFY COLUMN `gray_css_url` varchar(255) DEFAULT NULL;
+        ALTER TABLE T_SERVICE MODIFY COLUMN `gray_js_url` varchar(255) DEFAULT NULL;
+        ALTER TABLE T_SERVICE ADD COLUMN `gray_iframe_url` varchar(255) DEFAULT NULL AFTER `weight`;
+    END IF;
+
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

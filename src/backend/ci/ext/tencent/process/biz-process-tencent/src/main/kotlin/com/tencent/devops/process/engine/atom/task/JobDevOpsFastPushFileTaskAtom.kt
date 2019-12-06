@@ -607,7 +607,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val result = mutableListOf<BkRepoFile>()
         val bkRepoData = getAllBkRepoFiles(projectId, pipelineId, buildId, isCustom)
         val matcher = FileSystems.getDefault().getPathMatcher("glob:$srcPath")
-        val pipelinePathPrefix = "/$pipelineId/$buildId"
+        val pipelinePathPrefix = "/$pipelineId/$buildId/"
         bkRepoData.data?.forEach { bkrepoFile ->
             val repoPath = if (isCustom) {
                 bkrepoFile.fullPath.removePrefix("/")

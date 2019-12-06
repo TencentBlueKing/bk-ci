@@ -37,16 +37,16 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
-import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.AtomService
-import com.tencent.devops.store.service.atom.impl.MarketAtomServiceImpl
+import com.tencent.devops.store.service.atom.MarketAtomService
+import com.tencent.devops.store.service.atom.OpAtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpAtomResourceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val opAtomService: OpAtomService,
-    private val marketAtomService: MarketAtomServiceImpl
+    private val marketAtomService: MarketAtomService
 ) : OpAtomResource {
 
     override fun add(userId: String, atomCreateRequest: AtomCreateRequest): Result<Boolean> {
@@ -85,7 +85,12 @@ class OpAtomResourceImpl @Autowired constructor(
         return opAtomService.approveAtom(userId, atomId, approveReq)
     }
 
-    override fun generateCiYaml(atomCode: String?): String {
-        return marketAtomService.generateCiYaml(atomCode)
+    override fun generateCiYaml(
+        atomCode: String?,
+        os: String?,
+        classType: String?,
+        defaultShowFlag: Boolean?
+    ): Result<String> {
+        return Result(marketAtomService.generateCiYaml(atomCode, os, classType, defaultShowFlag))
     }
 }

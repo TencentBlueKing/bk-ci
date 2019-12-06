@@ -32,6 +32,7 @@ import com.tencent.devops.store.service.atom.impl.BkAtomNotifyServiceImpl
 import com.tencent.devops.store.service.atom.impl.BkAtomReleaseServiceImpl
 import com.tencent.devops.store.service.atom.impl.BkAtomServiceImpl
 import com.tencent.devops.store.service.atom.impl.BkMarketAtomServiceImpl
+import com.tencent.devops.store.service.common.impl.BkStoreLogoServiceImpl
 import com.tencent.devops.store.service.common.impl.BkStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.BkStoreUserServiceImpl
 import com.tencent.devops.store.service.container.impl.BkContainerServiceImpl
@@ -79,4 +80,7 @@ class BkServiceConfig {
 
     @Bean
     fun templateReleaseService() = BkTemplateReleaseServiceImpl()
+
+    @Bean
+    fun storeLogoService() = BkStoreLogoServiceImpl()
 }

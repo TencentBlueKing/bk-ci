@@ -160,6 +160,15 @@ interface OpAtomResource {
     fun generateCiYaml(
         @ApiParam("原子插件标识", required = false)
         @QueryParam("atomCode")
-        atomCode: String?
-    ): String
+        atomCode: String?,
+        @ApiParam("操作系统", required = false)
+        @QueryParam("os")
+        os: String?,
+        @ApiParam("插件类型 marketBuild:有编译环境,marketBuildLess:无编译环境", required = false)
+        @QueryParam("classType")
+        classType: String?,
+        @ApiParam("是否展示系统自带的yml信息", required = false)
+        @QueryParam("defaultShowFlag")
+        defaultShowFlag: Boolean?
+    ): Result<String>
 }

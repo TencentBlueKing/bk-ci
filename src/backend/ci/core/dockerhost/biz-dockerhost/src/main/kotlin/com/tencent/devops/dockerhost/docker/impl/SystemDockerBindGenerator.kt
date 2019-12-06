@@ -43,7 +43,7 @@ import java.util.concurrent.locks.ReentrantLock
 class SystemDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerBindGenerator {
 
-    private val etcHosts = "/etc/hosts"
+//    private val etcHosts = "/etc/hosts"
 
     private val whiteList = mutableSetOf<String>()
 
@@ -59,7 +59,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
                 Bind(getCcachePath(), Volume(dockerHostConfig.volumeCcache)),
                 Bind(dockerHostConfig.hostPathApps, Volume(dockerHostConfig.volumeApps), AccessMode.ro),
                 Bind(dockerHostConfig.hostPathInit, Volume(dockerHostConfig.volumeInit), AccessMode.ro),
-                Bind(etcHosts, Volume(etcHosts), AccessMode.ro),
+//                Bind(etcHosts, Volume(etcHosts), AccessMode.ro),
                 Bind(getLogsPath(), Volume(dockerHostConfig.volumeLogs)),
                 Bind(getGradlePath(), Volume(dockerHostConfig.volumeGradleCache)),
                 Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace))

@@ -36,6 +36,8 @@ dependencies {
     compile project(":ext:tencent:environment:api-environment-tencent")
     compile project(":core:image:api-image")
     compile project(":ext:tencent:image:api-image-tencent")
+    compile project(":ext:tencent:common:common-pipeline-tencent")
+    compile project(":core:common:common-archive")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
