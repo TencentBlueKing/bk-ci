@@ -1603,7 +1603,7 @@ class PipelineBuildService(
                 containerId = vmSeqId,
                 containerType = containerType,
                 actionType = ActionType.TERMINATE,
-                reason = errorMsg
+                reason = msg
             )
         )
     }

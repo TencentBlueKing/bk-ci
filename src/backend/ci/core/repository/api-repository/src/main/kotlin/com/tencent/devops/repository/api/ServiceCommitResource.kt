@@ -54,6 +54,9 @@ interface ServiceCommitResource {
     @Path("/getLatestCommit")
     fun getLatestCommit(
         @ApiParam("流水线ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam("原子ID", required = true)
