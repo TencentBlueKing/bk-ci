@@ -32,21 +32,22 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceCommitResource
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.repository.pojo.commit.CommitResponse
-import com.tencent.devops.repository.service.RepositoryService
+import com.tencent.devops.repository.service.CommitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceCommitResourceImpl @Autowired constructor(
-    private val repositoryService: RepositoryService
+    private val commitService: CommitService
 ) : ServiceCommitResource {
 
     override fun getLatestCommit(
+        projectId: String,
         pipelineId: String,
         elementId: String,
         repositoryId: String,
         repositoryType: RepositoryType?
     ): Result<CommitData?> {
-        val data = repositoryService.getLatestCommit(pipelineId, elementId, repositoryId, repositoryType, 1, 1)
+        val data = commitService.getLatestCommit(projectId, pipelineId, elementId, repositoryId, repositoryType, 1, 1)
         return if (data.isNotEmpty()) {
             Result(data[0])
         } else {
@@ -55,6 +56,6 @@ class ServiceCommitResourceImpl @Autowired constructor(
     }
 
     override fun getCommitsByBuildId(buildId: String, agentId: String): Result<List<CommitResponse>> {
-        return Result(repositoryService.getCommit(buildId))
+        return Result(commitService.getCommit(buildId))
     }
 }
