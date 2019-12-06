@@ -97,6 +97,7 @@ import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplatePipeline
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
@@ -1472,6 +1473,66 @@ class TemplateService @Autowired constructor(
         }
 
         return result
+    }
+
+    fun listTemplateInstancesInPage(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchKey: String?
+    ): TemplateInstancePage {
+        logger.info("[$projectId|$userId|$templateId|$page|$pageSize] List the template instances with filter $searchKey")
+
+        val instancePage = templatePipelineDao.listPipelineInPage(dslContext, projectId, templateId, page, pageSize, searchKey)
+        val associatePipelines = instancePage.records
+        val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
+        logger.info("Get the pipelineIds - $associatePipelines")
+        val pipelineSettings =
+            pipelineSettingDao.getSettings(dslContext, pipelineIds).groupBy { it.pipelineId }
+        logger.info("Get the pipeline settings - $pipelineSettings")
+        val hasPermissionList = authPermissionApi.getUserResourceByPermission(
+            userId, pipelineAuthServiceCode,
+            AuthResourceType.PIPELINE_DEFAULT, projectId, AuthPermission.EDIT,
+            null
+        )
+
+        val templatePipelines = associatePipelines.map {
+            val pipelineSetting = pipelineSettings[it.pipelineId]
+            if (pipelineSetting == null || pipelineSetting.isEmpty()) {
+                throw OperationException("流水线设置配置不存在")
+            }
+            TemplatePipeline(
+                templateId = it.templateId,
+                versionName = it.versionName,
+                version = it.version,
+                pipelineId = it.pipelineId,
+                pipelineName = pipelineSetting[0].name,
+                updateTime = it.updatedTime.timestampmilli(),
+                hasPermission = hasPermissionList.contains(it.pipelineId)
+            )
+        }
+
+        var latestVersion = templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        if (latestVersion.type == TemplateType.CONSTRAINT.name) {
+            latestVersion = templateDao.getLatestTemplate(dslContext, latestVersion.srcTemplateId)
+        }
+
+        return TemplateInstancePage(
+            projectId = projectId,
+            templateId = templateId,
+            instances = templatePipelines,
+            latestVersion = TemplateVersion(
+                version = latestVersion.version,
+                versionName = latestVersion.versionName,
+                updateTime = latestVersion.createdTime.timestampmilli(),
+                creator = latestVersion.creator
+            ),
+            count = instancePage.count.toInt(),
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {

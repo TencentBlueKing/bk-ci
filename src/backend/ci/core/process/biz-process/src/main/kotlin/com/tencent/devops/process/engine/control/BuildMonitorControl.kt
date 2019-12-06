@@ -166,7 +166,8 @@ class BuildMonitorControl @Autowired constructor(
                     stageId = stageId,
                     containerId = containerId,
                     containerType = containerType,
-                    actionType = ActionType.TERMINATE
+                    actionType = ActionType.TERMINATE,
+                    reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!"
                 )
             )
         }
