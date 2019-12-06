@@ -207,6 +207,7 @@ CREATE TABLE IF NOT EXISTS `T_IMAGE`
     `CREATE_TIME`       datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME`       datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `AGENT_TYPE_SCOPE`  varchar(64)  NOT NULL DEFAULT '[]' COMMENT '支持的构建机环境',
+    `DELETE_FLAG`       BIT(1)       DEFAULT FALSE  COMMENT '删除标识 true：是，false：否',
     PRIMARY KEY (`ID`) USING BTREE,
     UNIQUE KEY `uni_inx_ti_code_version` (`IMAGE_CODE`, `VERSION`) USING BTREE,
     KEY `inx_ti_image_name` (`IMAGE_NAME`) USING BTREE,
@@ -245,6 +246,7 @@ CREATE TABLE IF NOT EXISTS `T_IMAGE_FEATURE`
     `CERTIFICATION_FLAG` bit(1)                DEFAULT b'0' COMMENT '是否官方认证， TRUE：是 FALSE：不是',
     `WEIGHT`             int(11)               DEFAULT NULL COMMENT '权重（数值越大代表权重越高）',
     `IMAGE_TYPE`         tinyint(4)   NOT NULL DEFAULT '1' COMMENT '镜像类型：0：蓝鲸官方，1：第三方',
+    `DELETE_FLAG`        BIT(1)       DEFAULT FALSE  COMMENT '删除标识 true：是，false：否',
     PRIMARY KEY (`ID`) USING BTREE,
     KEY `inx_tif_image_code` (`IMAGE_CODE`) USING BTREE,
     KEY `inx_tif_public_flag` (`PUBLIC_FLAG`) USING BTREE,
@@ -283,6 +285,25 @@ CREATE TABLE IF NOT EXISTS `T_IMAGE_VERSION_LOG`
     KEY `inx_tivl_release_type` (`RELEASE_TYPE`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='镜像版本日志表';
+
+CREATE TABLE IF NOT EXISTS `T_IMAGE_AGENT_TYPE` (
+  `ID` varchar(32) NOT NULL COMMENT '主键',
+  `IMAGE_CODE` varchar(32) NOT NULL COMMENT '镜像代码',
+  `AGENT_TYPE` varchar(32) NOT NULL COMMENT '机器类型 PUBLIC_DEVNET，PUBLIC_IDC，PUBLIC_DEVCLOUD',
+  PRIMARY KEY (`ID`) USING BTREE,
+  KEY `inx_tiat_agent_type` (`AGENT_TYPE`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT = '镜像与机器类型关联表';
+
+CREATE TABLE IF NOT EXISTS `T_BUSINESS_CONFIG` (
+  `BUSINESS` varchar(64) NOT NULL COMMENT '业务名称',
+  `FEATURE` varchar(64) NOT NULL COMMENT '要控制的功能特性',
+  `BUSINESS_VALUE` varchar(255) NOT NULL COMMENT '业务取值',
+  `CONFIG_VALUE` text NOT NULL COMMENT '配置值',
+  `DESCRIPTION` varchar(255) DEFAULT NULL COMMENT '配置描述',
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`ID`) USING BTREE,
+  UNIQUE KEY `i_feature_business_businessValue` (`FEATURE`,`BUSINESS`,`BUSINESS_VALUE`) USING BTREE COMMENT '同一业务相同业务值的相同特性仅能有一个配置'
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP PROCEDURE IF EXISTS ci_store_schema_update;
 
@@ -392,6 +413,24 @@ BEGIN
                     AND COLUMN_NAME = 'PUB_TIME') THEN
         ALTER TABLE T_TEMPLATE
             ADD COLUMN `PUB_TIME` datetime DEFAULT NULL COMMENT '发布时间' AFTER `UPDATE_TIME`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_IMAGE'
+                    AND COLUMN_NAME = 'DELETE_FLAG') THEN
+        ALTER TABLE T_ATOM_FEATURE
+            ADD COLUMN `DELETE_FLAG` bit(1) DEFAULT b'0' AFTER `PRIVATE_REASON`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_IMAGE_FEATURE'
+                    AND COLUMN_NAME = 'DELETE_FLAG') THEN
+        ALTER TABLE T_ATOM_FEATURE
+            ADD COLUMN `DELETE_FLAG` bit(1) DEFAULT b'0' AFTER `PRIVATE_REASON`;
     END IF;
 
 
