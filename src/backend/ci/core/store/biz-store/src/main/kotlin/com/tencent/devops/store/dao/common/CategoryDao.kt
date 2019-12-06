@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.records.TCategoryRecord
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.CategoryRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -151,11 +152,15 @@ class CategoryDao {
 
     fun convert(record: TCategoryRecord): Category {
         with(record) {
+            val categoryLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
+                defaultMessage = categoryName
+            )
             return Category(
                 id = id,
                 categoryCode = categoryCode,
                 // 范畴信息名称没有配置国际化信息则取范畴表里面的名称
-                categoryName = MessageCodeUtil.getMessageByLocale(categoryName, categoryCode),
+                categoryName = if (categoryLanName == categoryCode) categoryName else categoryLanName,
                 iconUrl = iconUrl,
                 categoryType = StoreTypeEnum.getStoreType(type.toInt()),
                 createTime = createTime.timestampmilli(),
