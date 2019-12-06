@@ -35,13 +35,15 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectLocalService
+import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.TxProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectPermissionService: TxProjectPermissionService,
-    private val projectLocalService: ProjectLocalService
+    private val projectLocalService: ProjectLocalService,
+    private val projectMemberService: ProjectMemberService
 ) : ServiceTxProjectResource {
     override fun getProjectEnNamesByCenterId(
         userId: String,
@@ -138,6 +140,12 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     // TODO
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
         return Result(projectLocalService.create(userId, "", projectCreateInfo))
+    }
+
+    override fun getProjectManagers(
+        projectCode: String
+    ): Result<List<String>> {
+        return Result(projectMemberService.getProjectManagers(projectCode))
     }
 
     override fun verifyUserProjectPermission(

@@ -31,20 +31,28 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 
 data class IDCDispatchType(
-    @JsonProperty("value") var image: String,
-    var imageType: ImageType? = ImageType.BKDEVOPS,
-    val credentialId: String? = ""
-) : DispatchType(image, DispatchRouteKeySuffix.IDC) {
+    @JsonProperty("value") var image: String?,
+    override var imageType: ImageType? = ImageType.BKDEVOPS,
+    override var credentialId: String? = "",
+    override var credentialProject: String? = "",
+    // 商店镜像代码
+    override var imageCode: String? = "",
+    // 商店镜像版本
+    override var imageVersion: String? = "",
+    // 商店镜像名称
+    override var imageName: String? = ""
+) : StoreDispatchType(if (image.isNullOrBlank())
+    imageCode else image, DispatchRouteKeySuffix.IDC, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
     override fun replaceField(variables: Map<String, String>) {
         val valueMap = mutableMapOf<String, Any?>()
-        valueMap["image"] = EnvUtils.parseEnv(image, variables)
+        valueMap["image"] = EnvUtils.parseEnv(image!!, variables)
         valueMap["imageType"] = imageType
         valueMap["credentialId"] = credentialId
-
+        valueMap["credentialProject"] = credentialProject
         image = JsonUtil.toJson(valueMap)
     }
 

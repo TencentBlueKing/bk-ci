@@ -39,7 +39,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
     JsonSubTypes.Type(value = CodeCCScanClientTask::class, name = CodeCCScanClientTask.taskType + CodeCCScanClientTask.taskVersion),
     JsonSubTypes.Type(value = DockerRunDevCloudTask::class, name = DockerRunDevCloudTask.taskType + DockerRunDevCloudTask.taskVersion),
     JsonSubTypes.Type(value = DockerBuildAndPushImageTask::class, name = DockerBuildAndPushImageTask.taskType + DockerBuildAndPushImageTask.taskVersion),
-    JsonSubTypes.Type(value = MarketBuildTask::class, name = MarketBuildTask.taskType + MarketBuildTask.taskVersion)
+    JsonSubTypes.Type(value = MarketBuildTask::class, name = MarketBuildTask.taskType + MarketBuildTask.taskVersion),
+    JsonSubTypes.Type(value = CodeCCScanInContainerTask::class, name = CodeCCScanInContainerTask.taskType + CodeCCScanInContainerTask.taskVersion)
 )
 
 abstract class AbstractTask(
