@@ -174,6 +174,7 @@ class GitCIBuildService @Autowired constructor(
         // 第二个stage，services初始化
         addServicesStage(yaml, stageList)
 
+
         // 其他的stage
         yaml.stages!!.forEachIndexed { stageIndex, stage ->
 
@@ -186,7 +187,7 @@ class GitCIBuildService @Autowired constructor(
                     // 构建环境容器每个job的第一个插件都是拉代码
                     elementList.add(createGitCodeElement(event, gitProjectConf))
                     makeElementList(job, elementList, gitProjectConf, event.userId)
-                    addVmBuildContainer(job, elementList, containerList, nowStageIndex, jobIndex)
+                    addVmBuildContainer(job, elementList, containerList, jobIndex)
                 } else if (job.job.type == NORMAL_JOB) {
                     makeElementList(job, elementList, gitProjectConf, event.userId)
                     addNormalContainer(elementList, containerList)
@@ -216,16 +217,17 @@ class GitCIBuildService @Autowired constructor(
         ))
     }
 
-    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, nowStageIndex: Int, jobIndex: Int) {
+    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
         val containerPool =
             if (job.job.pool?.container == null) {
                 Pool(buildConfig.registryImage, Credential("", ""))
             } else {
                 Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
             }
+
         val vmContainer = VMBuildContainer(
             id = null,
-            name = job.job.name ?: "stage$nowStageIndex-${jobIndex + 1}",
+            name = "${jobIndex + 1} " + job.job.name,
             elements = elementList,
             status = null,
             startEpoch = null,
