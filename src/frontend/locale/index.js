@@ -34,6 +34,7 @@ function getLsLocale () {
     }
 }
 
+
 function setLsLocale (locale) {
     if (typeof cookies.set === 'function') {
         cookies.set(LS_KEY, locale, { domain: BK_CI_DOMAIN, path: '/' })
