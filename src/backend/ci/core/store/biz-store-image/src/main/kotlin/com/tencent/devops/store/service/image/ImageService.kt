@@ -66,9 +66,6 @@ import com.tencent.devops.store.exception.image.ImageNotExistException
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
 import com.tencent.devops.store.pojo.common.VersionInfo
-import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import com.tencent.devops.store.pojo.common.enums.BusinessFeatureEnum
-import com.tencent.devops.store.pojo.common.enums.BusinessFeatureValueEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
@@ -825,14 +822,6 @@ abstract class ImageService @Autowired constructor() {
         } else {
             null
         }
-        val needAgentTypeCategorys = businessConfigDao.list(
-            dslContext = dslContext,
-            business = BusinessEnum.CATEGORY.name,
-            feature = BusinessFeatureEnum.NEED_AGENT_TYPE.name,
-            configValue = BusinessFeatureValueEnum.NEED_AGENT_TYPE_TRUE.name
-        )?.map {
-            it.businessValue
-        }?.toList() ?: emptyList()
         // 组装返回
         return ImageDetail(
             imageId = imageId,
@@ -862,7 +851,6 @@ abstract class ImageService @Autowired constructor() {
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
             description = imageRecord.description ?: "",
             labelList = labelList,
-            needAgentTypeCategorys = needAgentTypeCategorys,
             category = category?.categoryCode ?: "",
             categoryName = category?.categoryName ?: "",
             latestFlag = imageRecord.latestFlag,
