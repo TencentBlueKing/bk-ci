@@ -211,8 +211,12 @@ function parseOS (): string {
 }
 
 function getProjectId (store, params): string {
-    const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
-    return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
+    try {
+        const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
+        return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
+    } catch (error) {
+        return ''
+    }
 }
 
 function initProjectId (to, store): string {
