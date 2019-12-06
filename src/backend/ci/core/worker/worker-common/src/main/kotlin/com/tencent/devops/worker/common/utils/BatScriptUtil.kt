@@ -26,7 +26,6 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import org.slf4j.LoggerFactory
@@ -50,12 +49,9 @@ object BatScriptUtil {
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
 
     fun execute(
-        buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        outerCommandFunc:
-        ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)? = null,
         prefix: String = ""
     ): String {
         try {
@@ -79,7 +75,12 @@ object BatScriptUtil {
             // FIXME: 需要处理 |和= 号可能造成的问题
             runtimeVariables.plus(CommonEnv.getCommonEnv())
                 .forEach { (name, value) ->
-                    val clean = value.replace("\"", "\\\"") // 转义
+                    // 特殊保留字符转义
+                    val clean = value.replace("\"", "\\\"")
+                        .replace("&", "^&")
+                        .replace("<", "^<")
+                        .replace(">", "^>")
+                        .replace("|", "^|")
                     command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
                     command.append("set $name=%$name:~1,-1%\r\n") // 去除双引号，防止被程序读到有双引号的变量值
                 }
@@ -95,13 +96,8 @@ object BatScriptUtil {
             logger.info("The default charset is $charset")
 
             file.writeText(command.toString(), charset)
-            return if (outerCommandFunc == null) {
-                logger.info("start to run windows script")
-                CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
-            } else {
-                logger.info("start to run windows codecc script")
-                outerCommandFunc(BuildScriptType.BAT, buildId, file, dir)
-            }
+            logger.info("start to run windows script")
+            return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
         } catch (e: Throwable) {
             logger.warn("Fail to execute bat script $script", e)
             throw e
