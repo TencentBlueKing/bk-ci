@@ -61,14 +61,14 @@ class QualityControlPointService @Autowired constructor(
         return controlPointList.filter { it.elementType in elements }.filter { it.testProject.isBlank() || (it.testProject == projectId) }
                 .map {
             QualityControlPoint(
-                    HashUtil.encodeLongId(it.id),
-                    it.elementType,
-                    it.name,
-                    it.stage,
-                    it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                    ControlPointPosition(it.defaultPosition),
-                    it.enable,
-                    it.atomVersion
+                hashId = HashUtil.encodeLongId(it.id),
+                type = it.elementType,
+                name = it.name,
+                stage = it.stage,
+                availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+                defaultPos = ControlPointPosition(it.defaultPosition),
+                enable = it.enable,
+                atomVersion = it.atomVersion
             )
         }
     }
@@ -81,27 +81,27 @@ class QualityControlPointService @Autowired constructor(
         if (elementType.isNullOrBlank()) return null
         val record = controlPointDao.getByType(dslContext, elementType!!) ?: return null
         return QualityControlPoint(
-                HashUtil.encodeLongId(record.id ?: 0L),
-                record.elementType ?: "",
-                record.name ?: "",
-                record.stage ?: "",
-                if (record.availablePosition.isNullOrBlank()) listOf() else record.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                ControlPointPosition(record.defaultPosition ?: ""),
-                record.enable ?: true,
-                record.atomVersion
+            hashId = HashUtil.encodeLongId(record.id ?: 0L),
+            type = record.elementType ?: "",
+            name = record.name ?: "",
+            stage = record.stage ?: "",
+            availablePos = if (record.availablePosition.isNullOrBlank()) listOf() else record.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+            defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
+            enable = record.enable ?: true,
+            atomVersion = record.atomVersion
         )
     }
 
     fun opList(userId: String, page: Int, pageSize: Int): Page<ControlPointData> {
         val data = controlPointDao.list(page, pageSize, dslContext).map {
             ControlPointData(
-                    it.id,
-                    it.elementType,
-                    it.name,
-                    it.stage,
-                    it.availablePosition,
-                    it.defaultPosition,
-                    it.enable
+                id = it.id,
+                elementType = it.elementType,
+                name = it.name,
+                stage = it.stage,
+                availablePosition = it.availablePosition,
+                defaultPosition = it.defaultPosition,
+                enable = it.enable
             )
         }
         val count = controlPointDao.count(dslContext)
