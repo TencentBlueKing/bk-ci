@@ -30,8 +30,8 @@ package com.tencent.devops.common.api.exception
  * 根据错误码会反查错误信息，用于改造现有直接抛出一些错误的异常
  */
 open class ErrorCodeException(
-    val errorCode: String,
-    val defaultMessage: String? = null,
-    val params: Array<String>? = null
+    open val errorCode: String,
+    open val defaultMessage: String? = null,
+    open val params: Array<String>? = null
 ) :
     UniqueIdException("[errorCode=$errorCode]$defaultMessage")

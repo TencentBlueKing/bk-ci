@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
+import com.tencent.devops.image.pojo.ImageItem
+import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import okhttp3.Credentials
 import okhttp3.MediaType
@@ -63,13 +65,14 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     fun listPublicImages(searchKey: String, start: Int, limit: Int): ImagePageData {
-        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/public/*\"}},{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+        val aql = generateListPublicImageAql(searchKey)
         logger.info("aql: $aql")
 
         val images = aqlSearchImage(aql)
         val repoNames = images.map { it.repo }.toSet().toList().sortedBy { it }
         val repos = repoNames.map {
             DockerRepo().apply {
+                repoUrl = dockerConfig.imagePrefix
                 repo = it
                 type = "public"
                 createdBy = "system"
@@ -84,11 +87,16 @@ class ImageArtifactoryService @Autowired constructor(
         return ImagePageData(resultRepos, start, limit, total)
     }
 
+    private fun generateListPublicImageAql(searchKey: String): String {
+        return "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/public/*\"}},{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+    }
+
     private fun listProjectImagesByAql(aql: String, start: Int, limit: Int): ImagePageData {
         val images = aqlSearchImage(aql)
         val repoNames = images.map { it.repo }.toSet().toList().sortedBy { it }
         val repos = repoNames.map {
             DockerRepo().apply {
+                repoUrl = dockerConfig.imagePrefix
                 repo = it
                 type = "private"
                 createdBy = "system"
@@ -104,10 +112,54 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     fun listProjectImages(projectCode: String, searchKey: String, start: Int, limit: Int): ImagePageData {
-        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/$projectCode/*\"}},{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+        val aql = generateListProjectImagesAql(projectCode, searchKey)
         logger.info("aql: $aql")
 
         return listProjectImagesByAql(aql, start, limit)
+    }
+
+    private fun generateListProjectImagesAql(projectCode: String, searchKey: String): String {
+        return "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/$projectCode/*\"}},{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+    }
+
+    fun listAllProjectImages(projectCode: String, searchKey: String?): ImageListResp {
+        // 查询项目镜像列表
+        val aql = generateListProjectImagesAql(projectCode, searchKey ?: "")
+        val projectImages = aqlSearchImage(aql)
+        val imageList = mutableListOf<ImageItem>()
+        handleImageList(projectImages, imageList)
+        // 获取项目Docker构建镜像列表
+        val dockerProjectImages = listDockerBuildImages(projectCode)
+        handleImageList(dockerProjectImages, imageList)
+        // 获取项目devCloud镜像列表
+        val devCloudProjectImages = listDevCloudImages(projectCode, false)
+        handleImageList(devCloudProjectImages, imageList)
+        return ImageListResp(imageList)
+    }
+
+    fun listAllPublicImages(searchKey: String?): ImageListResp {
+        // 查询项目镜像列表
+        val aql = generateListPublicImageAql(searchKey ?: "")
+        val publicImages = aqlSearchImage(aql)
+        val imageList = mutableListOf<ImageItem>()
+        handleImageList(publicImages, imageList)
+        // 获取项目devCloud镜像列表
+        val devCloudPublicImages = listDevCloudImages("", true)
+        handleImageList(devCloudPublicImages, imageList)
+        return ImageListResp(imageList)
+    }
+
+    private fun handleImageList(images: List<DockerTag>, imageList: MutableList<ImageItem>) {
+        val repoNames = images.map { it.repo }.toSet().toList().sortedBy { it }
+        repoNames.forEach {
+            imageList.add(
+                ImageItem(
+                    repoUrl = dockerConfig.imagePrefix!!,
+                    repo = it!!,
+                    name = parseName(it)
+                )
+            )
+        }
     }
 
     fun listProjectBuildImages(projectCode: String, searchKey: String, start: Int, limit: Int): ImagePageData {
@@ -142,6 +194,7 @@ class ImageArtifactoryService @Autowired constructor(
 
         val firstImage = buildImages[0]
         return DockerRepo().apply {
+            repoUrl = dockerConfig.imagePrefix
             repo = imageRepo
             type = parseType(imageRepo)
             repoType = ""
@@ -194,6 +247,7 @@ class ImageArtifactoryService @Autowired constructor(
 
         val firstImage = devImages[0]
         return DockerRepo().apply {
+            repoUrl = dockerConfig.imagePrefix
             repo = imageRepo
             type = parseType(imageRepo)
             repoType = ""
