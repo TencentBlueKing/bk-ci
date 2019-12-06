@@ -16,7 +16,7 @@
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
     export default {
-        name: 'pushimage-to-thiedrepo',
+        name: 'remote-atom',
         mixins: [atomMixin, validMixins],
         data () {
             return {
@@ -25,16 +25,22 @@
             }
         },
         mounted () {
-            window.addEventListener('message', function (e) {
-                if (location.href.indexOf(e.origin) === 0) return
-                console.log(e, e.data, 'top')
-            })
+            window.addEventListener('message', this.receiveMsgFromIframe)
         },
         methods: {
             onLoad () {
-                console.log(55)
                 const iframe = document.getElementById('atom-iframe').contentWindow
                 iframe.postMessage({ atomPropsValue: this.element.data.input, atomPropsModel: this.atomPropsModel.input }, '*')
+            },
+            receiveMsgFromIframe (e) {
+                if (location.href.indexOf(e.origin) === 0) return
+                console.log(e.data, 'top')
+                if (e.data && e.data.atomValue) {
+                    // Vue.set(this.element.data, 'input', e.data.atomValue)
+                    this.handleUpdateWholeAtomInput(e.data.atomValue)
+                } else if (e.data && e.data.isError) {
+                    console.log(e.data)
+                }
             }
         }
     }
