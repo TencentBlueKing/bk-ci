@@ -307,7 +307,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                     LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
-                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
                         errorMsg = "EnvId is not init"
                     )
                 }
@@ -319,7 +319,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                     LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
-                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
                         errorMsg = "EnvId is not init"
                     )
                 }
@@ -331,7 +331,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                     LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
-                        errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL,
+                        errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL.toInt(),
                         errorMsg = "EnvName is not init"
                     )
                 }
@@ -351,7 +351,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
-                    errorCode = ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL,
+                    errorCode = ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL.toInt(),
                     errorMsg = "Unsupported targetEnvType: $targetEnvType "
                 )
             }
@@ -489,7 +489,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS.toInt(),
                 errorMsg = "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames"
             )
         }
@@ -507,7 +507,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI.toInt(),
                 errorMsg = "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds"
             )
         }
@@ -544,7 +544,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
-                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
                 )
             }
@@ -569,7 +569,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
-                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
                 )
             }

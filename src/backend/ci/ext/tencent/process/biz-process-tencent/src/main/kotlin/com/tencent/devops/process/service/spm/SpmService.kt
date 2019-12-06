@@ -81,7 +81,7 @@ class SpmService {
                 logger.error("Response failed. msg: ${responseJson["msg"].asString}")
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_CDN_FAIL,
+                    errorCode = ERROR_BUILD_TASK_CDN_FAIL.toInt(),
                     errorMsg = "查询CDN信息失败"
                 )
             }
