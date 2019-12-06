@@ -26,11 +26,11 @@
 
 package com.tencent.devops.process.service.scm
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
@@ -88,7 +89,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     "SCM", AlertLevel.MEDIUM, "拉取最新版本号出现异常,重试${retry}次失败",
                     "拉取最新版本号出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
                 )
-                return Result(ERROR_RETRY_3_FAILED)
+                return Result(ERROR_RETRY_3_FAILED.toInt())
             }
         }, retry, 2000)
     }
@@ -277,7 +278,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
             is CodeSvnRepository -> {
-                throw OperationException("SVN 不支持获取Tag")
+                throw ErrorCodeException(defaultMessage = "SVN 不支持获取Tag", errorCode = ProcessMessageCode.SVN_NOT_SUPPORT_TAG)
             }
             is CodeGitRepository -> {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
@@ -310,7 +311,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
     fun addGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
-        val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository ?: throw OperationException("不是Git 代码仓库")
+        val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
+            ?: throw ErrorCodeException(defaultMessage = "不是Git代码仓库", errorCode = RepositoryMessageCode.GIT_INVALID)
         val isOauth = repo.credentialId.isEmpty()
         val token = if (isOauth) getAccessToken(repo.userName).first else
             getCredential(projectId, repo).privateKey
@@ -354,7 +356,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
-            ?: throw OperationException("不是Gitlab 代码仓库")
+            ?: throw ErrorCodeException(defaultMessage = "不是Gitlab代码仓库", errorCode = RepositoryMessageCode.GITLAB_INVALID)
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -372,7 +374,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
     fun addSvnWebhook(projectId: String, repositoryConfig: RepositoryConfig): String {
         checkRepoID(repositoryConfig)
-        val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository ?: throw OperationException("不是SVN 代码仓库")
+        val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
+            ?: throw ErrorCodeException(defaultMessage = "不是SVN代码仓库", errorCode = RepositoryMessageCode.SVN_INVALID)
         val credential = getCredential(projectId, repo)
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -403,7 +406,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         logger.info("Project($projectId) add github commit($commitId) check runs")
 
         checkRepoID(repositoryConfig)
-        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
+        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
+            ?: throw ErrorCodeException(defaultMessage = "不是Github代码仓库", errorCode = RepositoryMessageCode.GITHUB_INVALID)
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -439,7 +443,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
         checkRepoID(repositoryConfig)
-        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
+        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
+            ?: throw ErrorCodeException(defaultMessage = "不是Github代码仓库", errorCode = RepositoryMessageCode.GITHUB_INVALID)
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -463,10 +468,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     private fun checkRepoID(repositoryConfig: RepositoryConfig) {
         when (repositoryConfig.repositoryType) {
             RepositoryType.ID -> if (repositoryConfig.repositoryHashId.isNullOrBlank()) {
-                throw ParamBlankException("Blank repository hash id")
+                throw ErrorCodeException(defaultMessage = "仓库ID为空", errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_ID_NULL)
             }
             RepositoryType.NAME -> if (repositoryConfig.repositoryName.isNullOrBlank()) {
-                throw ParamBlankException("Blank repository name")
+                throw ErrorCodeException(defaultMessage = "仓库名为空", errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_NAME_NULL)
             }
         }
     }
