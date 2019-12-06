@@ -23,34 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.api
+package com.tencent.devops.openapi.resources.v2
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.MarketItem
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.v2.ApigwMarketTemplateResourceV2
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["OPEN_API_MARKET"], description = "OPEN-API-研发市场资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/market")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ApigwMarketTemplateResource {
+@RestResource
+class ApigwMarketTemplateResourceV2Impl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResourceV2 {
 
-    @ApiOperation("获取个人可以查看的模板列表")
-    @GET
-    @Path("/template/getListByUser/")
-    fun list(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
-    ): Result<List<MarketItem?>>
+    override fun installTemplateFromStore(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        //可见与可安装鉴权在store服务marketTemplateService中已实现
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwMarketTemplateResourceV2Impl::class.java)
+    }
 }
