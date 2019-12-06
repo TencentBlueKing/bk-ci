@@ -254,6 +254,7 @@ class GroupService @Autowired constructor(
                 defaultMessage = authPermission.alias
             )
             throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = QualityMessageCode.NEED_USER_GROUP_X_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg))
