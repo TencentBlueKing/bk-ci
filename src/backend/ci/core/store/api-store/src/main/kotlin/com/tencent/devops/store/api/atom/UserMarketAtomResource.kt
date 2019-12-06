@@ -213,4 +213,19 @@ interface UserMarketAtomResource {
         @PathParam("atomCode")
         atomCode: String
     ): Result<Boolean>
+
+    @ApiOperation("查看插件的yml信息")
+    @GET
+    @Path("/atoms/{atomCode}/yml/detail")
+    fun getAtomYmlInfo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("是否展示系统自带的yml信息", required = false)
+        @QueryParam("defaultShowFlag")
+        defaultShowFlag: Boolean?
+    ): Result<String?>
 }
