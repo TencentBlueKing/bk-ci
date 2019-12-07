@@ -181,6 +181,7 @@ object CiYamlUtils {
         val yamlJsonStr = try {
             convertYamlToJson(yamlStr)
         } catch (e: Throwable) {
+            logger.error("", e)
             throw CustomException(Response.Status.BAD_REQUEST, "非法的yaml格式: ${e.cause}")
         }
 
@@ -188,6 +189,7 @@ object CiYamlUtils {
             val schema = getCIBuildYamlSchema()
             return validate(schema, yamlJsonStr)
         } catch (e: Throwable) {
+            logger.error("", e)
             throw CustomException(Response.Status.BAD_REQUEST, "非法的yaml格式: ${e.message}")
         }
     }
