@@ -71,10 +71,72 @@ class ProjectVOTest {
             enabled = true,
             enableExternal = true,
             hybridCcAppId = 0,
+            hybrid_cc_app_id = 0,
+            project_id = "job",
             project_code = "job",
             project_name = "定时任务",
             cc_app_id = 123,
             cc_app_name = "XXG"
+        )
+        val message = JsonUtil.toJson(p)
+        println(message)
+        val to = JsonUtil.to(message, object : TypeReference<ProjectVO>() {})
+        println(to)
+        assertEquals(true, to.offlined)
+        assertEquals(true, to.secrecy)
+        assertEquals(true, to.helmChartEnabled)
+        assertEquals(to.projectName, to.project_name)
+        assertEquals(to.projectCode, to.project_code)
+        assertEquals(to.projectId, to.project_id)
+        assertEquals(to.hybridCcAppId, to.hybrid_cc_app_id)
+        assertEquals(to.ccAppId, to.cc_app_id)
+        assertEquals(to.ccAppName, to.cc_app_name)
+    }
+
+    @Test
+    fun jsonWithNullExtFields() {
+        val p = ProjectVO(
+            id = 890,
+            projectId = "job",
+            projectName = "定时任务",
+            projectCode = "job",
+            projectType = 1,
+            approvalStatus = 1,
+            approvalTime = "2019-02-12",
+            approver = "fgg",
+            ccAppId = 123,
+            ccAppName = "XXG",
+            createdAt = "2019-02-12",
+            creator = "ggg",
+            dataId = 768,
+            deployType = "n",
+            updatedAt = "2019-02-12",
+            bgId = 6867.toString(),
+            bgName = "ssd",
+            centerId = 87987.toString(),
+            centerName = "fghfg",
+            deptId = 2.toString(),
+            deptName = "",
+            description = "job project",
+            englishName = "job",
+            extra = "",
+            offlined = true,
+            secrecy = true,
+            helmChartEnabled = true,
+            kind = 1,
+            logoAddr = "",
+            remark = "",
+            useBk = true,
+            gray = false,
+            enabled = true,
+            enableExternal = true,
+            hybridCcAppId = 0,
+            hybrid_cc_app_id = null,
+            project_id = null,
+            project_code = null,
+            project_name = null,
+            cc_app_id = null,
+            cc_app_name = null
         )
         val message = JsonUtil.toJson(p)
         println(message)

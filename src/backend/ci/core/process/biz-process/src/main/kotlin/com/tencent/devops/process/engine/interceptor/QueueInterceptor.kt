@@ -68,7 +68,7 @@ class QueueInterceptor @Autowired constructor(
                 // 设置了最大排队数量限制为0，但此时没有构建正在执行
                 Response(BuildStatus.RUNNING)
             } else if (maxQueue == 0 && buildSummaryRecord.runningCount > 0) {
-                Response(ERROR_PIPELINE_QUEUE_FULL, "流水线串行，排队数设置为0")
+                Response(ERROR_PIPELINE_QUEUE_FULL.toInt(), "流水线串行，排队数设置为0")
             } else if (buildSummaryRecord.queueCount >= maxQueue) {
                 // 排队数量超过最大限制
                 logger.info("[$pipelineId] MaxQueue=$maxQueue| currentQueue=${buildSummaryRecord.queueCount}")

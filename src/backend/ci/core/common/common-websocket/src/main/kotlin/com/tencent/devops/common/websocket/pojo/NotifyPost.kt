@@ -27,11 +27,18 @@
 package com.tencent.devops.common.websocket.pojo
 
 data class NotifyPost(
+    /**记录推送微服务模块*/
     var module: String,
+    /**推送内容级别*/
     var level: Int,
+    /**状态码*/
     var code: Int,
+    /**呈现消息*/
     var message: String,
+    /**处理url，异常推送用到*/
     var dealUrl: String?,
+    /**推送websocket类型，前端用于判断呈现形式*/
     var webSocketType: String?,
+    /**对应导航栏链接子集*/
     var page: String?
 )

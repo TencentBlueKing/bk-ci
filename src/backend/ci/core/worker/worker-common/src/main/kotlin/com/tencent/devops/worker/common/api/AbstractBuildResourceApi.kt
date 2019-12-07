@@ -52,11 +52,14 @@ import java.io.FileOutputStream
 import java.net.URLEncoder
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
-
-    val logger = LoggerFactory.getLogger(javaClass)
 
     protected fun requestForResponse(
         request: Request,
@@ -151,7 +154,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val READ_TIMEOUT = 1500L
         private const val WRITE_TIMEOUT = 60L
         private val retryCodes = arrayOf(502, 503)
-        private val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
+        val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
         private val gateway = AgentEnv.getGateway()
 
         private val buildArgs: Map<String, String> by lazy {
@@ -183,17 +186,43 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         }
     }
 
-    private val okHttpClient: OkHttpClient = okhttp3.OkHttpClient.Builder()
+    private fun sslSocketFactory(): SSLSocketFactory {
+        try {
+            val sslContext = SSLContext.getInstance("SSL")
+            sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+            return sslContext.socketFactory
+        } catch (ingored: Exception) {
+            throw RemoteServiceException(ingored.message!!)
+        }
+    }
+
+    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+        @Throws(CertificateException::class)
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+        }
+
+        @Throws(CertificateException::class)
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+        }
+
+        override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+            return arrayOf()
+        }
+    })
+
+    private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
         .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS) // Set to 15 minutes
         .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
         .build()
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
     fun buildGet(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        logger.info("build get url: $path")
+        LoggerService.addNormalLine("build get url: $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
