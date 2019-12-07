@@ -48,7 +48,6 @@ class ImageDao {
         val imageSourceType: ImageType?,
         val imageRepoUrl: String?,
         val imageRepoName: String?,
-        val imageRepoPath: String?,
         val ticketId: String?,
         val imageStatus: ImageStatusEnum?,
         val imageStatusMsg: String?,
@@ -60,7 +59,7 @@ class ImageDao {
         val summary: String?,
         val description: String?,
         val publisher: String?,
-        val latestFlag: String?,
+        val latestFlag: Boolean?,
         val modifier: String?
     )
 
@@ -646,11 +645,26 @@ class ImageDao {
             if (!imageUpdateBean.classifyId.isNullOrBlank()) {
                 baseQuery = baseQuery.set(CLASSIFY_ID, imageUpdateBean.classifyId)
             }
-            if (!imageUpdateBean.logoUrl.isNullOrBlank()) {
-                baseQuery = baseQuery.set(LOGO_URL, imageUpdateBean.logoUrl)
+            if (!imageUpdateBean.version.isNullOrBlank()) {
+                baseQuery = baseQuery.set(VERSION, imageUpdateBean.version)
+            }
+            if (imageUpdateBean.imageSourceType != null) {
+                baseQuery = baseQuery.set(IMAGE_SOURCE_TYPE, imageUpdateBean.imageSourceType.type)
+            }
+            if (imageUpdateBean.imageRepoUrl != null) {
+                baseQuery = baseQuery.set(IMAGE_REPO_URL, imageUpdateBean.imageRepoUrl)
+            }
+            if (!imageUpdateBean.imageRepoName.isNullOrBlank()) {
+                baseQuery = baseQuery.set(IMAGE_REPO_NAME, imageUpdateBean.imageRepoName)
+            }
+            if (imageUpdateBean.ticketId != null) {
+                baseQuery = baseQuery.set(TICKET_ID, imageUpdateBean.ticketId)
             }
             if (imageUpdateBean.imageStatus != null) {
                 baseQuery = baseQuery.set(IMAGE_STATUS, imageUpdateBean.imageStatus.status.toByte())
+            }
+            if (imageUpdateBean.imageStatusMsg != null) {
+                baseQuery = baseQuery.set(IMAGE_STATUS_MSG, imageUpdateBean.imageStatusMsg)
             }
             if (!imageUpdateBean.imageSize.isNullOrBlank()) {
                 baseQuery = baseQuery.set(IMAGE_SIZE, imageUpdateBean.imageSize)
@@ -661,17 +675,23 @@ class ImageDao {
             if (imageUpdateBean.agentTypeList.isNotEmpty()) {
                 baseQuery = baseQuery.set(AGENT_TYPE_SCOPE, JsonUtil.toJson(imageUpdateBean.agentTypeList))
             }
+            if (!imageUpdateBean.logoUrl.isNullOrBlank()) {
+                baseQuery = baseQuery.set(LOGO_URL, imageUpdateBean.logoUrl)
+            }
+            if (imageUpdateBean.icon != null) {
+                baseQuery = baseQuery.set(ICON, imageUpdateBean.icon)
+            }
             if (!imageUpdateBean.summary.isNullOrBlank()) {
                 baseQuery = baseQuery.set(SUMMARY, imageUpdateBean.summary)
             }
-            if (!imageUpdateBean.description.isNullOrBlank()) {
+            if (imageUpdateBean.description != null) {
                 baseQuery = baseQuery.set(DESCRIPTION, imageUpdateBean.description)
             }
             if (!imageUpdateBean.publisher.isNullOrBlank()) {
                 baseQuery = baseQuery.set(PUBLISHER, imageUpdateBean.publisher)
             }
-            if (!imageUpdateBean.version.isNullOrBlank()) {
-                baseQuery = baseQuery.set(VERSION, imageUpdateBean.version)
+            if (imageUpdateBean.latestFlag != null) {
+                baseQuery = baseQuery.set(LATEST_FLAG, imageUpdateBean.latestFlag)
             }
             if (!imageUpdateBean.modifier.isNullOrBlank()) {
                 baseQuery = baseQuery.set(MODIFIER, imageUpdateBean.modifier)
