@@ -26,7 +26,17 @@
 
 package com.tencent.devops.common.ci
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.github.fge.jackson.JsonLoader
+import com.github.fge.jsonschema.core.report.LogLevel
+import com.github.fge.jsonschema.core.report.ProcessingMessage
+import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.common.ci.yaml.MatchRule
@@ -165,5 +175,81 @@ object CiYamlUtils {
         val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", "vmBuild", Pool(null, null), originYaml.steps!!, null)))))
 
         return CIBuildYaml(null, null, null, null, stages, null)
+    }
+
+    fun validateYaml(yamlStr: String): Pair<Boolean, String> {
+        val yamlJsonStr = try {
+            convertYamlToJson(yamlStr)
+        } catch (e: Throwable) {
+            throw CustomException(Response.Status.BAD_REQUEST, "非法的yaml格式: ${e.cause}")
+        }
+
+        try {
+            val schema = getCIBuildYamlSchema()
+            return validate(schema, yamlJsonStr)
+        } catch (e: Throwable) {
+            throw CustomException(Response.Status.BAD_REQUEST, "非法的yaml格式: ${e.message}")
+        }
+    }
+
+    fun validate(schema: String, json: String): Pair<Boolean, String> {
+        val schemaNode = jsonNodeFromString(schema)
+        val jsonNode = jsonNodeFromString(json)
+        val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
+        val itr = report.iterator()
+        val sb = java.lang.StringBuilder()
+        while (itr.hasNext()) {
+            val message = itr.next() as ProcessingMessage
+            if (message.logLevel == LogLevel.ERROR || message.logLevel == LogLevel.FATAL) {
+                sb.append(message).append("\r\n")
+            }
+        }
+        return Pair(report.isSuccess, sb.toString())
+    }
+
+    fun jsonNodeFromString(json: String): JsonNode = JsonLoader.fromString(json)
+
+    fun validateSchema(schema: String): Boolean = validateJson(schema)
+
+    fun validateJson(json: String): Boolean {
+        try {
+            jsonNodeFromString(json)
+        } catch (e: Exception) {
+            return false
+        }
+        return true
+    }
+
+    fun convertYamlToJson(yaml: String): String {
+        val yamlReader = ObjectMapper(YAMLFactory())
+        val obj = yamlReader.readValue(yaml, Any::class.java)
+
+        val jsonWriter = ObjectMapper()
+        return jsonWriter.writeValueAsString(obj)
+    }
+
+    fun getCIBuildYamlSchema(): String {
+        val mapper = ObjectMapper()
+        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+        val schema = mapper.generateJsonSchema(CIBuildYaml::class.java)
+        schema.schemaNode.with("properties").with("steps").put("item", getAbstractTaskSchema())
+        schema.schemaNode.with("properties")
+                .with("stages")
+                .with("items")
+                .with("properties")
+                .with("stage")
+                .with("items")
+                .with("properties")
+                .with("job")
+                .with("properties")
+                .with("steps")
+                .put("item", getAbstractTaskSchema())
+        return  mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
+    }
+
+    fun getAbstractTaskSchema(): ObjectNode {
+        val mapper = ObjectMapper()
+        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+        return mapper.generateJsonSchema(AbstractTask::class.java).schemaNode
     }
 }

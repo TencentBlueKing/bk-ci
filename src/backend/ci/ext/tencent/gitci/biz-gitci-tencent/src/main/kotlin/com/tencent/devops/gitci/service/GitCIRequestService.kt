@@ -170,6 +170,10 @@ class GitCIRequestService @Autowired constructor(
         }
     }
 
+    fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
+
+    fun getCIBuildYamlSchema() = CiYamlUtils.getCIBuildYamlSchema()
+
     fun createCIBuildYaml(yamlStr: String, gitProjectId: Long? = null): CIBuildYaml {
         logger.info("input yamlStr: $yamlStr")
 
