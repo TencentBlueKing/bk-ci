@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.measure.pojo.ElementMeasureData
 import com.tencent.devops.measure.pojo.PipelineBuildData
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
@@ -50,7 +51,8 @@ class MeasureServiceImpl constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val templateService: TemplateService,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val pipelineBuildTaskService: PipelineBuildTaskService
 ) : MeasureService {
 
     override fun postPipelineData(
@@ -117,7 +119,7 @@ class MeasureServiceImpl constructor(
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String) {
         try {
-            val tasks = pipelineRuntimeService.getAllBuildTask(buildId)
+            val tasks = pipelineBuildTaskService.getAllBuildTask(buildId)
             if (tasks.isEmpty()) {
                 return
             }

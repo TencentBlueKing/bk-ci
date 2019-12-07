@@ -26,8 +26,9 @@
 
 package com.tencent.devops.plugin.worker.task.codecc.util
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
@@ -40,77 +41,90 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.replaceCod
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.scm.util.RepositoryUtils
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
+import com.tencent.devops.worker.common.api.process.BuildTaskSDKApi
+import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.utils.CredentialUtils
 
 object CodeccRepoHelper {
 
     private val pipelineApi = ApiFactory.create(BuildSDKApi::class)
+    private val pipelineTaskApi = ApiFactory.create(BuildTaskSDKApi::class)
+    private val repoElementTypes = setOf(
+        CodeSvnElement.classType,
+        CodeGitElement.classType,
+        CodeGitlabElement.classType,
+        GithubElement.classType
+    )
+    private val codeccElementTypes = setOf(LinuxCodeCCScriptElement.classType, LinuxPaasCodeCCScriptElement.classType)
 
     fun getCodeccRepos(
-        codeccId: String,
         buildTask: BuildTask,
         buildVariables: BuildVariables
     ): List<CodeccExecuteConfig.RepoItem> {
-        val projectId = buildVariables.projectId
-        val pipelineId = buildVariables.pipelineId
-        val buildId = buildVariables.buildId
+        val buildTasks = pipelineTaskApi.getAllBuildTask().data
+            ?: throw TaskExecuteException(
+                ErrorType.SYSTEM,
+                AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
+                "get build task fail"
+            )
+        val codeccTask = buildTasks.first { it.taskType in codeccElementTypes }
 
-        val modelDetail = pipelineApi.getBuildDetail(projectId, pipelineId, buildId).data
-            ?: throw RuntimeException("no model found in $buildId")
-        val repoElementTypes = setOf(
-            CodeSvnElement.classType,
-            CodeGitElement.classType,
-            CodeGitlabElement.classType,
-            GithubElement.classType
-        )
-        val codeccElementTypes = setOf(LinuxCodeCCScriptElement.classType, LinuxPaasCodeCCScriptElement.classType)
         val repoItemList = mutableSetOf<CodeccExecuteConfig.RepoItem>()
-        modelDetail.model.stages.forEach { stage ->
-            stage.containers.forEach CONTAINER@{ container ->
-                // 寻找codecc原子对应的container里面的代码库原子
-                val isMatchContainer =
-                    container.elements.any { it.getClassType() in codeccElementTypes && codeccId == it.id }
-                if (!isMatchContainer) return@CONTAINER
-                val items = container.elements.filter { it.getClassType() in repoElementTypes }.map {
-                    when (it) {
-                        is CodeSvnElement -> {
-                            CodeccExecuteConfig.RepoItem(
-                                repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
-                                type = "SVN",
-                                relPath = EnvUtils.parseEnv(it.path ?: "", buildVariables.variables),
-                                relativePath = EnvUtils.parseEnv(it.svnPath ?: "", buildVariables.variables)
-                            )
-                        }
-                        is CodeGitElement -> CodeccExecuteConfig.RepoItem(
-                            repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
-                            type = "GIT",
-                            relPath = EnvUtils.parseEnv(it.path ?: "", buildVariables.variables)
-                        )
-                        is CodeGitlabElement -> CodeccExecuteConfig.RepoItem(
-                            repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
-                            type = "GIT",
-                            relPath = EnvUtils.parseEnv(it.path ?: "", buildVariables.variables)
-                        )
-                        is GithubElement -> CodeccExecuteConfig.RepoItem(
-                            repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
-                            type = "GIT",
-                            relPath = EnvUtils.parseEnv(it.path ?: "", buildVariables.variables)
-                        )
-                        else -> throw OperationException("Unknown git element")
-                    }
+
+        buildTasks.filter { it.containerId == codeccTask.containerId && it.taskType in repoElementTypes }.forEach {
+            val item = when (it.taskType) {
+                CodeSvnElement.classType -> {
+                    CodeccExecuteConfig.RepoItem(
+                        repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
+                        type = "SVN",
+                        relPath = EnvUtils.parseEnv(it.getTaskParam("path"), buildVariables.variables),
+                        relativePath = EnvUtils.parseEnv(it.getTaskParam("svnPath"), buildVariables.variables)
+                    )
                 }
-                repoItemList.addAll(items)
+                CodeGitElement.classType -> {
+                    CodeccExecuteConfig.RepoItem(
+                        repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
+                        type = "GIT",
+                        relPath = EnvUtils.parseEnv(it.getTaskParam("path"), buildVariables.variables)
+                    )
+                }
+                CodeGitlabElement.classType -> {
+                    CodeccExecuteConfig.RepoItem(
+                        repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
+                        type = "GIT",
+                        relPath = EnvUtils.parseEnv(it.getTaskParam("path"), buildVariables.variables)
+                    )
+                }
+                GithubElement.classType -> {
+                    CodeccExecuteConfig.RepoItem(
+                        repositoryConfig = replaceCodeProp(buildConfig(it), buildVariables.variables),
+                        type = "GIT",
+                        relPath = EnvUtils.parseEnv(it.getTaskParam("path"), buildVariables.variables)
+                    )
+                }
+                else -> {
+                    throw TaskExecuteException(
+                        ErrorType.SYSTEM,
+                        AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
+                        "get codecc task fail"
+                    )
+                }
             }
+            repoItemList.add(item)
         }
 
+        // 新的拉代码插件接入模式
         val newRepoTaskIds = buildTask.buildVariable?.filter { it.key.startsWith("bk_repo_taskId_") }?.values
         newRepoTaskIds?.forEach { taskId ->
             val repoConfigType = buildTask.buildVariable!!["bk_repo_config_type_$taskId"]
@@ -183,5 +197,17 @@ object CodeccRepoHelper {
 
     fun getCertType(repos: List<CodeccExecuteConfig.RepoItem>): String {
         return repos.map { it.authType }.first() // 每次扫描支持一种类型代码库认证类型，其他情况先不考虑
+    }
+
+    private fun buildConfig(task: PipelineBuildTask): RepositoryConfig {
+        return when (task.taskType) {
+            CodeGitElement.classType, CodeSvnElement.classType, CodeGitlabElement.classType, GithubElement.classType ->
+                RepositoryConfig(
+                    task.getTaskParam("repositoryHashId"),
+                    task.getTaskParam("repositoryName"),
+                    RepositoryType.parseType(task.getTaskParam("repositoryType"))
+                )
+            else -> throw InvalidParamException("Unknown code element -> ${task.taskType}")
+        }
     }
 }
