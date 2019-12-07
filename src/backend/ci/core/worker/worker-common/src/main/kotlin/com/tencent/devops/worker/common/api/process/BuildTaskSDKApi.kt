@@ -24,16 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.worker.common.api.process
 
-enum class RepositoryType {
-    ID,
-    NAME;
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
-    companion object {
-        fun parseType(type: String?): RepositoryType {
-            if (type.isNullOrBlank()) return ID
-            return RepositoryType.valueOf(type!!)
-        }
-    }
+interface BuildTaskSDKApi: WorkerRestApiSDK {
+
+    fun getAllBuildTask(): Result<List<PipelineBuildTask>>
+
 }
