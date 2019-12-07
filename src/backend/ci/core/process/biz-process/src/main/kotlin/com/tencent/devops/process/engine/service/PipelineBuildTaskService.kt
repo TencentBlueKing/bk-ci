@@ -24,16 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.process.engine.service
 
-enum class RepositoryType {
-    ID,
-    NAME;
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-    companion object {
-        fun parseType(type: String?): RepositoryType {
-            if (type.isNullOrBlank()) return ID
-            return RepositoryType.valueOf(type!!)
+@Service
+class PipelineBuildTaskService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pipelineBuildTaskDao: PipelineBuildTaskDao
+) {
+    fun getAllBuildTask(buildId: String): List<PipelineBuildTask> {
+        val list = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
+        val result = mutableListOf<PipelineBuildTask>()
+        if (list.isNotEmpty()) {
+            list.forEach {
+                result.add(pipelineBuildTaskDao.convert(it)!!)
+            }
         }
+        return result
     }
 }
