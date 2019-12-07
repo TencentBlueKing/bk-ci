@@ -57,8 +57,6 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
@@ -266,7 +264,7 @@ class PipelineBuildService(
             )
         }
 
-        val redisLock = RedisLock(redisOperation, "build:concurrency:$buildId", 30L)
+        val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
 
             redisLock.lock()
@@ -285,7 +283,7 @@ class PipelineBuildService(
                 )
             }
 
-            val model = getModel(projectId, pipelineId, buildInfo.version)
+            val model = getModel(projectId = projectId, pipelineId = pipelineId, version = buildInfo.version)
 
             val container = model.stages[0].containers[0] as TriggerContainer
 
@@ -1007,12 +1005,12 @@ class PipelineBuildService(
         val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
 
         if (buildHistories.isEmpty()) {
-            return MessageCodeUtil.generateResponseDataObject(ERROR_NO_BUILD_EXISTS_BY_ID.toString(), arrayOf(buildId))
+            return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, arrayOf(buildId))
         }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return MessageCodeUtil.generateResponseDataObject(
-                ERROR_NO_PIPELINE_EXISTS_BY_ID.toString(),
+                ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
                 arrayOf(buildId)
             )
 
@@ -1413,7 +1411,7 @@ class PipelineBuildService(
                             val status = task["status"] ?: ""
                             if (taskId == e.id) {
                                 isPrepareEnv = false
-                                logger.info("Pipeline($pipelineId) build($buildId) shutdown by $userId, elementId: $taskId")
+                                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
                                 LogUtils.addYellowLine(
                                     rabbitTemplate = rabbitTemplate,
                                     buildId = buildId,
