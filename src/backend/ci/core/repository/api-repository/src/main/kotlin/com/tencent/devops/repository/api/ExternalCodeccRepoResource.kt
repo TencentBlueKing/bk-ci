@@ -28,6 +28,7 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -67,5 +68,29 @@ interface ExternalCodeccRepoResource {
         @ApiParam("代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
+    ): Result<String>
+
+    @ApiOperation("获取仓库单个文件内容")
+    @GET
+    @Path("/getGitFileContentCommon")
+    fun getGitFileContentCommon(
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoUrl")
+        repoUrl: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "分支或者commit id（git）")
+        @QueryParam("branch")
+        ref: String?,
+        @ApiParam(value = "调用api的token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "代码块认证方式，默认http")
+        @QueryParam("authType")
+        authType: RepoAuthType? = RepoAuthType.HTTP,
+        @ApiParam(value = "子模块项目名称")
+        @QueryParam("subModule")
+        subModule: String? = null
     ): Result<String>
 }
