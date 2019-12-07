@@ -1,0 +1,16 @@
+package com.tencent.devops.store.exception.image
+
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+
+/**
+ * @Description 范畴不存在的异常，一般为参数错误导致
+ * @Date 2019/9/3
+ * @Version 1.0
+ */
+class CategoryNotExistException(
+    message: String?,
+    errorCode: String = CommonMessageCode.PARAMETER_IS_INVALID,
+    params: Array<String>? = null
+) :
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

@@ -28,18 +28,20 @@ package com.tencent.devops.quality.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.quality.constant.QualityMessageCode
+import com.tencent.devops.quality.dao.GroupDao
 import com.tencent.devops.quality.pojo.Group
 import com.tencent.devops.quality.pojo.GroupCreate
-import com.tencent.devops.quality.dao.GroupDao
 import com.tencent.devops.quality.pojo.GroupPermission
 import com.tencent.devops.quality.pojo.GroupSummaryWithPermission
 import com.tencent.devops.quality.pojo.GroupUpdate
@@ -50,7 +52,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 
 @Service
@@ -68,7 +69,11 @@ class GroupService @Autowired constructor(
     private val regex = Pattern.compile("[,;]")
 
     fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
-        val groupPermissionListMap = filterGroup(userId, projectId, setOf(AuthPermission.EDIT, AuthPermission.DELETE))
+        val groupPermissionListMap = filterGroup(
+            user = userId,
+            projectId = projectId,
+            authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
+        )
 
         val count = groupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
@@ -76,15 +81,15 @@ class GroupService @Autowired constructor(
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
             val canDelete = groupPermissionListMap[AuthPermission.DELETE]!!.contains(it.id)
             GroupSummaryWithPermission(
-                    HashUtil.encodeLongId(it.id),
-                    it.name,
-                    it.innerUsersCount,
-                    it.outerUsersCount,
-                    objectMapper.readValue(it.innerUsers),
-                    it.outerUsers,
-                    it.creator,
-                    it.remark ?: "",
-                    GroupPermission(canEdit, canDelete)
+                groupHashId = HashUtil.encodeLongId(it.id),
+                name = it.name,
+                innerUsersCount = it.innerUsersCount,
+                outerUsersCount = it.outerUsersCount,
+                innerUsers = objectMapper.readValue(it.innerUsers),
+                outerUsers = it.outerUsers,
+                creator = it.creator,
+                remark = it.remark ?: "",
+                permissions = GroupPermission(canEdit, canDelete)
             )
         }
         return Pair(count, list)
@@ -94,32 +99,42 @@ class GroupService @Autowired constructor(
         val groupAndUsersList = bkAuthProjectApi.getProjectGroupAndUserList(serviceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                    it.displayName,
-                    it.roleName,
-                    it.userIdList.toSet()
+                groupName = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
+                    defaultMessage = it.displayName
+                ),
+                groupId = it.roleName,
+                users = it.userIdList.toSet()
             )
         }
     }
 
     fun create(userId: String, projectId: String, group: GroupCreate) {
         if (groupDao.has(dslContext, projectId, group.name)) {
-            throw CustomException(Response.Status.BAD_REQUEST, "用户组(${group.name})已存在")
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
+                defaultMessage = "用户组(${group.name})已存在",
+                params = arrayOf(group.name)
+            )
         }
 
         val outerUsers = regex.split(group.outerUsers)
         val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
         val innerUsersCount = group.innerUsers.size
 
-        val groupId = groupDao.create(dslContext,
-                projectId,
-                group.name,
-                objectMapper.writeValueAsString(group.innerUsers),
-                innerUsersCount,
-                group.outerUsers,
-                outerUsersCount,
-                group.remark,
-                userId,
-                userId)
+        val groupId = groupDao.create(
+            dslContext = dslContext,
+            projectId = projectId,
+            name = group.name,
+            innerUsers = objectMapper.writeValueAsString(group.innerUsers),
+            innerUsersCount = innerUsersCount,
+            outerUsers = group.outerUsers,
+            outerUsersCount = outerUsersCount,
+            remark = group.remark,
+            creator = userId,
+            updator = userId
+        )
         createResource(userId, projectId, groupId, group.name)
     }
 
@@ -131,11 +146,11 @@ class GroupService @Autowired constructor(
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         val groupRecord = groupDao.get(dslContext, groupId)
         return Group(
-                groupHashId,
-                groupRecord.name,
-                objectMapper.readValue(groupRecord.innerUsers),
-                groupRecord.outerUsers,
-                groupRecord.remark ?: ""
+            groupHashId = groupHashId,
+            name = groupRecord.name,
+            innerUsers = objectMapper.readValue(groupRecord.innerUsers),
+            outerUsers = groupRecord.outerUsers,
+            remark = groupRecord.remark ?: ""
         )
     }
 
@@ -163,66 +178,130 @@ class GroupService @Autowired constructor(
             innerUsersSet.addAll(innerUsers)
             outerUsersSet.addAll(outerUsers)
         }
-        return GroupUsers(innerUsersSet, outerUsersSet)
+        return GroupUsers(innerUsers = innerUsersSet, outerUsers = outerUsersSet)
     }
 
     fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(userId, projectId, groupId, AuthPermission.EDIT, "用户在项目($projectId)没有用户组($groupHashId)的编辑权限")
+        validatePermission(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            authPermission = AuthPermission.EDIT,
+            message = "用户没有用户组的编辑权限"
+        )
         if (groupDao.getOrNull(dslContext, groupId) == null) {
-            throw NotFoundException("用户组($groupHashId)不存在")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = QualityMessageCode.USER_GROUP_NOT_EXISTS,
+                defaultMessage = "用户组($groupHashId)不存在",
+                params = arrayOf(groupHashId)
+            )
         }
         if (groupDao.has(dslContext, projectId, group.name, groupId)) {
-            throw CustomException(Response.Status.BAD_REQUEST, "用户组(${group.name})已存在")
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
+                defaultMessage = "用户组(${group.name})已存在",
+                params = arrayOf(group.name)
+            )
         }
 
         val outerUsers = regex.split(group.outerUsers)
         val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
         val innerUsersCount = group.innerUsers.size
 
-        groupDao.update(dslContext,
-                groupId,
-                group.name,
-                objectMapper.writeValueAsString(group.innerUsers),
-                innerUsersCount,
-                group.outerUsers,
-                outerUsersCount,
-                group.remark,
-                userId)
-        modifyResource(projectId, groupId, group.name)
+        groupDao.update(
+            dslContext = dslContext,
+            id = groupId,
+            name = group.name,
+            innerUsers = objectMapper.writeValueAsString(group.innerUsers),
+            innerUsersCount = innerUsersCount,
+            outerUsers = group.outerUsers,
+            outerUsersCount = outerUsersCount,
+            remark = group.remark,
+            updator = userId
+        )
+        modifyResource(projectId = projectId, groupId = groupId, groupName = group.name)
     }
 
     fun delete(userId: String, projectId: String, groupHashId: String) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
-        validatePermission(userId, projectId, groupId, AuthPermission.DELETE, "用户在项目($projectId)没有用户组($groupHashId)的删除权限")
+        validatePermission(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            authPermission = AuthPermission.DELETE,
+            message = "用户没有用户组的删除权限"
+        )
 
-        deleteResource(projectId, groupId)
+        deleteResource(projectId = projectId, groupId = groupId)
         groupDao.delete(dslContext, groupId)
     }
 
     private fun validatePermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, resourceType, projectId, HashUtil.encodeLongId(groupId), authPermission)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = serviceCode,
+                resourceType = resourceType,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(groupId),
+                permission = authPermission
+            )) {
             logger.error(message)
-            throw PermissionForbiddenException(message)
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                defaultMessage = authPermission.alias
+            )
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = QualityMessageCode.NEED_USER_GROUP_X_PERMISSION,
+                defaultMessage = message,
+                params = arrayOf(permissionMsg))
         }
     }
 
     private fun createResource(userId: String, projectId: String, groupId: Long, groupName: String) {
-        bkAuthResourceApi.createResource(userId, serviceCode, resourceType, projectId, HashUtil.encodeLongId(groupId), groupName)
+        bkAuthResourceApi.createResource(
+            user = userId,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(groupId),
+            resourceName = groupName
+        )
     }
 
     private fun modifyResource(projectId: String, groupId: Long, groupName: String) {
-        bkAuthResourceApi.modifyResource(serviceCode, resourceType, projectId, HashUtil.encodeLongId(groupId), groupName)
+        bkAuthResourceApi.modifyResource(
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(groupId),
+            resourceName = groupName
+        )
     }
 
     private fun deleteResource(projectId: String, groupId: Long) {
-        bkAuthResourceApi.deleteResource(serviceCode, resourceType, projectId, HashUtil.encodeLongId(groupId))
+        bkAuthResourceApi.deleteResource(
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(groupId)
+        )
     }
 
     private fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(user, serviceCode, resourceType, projectId, authPermissions, null)
+        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectId,
+            permissions = authPermissions,
+            supplier = null
+        )
         val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { key, value ->
+        permissionResourceMap.forEach { (key, value) ->
             map[key] = value.map { HashUtil.decodeIdToLong(it) }
         }
         return map
