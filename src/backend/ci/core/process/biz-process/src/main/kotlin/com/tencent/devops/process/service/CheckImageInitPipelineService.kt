@@ -84,24 +84,90 @@ class CheckImageInitPipelineService @Autowired constructor(
         val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
         val stageFirstElements = listOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
-        params.add(BuildFormProperty("imageCode", true, BuildFormPropertyType.STRING, imageCode, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("imageName", true, BuildFormPropertyType.STRING, imageName, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("version", true, BuildFormPropertyType.STRING, version, null, null,
-            null, null, null, null, null, null))
-        if (null != imageType) {
-            params.add(BuildFormProperty("imageType", true, BuildFormPropertyType.STRING, imageType, null, null,
-                null, null, null, null, null, null))
-        }
-        if (null != registryUser) {
-            params.add(BuildFormProperty("registryUser", true, BuildFormPropertyType.STRING, registryUser, null, null,
-                null, null, null, null, null, null))
-        }
-        if (null != registryPwd) {
-            params.add(BuildFormProperty("registryPwd", true, BuildFormPropertyType.STRING, registryPwd, null, null,
-                null, null, null, null, null, null))
-        }
+        params.add(BuildFormProperty(
+            id = "imageCode",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = imageCode,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "imageName",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = imageName,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "version",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = version,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "imageType",
+            required = false,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = "",
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "registryUser",
+            required = false,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = "",
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "registryPwd",
+            required = false,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = "",
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
             name = "构建触发",

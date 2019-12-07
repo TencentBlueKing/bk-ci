@@ -31,3 +31,5 @@ dependencies {
     // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
     // compile project(":ext:blueking:common:common-auth:common-auth-blueking")
 }
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
