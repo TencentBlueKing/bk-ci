@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.old.OldServiceEnvironmentResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
