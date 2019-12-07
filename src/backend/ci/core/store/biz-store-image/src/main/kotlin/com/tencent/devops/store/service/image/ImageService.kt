@@ -661,41 +661,30 @@ abstract class ImageService @Autowired constructor() {
         val tag = imageRecord.get(KEY_IMAGE_TAG) as String? ?: ""
         val ticketId = imageRecord.get(Constants.KEY_IMAGE_TICKET_ID) as String? ?: ""
         val ticketProject = imageRecord.get(Constants.KEY_IMAGE_INIT_PROJECT) as String? ?: ""
-        var completeImageName = ""
         val cleanImageRepoUrl = repoUrl.trimEnd { ch ->
             ch == '/'
         }
         val cleanImageRepoName = repoName.trimStart { ch ->
             ch == '/'
         }
-        if (ImageType.BKDEVOPS == sourceType) {
-            // 蓝盾项目源镜像
-            completeImageName = cleanImageRepoName
-        } else if (ImageType.THIRD == sourceType) {
-            // 第三方源镜像
-            completeImageName = "$cleanImageRepoUrl/$cleanImageRepoName"
-            // dockerhub镜像名称不带斜杠前缀
-            if (cleanImageRepoUrl.isBlank()) {
-                completeImageName = completeImageName.removePrefix("/")
-            }
-        } else {
-            throw UnknownImageSourceType(
-                "imageId=$id,imageSourceType=${sourceType.name}",
-                StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
+        val cleanTag = if (!tag.isBlank()) tag else {
+            "latest"
+        }
+        if (sourceType != ImageType.BKDEVOPS && sourceType != ImageType.THIRD) throw UnknownImageSourceType(
+            "imageId=$id,imageSourceType=${sourceType.name}",
+            StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
+        )
+        else {
+            logger.info("getImageRepoInfoByRecord:Output($sourceType,$cleanImageRepoUrl,$cleanImageRepoName,$cleanTag,$ticketId,$ticketProject)")
+            return ImageRepoInfo(
+                sourceType = sourceType,
+                repoUrl = cleanImageRepoUrl,
+                repoName = cleanImageRepoName,
+                repoTag = cleanTag,
+                ticketId = ticketId,
+                ticketProject = ticketProject
             )
         }
-        completeImageName += if (!tag.isBlank()) {
-            ":$tag"
-        } else {
-            ":latest"
-        }
-        logger.info("getImageRepoInfoByRecord:Output($completeImageName)")
-        return ImageRepoInfo(
-            sourceType = sourceType,
-            completeImageName = completeImageName,
-            ticketId = ticketId,
-            ticketProject = ticketProject
-        )
     }
 
     fun getImageDetailByCode(
