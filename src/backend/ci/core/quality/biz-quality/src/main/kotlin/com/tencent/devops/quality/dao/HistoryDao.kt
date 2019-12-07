@@ -48,36 +48,38 @@ class HistoryDao {
         updateTime: LocalDateTime
     ): Long {
         with(THistory.T_HISTORY) {
-            val record = dslContext.insertInto(this,
-                    PROJECT_ID,
-                    RULE_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    RESULT,
-                    INTERCEPT_LIST,
-                    CREATE_TIME,
-                    UPDATE_TIME
+            val record = dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                RULE_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                RESULT,
+                INTERCEPT_LIST,
+                CREATE_TIME,
+                UPDATE_TIME
             ).values(
-                    projectId,
-                    ruleId,
-                    pipelineId,
-                    buildId,
-                    result,
-                    interceptList,
-                    createTime,
-                    updateTime)
-                    .returning(ID)
-                    .fetchOne()
+                projectId,
+                ruleId,
+                pipelineId,
+                buildId,
+                result,
+                interceptList,
+                createTime,
+                updateTime
+            )
+                .returning(ID)
+                .fetchOne()
 
             // 更新projectNum
             val projectNum = dslContext.selectCount()
-                    .from(this)
-                    .where(PROJECT_ID.eq(projectId).and(ID.lt(record.id)))
-                    .fetchOne(0, Long::class.java) + 1
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(ID.lt(record.id)))
+                .fetchOne(0, Long::class.java) + 1
             dslContext.update(this)
-                    .set(PROJECT_NUM, projectNum)
-                    .where(ID.eq(record.id))
-                    .execute()
+                .set(PROJECT_NUM, projectNum)
+                .where(ID.eq(record.id))
+                .execute()
             return record.id
         }
     }
@@ -91,11 +93,11 @@ class HistoryDao {
     ): Result<THistoryRecord> {
         with(THistory.T_HISTORY) {
             return dslContext.selectFrom(this)
-                    .where(RULE_ID.eq(ruleId).and(PROJECT_ID.eq(projectId)))
-                    .orderBy(PROJECT_NUM.desc())
-                    .offset(offset)
-                    .limit(limit)
-                    .fetch()
+                .where(RULE_ID.eq(ruleId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(PROJECT_NUM.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch()
         }
     }
 
@@ -118,9 +120,9 @@ class HistoryDao {
             val step5 = if (startTime == null) step4 else step4.and(CREATE_TIME.gt(startTime))
             val step6 = if (endTime == null) step5 else step5.and(CREATE_TIME.lt(endTime))
             return step6.orderBy(PROJECT_NUM.desc())
-                    .offset(offset)
-                    .limit(limit)
-                    .fetch()
+                .offset(offset)
+                .limit(limit)
+                .fetch()
         }
     }
 
@@ -134,36 +136,57 @@ class HistoryDao {
         offset: Int,
         limit: Int
     ): Result<THistoryRecord> {
-        return list(dslContext, projectId, pipelineId, ruleId, RuleInterceptResult.FAIL.name, startTime, endTime, offset, limit)
+        return list(
+            dslContext,
+            projectId,
+            pipelineId,
+            ruleId,
+            RuleInterceptResult.FAIL.name,
+            startTime,
+            endTime,
+            offset,
+            limit
+        )
     }
 
-    fun listByBuildIdAndResult(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String, result: String): Result<THistoryRecord> {
+    fun listByBuildIdAndResult(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        result: String
+    ): Result<THistoryRecord> {
         with(THistory.T_HISTORY) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(BUILD_ID.eq(buildId))
-                    .and(RESULT.eq(result))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .and(RESULT.eq(result))
+                .fetch()
         }
     }
 
-    fun listByBuildId(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String): Result<THistoryRecord> {
+    fun listByBuildId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<THistoryRecord> {
         with(THistory.T_HISTORY) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(BUILD_ID.eq(buildId))
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetch()
         }
     }
 
     fun count(dslContext: DSLContext, ruleId: Long): Long {
         with(THistory.T_HISTORY) {
             return dslContext.selectCount()
-                    .from(this)
-                    .where(RULE_ID.eq(ruleId))
-                    .fetchOne(0, Long::class.java)
+                .from(this)
+                .where(RULE_ID.eq(ruleId))
+                .fetchOne(0, Long::class.java)
         }
     }
 

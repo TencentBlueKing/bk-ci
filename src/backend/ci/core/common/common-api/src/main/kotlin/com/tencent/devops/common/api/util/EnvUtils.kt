@@ -55,7 +55,7 @@ object EnvUtils {
     private fun escapeSpecialWord(keyword: String): String {
         var replaceWord = keyword
         if (keyword.isNotBlank()) {
-            val wordList = listOf("\\","\"")
+            val wordList = listOf("\\", "\"")
             wordList.forEach {
                 if (replaceWord.contains(it)) {
                     replaceWord = replaceWord.replace(it, "\\" + it)

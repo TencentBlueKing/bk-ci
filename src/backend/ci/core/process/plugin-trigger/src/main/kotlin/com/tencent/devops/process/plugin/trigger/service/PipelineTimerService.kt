@@ -88,7 +88,7 @@ open class PipelineTimerService @Autowired constructor(
                     actionType = ActionType.TERMINATE
                 )
             )
-            Result(ERROR_SAVE_PIPELINE_TIMER, "添加流水线的定时触发器保存失败！可能是定时器参数过长！")
+            Result(ERROR_SAVE_PIPELINE_TIMER.toInt(), "添加流水线的定时触发器保存失败！可能是定时器参数过长！")
         }
     }
 
@@ -109,7 +109,7 @@ open class PipelineTimerService @Autowired constructor(
                 )
             )
         }
-        return if (count > 0) Result(true) else Result(ERROR_DEL_PIPELINE_TIMER, "删除流水线${pipelineId}定时触发调度失败！")
+        return if (count > 0) Result(true) else Result(ERROR_DEL_PIPELINE_TIMER.toInt(), "删除流水线${pipelineId}定时触发调度失败！")
     }
 
     open fun get(pipelineId: String): PipelineTimer? {

@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.api
+package com.tencent.devops.worker.common.api.codecc
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.pojo.Result
