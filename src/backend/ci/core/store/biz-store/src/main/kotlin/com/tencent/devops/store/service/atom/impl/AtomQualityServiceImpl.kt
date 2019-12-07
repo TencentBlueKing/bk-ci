@@ -27,7 +27,7 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.quality.api.v2.ServiceQualityControlPointResource
+import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityMetadataMarketResource
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -49,16 +49,17 @@ class AtomQualityServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(AtomQualityServiceImpl::class.java)
 
     override fun updateQualityInApprove(atomCode: String, atomStatus: Byte) {
-        logger.info("update quality atomCode: $atomCode,atomStatus: $atomStatus")
+        logger.info("update quality atomStatus: $atomStatus")
         if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
             // 审核通过就刷新基础数据和指标
             val metadataMap =
                 client.get(ServiceQualityMetadataMarketResource::class).refreshMetadata(atomCode).data ?: mapOf()
             client.get(ServiceQualityIndicatorMarketResource::class).refreshIndicator(atomCode, metadataMap)
-            client.get(ServiceQualityControlPointResource::class).cleanTestProject(atomCode)
+            client.get(ServiceQualityControlPointMarketResource::class).refreshControlPoint(atomCode)
         }
         // 删除测试数据
         client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
         client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
+        client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
     }
 }
