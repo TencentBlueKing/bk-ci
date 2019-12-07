@@ -132,7 +132,7 @@ class QualityMetadataService @Autowired constructor(
         }.toMap()
     }
 
-    // 把测试的数据刷到正式的， 有则update，没则insert，多余的删掉
+    // 把测试的数据刷到正式的， 有则update，没也update，多余的删掉
     fun serviceRefreshMetadata(elementType: String): Map<String, String> {
         val data = metadataDao.listByElementType(dslContext, elementType)
         val testData = data?.filter { it.extra == "IN_READY_TEST" } ?: listOf()
@@ -147,15 +147,15 @@ class QualityMetadataService @Autowired constructor(
             testData.forEach TEST@{ testItem ->
                 if (prodItem.dataId == testItem.dataId) {
                     metadataDao.update(userId, prodItem.id, QualityMetaData(
-                            testItem.id,
-                            testItem.dataId,
-                            testItem.dataName,
-                            testItem.elementType,
-                            testItem.elementName,
-                            testItem.elementDetail,
-                            testItem.valueType,
-                            testItem.desc,
-                            "IN_READY_RUNNING"
+                        testItem.id,
+                        testItem.dataId,
+                        testItem.dataName,
+                        testItem.elementType,
+                        testItem.elementName,
+                        testItem.elementDetail,
+                        testItem.valueType,
+                        testItem.desc,
+                        "IN_READY_RUNNING"
                     ), dslContext)
                     resultMap[prodItem.dataId] = prodItem.id.toString()
                     return@PROD
@@ -167,21 +167,21 @@ class QualityMetadataService @Autowired constructor(
         }
         metadataDao.delete(deleteItemId, dslContext)
 
-        // 没则insert
+        // 没也update
         testData.forEach TEST@{ testItem ->
             prodData.forEach PROD@{ prodItem ->
                 if (prodItem.dataId == testItem.dataId) return@TEST
             }
-            val id = metadataDao.insert(userId, QualityMetaData(
-                    testItem.id,
-                    testItem.dataId,
-                    testItem.dataName,
-                    testItem.elementType,
-                    testItem.elementName,
-                    testItem.elementDetail,
-                    testItem.valueType,
-                    testItem.desc,
-                    "IN_READY_RUNNING"
+            val id = metadataDao.update(userId, testItem.id, QualityMetaData(
+                testItem.id,
+                testItem.dataId,
+                testItem.dataName,
+                testItem.elementType,
+                testItem.elementName,
+                testItem.elementDetail,
+                testItem.valueType,
+                testItem.desc,
+                "IN_READY_RUNNING"
             ), dslContext)
             resultMap[testItem.dataId] = id.toString()
         }

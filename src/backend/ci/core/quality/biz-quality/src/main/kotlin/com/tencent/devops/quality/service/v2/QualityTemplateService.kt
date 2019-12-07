@@ -67,12 +67,13 @@ class QualityTemplateService @Autowired constructor(
         } ?: listOf()
     }
 
-    fun userList(): List<RuleTemplate> {
+    fun userList(projectId: String): List<RuleTemplate> {
         val templateList = ruleTemplateDao.listTemplateEnable(dslContext)
         return templateList?.map {
             val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(it.id, dslContext)?.map { it.indicatorId }
                     ?: listOf()
-            val controlPoint = controlPointService.serviceGet(it.controlPoint)
+
+            val controlPoint = controlPointService.serviceGet(it.controlPoint, projectId)
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleTemplate(
                     HashUtil.encodeLongId(it.id),
@@ -89,6 +90,8 @@ class QualityTemplateService @Autowired constructor(
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<TemplateData> {
+        val controlPointMap = controlPointService.listAllControlPoint().map { it.elementType to it }.toMap()
+
         val data = ruleTemplateDao.list(userId, page!!, pageSize!!, dslContext).map {
             val templateIndicatorMap = ruleTemplateIndicatorDao.listByTemplateId(it.id, dslContext)
             val indicatorIds = templateIndicatorMap.map { it.indicatorId }.toHashSet()
@@ -108,12 +111,10 @@ class QualityTemplateService @Autowired constructor(
                         it1.threshold
                 )
             }
-            val controlPoint = controlPointService.serviceGetByType(it.controlPoint)
             TemplateData(
                     it.id, it.name, it.type, it.desc, it.stage, it.controlPoint,
-                    if (controlPoint == null) null else controlPoint.name,
-                    it.controlPointPosition, it.enable, templateIndicatorMap.size,
-                    templateIndicatorMaps
+                    controlPointMap[it.controlPoint]?.name, it.controlPointPosition, it.enable,
+                    templateIndicatorMap.size, templateIndicatorMaps
             )
         }
         val count = ruleTemplateDao.count(dslContext)
