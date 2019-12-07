@@ -33,10 +33,23 @@ class DispatchTypeParserImpl @Autowired constructor(
                     imageVersion = dispatchType.imageVersion,
                     defaultPrefix = ""
                 )
-                logger.info("DispatchTypeParserImpl:imageType==BKSTORE:imageBaseInfo=(${imageRepoInfo.sourceType.name},${imageRepoInfo.completeImageName},${imageRepoInfo.ticketId},${imageRepoInfo.ticketProject})")
+
+                val completeImageName = if (ImageType.BKDEVOPS == imageRepoInfo.sourceType) {
+                    // 蓝盾项目源镜像
+                    imageRepoInfo.repoName
+                } else {
+                    // 第三方源镜像
+                    // dockerhub镜像名称不带斜杠前缀
+                    if (imageRepoInfo.repoUrl.isBlank()) {
+                        imageRepoInfo.repoName
+                    } else {
+                        "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
+                    }
+                } + ":" + imageRepoInfo.repoTag
+                logger.info("DispatchTypeParserImpl:imageType==BKSTORE:imageRepoInfo=(${imageRepoInfo.sourceType.name},${completeImageName},${imageRepoInfo.ticketId},${imageRepoInfo.ticketProject})")
                 // 镜像来源替换为原始来源
                 dispatchType.imageType = imageRepoInfo.sourceType
-                dispatchType.value = imageRepoInfo.completeImageName
+                dispatchType.value = completeImageName
                 dispatchType.credentialId = imageRepoInfo.ticketId
                 dispatchType.credentialProject = imageRepoInfo.ticketProject
             } else {
