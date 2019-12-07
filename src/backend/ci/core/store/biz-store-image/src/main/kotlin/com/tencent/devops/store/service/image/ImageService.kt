@@ -67,6 +67,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -146,6 +147,8 @@ abstract class ImageService @Autowired constructor() {
     lateinit var classifyService: ClassifyService
     @Autowired
     lateinit var marketImageStatisticService: MarketImageStatisticService
+    @Autowired
+    lateinit var imageLabelService: ImageLabelService
     @Autowired
     lateinit var client: Client
     @Value("\${store.baseImageDocsLink}")
@@ -965,7 +968,6 @@ abstract class ImageService @Autowired constructor() {
                     imageSourceType = imageUpdateRequest.imageSourceType,
                     imageRepoUrl = imageUpdateRequest.imageRepoUrl,
                     imageRepoName = imageUpdateRequest.imageRepoName,
-                    imageRepoPath = imageUpdateRequest.imageRepoPath,
                     ticketId = imageUpdateRequest.ticketId,
                     imageStatus = null,
                     imageStatusMsg = null,
@@ -992,8 +994,28 @@ abstract class ImageService @Autowired constructor() {
                 weight = imageUpdateRequest.weight,
                 modifier = userId
             )
+            //更新调试项目
+            val projectCode = imageUpdateRequest.projectCode
+            if (projectCode != null) {
+                storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
+            }
+            //更新范畴
             val categoryCode = imageUpdateRequest.category
-            saveImageCategory(context, userId, imageId, categoryCode)
+            saveImageCategory(
+                context = context,
+                userId = userId,
+                imageId = imageId,
+                categoryCode = categoryCode
+            )
+            //更新标签
+            if (imageUpdateRequest.labelIdList != null) {
+                imageLabelService.updateImageLabels(
+                    dslContext = dslContext,
+                    userId = userId,
+                    imageId = imageId,
+                    labelIdList = imageUpdateRequest.labelIdList!!
+                )
+            }
         }
         return Result(true)
     }
@@ -1096,14 +1118,12 @@ abstract class ImageService @Autowired constructor() {
             val labelIdList = imageBaseInfoUpdateRequest.labelIdList
             if (null != labelIdList) {
                 imageIdList.forEach {
-                    imageLabelRelDao.deleteByImageId(context, it)
-                    if (labelIdList.isNotEmpty())
-                        imageLabelRelDao.batchAdd(
-                            dslContext = context,
-                            userId = userId,
-                            imageId = it,
-                            labelIdList = labelIdList
-                        )
+                    imageLabelService.updateImageLabels(
+                        dslContext = dslContext,
+                        userId = userId,
+                        imageId = it,
+                        labelIdList = labelIdList
+                    )
                 }
             }
             // 更新范畴信息

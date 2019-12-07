@@ -6,6 +6,7 @@ import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,5 +39,21 @@ class ImageLabelService @Autowired constructor(
             )
         }
         return Result(imageLabelList)
+    }
+
+    fun updateImageLabels(dslContext: DSLContext, userId: String, imageId: String, labelIdList: List<String>) {
+        // 更新标签信息
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            imageLabelRelDao.deleteByImageId(context, imageId)
+            if (labelIdList.isNotEmpty()) {
+                imageLabelRelDao.batchAdd(
+                    dslContext = context,
+                    userId = userId,
+                    imageId = imageId,
+                    labelIdList = labelIdList
+                )
+            }
+        }
     }
 }
