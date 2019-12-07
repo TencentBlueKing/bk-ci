@@ -36,7 +36,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildQualityMetadataResourceImpl @Autowired constructor(
     private val qualityHisMetadataService: QualityHisMetadataService
 ) : BuildQualityMetadataResource {
-    override fun saveHisMetadata(projectId: String, pipelineId: String, buildId: String, elementType: String, data: Map<String, String>): Result<Boolean> {
+    override fun saveHisMetadata(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementType: String,
+        data: Map<String, String>
+    ): Result<Boolean> {
         return Result(qualityHisMetadataService.saveHisMetadata(projectId, pipelineId, buildId, elementType, data))
     }
 }

@@ -24,20 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.plugin.worker.pojo
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildVariables
 import java.io.File
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
-
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        return CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, file, FileChannelTypeEnum.WEB_SHOW.name)
-    }
+/**
+ * 26/01/2018
+ */
+data class CodeccExecuteConfig(
+    val scriptType: BuildScriptType,
+    val repos: List<RepoItem>,
+    val buildVariables: BuildVariables,
+    val buildTask: BuildTask,
+    val workspace: File,
+    val tools: List<String>,
+    val filterTools: List<String>,
+    val timeOut: Long = 4 * 3600 // 4小时
+) {
+    data class RepoItem(
+        val repositoryConfig: RepositoryConfig?,
+        val type: String,
+        val relPath: String = "", // 代码路径
+        val relativePath: String = "", // 代码相对路径
+        var url: String = "",
+        var authType: String = "",
+        var repoHashId: String = "",
+        var svnUerPassPair: Pair<String, String>? = null
+    )
 }

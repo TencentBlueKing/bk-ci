@@ -69,7 +69,7 @@ object AtomUtils {
                     val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}"
                     throw BuildTaskException(
                         errorType = ErrorType.SYSTEM,
-                        errorCode = ERROR_ATOM_NOT_FOUND,
+                        errorCode = ERROR_ATOM_NOT_FOUND.toInt(),
                         errorMsg = message,
                         pipelineId = task.pipelineId,
                         buildId = task.buildId,
