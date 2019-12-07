@@ -126,4 +126,14 @@ interface MarketAtomService {
      * 删除插件
      */
     fun deleteAtom(userId: String, atomCode: String): Result<Boolean>
+
+    /**
+     * 生成插件yml文件
+     */
+    fun generateCiYaml(
+        atomCode: String?,
+        os: String? = null,
+        classType: String? = null,
+        defaultShowFlag: Boolean? = true
+    ): String
 }
