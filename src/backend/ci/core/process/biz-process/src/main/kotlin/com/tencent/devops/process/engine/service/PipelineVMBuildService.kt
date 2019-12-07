@@ -181,13 +181,17 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             // 如果是成功的状态，则更新构建机启动插件的状态
             if (BuildStatus.isFinish(buildStatus)) {
                 pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = startUpVMTask.taskId,
-                    userId = startUpVMTask.starter, buildStatus = buildStatus
+                    buildId = buildId,
+                    taskId = startUpVMTask.taskId,
+                    userId = startUpVMTask.starter,
+                    buildStatus = buildStatus
                 )
             }
 
             // 失败的话就发终止事件
+            var message: String? = null
             val actionType = if (BuildStatus.isFailure(buildStatus)) {
+                message = "构建机启动失败，所有插件被终止"
                 ActionType.TERMINATE
             } else {
                 ActionType.START
@@ -203,7 +207,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     stageId = startUpVMTask.stageId,
                     containerId = startUpVMTask.containerId,
                     containerType = startUpVMTask.containerType,
-                    actionType = actionType
+                    actionType = actionType,
+                    reason = message
                 )
             )
             return true
@@ -437,7 +442,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             elementName = task.taskName,
             type = task.taskType,
             params = task.taskParams.map {
-                it.key to parseEnv(JsonUtil.toJson(it.value), buildVariable)
+                it.key to parseEnv(command = JsonUtil.toJson(it.value), data = buildVariable, isEscape = true)
             }.filter {
                 !it.first.startsWith("@type")
             }.toMap(),

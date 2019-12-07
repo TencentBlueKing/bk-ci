@@ -26,17 +26,13 @@
 
 package com.tencent.devops.worker.common.task.script.powershell
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.task.script.ICommand
 import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
-class CommandPowerShellImpl(
-    override val outerCommandFunc:
-    ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?
-) : ICommand {
+class CommandPowerShellImpl() : ICommand {
     private val count = AtomicInteger(0)
     private val executorService = Executors.newFixedThreadPool(2)
 

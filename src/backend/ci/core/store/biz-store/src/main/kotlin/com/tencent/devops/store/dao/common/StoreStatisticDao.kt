@@ -32,11 +32,13 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 
 @Repository
 class StoreStatisticDao {
+    private val logger = LoggerFactory.getLogger(StoreStatisticDao::class.java)
     /**
      * 根据storeId与storeType获取组件统计数据
      */
@@ -96,10 +98,10 @@ class StoreStatisticDao {
             if (storeCodeList.isNotEmpty()) {
                 conditions.add(STORE_CODE.`in`(storeCodeList))
             }
-
-            return baseStep.where(conditions)
+            val finalStep = baseStep.where(conditions)
                 .groupBy(STORE_CODE)
-                .fetch()
+            logger.info(finalStep.getSQL(true))
+            return finalStep.fetch()
         }
     }
 

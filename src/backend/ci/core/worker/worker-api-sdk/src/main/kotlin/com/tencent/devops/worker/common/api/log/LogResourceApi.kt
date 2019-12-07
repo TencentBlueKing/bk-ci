@@ -30,19 +30,25 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.log.model.message.LogMessage
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.env.LogMode
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
     override fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean> {
-        val path = "/ms/log/api/build/logs/multi"
-        val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
-            objectMapper.writeValueAsString(logMessages)
-        )
-        val request = buildPost(path, requestBody)
-        val responseContent = request(request, "上报日志失败")
-        return objectMapper.readValue(responseContent)
+        return if (LogMode.LOCAL == AgentEnv.getLogMode()) {
+            logMessages.forEach {
+                logger.info(it.message)
+            }
+            Result(true)
+        } else {
+            val path = "/log/api/build/logs/multi"
+            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(logMessages))
+            val request = buildPost(path, requestBody)
+            val responseContent = request(request, "上报日志失败")
+            objectMapper.readValue(responseContent)
+        }
     }
 }

@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.records.TCategoryRecord
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.CategoryRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -56,6 +57,33 @@ class CategoryDao {
                     categoryRequest.categoryCode,
                     categoryRequest.categoryName,
                     categoryRequest.iconUrl,
+                    type
+                ).execute()
+        }
+    }
+
+    fun add(
+        dslContext: DSLContext,
+        id: String,
+        categoryCode: String,
+        categoryName: String,
+        iconUrl: String,
+        type: Byte
+    ) {
+        with(TCategory.T_CATEGORY) {
+            dslContext.insertInto(
+                this,
+                ID,
+                CATEGORY_CODE,
+                CATEGORY_NAME,
+                ICON_URL,
+                TYPE
+            )
+                .values(
+                    id,
+                    categoryCode,
+                    categoryName,
+                    iconUrl,
                     type
                 ).execute()
         }
@@ -103,6 +131,15 @@ class CategoryDao {
         }
     }
 
+    fun getCategoryByCodeAndType(dslContext: DSLContext, categoryCode: String, type: Byte): TCategoryRecord? {
+        with(TCategory.T_CATEGORY) {
+            return dslContext.selectFrom(this)
+                .where(CATEGORY_CODE.eq(categoryCode))
+                .and(TYPE.eq(type))
+                .fetchOne()
+        }
+    }
+
     fun getAllCategory(dslContext: DSLContext, type: Byte): Result<TCategoryRecord>? {
         with(TCategory.T_CATEGORY) {
             return dslContext
@@ -115,11 +152,15 @@ class CategoryDao {
 
     fun convert(record: TCategoryRecord): Category {
         with(record) {
+            val categoryLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
+                defaultMessage = categoryName
+            )
             return Category(
                 id = id,
                 categoryCode = categoryCode,
                 // 范畴信息名称没有配置国际化信息则取范畴表里面的名称
-                categoryName = MessageCodeUtil.getMessageByLocale(categoryName, categoryCode),
+                categoryName = if (categoryLanName == categoryCode) categoryName else categoryLanName,
                 iconUrl = iconUrl,
                 categoryType = StoreTypeEnum.getStoreType(type.toInt()),
                 createTime = createTime.timestampmilli(),
