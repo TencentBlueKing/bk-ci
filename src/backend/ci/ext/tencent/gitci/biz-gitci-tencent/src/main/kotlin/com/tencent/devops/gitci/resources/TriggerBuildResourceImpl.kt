@@ -69,7 +69,9 @@ class TriggerBuildResourceImpl @Autowired constructor(
     }
 
     override fun getYamlSchema(userId: String): Result<String> {
-        return Result(gitCIRequestService.getCIBuildYamlSchema())
+        val schema = gitCIRequestService.getCIBuildYamlSchema()
+        logger.info("ci build yaml schema: $schema")
+        return Result(schema)
     }
 
     override fun getYamlByBuildId(userId: String, gitProjectId: Long, buildId: String): Result<String> {
