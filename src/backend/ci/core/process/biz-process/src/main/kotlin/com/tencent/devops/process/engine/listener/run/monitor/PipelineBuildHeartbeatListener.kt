@@ -68,7 +68,7 @@ class PipelineBuildHeartbeatListener @Autowired constructor(
             val elapse = System.currentTimeMillis() - lastUpdate.toLong()
             if (elapse > TIMEOUT_IN_MS) {
                 logger.error("The build($buildId) is timeout for ${elapse}ms, terminate it")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "构建任务对应的Agent的心跳超时，请检查Agent的状态", "", "", 1)
+                LogUtils.addRedLine(rabbitTemplate, buildId, "构建任务对应的Agent的心跳超时，请检查Agent的状态", "", containerId, 1)
                 var stageId: String? = null
                 var containerType = "vmBuild"
                 val modelDetail = buildDetailService.get(buildId) ?: return
@@ -92,9 +92,16 @@ class PipelineBuildHeartbeatListener @Autowired constructor(
                 // 终止当前容器下的任务
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildContainerEvent(
-                        "heartbeat_timeout",
-                        projectId, pipelineId, userId, buildId,
-                        stageId!!, containerId, containerType, ActionType.TERMINATE
+                        source = "heartbeat_timeout",
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        stageId = stageId!!,
+                        containerId = containerId,
+                        containerType = containerType,
+                        actionType = ActionType.TERMINATE,
+                        reason = "构建任务对应的Agent的心跳超时，请检查Agent的状态"
                     )
                 )
             } else {

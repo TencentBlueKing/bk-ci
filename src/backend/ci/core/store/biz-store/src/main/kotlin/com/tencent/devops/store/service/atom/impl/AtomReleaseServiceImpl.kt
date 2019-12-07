@@ -53,16 +53,12 @@ import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
-import com.tencent.devops.store.dao.atom.MarketAtomBuildAppRelDao
-import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomOfflineDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
-import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
@@ -119,14 +115,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
     @Autowired
     lateinit var marketAtomOfflineDao: MarketAtomOfflineDao
-    @Autowired
-    lateinit var marketAtomBuildInfoDao: MarketAtomBuildInfoDao
-    @Autowired
-    lateinit var marketAtomBuildAppRelDao: MarketAtomBuildAppRelDao
-    @Autowired
-    lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
-    @Autowired
-    lateinit var storePipelineRelDao: StorePipelineRelDao
     @Autowired
     lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
     @Autowired
@@ -919,10 +907,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     protected fun checkAtomVersionOptRight(userId: String, atomId: String, status: Byte): Pair<Boolean, String> {
         val record =
-            marketAtomDao.getAtomById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
-        val atomCode = record["atomCode"] as String
-        val creator = record["creator"] as String
-        val recordStatus = record["atomStatus"] as Byte
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
+        val atomCode = record.atomCode
+        val modifier = record.modifier
+        val recordStatus = record.atomStatus
 
         // 判断用户是否有权限
         if (!(storeMemberDao.isStoreAdmin(
@@ -930,7 +918,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId,
                 atomCode,
                 StoreTypeEnum.ATOM.type.toByte()
-            ) || creator == userId)
+            ) || modifier == userId)
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }

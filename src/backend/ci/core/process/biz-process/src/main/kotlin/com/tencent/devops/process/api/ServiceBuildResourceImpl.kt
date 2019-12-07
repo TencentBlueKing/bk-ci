@@ -252,6 +252,33 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    /**
+     * 不鉴权接口，仅供平台方调用
+     */
+    override fun getBuildStatusWithoutPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode
+    ): Result<BuildHistoryWithVars> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            buildService.getBuildStatusWithVars(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+        )
+    }
+
     override fun getBuildVars(
         userId: String,
         projectId: String,
