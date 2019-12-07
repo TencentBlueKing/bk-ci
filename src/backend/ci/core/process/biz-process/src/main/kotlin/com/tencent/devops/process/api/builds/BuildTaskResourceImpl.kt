@@ -24,16 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.process.api.builds
 
-enum class RepositoryType {
-    ID,
-    NAME;
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import org.springframework.beans.factory.annotation.Autowired
 
-    companion object {
-        fun parseType(type: String?): RepositoryType {
-            if (type.isNullOrBlank()) return ID
-            return RepositoryType.valueOf(type!!)
-        }
+@RestResource
+class BuildTaskResourceImpl @Autowired constructor(
+    private val pipelineBuildTaskService: PipelineBuildTaskService
+): BuildTaskResource {
+    override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTask>> {
+        return Result(pipelineBuildTaskService.getAllBuildTask(buildId))
     }
 }

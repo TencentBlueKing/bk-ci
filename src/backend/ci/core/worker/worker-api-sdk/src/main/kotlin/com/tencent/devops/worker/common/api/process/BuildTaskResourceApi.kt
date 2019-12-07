@@ -24,16 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.worker.common.api.process
 
-enum class RepositoryType {
-    ID,
-    NAME;
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-    companion object {
-        fun parseType(type: String?): RepositoryType {
-            if (type.isNullOrBlank()) return ID
-            return RepositoryType.valueOf(type!!)
-        }
+class BuildTaskResourceApi : AbstractBuildResourceApi(), BuildTaskSDKApi {
+    override fun getAllBuildTask(): Result<List<PipelineBuildTask>> {
+        val path = "/ms/process/api/build/task/getAllBuildTask"
+        val request = buildGet(path)
+        val responseContent = request(request, "领取构建机任务详情失败")
+        return objectMapper.readValue(responseContent)
     }
 }
