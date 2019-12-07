@@ -101,8 +101,8 @@ class MessageCodeUtil {
          * 获取code对应的中英文信息
          * @param messageCode code
          */
-        fun getCodeLanMessage(messageCode: String): String {
-            return getCodeMessage(messageCode, null) ?: messageCode
+        fun getCodeLanMessage(messageCode: String, defaultMessage: String? = null): String {
+            return getCodeMessage(messageCode, null) ?: defaultMessage ?: messageCode
         }
 
         /**

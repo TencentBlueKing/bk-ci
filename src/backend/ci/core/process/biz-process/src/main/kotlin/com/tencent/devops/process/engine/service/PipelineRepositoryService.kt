@@ -27,7 +27,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -71,7 +72,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 /**
  *
@@ -195,9 +196,15 @@ class PipelineRepositoryService constructor(
     ) {
         if (s.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${s.containers.size})")
-            throw OperationException("非法的流水线编排")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON,
+                defaultMessage = "非法的流水线编排"
+            )
         }
-        val c = (s.containers.getOrNull(0) ?: throw OperationException("第一阶段的环境不能为空")) as TriggerContainer
+        val c = (s.containers.getOrNull(0) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+            defaultMessage = "第一阶段的环境不能为空"
+        )) as TriggerContainer
         c.id = containerSeqId.get().toString()
         if (c.containerId.isNullOrBlank()) {
             c.containerId = modelContainerIdGenerator.getNextId()
@@ -216,24 +223,32 @@ class PipelineRepositoryService constructor(
             if (e is CodeGitWebHookTriggerElement ||
                 e is CodeGitlabWebHookTriggerElement ||
                 e is CodeSVNWebHookTriggerElement ||
-                e is CodeGithubWebHookTriggerElement) {
+                e is CodeGithubWebHookTriggerElement
+            ) {
                 logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
                 pipelineEventDispatcher.dispatch(
-                        PipelineCreateEvent(
-                                "createWebhook",
-                                projectId,
-                                pipelineId,
-                                userId,
-                                null,
-                                model.name,
-                                e,
-                                null,
-                                variables
-                        )
+                    PipelineCreateEvent(
+                        source = "createWebhook",
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildNo = null,
+                        pipelineName = model.name,
+                        element = e,
+                        version = null,
+                        variables = variables
+                    )
                 )
             }
 
-            ElementBizRegistrar.getPlugin(e)?.afterCreate(e, projectId, pipelineId, model.name, userId, channelCode)
+            ElementBizRegistrar.getPlugin(e)?.afterCreate(
+                element = e,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = model.name,
+                userId = userId,
+                channelCode = channelCode
+            )
 
             modelTasks.add(
                 PipelineModelTask(
@@ -265,7 +280,10 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode
     ) {
         if (s.containers.isEmpty()) {
-            throw OperationException("阶段的环境不能为空")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                defaultMessage = "阶段的环境不能为空"
+            )
         }
         s.containers.forEach { c ->
 
@@ -349,16 +367,16 @@ class PipelineRepositoryService constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineInfoDao.create(
-                transactionContext,
-                pipelineId,
-                projectId,
-                version,
-                model.name,
-                userId,
-                channelCode,
-                canManualStartup,
-                canElementSkip,
-                taskCount
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                version = version,
+                pipelineName = model.name,
+                userId = userId,
+                channelCode = channelCode,
+                manualStartup = canManualStartup,
+                canElementSkip = canElementSkip,
+                taskCount = taskCount
             )
             pipelineResDao.create(transactionContext, pipelineId, version, model)
             if (model.instanceFromTemplate == null ||
@@ -377,9 +395,14 @@ class PipelineRepositoryService constructor(
                         pipelineName = model.name,
                         successNotifyTypes = notifyTypes,
                         failNotifyTypes = notifyTypes
-                        )
+                    )
                 } else {
-                    pipelineSettingDao.updateSetting(transactionContext, pipelineId, model.name, model.desc ?: "")
+                    pipelineSettingDao.updateSetting(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        name = model.name,
+                        desc = model.desc ?: ""
+                    )
                 }
             }
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
@@ -448,7 +471,10 @@ class PipelineRepositoryService constructor(
     fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
         val template = templatePipelineDao.get(dslContext, pipelineId)
         val templateId = template?.templateId
-        return pipelineInfoDao.convert(pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode), templateId)
+        return pipelineInfoDao.convert(
+            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode),
+            templateId
+        )
     }
 
     fun getPipelineInfo(pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
@@ -478,7 +504,10 @@ class PipelineRepositoryService constructor(
 
             val record =
                 (pipelineInfoDao.getPipelineInfo(transactionContext, projectId, pipelineId, channelCode, delete)
-                    ?: throw NotFoundException("要删除的流水线不存在"))
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                        defaultMessage = "要删除的流水线不存在"
+                    ))
             if (delete) {
                 pipelineInfoDao.delete(transactionContext, projectId, pipelineId)
             } else {
@@ -569,7 +598,10 @@ class PipelineRepositoryService constructor(
 
         if (existPipelines.contains(pipelineId)) {
             logger.info("[$projectId|$pipelineId] Sub pipeline call [$existPipelines|$pipelineId]")
-            throw OperationException("子流水线不允许循环调用")
+            throw ErrorCodeException(
+                defaultMessage = "子流水线不允许循环调用",
+                errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL
+            )
         }
         existPipelines.add(pipelineId)
         val pipeline = getPipelineInfo(projectId, pipelineId)
@@ -649,19 +681,51 @@ class PipelineRepositoryService constructor(
     }
 
     fun restorePipeline(projectId: String, pipelineId: String, userId: String, channelCode: ChannelCode): Model {
-        val existModel = getModel(pipelineId) ?: throw NotFoundException("指定的流水线-模型不存在")
+        val existModel = getModel(pipelineId) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+            defaultMessage = "流水线编排不存在"
+        )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
 
-            val pipeline = pipelineInfoDao.getPipelineInfo(transactionContext, projectId, pipelineId, null, true)
-                ?: throw NotFoundException("要还原的流水线不存在，可能已经被删除或还原了")
+            val pipeline = pipelineInfoDao.getPipelineInfo(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = null,
+                delete = true
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND,
+                defaultMessage = "要还原的流水线不存在，可能已经被删除或还原了"
+            )
+
             if (pipeline.channel != channelCode.name) {
-                throw NotFoundException("指定编辑的流水线渠道来源${pipeline.channel}不符合${channelCode.name}")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
+                    defaultMessage = "指定编辑的流水线渠道来源${pipeline.channel}不符合$channelCode",
+                    params = arrayOf(pipeline.channel)
+                )
             }
 
-            pipelineInfoDao.restore(transactionContext, projectId, pipelineId, userId, channelCode)
+            pipelineInfoDao.restore(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                channelCode = channelCode
+            )
             // 只初始化相关信息
-            val tasks = initModel(existModel, projectId, pipelineId, userId, false, channelCode)
+            val tasks = initModel(
+                model = existModel,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                create = false,
+                channelCode = channelCode
+            )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
         return existModel

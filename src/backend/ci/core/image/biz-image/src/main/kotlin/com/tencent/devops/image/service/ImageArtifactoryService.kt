@@ -30,9 +30,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
@@ -59,6 +59,7 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private val credential: String
+
     init {
         logger.info("Image artifactory init with url(${dockerConfig.registryUrl}), user(${dockerConfig.registryUsername}) and password(${SecurityUtil.decrypt(dockerConfig.registryPassword!!)})")
         credential = makeCredential()

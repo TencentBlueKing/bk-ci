@@ -26,8 +26,10 @@
 
 package com.tencent.devops.process.template.dao
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.template.TemplateType
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -201,7 +203,8 @@ class PTemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(VERSION.eq(version))
-                .fetchOne() ?: throw com.tencent.devops.common.api.exception.OperationException("流水线模板不存在")
+                .fetchOne()
+                ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS, defaultMessage = "模板不存在")
         }
     }
 

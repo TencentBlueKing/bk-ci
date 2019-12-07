@@ -29,4 +29,4 @@ package com.tencent.devops.common.api.exception
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INVALID
 
 class InvalidParamException(message: String, errorCode: String = PARAMETER_IS_INVALID, params: Array<String>? = null) :
-    ErrorCodeException(errorCode, message, params)
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

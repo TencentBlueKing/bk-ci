@@ -27,7 +27,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
@@ -44,6 +44,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
+import com.tencent.devops.quality.constant.QualityMessageCode
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
@@ -76,7 +77,6 @@ class QualityRuleCheckService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
-    private val DEFAULT_TIMEOUT_MINUTES = 15
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun userGetMatchRuleList(projectId: String, pipelineId: String): List<QualityRuleMatchTask> {
@@ -107,10 +107,10 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun listMatchTask(ruleList: List<QualityRule>): List<QualityRuleMatchTask> {
         val matchTaskList = mutableListOf<QualityRuleMatchTask>()
-        ruleList.groupBy { it.controlPoint.position.name }.forEach { controlPointPosName, rules ->
+        ruleList.groupBy { it.controlPoint.position.name }.forEach { (controlPointPosName, rules) ->
 
             // 按照控制点拦截位置再分组
-            rules.groupBy { it.controlPoint.position }.forEach { position, positionRules ->
+            rules.groupBy { it.controlPoint.position }.forEach { (position, positionRules) ->
                 val controlPoint = positionRules.first().controlPoint
                 val taskRuleList = mutableListOf<QualityRuleMatchTask.RuleMatchRule>()
                 val taskThresholdList = mutableListOf<QualityRuleMatchTask.RuleThreshold>()
@@ -268,7 +268,7 @@ class QualityRuleCheckService @Autowired constructor(
                             break
                         }
 
-                        if (it?.value != null && NumberUtils.isNumber(it.value)) {
+                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = it.value.toInt()
                             result = (result ?: 0) + value
                             // 记录”查看详情“里面跳转的基础数据, 记录第一个
@@ -286,7 +286,7 @@ class QualityRuleCheckService @Autowired constructor(
                     var result: BigDecimal? = null
                     for (it in filterMetadataList) {
 
-                        if (it?.value != null && NumberUtils.isNumber(it.value)) {
+                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = BigDecimal(it.value)
 
                             // -1表示直接失败
@@ -507,7 +507,11 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
-        return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
+        return project?.projectName ?: throw ErrorCodeException(
+            errorCode = QualityMessageCode.QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
+            defaultMessage = "项目(id:$projectId)不存在",
+            params = arrayOf(projectId)
+        )
     }
 
     private fun getPipelineName(projectId: String, pipelineId: String): String {
@@ -522,6 +526,7 @@ class QualityRuleCheckService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(QualityRuleCheckService::class.java)
         private const val DETAIL_NOT_RUN_VALUE = "-1"
+        private const val DEFAULT_TIMEOUT_MINUTES = 15
         val DETAIL_NOT_RUN_FLOAT_VALUE = BigDecimal(-1)
     }
 }

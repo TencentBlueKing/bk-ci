@@ -26,13 +26,14 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.quality.QualityGateInElement
@@ -45,7 +46,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Service
 class PipelineBuildQualityService(
@@ -71,18 +72,30 @@ class PipelineBuildQualityService(
         checkPermission: Boolean = true
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw NotFoundException("流水线${pipelineId}不存在")
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线不存在"
+            )
 
         if (pipelineInfo.channelCode != channelCode) {
-            throw NotFoundException("流水线${pipelineId}不存在")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线不存在"
+            )
         }
 
         val modelDetail = buildDetailService.get(buildId)
-            ?: throw NotFoundException("构建任务${buildId}不存在")
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "流水线构建不存在",
+                params = arrayOf(buildId)
+            )
 
         var find = false
         var taskType = ""
-//        var elementName = ""
         modelDetail.model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -92,7 +105,6 @@ class PipelineBuildQualityService(
                     logger.info("${element.id}, ${element.name}")
                     if ((element is QualityGateInElement || element is QualityGateOutElement) && element.id == elementId) {
                         find = true
-//                        elementName = element.name
                         if (element is QualityGateInElement) {
                             taskType = element.interceptTask!!
                         }
@@ -106,14 +118,24 @@ class PipelineBuildQualityService(
         }
 
         if (!find) {
-            logger.warn("The element($elementId) of pipeline($pipelineId) is not exist")
-            throw NotFoundException("原子${elementId}不存在")
+            logger.error("[$buildId]| The quality Task($elementId) of pipeline($pipelineId) is not exist")
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
+                defaultMessage = "质量红线拦截的任务[$elementId]不存在",
+                params = arrayOf(elementId)
+            )
         }
 
         // 校验审核权限
         val auditUserSet = getAuditUserList(client, projectId, pipelineId, buildId, taskType)
         if (!auditUserSet.contains(userId)) {
-            throw PermissionForbiddenException("用户($userId)不在审核人员名单中")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
+                defaultMessage = "用户($userId)不在审核人员名单中",
+                params = arrayOf(userId)
+            )
         }
 
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")

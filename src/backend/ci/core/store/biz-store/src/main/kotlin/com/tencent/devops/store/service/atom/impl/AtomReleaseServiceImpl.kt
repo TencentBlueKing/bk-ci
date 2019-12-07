@@ -904,10 +904,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     protected fun checkAtomVersionOptRight(userId: String, atomId: String, status: Byte): Pair<Boolean, String> {
         val record =
-            marketAtomDao.getAtomById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
-        val atomCode = record["atomCode"] as String
-        val creator = record["creator"] as String
-        val recordStatus = record["atomStatus"] as Byte
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
+        val atomCode = record.atomCode
+        val modifier = record.modifier
+        val recordStatus = record.atomStatus
 
         // 判断用户是否有权限
         if (!(storeMemberDao.isStoreAdmin(
@@ -915,7 +915,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId,
                 atomCode,
                 StoreTypeEnum.ATOM.type.toByte()
-            ) || creator == userId)
+            ) || modifier == userId)
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
