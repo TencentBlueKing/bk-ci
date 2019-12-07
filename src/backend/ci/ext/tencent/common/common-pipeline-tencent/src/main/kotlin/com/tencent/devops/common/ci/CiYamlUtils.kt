@@ -36,6 +36,7 @@ import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.ci.service.AbstractService
 import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Trigger
@@ -235,6 +236,7 @@ object CiYamlUtils {
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
         val schema = mapper.generateJsonSchema(CIBuildYaml::class.java)
         schema.schemaNode.with("properties").with("steps").put("item", getAbstractTaskSchema())
+        schema.schemaNode.with("properties").with("services").put("item", getAbstractServiceSchema())
         schema.schemaNode.with("properties")
                 .with("stages")
                 .with("items")
@@ -253,5 +255,11 @@ object CiYamlUtils {
         val mapper = ObjectMapper()
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
         return mapper.generateJsonSchema(AbstractTask::class.java).schemaNode
+    }
+
+    fun getAbstractServiceSchema(): ObjectNode {
+        val mapper = ObjectMapper()
+        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+        return mapper.generateJsonSchema(AbstractService::class.java).schemaNode
     }
 }
