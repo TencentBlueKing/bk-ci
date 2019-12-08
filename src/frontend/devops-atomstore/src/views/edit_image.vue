@@ -32,7 +32,7 @@
                     <bk-select v-model="form.classifyId" searchable>
                         <bk-option v-for="(option, index) in classifys"
                             :key="index"
-                            :id="option.classifyId"
+                            :id="option.id"
                             :name="option.classifyName"
                             :placeholder="$t('请选择分类')"
                         >
