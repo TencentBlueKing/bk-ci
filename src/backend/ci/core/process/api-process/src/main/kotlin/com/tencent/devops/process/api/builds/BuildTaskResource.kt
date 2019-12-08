@@ -24,43 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.response
+package com.tencent.devops.process.api.builds
 
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("指标列表页面响应")
-data class IndicatorListResponse(
-    @ApiModelProperty("脚本指标")
-    val scriptIndicators: List<IndicatorListItem>,
-    @ApiModelProperty("系统指标")
-    val systemIndicators: List<IndicatorListItem>,
-    @ApiModelProperty("研发商店指标")
-    val marketIndicators: List<IndicatorListItem>
-) {
-    data class IndicatorListItem(
-        val hashId: String,
-        val name: String,
-        val cnName: String,
-        val elementType: String,
-        val elementName: String,
-        val elementDetail: String, // 对应页面的工具
-        val metadatas: List<QualityMetadata>,
-        val availableOperation: List<QualityOperation>,
-        val dataType: QualityDataType,
-        val threshold: String,
-        val desc: String,
-        val range: String
-    )
+@Api(tags = ["BUILD_TASK"], description = "构建-任务资源")
+@Path("/build/task")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildTaskResource {
 
-    data class QualityMetadata(
-        val enName: String,
-        val cnName: String,
-        val detail: String,
-        val type: QualityDataType,
-        val msg: String,
-        val extra: String?
-    )
+    @ApiOperation("获取当此构建的所有task")
+    @Path("/getAllBuildTask")
+    @GET
+    fun getAllBuildTask(
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String
+    ): Result<List<PipelineBuildTaskInfo>>
 }
