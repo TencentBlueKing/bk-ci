@@ -395,6 +395,17 @@ class PipelineRuntimeService @Autowired constructor(
         return result
     }
 
+    fun getAllBuildTask(buildId: String): Collection<PipelineBuildTask> {
+        val list = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
+        val result = mutableListOf<PipelineBuildTask>()
+        if (list.isNotEmpty()) {
+            list.forEach {
+                result.add(pipelineBuildTaskDao.convert(it)!!)
+            }
+        }
+        return result
+    }
+
     fun getContainer(buildId: String, stageId: String?, containerId: String): PipelineBuildContainer? {
         val result = pipelineBuildContainerDao.get(dslContext, buildId, stageId, containerId)
         if (result != null) {

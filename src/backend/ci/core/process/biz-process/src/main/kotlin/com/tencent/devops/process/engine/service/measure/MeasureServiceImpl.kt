@@ -51,8 +51,7 @@ class MeasureServiceImpl constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val templateService: TemplateService,
-    private val measureEventDispatcher: MeasureEventDispatcher,
-    private val pipelineBuildTaskService: PipelineBuildTaskService
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) : MeasureService {
 
     override fun postPipelineData(
@@ -119,7 +118,7 @@ class MeasureServiceImpl constructor(
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String) {
         try {
-            val tasks = pipelineBuildTaskService.getAllBuildTask(buildId)
+            val tasks = pipelineRuntimeService.getAllBuildTask(buildId)
             if (tasks.isEmpty()) {
                 return
             }
