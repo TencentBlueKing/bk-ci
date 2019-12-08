@@ -43,18 +43,11 @@ class UserQualityControlPointResourceImpl @Autowired constructor(
         return Result(controlPointService.userList(userId, projectId).filter { it.enable }.map { it.type })
     }
 
-    override fun get(userId: String, elementType: String): Result<QualityControlPoint> {
-        return Result(
-            controlPointService.userGetByType(elementType)
-                ?: throw OperationException("control point ($elementType) not found")
-        )
+    override fun get(userId: String, projectId: String, elementType: String): Result<QualityControlPoint> {
+        return Result(controlPointService.userGetByType(projectId, elementType) ?: throw OperationException("control point ($elementType) not found"))
     }
 
     override fun list(userId: String, projectId: String): Result<List<ControlPointStageGroup>> {
-        return Result(
-            controlPointService.userList(
-                userId,
-                projectId
-            ).filter { it.enable }.groupBy { it.stage }.map { ControlPointStageGroup(it.key, it.value) })
+        return Result(controlPointService.userList(userId, projectId).filter { it.enable }.groupBy { it.stage }.map { ControlPointStageGroup(it.key, it.value) })
     }
 }
