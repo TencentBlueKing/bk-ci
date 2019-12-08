@@ -26,8 +26,14 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -37,14 +43,37 @@ class PipelineBuildTaskService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao
 ) {
-    fun getAllBuildTask(buildId: String): List<PipelineBuildTask> {
+    fun getAllBuildTask(buildId: String): List<PipelineBuildTaskInfo> {
         val list = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
-        val result = mutableListOf<PipelineBuildTask>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildTaskDao.convert(it)!!)
+        return list.map {
+            with(it) {
+                PipelineBuildTaskInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    containerType = containerType,
+                    taskSeq = taskSeq,
+                    taskId = taskId,
+                    taskName = taskName,
+                    taskType = taskType,
+                    taskAtom = taskAtom,
+                    status = BuildStatus.values()[status],
+                    taskParams = JsonUtil.toMutableMapSkipEmpty(taskParams),
+                    additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
+                    executeCount = executeCount ?: 1,
+                    starter = starter,
+                    approver = approver,
+                    subBuildId = subBuildId,
+                    startTime = startTime.timestampmilli(),
+                    endTime = endTime.timestampmilli(),
+                    errorType = if (errorType == null) null else ErrorType.values()[errorType],
+                    errorCode = errorCode,
+                    errorMsg = errorMsg
+                )
             }
         }
-        return result
     }
 }

@@ -41,11 +41,11 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.replaceCod
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.scm.util.RepositoryUtils
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
@@ -199,7 +199,7 @@ object CodeccRepoHelper {
         return repos.map { it.authType }.first() // 每次扫描支持一种类型代码库认证类型，其他情况先不考虑
     }
 
-    private fun buildConfig(task: PipelineBuildTask): RepositoryConfig {
+    private fun buildConfig(task: PipelineBuildTaskInfo): RepositoryConfig {
         return when (task.taskType) {
             CodeGitElement.classType, CodeSvnElement.classType, CodeGitlabElement.classType, GithubElement.classType ->
                 RepositoryConfig(

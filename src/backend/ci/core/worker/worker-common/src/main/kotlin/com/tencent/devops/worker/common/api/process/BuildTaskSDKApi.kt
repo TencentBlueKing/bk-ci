@@ -28,10 +28,11 @@ package com.tencent.devops.worker.common.api.process
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface BuildTaskSDKApi: WorkerRestApiSDK {
 
-    fun getAllBuildTask(): Result<List<PipelineBuildTask>>
+    fun getAllBuildTask(): Result<List<PipelineBuildTaskInfo>>
 
 }
