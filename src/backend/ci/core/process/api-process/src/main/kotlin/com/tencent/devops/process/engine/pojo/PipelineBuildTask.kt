@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.pojo
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.ErrorType
@@ -52,7 +53,9 @@ data class PipelineBuildTask(
     var starter: String,
     val approver: String?,
     var subBuildId: String?,
+    @JsonIgnore
     val startTime: LocalDateTime? = null,
+    @JsonIgnore
     val endTime: LocalDateTime? = null,
     var errorType: ErrorType? = null,
     var errorCode: Int? = null,
