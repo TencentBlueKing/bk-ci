@@ -1004,12 +1004,12 @@ abstract class ImageService @Autowired constructor() {
                 weight = imageUpdateRequest.weight,
                 modifier = userId
             )
-            //更新调试项目
+            // 更新调试项目
             val projectCode = imageUpdateRequest.projectCode
             if (projectCode != null) {
                 storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
             }
-            //更新范畴
+            // 更新范畴
             val categoryIdList = imageUpdateRequest.categoryIdList
             if (categoryIdList != null) {
                 saveImageCategoryByIds(
@@ -1019,7 +1019,7 @@ abstract class ImageService @Autowired constructor() {
                     categoryIdList = categoryIdList
                 )
             }
-            //更新标签
+            // 更新标签
             if (imageUpdateRequest.labelIdList != null) {
                 imageLabelService.updateImageLabels(
                     dslContext = dslContext,

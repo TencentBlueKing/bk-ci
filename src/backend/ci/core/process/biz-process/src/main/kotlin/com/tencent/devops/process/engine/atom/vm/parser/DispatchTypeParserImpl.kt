@@ -46,7 +46,7 @@ class DispatchTypeParserImpl @Autowired constructor(
                         "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
                     }
                 } + ":" + imageRepoInfo.repoTag
-                logger.info("DispatchTypeParserImpl:imageType==BKSTORE:imageRepoInfo=(${imageRepoInfo.sourceType.name},${completeImageName},${imageRepoInfo.ticketId},${imageRepoInfo.ticketProject})")
+                logger.info("DispatchTypeParserImpl:imageType==BKSTORE:imageRepoInfo=(${imageRepoInfo.sourceType.name},$completeImageName,${imageRepoInfo.ticketId},${imageRepoInfo.ticketProject})")
                 // 镜像来源替换为原始来源
                 dispatchType.imageType = imageRepoInfo.sourceType
                 dispatchType.value = completeImageName
