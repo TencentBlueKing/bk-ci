@@ -235,4 +235,12 @@ class QualityControlPointDao {
                 .execute()
         }
     }
+
+    fun deleteControlPoint(dslContext: DSLContext, id: Long): Int {
+        return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }
