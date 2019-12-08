@@ -58,6 +58,9 @@ data class ImageDetail(
     @ApiModelProperty("下载量", required = true)
     val downloads: Int,
 
+    @ApiModelProperty("所属镜像分类ID", required = true)
+    val classifyId: String,
+
     @ApiModelProperty("所属镜像分类代码", required = true)
     val classifyCode: String,
 
