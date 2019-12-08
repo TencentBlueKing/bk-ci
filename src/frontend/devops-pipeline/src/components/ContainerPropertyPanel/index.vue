@@ -158,7 +158,7 @@
             </div>
 
             <image-selector :is-show.sync="showImageSelector"
-                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
+                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isHandleHistory"
                 :code="buildImageCode"
                 :build-resource-type="buildResourceType"
                 @choose="choose"

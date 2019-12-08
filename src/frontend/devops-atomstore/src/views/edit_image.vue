@@ -28,11 +28,11 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item class="wt660" :label="$t('store.分类')" :required="true" property="classifyCode" :rules="[requireRule]" ref="classifyCode">
-                    <bk-select v-model="form.classifyCode" searchable>
+                <bk-form-item class="wt660" :label="$t('store.分类')" :required="true" property="classifyId" :rules="[requireRule]" ref="classifyId">
+                    <bk-select v-model="form.classifyId" searchable>
                         <bk-option v-for="(option, index) in classifys"
                             :key="index"
-                            :id="option.classifyCode"
+                            :id="option.classifyId"
                             :name="option.classifyName"
                             :placeholder="$t('store.请选择分类')"
                         >
@@ -173,7 +173,7 @@
                 form: {
                     imageId: '',
                     imageName: '',
-                    classifyCode: '',
+                    classifyId: '',
                     labelIdList: [],
                     labelList: [],
                     summary: '',
