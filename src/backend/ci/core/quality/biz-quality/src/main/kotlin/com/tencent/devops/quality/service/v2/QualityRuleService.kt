@@ -458,8 +458,10 @@ class QualityRuleService @Autowired constructor(
             val pipelineElementCodes = pipelineElement.map { it.classType }
             val lackElements = indicatorElement.minus(pipelineElementCodes).toMutableSet()
             if (controlPoint != null && !pipelineElementCodes.contains(controlPoint.type)) lackElements.add(controlPoint.type)
-            QualityRuleSummaryWithPermission.RuleRangeSummary(info.pipelineId, info.pipelineName, "PIPELINE",
-                    lackElements.map { ElementUtils.getElementCnName(it, projectId) })
+            QualityRuleSummaryWithPermission.RuleRangeSummary(id = info.pipelineId,
+                name = info.pipelineName,
+                type = "PIPELINE",
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) })
         }
     }
 
@@ -476,8 +478,10 @@ class QualityRuleService @Autowired constructor(
             val templateElementCodes = templateElements.map { it.getAtomCode() }.toSet()
             val lackElements = indicatorElement.minus(templateElementCodes).toMutableSet()
             if (controlPoint != null && !templateElementCodes.contains(controlPoint.type)) lackElements.add(controlPoint.type)
-            QualityRuleSummaryWithPermission.RuleRangeSummary(template.templateId, template.name, "TEMPLATE",
-                    lackElements.map { ElementUtils.getElementCnName(it, projectId) })
+            QualityRuleSummaryWithPermission.RuleRangeSummary(id = template.templateId,
+                name = template.name,
+                type = "TEMPLATE",
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) })
         }
     }
 
@@ -562,20 +566,21 @@ class QualityRuleService @Autowired constructor(
             logger.info("start to copy rule : ${it.name}")
             val ruleData = doGetRuleData(it)
 
-            val createRequest = RuleCreateRequest(ruleData.name,
-                    ruleData.desc,
-                    ruleData.indicators.map { RuleCreateRequest.CreateRequestIndicator(it.hashId, it.operation.name, it.threshold) }, // indicatorIds
-                    ruleData.controlPoint.name,
-                    ruleData.controlPoint.position.name,
-                    listOf(),
-                    listOf(request.targetTemplateId),
-                    ruleData.operation,
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    ruleData.auditTimeoutMinutes,
-                    ruleData.gatewayId
+            val createRequest = RuleCreateRequest(
+                name = ruleData.name,
+                desc = ruleData.desc,
+                indicatorIds = ruleData.indicators.map { RuleCreateRequest.CreateRequestIndicator(it.hashId, it.operation.name, it.threshold) }, // indicatorIds
+                controlPoint = ruleData.controlPoint.name,
+                controlPointPosition = ruleData.controlPoint.position.name,
+                range = listOf(),
+                templateRange = listOf(request.targetTemplateId),
+                operation = ruleData.operation,
+                notifyTypeList = listOf(),
+                notifyGroupList = listOf(),
+                notifyUserList = listOf(),
+                auditUserList = listOf(),
+                auditTimeoutMinutes = ruleData.auditTimeoutMinutes,
+                gatewayId = ruleData.gatewayId
             )
             serviceCreate(request.userId, request.targetProjectId, createRequest)
         }
