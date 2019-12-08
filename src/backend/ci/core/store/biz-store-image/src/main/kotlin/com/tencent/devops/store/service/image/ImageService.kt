@@ -916,7 +916,27 @@ abstract class ImageService @Autowired constructor() {
         }
     }
 
-    fun saveImageCategory(
+    fun saveImageCategoryByIds(
+        context: DSLContext,
+        userId: String,
+        imageId: String,
+        categoryIdList: List<String>
+    ) {
+        if (!categoryIdList.isEmpty()) {
+            categoryIdList.forEach {
+                if (categoryDao.countById(context, it.trim(), StoreTypeEnum.IMAGE.type.toByte()) == 0) {
+                    throw CategoryNotExistException(
+                        message = "category does not exist, categoryId:$it",
+                        params = arrayOf(it)
+                    )
+                }
+            }
+            imageCategoryRelDao.deleteByImageId(context, imageId)
+            imageCategoryRelDao.batchAdd(context, userId, imageId, categoryIdList)
+        }
+    }
+
+    fun saveImageCategoryByCode(
         context: DSLContext,
         userId: String,
         imageId: String,
@@ -990,13 +1010,15 @@ abstract class ImageService @Autowired constructor() {
                 storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
             }
             //更新范畴
-            val categoryCode = imageUpdateRequest.category
-            saveImageCategory(
-                context = context,
-                userId = userId,
-                imageId = imageId,
-                categoryCode = categoryCode
-            )
+            val categoryIdList = imageUpdateRequest.categoryIdList
+            if (categoryIdList != null) {
+                saveImageCategoryByIds(
+                    context = context,
+                    userId = userId,
+                    imageId = imageId,
+                    categoryIdList = categoryIdList
+                )
+            }
             //更新标签
             if (imageUpdateRequest.labelIdList != null) {
                 imageLabelService.updateImageLabels(
