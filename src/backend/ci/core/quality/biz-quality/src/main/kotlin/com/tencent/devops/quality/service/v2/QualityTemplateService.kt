@@ -54,15 +54,15 @@ class QualityTemplateService @Autowired constructor(
 ) {
 
     fun userListIndicatorSet(): List<RuleIndicatorSet> {
-        return ruleTemplateDao.listIndicatorSetEnable(dslContext)?.map {
-            val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(it.id, dslContext)?.map { it.indicatorId }
+        return ruleTemplateDao.listIndicatorSetEnable(dslContext)?.map { record ->
+            val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(record.id, dslContext)?.map { it.indicatorId }
                     ?: listOf()
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleIndicatorSet(
-                    HashUtil.encodeLongId(it.id),
-                    it.name,
-                    it.desc,
-                    indicators
+                hashId = HashUtil.encodeLongId(record.id),
+                name = record.name,
+                desc = record.desc,
+                indicators = indicators
             )
         } ?: listOf()
     }
@@ -76,15 +76,15 @@ class QualityTemplateService @Autowired constructor(
             val controlPoint = controlPointService.serviceGet(it.controlPoint, projectId)
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleTemplate(
-                    HashUtil.encodeLongId(it.id),
-                    it.name,
-                    it.desc,
-                    indicators,
-                    it.stage,
-                    it.controlPoint,
-                    controlPoint?.name ?: "",
-                    ControlPointPosition(it.controlPointPosition),
-                    listOf(ControlPointPosition("BEFORE"), ControlPointPosition("AFTER"))
+                hashId = HashUtil.encodeLongId(it.id),
+                name = it.name,
+                desc = it.desc,
+                indicators = indicators,
+                stage = it.stage,
+                controlPoint = it.controlPoint,
+                controlPointName = controlPoint?.name ?: "",
+                controlPointPosition = ControlPointPosition(it.controlPointPosition),
+                availablePosition = listOf(ControlPointPosition("BEFORE"), ControlPointPosition("AFTER"))
             )
         } ?: listOf()
     }
@@ -103,18 +103,26 @@ class QualityTemplateService @Autowired constructor(
                     "${indicatorInst.elementName}-${indicatorInst.elementDetail}-${indicatorInst.cnName}"
                 } else null
                 TemplateIndicatorMap(
-                        it1.id,
-                        it1.templateId,
-                        it1.indicatorId,
-                        indicatorName,
-                        it1.operation,
-                        it1.threshold
+                    id = it1.id,
+                    templateId = it1.templateId,
+                    indicatorId = it1.indicatorId,
+                    indicatorName = indicatorName,
+                    operation = it1.operation,
+                    threshold = it1.threshold
                 )
             }
             TemplateData(
-                    it.id, it.name, it.type, it.desc, it.stage, it.controlPoint,
-                    controlPointMap[it.controlPoint]?.name, it.controlPointPosition, it.enable,
-                    templateIndicatorMap.size, templateIndicatorMaps
+                id = it.id,
+                name = it.name,
+                type = it.type,
+                desc = it.desc,
+                stage = it.stage,
+                elementType = it.controlPoint,
+                elementName = controlPointMap[it.controlPoint]?.name,
+                controlPointPostion = it.controlPointPosition,
+                enable = it.enable,
+                indicatorNum = templateIndicatorMap.size,
+                indicatorDetail = templateIndicatorMaps
             )
         }
         val count = ruleTemplateDao.count(dslContext)
