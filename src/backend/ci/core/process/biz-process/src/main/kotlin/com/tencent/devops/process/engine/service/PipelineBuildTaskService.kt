@@ -67,8 +67,8 @@ class PipelineBuildTaskService @Autowired constructor(
                     starter = starter,
                     approver = approver,
                     subBuildId = subBuildId,
-                    startTime = startTime.timestampmilli(),
-                    endTime = endTime.timestampmilli(),
+                    startTime = startTime.timestampmilli() ?: 0L,
+                    endTime = endTime.timestampmilli() ?: 0L,
                     errorType = if (errorType == null) null else ErrorType.values()[errorType],
                     errorCode = errorCode,
                     errorMsg = errorMsg
