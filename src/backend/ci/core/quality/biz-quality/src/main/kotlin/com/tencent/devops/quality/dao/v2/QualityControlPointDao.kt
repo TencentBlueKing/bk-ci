@@ -35,49 +35,58 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class QualityControlPointDao {
-    fun get(dslContext: DSLContext, elementType: String): TQualityControlPointRecord? {
+
+    fun list(dslContext: DSLContext, elementType: Collection<String>, projectId: String): List<TQualityControlPointRecord>? {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            return dslContext.selectFrom(this)
-                .where(ELEMENT_TYPE.eq(elementType))
+            val result = dslContext.selectFrom(this)
+                .where(ELEMENT_TYPE.`in`(elementType))
                 .fetch()
-                .firstOrNull()
+            val filterResult = mutableListOf<TQualityControlPointRecord>()
+            // 获取生产跑的，或者测试项目对应的
+            result?.groupBy { it.elementType }?.forEach { elementType, list ->
+                val testControlPoint = list.firstOrNull { it.testProject == projectId }
+                val prodControlPoint = list.firstOrNull { it.testProject.isNullOrBlank() }
+                if (testControlPoint != null) {
+                    filterResult.add(testControlPoint)
+                } else {
+                    if (prodControlPoint != null) filterResult.add(prodControlPoint)
+                }
+            }
+            return filterResult
         }
     }
 
-    fun list(dslContext: DSLContext): Result<TQualityControlPointRecord>? {
-        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            return dslContext.selectFrom(this)
-                .fetch()
-        }
-    }
-
-    fun getByType(dslContext: DSLContext, type: String): TQualityControlPointRecord? {
-        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            return dslContext.selectFrom(this)
-                .where(ELEMENT_TYPE.eq(type))
-                .fetch()
-                .firstOrNull()
-        }
-    }
-
+    // 分页暂时不支持区分测试项目
     fun list(page: Int, pageSize: Int, dslContext: DSLContext): Result<TQualityControlPointRecord> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.selectFrom(this)
+                .where(TAG.ne("IN_READY_TEST"))
                 .orderBy(CREATE_TIME.desc())
                 .limit(sqlLimit.offset, sqlLimit.limit)
                 .fetch()
         }
     }
 
+    fun listAllControlPoint(dslContext: DSLContext): List<TQualityControlPointRecord> {
+        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            return dslContext.selectFrom(this)
+                .fetch()
+                .filter { it.testProject.isNullOrBlank() }
+        }
+    }
+
+    // 统计暂时不支持区分测试项目
     fun count(dslContext: DSLContext): Long {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.selectCount().from(this)
+                .where(TAG.ne("IN_READY_TEST"))
                 .fetchOne(0, Long::class.java)
         }
     }
@@ -101,10 +110,11 @@ class QualityControlPointDao {
         }
     }
 
+    // 暂时不支持区分测试项目
     fun getStages(dslContext: DSLContext): Result<Record1<String>> {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             dslContext.select(STAGE).from(this)
-                .where(STAGE.isNotNull)
+                .where(STAGE.isNotNull.and(TAG.ne("IN_READY_TEST")))
                 .groupBy(STAGE)
                 .fetch()
         }
@@ -113,64 +123,123 @@ class QualityControlPointDao {
     /**
      * 返回的第一个字段是elementType，第二个字段是elementName
      */
+    // 暂时不支持区分测试项目
     fun getElementNames(dslContext: DSLContext): Result<Record2<String, String>> {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             dslContext.select(ELEMENT_TYPE, NAME).from(this)
-                .where(NAME.isNotNull)
+                .where(NAME.isNotNull.and(TAG.ne("IN_READY_TEST")))
                 .groupBy(ELEMENT_TYPE, NAME)
                 .fetch()
         }
     }
 
-    fun serviceCreateOrUpdate(dslContext: DSLContext, userId: String, controlPoint: QualityControlPoint): Int {
+    fun setTestControlPoint(dslContext: DSLContext, userId: String, controlPoint: QualityControlPoint): Int {
+        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            val testControlPoint = dslContext.selectFrom(this)
+                .where(ELEMENT_TYPE.eq(controlPoint.type).and(TAG.eq("IN_READY_TEST")))
+                .fetchOne()
+
+            return if (testControlPoint != null) {
+                dslContext.update(this)
+                    .set(ELEMENT_TYPE, controlPoint.type)
+                    .set(NAME, controlPoint.name)
+                    .set(STAGE, controlPoint.stage)
+                    .set(AVAILABLE_POSITION, controlPoint.availablePos.joinToString(",") { it.name })
+                    .set(DEFAULT_POSITION, controlPoint.defaultPos.name)
+                    .set(ENABLE, controlPoint.enable)
+                    .set(UPDATE_USER, userId)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(ID.eq(testControlPoint.id))
+                    .execute()
+            } else {
+                dslContext.insertInto(
+                    this,
+                    ELEMENT_TYPE,
+                    NAME,
+                    STAGE,
+                    AVAILABLE_POSITION,
+                    DEFAULT_POSITION,
+                    ENABLE,
+                    CREATE_USER,
+                    UPDATE_USER,
+                    CREATE_TIME,
+                    UPDATE_TIME,
+                    ATOM_VERSION,
+                    TEST_PROJECT,
+                    TAG
+                )
+                    .values(
+                        controlPoint.type,
+                        controlPoint.name,
+                        controlPoint.stage,
+                        controlPoint.availablePos.joinToString(",") { it.name },
+                        controlPoint.defaultPos.name,
+                        controlPoint.enable,
+                        userId,
+                        userId,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        controlPoint.atomVersion,
+                        controlPoint.testProject,
+                        "IN_READY_TEST"
+                    )
+                    .execute()
+            }
+        }
+    }
+
+    fun refreshControlPoint(dslContext: DSLContext, elementType: String): Int {
+        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                val controlPoints = transactionContext.selectFrom(this)
+                    .where(ELEMENT_TYPE.eq(elementType))
+                    .fetch()
+
+                val testControlPoint = controlPoints.firstOrNull { it.tag == "IN_READY_TEST" }
+                val prodControlPoint = controlPoints.firstOrNull { it.tag != "IN_READY_TEST" }
+
+                // 测试为空，代表quality.json被删了，直接把生产的也删了
+                if (testControlPoint == null) {
+                    transactionContext.deleteFrom(this)
+                        .where(ELEMENT_TYPE.eq(elementType))
+                        .execute()
+                    return@transaction
+                }
+
+                if (prodControlPoint != null) {
+                    transactionContext.update(this)
+                        .set(NAME, testControlPoint.name)
+                        .set(STAGE, testControlPoint.stage)
+                        .set(AVAILABLE_POSITION, testControlPoint.availablePosition)
+                        .set(DEFAULT_POSITION, testControlPoint.defaultPosition)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                        .where(ID.eq(prodControlPoint.id))
+                        .execute()
+                } else {
+                    transactionContext.update(this)
+                        .set(TAG, "IN_READY_RUNNING")
+                        .set(TEST_PROJECT, "")
+                        .where(ID.eq(testControlPoint.id))
+                        .execute()
+                }
+            }
+        }
+        return 0
+    }
+
+    fun deleteTestControlPoint(dslContext: DSLContext, elementType: String): Int {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            dslContext.insertInto(
-                this,
-                ELEMENT_TYPE,
-                NAME,
-                STAGE,
-                AVAILABLE_POSITION,
-                DEFAULT_POSITION,
-                ENABLE,
-                CREATE_USER,
-                UPDATE_USER,
-                CREATE_TIME,
-                UPDATE_TIME,
-                ATOM_VERSION,
-                TEST_PROJECT
-            )
-                .values(
-                    controlPoint.type,
-                    controlPoint.name,
-                    controlPoint.stage,
-                    controlPoint.availablePos.joinToString(",") { it.name },
-                    controlPoint.defaultPos.name,
-                    controlPoint.enable,
-                    userId,
-                    userId,
-                    LocalDateTime.now(),
-                    LocalDateTime.now(),
-                    controlPoint.atomVersion,
-                    controlPoint.testProject
-                ).onDuplicateKeyUpdate()
-                .set(ELEMENT_TYPE, controlPoint.type)
-                .set(NAME, controlPoint.name)
-                .set(STAGE, controlPoint.stage)
-                .set(AVAILABLE_POSITION, controlPoint.availablePos.joinToString(",") { it.name })
-                .set(DEFAULT_POSITION, controlPoint.defaultPos.name)
-                .set(ENABLE, controlPoint.enable)
-                .set(UPDATE_USER, userId)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(TEST_PROJECT, controlPoint.testProject)
+            dslContext.deleteFrom(this)
+                .where(ELEMENT_TYPE.eq(elementType).and(TAG.eq("IN_READY_TEST")))
                 .execute()
         }
     }
 
-    fun cleanTestProject(dslContext: DSLContext, controlPointType: String): Int {
+    fun deleteControlPoint(dslContext: DSLContext, id: Long): Int {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            dslContext.update(this)
-                .set(TEST_PROJECT, "")
-                .where(ELEMENT_TYPE.eq(controlPointType))
+            dslContext.deleteFrom(this)
+                .where(ID.eq(id))
                 .execute()
         }
     }

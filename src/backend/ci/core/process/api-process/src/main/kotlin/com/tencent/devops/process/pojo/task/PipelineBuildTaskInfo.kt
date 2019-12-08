@@ -24,43 +24,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.response
+package com.tencent.devops.process.pojo.task
 
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.process.pojo.ErrorType
+import java.time.LocalDateTime
 
-@ApiModel("指标列表页面响应")
-data class IndicatorListResponse(
-    @ApiModelProperty("脚本指标")
-    val scriptIndicators: List<IndicatorListItem>,
-    @ApiModelProperty("系统指标")
-    val systemIndicators: List<IndicatorListItem>,
-    @ApiModelProperty("研发商店指标")
-    val marketIndicators: List<IndicatorListItem>
+data class PipelineBuildTaskInfo(
+    val projectId: String,
+    val pipelineId: String,
+    val templateId: String? = null,
+    val buildId: String,
+    val stageId: String,
+    val containerId: String,
+    val containerHashId: String?,
+    val containerType: String,
+    val taskSeq: Int,
+    val taskId: String,
+    val taskName: String,
+    val taskType: String,
+    val taskAtom: String,
+    var status: BuildStatus,
+    val taskParams: MutableMap<String, Any>,
+    val additionalOptions: ElementAdditionalOptions?,
+    val executeCount: Int? = 1,
+    var starter: String,
+    val approver: String?,
+    var subBuildId: String?,
+    val startTime: Long? = null,
+    val endTime: Long? = null,
+    var errorType: ErrorType? = null,
+    var errorCode: Int? = null,
+    var errorMsg: String? = null
 ) {
-    data class IndicatorListItem(
-        val hashId: String,
-        val name: String,
-        val cnName: String,
-        val elementType: String,
-        val elementName: String,
-        val elementDetail: String, // 对应页面的工具
-        val metadatas: List<QualityMetadata>,
-        val availableOperation: List<QualityOperation>,
-        val dataType: QualityDataType,
-        val threshold: String,
-        val desc: String,
-        val range: String
-    )
-
-    data class QualityMetadata(
-        val enName: String,
-        val cnName: String,
-        val detail: String,
-        val type: QualityDataType,
-        val msg: String,
-        val extra: String?
-    )
+    fun getTaskParam(paramName: String): String {
+        return if (taskParams[paramName] != null) {
+            taskParams[paramName].toString().trim()
+        } else {
+            ""
+        }
+    }
 }
