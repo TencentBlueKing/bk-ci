@@ -36,7 +36,6 @@ dependencies {
     compile project(":core:common:common-websocket")
 
     compile project(":core:log:api-log")
-    compile project(":core:log:api-log")
     compile project(":core:store:api-store")
     compile project(":core:store:api-store-image")
     compile project(":core:dispatch:api-dispatch")

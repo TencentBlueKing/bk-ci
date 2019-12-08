@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceCodeccElementResourceImpl @Autowired constructor(
     private val codeccElementService: CodeccElementService
 ) : ServiceCodeccElementResource {
-    override fun get(projectId: String, pipelineId: String): Result<CodeccElementData> {
+    override fun get(projectId: String, pipelineId: String): Result<CodeccElementData?> {
         return Result(codeccElementService.getCodeccElement(projectId, pipelineId))
     }
 }
