@@ -58,6 +58,10 @@ class OPControlPointResourceImpl @Autowired constructor(
         return Result(updateResult)
     }
 
+    override fun delete(userId: String, id: Long): Result<Int> {
+        return Result(controlPointService.deleteControlPoint(id))
+    }
+
     override fun getStage(userId: String): Result<List<String>> {
         if (userId.isBlank()) throw ParamBlankException("Invalid userId")
         return Result(controlPointService.opGetStages())
