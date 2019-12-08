@@ -829,6 +829,7 @@ abstract class ImageService @Autowired constructor() {
             projectCode = projectCode,
             score = storeStatisticRecord?.value3()?.toDouble() ?: 0.0,
             downloads = storeStatisticRecord?.value1()?.toInt() ?: 0,
+            classifyId = classifyRecord?.id ?: "",
             classifyCode = classifyRecord?.classifyCode ?: "",
             classifyName = classifyRecord?.classifyName ?: "",
             imageSourceType = ImageType.getType(imageRecord.imageSourceType).name,
