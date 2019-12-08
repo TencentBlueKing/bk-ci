@@ -73,7 +73,7 @@
                 </div>
                 <template v-else>
                     <div class="bk-form-item is-required" ref="jobError">
-                        <label class="bk-label env-label"> {{ $t('store.适用Job类型：') }} </label>
+                        <label class="bk-label env-label"> {{ $t('store.适用Job类型') }} </label>
                         <div class="bk-form-content atom-item-content">
                             <bk-radio-group v-model="atomForm.jobType" class="radio-group">
                                 <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="formErrors.jobError = false">{{entry.label}}</bk-radio>
@@ -814,6 +814,7 @@
             .bk-label {
                 width: 110px;
                 font-weight: normal;
+                padding: 0 20px 0 0;
             }
             .bk-form-content {
                 margin-left: 0;
