@@ -28,15 +28,15 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildTaskResourceImpl @Autowired constructor(
     private val pipelineBuildTaskService: PipelineBuildTaskService
 ): BuildTaskResource {
-    override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTask>> {
+    override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTaskInfo>> {
         return Result(pipelineBuildTaskService.getAllBuildTask(buildId))
     }
 }

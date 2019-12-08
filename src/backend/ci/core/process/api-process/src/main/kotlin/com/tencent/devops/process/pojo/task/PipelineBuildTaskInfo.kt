@@ -24,19 +24,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.process
+package com.tencent.devops.process.pojo.task
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.process.pojo.ErrorType
+import java.time.LocalDateTime
 
-class BuildTaskResourceApi : AbstractBuildResourceApi(), BuildTaskSDKApi {
-    override fun getAllBuildTask(): Result<List<PipelineBuildTaskInfo>> {
-        val path = "/ms/process/api/build/task/getAllBuildTask"
-        val request = buildGet(path)
-        val responseContent = request(request, "领取构建机任务详情失败")
-        return objectMapper.readValue(responseContent)
+data class PipelineBuildTaskInfo(
+    val projectId: String,
+    val pipelineId: String,
+    val templateId: String? = null,
+    val buildId: String,
+    val stageId: String,
+    val containerId: String,
+    val containerHashId: String?,
+    val containerType: String,
+    val taskSeq: Int,
+    val taskId: String,
+    val taskName: String,
+    val taskType: String,
+    val taskAtom: String,
+    var status: BuildStatus,
+    val taskParams: MutableMap<String, Any>,
+    val additionalOptions: ElementAdditionalOptions?,
+    val executeCount: Int? = 1,
+    var starter: String,
+    val approver: String?,
+    var subBuildId: String?,
+    val startTime: Long? = null,
+    val endTime: Long? = null,
+    var errorType: ErrorType? = null,
+    var errorCode: Int? = null,
+    var errorMsg: String? = null
+) {
+    fun getTaskParam(paramName: String): String {
+        return if (taskParams[paramName] != null) {
+            taskParams[paramName].toString().trim()
+        } else {
+            ""
+        }
     }
 }
