@@ -147,6 +147,10 @@ class QualityControlPointService @Autowired constructor(
         return controlPointDao.deleteTestControlPoint(dslContext, elementType)
     }
 
+    fun deleteControlPoint(id: Long): Int {
+        return controlPointDao.deleteControlPoint(dslContext, id)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(QualityControlPointService::class.java)
     }
