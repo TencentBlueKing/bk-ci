@@ -59,8 +59,7 @@ class BuildEndControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
-    private val pipelineBuildTaskService: PipelineBuildTaskService
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -156,7 +155,7 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo) {
-        val allBuildTask = pipelineBuildTaskService.getAllBuildTask(buildId)
+        val allBuildTask = pipelineRuntimeService.getAllBuildTask(buildId)
 
         allBuildTask.forEach {
             // 将所有还在运行中的任务全部结束掉
