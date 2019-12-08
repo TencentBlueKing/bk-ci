@@ -26,6 +26,7 @@
 
 package com.tencent.devops.quality.api.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -237,7 +238,11 @@ interface UserQualityRuleResource {
     @ApiOperation("获取规则模板")
     @Path("/listTemplates")
     @GET
-    fun listTemplates(): Result<List<RuleTemplate>>
+    fun listTemplates(
+        @ApiParam("项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String
+    ): Result<List<RuleTemplate>>
 
     @ApiOperation("查询生效范围数据")
     @Path("/listPipelineRangeDetail")
