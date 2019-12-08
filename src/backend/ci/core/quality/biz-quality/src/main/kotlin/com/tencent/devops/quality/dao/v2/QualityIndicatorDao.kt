@@ -38,33 +38,22 @@ import java.time.LocalDateTime
 
 @Repository
 class QualityIndicatorDao {
-    fun listByType(
-        dslContext: DSLContext,
-        projectId: String? = null,
-        type: IndicatorType = IndicatorType.SYSTEM
-    ): Result<TQualityIndicatorRecord>? {
+    fun listByType(dslContext: DSLContext, type: IndicatorType = IndicatorType.SYSTEM): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
-            val sql = dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(TYPE.eq(type.name))
-            if (projectId != null) sql.and(INDICATOR_RANGE.like("%$projectId%").or(INDICATOR_RANGE.eq("ANY")))
-            return sql.fetch()
+                .fetch()
         }
     }
 
-    fun listByProject(
-        dslContext: DSLContext,
-        projectId: String,
-        keyword: String? = null
-    ): Result<TQualityIndicatorRecord>? {
+    fun listAll(dslContext: DSLContext): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
-            val sql = dslContext.selectFrom(this)
-                .where(INDICATOR_RANGE.like("%$projectId%").or(INDICATOR_RANGE.eq("ANY")))
-            if (keyword != null) sql.and(CN_NAME.like("%$keyword%"))
-            return sql.fetch()
+            return dslContext.selectFrom(this)
+                .fetch()
         }
     }
 
-    fun listSystem(dslContext: DSLContext, page: Int? = null, pageSize: Int? = null): Result<TQualityIndicatorRecord>? {
+    fun listSystemDescByPage(dslContext: DSLContext, page: Int? = null, pageSize: Int? = null): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             val sql = dslContext.selectFrom(this)
                 .where(TYPE.eq(IndicatorType.SYSTEM.name))
@@ -85,11 +74,7 @@ class QualityIndicatorDao {
         }
     }
 
-    fun listByElementType(
-        dslContext: DSLContext,
-        elementType: String,
-        type: IndicatorType = IndicatorType.MARKET
-    ): Result<TQualityIndicatorRecord>? {
+    fun listByElementType(dslContext: DSLContext, elementType: String, type: IndicatorType = IndicatorType.MARKET): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectFrom(this)
                 .where(TYPE.eq(type.name).and(ELEMENT_TYPE.eq(elementType)))
@@ -136,7 +121,6 @@ class QualityIndicatorDao {
                 DESC,
                 INDICATOR_READ_ONLY,
                 STAGE,
-                INDICATOR_RANGE,
                 ENABLE,
                 TYPE,
                 TAG,
@@ -145,7 +129,8 @@ class QualityIndicatorDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 ATOM_VERSION,
-                LOG_PROMPT
+                LOG_PROMPT,
+                INDICATOR_RANGE
             ).values(
                 indicatorUpdate.elementType,
                 indicatorUpdate.elementName,
@@ -160,7 +145,6 @@ class QualityIndicatorDao {
                 indicatorUpdate.desc,
                 indicatorUpdate.readOnly,
                 indicatorUpdate.stage,
-                indicatorUpdate.range,
                 indicatorUpdate.enable,
                 indicatorUpdate.type.toString(),
                 indicatorUpdate.tag,
@@ -168,8 +152,9 @@ class QualityIndicatorDao {
                 userId,
                 now,
                 now,
-                indicatorUpdate.elementVersion ?: "1.0.0",
-                indicatorUpdate.logPrompt ?: ""
+                indicatorUpdate.elementVersion ?: "",
+                indicatorUpdate.logPrompt ?: "",
+                indicatorUpdate.range ?: ""
             ).returning(ID).fetchOne()
             return record.id
         }
@@ -205,7 +190,6 @@ class QualityIndicatorDao {
                 if (!desc.isNullOrBlank()) update.set(DESC, desc)
                 if (readOnly != null) update.set(INDICATOR_READ_ONLY, readOnly)
                 if (!stage.isNullOrBlank()) update.set(STAGE, stage)
-                if (!range.isNullOrBlank()) update.set(INDICATOR_RANGE, range)
                 if (enable != null) update.set(ENABLE, enable)
                 if (type != null) update.set(TYPE, type.toString())
                 if (!tag.isNullOrBlank()) update.set(TAG, tag)
@@ -213,15 +197,6 @@ class QualityIndicatorDao {
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
-                .where(ID.eq(id))
-                .execute()
-        }
-    }
-
-    fun appendRange(id: Long, range: String, dslContext: DSLContext): Int {
-        return with(TQualityIndicator.T_QUALITY_INDICATOR) {
-            dslContext.update(this)
-                .set(INDICATOR_RANGE, INDICATOR_RANGE.concat(",$range"))
                 .where(ID.eq(id))
                 .execute()
         }
