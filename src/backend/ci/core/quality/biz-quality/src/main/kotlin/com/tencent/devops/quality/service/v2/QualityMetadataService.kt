@@ -48,15 +48,15 @@ class QualityMetadataService @Autowired constructor(
     fun serviceListMetadata(metadataIds: Collection<Long>): List<QualityIndicatorMetadata> {
         return metadataDao.list(dslContext, metadataIds)?.map {
             QualityIndicatorMetadata(
-                    HashUtil.encodeLongId(it.id),
-                    it.dataId,
-                    it.dataName,
-                    it.elementType,
-                    it.elementName,
-                    it.elementDetail,
-                    QualityDataType.valueOf(it.valueType),
-                    it.desc,
-                    it.extra
+                hashId = HashUtil.encodeLongId(it.id),
+                dataId = it.dataId,
+                dataName = it.dataName,
+                elementType = it.elementType,
+                elementName = it.elementName,
+                elementDetail = it.elementDetail,
+                valueType = QualityDataType.valueOf(it.valueType),
+                desc = it.desc,
+                extra = it.extra
             )
         }?.toList() ?: listOf()
     }
@@ -71,11 +71,23 @@ class QualityMetadataService @Autowired constructor(
         val data = metadataDao.list(elementName, elementDetail, searchString, page!!, pageSize!!, dslContext)
         val resultData = data.map {
             QualityMetaData(
-                    it.id, it.dataId, it.dataName, it.elementType, it.elementName, it.elementDetail,
-                    it.valueType, it.desc, it.extra
+                id = it.id,
+                dataId = it.dataId,
+                dataName = it.dataName,
+                elementType = it.elementType,
+                elementName = it.elementName,
+                elementDetail = it.elementDetail,
+                valueType = it.valueType,
+                desc = it.desc,
+                extra = it.extra
             )
         }
-        val count = metadataDao.count(elementName, elementDetail, searchString, dslContext)
+        val count = metadataDao.count(
+            elementName = elementName,
+            elementDetail = elementDetail,
+            searchString = searchString,
+            dslContext = dslContext
+        )
 
         return Page(page, pageSize, count, resultData)
     }
@@ -83,15 +95,15 @@ class QualityMetadataService @Autowired constructor(
     fun serviceListByDataId(elementType: String, dataIds: Collection<String>): List<QualityIndicatorMetadata> {
         return metadataDao.listByDataId(dslContext, elementType, dataIds)?.map {
             QualityIndicatorMetadata(
-                    HashUtil.encodeLongId(it.id),
-                    it.dataId,
-                    it.dataName,
-                    it.elementType,
-                    it.elementName,
-                    it.elementDetail,
-                    QualityDataType.valueOf(it.valueType),
-                    it.desc,
-                    it.extra
+                hashId = HashUtil.encodeLongId(it.id),
+                dataId = it.dataId,
+                dataName = it.dataName,
+                elementType = it.elementType,
+                elementName = it.elementName,
+                elementDetail = it.elementDetail,
+                valueType = QualityDataType.valueOf(it.valueType),
+                desc = it.desc,
+                extra = it.extra
             )
         }?.toList() ?: listOf()
     }
@@ -147,15 +159,15 @@ class QualityMetadataService @Autowired constructor(
             testData.forEach TEST@{ testItem ->
                 if (prodItem.dataId == testItem.dataId) {
                     metadataDao.update(userId, prodItem.id, QualityMetaData(
-                        testItem.id,
-                        testItem.dataId,
-                        testItem.dataName,
-                        testItem.elementType,
-                        testItem.elementName,
-                        testItem.elementDetail,
-                        testItem.valueType,
-                        testItem.desc,
-                        "IN_READY_RUNNING"
+                        id = testItem.id,
+                        dataId = testItem.dataId,
+                        dataName = testItem.dataName,
+                        elementType = testItem.elementType,
+                        elementName = testItem.elementName,
+                        elementDetail = testItem.elementDetail,
+                        valueType = testItem.valueType,
+                        desc = testItem.desc,
+                        extra = "IN_READY_RUNNING"
                     ), dslContext)
                     resultMap[prodItem.dataId] = prodItem.id.toString()
                     return@PROD
@@ -173,15 +185,15 @@ class QualityMetadataService @Autowired constructor(
                 if (prodItem.dataId == testItem.dataId) return@TEST
             }
             val id = metadataDao.update(userId, testItem.id, QualityMetaData(
-                testItem.id,
-                testItem.dataId,
-                testItem.dataName,
-                testItem.elementType,
-                testItem.elementName,
-                testItem.elementDetail,
-                testItem.valueType,
-                testItem.desc,
-                "IN_READY_RUNNING"
+                id = testItem.id,
+                dataId = testItem.dataId,
+                dataName = testItem.dataName,
+                elementType = testItem.elementType,
+                elementName = testItem.elementName,
+                elementDetail = testItem.elementDetail,
+                valueType = testItem.valueType,
+                desc = testItem.desc,
+                extra = "IN_READY_RUNNING"
             ), dslContext)
             resultMap[testItem.dataId] = id.toString()
         }
