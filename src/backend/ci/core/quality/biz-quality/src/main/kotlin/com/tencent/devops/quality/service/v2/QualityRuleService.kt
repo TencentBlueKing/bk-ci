@@ -91,34 +91,44 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
-        return validatePermission(userId, projectId, AuthPermission.CREATE)
+        return validatePermission(userId = userId, projectId = projectId, authPermission = AuthPermission.CREATE)
     }
 
     fun userCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
-        validatePermission(userId, projectId, AuthPermission.CREATE, "用户没有创建拦截规则权限")
-        return serviceCreate(userId, projectId, ruleRequest)
+        validatePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = AuthPermission.CREATE,
+            message = "用户没有创建拦截规则权限"
+        )
+        return serviceCreate(userId = userId, projectId = projectId, ruleRequest = ruleRequest)
     }
 
     fun serviceCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
 
-            val ruleId = qualityRuleDao.create(context, userId, projectId, ruleRequest)
+            val ruleId = qualityRuleDao.create(
+                dslContext = context,
+                userId = userId,
+                projectId = projectId,
+                ruleRequest = ruleRequest
+            )
 
             if (ruleRequest.operation == RuleOperation.END) {
                 ruleOperationService.serviceSaveEndOperation(
-                        ruleId,
-                        ruleRequest.notifyUserList ?: listOf(),
-                        ruleRequest.notifyGroupList?.map { HashUtil.decodeIdToLong(it) } ?: listOf(),
-                        ruleRequest.notifyTypeList ?: listOf())
+                    ruleId = ruleId,
+                    notifyUserList = ruleRequest.notifyUserList ?: listOf(),
+                    notifyGroupList = ruleRequest.notifyGroupList?.map { HashUtil.decodeIdToLong(it) } ?: listOf(),
+                    notifyTypeList = ruleRequest.notifyTypeList ?: listOf())
             } else if (ruleRequest.operation == RuleOperation.AUDIT) {
                 ruleOperationService.serviceSaveAuditOperation(
-                        ruleId,
-                        ruleRequest.auditUserList ?: listOf(),
-                        ruleRequest.auditTimeoutMinutes ?: 15
+                    ruleId = ruleId,
+                    auditUserList = ruleRequest.auditUserList ?: listOf(),
+                    auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes ?: 15
                 )
             }
-            createResource(userId, projectId, ruleId, ruleRequest.name)
+            createResource(userId = userId, projectId = projectId, ruleId = ruleId, ruleName = ruleRequest.name)
             HashUtil.encodeLongId(ruleId)
         }
     }
@@ -132,18 +142,18 @@ class QualityRuleService @Autowired constructor(
             qualityRuleDao.update(context, userId, projectId, ruleId, ruleRequest)
             if (ruleRequest.operation == RuleOperation.END) {
                 ruleOperationService.serviceUpdateEndOperation(
-                        ruleId,
-                        ruleRequest.notifyUserList ?: listOf(),
-                        ruleRequest.notifyGroupList?.map { HashUtil.decodeIdToLong(it) } ?: listOf(),
-                        ruleRequest.notifyTypeList ?: listOf())
+                    ruleId = ruleId,
+                    notifyUserList = ruleRequest.notifyUserList ?: listOf(),
+                    notifyGroupList = ruleRequest.notifyGroupList?.map { HashUtil.decodeIdToLong(it) } ?: listOf(),
+                    notifyTypeList = ruleRequest.notifyTypeList ?: listOf())
             } else if (ruleRequest.operation == RuleOperation.AUDIT) {
                 ruleOperationService.serviceUpdateAuditOperation(
-                        ruleId,
-                        ruleRequest.auditUserList ?: listOf(),
-                        ruleRequest.auditTimeoutMinutes ?: 15
+                    ruleId = ruleId,
+                    auditUserList = ruleRequest.auditUserList ?: listOf(),
+                    auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes ?: 15
                 )
             }
-            modifyResource(projectId, ruleId, ruleRequest.name)
+            modifyResource(projectId = projectId, ruleId = ruleId, ruleName = ruleRequest.name)
         }
         return true
     }
@@ -151,14 +161,26 @@ class QualityRuleService @Autowired constructor(
     fun userUpdateEnable(userId: String, projectId: String, ruleHashId: String, enable: Boolean) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         logger.info("user($userId) update the rule($ruleId) in project($projectId) to $enable")
-        validatePermission(userId, projectId, ruleId, AuthPermission.ENABLE, "用户没拦截规则的停用/启用权限")
-        qualityRuleDao.updateEnable(dslContext, ruleId, enable)
+        validatePermission(
+            userId = userId,
+            projectId = projectId,
+            ruleId = ruleId,
+            authPermission = AuthPermission.ENABLE,
+            message = "用户没拦截规则的停用/启用权限"
+        )
+        qualityRuleDao.updateEnable(dslContext = dslContext, ruleId = ruleId, enable = enable)
     }
 
     fun userDelete(userId: String, projectId: String, ruleHashId: String) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         logger.info("user($userId) delete the rule($ruleId) in project($projectId)")
-        validatePermission(userId, projectId, ruleId, AuthPermission.ENABLE, "用户没拦截规则的停用/启用权限")
+        validatePermission(
+            userId = userId,
+            projectId = projectId,
+            ruleId = ruleId,
+            authPermission = AuthPermission.ENABLE,
+            message = "用户没拦截规则的停用/启用权限"
+        )
         qualityRuleDao.delete(dslContext, ruleId)
         deleteResource(projectId, ruleId)
     }
@@ -217,22 +239,22 @@ class QualityRuleService @Autowired constructor(
         val templatePipelineCount = client.get(ServiceTemplateInstanceResource::class).countTemplateInstance(projectId, templateIds).data ?: 0
 
         return UserQualityRule(
-                rule.hashId,
-                rule.name,
-                rule.desc,
-                rule.indicators,
-                rule.controlPoint,
-                range,
-                templateRange,
-                range.size + templatePipelineCount,
-                rule.operation,
-                rule.notifyTypeList,
-                rule.notifyGroupList?.map { HashUtil.encodeLongId(it.toLong()) },
-                rule.notifyUserList,
-                rule.auditUserList,
-                rule.auditTimeoutMinutes,
-                "",
-                rule.gatewayId
+            hashId = rule.hashId,
+            name = rule.name,
+            desc = rule.desc,
+            indicators = rule.indicators,
+            controlPoint = rule.controlPoint,
+            range = range,
+            templateRange = templateRange,
+            pipelineCount = range.size + templatePipelineCount,
+            operation = rule.operation,
+            notifyTypeList = rule.notifyTypeList,
+            notifyGroupList = rule.notifyGroupList?.map { HashUtil.encodeLongId(it.toLong()) },
+            notifyUserList = rule.notifyUserList,
+            auditUserList = rule.auditUserList,
+            auditTimeoutMinutes = rule.auditTimeoutMinutes,
+            interceptRecent = "",
+            gatewayId = rule.gatewayId
         )
     }
 
@@ -250,13 +272,13 @@ class QualityRuleService @Autowired constructor(
         // 查询控制点
         val controlPoint = qualityControlPointService.serviceGet(record.controlPoint, record.projectId)
         val dataControlPoint = QualityRule.RuleControlPoint(
-                HashUtil.encodeLongId(record.id),
-                record.controlPoint,
-                ElementUtils.getElementCnName(record.controlPoint, record.projectId),
-                ControlPointPosition(record.controlPointPosition),
-                if (controlPoint?.availablePosition != null && !controlPoint.availablePosition.isNullOrBlank())
-                    controlPoint.availablePosition.split(",").map { ControlPointPosition(it) }
-                else listOf()
+            hashId = HashUtil.encodeLongId(record.id),
+            name = record.controlPoint,
+            cnName = ElementUtils.getElementCnName(record.controlPoint, record.projectId),
+            position = ControlPointPosition(record.controlPointPosition),
+            availablePosition = if (controlPoint?.availablePosition != null && !controlPoint.availablePosition.isNullOrBlank())
+                controlPoint.availablePosition.split(",").map { ControlPointPosition(it) }
+            else listOf()
         )
 
         // 查询指标通知
@@ -272,39 +294,39 @@ class QualityRuleService @Autowired constructor(
         val dataIndicators = indicatorService.serviceList(indicatorIds).map {
             val pair = indicatorExtraMap[it.hashId]!!
             QualityIndicator(
-                    it.hashId,
-                    it.elementType,
-                    it.elementDetail,
-                    it.enName,
-                    it.cnName,
-                    it.stage,
-                    QualityOperation.valueOf(pair.first),
-                    it.operationList,
-                    pair.second,
-                    it.thresholdType,
-                    it.readOnly,
-                    it.type,
-                    it.tag,
-                    it.metadataList,
-                    it.desc,
-                    it.logPrompt
+                hashId = it.hashId,
+                elementType = it.elementType,
+                elementDetail = it.elementDetail,
+                enName = it.enName,
+                cnName = it.cnName,
+                stage = it.stage,
+                operation = QualityOperation.valueOf(pair.first),
+                operationList = it.operationList,
+                threshold = pair.second,
+                thresholdType = it.thresholdType,
+                readOnly = it.readOnly,
+                type = it.type,
+                tag = it.tag,
+                metadataList = it.metadataList,
+                desc = it.desc,
+                logPrompt = it.logPrompt
             )
         }
         return QualityRule(
-                HashUtil.encodeLongId(record.id),
-                record.name,
-                record.desc,
-                dataIndicators,
-                dataControlPoint,
-                if (record.indicatorRange.isNullOrBlank()) listOf() else record.indicatorRange.split(","),
-                if (record.pipelineTemplateRange.isNullOrBlank()) listOf() else record.pipelineTemplateRange.split(","),
-                RuleOperation.valueOf(ruleOperation.type),
-                if (ruleOperation.notifyTypes.isNullOrBlank()) listOf() else ruleOperation.notifyTypes.split(",").map { NotifyType.valueOf(it) },
-                if (ruleOperation.notifyGroupId.isNullOrBlank()) listOf() else ruleOperation.notifyGroupId.split(","),
-                if (ruleOperation.notifyUser.isNullOrBlank()) listOf() else ruleOperation.notifyUser.split(","),
-                if (ruleOperation.auditUser.isNullOrBlank()) listOf() else ruleOperation.auditUser.split(","),
-                ruleOperation.auditTimeout ?: 15,
-                record.gatewayId
+            hashId = HashUtil.encodeLongId(record.id),
+            name = record.name,
+            desc = record.desc,
+            indicators = dataIndicators,
+            controlPoint = dataControlPoint,
+            range = if (record.indicatorRange.isNullOrBlank()) listOf() else record.indicatorRange.split(","),
+            templateRange = if (record.pipelineTemplateRange.isNullOrBlank()) listOf() else record.pipelineTemplateRange.split(","),
+            operation = RuleOperation.valueOf(ruleOperation.type),
+            notifyTypeList = if (ruleOperation.notifyTypes.isNullOrBlank()) listOf() else ruleOperation.notifyTypes.split(",").map { NotifyType.valueOf(it) },
+            notifyGroupList = if (ruleOperation.notifyGroupId.isNullOrBlank()) listOf() else ruleOperation.notifyGroupId.split(","),
+            notifyUserList = if (ruleOperation.notifyUser.isNullOrBlank()) listOf() else ruleOperation.notifyUser.split(","),
+            auditUserList = if (ruleOperation.auditUser.isNullOrBlank()) listOf() else ruleOperation.auditUser.split(","),
+            auditTimeoutMinutes = ruleOperation.auditTimeout ?: 15,
+            gatewayId = record.gatewayId
         )
     }
 
@@ -312,7 +334,11 @@ class QualityRuleService @Autowired constructor(
         val count = qualityRuleDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
         val ruleRecordList = qualityRuleDao.list(dslContext, projectId, offset, finalLimit)
-        val permissionMap = filterRules(userId, projectId, setOf(AuthPermission.EDIT, AuthPermission.DELETE, AuthPermission.ENABLE))
+        val permissionMap = filterRules(
+            userId = userId,
+            projectId = projectId,
+            bkAuthPermissionSet = setOf(AuthPermission.EDIT, AuthPermission.DELETE, AuthPermission.ENABLE)
+        )
         // 获取控制点信息
         val controlPointMap = mutableMapOf<String, QualityControlPoint>()
         qualityControlPointService.serviceList(projectId).forEach { controlPointMap[it.type] = it }
@@ -468,12 +494,12 @@ class QualityRuleService @Autowired constructor(
         return pipelineList.map { it.pipelineId to it }.toMap()
     }
 
-    private fun validatePermission(userId: String, projectId: String, bkAuthPermission: AuthPermission): Boolean {
-        return bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, bkAuthPermission)
+    private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        return bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, authPermission)
     }
 
-    private fun validatePermission(userId: String, projectId: String, bkAuthPermission: AuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, "*", bkAuthPermission)) {
+    private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, "*", authPermission)) {
             logger.error(message)
             val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
@@ -487,8 +513,8 @@ class QualityRuleService @Autowired constructor(
         }
     }
 
-    private fun validatePermission(userId: String, projectId: String, ruleId: Long, bkAuthPermission: AuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId), bkAuthPermission)) {
+    private fun validatePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, HashUtil.encodeLongId(ruleId), authPermission)) {
             logger.error(message)
             val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
