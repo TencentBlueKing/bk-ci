@@ -61,6 +61,7 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -114,6 +115,7 @@ class PipelineBuildService(
     private val pipelinePermissionService: PipelinePermissionService,
     private val buildStartupParamService: BuildStartupParamService,
     private val paramService: ParamService,
+    private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     companion object {
@@ -1476,8 +1478,15 @@ class PipelineBuildService(
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
+            val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(
+                projectId = readyToBuildPipelineInfo.projectId,
+                pipelineId = readyToBuildPipelineInfo.pipelineId,
+                startParams = startParams,
+                model = model
+            )
+
             val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(readyToBuildPipelineInfo, model, startType)
+                InterceptData(readyToBuildPipelineInfo, fullModel, startType)
             )
 
             if (interceptResult.isNotOk()) {
@@ -1526,7 +1535,7 @@ class PipelineBuildService(
                 }
             )
 
-            val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, model, params)
+            val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, params)
             if (startParams.isNotEmpty()) {
                 buildStartupParamService.addParam(
                     projectId = readyToBuildPipelineInfo.projectId,
