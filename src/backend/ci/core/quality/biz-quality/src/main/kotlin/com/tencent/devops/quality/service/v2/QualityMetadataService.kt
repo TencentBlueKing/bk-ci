@@ -89,7 +89,7 @@ class QualityMetadataService @Autowired constructor(
             dslContext = dslContext
         )
 
-        return Page(page, pageSize, count, resultData)
+        return Page(page = page, pageSize = pageSize, count = count, records = resultData)
     }
 
     fun serviceListByDataId(elementType: String, dataIds: Collection<String>): List<QualityIndicatorMetadata> {
