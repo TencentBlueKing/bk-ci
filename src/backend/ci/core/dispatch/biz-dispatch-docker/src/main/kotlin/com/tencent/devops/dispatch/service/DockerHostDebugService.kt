@@ -113,7 +113,7 @@ class DockerHostDebugService @Autowired constructor(
                     // dockerhub镜像名称不带斜杠前缀
                     imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
                 } else {
-                    //无论蓝盾还是第三方镜像此处均需完整路径
+                    // 无论蓝盾还是第三方镜像此处均需完整路径
                     imageRepoInfo.repoUrl + "/" + imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
                 }
             }
