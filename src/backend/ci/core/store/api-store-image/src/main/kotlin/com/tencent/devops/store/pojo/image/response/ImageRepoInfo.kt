@@ -15,8 +15,14 @@ data class ImageRepoInfo(
     @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val sourceType: ImageType,
 
-    @ApiModelProperty("镜像完整路径", required = true)
-    val completeImageName: String,
+    @ApiModelProperty("镜像仓库地址", required = true)
+    val repoUrl: String,
+
+    @ApiModelProperty("镜像在仓库中的路径", required = true)
+    val repoName: String,
+
+    @ApiModelProperty("镜像Tag", required = true)
+    val repoTag: String,
 
     @ApiModelProperty("凭证Id", required = true)
     val ticketId: String,

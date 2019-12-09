@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildTaskResourceImpl @Autowired constructor(
     private val pipelineBuildTaskService: PipelineBuildTaskService
-): BuildTaskResource {
+) : BuildTaskResource {
     override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTaskInfo>> {
         return Result(pipelineBuildTaskService.getAllBuildTask(buildId))
     }
