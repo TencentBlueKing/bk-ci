@@ -374,8 +374,8 @@ export default {
 
     // 建立日志WS连接
     buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag, payLoad, jobId }) {
-        let url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/job?lineNo=${lineNo}sessionId=${payLoad.sessionId}&jobId=${jobId}`
-        if (tag) url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/tag?lineNo=${lineNo}sessionId=${payLoad.sessionId}&tag=${tag}`
+        let url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/job?lineNo=${lineNo}&sessionId=${payLoad.sessionId}&jobId=${jobId}`
+        if (tag) url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/tag?lineNo=${lineNo}&sessionId=${payLoad.sessionId}&tag=${tag}`
         return request.get(url)
     },
 
