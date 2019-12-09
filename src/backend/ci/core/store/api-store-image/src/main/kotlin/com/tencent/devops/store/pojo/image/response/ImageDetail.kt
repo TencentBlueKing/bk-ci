@@ -58,6 +58,9 @@ data class ImageDetail(
     @ApiModelProperty("下载量", required = true)
     val downloads: Int,
 
+    @ApiModelProperty("所属镜像分类ID", required = true)
+    val classifyId: String,
+
     @ApiModelProperty("所属镜像分类代码", required = true)
     val classifyCode: String,
 
@@ -96,9 +99,6 @@ data class ImageDetail(
 
     @ApiModelProperty("Label数组", required = true)
     val labelList: List<Label>,
-
-    @ApiModelProperty("需要指定Agent类型的范畴code")
-    var needAgentTypeCategorys: List<String>,
 
     @ApiModelProperty("范畴code", required = true)
     val category: String,
