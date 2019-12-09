@@ -56,14 +56,18 @@ interface CurrentBuildResource {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam("pipelineId", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("buildId", required = true)
+        @QueryParam("buildId")
+        buildId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
         @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("元数据", required = true)
-        searchProps: SearchProps
+        pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("创建下载链接")

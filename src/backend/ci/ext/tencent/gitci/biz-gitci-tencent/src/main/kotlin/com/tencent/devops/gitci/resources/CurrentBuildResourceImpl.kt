@@ -37,12 +37,13 @@ class CurrentBuildResourceImpl @Autowired constructor(
     override fun search(
         userId: String,
         gitProjectId: Long,
+        pipelineId: String,
+        buildId: String,
         page: Int?,
-        pageSize: Int?,
-        searchProps: SearchProps
+        pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
         checkParam(userId, gitProjectId)
-        return Result(currentBuildService.search(userId, gitProjectId, page, pageSize, searchProps))
+        return Result(currentBuildService.search(userId, gitProjectId, page, pageSize, pipelineId, buildId))
     }
 
     override fun downloadUrl(

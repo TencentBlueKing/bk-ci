@@ -75,14 +75,21 @@ class CurrentBuildService @Autowired constructor(
     fun search(
         userId: String,
         gitProjectId: Long,
+        pipelineId: String,
+        buildId: String,
         page: Int?,
-        pageSize: Int?,
-        searchProps: SearchProps
+        pageSize: Int?
     ): FileInfoPage<FileInfo> {
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
+
+        val propMap = HashMap<String, String>()
+        propMap["pipelineId"] = pipelineId
+        propMap["buildId"] = buildId
+        val searchProps = SearchProps(emptyList(), propMap)
+
         return client.get(UserArtifactoryResource::class).search(
             userId,
             conf.projectCode!!,
