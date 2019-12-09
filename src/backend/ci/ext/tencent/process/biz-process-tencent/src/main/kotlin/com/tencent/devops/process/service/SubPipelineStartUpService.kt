@@ -79,7 +79,7 @@ class SubPipelineStartUpService(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        val project = if(callPipelineId.isNotEmpty()) { callProjectId } else { projectId }
+        val project = if (callPipelineId.isNotEmpty()) { callProjectId } else { projectId }
 
         logger.info("callPipelineStartup: $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
 
