@@ -32,6 +32,7 @@ import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+
 @ApiModel("CodeCC代码检查任务(service端)", description = LinuxScriptElement.classType)
 open class LinuxCodeCCScriptElement(
     @ApiModelProperty("任务名称", required = true)
@@ -41,7 +42,7 @@ open class LinuxCodeCCScriptElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("脚本类型", required = true)
-    open var scriptType: BuildScriptType,
+    open var scriptType: BuildScriptType = BuildScriptType.SHELL,
     @ApiModelProperty("脚本内容", required = true)
     open var script: String = "",
     @ApiModelProperty("CodeCC Task Name", required = false, hidden = true)
@@ -49,7 +50,7 @@ open class LinuxCodeCCScriptElement(
     @ApiModelProperty("CodeCC Task CN Name", required = false, hidden = true)
     open var codeCCTaskCnName: String? = null,
     @ApiModelProperty("工程语言", required = true)
-    open var languages: List<ProjectLanguage>,
+    open var languages: List<ProjectLanguage> = listOf(),
     @ApiModelProperty("是否异步", required = false)
     open var asynchronous: Boolean? = false,
     @ApiModelProperty("扫描类型（0：全量, 1：增量）", required = false)
@@ -113,6 +114,45 @@ open class LinuxCodeCCScriptElement(
         const val classType = "linuxCodeCCScript"
     }
 
-    override fun getClassType() =
-        classType
+    override fun getClassType() = classType
+
+    constructor(): this(
+        name = "",
+        id = "",
+        status = "",
+        scriptType = BuildScriptType.SHELL,
+        script = "",
+        codeCCTaskName = "",
+        codeCCTaskCnName = "",
+        languages = listOf(),
+        asynchronous = true,
+        scanType = "",
+        path = "",
+        compilePlat = "",
+        tools = listOf(),
+        pyVersion = null,
+        eslintRc = null,
+        phpcsStandard = null,
+        goPath = null,
+        projectBuildType = null,
+        projectBuildCommand = null,
+        ccnThreshold = null,
+        needCodeContent = null,
+        coverityToolSetId = null,
+        klocworkToolSetId = null,
+        cpplintToolSetId = null,
+        eslintToolSetId = null,
+        pylintToolSetId = null,
+        gometalinterToolSetId = null,
+        checkStyleToolSetId = null,
+        styleCopToolSetId = null,
+        detektToolSetId = null,
+        phpcsToolSetId = null,
+        sensitiveToolSetId = null,
+        occheckToolSetId = null,
+        gociLintToolSetId = null,
+        woodpeckerToolSetId = null,
+        horuspyToolSetId = null
+    )
 }
+
