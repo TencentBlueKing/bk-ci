@@ -24,20 +24,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.process.pojo.task
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import org.springframework.stereotype.Service
-import java.io.File
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.process.pojo.ErrorType
+import java.time.LocalDateTime
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
-
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        return CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, file, FileChannelTypeEnum.WEB_SHOW.name)
+data class PipelineBuildTaskInfo(
+    val projectId: String,
+    val pipelineId: String,
+    val templateId: String? = null,
+    val buildId: String,
+    val stageId: String,
+    val containerId: String,
+    val containerHashId: String?,
+    val containerType: String,
+    val taskSeq: Int,
+    val taskId: String,
+    val taskName: String,
+    val taskType: String,
+    val taskAtom: String,
+    var status: BuildStatus,
+    val taskParams: MutableMap<String, Any>,
+    val additionalOptions: ElementAdditionalOptions?,
+    val executeCount: Int? = 1,
+    var starter: String,
+    val approver: String?,
+    var subBuildId: String?,
+    val startTime: Long? = null,
+    val endTime: Long? = null,
+    var errorType: ErrorType? = null,
+    var errorCode: Int? = null,
+    var errorMsg: String? = null
+) {
+    fun getTaskParam(paramName: String): String {
+        return if (taskParams[paramName] != null) {
+            taskParams[paramName].toString().trim()
+        } else {
+            ""
+        }
     }
 }

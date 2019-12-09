@@ -51,42 +51,46 @@ class AtomBuildArchiveTask : ITask() {
         val taskParams = buildTask.params ?: mapOf()
         val destPath = taskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
-            errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorType = ErrorType.SYSTEM,
+            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
         )
         val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
-            errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorType = ErrorType.SYSTEM,
+            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
         )
 
         val fileSha = atomApi.archiveAtom(filePath, destPath, workspace, buildVariables)
         if (fileSha.isNullOrBlank()) {
             throw TaskExecuteException(
                 errorMsg = "atom file check sha fail!",
-                errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorType = ErrorType.SYSTEM,
+                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
 
         val atomCode = buildTask.buildVariable!!["atomCode"] ?: throw TaskExecuteException(
             errorMsg = "need atomCode param",
-            errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorType = ErrorType.SYSTEM,
+            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
         )
         val atomVersion = buildTask.buildVariable!!["version"] ?: throw TaskExecuteException(
             errorMsg = "need version param",
-            errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorType = ErrorType.SYSTEM,
+            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
         )
         val preCmd = buildTask.buildVariable!!["preCmd"]
         val target = buildTask.buildVariable!!["target"]
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
-        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: ""
+        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
+            errorMsg = "user basic info error, please check environment.",
+            errorType = ErrorType.SYSTEM,
+            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+        )
         val atomEnv = atomEnvResult.data ?: throw TaskExecuteException(
             errorMsg = "can not found any $atomCode env",
-            errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorType = ErrorType.SYSTEM,
+            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
         )
         val request = AtomEnvRequest(
             userId = userId,

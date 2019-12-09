@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.permission
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 
@@ -53,6 +54,18 @@ interface PipelinePermissionService {
         pipelineId: String,
         permission: AuthPermission
     ): Boolean
+
+    /**
+     * 检查是否有相应权限并抛出异常
+     */
+    @Throws(ErrorCodeException::class)
+    fun validPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String?
+    )
 
     /**
      * 获取用户所拥有指定权限下的流水线ID列表

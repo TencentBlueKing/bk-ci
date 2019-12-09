@@ -95,7 +95,7 @@ object AgentEnv {
         return agentId!!
     }
 
-    private fun getEnv(): Env {
+    fun getEnv(): Env {
         if (env == null) {
             synchronized(this) {
                 if (env == null) {

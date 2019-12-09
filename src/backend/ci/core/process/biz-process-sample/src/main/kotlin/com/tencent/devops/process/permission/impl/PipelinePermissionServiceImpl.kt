@@ -26,18 +26,23 @@
 
 package com.tencent.devops.process.permission.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 /**
  * Pipeline专用权限校验接口
@@ -93,6 +98,35 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             resourceCode = pipelineId,
             permission = permission
         )
+    }
+
+    override fun validPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String?
+    ) {
+        if (!authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = resourceType,
+                projectCode = projectId,
+                resourceCode = pipelineId,
+                permission = permission
+            )
+        ) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
+                defaultMessage = permission.alias
+            )
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
+                defaultMessage = message,
+                params = arrayOf(permissionMsg)
+            )
+        }
     }
 
     /**
