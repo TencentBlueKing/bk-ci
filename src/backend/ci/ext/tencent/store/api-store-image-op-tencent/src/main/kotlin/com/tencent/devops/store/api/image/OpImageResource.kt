@@ -182,10 +182,10 @@ interface OpImageResource {
         @QueryParam("classifyCode")
         classifyCode: String?,
         @ApiParam("应用范畴", required = false)
-        @QueryParam("category")
+        @QueryParam("categoryCodes")
         categoryCodes: Set<String>?,
         @ApiParam("功能标签", required = false)
-        @QueryParam("labelCode")
+        @QueryParam("labelCodes")
         labelCodes: Set<String>?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
