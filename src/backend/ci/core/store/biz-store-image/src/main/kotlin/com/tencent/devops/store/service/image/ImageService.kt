@@ -66,10 +66,8 @@ import com.tencent.devops.store.exception.image.ImageNotExistException
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
 import com.tencent.devops.store.pojo.common.VersionInfo
-import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import com.tencent.devops.store.pojo.common.enums.BusinessFeatureEnum
-import com.tencent.devops.store.pojo.common.enums.BusinessFeatureValueEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -149,6 +147,8 @@ abstract class ImageService @Autowired constructor() {
     lateinit var classifyService: ClassifyService
     @Autowired
     lateinit var marketImageStatisticService: MarketImageStatisticService
+    @Autowired
+    lateinit var imageLabelService: ImageLabelService
     @Autowired
     lateinit var client: Client
     @Value("\${store.baseImageDocsLink}")
@@ -661,41 +661,30 @@ abstract class ImageService @Autowired constructor() {
         val tag = imageRecord.get(KEY_IMAGE_TAG) as String? ?: ""
         val ticketId = imageRecord.get(Constants.KEY_IMAGE_TICKET_ID) as String? ?: ""
         val ticketProject = imageRecord.get(Constants.KEY_IMAGE_INIT_PROJECT) as String? ?: ""
-        var completeImageName = ""
         val cleanImageRepoUrl = repoUrl.trimEnd { ch ->
             ch == '/'
         }
         val cleanImageRepoName = repoName.trimStart { ch ->
             ch == '/'
         }
-        if (ImageType.BKDEVOPS == sourceType) {
-            // 蓝盾项目源镜像
-            completeImageName = cleanImageRepoName
-        } else if (ImageType.THIRD == sourceType) {
-            // 第三方源镜像
-            completeImageName = "$cleanImageRepoUrl/$cleanImageRepoName"
-            // dockerhub镜像名称不带斜杠前缀
-            if (cleanImageRepoUrl.isBlank()) {
-                completeImageName = completeImageName.removePrefix("/")
-            }
-        } else {
-            throw UnknownImageSourceType(
-                "imageId=$id,imageSourceType=${sourceType.name}",
-                StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
+        val cleanTag = if (!tag.isBlank()) tag else {
+            "latest"
+        }
+        if (sourceType != ImageType.BKDEVOPS && sourceType != ImageType.THIRD) throw UnknownImageSourceType(
+            "imageId=$id,imageSourceType=${sourceType.name}",
+            StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
+        )
+        else {
+            logger.info("getImageRepoInfoByRecord:Output($sourceType,$cleanImageRepoUrl,$cleanImageRepoName,$cleanTag,$ticketId,$ticketProject)")
+            return ImageRepoInfo(
+                sourceType = sourceType,
+                repoUrl = cleanImageRepoUrl,
+                repoName = cleanImageRepoName,
+                repoTag = cleanTag,
+                ticketId = ticketId,
+                ticketProject = ticketProject
             )
         }
-        completeImageName += if (!tag.isBlank()) {
-            ":$tag"
-        } else {
-            ":latest"
-        }
-        logger.info("getImageRepoInfoByRecord:Output($completeImageName)")
-        return ImageRepoInfo(
-            sourceType = sourceType,
-            completeImageName = completeImageName,
-            ticketId = ticketId,
-            ticketProject = ticketProject
-        )
     }
 
     fun getImageDetailByCode(
@@ -825,14 +814,6 @@ abstract class ImageService @Autowired constructor() {
         } else {
             null
         }
-        val needAgentTypeCategorys = businessConfigDao.list(
-            dslContext = dslContext,
-            business = BusinessEnum.CATEGORY.name,
-            feature = BusinessFeatureEnum.NEED_AGENT_TYPE.name,
-            configValue = BusinessFeatureValueEnum.NEED_AGENT_TYPE_TRUE.name
-        )?.map {
-            it.businessValue
-        }?.toList() ?: emptyList()
         // 组装返回
         return ImageDetail(
             imageId = imageId,
@@ -848,6 +829,7 @@ abstract class ImageService @Autowired constructor() {
             projectCode = projectCode,
             score = storeStatisticRecord?.value3()?.toDouble() ?: 0.0,
             downloads = storeStatisticRecord?.value1()?.toInt() ?: 0,
+            classifyId = classifyRecord?.id ?: "",
             classifyCode = classifyRecord?.classifyCode ?: "",
             classifyName = classifyRecord?.classifyName ?: "",
             imageSourceType = ImageType.getType(imageRecord.imageSourceType).name,
@@ -862,7 +844,6 @@ abstract class ImageService @Autowired constructor() {
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
             description = imageRecord.description ?: "",
             labelList = labelList,
-            needAgentTypeCategorys = needAgentTypeCategorys,
             category = category?.categoryCode ?: "",
             categoryName = category?.categoryName ?: "",
             latestFlag = imageRecord.latestFlag,
@@ -935,7 +916,27 @@ abstract class ImageService @Autowired constructor() {
         }
     }
 
-    fun saveImageCategory(
+    fun saveImageCategoryByIds(
+        context: DSLContext,
+        userId: String,
+        imageId: String,
+        categoryIdList: List<String>
+    ) {
+        if (!categoryIdList.isEmpty()) {
+            categoryIdList.forEach {
+                if (categoryDao.countById(context, it.trim(), StoreTypeEnum.IMAGE.type.toByte()) == 0) {
+                    throw CategoryNotExistException(
+                        message = "category does not exist, categoryId:$it",
+                        params = arrayOf(it)
+                    )
+                }
+            }
+            imageCategoryRelDao.deleteByImageId(context, imageId)
+            imageCategoryRelDao.batchAdd(context, userId, imageId, categoryIdList)
+        }
+    }
+
+    fun saveImageCategoryByCode(
         context: DSLContext,
         userId: String,
         imageId: String,
@@ -977,7 +978,6 @@ abstract class ImageService @Autowired constructor() {
                     imageSourceType = imageUpdateRequest.imageSourceType,
                     imageRepoUrl = imageUpdateRequest.imageRepoUrl,
                     imageRepoName = imageUpdateRequest.imageRepoName,
-                    imageRepoPath = imageUpdateRequest.imageRepoPath,
                     ticketId = imageUpdateRequest.ticketId,
                     imageStatus = null,
                     imageStatusMsg = null,
@@ -1004,8 +1004,30 @@ abstract class ImageService @Autowired constructor() {
                 weight = imageUpdateRequest.weight,
                 modifier = userId
             )
-            val categoryCode = imageUpdateRequest.category
-            saveImageCategory(context, userId, imageId, categoryCode)
+            // 更新调试项目
+            val projectCode = imageUpdateRequest.projectCode
+            if (projectCode != null) {
+                storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
+            }
+            // 更新范畴
+            val categoryIdList = imageUpdateRequest.categoryIdList
+            if (categoryIdList != null) {
+                saveImageCategoryByIds(
+                    context = context,
+                    userId = userId,
+                    imageId = imageId,
+                    categoryIdList = categoryIdList
+                )
+            }
+            // 更新标签
+            if (imageUpdateRequest.labelIdList != null) {
+                imageLabelService.updateImageLabels(
+                    dslContext = dslContext,
+                    userId = userId,
+                    imageId = imageId,
+                    labelIdList = imageUpdateRequest.labelIdList!!
+                )
+            }
         }
         return Result(true)
     }
@@ -1108,14 +1130,12 @@ abstract class ImageService @Autowired constructor() {
             val labelIdList = imageBaseInfoUpdateRequest.labelIdList
             if (null != labelIdList) {
                 imageIdList.forEach {
-                    imageLabelRelDao.deleteByImageId(context, it)
-                    if (labelIdList.isNotEmpty())
-                        imageLabelRelDao.batchAdd(
-                            dslContext = context,
-                            userId = userId,
-                            imageId = it,
-                            labelIdList = labelIdList
-                        )
+                    imageLabelService.updateImageLabels(
+                        dslContext = dslContext,
+                        userId = userId,
+                        imageId = it,
+                        labelIdList = labelIdList
+                    )
                 }
             }
             // 更新范畴信息
