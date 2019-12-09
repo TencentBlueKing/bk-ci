@@ -370,16 +370,16 @@ export default {
 
     // 第一次拉取日志
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
-        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : ''}${jobId ? '?jobId=' + jobId : ''}`)
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : '?jobId=' + jobId}`)
     },
 
     // 建立日志WS连接
-    buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag }) {
-        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push?lineNo=${lineNo}${tag ? '&tag=' + tag : ''}`)
+    buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag, jobId }) {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push?lineNo=${lineNo}${tag ? '&tag=' + tag : '&jobId=' + jobId}`)
     },
 
     // 关闭日志WS连接
-    stopLogWs ({ commit }, { projectId, pipelineId, buildId, tag }) {
-        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop${tag ? '?tag=' + tag : ''}`)
+    stopLogWs ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop${tag ? '?tag=' + tag : '?jobId=' + jobId}`)
     }
 }
