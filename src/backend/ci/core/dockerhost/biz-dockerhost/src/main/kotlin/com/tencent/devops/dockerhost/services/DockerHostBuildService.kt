@@ -118,8 +118,8 @@ class DockerHostBuildService(
         return result!!.data!!
     }
 
-    fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Boolean {
-        log(buildId, true, if (shutdown) "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出" else "启动构建环境失败，构建任务将重试")
+    fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean, containerId: String): Boolean {
+        log(buildId, true, if (shutdown) "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出" else "启动构建环境失败，构建任务将重试", containerId)
 
         val result = dockerHostBuildApi.rollbackBuild(buildId, vmSeqId, shutdown)
         if (result != null) {
@@ -146,10 +146,10 @@ class DockerHostBuildService(
             registryPwd = registryPwd
         )
         val dockerImageName = CommonUtils.normalizeImageName(imageName)
-        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName")
+        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName", "null")
         dockerCli.pullImageCmd(dockerImageName).withAuthConfig(authConfig)
             .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi)).awaitCompletion()
-        log(buildId, "拉取镜像成功，准备启动构建环境...")
+        log(buildId, "拉取镜像成功，准备启动构建环境...", "null")
         return Result(true)
     }
 
@@ -174,7 +174,7 @@ class DockerHostBuildService(
             }
         } catch (t: Throwable) {
             logger.warn("Fail to pull the image $imageName of build $buildId", t)
-            log(buildId, "pull image fail，error is：${t.message}")
+            log(buildId, "pull image fail，error is：${t.message}", "null")
         }
         val dockerImageName = CommonUtils.normalizeImageName(checkImageRequest.imageName)
         // 查询镜像详细信息
@@ -205,8 +205,8 @@ class DockerHostBuildService(
                 )
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
-                log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}")
-                log(dockerBuildInfo.buildId, "尝试使用本地镜像启动...")
+                log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}", dockerBuildInfo.containerId)
+                log(dockerBuildInfo.buildId, "尝试使用本地镜像启动...", dockerBuildInfo.containerId)
             }
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
@@ -226,7 +226,7 @@ class DockerHostBuildService(
             logger.error(er.toString())
             logger.error(er.cause.toString())
             logger.error(er.message)
-            log(dockerBuildInfo.buildId, true, "启动构建环境失败，错误信息:${er.message}")
+            log(dockerBuildInfo.buildId, true, "启动构建环境失败，错误信息:${er.message}", dockerBuildInfo.containerId)
             if (er is NotFoundException) {
                 throw NoSuchImageException("Create container failed: ${er.message}")
             } else {
@@ -391,8 +391,8 @@ class DockerHostBuildService(
                 )
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build $buildId", t)
-                log(buildId, "拉取镜像失败，错误信息：${t.message}")
-                log(buildId, "尝试使用本地镜像执行命令...")
+                log(buildId, "拉取镜像失败，错误信息：${t.message}", "null")
+                log(buildId, "尝试使用本地镜像执行命令...", "null")
             }
 
             val dockerBuildInfo = DockerHostBuildInfo(
@@ -435,7 +435,7 @@ class DockerHostBuildService(
         } catch (er: Throwable) {
             val errorLog = "[$buildId]|启动容器失败，错误信息:${er.message}"
             logger.error(errorLog, er)
-            log(buildId, true, errorLog)
+            log(buildId, true, errorLog, "null")
             alertApi.alert(
                 level = AlertLevel.HIGH.name, title = "Docker构建机创建容器失败",
                 message = "Docker构建机创建容器失败, 母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
@@ -561,14 +561,14 @@ class DockerHostBuildService(
         return inspectContainerResponse.state.running ?: false
     }
 
-    fun log(buildId: String, message: String) {
-        return log(buildId, false, message)
+    fun log(buildId: String, message: String, tag: String) {
+        return log(buildId, false, message, tag)
     }
 
-    fun log(buildId: String, red: Boolean, message: String) {
+    fun log(buildId: String, red: Boolean, message: String, tag: String) {
         logger.info("write log to dispatch, buildId: $buildId, message: $message")
         try {
-            dockerHostBuildApi.postLog(buildId, red, message, null)
+            dockerHostBuildApi.postLog(buildId, red, message, tag)
         } catch (e: Exception) {
             logger.info("write log to dispatch failed")
         }
