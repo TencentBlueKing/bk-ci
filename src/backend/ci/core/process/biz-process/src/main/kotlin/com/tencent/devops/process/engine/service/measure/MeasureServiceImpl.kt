@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.measure.pojo.ElementMeasureData
 import com.tencent.devops.measure.pojo.PipelineBuildData
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
-import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
