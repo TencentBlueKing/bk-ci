@@ -141,9 +141,9 @@ class BlueShieldWebSocket {
                 this.loopSendChangePage(data)
                 break;
             case 'closeLogWs':
-                this.diaLogUuid = ''
                 data = { sessionId: this.diaLogUuid, userId: this.userName, page: location.pathname }
                 this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
+                this.diaLogUuid = ''
         }
     }
 
