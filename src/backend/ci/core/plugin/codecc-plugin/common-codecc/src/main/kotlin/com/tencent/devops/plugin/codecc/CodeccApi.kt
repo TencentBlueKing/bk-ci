@@ -27,6 +27,8 @@
 package com.tencent.devops.plugin.codecc
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.CodeccReportException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -43,12 +45,12 @@ import org.slf4j.LoggerFactory
 
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
-    private val createPath: String = "/blueShield/createTask",
-    private val updatePath: String = "/blueShield/updateTask",
-    private val existPath: String = "/blueShield/checkTaskExists",
-    private val deletePath: String = "/blueShield/deleteTask",
-    private val report: String = "/blueShield/codeCheckReport",
-    private val getRuleSetsPath: String = "/blueShield/getRuleSets"
+    private val createPath: String = "/ms/task/api/service/task",
+    private val updatePath: String = "/ms/task/api/service/task",
+    private val existPath: String = "/ms/task/api/service/task/exists",
+    private val deletePath: String = "/ms/task/api/service/task",
+    private val report: String = "/api",
+    private val getRuleSetsPath: String = "/ms/task/api/service/checker/tasks/0/checkerSets"
 ) {
 
     companion object {
@@ -89,14 +91,18 @@ open class CodeccApi constructor(
                 "pipelineName" to pipelineName,
                 "devopsCodeLang" to objectMapper.writeValueAsString(languages),
                 "devopsTools" to objectMapper.writeValueAsString(tools),
-                "devopsToolParams" to devopsToolParams
+                "devopsToolParams" to devopsToolParams,
+                "toolCheckerSets" to genToolChecker(element),
+                "nameCn" to pipelineName
             )
+            logger.info("start to create task: $body")
+
             val header = mapOf(
                 USER_NAME_HEADER to rtx,
                 DEVOPS_PROJECT_ID to projectId,
                 CONTENT_TYPE to CONTENT_TYPE_JSON
             )
-            return taskExecution(body, createPath, header, "POST")
+            return getCodeccResult(taskExecution(body, createPath, header, "POST"))
         }
     }
 
@@ -124,21 +130,23 @@ open class CodeccApi constructor(
                 "devopsCodeLang" to objectMapper.writeValueAsString(languages),
                 "devopsTools" to objectMapper.writeValueAsString(tools ?: listOf<String>()),
                 "taskId" to codeCCTaskId!!,
-                "devopsToolParams" to devopsToolParams
+                "devopsToolParams" to devopsToolParams,
+                "toolCheckerSets" to genToolChecker(element),
+                "nameCn" to pipelineName
             )
             logger.info("Update the coverity task($body)")
             val header = mapOf(
                 USER_NAME_HEADER to userId,
                 CONTENT_TYPE to CONTENT_TYPE_JSON
             )
-            taskExecution(body, updatePath, header, "PUT")
+            getCodeccResult(taskExecution(body, updatePath, header, "PUT"))
         }
     }
 
     open fun isTaskExist(taskId: String, userId: String): Boolean {
         logger.info("Check the coverity task if exist")
         val header = mapOf(CONTENT_TYPE to CONTENT_TYPE_JSON)
-        val result = taskExecution(mapOf(), "$existPath/$taskId", header, "GET")
+        val result = getCodeccResult(taskExecution(mapOf(), "$existPath/$taskId", header, "GET"))
         logger.info("Get the exist result($result)")
         return result.data == true
     }
@@ -155,35 +163,17 @@ open class CodeccApi constructor(
 
     fun getRuleSets(projectId: String, userId: String, toolName: String): Result<Map<String, Any>> {
         val headers = mapOf(
-            USER_NAME_HEADER to userId
+            AUTH_HEADER_DEVOPS_USER_ID to userId,
+            AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
         )
-        val result = taskExecution("$getRuleSetsPath?bsProjectId=$projectId&toolName=$toolName", headers)
+        val body = mapOf<String, String>()
+        val result = taskExecution(
+            body = body,
+            path = getRuleSetsPath,
+            headers = headers,
+            method = "POST"
+        )
         return objectMapper.readValue(result)
-    }
-
-    private fun taskExecution(path: String, headers: Map<String, String>? = null): String {
-        logger.info("taskExecution url: ${codeccApiUrl + path}")
-        val builder = Request.Builder()
-            .url(codeccApiUrl + path)
-            .get()
-
-        if (headers != null && headers.isNotEmpty()) {
-            headers.forEach { t, u ->
-                builder.addHeader(t, u)
-            }
-        }
-
-        val request = builder.build()
-        OkhttpUtils.doHttp(request).use { response ->
-            //        okHttpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                logger.warn("Fail to execute($path) because of ${response.message()}")
-                throw RuntimeException("Fail to invoke codecc request")
-            }
-            val responseBody = response.body()!!.string()
-            logger.info("Get the task response body - $responseBody")
-            return responseBody
-        }
     }
 
     private fun taskExecution(
@@ -191,12 +181,13 @@ open class CodeccApi constructor(
         path: String,
         headers: Map<String, String>? = null,
         method: String = "GET"
-    ): CoverityResult {
+    ): String {
         val jsonBody = objectMapper.writeValueAsString(body)
         val requestBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"), jsonBody
         )
 
+        logger.info("taskExecution url: ${codeccApiUrl + path}")
         val builder = Request.Builder()
             .url(codeccApiUrl + path)
 
@@ -229,11 +220,14 @@ open class CodeccApi constructor(
             }
             val responseBody = response.body()!!.string()
             logger.info("Get the task response body - $responseBody")
-
-            val result = objectMapper.readValue<CoverityResult>(responseBody)
-            if (result.code != "0" || result.status != 0) throw RuntimeException("execute codecc task fail in path($path) - method($method):\n$headers\n$body")
-            return result
+            return responseBody
         }
+    }
+
+    private fun getCodeccResult(responseBody: String): CoverityResult {
+        val result = objectMapper.readValue<CoverityResult>(responseBody)
+        if (result.code != "0" || result.status != 0) throw RuntimeException("execute codecc task fail")
+        return result
     }
 
     open fun getReport(
@@ -273,8 +267,41 @@ open class CodeccApi constructor(
         }
     }
 
+    private fun genToolChecker(element: LinuxCodeCCScriptElement): List<ToolChecker> {
+        return genToolRuleSet(element).map {
+            ToolChecker(it.key, it.value)
+        }
+    }
+
+    private fun genToolRuleSet(element: LinuxCodeCCScriptElement): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        with(element) {
+            if (!coverityToolSetId.isNullOrBlank()) map["COVERITY"] = coverityToolSetId!!
+            if (!klocworkToolSetId.isNullOrBlank()) map["KLOCWORK"] = klocworkToolSetId!!
+            if (!cpplintToolSetId.isNullOrBlank()) map["CPPLINT"] = cpplintToolSetId!!
+            if (!eslintToolSetId.isNullOrBlank()) map["ESLINT"] = eslintToolSetId!!
+            if (!pylintToolSetId.isNullOrBlank()) map["PYLINT"] = pylintToolSetId!!
+            if (!gometalinterToolSetId.isNullOrBlank()) map["GOML"] = gometalinterToolSetId!!
+            if (!checkStyleToolSetId.isNullOrBlank()) map["CHECKSTYLE"] = checkStyleToolSetId!!
+            if (!styleCopToolSetId.isNullOrBlank()) map["STYLECOP"] = styleCopToolSetId!!
+            if (!detektToolSetId.isNullOrBlank()) map["DETEKT"] = detektToolSetId!!
+            if (!phpcsToolSetId.isNullOrBlank()) map["PHPCS"] = phpcsToolSetId!!
+            if (!sensitiveToolSetId.isNullOrBlank()) map["SENSITIVE"] = sensitiveToolSetId!!
+            if (!occheckToolSetId.isNullOrBlank()) map["OCCHECK"] = occheckToolSetId!!
+            if (!gociLintToolSetId.isNullOrBlank()) map["GOCILINT"] = gociLintToolSetId!!
+            if (!woodpeckerToolSetId.isNullOrBlank()) map["WOODPECKER_SENSITIVE"] = woodpeckerToolSetId!!
+            if (!horuspyToolSetId.isNullOrBlank()) map["HORUSPY"] = horuspyToolSetId!!
+        }
+        return map
+    }
+
     private data class DevOpsToolParams(
         val varName: String,
         val chooseValue: String
+    )
+
+    private data class ToolChecker(
+        val toolName: String,
+        val checkerSetId: String
     )
 }

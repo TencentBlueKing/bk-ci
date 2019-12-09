@@ -24,11 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.worker.common.api.process
 
-data class JFrogFileInfo(
-    val uri: String,
-    val size: Long,
-    val lastModified: String,
-    val folder: Boolean
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+
+interface BuildTaskSDKApi : WorkerRestApiSDK {
+
+    fun getAllBuildTask(): Result<List<PipelineBuildTaskInfo>>
+}

@@ -39,19 +39,41 @@ class QualityRuleOperationService @Autowired constructor(
     private val ruleOperationDao: QualityRuleOperationDao
 ) {
     fun serviceSaveEndOperation(ruleId: Long, notifyUserList: List<String>, notifyGroupList: List<Long>, notifyTypeList: List<NotifyType>) {
-        ruleOperationDao.saveEndOperation(dslContext, ruleId, notifyUserList, notifyGroupList, notifyTypeList)
+        ruleOperationDao.saveEndOperation(
+            dslContext = dslContext,
+            ruleId = ruleId,
+            notifyUserList = notifyUserList,
+            notifyGroupList = notifyGroupList,
+            notifyTypeList = notifyTypeList
+        )
     }
 
     fun serviceSaveAuditOperation(ruleId: Long, auditUserList: List<String>, auditTimeoutMinutes: Int) {
-        ruleOperationDao.saveAuditOperation(dslContext, ruleId, auditUserList, auditTimeoutMinutes)
+        ruleOperationDao.saveAuditOperation(
+            dslContext = dslContext,
+            ruleId = ruleId,
+            auditUserList = auditUserList,
+            auditTimeoutMinutes = auditTimeoutMinutes
+        )
     }
 
     fun serviceUpdateEndOperation(ruleId: Long, notifyUserList: List<String>, notifyGroupList: List<Long>, notifyTypeList: List<NotifyType>) {
-        ruleOperationDao.updateEndOperation(dslContext, ruleId, notifyUserList, notifyGroupList, notifyTypeList)
+        ruleOperationDao.updateEndOperation(
+            dslContext = dslContext,
+            ruleId = ruleId,
+            notifyUserList = notifyUserList,
+            notifyGroupList = notifyGroupList,
+            notifyTypeList = notifyTypeList
+        )
     }
 
     fun serviceUpdateAuditOperation(ruleId: Long, auditUserList: List<String>, auditTimeoutMinutes: Int) {
-        ruleOperationDao.updateAuditOperation(dslContext, ruleId, auditUserList, auditTimeoutMinutes)
+        ruleOperationDao.updateAuditOperation(
+            dslContext = dslContext,
+            ruleId = ruleId,
+            auditUserList = auditUserList,
+            auditTimeoutMinutes = auditTimeoutMinutes
+        )
     }
 
     fun serviceGet(dslContext: DSLContext, ruleId: Long): TQualityRuleOperationRecord {

@@ -24,8 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.process.api.builds
 
-enum class BusinessFeatureEnum constructor(val value: String) {
-    NEED_AGENT_TYPE("needAgentType") // 需要指定AgentType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class BuildTaskResourceImpl @Autowired constructor(
+    private val pipelineBuildTaskService: PipelineBuildTaskService
+) : BuildTaskResource {
+    override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTaskInfo>> {
+        return Result(pipelineBuildTaskService.getAllBuildTask(buildId))
+    }
 }

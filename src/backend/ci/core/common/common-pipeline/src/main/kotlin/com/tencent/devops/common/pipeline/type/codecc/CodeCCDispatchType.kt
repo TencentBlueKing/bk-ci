@@ -24,21 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task.codecc.util
+package com.tencent.devops.common.pipeline.type.codecc
 
-import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.plugin.worker.pojo.CoverityConfig
-import java.io.File
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.DispatchType
 
-class Coverity constructor(private val coverityConfig: CoverityConfig) {
+data class CodeCCDispatchType(
+    val codeccTaskId: Long
+) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
+    override fun buildType(): BuildType {
+        return BuildType.DOCKER
+    }
 
-    fun coverity(scriptType: BuildScriptType, buildId: String, file: File, workspace: File): String {
-        return when (scriptType) {
-            BuildScriptType.SHELL ->
-                CodeccUtils.executeCoverityCommand(buildId, workspace, coverityConfig)
-            else ->
-                throw InvalidParamException("unsupported scriptype $scriptType")
-        }
+    override fun replaceField(variables: Map<String, String>) {
+        val valueMap = mutableMapOf<String, Any?>()
+        valueMap["codeccTaskId"] = codeccTaskId
+        value = JsonUtil.toJson(valueMap)
     }
 }
