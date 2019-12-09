@@ -24,25 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service
+package com.tencent.devops.environment.init
 
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-interface AgentUrlService {
+@Configuration
+class EnvironmentConfig {
 
-    fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-    /**
-     *生成Agent URL
-     */
-    fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成构建机脚本下载链接
-     */
-    fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成网关域名
-     */
-    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+    @Bean
+    @ConditionalOnMissingBean(AgentUrlService::class)
+    fun agentUrlService(slaveGatewayService: SlaveGatewayService) = BluekingAgentUrlServiceImpl(slaveGatewayService)
 }
