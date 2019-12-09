@@ -36,8 +36,8 @@ export default {
         this.callBack = () => {}
     },
 
-    openDialogWebSocket (callBack) {
-        window.parent.postMessage({ type: 'openLogWs' }, '*')
+    openDialogWebSocket (callBack, page) {
+        window.parent.postMessage({ type: 'openLogWs', page }, '*')
         this.openDialogWebSocket.dialogCallBack = (res) => {
             const data = res.data
             const type = data.webSocketType
@@ -49,8 +49,8 @@ export default {
         window.addEventListener('message', this.openDialogWebSocket.dialogCallBack)
     },
 
-    closeDialogWebSocket () {
-        window.parent.postMessage({ type: 'closeLogWs' }, '*')
+    closeDialogWebSocket (page) {
+        window.parent.postMessage({ type: 'closeLogWs', page }, '*')
         window.removeEventListener('message', this.openDialogWebSocket.dialogCallBack)
     }
 }
