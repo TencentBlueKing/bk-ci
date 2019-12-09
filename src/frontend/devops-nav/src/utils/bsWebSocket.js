@@ -132,24 +132,22 @@ class BlueShieldWebSocket {
         const resData = res.data
         const type = resData.type
         const page = resData.page
+        const sessionId = resData.sessionId
         let data
         switch (type) {
             case 'openLogWs':
-                if (this.diaLogUuid) return
-                this.diaLogUuid = uuid()
-                this.stompClient.subscribe(`/topic/bk/notify/${this.diaLogUuid}`, (res) => {
+                this.stompClient.subscribe(`/topic/bk/notify/${sessionId}`, (res) => {
                     this.handleMessage(res)
                 })
                 
                 const projectId = localStorage.getItem('projectId')
-                data = JSON.stringify({ sessionId: this.diaLogUuid, userId: this.userName, page, showProjectList: true, projectId })
+                data = JSON.stringify({ sessionId, userId: this.userName, page, showProjectList: true, projectId })
                 this.loopSendChangePage(data)
                 break;
             case 'closeLogWs':
-                this.stompClient.unsubscribe(`/topic/bk/notify/${this.diaLogUuid}`)
-                data = { sessionId: this.diaLogUuid, userId: this.userName, page }
+                this.stompClient.unsubscribe(`/topic/bk/notify/${sessionId}`)
+                data = { sessionId, userId: this.userName, page }
                 this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
-                this.diaLogUuid = ''
         }
     }
 

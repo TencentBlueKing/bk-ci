@@ -16,7 +16,6 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 import request from '@/utils/request'
 import {
     FETCH_ERROR,
@@ -370,16 +369,20 @@ export default {
 
     // 第一次拉取日志
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
-        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : '?jobId=' + jobId}`)
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : ''}${jobId ? '?jobId=' + jobId : ''}`)
     },
 
     // 建立日志WS连接
-    buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag, jobId }) {
-        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push?lineNo=${lineNo}${tag ? '&tag=' + tag : '&jobId=' + jobId}`)
+    buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag, payLoad, jobId }) {
+        let url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/job?lineNo=${lineNo}sessionId=${payLoad.sessionId}&jobId=${jobId}`
+        if (tag) url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/tag?lineNo=${lineNo}sessionId=${payLoad.sessionId}&tag=${tag}`
+        return request.get(url)
     },
 
     // 关闭日志WS连接
-    stopLogWs ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
-        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop${tag ? '?tag=' + tag : '?jobId=' + jobId}`)
+    stopLogWs ({ commit }, { projectId, pipelineId, buildId, tag, payLoad, jobId }) {
+        let url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop/job?sessionId=${payLoad.sessionId}&jobId=${jobId}`
+        if (tag) url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop/tag?sessionId=${payLoad.sessionId}&tag=${tag}`
+        return request.get(url)
     }
 }

@@ -35,7 +35,7 @@
             @mousedown="startBottomMove"
         >
         </span>
-        <p class="list-empty" v-if="!$parent.isInit && totalNumber <= 0">{{ $t('log.日志内容为空') }}</p>
+        <p class="list-empty" v-if="!$parent.isInit && totalNumber <= 0">日志内容为空</p>
     </section>
 </template>
 
