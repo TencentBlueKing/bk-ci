@@ -28,4 +28,5 @@ dependencies {
     compile project(":core:common:common-pipeline")
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile group: 'org.apache.ant', name: 'ant', version: '1.10.5'
+    compile "com.github.fge:json-schema-validator"
 }
