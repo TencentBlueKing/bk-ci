@@ -34,6 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -680,12 +681,20 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 添加质量红线原子
         val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(projectId, pipelineId, startParams, model)
 
+        val startParamsWithType = mutableListOf<BuildParameters>()
+        startParams.forEach { t, u -> startParamsWithType.add(
+            BuildParameters(
+                t,
+                u
+            )
+        ) }
+
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId,
                 pipelineInfo,
                 StartType.WEB_HOOK,
-                startParams,
+                startParamsWithType,
                 pipelineInfo.channelCode,
                 false,
                 fullModel,
