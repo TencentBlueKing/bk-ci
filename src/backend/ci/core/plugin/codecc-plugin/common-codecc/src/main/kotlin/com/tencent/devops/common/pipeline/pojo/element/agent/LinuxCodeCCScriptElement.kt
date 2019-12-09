@@ -92,21 +92,21 @@ open class LinuxCodeCCScriptElement(
     var ccnThreshold: Int? = null,
     @ApiModelProperty("是否隐藏代码内容，字符串的false和true", required = false)
     var needCodeContent: String? = null,
-    val coverityToolSetId: String? = null,
-    val klocworkToolSetId: String? = null,
-    val cpplintToolSetId: String? = null,
-    val eslintToolSetId: String? = null,
-    val pylintToolSetId: String? = null,
-    val gometalinterToolSetId: String? = null,
-    val checkStyleToolSetId: String? = null,
-    val styleCopToolSetId: String? = null,
-    val detektToolSetId: String? = null,
-    val phpcsToolSetId: String? = null,
-    val sensitiveToolSetId: String? = null,
-    val occheckToolSetId: String? = null,
-    val gociLintToolSetId: String? = null,
-    val woodpeckerToolSetId: String? = null,
-    val horuspyToolSetId: String? = null
+    var coverityToolSetId: String? = null,
+    var klocworkToolSetId: String? = null,
+    var cpplintToolSetId: String? = null,
+    var eslintToolSetId: String? = null,
+    var pylintToolSetId: String? = null,
+    var gometalinterToolSetId: String? = null,
+    var checkStyleToolSetId: String? = null,
+    var styleCopToolSetId: String? = null,
+    var detektToolSetId: String? = null,
+    var phpcsToolSetId: String? = null,
+    var sensitiveToolSetId: String? = null,
+    var occheckToolSetId: String? = null,
+    var gociLintToolSetId: String? = null,
+    var woodpeckerToolSetId: String? = null,
+    var horuspyToolSetId: String? = null
 ) : Element(name, id, status) {
 
     companion object {
