@@ -74,7 +74,7 @@ class PipelineRuntimeServiceTest {
     private val pipelineRuntimeService = PipelineRuntimeService(
         pipelineEventDispatcher = pipelineEventDispatcher,
         webSocketDispatcher = websocketDispatcher,
-        websocketService = mock(),
+        pipelineWebsocketService = mock(),
         buildIdGenerator = buildIdGenerator,
         dslContext = dslContext,
         pipelineBuildDao = pipelineBuildDao,
