@@ -1,26 +1,34 @@
 <template>
-    <div class="bk-form bk-form-vertical">
-        <iframe
-            v-if="src"
-            id="atom-iframe"
-            ref="iframeEle"
-            allowfullscreen
-            height="100%"
-            :src="src"
-            @load="onLoad"
-        />
-    </div>
+    <section v-bkloading="{ isLoading: loading }">
+        <div class="bk-form bk-form-vertical">
+            <iframe
+                v-if="src"
+                id="atom-iframe"
+                ref="iframeEle"
+                allowfullscreen
+                height="100%"
+                :src="src"
+                @load="onLoad"
+            />
+        </div>
+        <atom-output :element="element" :atom-props-model="atomPropsModel"></atom-output>
+    </section>
 </template>
 
 <script>
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import AtomOutput from './AtomOutput'
     export default {
         name: 'remote-atom',
+        components: {
+            AtomOutput
+        },
         mixins: [atomMixin, validMixins],
         data () {
             return {
                 newModel: {},
+                loading: true,
                 src: 'http://dev.nav.oa.com:8001?projectId=t1'
             }
         },
@@ -29,6 +37,7 @@
         },
         methods: {
             onLoad () {
+                this.loading = false
                 const iframe = document.getElementById('atom-iframe').contentWindow
                 iframe.postMessage({ atomPropsValue: this.element.data.input, atomPropsModel: this.atomPropsModel.input }, '*')
             },
