@@ -17,8 +17,9 @@ class BlueShieldWebSocket {
         this.hasConnect = false
         this.userName = /bk_uid=([^;]+);/.exec(document.cookie)[1]
         this.uuid = uuid()
+        this.diaLogUuid = ''
         this.stompClient = {}
-        window.addEventListener('message', this.handlePostMessage)
+        window.addEventListener('message', (res) => this.handlePostMessage(res))
 
         this.connect()
         this.readyDisConnect()
@@ -46,22 +47,6 @@ class BlueShieldWebSocket {
                 window.devops.$bkMessage({ message: err.message || 'websocket异常，请稍后重试', theme: 'error' })
             }
         })
-    }
-
-    handlePostMessage (res) {
-        const type = res.type
-        let data
-        switch (type) {
-            case 'openLogWs':
-                this.handlePostMessage.uuid = uuid()
-                const projectId = localStorage.getItem('projectId')
-                data = JSON.stringify({ sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname, showProjectList: true, projectId })
-                this.loopSendChangePage(data)
-                break;
-            case 'closeLogWs':
-                data = { sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname }
-                this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
-        }
     }
 
     handleMessage (res) {
@@ -140,6 +125,25 @@ class BlueShieldWebSocket {
                     this.hasConnect = true
                 })
             }
+        }
+    }
+
+    handlePostMessage (res) {
+        const resData = res.data
+        const type = resData.type
+        let data
+        switch (type) {
+            case 'openLogWs':
+                if (this.diaLogUuid) return
+                this.diaLogUuid = uuid()
+                const projectId = localStorage.getItem('projectId')
+                data = JSON.stringify({ sessionId: this.diaLogUuid, userId: this.userName, page: location.pathname, showProjectList: true, projectId })
+                this.loopSendChangePage(data)
+                break;
+            case 'closeLogWs':
+                this.diaLogUuid = ''
+                data = { sessionId: this.diaLogUuid, userId: this.userName, page: location.pathname }
+                this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
         }
     }
 
