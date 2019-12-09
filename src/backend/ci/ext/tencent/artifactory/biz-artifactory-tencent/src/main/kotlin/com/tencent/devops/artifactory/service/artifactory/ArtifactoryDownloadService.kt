@@ -28,7 +28,7 @@ package com.tencent.devops.artifactory.service.artifactory
 
 import com.tencent.devops.artifactory.client.JFrogAQLService
 import com.tencent.devops.artifactory.client.JFrogApiService
-import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.dao.TokenDao
 import com.tencent.devops.artifactory.pojo.DownloadUrl
 import com.tencent.devops.artifactory.pojo.Url

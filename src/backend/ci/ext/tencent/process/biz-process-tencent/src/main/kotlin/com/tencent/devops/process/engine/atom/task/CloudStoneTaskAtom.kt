@@ -30,14 +30,15 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.common.pipeline.element.CloudStoneElement
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.CloudStoneService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -46,7 +47,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
@@ -57,14 +57,15 @@ import java.nio.file.Files
 class CloudStoneTaskAtom @Autowired constructor(
     private val cloudStoneService: CloudStoneService,
     private val rabbitTemplate: RabbitTemplate,
-    private val client: Client
+    private val client: Client,
+    private val commonConfig: CommonConfig
 ) : IAtomTask<CloudStoneElement> {
     override fun getParamElement(task: PipelineBuildTask): CloudStoneElement {
         return JsonUtil.mapTo(task.taskParams, CloudStoneElement::class.java)
     }
 
-    @Value("\${gateway.url:#{null}}")
-    private val gatewayUrl: String? = null
+//    @Value("\${gateway.url:#{null}}")
+//    private val gatewayUrl: String? = null
 
     override fun execute(task: PipelineBuildTask, param: CloudStoneElement, runVariables: Map<String, String>): AtomResponse {
         val executeCount = task.executeCount ?: 1
@@ -84,7 +85,7 @@ class CloudStoneTaskAtom @Autowired constructor(
         val userId = runVariables[PIPELINE_START_USER_ID]!!
 
         val destPath = Files.createTempDirectory("cloudStone_").toAbsolutePath().toString()
-        val matchFiles = JfrogClient(gatewayUrl!!, projectId, pipelineId, buildId).downloadFile(sourcePath, isCustom, destPath)
+        val matchFiles = JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId).downloadFile(sourcePath, isCustom, destPath)
         if (matchFiles.isEmpty()) throw OperationException("There is 0 file find in $sourcePath(custom: $isCustom)")
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {

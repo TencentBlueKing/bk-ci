@@ -135,7 +135,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw BuildTaskException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NOT_EXISTS,
+                errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
                 errorMsg = "流水线不存在",
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -144,7 +144,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         val model = pipelineBuildDetailService.getBuildModel(buildId)
             ?: throw BuildTaskException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_MODEL_NOT_EXISTS,
+                errorCode = ERROR_PIPELINE_MODEL_NOT_EXISTS.toInt(),
                 errorMsg = "流水线模型不存在",
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -154,7 +154,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         val container = model.getContainer(vmSeqId)
             ?: throw BuildTaskException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
+                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
                 errorMsg = "流水线的模型中指定构建Job不存在",
                 pipelineId = pipelineId,
                 buildId = buildId,

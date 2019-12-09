@@ -31,7 +31,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineResource
 import com.tencent.devops.artifactory.pojo.enums.Permission
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
@@ -47,9 +48,10 @@ import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperiencePermission
@@ -66,6 +68,7 @@ import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.experience.util.WechatUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -75,13 +78,12 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Service
 class ExperienceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experienceDao: ExperienceDao,
-    private val tokenDao: TokenDao,
     private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val wechatWorkService: WechatWorkService,
@@ -94,12 +96,21 @@ class ExperienceService @Autowired constructor(
 
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
-    private val regex = Pattern.compile(",|;")
+    private val regex = Pattern.compile("[,;]")
 
-    fun hasArtifactoryPermission(userId: String, projectId: String, path: String, artifactoryType: ArtifactoryType): Boolean {
+    fun hasArtifactoryPermission(
+        userId: String,
+        projectId: String,
+        path: String,
+        artifactoryType: ArtifactoryType
+    ): Boolean {
         val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(projectId, type, path).data!!) {
-            throw NotFoundException("文件($path)不存在")
+            throw ErrorCodeException(
+                statusCode = 404,
+                defaultMessage = "文件不存在",
+                errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
+            )
         }
 
         val properties = client.get(ServiceArtifactoryResource::class).properties(projectId, type, path).data!!
@@ -108,10 +119,18 @@ class ExperienceService @Autowired constructor(
             propertyMap[it.key] = it.value
         }
         if (!propertyMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            throw RuntimeException("元数据pipelineId不存在")
+            throw ErrorCodeException(
+                defaultMessage = "体验未与流水线绑定",
+                errorCode = ExperienceMessageCode.EXP_META_DATA_PIPELINE_ID_NOT_EXISTS
+            )
         }
         val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]!!
-        return client.get(ServicePipelineResource::class).hasPermission(userId, projectId, pipelineId, Permission.EXECUTE).data!!
+        return client.get(ServicePipelineResource::class).hasPermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = Permission.EXECUTE
+        ).data!!
     }
 
     fun list(userId: String, projectId: String, expired: Boolean?): List<ExperienceSummaryWithPermission> {
@@ -124,8 +143,8 @@ class ExperienceService @Autowired constructor(
         val groupIdSet = mutableSetOf<String>()
         experienceList.forEach {
             val experienceGroups = objectMapper.readValue<Set<String>>(it.experienceGroups)
-            experienceGroups.forEach {
-                groupIdSet.add(it)
+            experienceGroups.forEach { group ->
+                groupIdSet.add(group)
             }
         }
         val groupMap = groupService.serviceGet(groupIdSet)
@@ -135,9 +154,9 @@ class ExperienceService @Autowired constructor(
             val innerUsers = objectMapper.readValue<Set<String>>(it.innerUsers)
             val experienceGroups = objectMapper.readValue<Set<String>>(it.experienceGroups)
             userSet.addAll(innerUsers)
-            experienceGroups.forEach {
-                if (groupMap.containsKey(it)) {
-                    userSet.addAll(groupMap[it]!!.innerUsers)
+            experienceGroups.forEach { group ->
+                if (groupMap.containsKey(group)) {
+                    userSet.addAll(groupMap[group]!!.innerUsers)
                 }
             }
 
@@ -145,17 +164,17 @@ class ExperienceService @Autowired constructor(
             val canExperience = userSet.contains(userId) || userId == it.creator
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
             ExperienceSummaryWithPermission(
-                    HashUtil.encodeLongId(it.id),
-                    it.name,
-                    Platform.valueOf(it.platform),
-                    it.version,
-                    it.remark ?: "",
-                    it.endDate.timestamp(),
-                    Source.valueOf(it.source),
-                    it.creator,
-                    isExpired,
-                    it.online,
-                    ExperiencePermission(canExperience, canEdit)
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                name = it.name,
+                platform = Platform.valueOf(it.platform),
+                version = it.version,
+                remark = it.remark ?: "",
+                expireDate = it.endDate.timestamp(),
+                source = Source.valueOf(it.source),
+                creator = it.creator,
+                expired = isExpired,
+                online = it.online,
+                permissions = ExperiencePermission(canExperience, canEdit)
             )
         }
     }
@@ -173,36 +192,50 @@ class ExperienceService @Autowired constructor(
         val groupList = groupService.serviceList(groupHashIds.toSet())
 
         return Experience(
-                experienceRecord.name,
-                experienceRecord.artifactoryPath,
-                ArtifactoryType.valueOf(experienceRecord.artifactoryType),
-                Platform.valueOf(experienceRecord.platform),
-                experienceRecord.version,
-                experienceRecord.remark ?: "",
-                experienceRecord.createTime.timestamp(),
-                experienceRecord.endDate.timestamp(),
-                groupList,
-                objectMapper.readValue(experienceRecord.innerUsers),
-                experienceRecord.outerUsers,
-                objectMapper.readValue(experienceRecord.notifyTypes),
-                experienceRecord.enableWechatGroups ?: true,
-                experienceRecord.wechatGroups ?: "",
-                experienceRecord.creator,
-                isExpired,
-                canExperience,
-                experienceRecord.online,
-                url
+            name = experienceRecord.name,
+            path = experienceRecord.artifactoryPath,
+            artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
+            platform = Platform.valueOf(experienceRecord.platform),
+            version = experienceRecord.version,
+            remark = experienceRecord.remark ?: "",
+            createDate = experienceRecord.createTime.timestamp(),
+            expireDate = experienceRecord.endDate.timestamp(),
+            experienceGroups = groupList,
+            innerUsers = objectMapper.readValue(experienceRecord.innerUsers),
+            outerUsers = experienceRecord.outerUsers,
+            notifyTypes = objectMapper.readValue(experienceRecord.notifyTypes),
+            enableWechatGroups = experienceRecord.enableWechatGroups ?: true,
+            wechatGroups = experienceRecord.wechatGroups ?: "",
+            creator = experienceRecord.creator,
+            expired = isExpired,
+            canExperience = canExperience,
+            online = experienceRecord.online,
+            url = url
         )
     }
 
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         experience.experienceGroups.forEach {
             if (!groupService.serviceCheck(it)) {
-                throw NotFoundException("体验组($it)不存在")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    defaultMessage = "体验组($it)不存在",
+                    errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
+                    params = arrayOf(it)
+                )
             }
         }
+
         if (!hasArtifactoryPermission(userId, projectId, experience.path, experience.artifactoryType)) {
-            throw PermissionForbiddenException("用户在项目($projectId)下没有流水线执行权限")
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
+                defaultMessage = AuthPermission.EXECUTE.alias
+            )
+            throw ErrorCodeException(
+                defaultMessage = "用户没有流水线执行权限",
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                params = arrayOf(permissionMsg)
+            )
         }
 
         val platform = if (experience.path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
@@ -210,8 +243,10 @@ class ExperienceService @Autowired constructor(
         val source = Source.WEB
 
         val path = experience.path
-        val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
-        val properties = client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
+        val artifactoryType =
+            com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
+        val properties =
+            client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
@@ -226,27 +261,28 @@ class ExperienceService @Autowired constructor(
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
 
-        val experienceId = experienceDao.create(dslContext,
-                projectId,
-                experience.name,
-                platform.name,
-                experience.path,
-                experience.artifactoryType.name,
-                artifactorySha1,
-                appBundleIdentifier,
-                appVersion,
-                experience.remark,
-                LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-                objectMapper.writeValueAsString(experience.experienceGroups),
-                objectMapper.writeValueAsString(experience.innerUsers),
-                experience.outerUsers,
-                objectMapper.writeValueAsString(experience.notifyTypes),
-                experience.enableWechatGroups,
-                experience.wechatGroups ?: "",
-                true,
-                source.name,
-                userId,
-                userId
+        val experienceId = experienceDao.create(
+            dslContext = dslContext,
+            projectId = projectId,
+            name = experience.name,
+            platform = platform.name,
+            path = experience.path,
+            artifactoryType = experience.artifactoryType.name,
+            artifactorySha1 = artifactorySha1,
+            bundleIdentifier = appBundleIdentifier,
+            version = appVersion,
+            remark = experience.remark,
+            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            experienceGroups = objectMapper.writeValueAsString(experience.experienceGroups),
+            innerUsers = objectMapper.writeValueAsString(experience.innerUsers),
+            outerUsers = experience.outerUsers,
+            notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
+            enableWechatGroup = experience.enableWechatGroups,
+            wechatGroups = experience.wechatGroups ?: "",
+            online = true,
+            source = source.name,
+            creator = userId,
+            updator = userId
         )
         createTaskResource(userId, projectId, experienceId, "${experience.name}（${experience.version}）")
         sendNotification(experienceId)
@@ -254,37 +290,64 @@ class ExperienceService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        validateTaskPermission(userId, projectId, experienceId, AuthPermission.EDIT, "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限")
+        validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.EDIT,
+            message = "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限"
+        )
         if (experienceDao.getOrNull(dslContext, experienceId) == null) {
-            throw NotFoundException("体验($experienceHashId)不存在")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                defaultMessage = "体验($experienceHashId)不存在",
+                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
+                params = arrayOf(experienceHashId)
+            )
         }
         experience.experienceGroups.forEach {
             if (!groupService.serviceCheck(it)) {
-                throw NotFoundException("体验组($it)不存在")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    defaultMessage = "体验($experienceHashId)不存在",
+                    errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS
+                )
             }
         }
 
-        experienceDao.update(dslContext,
-                experienceId,
-                experience.name,
-                experience.remark,
-                LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-                objectMapper.writeValueAsString(experience.experienceGroups),
-                objectMapper.writeValueAsString(experience.innerUsers),
-                experience.outerUsers,
-                objectMapper.writeValueAsString(experience.notifyTypes),
-                experience.enableWechatGroups,
-                experience.wechatGroups ?: "",
-                userId
+        experienceDao.update(
+            dslContext = dslContext,
+            id = experienceId,
+            name = experience.name,
+            remark = experience.remark,
+            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            experienceGroups = objectMapper.writeValueAsString(experience.experienceGroups),
+            innerUsers = objectMapper.writeValueAsString(experience.innerUsers),
+            outerUsers = experience.outerUsers,
+            notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
+            enableWechatGroup = experience.enableWechatGroups,
+            wechatGroups = experience.wechatGroups ?: "",
+            updator = userId
         )
         sendNotification(experienceId)
     }
 
     fun updateOnline(userId: String, projectId: String, experienceHashId: String, online: Boolean) {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        validateTaskPermission(userId, projectId, experienceId, AuthPermission.EDIT, "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限")
+        validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.EDIT,
+            message = "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限"
+        )
         if (experienceDao.getOrNull(dslContext, experienceId) == null) {
-            throw NotFoundException("体验($experienceHashId)不存在")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                defaultMessage = "体验($experienceHashId)不存在",
+                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
+                params = arrayOf(experienceHashId)
+            )
         }
         experienceDao.updateOnline(dslContext, experienceId, online)
     }
@@ -293,23 +356,37 @@ class ExperienceService @Autowired constructor(
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
         if (!userCanExperience(userId, experienceId)) {
-            throw PermissionForbiddenException("用户($userId)不在体验用户名单中")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                defaultMessage = "用户($userId)不在体验用户名单中",
+                errorCode = ExperienceMessageCode.USER_NOT_IN_EXP_GROUP,
+                params = arrayOf(userId)
+            )
         }
-        return shortUrlApi.getShortUrl("${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId", 24*3600*3)
+        return shortUrlApi.getShortUrl(
+            url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId",
+            ttl = 24 * 3600 * 3
+        )
     }
 
     fun downloadUrl(userId: String, projectId: String, experienceHashId: String): String {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
         if (!userCanExperience(userId, experienceId)) {
-            throw PermissionForbiddenException("用户($userId)不在体验用户名单中")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                defaultMessage = "用户($userId)不在体验用户名单中",
+                errorCode = ExperienceMessageCode.USER_NOT_IN_EXP_GROUP,
+                params = arrayOf(userId)
+            )
         }
         return experienceDownloadService.serviceGetInnerDownloadUrl(userId, experienceId)
     }
 
     fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate) {
         val path = experience.path
-        val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
+        val artifactoryType =
+            com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
             throw RuntimeException("文件($path)不存在")
         }
@@ -318,7 +395,8 @@ class ExperienceService @Autowired constructor(
         val artifactorySha1 = makeSha1(experience.artifactoryType, path)
         val source = Source.PIPELINE
 
-        val properties = client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
+        val properties =
+            client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
@@ -339,29 +417,35 @@ class ExperienceService @Autowired constructor(
         val buildNo = propertyMap[ARCHIVE_PROPS_BUILD_NO]!!
         val remark = "构建号#$buildNo"
 
-        val experienceId = experienceDao.create(dslContext,
-                projectId,
-                name,
-                platform.name,
-                experience.path,
-                experience.artifactoryType.name,
-                artifactorySha1,
-                appBundleIdentifier,
-                appVersion,
-                remark,
-                LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-                objectMapper.writeValueAsString(experience.experienceGroups),
-                objectMapper.writeValueAsString(experience.innerUsers),
-                experience.outerUsers,
-                objectMapper.writeValueAsString(experience.notifyTypes),
-                experience.enableWechatGroups,
-                experience.wechatGroups,
-                true,
-                source.name,
-                userId,
-                userId
+        val experienceId = experienceDao.create(
+            dslContext = dslContext,
+            projectId = projectId,
+            name = name,
+            platform = platform.name,
+            path = experience.path,
+            artifactoryType = experience.artifactoryType.name,
+            artifactorySha1 = artifactorySha1,
+            bundleIdentifier = appBundleIdentifier,
+            version = appVersion,
+            remark = remark,
+            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            experienceGroups = objectMapper.writeValueAsString(experience.experienceGroups),
+            innerUsers = objectMapper.writeValueAsString(experience.innerUsers),
+            outerUsers = experience.outerUsers,
+            notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
+            enableWechatGroup = experience.enableWechatGroups,
+            wechatGroups = experience.wechatGroups,
+            online = true,
+            source = source.name,
+            creator = userId,
+            updator = userId
         )
-        createTaskResource(userId, projectId, experienceId, "$name（$appVersion）")
+        createTaskResource(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            experienceName = "$name（$appVersion）"
+        )
         sendNotification(experienceId)
     }
 
@@ -393,43 +477,112 @@ class ExperienceService @Autowired constructor(
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
 
         if (notifyTypeList.contains(NotifyType.EMAIL)) {
-            val message = EmailUtil.makeMessage(userId, projectName, name, version, innerUrl, receivers.toSet())
+            val message = EmailUtil.makeMessage(
+                userId = userId,
+                projectName = projectName,
+                name = name,
+                version = version,
+                url = innerUrl,
+                receivers = receivers.toSet()
+            )
             client.get(ServiceNotifyResource::class).sendEmailNotify(message)
         }
 
         receivers.forEach {
             if (notifyTypeList.contains(NotifyType.RTX)) {
-                val message = RtxUtil.makeMessage(projectName, name, version, innerUrl, outerUrl, setOf(it))
+                val message = RtxUtil.makeMessage(
+                    projectName = projectName,
+                    name = name,
+                    version = version,
+                    innerUrl = innerUrl,
+                    outerUrl = outerUrl,
+                    receivers = setOf(it)
+                )
                 client.get(ServiceNotifyResource::class).sendRtxNotify(message)
             }
             if (notifyTypeList.contains(NotifyType.WECHAT)) {
-                val message = WechatUtil.makeMessage(projectName, name, version, innerUrl, outerUrl, setOf(it))
+                val message = WechatUtil.makeMessage(
+                    projectName = projectName,
+                    name = name,
+                    version = version,
+                    innerUrl = innerUrl,
+                    outerUrl = outerUrl,
+                    receivers = setOf(it)
+                )
                 client.get(ServiceNotifyResource::class).sendWechatNotify(message)
             }
         }
         if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
             val wechatGroupList = regex.split(experienceRecord.wechatGroups)
             wechatGroupList.forEach {
-                val message = WechatGroupUtil.makeRichtextMessage(projectName, name, version, innerUrl, outerUrl, it)
+                val message = WechatGroupUtil.makeRichtextMessage(
+                    projectName = projectName,
+                    name = name,
+                    version = version,
+                    innerUrl = innerUrl,
+                    outerUrl = outerUrl,
+                    groupId = it
+                )
                 wechatWorkService.sendRichText(message)
             }
         }
     }
 
-    private fun validateTaskPermission(user: String, projectId: String, experienceId: Long, authPermission: AuthPermission, message: String) {
-        if (!bsAuthPermissionApi.validateUserResourcePermission(user, experienceServiceCode, taskResourceType, projectId, HashUtil.encodeLongId(experienceId), authPermission)) {
-            throw PermissionForbiddenException(message)
+    private fun validateTaskPermission(
+        user: String,
+        projectId: String,
+        experienceId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        if (!bsAuthPermissionApi.validateUserResourcePermission(
+                user = user,
+                serviceCode = experienceServiceCode,
+                resourceType = taskResourceType,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(experienceId),
+                permission = authPermission
+            )
+        ) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                defaultMessage = authPermission.alias
+            )
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION,
+                defaultMessage = message,
+                params = arrayOf(permissionMsg)
+            )
         }
     }
 
     private fun createTaskResource(user: String, projectId: String, experienceId: Long, experienceName: String) {
-        bsAuthResourceApi.createResource(user, experienceServiceCode, taskResourceType, projectId, HashUtil.encodeLongId(experienceId), experienceName)
+        bsAuthResourceApi.createResource(
+            user = user,
+            serviceCode = experienceServiceCode,
+            resourceType = taskResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(experienceId),
+            resourceName = experienceName
+        )
     }
 
-    private fun filterExperience(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(user, experienceServiceCode, taskResourceType, projectId, authPermissions, null)
+    private fun filterExperience(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
+        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(
+            user = user,
+            serviceCode = experienceServiceCode,
+            resourceType = taskResourceType,
+            projectCode = projectId,
+            permissions = authPermissions,
+            supplier = null
+        )
         val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { key, value ->
+        permissionResourceMap.forEach { (key, value) ->
             map[key] = value.map { HashUtil.decodeIdToLong(it) }
         }
         return map
@@ -446,7 +599,10 @@ class ExperienceService @Autowired constructor(
 
     private fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
-        return shortUrlApi.getShortUrl("${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId", 24*3600*30)
+        return shortUrlApi.getShortUrl(
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId",
+            24 * 3600 * 30
+        )
     }
 
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
@@ -457,7 +613,7 @@ class ExperienceService @Autowired constructor(
         val allUsers = mutableSetOf<String>()
         allUsers.addAll(innerUsers)
         val groupUserMap = groupService.serviceGet(experienceGroups)
-        groupUserMap.forEach { _, value ->
+        groupUserMap.forEach { (_, value) ->
             allUsers.addAll(value.innerUsers)
         }
         return allUsers.contains(userId) || userId == experienceRecord.creator

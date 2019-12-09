@@ -41,6 +41,8 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.store.pojo.image.exception.UnknownImageType
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -84,29 +86,54 @@ class DockerHostDebugService @Autowired constructor(
         credentialId: String?
     ) {
         logger.info("Start docker debug  pipelineId:($pipelineId), projectId:($projectId), vmSeqId:($vmSeqId), imageName:($imageName), imageType:($imageType), imageCode:($imageCode), imageVersion:($imageVersion)")
-        val dockerImage = if (imageType == ImageType.THIRD) {
-            imageName!!
-        } else if (imageType == ImageType.BKSTORE) {
-            // 调商店接口获取镜像完整名称
-            storeImageService.getCompleteImageName(
+        var imageRepoInfo: ImageRepoInfo? = null
+        var finalCredentialId = credentialId
+        var credentialProject = projectId
+        if (imageType == ImageType.BKSTORE) {
+            imageRepoInfo = storeImageService.getImageRepoInfo(
                 userId = userId,
                 projectId = projectId,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 defaultPrefix = dockerBuildImagePrefix
             )
-        } else {
-            when (imageName) {
-                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
-                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/bkdevops/$imageName"
+            if (imageRepoInfo.ticketId.isNotBlank()) {
+                finalCredentialId = imageRepoInfo.ticketId
+            }
+            credentialProject = imageRepoInfo.ticketProject
+            if (credentialProject.isBlank()) {
+                logger.warn("insertDebug:credentialProject is blank,pipelineId=$pipelineId, imageCode=$imageCode,imageVersion=$imageVersion,credentialId=$credentialId")
             }
         }
-        logger.info("Docker images is: $dockerImage")
+        val dockerImage = when (imageType) {
+            ImageType.THIRD -> imageName!!
+            ImageType.BKSTORE -> {
+                // 研发商店镜像一定含name与tag
+                if (imageRepoInfo!!.repoUrl.isBlank()) {
+                    // dockerhub镜像名称不带斜杠前缀
+                    imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                } else {
+                    // 无论蓝盾还是第三方镜像此处均需完整路径
+                    imageRepoInfo.repoUrl + "/" + imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                }
+            }
+            else -> when (imageName) {
+                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
+                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
+                else -> "$dockerBuildImagePrefix/$imageName"
+            }
+        }
+        logger.info("insertDebug:Docker images is: $dockerImage")
         var userName: String? = null
         var password: String? = null
-        if (imageType == ImageType.THIRD && !credentialId.isNullOrBlank()) {
-            val ticketsMap = CommonUtils.getCredential(client, projectId, credentialId!!, CredentialType.USERNAME_PASSWORD)
+        if (imageType == ImageType.THIRD && !finalCredentialId.isNullOrBlank()) {
+            val ticketsMap =
+                CommonUtils.getCredential(
+                    client = client,
+                    projectId = credentialProject,
+                    credentialId = finalCredentialId!!,
+                    type = CredentialType.USERNAME_PASSWORD
+                )
             userName = ticketsMap["v1"] as String
             password = ticketsMap["v2"] as String
         }
@@ -126,22 +153,25 @@ class DockerHostDebugService @Autowired constructor(
         }
 
         pipelineDockerDebugDao.insertDebug(
-            dslContext,
-            projectId,
-            pipelineId,
-            vmSeqId,
-            PipelineTaskStatus.QUEUE,
-            "",
-            dockerImage,
-            hostTag,
-            buildEnvStr,
-            userName,
-            password,
-            imageType = if (null == imageType) {
-                ImageType.BKDEVOPS.type
-            } else {
-                imageType.type
-            })
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            status = PipelineTaskStatus.QUEUE,
+            token = "",
+            imageName = dockerImage,
+            hostTag = hostTag,
+            buildEnv = buildEnvStr,
+            registryUser = userName,
+            registryPwd = password,
+            imageType = when (imageType) {
+                null -> ImageType.BKDEVOPS.type
+                ImageType.THIRD -> imageType!!.type
+                ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
+                ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
+                else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
+            }
+        )
     }
 
     fun deleteDebug(pipelineId: String, vmSeqId: String): Result<Boolean> {

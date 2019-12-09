@@ -42,6 +42,7 @@ import com.tencent.devops.common.gcloud.api.pojo.history.QueryVersionParam
 import com.tencent.devops.common.gcloud.api.pojo.history.UploadUpdateFileParam
 import com.tencent.devops.common.pipeline.element.GcloudAppElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -51,7 +52,6 @@ import com.tencent.devops.process.util.gcloud.TicketUtil
 import org.apache.commons.lang.math.NumberUtils
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
@@ -62,11 +62,12 @@ import java.nio.file.Files
 class GcloudNewAppTaskAtom @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val commonConfig: CommonConfig
 ) : IAtomTask<GcloudAppElement> {
 
-    @Value("\${gateway.url:#{null}}")
-    private val gatewayUrl: String? = null
+//    @Value("\${gateway.url:#{null}}")
+//    private val gatewayUrl: String? = null
 
     override fun getParamElement(task: PipelineBuildTask): GcloudAppElement {
         return JsonUtil.mapTo(task.taskParams, GcloudAppElement::class.java)
@@ -138,7 +139,7 @@ class GcloudNewAppTaskAtom @Autowired constructor(
             4
         }
 
-        val jfrogClient = JfrogClient(gatewayUrl ?: "", projectId, pipelineId, buildId)
+        val jfrogClient = JfrogClient(commonConfig.devopsHostGateway ?: "", projectId, pipelineId, buildId)
         val isCustom = fileSource.toUpperCase() == "CUSTOMIZE"
         val destPath = Files.createTempDirectory("gcloud").toAbsolutePath().toString()
         val downloadFileList = jfrogClient.downloadFile(filePath, isCustom, destPath)

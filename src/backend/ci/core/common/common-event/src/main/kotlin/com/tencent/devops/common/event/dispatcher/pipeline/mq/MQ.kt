@@ -87,7 +87,7 @@ object MQ {
 
     // 插件结束后续广播exchange
     const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "e.engine.pipeline.build.element.finish"
-    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
+//    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_ELEMENT_FINISH_LAMBDA = "q.engine.pipeline.build.element.lambda"
     const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
@@ -189,4 +189,8 @@ object MQ {
     const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
     const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
     const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
+
+    // 回调
+    const val EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT = "e.engine.pipeline.build.callback.fanout"
+    const val QUEUE_PIPELINE_BUILD_STATUS_CHANGE = "e.engine.pipeline.build.callback.change"
 }

@@ -411,7 +411,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
-                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
                 )
             }
@@ -436,7 +436,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
-                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
                 )
             }

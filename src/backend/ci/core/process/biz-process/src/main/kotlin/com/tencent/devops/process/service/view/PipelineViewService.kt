@@ -88,67 +88,109 @@ class PipelineViewService @Autowired constructor(
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
-        if (pipelineViewLastViewDao.get(dslContext, userId, projectId) == null) {
-            pipelineViewLastViewDao.create(dslContext, userId, projectId, viewId)
+        if (pipelineViewLastViewDao.get(dslContext = dslContext, userId = userId, projectId = projectId) == null) {
+            pipelineViewLastViewDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                viewId = viewId
+            )
         } else {
-            pipelineViewLastViewDao.update(dslContext, userId, projectId, viewId)
+            pipelineViewLastViewDao.update(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                viewId = viewId
+            )
         }
     }
 
     fun getUsingView(userId: String, projectId: String): String? {
-        return pipelineViewLastViewDao.get(dslContext, userId, projectId)?.viewId
+        return pipelineViewLastViewDao.get(dslContext = dslContext, userId = userId, projectId = projectId)?.viewId
     }
 
     fun getViewSettings(userId: String, projectId: String): PipelineViewSettings {
-        val currentViewListAndView = getCurrentViewIdAndList(userId, projectId)
+        val currentViewListAndView = getCurrentViewIdAndList(userId = userId, projectId = projectId)
         val currentViewId = currentViewListAndView.first
         val currentViewList = currentViewListAndView.second
-        return PipelineViewSettings(currentViewId, currentViewList, getViewClassifyList(userId, projectId))
+        return PipelineViewSettings(
+            currentViewId = currentViewId,
+            currentViews = currentViewList,
+            viewClassifies = getViewClassifyList(userId = userId, projectId = projectId)
+        )
     }
 
     fun getViewClassifyList(userId: String, projectId: String): List<PipelineViewClassify> {
         val systemViewList = listOf(
-            PipelineViewIdAndName(PIPELINE_VIEW_FAVORITE_PIPELINES, FAVORITE_PIPELINES_LABEL),
-            PipelineViewIdAndName(PIPELINE_VIEW_MY_PIPELINES, MY_PIPELINES_LABEL),
-            PipelineViewIdAndName(PIPELINE_VIEW_ALL_PIPELINES, ALL_PIPELINES_LABEL)
+            PipelineViewIdAndName(
+                id = PIPELINE_VIEW_FAVORITE_PIPELINES,
+                name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+            ),
+            PipelineViewIdAndName(
+                id = PIPELINE_VIEW_MY_PIPELINES,
+                name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+            ),
+            PipelineViewIdAndName(
+                id = PIPELINE_VIEW_ALL_PIPELINES,
+                name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+            )
         )
 
-        val projectViewRecordList = pipelineViewDao.list(dslContext, projectId, true)
+        val projectViewRecordList = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = true
+        )
         val projectViewList = projectViewRecordList.map {
-            PipelineViewIdAndName(encode(it.id), it.name)
+            PipelineViewIdAndName(id = encode(it.id), name = it.name)
         }
 
-        val personViewRecordList = pipelineViewDao.list(dslContext, projectId, userId, false)
+        val personViewRecordList = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            userId = userId,
+            isProject = false
+        )
         val personViewList = personViewRecordList.map {
-            PipelineViewIdAndName(encode(it.id), it.name)
+            PipelineViewIdAndName(id = encode(it.id), name = it.name)
         }
 
-        val systemPipelineViewClassify =
-            PipelineViewClassify(MessageCodeUtil.getCodeLanMessage(SYSTEM_VIEW_LABEL), systemViewList)
-        val projectPipelineViewClassify =
-            PipelineViewClassify(MessageCodeUtil.getCodeLanMessage(PROJECT_VIEW_LABEL), projectViewList)
-        val personPipelineViewClassify =
-            PipelineViewClassify(MessageCodeUtil.getCodeLanMessage(PERSON_VIEW_LABEL), personViewList)
+        val systemPipelineViewClassify = PipelineViewClassify(
+            label = MessageCodeUtil.getCodeLanMessage(SYSTEM_VIEW_LABEL),
+            viewList = systemViewList
+        )
+        val projectPipelineViewClassify = PipelineViewClassify(
+            label = MessageCodeUtil.getCodeLanMessage(PROJECT_VIEW_LABEL),
+            viewList = projectViewList
+        )
+        val personPipelineViewClassify = PipelineViewClassify(
+            label = MessageCodeUtil.getCodeLanMessage(PERSON_VIEW_LABEL),
+            viewList = personViewList
+        )
 
         return listOf(systemPipelineViewClassify, projectPipelineViewClassify, personPipelineViewClassify)
     }
 
     fun getCurrentViewIdAndList(userId: String, projectId: String): Pair<String, List<PipelineViewIdAndName>> {
-        val pipelineViewSettingsRecord = pipelineViewUserSettingDao.get(dslContext, userId, projectId)
+        val pipelineViewSettingsRecord = pipelineViewUserSettingDao.get(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId
+        )
 
         val currentViewList = if (pipelineViewSettingsRecord == null) {
             listOf(
                 PipelineViewIdAndName(
-                    PIPELINE_VIEW_FAVORITE_PIPELINES,
-                    MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+                    id = PIPELINE_VIEW_FAVORITE_PIPELINES,
+                    name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
                 ),
                 PipelineViewIdAndName(
-                    PIPELINE_VIEW_MY_PIPELINES,
-                    MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+                    id = PIPELINE_VIEW_MY_PIPELINES,
+                    name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
                 ),
                 PipelineViewIdAndName(
-                    PIPELINE_VIEW_ALL_PIPELINES,
-                    MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+                    id = PIPELINE_VIEW_ALL_PIPELINES,
+                    name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
                 )
             )
         } else {
@@ -165,32 +207,32 @@ class PipelineViewService @Autowired constructor(
             val tmpList = mutableListOf<PipelineViewIdAndName>()
             currentViewIdList.forEach { viewId ->
                 if (viewId in SYSTEM_VIEW_ID_LIST) {
-                    tmpList.add(PipelineViewIdAndName(viewId, getSystemViewName(viewId)))
+                    tmpList.add(PipelineViewIdAndName(id = viewId, name = getSystemViewName(viewId)))
                     return@forEach
                 }
 
                 val viewLongId = decode(viewId)
                 if (pipelineViewMap.containsKey(viewLongId)) {
                     val record = pipelineViewMap[viewLongId]!!
-                    tmpList.add(PipelineViewIdAndName(encode(record.id), record.name))
+                    tmpList.add(PipelineViewIdAndName(id = encode(record.id), name = record.name))
                 }
             }
             tmpList
         }
 
-        val usingViewId = getUsingView(userId, projectId)
+        val usingViewId = getUsingView(userId = userId, projectId = projectId)
         val currentViewId = if (usingViewId != null && currentViewList.map { it.id }.contains(usingViewId)) {
             usingViewId
         } else {
             currentViewList.first().id
         }
 
-        return Pair(currentViewId, currentViewList)
+        return Pair(first = currentViewId, second = currentViewList)
     }
 
     fun updateViewSettings(userId: String, projectId: String, viewIdList: List<String>) {
         if (viewIdList.size > 7) {
-            throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_MAX_LIMIT.toString())
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_MAX_LIMIT)
         }
 
         val projectViewRecordList = pipelineViewDao.list(dslContext, projectId)
@@ -202,7 +244,7 @@ class PipelineViewService @Autowired constructor(
             }
             if (!projectViewIdList.contains(decode(viewId))) {
                 logger.warn("[$projectId]| Pipeline view($viewId) not exist")
-                throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND.toString(), params = arrayOf(viewId))
+                throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
             }
         }
 
@@ -224,7 +266,12 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
-        val views = pipelineViewDao.listProjectOrUser(dslContext, projectId, true, userId)
+        val views = pipelineViewDao.listProjectOrUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = true,
+            userId = userId
+        )
 
         return views.map {
             PipelineNewViewSummary(
@@ -240,8 +287,8 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
-        val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND.toString(), params = arrayOf(viewId))
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
 
         val filters =
             getFilters(
@@ -275,9 +322,7 @@ class PipelineViewService @Autowired constructor(
                     logic = pipelineView.logic.name,
                     isProject = pipelineView.projected,
                     filters = objectMapper.writerFor(object :
-                        TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(
-                        pipelineView.filters
-                    ),
+                        TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(pipelineView.filters),
                     userId = userId
                 )
                 encode(viewId)
@@ -285,7 +330,7 @@ class PipelineViewService @Autowired constructor(
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS.toString(),
+                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS,
                 params = arrayOf(pipelineView.name)
             )
         }
@@ -294,33 +339,32 @@ class PipelineViewService @Autowired constructor(
     fun deleteView(userId: String, projectId: String, viewId: String): Boolean {
         val id = decode(viewId)
         val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND.toString(), params = arrayOf(viewId))
+            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
         val isUserManager = isUserManager(userId, projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
             throw ErrorCodeException(
-                errorCode = ERROR_DEL_PIPELINE_VIEW_NO_PERM.toString(),
+                errorCode = ERROR_DEL_PIPELINE_VIEW_NO_PERM,
                 params = arrayOf(userId, viewId)
             )
         }
 
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val result = pipelineViewDao.delete(context, id)
             pipelineViewLabelDao.detachLabelByView(context, id, userId)
-            result
+            pipelineViewDao.delete(context, id)
         }
     }
 
     fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Boolean {
         val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND.toString(), params = arrayOf(viewId))
-        val isUserManager = isUserManager(userId, projectId)
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+        val isUserManager = isUserManager(userId = userId, projectId = projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
             throw ErrorCodeException(
-                errorCode = ERROR_EDIT_PIPELINE_VIEW_NO_PERM.toString(),
+                errorCode = ERROR_EDIT_PIPELINE_VIEW_NO_PERM,
                 params = arrayOf(userId, viewId)
             )
         }
@@ -345,7 +389,7 @@ class PipelineViewService @Autowired constructor(
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS.toString(),
+                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS,
                 params = arrayOf(pipelineView.name)
             )
         }
@@ -369,7 +413,7 @@ class PipelineViewService @Autowired constructor(
             }
         }
 
-        return Triple(filterByNames, filterByCreators, filterByLabels)
+        return Triple(first = filterByNames, second = filterByCreators, third = filterByLabels)
     }
 
     private fun getFilters(
@@ -388,17 +432,28 @@ class PipelineViewService @Autowired constructor(
         }
 
         if (filterByName.isNotEmpty()) {
-            allFilters.add(PipelineViewFilterByName(Condition.LIKE, filterByName))
+            allFilters.add(PipelineViewFilterByName(condition = Condition.LIKE, pipelineName = filterByName))
         }
 
         if (filterByCreator.isNotEmpty()) {
-            allFilters.add(PipelineViewFilterByCreator(Condition.INCLUDE, filterByCreator.split(",")))
+            allFilters.add(
+                PipelineViewFilterByCreator(
+                    condition = Condition.INCLUDE,
+                    userIds = filterByCreator.split(",")
+                )
+            )
         }
 
         if (labelIds.isNotEmpty()) {
             val groupToLabelsMap = pipelineGroupService.getGroupToLabelsMap(labelIds)
             groupToLabelsMap.forEach { (groupId, labelIdList) ->
-                allFilters.add(PipelineViewFilterByLabel(Condition.INCLUDE, groupId, labelIdList))
+                allFilters.add(
+                    PipelineViewFilterByLabel(
+                        condition = Condition.INCLUDE,
+                        groupId = groupId,
+                        labelIds = labelIdList
+                    )
+                )
             }
         }
 
@@ -406,7 +461,11 @@ class PipelineViewService @Autowired constructor(
     }
 
     private fun isUserManager(userId: String, projectId: String): Boolean {
-        return pipelinePermissionService.isProjectUser(userId, projectId, BkAuthGroup.MANAGER)
+        return pipelinePermissionService.isProjectUser(
+            userId = userId,
+            projectId = projectId,
+            group = BkAuthGroup.MANAGER
+        )
     }
 
     private fun getSystemViewName(viewId: String): String {
@@ -415,8 +474,7 @@ class PipelineViewService @Autowired constructor(
             PIPELINE_VIEW_MY_PIPELINES -> MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
             PIPELINE_VIEW_ALL_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
             else -> throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND.toString(),
-                params = arrayOf(viewId)
+                errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId)
             )
         }
     }

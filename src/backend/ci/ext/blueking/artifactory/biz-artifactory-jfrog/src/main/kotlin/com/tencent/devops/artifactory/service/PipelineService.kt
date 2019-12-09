@@ -30,17 +30,17 @@ import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.pojo.JFrogFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
-import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.archive.pojo.JFrogFileInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.api.BkAuthPermissionApi
+import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
@@ -52,11 +52,11 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class PipelineService @Autowired constructor(
-    private val authPermissionApi: AuthPermissionApi,
+    private val bkAuthPermissionApi: BkAuthPermissionApi,
     private val jFrogPropertiesApi: JFrogPropertiesApi,
     private val jFrogService: JFrogService,
     private val client: Client,
-    private val serviceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: BkPipelineAuthServiceCode
 ) {
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
 
@@ -136,8 +136,8 @@ class PipelineService @Autowired constructor(
             val pipelineName = getPipelineName(projectId, pipelineId)
             jFrogPropertiesMap[ARCHIVE_PROPS_PIPELINE_NAME] = pipelineName
         }
-
-        return if (jFrogFileInfo.checksums == null) {
+        val checksums = jFrogFileInfo.checksums
+        return if (checksums == null) {
             FileDetail(
                 name = getDirectoryName(projectId, path),
                 path = path,
@@ -162,9 +162,9 @@ class PipelineService @Autowired constructor(
                 createdTime = LocalDateTime.parse(jFrogFileInfo.created, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 modifiedTime = LocalDateTime.parse(jFrogFileInfo.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 checksums = FileChecksums(
-                    jFrogFileInfo.checksums.sha256,
-                    jFrogFileInfo.checksums.sha1,
-                    jFrogFileInfo.checksums.md5
+                    checksums.sha256,
+                    checksums.sha1,
+                    checksums.md5
                 ),
                 meta = jFrogPropertiesMap
             )
@@ -433,9 +433,9 @@ class PipelineService @Autowired constructor(
         pipelineId: String,
         bkAuthPermission: AuthPermission
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        return bkAuthPermissionApi.validateUserResourcePermission(
             user = user,
-            serviceCode = serviceCode,
+            serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
             permission = bkAuthPermission
@@ -445,9 +445,9 @@ class PipelineService @Autowired constructor(
     fun filterPipeline(user: String, projectId: String, bkAuthPermission: AuthPermission): List<String> {
         val startTimestamp = System.currentTimeMillis()
         try {
-            return authPermissionApi.getUserResourceByPermission(
+            return bkAuthPermissionApi.getUserResourceByPermission(
                 user = user,
-                serviceCode = serviceCode,
+                serviceCode = pipelineAuthServiceCode,
                 resourceType = resourceType,
                 projectCode = projectId,
                 permission = bkAuthPermission,

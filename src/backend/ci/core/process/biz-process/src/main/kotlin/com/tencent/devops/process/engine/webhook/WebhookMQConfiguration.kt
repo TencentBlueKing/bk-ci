@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.webhook
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.run.WebhookEventListener
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
@@ -152,17 +153,19 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired webhookEventListener: WebhookEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(svnEventQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(1)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
-        val messageListenerAdapter = MessageListenerAdapter(webhookEventListener, webhookEventListener::handleCommitEvent.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
         logger.info("Start SVN commit event listener")
-        return container
+        val adapter = MessageListenerAdapter(webhookEventListener, webhookEventListener::handleCommitEvent.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = svnEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
     }
 
     @Bean
@@ -173,17 +176,19 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired webhookEventListener: WebhookEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(gitEventQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
-        val messageListenerAdapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleCommitEvent.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
         logger.info("Start Git commit event listener")
-        return container
+        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleCommitEvent.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = gitEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
     }
 
     @Bean
@@ -194,17 +199,19 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired webhookEventListener: WebhookEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(gitlabEventQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
-        val messageListenerAdapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleCommitEvent.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleCommitEvent.name)
+        adapter.setMessageConverter(messageConverter)
         logger.info("Start Gitlab commit event listener")
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = gitlabEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
     }
 
     @Bean
@@ -215,17 +222,19 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired webhookEventListener: WebhookEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(githubEventQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
-        val messageListenerAdapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleGithubCommitEvent.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleGithubCommitEvent.name)
+        adapter.setMessageConverter(messageConverter)
         logger.info("Start Github commit event listener")
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = githubEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
     }
 
     companion object {

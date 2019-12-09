@@ -278,7 +278,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             )
             throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS,
+                errorCode = ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS.toInt(),
                 errorMsg = "Index file not exist"
             ) }
         LogUtils.addLine(rabbitTemplate, buildId, "入口文件检测完成", taskId, containerId, executeCount)
