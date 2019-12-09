@@ -24,43 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.response
+package com.tencent.devops.process.api.builds
 
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("指标列表页面响应")
-data class IndicatorListResponse(
-    @ApiModelProperty("脚本指标")
-    val scriptIndicators: List<IndicatorListItem>,
-    @ApiModelProperty("系统指标")
-    val systemIndicators: List<IndicatorListItem>,
-    @ApiModelProperty("研发商店指标")
-    val marketIndicators: List<IndicatorListItem>
-) {
-    data class IndicatorListItem(
-        val hashId: String,
-        val name: String,
-        val cnName: String,
-        val elementType: String,
-        val elementName: String,
-        val elementDetail: String, // 对应页面的工具
-        val metadatas: List<QualityMetadata>,
-        val availableOperation: List<QualityOperation>,
-        val dataType: QualityDataType,
-        val threshold: String,
-        val desc: String,
-        val range: String
-    )
-
-    data class QualityMetadata(
-        val enName: String,
-        val cnName: String,
-        val detail: String,
-        val type: QualityDataType,
-        val msg: String,
-        val extra: String?
-    )
+@RestResource
+class BuildTaskResourceImpl @Autowired constructor(
+    private val pipelineBuildTaskService: PipelineBuildTaskService
+) : BuildTaskResource {
+    override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTaskInfo>> {
+        return Result(pipelineBuildTaskService.getAllBuildTask(buildId))
+    }
 }
