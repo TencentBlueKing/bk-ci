@@ -92,6 +92,8 @@ class TxImageRepoService @Autowired constructor(
                     it.storeFlag
                 }
                 dockerRepo.tags = tags
+            } else {
+                dockerRepo.tags = dockerRepo.tags?.filter { it.tag != LATEST }
             }
         }
         logger.info("getRelImageInfo dockerRepo is:$dockerRepo")
