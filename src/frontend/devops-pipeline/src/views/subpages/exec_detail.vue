@@ -395,6 +395,7 @@
                 this.getInitLog(this.logPostData).then((res) => {
                     res = res.data || {}
                     this.$refs.log.addLogData(res.logs, true)
+                    const page = `/log/build/${this.logPostData.buildId}/tag/${this.logPostData.tag}`
                     if (!res.finished) {
                         const lastLog = res.logs[res.logs.length - 1] || { lineNo: 0 }
                         Object.assign(this.logPostData, lastLog)
@@ -403,7 +404,7 @@
                             if (res.finished) {
                                 this.closeLog()
                             }
-                        })
+                        }, page)
                         this.buildLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
                     }
                 }).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err })).finally(() => (this.isInitLog = false))
@@ -411,8 +412,9 @@
 
             closeLog () {
                 this.showLog = false
+                const page = `/log/build/${this.logPostData.buildId}/tag/${this.logPostData.tag}`
                 this.stopLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
-                webSocketMessage.closeDialogWebSocket()
+                webSocketMessage.closeDialogWebSocket(page)
             }
         }
     }
