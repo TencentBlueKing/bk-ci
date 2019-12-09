@@ -50,15 +50,16 @@ class BlueShieldWebSocket {
 
     handlePostMessage (res) {
         const type = res.type
+        let data
         switch (type) {
             case 'openLogWs':
                 this.handlePostMessage.uuid = uuid()
                 const projectId = localStorage.getItem('projectId')
-                const data = JSON.stringify({ sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname, showProjectList: true, projectId })
+                data = JSON.stringify({ sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname, showProjectList: true, projectId })
                 this.loopSendChangePage(data)
                 break;
             case 'closeLogWs':
-                const data = { sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname }
+                data = { sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname }
                 this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
         }
     }
