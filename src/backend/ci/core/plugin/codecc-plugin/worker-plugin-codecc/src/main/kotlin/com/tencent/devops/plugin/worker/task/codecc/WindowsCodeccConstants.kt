@@ -24,40 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.pojo
+package com.tencent.devops.plugin.worker.task.codecc
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildVariables
+import java.io.File
 
-/**
- * 26/01/2018
- */
-data class CoverityConfig(
-    val name: String,
-    val cnName: String,
-    val projectType: CoverityProjectType,
-    val tools: List<String>,
-    var asynchronous: Boolean, // 是否同步，默认是同步
-    val filterTools: List<String>,
-    val repos: List<RepoItem>,
-    val scanCodePath: String,
-    val scmType: String,
-    val certType: String,
-    val taskParams: Map<String, String>,
-    val buildVariables: BuildVariables,
-    val buildTask: BuildTask,
-    val timeOut: Long = 4 * 3600 // 4小时
-) {
-    data class RepoItem(
-        val repositoryConfig: RepositoryConfig,
-        val type: String,
-        val relPath: String = "", // 代码路径
-        val relativePath: String = "", // 代码相对路径
-        var url: String = "",
-        var authType: String = "",
-        var repoHashId: String = "",
-        var svnUerPassPair: Pair<String, String>? = null
-    )
+object WindowsCodeccConstants {
+
+    // windows公共构建机路径
+    // windows不需要安装，直接配置路径即可
+    val WINDOWS_CODECC_FOLDER = File("c:/software/codecc")
+    val WINDOWS_COV_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getCovPyFile()}")
+    val WINDOWS_TOOL_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getToolPyFile()}")
+    val WINDOWS_COVRITY_HOME = File(WINDOWS_CODECC_FOLDER, "cov-analysis-win64-2018.06")
+    val WINDOWS_KLOCWORK_HOME = File(WINDOWS_CODECC_FOLDER, "kw-analysis-win64-12.3")
+    val WINDOWS_PYTHON2_PATH = File(WINDOWS_CODECC_FOLDER, "Python27")
+    val WINDOWS_PYTHON3_PATH = File(WINDOWS_CODECC_FOLDER, "Python-3.5.2")
+    val WINDOWS_PYLINT2_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_2.7")
+    val WINDOWS_PYLINT3_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_3.5")
+    val WINDOWS_GOROOT_PATH = File(WINDOWS_CODECC_FOLDER, "go1.10.3")
+    val WINDOWS_JDK_PATH = File(WINDOWS_CODECC_FOLDER, "Java/jdk1.8.0_65/bin")
+    val WINDOWS_NODE_PATH = File(WINDOWS_CODECC_FOLDER, "node-v8.9.0-win-x86_eslint")
+    val WINDOWS_GOMETALINTER_PATH = File(WINDOWS_CODECC_FOLDER, "gometalinter/bin")
 }

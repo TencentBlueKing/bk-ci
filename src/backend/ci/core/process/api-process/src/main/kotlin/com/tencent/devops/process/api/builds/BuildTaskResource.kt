@@ -24,14 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.api
+package com.tencent.devops.process.api.builds
 
-import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.pojo.Result
-import okhttp3.Response
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface CodeccSDKApi {
-    fun saveTask(projectId: String, pipelineId: String, buildId: String): Result<String>
-    fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean = false): Response
-    fun downloadToolScript(osType: OSType, fileMd5: String): Response
+@Api(tags = ["BUILD_TASK"], description = "构建-任务资源")
+@Path("/build/task")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildTaskResource {
+
+    @ApiOperation("获取当此构建的所有task")
+    @Path("/getAllBuildTask")
+    @GET
+    fun getAllBuildTask(
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String
+    ): Result<List<PipelineBuildTaskInfo>>
 }

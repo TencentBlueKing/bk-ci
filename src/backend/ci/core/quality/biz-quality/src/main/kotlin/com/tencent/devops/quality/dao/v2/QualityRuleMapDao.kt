@@ -37,16 +37,16 @@ class QualityRuleMapDao {
     fun get(dslContext: DSLContext, ruleId: Long): TQualityRuleMapRecord {
         return with(TQualityRuleMap.T_QUALITY_RULE_MAP) {
             dslContext.selectFrom(this)
-                    .where(RULE_ID.eq(ruleId))
-                    .fetchOne()
+                .where(RULE_ID.eq(ruleId))
+                .fetchOne()
         }
     }
 
     fun batchGet(dslContext: DSLContext, ruleIds: Collection<Long>): Result<TQualityRuleMapRecord>? {
         return with(TQualityRuleMap.T_QUALITY_RULE_MAP) {
             dslContext.selectFrom(this)
-                    .where(RULE_ID.`in`(ruleIds))
-                    .fetch()
+                .where(RULE_ID.`in`(ruleIds))
+                .fetch()
         }
     }
 }

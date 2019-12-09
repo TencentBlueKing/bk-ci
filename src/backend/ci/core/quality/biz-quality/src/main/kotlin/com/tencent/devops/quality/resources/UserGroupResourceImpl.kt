@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.UserGroupResource
 import com.tencent.devops.quality.pojo.Group
 import com.tencent.devops.quality.pojo.GroupCreate
-import com.tencent.devops.quality.api.UserGroupResource
 import com.tencent.devops.quality.pojo.GroupSummaryWithPermission
 import com.tencent.devops.quality.pojo.GroupUpdate
 import com.tencent.devops.quality.pojo.GroupUsers
@@ -45,7 +45,12 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserGroupResourceImpl @Autowired constructor(
     private val groupService: GroupService
 ) : UserGroupResource {
-    override fun list(userId: String, projectId: String, page: Int?, pageSize: Int?): Result<Page<GroupSummaryWithPermission>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<GroupSummaryWithPermission>> {
         checkParam(userId, projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20

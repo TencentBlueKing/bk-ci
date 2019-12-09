@@ -24,20 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.worker.common.api.codecc
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import org.springframework.stereotype.Service
-import java.io.File
+import okhttp3.Response
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
-
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        return CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, file, FileChannelTypeEnum.WEB_SHOW.name)
-    }
+interface CodeccSDKApi {
+    fun saveTask(projectId: String, pipelineId: String, buildId: String): Result<String>
+    fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean = false): Response
+    fun downloadToolScript(osType: OSType, fileMd5: String): Response
 }
