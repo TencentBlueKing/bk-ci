@@ -708,6 +708,6 @@
         "mutualTimeoutPlaceholder": "Please fill in an integer between 1 and 10080 ",
         "queueLabel": " Maximum tasks in queues ",
         "queuePlaceholder": " Please fill in an integer between 1 and 10",
-        "noEnv": "Agentless job" 
+        "noEnv": "Agentless" 
     }
 }
