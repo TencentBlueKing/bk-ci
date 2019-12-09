@@ -12,7 +12,7 @@
                                         <i class="bk-icon icon-angle-up" :disabled="execDetail.latestBuildNum === execDetail.buildNum || isLoading" @click="switchBuildNum(1)" />
                                         <i class="bk-icon icon-angle-down" :disabled="1 === execDetail.buildNum || isLoading" @click="switchBuildNum(-1)" />
                                     </p>
-                                    <i class="bk-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
+                                    <!-- <i class="bk-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i> -->
                                 </template>
                             </div>
                         </bread-crumb-item>

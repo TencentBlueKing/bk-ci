@@ -4,12 +4,12 @@
             <header class="log-head">
                 <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
                 <p class="log-buttons">
-                    <bk-button class="log-button" @click="showTime = !showTime">显示时间</bk-button>
-                    <a download :href="downLoadLink"><bk-button class="log-button">下载日志</bk-button></a>
+                    <bk-button class="log-button" @click="showTime=!showTime">显示时间</bk-button>
+                    <bk-button class="log-button">下载日志</bk-button>
                 </p>
             </header>
 
-            <virtual-scroll class="log-scroll" ref="scroll" v-bkloading="{ isLoading: isInit }" :id="id">
+            <virtual-scroll class="log-scroll" ref="scroll" v-bkloading="{ isLoading: isInit }" :id="id" v-for="plugin in pluginList" :key="plugin.id">
                 <template slot-scope="item">
                     <span class="item-txt selection-color"
                         v-if="!isInit"
@@ -35,15 +35,10 @@
             statusIcon
         },
 
-        filters: {
-            timeFilter (val) {
-                if (!val) return ''
-                const time = new Date(val)
-                return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
-            }
-        },
-
         props: {
+            pluginList: {
+                type: Array
+            },
             show: {
                 type: Boolean,
                 default: false
@@ -51,12 +46,6 @@
             isInit: {
                 type: Boolean,
                 default: false
-            },
-            downLoadLink: {
-                type: String
-            },
-            logType: {
-                type: String
             },
             status: {
                 type: String
@@ -70,6 +59,14 @@
             },
             linkUrl: {
                 type: String
+            }
+        },
+
+        filters: {
+            timeFilter (val) {
+                if (!val) return ''
+                const time = new Date(val)
+                return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
             }
         },
 
@@ -99,19 +96,13 @@
             this.offsetTop = mainEle.offsetTop
         },
 
-        beforeDestroy () {
+        beforeDestroy() {
             document.removeEventListener('mousedown', this.startShare)
             document.removeEventListener('mousemove', this.shareMove)
             document.removeEventListener('mouseup', this.showShare)
         },
 
         methods: {
-            preventDefault (event) {
-                event.preventDefault()
-                const sel = window.getSelection()
-                sel.removeAllRanges()
-            },
-
             shareMove (event) {
                 if (!this.isShareMove) return
                 let curTarget = event.target
@@ -130,7 +121,7 @@
                 const selection = document.getSelection()
                 selection.removeAllRanges()
                 const eleShare = document.querySelector('.share-icon')
-                eleShare.style.display = 'none'
+                eleShare.style.display = "none"
                 this.isShareMove = true
                 if (!curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode
                 if (curTarget.classList.contains('item-txt')) this.startShareIndex = curTarget.parentNode.style.top.slice(0, -2)
@@ -139,14 +130,15 @@
             showShare (event) {
                 this.isShareMove = false
                 const eleShare = document.querySelector('.share-icon')
+                const scroll = this.$refs.scroll
                 const selection = window.getSelection()
                 const txt = selection.toString()
                 if (txt) {
                     const left = event.clientX - this.offsetLeft
                     const top = event.clientY - this.offsetTop
-                    eleShare.style.display = 'inline'
-                    eleShare.style.left = left + 'px'
-                    eleShare.style.top = top + 'px'
+                    eleShare.style.display = "inline"
+                    eleShare.style.left = left + "px"
+                    eleShare.style.top = top + "px"
                 }
             },
 
@@ -157,7 +149,7 @@
                 const startParentNode = selection.anchorNode.parentNode
                 const endParentNode = selection.focusNode.parentNode
 
-                eleShare.style.display = 'none'
+                eleShare.style.display = "none"
                 let startShareIndex = +this.startShareIndex
                 let endShareIndex = +this.endShareIndex
                 let startOffset = selection.anchorOffset
@@ -179,20 +171,8 @@
                 if (startShareIndex > endShareIndex) changeTemp()
                 if (startShareIndex === endShareIndex && startOffset > endOffset) changeTemp()
 
-                const url = this.getLinkUrl({
-                    isStartFirst,
-                    isEndFirst,
-                    id: this.id || '',
-                    startShareIndex,
-                    endShareIndex,
-                    startOffset,
-                    endOffset,
-                    minMapTop,
-                    bottomScrollDis,
-                    showTime: this.showTime,
-                    flodIndexs,
-                    logType: this.logType
-                })
+
+                const url = this.getLinkUrl({ showLog: true, isStartFirst, isEndFirst, id: this.id || '', startShareIndex, endShareIndex, startOffset, endOffset, minMapTop, bottomScrollDis, showTime: this.showTime, flodIndexs })
                 const input = document.createElement('input')
                 document.body.appendChild(input)
                 input.setAttribute('value', url)
@@ -215,7 +195,7 @@
                 return url
             },
 
-            addLogData (data, isInit) {
+            addLogData(data, isInit) {
                 const type = isInit ? 'initLog' : 'addListData'
                 const foldParam = this.$route.query.flodIndexs
                 const id = this.$route.query.id
@@ -304,7 +284,6 @@
                 .log-buttons {
                     display: flex;
                     align-items: center;
-                    line-height: 30px;
                     .log-button {
                         color: #c2cade;
                         background: #2f363d;

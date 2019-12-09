@@ -18,6 +18,7 @@ class BlueShieldWebSocket {
         this.userName = /bk_uid=([^;]+);/.exec(document.cookie)[1]
         this.uuid = uuid()
         this.stompClient = {}
+        window.addEventListener('message', this.handlePostMessage)
 
         this.connect()
         this.readyDisConnect()
@@ -31,7 +32,10 @@ class BlueShieldWebSocket {
             this.stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
                 this.connectErrTime = 1
                 this.handleMessage(res)
-                if (callBack) callBack()
+                if (callBack) {
+                    callBack()
+                    callBack = null
+                }
             })
         }, (err) => {
             if (this.connectErrTime <= 8) {
@@ -42,6 +46,21 @@ class BlueShieldWebSocket {
                 window.devops.$bkMessage({ message: err.message || 'websocket异常，请稍后重试', theme: 'error' })
             }
         })
+    }
+
+    handlePostMessage (res) {
+        const type = res.type
+        switch (type) {
+            case 'openLogWs':
+                this.handlePostMessage.uuid = uuid()
+                const projectId = localStorage.getItem('projectId')
+                const data = JSON.stringify({ sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname, showProjectList: true, projectId })
+                this.loopSendChangePage(data)
+                break;
+            case 'closeLogWs':
+                const data = { sessionId: this.handlePostMessage.uuid, userId: this.userName, page: location.pathname }
+                this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
+        }
     }
 
     handleMessage (res) {
@@ -55,11 +74,13 @@ class BlueShieldWebSocket {
                 this.handleNotify(data)
                 break
             case 'IFRAME':
+            case 'IFRAMEDIALOG':
                 const iframe = document.getElementById('iframe-box')
                 const iframeWindow = iframe.contentWindow
                 iframeWindow.postMessage(data, '*')
                 break
             case 'AMD':
+            case 'AMDDIALOG':
                 window.postMessage(data)
                 break
         }

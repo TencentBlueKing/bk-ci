@@ -21,7 +21,8 @@ import request from '@/utils/request'
 import {
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
+    STORE_API_URL_PREFIX,
+    LOG_API_URL_PREFIX
 } from '@/store/constants'
 import { SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_CONTAINER_DETAIL, SET_ATOMS, SET_ATOM_MODAL, SET_ATOM_MODAL_FETCHING, UPDATE_ATOM_TYPE, UPDATE_ATOM, INSERT_ATOM, PROPERTY_PANEL_VISIBLE, SET_PIPELINE_EDITING, DELETE_CONTAINER, DELETE_STAGE, ADD_CONTAINER, DELETE_ATOM, UPDATE_CONTAINER, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS, SET_AUTH_EDITING } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
@@ -365,5 +366,20 @@ export default {
     // 获取分类
     getAtomClassify () {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`)
+    },
+
+    // 第一次拉取日志
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : ''}${jobId ? '?jobId=' + jobId : ''}`)
+    },
+
+    // 建立日志WS连接
+    buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag }) {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push?lineNo=${lineNo}${tag ? '&tag=' + tag : ''}`)
+    },
+
+    // 关闭日志WS连接
+    stopLogWs ({ commit }, { projectId, pipelineId, buildId, tag }) {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop${tag ? '?tag=' + tag : ''}`)
     }
 }

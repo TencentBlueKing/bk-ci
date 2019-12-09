@@ -42,34 +42,32 @@
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showLog">
-                <pipeline-log
-                    class="log-panel"
-                    v-bind="sidePanelConfig"
-                    :build-no="$route.params.buildNo"
-                    :build-num="execDetail.buildNum"
-                    :show-export="true"
-                    :build-tag="getElementId"
-                    :execute-count="getExecuteCount"
+                <log :show="showLog"
+                    :is-init="isInitLog"
+                    :title="currentElement.name"
+                    :status="currentElement.status"
+                    :id="currentElement.id"
+                    :link-url="linkUrl"
+                    log-type="plugin"
+                    :down-load-link="downLoadPluginLink"
+                    @closeLog="closeLog"
+                    ref="log"
                 />
             </template>
             <template v-else-if="showContainerPanel">
-                <container-property-panel
-                    :title="sidePanelConfig.title"
-                    :container-index="editingElementPos.containerIndex"
-                    :stage-index="editingElementPos.stageIndex"
-                    :stages="execDetail.model.stages"
-                    :editable="false"
-                />
+                <log :show="showContainerPanel"
+                    :is-init="isInitLog"
+                    :title="currentJob.name"
+                    :status="currentJob.status"
+                    :id="currentJob.containerId"
+                    :link-url="linkUrl"
+                    log-type="job"
+                    :down-load-link="downLoadJobLink"
+                    @closeLog="closeLog"
+                    ref="log"
+                >
+                </log>
             </template>
-        </template>
-        <template v-if="execDetail">
-            <pipeline-log v-if="showCompleteLog"
-                class="log-panel"
-                :title="`${$t('history.viewLog')}${execDetail.buildNum ? `（#${execDetail.buildNum}）` : ''}`"
-                :build-no="$route.params.buildNo"
-                :build-num="execDetail.buildNum"
-                :show-export="true"
-            />
         </template>
     </section>
 </template>
@@ -81,9 +79,9 @@
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
     import outputOption from '@/components/outputOption'
-    import PipelineLog from '@/components/Log'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import emptyTips from '@/components/devops/emptyTips'
+    import log from '@/components/Log'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
@@ -91,12 +89,12 @@
     export default {
         components: {
             stages,
-            PipelineLog,
             ContainerPropertyPanel,
             viewPart,
             codeRecord,
             outputOption,
-            emptyTips
+            emptyTips,
+            log
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -104,6 +102,9 @@
             return {
                 isLoading: true,
                 hasNoPermission: false,
+                isInitLog: false,
+                logPostData: {},
+                linkUrl: WEB_URL_PIRFIX + location.pathname,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -132,12 +133,17 @@
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
-                'isShowCompleteLog',
                 'fetchingAtomList'
             ]),
             ...mapState([
                 'fetchError'
             ]),
+            downLoadJobLink () {
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/pipelinedebug/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${this.currentJob.containerId}`
+            },
+            downLoadPluginLink () {
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/pipelinedebug/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}`
+            },
             panels () {
                 return [{
                     name: 'executeDetail',
@@ -170,17 +176,38 @@
                     }
                 }]
             },
-            showLog () {
-                const { editingElementPos, $route: { params } } = this
-                return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
-            },
-            showCompleteLog () {
-                const { isShowCompleteLog, $route: { params } } = this
-                return isShowCompleteLog && params.buildNo
+            showLog: {
+                get () {
+                    const { editingElementPos, $route: { params } } = this
+                    const res = typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
+                    if (res) this.initLog()
+                    return res
+                },
+                set (value) {
+                    this.togglePropertyPanel({
+                        isShow: value
+                    })
+                }
             },
             showContainerPanel () {
                 const { editingElementPos } = this
-                return typeof editingElementPos.containerIndex !== 'undefined'
+                const res = typeof editingElementPos.containerIndex !== 'undefined'
+                if (res) this.initJobLog()
+                return res
+            },
+            currentJob () {
+                const { editingElementPos, execDetail } = this
+                const model = execDetail.model || {}
+                const stages = model.stages || []
+                const currentStage = stages[editingElementPos.stageIndex] || []
+                return currentStage.containers[editingElementPos.containerIndex]
+            },
+            currentElement () {
+                const {
+                    editingElementPos: { stageIndex, containerIndex, elementIndex },
+                    execDetail: { model: { stages } }
+                } = this
+                return stages[stageIndex].containers[containerIndex].elements[elementIndex]
             },
             getElementId () {
                 const {
@@ -241,16 +268,16 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
-                if (this.$route.hash) { // 带上elementId时，弹出日志弹窗
-                    const isBuildId = /^#(e|T)-+/.test(this.$route.hash) // 检查是否是合法的elementId
-                    isBuildId && this.showElementLog(this.$route.hash.slice(1))
-                }
+                const query = this.$route.query || {}
+                const logType = query.logType
+                const id = query.id
+                if (logType === 'plugin') this.showElementLog(id)
+                if (logType === 'job') this.showJobLog(id)
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
                     if (val !== oldVal) {
                         this.requestPipelineExecDetail(this.routerParams)
-                        // this.initWebSocket(val)
                     }
                 }
             },
@@ -269,7 +296,6 @@
                 pipelineId: this.routerParams.pipelineId
             })
             webSocketMessage.installWsMessage(this.setPipelineDetail)
-            // this.initWebSocket()
         },
 
         beforeDestroy () {
@@ -278,7 +304,6 @@
                 isShow: false
             })
             webSocketMessage.unInstallWsMessage()
-            // pipelineWebsocket.disconnect()
         },
 
         methods: {
@@ -286,7 +311,10 @@
                 'updateAtom',
                 'togglePropertyPanel',
                 'requestPipelineExecDetail',
-                'setPipelineDetail'
+                'setPipelineDetail',
+                'getInitLog',
+                'buildLogWs',
+                'stopLogWs'
             ]),
             ...mapActions('soda', [
                 'requestInterceptAtom'
@@ -321,6 +349,70 @@
                         }
                     })
                 }
+            },
+
+            showJobLog (id) {
+                let conIndex
+                const staIndex = this.execDetail.model.stages.findIndex(stage => {
+                    conIndex = stage.containers.findIndex(container => {
+                        return container.containerId === id
+                    })
+                    return conIndex > -1
+                })
+                this.togglePropertyPanel({
+                    isShow: true,
+                    editingElementPos: {
+                        stageIndex: staIndex,
+                        containerIndex: conIndex
+                    }
+                })
+            },
+
+            initJobLog () {
+                const route = this.$route.params || {}
+                this.logPostData = {
+                    projectId: route.projectId,
+                    pipelineId: route.pipelineId,
+                    buildId: this.execDetail.id,
+                    jobId: this.currentJob.containerId
+                }
+                this.openLogApi()
+            },
+
+            initLog () {
+                const route = this.$route.params || {}
+                this.logPostData = {
+                    projectId: route.projectId,
+                    pipelineId: route.pipelineId,
+                    buildId: this.execDetail.id,
+                    tag: this.currentElement.id
+                }
+                this.openLogApi()
+            },
+
+            openLogApi () {
+                this.isInitLog = true
+                this.getInitLog(this.logPostData).then((res) => {
+                    res = res.data || {}
+                    this.$refs.log.addLogData(res.logs, true)
+                    if (!res.finished) {
+                        const lastLog = res.logs[res.logs.length - 1] || { lineNo: 0 }
+                        Object.assign(this.logPostData, lastLog)
+                        webSocketMessage.openDialogWebSocket((res) => {
+                            this.$refs.log.addLogData(res.logs || [])
+                            if (res.finished) {
+                                this.closeLog()
+                            }
+                        })
+                        this.buildLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
+                    }
+                }).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err })).finally(() => (this.isInitLog = false))
+            },
+
+            closeLog () {
+                this.showLog = false
+                this.stopLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
+                webSocketMessage.closeDialogWebSocket()
             }
         }
     }

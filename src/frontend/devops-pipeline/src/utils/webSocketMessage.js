@@ -16,7 +16,6 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 export default {
     callBack: () => {},
 
@@ -35,5 +34,23 @@ export default {
     unInstallWsMessage () {
         window.removeEventListener('message', this.callBack)
         this.callBack = () => {}
+    },
+
+    openDialogWebSocket (callBack) {
+        window.parent.postMessage({ type: 'openLogWs' }, '*')
+        this.openDialogWebSocket.dialogCallBack = (res) => {
+            const data = res.data
+            const type = data.webSocketType
+            if (type === 'IFRAMEDIALOG') {
+                const message = JSON.parse(data.message)
+                callBack(message)
+            }
+        }
+        window.addEventListener('message', this.openDialogWebSocket.dialogCallBack)
+    },
+
+    closeDialogWebSocket () {
+        window.parent.postMessage({ type: 'closeLogWs' }, '*')
+        window.removeEventListener('message', this.openDialogWebSocket.dialogCallBack)
     }
 }
