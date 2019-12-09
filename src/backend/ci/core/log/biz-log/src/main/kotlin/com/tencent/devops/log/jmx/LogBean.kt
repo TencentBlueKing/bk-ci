@@ -31,10 +31,6 @@ import org.springframework.jmx.export.annotation.ManagedResource
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicLong
 
-/**
- * deng
- * 2019-02-28
- */
 @Component
 @ManagedResource(objectName = "com.tencent.devops.log:type=logs", description = "log performance")
 class LogBean {

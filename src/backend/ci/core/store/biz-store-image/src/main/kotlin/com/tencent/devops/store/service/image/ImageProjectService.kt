@@ -102,7 +102,7 @@ class ImageProjectService @Autowired constructor(
                 userId = userId
             )
         if (result.isNotOk()) {
-            throw ErrorCodeException(StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID, null)
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID)
         }
     }
 

@@ -556,31 +556,31 @@ class PipelineBuildWebhookService @Autowired constructor(
                 val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repo)?.reviewers
 
                 startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId!!
-                startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo!!.author.username
-                startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = mrInfo.sourceBranch ?: ""
-                startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = mrInfo.targetBranch ?: ""
+                startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo?.author?.username ?: ""
+                startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
+                startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
 
-                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo.author.username
+                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo?.author?.username ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = matcher.getHookTargetUrl() ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = matcher.getHookSourceUrl() ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = mrInfo.targetBranch ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = mrInfo.sourceBranch ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo.createTime ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo.updateTime ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo.createTime)
+                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.createTime)
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo.updateTime)
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo.mrId
-                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo.mrNumber
-                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo.description ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo.title
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo.assignee?.username ?: ""
+                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.updateTime)
+                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo?.title ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo?.assignee?.username ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = gitMrEvent.object_attributes.url
                 startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] = reviewers?.joinToString(",") { it.username } ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo.milestone?.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo.milestone?.dueDate ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo.labels.joinToString(",")
+                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
             }
 
             if (params.eventType == CodeEventType.TAG_PUSH) {
@@ -691,15 +691,15 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         try {
             val buildId = pipelineBuildService.startPipeline(
-                userId,
-                pipelineInfo,
-                StartType.WEB_HOOK,
-                startParamsWithType,
-                pipelineInfo.channelCode,
-                false,
-                fullModel,
-                pipelineInfo.version,
-                false
+                userId = userId,
+                readyToBuildPipelineInfo = pipelineInfo,
+                startType = StartType.WEB_HOOK,
+                startParamsWithType = startParamsWithType,
+                channelCode = pipelineInfo.channelCode,
+                isMobile = false,
+                model = fullModel,
+                signPipelineVersion = pipelineInfo.version,
+                frequencyLimit = false
             )
 
             when {

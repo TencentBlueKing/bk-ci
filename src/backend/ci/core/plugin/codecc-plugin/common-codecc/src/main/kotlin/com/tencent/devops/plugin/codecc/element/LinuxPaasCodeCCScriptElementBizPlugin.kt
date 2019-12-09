@@ -92,7 +92,7 @@ class LinuxPaasCodeCCScriptElementBizPlugin constructor(
 
     override fun beforeDelete(element: LinuxPaasCodeCCScriptElement, userId: String, pipelineId: String?) {
         with(element) {
-            logger.info("Start to delete the task($codeCCTaskId) in codecc by user $userId")
+            logger.info("Start to delete the codecc task($codeCCTaskId) in codecc by user $userId")
             if (codeCCTaskId.isNullOrEmpty()) {
                 logger.warn("The codecc task id is empty")
                 return

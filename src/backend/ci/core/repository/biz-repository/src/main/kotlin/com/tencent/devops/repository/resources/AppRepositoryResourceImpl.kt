@@ -32,12 +32,12 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.repository.api.AppRepositoryResource
 import com.tencent.devops.repository.pojo.commit.CommitResponse
-import com.tencent.devops.repository.service.RepositoryService
+import com.tencent.devops.repository.service.CommitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class AppRepositoryResourceImpl @Autowired constructor(
-    private val repositoryService: RepositoryService,
+    private val commitService: CommitService,
     private val client: Client
 ) : AppRepositoryResource {
 
@@ -57,6 +57,6 @@ class AppRepositoryResourceImpl @Autowired constructor(
         if (result.isNotOk() || result.data != true) {
             return Result(emptyList())
         }
-        return Result(repositoryService.getCommit(buildId))
+        return Result(commitService.getCommit(buildId))
     }
 }

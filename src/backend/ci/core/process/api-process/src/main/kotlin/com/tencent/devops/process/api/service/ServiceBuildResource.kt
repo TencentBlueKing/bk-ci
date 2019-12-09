@@ -323,7 +323,28 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为DS", required = true)
+        @ApiParam("渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<BuildHistoryWithVars>
+
+    @ApiOperation("获取构建详情（平台调用，不鉴权）")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/nopermission/status")
+    fun getBuildStatusWithoutPermission(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<BuildHistoryWithVars>

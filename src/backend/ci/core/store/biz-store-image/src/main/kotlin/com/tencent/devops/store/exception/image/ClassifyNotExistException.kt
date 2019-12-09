@@ -13,4 +13,4 @@ class ClassifyNotExistException(
     errorCode: String = PARAMETER_IS_INVALID,
     params: Array<String>? = null
 ) :
-    ErrorCodeException(errorCode, message, params)
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)
