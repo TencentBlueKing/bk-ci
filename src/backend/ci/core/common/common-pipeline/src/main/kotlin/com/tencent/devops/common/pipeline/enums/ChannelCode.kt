@@ -42,7 +42,9 @@ enum class ChannelCode {
     @ApiModelProperty("工蜂")
     GIT,
     @ApiModelProperty("开源扫描")
-    GONGFENGSCAN;
+    GONGFENGSCAN,
+    @ApiModelProperty("codecc回迁")
+    CODECC_EE;
 
     companion object {
         // Only BS need to check the authentication for now

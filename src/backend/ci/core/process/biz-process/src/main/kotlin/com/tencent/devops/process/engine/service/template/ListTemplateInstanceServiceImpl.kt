@@ -26,9 +26,10 @@
 
 package com.tencent.devops.process.engine.service.template
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -70,20 +71,24 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
         val templatePipelines = associatePipelines.map {
             val pipelineSetting = pipelineSettings[it.pipelineId]
             if (pipelineSetting == null || pipelineSetting.isEmpty()) {
-                throw OperationException("流水线设置配置不存在")
+                throw ErrorCodeException(defaultMessage = "流水线设置配置不存在", errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
             }
             TemplatePipeline(
-                it.templateId,
-                it.versionName,
-                it.version,
-                it.pipelineId,
-                pipelineSetting[0].name,
-                it.updatedTime.timestampmilli(),
-                hasPermissionList.contains(it.pipelineId)
+                templateId = it.templateId,
+                versionName = it.versionName,
+                version = it.version,
+                pipelineId = it.pipelineId,
+                pipelineName = pipelineSetting[0].name,
+                updateTime = it.updatedTime.timestampmilli(),
+                hasPermission = hasPermissionList.contains(it.pipelineId)
             )
         }
 
-        var latestVersion = templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        var latestVersion = templateDao.getLatestTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId
+        )
         if (latestVersion.type == TemplateType.CONSTRAINT.name) {
             latestVersion = templateDao.getLatestTemplate(dslContext, latestVersion.srcTemplateId)
         }
@@ -93,10 +98,10 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
             templateId,
             templatePipelines,
             TemplateVersion(
-                latestVersion.version,
-                latestVersion.versionName,
-                latestVersion.createdTime.timestampmilli(),
-                latestVersion.creator
+                version = latestVersion.version,
+                versionName = latestVersion.versionName,
+                updateTime = latestVersion.createdTime.timestampmilli(),
+                creator = latestVersion.creator
             )
         )
     }

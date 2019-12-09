@@ -27,7 +27,6 @@
 package com.tencent.devops.process.engine.extend
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -39,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
@@ -48,22 +48,35 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
 
     override fun checkModelIntegrity(model: Model) {
 
-        val stage = model.stages.getOrNull(0) ?: throw OperationException("流水线阶段为空")
+        val stage = model.stages.getOrNull(0)
+            ?: throw ErrorCodeException(
+                defaultMessage = "流水线Stage为空",
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+            )
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
-            throw OperationException("流水线只能有一个触发Stage")
+            throw ErrorCodeException(
+                defaultMessage = "流水线只能有一个触发Stage",
+                errorCode = ProcessMessageCode.ONLY_ONE_TRIGGER_JOB_IN_PIPELINE
+            )
         }
 
-        (stage.containers.getOrNull(0) ?: throw OperationException("触发Stage不能为空")) as TriggerContainer
+        (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+            defaultMessage = "流水线Stage为空",
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+        )) as TriggerContainer
 
         val elementCnt = mutableMapOf<String, Int>()
         model.stages.forEach { s ->
             if (s.containers.isEmpty()) {
-                throw OperationException("Stage的环境不能为空")
+                throw ErrorCodeException(
+                    defaultMessage = "流水线Stage为空",
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+                )
             }
             s.containers.forEach { c ->
                 if (c.elements.isEmpty()) {
-                    throw OperationException("构建环境没有包含任何插件")
+                    throw ErrorCodeException(defaultMessage = "Job需要至少有一个任务插件", errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK)
                 }
                 c.elements.forEach { e ->
                     val cnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
@@ -136,7 +149,10 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
     override fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String) {
         if (jobContainer is VMBuildContainer && jobContainer.baseOS == VMBaseOS.WINDOWS) {
             if (isThirdPartyAgentEmpty(jobContainer)) {
-                throw ErrorCodeException(ERROR_NO_PUBLIC_WINDOWS_BUILDER.toString(), "请设置Windows构建机")
+                throw ErrorCodeException(
+                    errorCode = ERROR_NO_PUBLIC_WINDOWS_BUILDER.toString(),
+                    defaultMessage = "请设置Windows构建机"
+                )
             }
         }
 
@@ -152,7 +168,10 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
             if (jobControlOption.customVariables == null ||
                 jobControlOption.customVariables!!.isEmpty()
             ) {
-                throw ErrorCodeException(ERROR_NO_PARAM_IN_JOB_CONDITION.toString(), "请设置Job运行条件时的自定义变量")
+                throw ErrorCodeException(
+                    errorCode = ERROR_NO_PARAM_IN_JOB_CONDITION.toString(),
+                    defaultMessage = "请设置Job运行条件时的自定义变量"
+                )
             }
         }
     }
