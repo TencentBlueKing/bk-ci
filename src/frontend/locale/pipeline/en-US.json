@@ -498,7 +498,7 @@
         "systemTime": "System time",
         "checkDesc": "Approval description",
         "checkSuggestTips": " Please enter suggestions for approval",
-        "checkResult": "A pprovalResults",
+        "checkResult": "Approval Results",
         "agree": "Approval",
         "abort": "Abort",
         "customVar": "Custom variables",

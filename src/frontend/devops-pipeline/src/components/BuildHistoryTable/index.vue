@@ -424,7 +424,7 @@
                     })
 
                     if (res.id) {
-                        message = this.$t('subpage.retrSuc')
+                        message = this.$t('subpage.retrySuc')
                         theme = 'success'
 
                         this.$emit('update-table')
