@@ -28,11 +28,11 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item class="wt660" :label="$t('分类')" :required="true" property="classifyId" :rules="[requireRule]" ref="classifyId">
-                    <bk-select v-model="form.classifyId" searchable>
+                <bk-form-item class="wt660" :label="$t('分类')" :required="true" property="classifyCode" :rules="[requireRule]" ref="classifyCode">
+                    <bk-select v-model="form.classifyCode" searchable>
                         <bk-option v-for="(option, index) in classifys"
                             :key="index"
-                            :id="option.id"
+                            :id="option.classifyCode"
                             :name="option.classifyName"
                             :placeholder="$t('请选择分类')"
                         >
@@ -173,7 +173,7 @@
                 form: {
                     imageId: '',
                     imageName: '',
-                    classifyId: '',
+                    classifyCode: '',
                     labelIdList: [],
                     labelList: [],
                     summary: '',
@@ -344,6 +344,10 @@
                             this.categoryList = categorys
                             this.imageList = imageList.imageList
                             this.ticketList = ticket.records || []
+                            const currentCategory = categorys.find((category) => (res.category === category.categoryCode)) || {}
+                            const settings = currentCategory.settings || {}
+                            this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
+                            
                             if (this.form.imageRepoName && this.form.imageSourceType === 'BKDEVOPS') {
                                 const imageRepo = this.form.imageRepoName
                                 const imageId = this.form.imageId
