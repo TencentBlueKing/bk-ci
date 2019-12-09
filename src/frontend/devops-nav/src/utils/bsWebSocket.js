@@ -53,7 +53,7 @@ class BlueShieldWebSocket {
         const data = JSON.parse(res.body) || {}
         const type = data.webSocketType
         const page = data.page
-        if (!location.href.includes(page)) return
+        if (!location.href.includes(page) && ['NAV', 'IFRAME', 'AMD'].includes(type)) return
 
         switch (type) {
             case 'NAV':
@@ -137,11 +137,16 @@ class BlueShieldWebSocket {
             case 'openLogWs':
                 if (this.diaLogUuid) return
                 this.diaLogUuid = uuid()
+                this.stompClient.subscribe(`/topic/bk/notify/${this.diaLogUuid}`, (res) => {
+                    this.handleMessage(res)
+                })
+                
                 const projectId = localStorage.getItem('projectId')
                 data = JSON.stringify({ sessionId: this.diaLogUuid, userId: this.userName, page, showProjectList: true, projectId })
                 this.loopSendChangePage(data)
                 break;
             case 'closeLogWs':
+                this.stompClient.unsubscribe(`/topic/bk/notify/${this.diaLogUuid}`)
                 data = { sessionId: this.diaLogUuid, userId: this.userName, page }
                 this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
                 this.diaLogUuid = ''
