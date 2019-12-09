@@ -8,7 +8,7 @@
             @click="toggleLocale"
         >
             <icon
-                name="switch-locale"
+                name="locale"
                 size="20"
             />
             <span>{{ localeLabel }}</span>
