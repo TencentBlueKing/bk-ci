@@ -297,7 +297,7 @@ class LogServiceV2 @Autowired constructor(
                 .setSize(4000)
                 .get()
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
         // 一边读一边流式下载
         val fileStream = StreamingOutput { output ->
             do {
@@ -315,7 +315,7 @@ class LogServiceV2 @Autowired constructor(
                             Constants.DEFAULT_PRIORITY_NOT_DELETED
                     )
                     val dateTime = sdf.format(Date(logLine.timestamp))
-                    val str = "[${logLine.lineNo}] - $dateTime : ${logLine.message}" + System.lineSeparator()
+                    val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
                     sb.append(str)
                 }
                 output.write(sb.toString().toByteArray())

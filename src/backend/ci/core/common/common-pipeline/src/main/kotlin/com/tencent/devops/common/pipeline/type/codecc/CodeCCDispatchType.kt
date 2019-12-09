@@ -24,40 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2
+package com.tencent.devops.common.pipeline.type.codecc
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.DispatchType
 
-@Api(tags = ["SERVICE_CONTROL_POINT_V2"], description = "质量红线-拦截点v2")
-@Path("/service/controlPoints/v2")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceQualityControlPointResource {
+data class CodeCCDispatchType(
+    val codeccTaskId: Long
+) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
+    override fun buildType(): BuildType {
+        return BuildType.DOCKER
+    }
 
-    @ApiOperation("获取控制点信息")
-    @Path("/set")
-    @POST
-    fun set(
-        @QueryParam("userId")
-        userId: String,
-        controlPoint: QualityControlPoint
-    ): Result<Int>
-
-    @ApiOperation("清除控制点信息")
-    @Path("/cleanTestProject")
-    @PUT
-    fun cleanTestProject(
-        @QueryParam("userId")
-        controlPointType: String
-    ): Result<Int>
+    override fun replaceField(variables: Map<String, String>) {
+        val valueMap = mutableMapOf<String, Any?>()
+        valueMap["codeccTaskId"] = codeccTaskId
+        value = JsonUtil.toJson(valueMap)
+    }
 }

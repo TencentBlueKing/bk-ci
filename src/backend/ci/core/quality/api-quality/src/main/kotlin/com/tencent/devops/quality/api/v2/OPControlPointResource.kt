@@ -81,6 +81,18 @@ interface OPControlPointResource {
         controlPointUpdate: ControlPointUpdate
     ): Result<Boolean>
 
+    @ApiOperation("删除控制点")
+    @Path("/{id}/delete")
+    @PUT
+    fun delete(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("控制点ID", required = true)
+        @PathParam("id")
+        id: Long
+    ): Result<Int>
+
     @ApiOperation("获取研发环节下拉列表")
     @Path("/getStage")
     @GET

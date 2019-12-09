@@ -24,10 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.process.api.builds
 
-data class CheckSums(
-    val sha256: String?,
-    val sha1: String,
-    val md5: String
-)
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["BUILD_TASK"], description = "构建-任务资源")
+@Path("/build/task")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildTaskResource {
+
+    @ApiOperation("获取当此构建的所有task")
+    @Path("/getAllBuildTask")
+    @GET
+    fun getAllBuildTask(
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String
+    ): Result<List<PipelineBuildTaskInfo>>
+}

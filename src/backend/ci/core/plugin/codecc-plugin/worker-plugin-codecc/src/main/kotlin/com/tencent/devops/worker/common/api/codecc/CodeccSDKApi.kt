@@ -24,11 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.worker.common.api.codecc
 
-data class JFrogFileInfo(
-    val uri: String,
-    val size: Long,
-    val lastModified: String,
-    val folder: Boolean
-)
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.pojo.Result
+import okhttp3.Response
+
+interface CodeccSDKApi {
+    fun saveTask(projectId: String, pipelineId: String, buildId: String): Result<String>
+    fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean = false): Response
+    fun downloadToolScript(osType: OSType, fileMd5: String): Response
+}

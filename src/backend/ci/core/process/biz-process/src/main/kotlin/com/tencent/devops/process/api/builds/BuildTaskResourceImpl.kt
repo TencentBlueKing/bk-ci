@@ -24,40 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.pojo
+package com.tencent.devops.process.api.builds
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * 26/01/2018
- */
-data class CoverityConfig(
-    val name: String,
-    val cnName: String,
-    val projectType: CoverityProjectType,
-    val tools: List<String>,
-    var asynchronous: Boolean, // 是否同步，默认是同步
-    val filterTools: List<String>,
-    val repos: List<RepoItem>,
-    val scanCodePath: String,
-    val scmType: String,
-    val certType: String,
-    val taskParams: Map<String, String>,
-    val buildVariables: BuildVariables,
-    val buildTask: BuildTask,
-    val timeOut: Long = 4 * 3600 // 4小时
-) {
-    data class RepoItem(
-        val repositoryConfig: RepositoryConfig,
-        val type: String,
-        val relPath: String = "", // 代码路径
-        val relativePath: String = "", // 代码相对路径
-        var url: String = "",
-        var authType: String = "",
-        var repoHashId: String = "",
-        var svnUerPassPair: Pair<String, String>? = null
-    )
+@RestResource
+class BuildTaskResourceImpl @Autowired constructor(
+    private val pipelineBuildTaskService: PipelineBuildTaskService
+) : BuildTaskResource {
+    override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTaskInfo>> {
+        return Result(pipelineBuildTaskService.getAllBuildTask(buildId))
+    }
 }
