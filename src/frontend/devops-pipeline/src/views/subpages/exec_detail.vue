@@ -271,8 +271,8 @@
                 const query = this.$route.query || {}
                 const logType = query.logType
                 const id = query.id
-                if (logType === 'plugin') this.showElementLog(id)
-                if (logType === 'job') this.showJobLog(id)
+                if (logType === 'plugin' && !this.showLog) this.showElementLog(id)
+                if (logType === 'job' && !this.showContainerPanel) this.showJobLog(id)
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -375,7 +375,10 @@
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
                     jobId: this.currentJob.containerId,
-                    page: `/log/build/${this.execDetail.id}/job/${this.currentJob.containerId}`
+                    payLoad: {
+                        page: `/log/build/${this.execDetail.id}/job/${this.currentJob.containerId}`,
+                        sessionId: this.uuid()
+                    }
                 }
                 this.openLogApi()
             },
@@ -387,7 +390,10 @@
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
                     tag: this.currentElement.id,
-                    page: `/log/build/${this.execDetail.id}/tag/${this.currentElement.id}`
+                    payLoad: {
+                        page: `/log/build/${this.execDetail.id}/tag/${this.currentElement.id}`,
+                        sessionId: this.uuid()
+                    }
                 }
                 this.openLogApi()
             },
@@ -399,13 +405,13 @@
                     this.$refs.log.addLogData(res.logs, true)
                     if (!res.finished) {
                         const lastLog = res.logs[res.logs.length - 1] || { lineNo: 0 }
-                        Object.assign(this.logPostData, lastLog)
+                        this.logPostData.lineNo = lastLog.lineNo
                         webSocketMessage.openDialogWebSocket((res) => {
                             this.$refs.log.addLogData(res.logs || [])
                             if (res.finished) {
                                 this.closeLog()
                             }
-                        }, this.logPostData.page)
+                        }, this.logPostData.payLoad)
                         this.buildLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
                     }
                 }).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err })).finally(() => (this.isInitLog = false))
@@ -414,7 +420,16 @@
             closeLog () {
                 this.showLog = false
                 this.stopLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
-                webSocketMessage.closeDialogWebSocket(this.logPostData.page)
+                webSocketMessage.closeDialogWebSocket(this.logPostData.payLoad)
+            },
+
+            uuid () {
+                let id = ''
+                for (let i = 0; i < 7; i++) {
+                    const randomNum = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+                    id += randomNum
+                }
+                return id
             }
         }
     }
