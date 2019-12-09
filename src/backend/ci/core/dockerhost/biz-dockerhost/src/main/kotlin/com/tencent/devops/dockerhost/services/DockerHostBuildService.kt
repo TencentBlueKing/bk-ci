@@ -131,7 +131,7 @@ class DockerHostBuildService(
         return result!!.data!!
     }
 
-    fun pullImage(
+    private fun pullImage(
         imageType: String?,
         imageName: String,
         registryUser: String?,
@@ -159,16 +159,22 @@ class DockerHostBuildService(
     ): Result<CheckImageResponse?> {
         logger.info("checkImage buildId: $buildId, checkImageRequest: $checkImageRequest")
         // 判断用户录入的镜像信息是否能正常拉取到镜像
-        val pullImageResult = pullImage(
-            imageType = checkImageRequest.imageType,
-            imageName = checkImageRequest.imageName,
-            registryUser = checkImageRequest.registryUser,
-            registryPwd = checkImageRequest.registryPwd,
-            buildId = buildId
-        )
-        logger.info("pullImageResult: $pullImageResult")
-        if (pullImageResult.isNotOk()) {
-            return Result(pullImageResult.status, pullImageResult.message, null)
+        val imageName = checkImageRequest.imageName
+        try {
+            val pullImageResult = pullImage(
+                imageType = checkImageRequest.imageType,
+                imageName = checkImageRequest.imageName,
+                registryUser = checkImageRequest.registryUser,
+                registryPwd = checkImageRequest.registryPwd,
+                buildId = buildId
+            )
+            logger.info("pullImageResult: $pullImageResult")
+            if (pullImageResult.isNotOk()) {
+                return Result(pullImageResult.status, pullImageResult.message, null)
+            }
+        } catch (t: Throwable) {
+            logger.warn("Fail to pull the image $imageName of build $buildId", t)
+            log(buildId, "pull image fail，error is：${t.message}")
         }
         val dockerImageName = CommonUtils.normalizeImageName(checkImageRequest.imageName)
         // 查询镜像详细信息
