@@ -47,8 +47,27 @@ class QualityControlPointService @Autowired constructor(
     private val controlPointDao: QualityControlPointDao
 ) {
 
-    fun serviceGet(elementType: String): TQualityControlPointRecord? {
-        return controlPointDao.get(dslContext, elementType)
+    fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
+        return serviceGetByType(projectId, elementType)
+    }
+
+    fun serviceGet(elementType: String, projectId: String): TQualityControlPointRecord? {
+        return controlPointDao.list(dslContext, setOf(elementType), projectId)?.firstOrNull()
+    }
+
+    fun serviceGetByType(projectId: String, elementType: String?): QualityControlPoint? {
+        if (elementType.isNullOrBlank()) return null
+        val record = serviceGet(elementType!!, projectId) ?: return null
+        return QualityControlPoint(
+            hashId = HashUtil.encodeLongId(record.id ?: 0L),
+            type = record.elementType ?: "",
+            name = record.name ?: "",
+            stage = record.stage ?: "",
+            availablePos = if (record.availablePosition.isNullOrBlank()) listOf() else record.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+            defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
+            enable = record.enable ?: true,
+            atomVersion = record.atomVersion
+        )
     }
 
     fun userList(userId: String, projectId: String): List<QualityControlPoint> {
@@ -56,52 +75,37 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun serviceList(projectId: String): List<QualityControlPoint> {
-        val controlPointList = controlPointDao.list(dslContext) ?: return listOf()
         val elements = ElementUtils.getProjectElement(projectId).keys
-        return controlPointList.filter { it.elementType in elements }.filter { it.testProject.isBlank() || (it.testProject == projectId) }
+        val controlPointList = controlPointDao.list(dslContext, elements, projectId) ?: return listOf()
+        return controlPointList.filter { it.elementType in elements }
                 .map {
             QualityControlPoint(
-                    HashUtil.encodeLongId(it.id),
-                    it.elementType,
-                    it.name,
-                    it.stage,
-                    it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                    ControlPointPosition(it.defaultPosition),
-                    it.enable,
-                    it.atomVersion
+                hashId = HashUtil.encodeLongId(it.id),
+                type = it.elementType,
+                name = it.name,
+                stage = it.stage,
+                availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+                defaultPos = ControlPointPosition(it.defaultPosition),
+                enable = it.enable,
+                atomVersion = it.atomVersion
             )
         }
     }
 
-    fun userGetByType(elementType: String?): QualityControlPoint? {
-        return serviceGetByType(elementType)
-    }
-
-    fun serviceGetByType(elementType: String?): QualityControlPoint? {
-        if (elementType.isNullOrBlank()) return null
-        val record = controlPointDao.getByType(dslContext, elementType!!) ?: return null
-        return QualityControlPoint(
-                HashUtil.encodeLongId(record.id ?: 0L),
-                record.elementType ?: "",
-                record.name ?: "",
-                record.stage ?: "",
-                if (record.availablePosition.isNullOrBlank()) listOf() else record.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                ControlPointPosition(record.defaultPosition ?: ""),
-                record.enable ?: true,
-                record.atomVersion
-        )
+    fun listAllControlPoint(): List<TQualityControlPointRecord> {
+        return controlPointDao.listAllControlPoint(dslContext)
     }
 
     fun opList(userId: String, page: Int, pageSize: Int): Page<ControlPointData> {
         val data = controlPointDao.list(page, pageSize, dslContext).map {
             ControlPointData(
-                    it.id,
-                    it.elementType,
-                    it.name,
-                    it.stage,
-                    it.availablePosition,
-                    it.defaultPosition,
-                    it.enable
+                id = it.id,
+                elementType = it.elementType,
+                name = it.name,
+                stage = it.stage,
+                availablePosition = it.availablePosition,
+                defaultPosition = it.defaultPosition,
+                enable = it.enable
             )
         }
         val count = controlPointDao.count(dslContext)
@@ -126,17 +130,25 @@ class QualityControlPointService @Autowired constructor(
         }
     }
 
-    fun serviceCreateOrUpdate(userId: String, controlPoint: QualityControlPoint): Int {
-        return controlPointDao.serviceCreateOrUpdate(dslContext, userId, controlPoint)
-    }
-
-    fun isControlPoint(elementType: String, atomVersion: String): Boolean {
-        val controlPoint = controlPointDao.get(dslContext, elementType)
+    fun isControlPoint(elementType: String, atomVersion: String, projectId: String): Boolean {
+        val controlPoint = serviceGet(elementType, projectId)
         return controlPoint != null && controlPoint.atomVersion <= atomVersion
     }
 
-    fun cleanTestProject(controlPointType: String): Int {
-        return controlPointDao.cleanTestProject(dslContext, controlPointType)
+    fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Int {
+        return controlPointDao.setTestControlPoint(dslContext, userId, controlPoint)
+    }
+
+    fun refreshControlPoint(elementType: String): Int {
+        return controlPointDao.refreshControlPoint(dslContext, elementType)
+    }
+
+    fun deleteTestControlPoint(elementType: String): Int {
+        return controlPointDao.deleteTestControlPoint(dslContext, elementType)
+    }
+
+    fun deleteControlPoint(id: Long): Int {
+        return controlPointDao.deleteControlPoint(dslContext, id)
     }
 
     companion object {

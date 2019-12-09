@@ -325,7 +325,6 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildVarDao.getVarsWithType(dslContext, buildId)
     }
 
-
     fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
         val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
         pipelineBuildVarDao.save(

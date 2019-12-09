@@ -132,7 +132,7 @@ class SubPipelineCallAtom constructor(
         if (subPipelineId.isNullOrBlank())
             throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL,
+                errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL.toInt(),
                 errorMsg = "子流水线ID参数为空，请检查流水线重新保存后并重新执行",
                 pipelineId = task.pipelineId,
                 buildId = buildId,
@@ -143,7 +143,7 @@ class SubPipelineCallAtom constructor(
         val pipelineInfo = (pipelineRepositoryService.getPipelineInfo(projectId, subPipelineId!!)
             ?: throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS,
+                errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS.toInt(),
                 errorMsg = "子流水线[$subPipelineId]不存在,请检查流水线是否还存在",
                 pipelineId = task.pipelineId,
                 buildId = buildId,

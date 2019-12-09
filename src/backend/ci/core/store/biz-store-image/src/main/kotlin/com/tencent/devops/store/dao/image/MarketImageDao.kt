@@ -441,6 +441,7 @@ class MarketImageDao @Autowired constructor(
                 .set(IMAGE_REPO_URL, marketImageUpdateRequest.imageRepoUrl)
                 .set(IMAGE_REPO_NAME, marketImageUpdateRequest.imageRepoName)
                 .set(IMAGE_TAG, marketImageUpdateRequest.imageTag)
+                .set(TICKET_ID, marketImageUpdateRequest.ticketId)
                 .set(AGENT_TYPE_SCOPE, JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope))
                 .set(SUMMARY, marketImageUpdateRequest.summary)
                 .set(DESCRIPTION, marketImageUpdateRequest.description)
@@ -480,6 +481,7 @@ class MarketImageDao @Autowired constructor(
                 IMAGE_REPO_URL,
                 IMAGE_REPO_NAME,
                 IMAGE_TAG,
+                TICKET_ID,
                 AGENT_TYPE_SCOPE,
                 LOGO_URL,
                 ICON,
@@ -503,6 +505,7 @@ class MarketImageDao @Autowired constructor(
                     marketImageUpdateRequest.imageRepoUrl,
                     marketImageUpdateRequest.imageRepoName,
                     marketImageUpdateRequest.imageTag,
+                    marketImageUpdateRequest.ticketId,
                     JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope),
                     marketImageUpdateRequest.logoUrl,
                     iconData,

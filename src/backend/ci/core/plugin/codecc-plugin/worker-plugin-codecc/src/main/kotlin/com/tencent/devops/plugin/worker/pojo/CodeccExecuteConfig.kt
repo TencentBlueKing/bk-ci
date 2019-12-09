@@ -24,8 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.plugin.worker.pojo
 
-enum class BusinessFeatureEnum constructor(val value: String) {
-    NEED_AGENT_TYPE("needAgentType") // 需要指定AgentType
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildVariables
+import java.io.File
+
+/**
+ * 26/01/2018
+ */
+data class CodeccExecuteConfig(
+    val scriptType: BuildScriptType,
+    val repos: List<RepoItem>,
+    val buildVariables: BuildVariables,
+    val buildTask: BuildTask,
+    val workspace: File,
+    val tools: List<String>,
+    val filterTools: List<String>,
+    val timeOut: Long = 4 * 3600 // 4小时
+) {
+    data class RepoItem(
+        val repositoryConfig: RepositoryConfig?,
+        val type: String,
+        val relPath: String = "", // 代码路径
+        val relativePath: String = "", // 代码相对路径
+        var url: String = "",
+        var authType: String = "",
+        var repoHashId: String = "",
+        var svnUerPassPair: Pair<String, String>? = null
+    )
 }
