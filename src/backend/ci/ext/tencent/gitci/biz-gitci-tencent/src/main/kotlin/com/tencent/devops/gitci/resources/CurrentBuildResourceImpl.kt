@@ -69,7 +69,7 @@ class CurrentBuildResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
         checkParam(userId, gitProjectId)
-        return Result(currentBuildService.search(userId, gitProjectId, page, pageSize, pipelineId, buildId))
+        return Result(currentBuildService.search(userId, gitProjectId, pipelineId, buildId, page, pageSize))
     }
 
     override fun downloadUrl(

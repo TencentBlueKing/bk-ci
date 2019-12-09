@@ -74,7 +74,7 @@ interface CurrentBuildResource {
 
     @ApiOperation("根据元数据获取文件(有排序),searchProps条件为and")
     @Path("/artifactories/{gitProjectId}/search")
-    @POST
+    @GET
     fun search(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
