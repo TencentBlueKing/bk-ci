@@ -35,7 +35,6 @@ import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.CategoryRequest
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import com.tencent.devops.store.pojo.common.enums.BusinessFeatureEnum
 import com.tencent.devops.store.service.common.CategoryService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -64,14 +63,13 @@ class CategoryServiceImpl @Autowired constructor(
     override fun getAllCategory(type: Byte): Result<List<Category>?> {
         val atomCategoryList = categoryDao.getAllCategory(dslContext, type)?.map {
             val category = categoryDao.convert(it)
-            val businessConfig = businessConfigDao.get(
+            val businessConfig = businessConfigDao.listFeatureConfig(
                 dslContext = dslContext,
                 business = BusinessEnum.CATEGORY.name,
-                feature = BusinessFeatureEnum.NEED_AGENT_TYPE.value,
                 businessValue = category.categoryCode
             )
-            if (businessConfig != null && !businessConfig.configValue.isNullOrBlank()) {
-                category.settings[BusinessFeatureEnum.NEED_AGENT_TYPE.value] = businessConfig.configValue
+            businessConfig?.forEach { config ->
+                category.settings[config.feature] = config.configValue ?: ""
             }
             category
         }
