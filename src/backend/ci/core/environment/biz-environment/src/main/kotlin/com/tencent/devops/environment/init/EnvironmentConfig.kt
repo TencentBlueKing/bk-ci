@@ -24,10 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.environment.init
 
-data class CheckSums(
-    val sha256: String?,
-    val sha1: String,
-    val md5: String
-)
+import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class EnvironmentConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(AgentUrlService::class)
+    fun agentUrlService(slaveGatewayService: SlaveGatewayService) = BluekingAgentUrlServiceImpl(slaveGatewayService)
+}

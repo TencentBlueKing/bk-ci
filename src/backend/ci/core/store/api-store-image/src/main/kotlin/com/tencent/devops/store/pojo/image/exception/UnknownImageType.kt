@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 
 class UnknownImageType(
     override val message: String?,
-    override val errorCode: String = PARAMETER_IS_INVALID,
+    errorCode: String = PARAMETER_IS_INVALID,
     params: Array<String>? = null
 ) :
-    ErrorCodeException(errorCode, message, params)
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

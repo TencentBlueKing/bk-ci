@@ -24,10 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.worker.common.api.process
 
-data class CheckSums(
-    val sha256: String?,
-    val sha1: String,
-    val md5: String
-)
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+
+class BuildTaskResourceApi : AbstractBuildResourceApi(), BuildTaskSDKApi {
+    override fun getAllBuildTask(): Result<List<PipelineBuildTaskInfo>> {
+        val path = "/ms/process/api/build/task/getAllBuildTask"
+        val request = buildGet(path)
+        val responseContent = request(request, "领取构建机任务详情失败")
+        return objectMapper.readValue(responseContent)
+    }
+}

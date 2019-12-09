@@ -53,5 +53,5 @@ interface ServiceCodeccElementResource {
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<CodeccElementData>
+    ): Result<CodeccElementData?>
 }

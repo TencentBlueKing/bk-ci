@@ -41,8 +41,8 @@ class QualityTemplateIndicatorMapDao {
     fun listByTemplateId(templateId: Long, dslContext: DSLContext): Result<TQualityTemplateIndicatorMapRecord> {
         return with(TQualityTemplateIndicatorMap.T_QUALITY_TEMPLATE_INDICATOR_MAP) {
             dslContext.selectFrom(this)
-                    .where(TEMPLATE_ID.eq(templateId))
-                    .fetch()
+                .where(TEMPLATE_ID.eq(templateId))
+                .fetch()
         }
     }
 
@@ -57,24 +57,24 @@ class QualityTemplateIndicatorMapDao {
     fun deleteByIndicatorId(dslContext: DSLContext, indicatorId: Long): Int {
         return with(TQualityTemplateIndicatorMap.T_QUALITY_TEMPLATE_INDICATOR_MAP) {
             dslContext.deleteFrom(this)
-                    .where(INDICATOR_ID.eq(indicatorId))
-                    .execute()
+                .where(INDICATOR_ID.eq(indicatorId))
+                .execute()
         }
     }
 
     fun deleteRealByTemplateId(dslContext: DSLContext, templateId: Long): Int {
         return with(TQualityTemplateIndicatorMap.T_QUALITY_TEMPLATE_INDICATOR_MAP) {
             dslContext.deleteFrom(this)
-                    .where(TEMPLATE_ID.eq(templateId))
-                    .execute()
+                .where(TEMPLATE_ID.eq(templateId))
+                .execute()
         }
     }
 
     fun queryTemplateMap(templateId: Long, dslContext: DSLContext): Result<TQualityTemplateIndicatorMapRecord>? {
         with(TQualityTemplateIndicatorMap.T_QUALITY_TEMPLATE_INDICATOR_MAP) {
             return dslContext.selectFrom(this)
-                    .where(TEMPLATE_ID.eq(templateId))
-                    .fetch()
+                .where(TEMPLATE_ID.eq(templateId))
+                .fetch()
         }
     }
 }

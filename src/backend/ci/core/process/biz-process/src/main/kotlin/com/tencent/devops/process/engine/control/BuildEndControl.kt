@@ -41,6 +41,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.ErrorType

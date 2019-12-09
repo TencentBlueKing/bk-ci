@@ -12,34 +12,34 @@ data class ImageUpdateRequest(
     val classifyId: String,
     @ApiModelProperty("功能标签", required = false)
     val labelIdList: List<String>?,
-    @ApiModelProperty("镜像所属范畴CATEGORY_CODE", required = false)
-    val category: String?,
+    @ApiModelProperty("镜像所属范畴ID列表", required = false)
+    val categoryIdList: List<String>?,
     @ApiModelProperty("镜像适用的构建机类型", required = true)
     val agentTypeScope: List<ImageAgentTypeEnum>,
     @ApiModelProperty("版本号", required = true)
     val version: String,
+    @ApiModelProperty("调试项目", required = false)
+    val projectCode: String?,
     @ApiModelProperty("镜像来源", required = true)
     val imageSourceType: ImageType,
     @ApiModelProperty("镜像仓库地址", required = true)
-    val imageRepoUrl: String,
+    val imageRepoUrl: String?,
     @ApiModelProperty("镜像在仓库的名称", required = true)
     val imageRepoName: String,
-    @ApiModelProperty("镜像在仓库的路径", required = true)
-    val imageRepoPath: String,
     @ApiModelProperty("凭证ID", required = true)
-    val ticketId: String,
+    val ticketId: String?,
     @ApiModelProperty("镜像大小", required = false)
-    val imageSize: String,
+    val imageSize: String?,
     @ApiModelProperty("镜像TAG", required = true)
     val imageTag: String,
     @ApiModelProperty("LOGO url", required = true)
     val logoUrl: String,
     @ApiModelProperty("镜像图标（BASE64字符串）", required = false)
-    val icon: String,
+    val icon: String?,
     @ApiModelProperty("镜像简介）", required = false)
-    val summary: String,
+    val summary: String?,
     @ApiModelProperty("镜像描述", required = false)
-    val description: String,
+    val description: String?,
     @ApiModelProperty("发布者", required = true)
     val publisher: String,
     @ApiModelProperty("是否公开 true：公开，false：不公开", required = false)

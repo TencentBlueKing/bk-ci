@@ -24,20 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.plugin.quality
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import org.springframework.stereotype.Service
-import java.io.File
+import com.tencent.devops.quality.QualityGateInElementBizPlugin
+import com.tencent.devops.quality.QualityGateOutElementBizPlugin
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
+@Configuration
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class QualityAutoConfiguration {
 
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        return CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, file, FileChannelTypeEnum.WEB_SHOW.name)
-    }
+    @Bean
+    fun qualityGateInElementBizPlugin() = QualityGateInElementBizPlugin()
+
+    @Bean
+    fun qualityGateOutElementBizPlugin() = QualityGateOutElementBizPlugin()
 }
