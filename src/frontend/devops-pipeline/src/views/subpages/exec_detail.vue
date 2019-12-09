@@ -139,10 +139,10 @@
                 'fetchError'
             ]),
             downLoadJobLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/pipelinedebug/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${this.currentJob.containerId}`
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${this.currentJob.containerId}`
             },
             downLoadPluginLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/pipelinedebug/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}`
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}`
             },
             panels () {
                 return [{
