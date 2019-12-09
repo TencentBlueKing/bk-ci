@@ -184,11 +184,11 @@
             handleWheel (data) {
                 if (this.isScrolling || this.itemHeight * this.totalNumber <= this.visHeight) return
 
-                const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
-                let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
-                if (bottomScrollLeft <= 0) bottomScrollLeft = 0
-                if (bottomScrollLeft + this.bottomScrollWidth >= this.mainWidth) bottomScrollLeft = this.mainWidth - this.bottomScrollWidth
-                this.bottomScrollDis = bottomScrollLeft
+                // const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
+                // let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
+                // if (bottomScrollLeft <= 0) bottomScrollLeft = 0
+                // if (bottomScrollLeft + this.bottomScrollWidth >= this.mainWidth) bottomScrollLeft = this.mainWidth - this.bottomScrollWidth
+                // this.bottomScrollDis = bottomScrollLeft
 
                 const deltaY = Math.max(-1, Math.min(1, (event.wheelDeltaY || -event.detail)))
                 let dis = deltaY * -(this.itemHeight * 3)
