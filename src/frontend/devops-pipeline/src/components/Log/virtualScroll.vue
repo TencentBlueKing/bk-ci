@@ -41,7 +41,7 @@
 
 <script>
     // eslint-disable-next-line
-    const Worker = require('worker-loader!./Worker.js')
+    const Worker = require('worker-loader!./worker.js')
 
     export default {
         props: {
