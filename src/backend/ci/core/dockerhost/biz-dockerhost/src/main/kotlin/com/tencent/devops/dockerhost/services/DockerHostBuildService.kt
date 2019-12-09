@@ -232,7 +232,7 @@ class DockerHostBuildService(
             } else {
                 alertApi.alert(
                     AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
+                    "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
                 )
                 throw ContainerException("Create container failed")
             }
