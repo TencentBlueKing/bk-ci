@@ -248,7 +248,7 @@ object CiYamlUtils {
                 .with("properties")
                 .with("steps")
                 .put("item", getAbstractTaskSchema())
-        return  mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
     }
 
     fun getAbstractTaskSchema(): ObjectNode {
