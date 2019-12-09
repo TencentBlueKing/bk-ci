@@ -29,6 +29,12 @@
     import virtualScroll from './virtualScroll'
     import statusIcon from './status'
 
+    function prezero (num) {
+        num = Number(num)
+        if (num < 10) return '0' + num
+        return num
+    }
+
     export default {
         components: {
             virtualScroll,
@@ -39,7 +45,7 @@
             timeFilter (val) {
                 if (!val) return ''
                 const time = new Date(val)
-                return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
             }
         },
 

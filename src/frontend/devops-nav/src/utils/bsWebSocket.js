@@ -17,8 +17,9 @@ class BlueShieldWebSocket {
         this.hasConnect = false
         this.userName = /bk_uid=([^;]+);/.exec(document.cookie)[1]
         this.uuid = uuid()
+        this.diaLogUuid = ''
         this.stompClient = {}
-        window.addEventListener('message', this.handlePostMessage)
+        window.addEventListener('message', (res) => this.handlePostMessage(res))
 
         this.connect()
         this.readyDisConnect()
@@ -48,29 +49,11 @@ class BlueShieldWebSocket {
         })
     }
 
-    handlePostMessage (res) {
-        const resData = res.data
-        const type = resData.type
-        const page = resData.page
-        let data
-        switch (type) {
-            case 'openLogWs':
-                this.handlePostMessage.uuid = uuid()
-                const projectId = localStorage.getItem('projectId')
-                data = JSON.stringify({ sessionId: this.handlePostMessage.uuid, userId: this.userName, page, showProjectList: true, projectId })
-                this.loopSendChangePage(data)
-                break;
-            case 'closeLogWs':
-                data = { sessionId: this.handlePostMessage.uuid, userId: this.userName, page }
-                this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
-        }
-    }
-
     handleMessage (res) {
         const data = JSON.parse(res.body) || {}
         const type = data.webSocketType
         const page = data.page
-        if (!location.href.includes(page)) return
+        if (!location.href.includes(page) && ['NAV', 'IFRAME', 'AMD'].includes(type)) return
 
         switch (type) {
             case 'NAV':
@@ -142,6 +125,29 @@ class BlueShieldWebSocket {
                     this.hasConnect = true
                 })
             }
+        }
+    }
+
+    handlePostMessage (res) {
+        const resData = res.data
+        const type = resData.type
+        const page = resData.page
+        const sessionId = resData.sessionId
+        let data
+        switch (type) {
+            case 'openLogWs':
+                this.stompClient.subscribe(`/topic/bk/notify/${sessionId}`, (res) => {
+                    this.handleMessage(res)
+                })
+                
+                const projectId = localStorage.getItem('projectId')
+                data = JSON.stringify({ sessionId, userId: this.userName, page, showProjectList: true, projectId })
+                this.loopSendChangePage(data)
+                break;
+            case 'closeLogWs':
+                this.stompClient.unsubscribe(`/topic/bk/notify/${sessionId}`)
+                data = { sessionId, userId: this.userName, page }
+                this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
         }
     }
 
