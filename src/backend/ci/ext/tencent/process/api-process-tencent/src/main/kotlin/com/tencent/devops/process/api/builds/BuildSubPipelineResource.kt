@@ -96,10 +96,10 @@ interface BuildSubPipelineResource {
         values: Map<String, String>
     ): Result<ProjectBuildId>
 
-    @ApiOperation("从构建机启动子流水线")
+    @ApiOperation("从构建机启动指定项目的子流水线")
     @POST
     // @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
-    @Path("/pipelines/{callProjectId}/{callPipelineId}/{atomCode}/startByPipeline")
+    @Path("/projects/{callProjectId}/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     fun callOtherProjectPipelineStartup(
         @ApiParam(value = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
