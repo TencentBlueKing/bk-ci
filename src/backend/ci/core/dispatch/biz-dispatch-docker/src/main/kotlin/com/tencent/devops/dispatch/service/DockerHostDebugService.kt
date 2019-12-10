@@ -87,6 +87,7 @@ class DockerHostDebugService @Autowired constructor(
     ) {
         logger.info("Start docker debug  pipelineId:($pipelineId), projectId:($projectId), vmSeqId:($vmSeqId), imageName:($imageName), imageType:($imageType), imageCode:($imageCode), imageVersion:($imageVersion)")
         var imageRepoInfo: ImageRepoInfo? = null
+        var finalCredentialId = credentialId
         var credentialProject = projectId
         if (imageType == ImageType.BKSTORE) {
             imageRepoInfo = storeImageService.getImageRepoInfo(
@@ -96,6 +97,9 @@ class DockerHostDebugService @Autowired constructor(
                 imageVersion = imageVersion,
                 defaultPrefix = dockerBuildImagePrefix
             )
+            if (imageRepoInfo.ticketId.isNotBlank()) {
+                finalCredentialId = imageRepoInfo.ticketId
+            }
             credentialProject = imageRepoInfo.ticketProject
             if (credentialProject.isBlank()) {
                 logger.warn("insertDebug:credentialProject is blank,pipelineId=$pipelineId, imageCode=$imageCode,imageVersion=$imageVersion,credentialId=$credentialId")
@@ -105,7 +109,13 @@ class DockerHostDebugService @Autowired constructor(
             ImageType.THIRD -> imageName!!
             ImageType.BKSTORE -> {
                 // 研发商店镜像一定含name与tag
-                imageRepoInfo!!.completeImageName
+                if (imageRepoInfo!!.repoUrl.isBlank()) {
+                    // dockerhub镜像名称不带斜杠前缀
+                    imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                } else {
+                    // 无论蓝盾还是第三方镜像此处均需完整路径
+                    imageRepoInfo.repoUrl + "/" + imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                }
             }
             else -> when (imageName) {
                 DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
@@ -116,12 +126,12 @@ class DockerHostDebugService @Autowired constructor(
         logger.info("insertDebug:Docker images is: $dockerImage")
         var userName: String? = null
         var password: String? = null
-        if (imageType == ImageType.THIRD && !credentialId.isNullOrBlank()) {
+        if (imageType == ImageType.THIRD && !finalCredentialId.isNullOrBlank()) {
             val ticketsMap =
                 CommonUtils.getCredential(
                     client = client,
                     projectId = credentialProject,
-                    credentialId = credentialId!!,
+                    credentialId = finalCredentialId!!,
                     type = CredentialType.USERNAME_PASSWORD
                 )
             userName = ticketsMap["v1"] as String
