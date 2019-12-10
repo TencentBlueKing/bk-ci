@@ -24,8 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.environment.init
 
-enum class BusinessFeatureEnum constructor(val value: String) {
-    NEED_AGENT_TYPE("needAgentType") // 需要指定AgentType
+import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class EnvironmentConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(AgentUrlService::class)
+    fun agentUrlService(slaveGatewayService: SlaveGatewayService) = BluekingAgentUrlServiceImpl(slaveGatewayService)
 }
