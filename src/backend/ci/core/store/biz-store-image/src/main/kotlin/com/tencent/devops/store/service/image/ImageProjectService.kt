@@ -348,7 +348,7 @@ class ImageProjectService @Autowired constructor(
             imageSize = imageSize,
             certificationFlag = certificationFlag,
             publicFlag = publicFlag,
-            imageType = if (null != imageType) ImageRDTypeEnum.getImageRDType(imageType.toInt()) else null,
+            imageType = if (null != imageType) ImageRDTypeEnum.getImageRDTypeStr(imageType.toInt()) else null,
             weight = weight,
             recommendFlag = recommendFlag,
             labelNames = labelNames,
@@ -939,7 +939,7 @@ class ImageProjectService @Autowired constructor(
         val id = it.get(KEY_IMAGE_ID) as String
         val code = it.get(KEY_IMAGE_CODE) as String
         val name = it.get(KEY_IMAGE_NAME) as String
-        val rdType = ImageRDTypeEnum.getImageRDType((it.get(KEY_IMAGE_RD_TYPE) as Byte).toInt())
+        val rdType = ImageRDTypeEnum.getImageRDTypeStr((it.get(KEY_IMAGE_RD_TYPE) as Byte).toInt())
 
         // 单独查询agentTypeScope
         val agentTypeScopeStr = it.get(KEY_IMAGE_AGENT_TYPE_SCOPE) as String?
