@@ -41,6 +41,7 @@ import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
@@ -160,16 +161,23 @@ class DockerHostBuildService(
     ): Result<CheckImageResponse?> {
         logger.info("checkImage buildId: $buildId, checkImageRequest: $checkImageRequest")
         // 判断用户录入的镜像信息是否能正常拉取到镜像
-        val pullImageResult = pullImage(
-            imageType = checkImageRequest.imageType,
-            imageName = checkImageRequest.imageName,
-            registryUser = checkImageRequest.registryUser,
-            registryPwd = checkImageRequest.registryPwd,
-            buildId = buildId
-        )
-        logger.info("pullImageResult: $pullImageResult")
-        if (pullImageResult.isNotOk()) {
-            return Result(pullImageResult.status, pullImageResult.message, null)
+        val imageName = checkImageRequest.imageName
+        try {
+            val pullImageResult = pullImage(
+                imageType = checkImageRequest.imageType,
+                imageName = checkImageRequest.imageName,
+                registryUser = checkImageRequest.registryUser,
+                registryPwd = checkImageRequest.registryPwd,
+                buildId = buildId
+            )
+            logger.info("pullImageResult: $pullImageResult")
+            if (pullImageResult.isNotOk()) {
+                return Result(pullImageResult.status, pullImageResult.message, null)
+            }
+        } catch (t: Throwable) {
+            logger.warn("Fail to pull the image $imageName of build $buildId", t)
+            log(buildId, "pull image fail，error is：${t.message}")
+            return Result(CommonMessageCode.SYSTEM_ERROR.toInt(), t.message, null)
         }
         val dockerImageName = CommonUtils.normalizeImageName(checkImageRequest.imageName)
         // 查询镜像详细信息
@@ -227,7 +235,7 @@ class DockerHostBuildService(
             } else {
                 alertApi.alert(
                     AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
+                    "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
                 )
                 throw ContainerException("Create container failed")
             }
