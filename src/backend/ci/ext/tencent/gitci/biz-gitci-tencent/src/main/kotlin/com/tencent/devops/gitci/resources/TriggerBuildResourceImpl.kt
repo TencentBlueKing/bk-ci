@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.resources
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.TriggerBuildResource
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
@@ -57,7 +58,7 @@ class TriggerBuildResourceImpl @Autowired constructor(
             val (validate, message) = gitCIRequestService.validateCIBuildYaml(yaml)
             if (!validate) {
                 logger.error("Validate yaml failed, message: $message")
-                return Result(1, "Invalid yaml", message)
+                return Result(1, "Invalid yaml: $message", message)
             }
             gitCIRequestService.createCIBuildYaml(yaml)
         } catch (e: Throwable) {
