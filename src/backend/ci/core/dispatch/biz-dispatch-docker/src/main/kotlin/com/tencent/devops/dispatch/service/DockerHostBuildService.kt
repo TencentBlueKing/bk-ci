@@ -658,8 +658,8 @@ class DockerHostBuildService @Autowired constructor(
                 } else {
                     dispatchType.imageType!!.type
                 },
-                //无构建环境默认使用自研公共镜像
-                imagePublicFlag = true,
+                //无构建环境默认每次都从仓库拉取
+                imagePublicFlag = false,
                 imageRDType = ImageRDTypeEnum.SELF_DEVELOPED
             )
         }
