@@ -968,6 +968,11 @@ abstract class ImageService @Autowired constructor() {
         val imageRecord = imageDao.getImage(dslContext, imageId) ?: throw ImageNotExistException("imageId=$imageId")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+            val imageSize = try {
+                imageUpdateRequest.imageSize?.toInt()
+            } catch (ignore: Exception) {
+                null
+            }
             imageDao.updateImage(
                 dslContext = context,
                 imageId = imageId,
@@ -981,7 +986,7 @@ abstract class ImageService @Autowired constructor() {
                     ticketId = imageUpdateRequest.ticketId,
                     imageStatus = null,
                     imageStatusMsg = null,
-                    imageSize = imageUpdateRequest.imageSize,
+                    imageSize = imageSize?.toString(),
                     imageTag = imageUpdateRequest.imageTag,
                     agentTypeList = imageUpdateRequest.agentTypeScope,
                     logoUrl = imageUpdateRequest.logoUrl,
