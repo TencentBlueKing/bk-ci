@@ -4,6 +4,11 @@
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 {{detail.name}}
+                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
+                    <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
+                    <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
+                    <span>{{ $t('store.工蜂') }}</span>
+                </h5>
                 <template v-if="!isEnterprise && userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
@@ -105,7 +110,7 @@
             return {
                 defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314',
                 showCooperDialog: false,
-                user: JSON.parse(localStorage.getItem('_cache_userInfo')).username,
+                user: window.userInfo.username,
                 cooperData: {
                     testProjectCode: '',
                     applyReason: ''
@@ -126,6 +131,15 @@
                 const fixWidth = 17 * integer
                 const rateWidth = 14 * (this.detail.score - integer)
                 return `${fixWidth + rateWidth}px`
+            },
+
+            isPublic () {
+                return this.detail.visibilityLevel === 'LOGIN_PUBLIC'
+            },
+
+            isPublicTitle () {
+                if (this.isPublic) return '查看源码'
+                else return '未开源'
             },
 
             approveMsg () {
@@ -159,13 +173,15 @@
             }
         },
 
+        created () {
+            this.initData()
+        },
+
         methods: {
             initData () {
-                if (this.type === 'atom') {
-                    this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
-                        this.userInfo = res
-                    })
-                }
+                this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
+                    this.userInfo = res
+                })
             },
 
             closeDialog () {
@@ -223,6 +239,10 @@
                     }
                 })
                 return jobList
+            },
+
+            goToCode () {
+                if (this.isPublic) window.open(this.detail.codeSrc, '_blank')
             },
 
             goToInstall () {
