@@ -79,7 +79,7 @@
                 </bk-form-item>
                 <template v-if="form.imageSourceType === 'BKDEVOPS'">
                     <bk-form-item :label="$t('store.源镜像')" :required="true" property="imageRepoName" :rules="[requireRule]" ref="imageRepoName">
-                        <bk-select v-model="form.imageRepoName" searchable>
+                        <bk-select v-model="form.imageRepoName" @toggle="getImageList" searchable>
                             <bk-option v-for="(option, index) in imageList"
                                 :key="index"
                                 :id="option.repo"
@@ -336,24 +336,24 @@
                     return Promise.all([
                         this.requestImageClassifys(),
                         this.requestImageLabel(),
-                        this.requestImageList(res.projectCode),
                         this.requestTicketList({ projectCode: res.projectCode }),
-                        this.requestImageCategorys()]).then(([classifys, labels, imageList, ticket, categorys]) => {
+                        this.requestImageCategorys()]).then(([classifys, labels, ticket, categorys]) => {
                             this.classifys = classifys
                             this.labelList = labels
                             this.categoryList = categorys
-                            this.imageList = imageList.imageList
                             this.ticketList = ticket.records || []
                             const currentCategory = categorys.find((category) => (res.category === category.categoryCode)) || {}
                             const settings = currentCategory.settings || {}
                             this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
-
+                            
                             if (this.form.imageRepoName && this.form.imageSourceType === 'BKDEVOPS') {
                                 const imageRepo = this.form.imageRepoName
                                 const imageId = this.form.imageId
-                                return this.requestImageTagList({ imageRepo, imageId }).then((res) => {
-                                    this.form.imageRepoUrl = res.repoUrl
-                                    this.imageVersionList = res.tags || []
+                                return Promise.all([this.requestImageList(res.projectCode), this.requestImageTagList({ imageRepo, imageId })]).then(([imageList, res]) => {
+                                    this.imageList = imageList.imageList
+                                    const resData = res || {}
+                                    this.form.imageRepoUrl = resData.repoUrl
+                                    this.imageVersionList = resData.tags || []
                                 })
                             }
                         })
@@ -361,6 +361,14 @@
                     this.isLoading = false
                     if (VERSION_TYPE === 'ee') this.form.imageSourceType = 'THIRD'
                 })
+            },
+
+            getImageList (isExpand) {
+                if (!isExpand) return
+                const code = this.form.projectCode
+                this.requestImageList(code).then((imageList) => {
+                    this.imageList = imageList.imageList
+                }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
             },
 
             async uploadimg (pos, file) {
