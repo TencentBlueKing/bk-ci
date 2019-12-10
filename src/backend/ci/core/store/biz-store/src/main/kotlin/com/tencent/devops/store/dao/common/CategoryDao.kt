@@ -103,6 +103,13 @@ class CategoryDao {
         }
     }
 
+    fun countById(dslContext: DSLContext, categoryId: String, type: Byte): Int {
+        with(TCategory.T_CATEGORY) {
+            return dslContext.selectCount().from(this).where(ID.eq(categoryId).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
     fun delete(dslContext: DSLContext, id: String) {
         with(TCategory.T_CATEGORY) {
             dslContext.deleteFrom(this)
