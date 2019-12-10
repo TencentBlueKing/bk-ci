@@ -939,7 +939,7 @@ class ImageProjectService @Autowired constructor(
         val id = it.get(KEY_IMAGE_ID) as String
         val code = it.get(KEY_IMAGE_CODE) as String
         val name = it.get(KEY_IMAGE_NAME) as String
-        val rdType = ImageRDTypeEnum.getImageRDTypeStr((it.get(KEY_IMAGE_RD_TYPE) as Byte).toInt())
+        val rdType = ImageRDTypeEnum.getImageRDTypeStr((it.get(KEY_IMAGE_RD_TYPE) as Byte?)?.toInt())
 
         // 单独查询agentTypeScope
         val agentTypeScopeStr = it.get(KEY_IMAGE_AGENT_TYPE_SCOPE) as String?
