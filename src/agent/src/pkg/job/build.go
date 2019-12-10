@@ -180,6 +180,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		startCmd := config.GetJava()
 		args := []string{
 			"-Ddevops.slave.agent.role=devops.slave.agent.role.slave",
+			"-Dbuild.type=AGENT",
 			"-jar",
 			buildAgentJarPath(),
 			getEncodedBuildInfo(buildInfo)}
