@@ -58,7 +58,6 @@ import com.tencent.devops.worker.common.utils.CredentialUtils
 
 object CodeccRepoHelper {
 
-    private val pipelineApi = ApiFactory.create(BuildSDKApi::class)
     private val pipelineTaskApi = ApiFactory.create(BuildTaskSDKApi::class)
     private val repoElementTypes = setOf(
         CodeSvnElement.classType,
