@@ -32,7 +32,6 @@ import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-
 @ApiModel("CodeCC代码检查任务(service端)", description = LinuxScriptElement.classType)
 open class LinuxCodeCCScriptElement(
     @ApiModelProperty("任务名称", required = true)
@@ -155,4 +154,3 @@ open class LinuxCodeCCScriptElement(
         horuspyToolSetId = null
     )
 }
-
