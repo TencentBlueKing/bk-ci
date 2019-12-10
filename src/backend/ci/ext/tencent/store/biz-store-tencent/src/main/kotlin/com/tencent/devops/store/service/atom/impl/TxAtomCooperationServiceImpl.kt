@@ -26,7 +26,11 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.dao.atom.MarketAtomDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateReq
+import com.tencent.devops.store.pojo.common.ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
@@ -42,6 +46,9 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
     @Value("\${store.moaApproveCallBackUrl}")
     private lateinit var moaApproveCallBackUrl: String
 
+    @Autowired
+    private lateinit var marketAtomDao: MarketAtomDao
+
     private val executorService = Executors.newFixedThreadPool(2)
 
     private val logger = LoggerFactory.getLogger(TxAtomCooperationServiceImpl::class.java)
@@ -55,9 +62,11 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
             adminRecords.forEach {
                 verifierSb.append(it.username).append(",")
             }
+            val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+            val applyReason = atomCollaboratorCreateReq.applyReason
             val createMoaApproveRequest = CreateMoaApproveRequest(
                 verifier = verifierSb.toString(),
-                title = atomCollaboratorCreateReq.applyReason,
+                title = MessageCodeUtil.getCodeMessage(ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE, arrayOf(userId, atomRecord!!.name, applyReason)) ?: applyReason,
                 taskId = approveId,
                 backUrl = moaApproveCallBackUrl
             )
