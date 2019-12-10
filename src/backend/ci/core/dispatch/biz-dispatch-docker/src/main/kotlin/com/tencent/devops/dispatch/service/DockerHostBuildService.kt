@@ -212,6 +212,12 @@ class DockerHostBuildService @Autowired constructor(
                     ImageType.THIRD == dispatchType.imageType -> dispatchType.imageType!!.type
                     ImageType.BKDEVOPS == dispatchType.imageType -> ImageType.BKDEVOPS.type
                     else -> throw UnknownImageType("imageCode:${dispatchType.imageCode},imageVersion:${dispatchType.imageVersion},imageType:${dispatchType.imageType}")
+                },
+                imagePublicFlag = dispatchType.imagePublicFlag,
+                imageRDType = if (dispatchType.imageRDType == null) {
+                    null
+                } else {
+                    ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!)
                 }
             )
 
@@ -325,7 +331,7 @@ class DockerHostBuildService @Autowired constructor(
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
                     imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType.toInt())
+                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
                 ))
             } else {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
@@ -366,7 +372,7 @@ class DockerHostBuildService @Autowired constructor(
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
                     imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType.toInt())
+                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
                 ))
             }
         } finally {
@@ -452,7 +458,7 @@ class DockerHostBuildService @Autowired constructor(
                 registryPwd = build.registryPwd,
                 imageType = build.imageType,
                 imagePublicFlag = build.imagePublicFlag,
-                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType.toInt())
+                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
             ))
         } finally {
             redisLock.unlock()
@@ -571,7 +577,6 @@ class DockerHostBuildService @Autowired constructor(
             )
             logger.info("[${event.buildId}]|BUILD_LESS| secretKey: $secretKey agentId: $agentId")
 
-            //
             val dockerImage = when (dispatchType.dockerBuildVersion) {
                 DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + BL_TLINUX1_2_IMAGE
                 DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + BL_TLINUX2_2_IMAGE
@@ -652,7 +657,11 @@ class DockerHostBuildService @Autowired constructor(
                     ImageType.BKDEVOPS.type
                 } else {
                     dispatchType.imageType!!.type
-                })
+                },
+                //无构建环境默认使用自研公共镜像
+                imagePublicFlag = true,
+                imageRDType = ImageRDTypeEnum.SELF_DEVELOPED
+            )
         }
     }
 
