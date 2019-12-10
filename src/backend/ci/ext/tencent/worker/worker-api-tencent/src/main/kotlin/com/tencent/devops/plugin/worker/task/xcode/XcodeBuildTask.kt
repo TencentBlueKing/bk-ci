@@ -24,15 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
+package com.tencent.devops.plugin.worker.task.xcode
 
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
+import com.tencent.devops.common.pipeline.element.XcodeBuildElement
+import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.task.ITask
+import com.tencent.devops.worker.common.task.TaskClassType
+import java.io.File
+
+@TaskClassType(classTypes = [XcodeBuildElement.classType])
+class XcodeBuildTask : ITask() {
+    override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
+        val taskParams = buildTask.params ?: mapOf()
+        val argument = Validator.validate(taskParams, workspace, buildVariables)
+        Builder(argument).build(buildVariables, workspace)
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

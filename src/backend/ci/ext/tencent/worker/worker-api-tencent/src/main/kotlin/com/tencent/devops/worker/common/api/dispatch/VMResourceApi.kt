@@ -24,15 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
+package com.tencent.devops.worker.common.api.dispatch
 
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.VM
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+
+class VMResourceApi : AbstractBuildResourceApi() {
+
+    fun getVmByPipeline(): Result<VM> {
+        val path = "/dispatch/api/build/vms/getVmByPipeLine"
+        val request = buildGet(path)
+        val response = request(request, "获取构建机基本信息失败")
+        return objectMapper.readValue(response)
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

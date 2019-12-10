@@ -24,15 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
+package com.tencent.devops.plugin.worker.task.unity3d.model
 
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
-}
+import java.io.File
+import com.tencent.devops.common.pipeline.enums.Platform
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+data class Argument(
+    val platform: Platform,
+    val executeMethod: String?,
+    val debug: Boolean,
+    val rootDir: File,
+    val androidKey: AndroidKey,
+    val androidAPKPath: String,
+    val androidAPKName: String,
+    val xcodeProjectName: String,
+    val enableBitCode: Boolean? = null,
+    var version: String = ""
+)

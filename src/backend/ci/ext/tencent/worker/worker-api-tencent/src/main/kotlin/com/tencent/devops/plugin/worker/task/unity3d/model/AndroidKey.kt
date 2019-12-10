@@ -24,15 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
+package com.tencent.devops.plugin.worker.task.unity3d.model
 
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
-}
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+/**
+ * Created by liangyuzhou on 2017/9/26.
+ * Powered By Tencent
+ */
+data class AndroidKey(
+    val storeName: String = "",
+    val storePass: String = "",
+    val aliasName: String = "",
+    val aliasPass: String = ""
+)

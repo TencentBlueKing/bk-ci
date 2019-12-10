@@ -24,15 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
+package com.tencent.devops.plugin.worker.task.xcode.pojo
 
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
+enum class XcodeMethod(val type: String) {
+    DEVELOPMENT("development"),
+    ENTERPRISE("enterprise"),
+    APP_STORE("app-store"),
+    AD_HOC("ad-hoc"),
+    PACKAGE("package"),
+    DEVELOPMENT_ID("development-id"),
+    MAC_APP("mac-application");
+
+    companion object {
+        fun parse(type: String): XcodeMethod {
+            when (type) {
+                DEVELOPMENT.type -> return DEVELOPMENT
+                ENTERPRISE.type -> return ENTERPRISE
+                APP_STORE.type -> return APP_STORE
+                AD_HOC.type -> return AD_HOC
+                PACKAGE.type -> return PACKAGE
+                DEVELOPMENT_ID.type -> return DEVELOPMENT_ID
+                MAC_APP.type -> return MAC_APP
+            }
+            return DEVELOPMENT
+        }
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
