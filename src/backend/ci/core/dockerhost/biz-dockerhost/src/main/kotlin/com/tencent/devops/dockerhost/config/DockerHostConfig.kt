@@ -32,8 +32,8 @@ import org.springframework.stereotype.Component
 @Component
 class DockerHostConfig {
 
-    @Value("\${dockerCli.dockerHost:unix:///var/run/docker.sock}")
-    val dockerHost: String? = null
+//    @Value("\${dockerCli.dockerHost:unix:///var/run/docker.sock}")
+//    val dockerHost: String? = null
 
     @Value("\${dockerCli.dockerConfig:/root/.docke}")
     var dockerConfig: String? = null

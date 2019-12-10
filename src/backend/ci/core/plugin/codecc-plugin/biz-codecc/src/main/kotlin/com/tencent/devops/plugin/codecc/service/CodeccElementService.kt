@@ -112,9 +112,8 @@ class CodeccElementService @Autowired constructor(
         return null
     }
 
-    fun getCodeccElement(projectId: String, pipelineId: String): CodeccElementData {
-        val record = codeccElementDao.get(dslContext, projectId, pipelineId)
-            ?: throw RuntimeException("not found codecc element for project($projectId), pipeline($pipelineId)")
+    fun getCodeccElement(projectId: String, pipelineId: String): CodeccElementData? {
+        val record = codeccElementDao.get(dslContext, projectId, pipelineId) ?: return null
         return CodeccElementData(
             projectId = projectId,
             pipelineId = pipelineId,

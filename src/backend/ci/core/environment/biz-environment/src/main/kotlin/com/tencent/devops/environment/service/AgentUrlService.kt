@@ -40,4 +40,9 @@ interface AgentUrlService {
      * 生成构建机脚本下载链接
      */
     fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+
+    /**
+     * 生成网关域名
+     */
+    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
 }

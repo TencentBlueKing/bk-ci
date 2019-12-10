@@ -54,13 +54,24 @@ class TriggerBuildResourceImpl @Autowired constructor(
 
     override fun checkYaml(userId: String, yaml: String): Result<String> {
         try {
+            val (validate, message) = gitCIRequestService.validateCIBuildYaml(yaml)
+            if (!validate) {
+                logger.error("Validate yaml failed, message: $message")
+                return Result(1, "Invalid yaml", message)
+            }
             gitCIRequestService.createCIBuildYaml(yaml)
         } catch (e: Throwable) {
             logger.error("check yaml failed, error: ${e.message}, yaml: $yaml")
-            return Result(1, "Invalid", e.message)
+            return Result(1, "Invalid yaml", e.message)
         }
 
         return Result("OK")
+    }
+
+    override fun getYamlSchema(userId: String): Result<String> {
+        val schema = gitCIRequestService.getCIBuildYamlSchema()
+        logger.info("ci build yaml schema: $schema")
+        return Result(schema)
     }
 
     override fun getYamlByBuildId(userId: String, gitProjectId: Long, buildId: String): Result<String> {

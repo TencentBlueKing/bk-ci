@@ -24,23 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.environment.init
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectServiceResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
-import com.tencent.devops.project.service.UserProjectServiceService
+import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@RestResource
-class ServiceProjectServiceResourceImpl constructor(
-    private val userProjectServiceService: UserProjectServiceService
-) : ServiceProjectServiceResource {
+@Configuration
+class EnvironmentConfig {
 
-    override fun updateServiceUrlByBatch(
-        userId: String,
-        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
-    ): Result<Boolean> {
-        return userProjectServiceService.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
-    }
+    @Bean
+    @ConditionalOnMissingBean(AgentUrlService::class)
+    fun agentUrlService(slaveGatewayService: SlaveGatewayService) = BluekingAgentUrlServiceImpl(slaveGatewayService)
 }

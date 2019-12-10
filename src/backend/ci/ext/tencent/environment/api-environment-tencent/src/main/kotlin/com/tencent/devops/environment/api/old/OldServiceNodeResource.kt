@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 interface OldServiceNodeResource {
     @ApiOperation("获取用户有权限使用的服务器列表")
     @GET
-    @Path("/projects/{projectId}/listUsableServerNodes")
+    @Path("/{projectId}/listUsableServerNodes")
     fun listUsableServerNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -63,7 +63,7 @@ interface OldServiceNodeResource {
 
     @ApiOperation("根据hashId获取项目节点列表")
     @POST
-    @Path("/projects/{projectId}/listByHashIds")
+    @Path("/{projectId}/listByHashIds")
     fun listByHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -77,7 +77,7 @@ interface OldServiceNodeResource {
 
     @ApiOperation("根据hashId获取项目节点列表(不校验权限)")
     @POST
-    @Path("/projects/{projectId}/listRawByHashIds")
+    @Path("/{projectId}/listRawByHashIds")
     fun listRawByHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -91,7 +91,7 @@ interface OldServiceNodeResource {
 
     @ApiOperation("根据环境hashId获取项目节点列表(不校验权限)")
     @POST
-    @Path("/projects/{projectId}/listRawByEnvHashIds")
+    @Path("/{projectId}/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -105,7 +105,7 @@ interface OldServiceNodeResource {
 
     @ApiOperation("根据类型查询node")
     @GET
-    @Path("/projects/{projectId}/listNodeByType/{type}")
+    @Path("/{projectId}/listNodeByType/{type}")
     fun listNodeByType(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -120,7 +120,7 @@ interface OldServiceNodeResource {
 
     @ApiOperation("根据机器类型查询node")
     @GET
-    @Path("/projects/{projectId}/listNodeByNodeType/{nodeType}")
+    @Path("/{projectId}/listNodeByNodeType/{nodeType}")
     fun listNodeByNodeType(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

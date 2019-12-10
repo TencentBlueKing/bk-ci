@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.api.old.OldServiceEnvironmentResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OldServiceEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService
-) : ServiceEnvironmentResource {
+) : OldServiceEnvironmentResource {
     override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listUsableServerEnvs(userId, projectId))
     }
