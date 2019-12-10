@@ -271,8 +271,8 @@
                 const query = this.$route.query || {}
                 const logType = query.logType
                 const id = query.id
-                if (logType === 'plugin' && !this.showLog) this.showElementLog(id)
-                if (logType === 'job' && !this.showContainerPanel) this.showJobLog(id)
+                if (logType === 'plugin') this.showElementLog(id)
+                if (logType === 'job') this.showJobLog(id)
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -399,11 +399,13 @@
             },
 
             openLogApi () {
+                if (this.openLogApi.hasOpen) return
+                this.openLogApi.hasOpen = true
                 this.isInitLog = true
                 this.getInitLog(this.logPostData).then((res) => {
                     res = res.data || {}
                     this.$refs.log.addLogData(res.logs, true)
-                    if (!res.finished) {
+                    if (res.hasMore) {
                         const lastLog = res.logs[res.logs.length - 1] || { lineNo: 0 }
                         this.logPostData.lineNo = lastLog.lineNo
                         webSocketMessage.openDialogWebSocket((res) => {
@@ -418,6 +420,7 @@
             },
 
             closeLog () {
+                this.openLogApi.hasOpen = false
                 this.showLog = false
                 this.stopLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
                 webSocketMessage.closeDialogWebSocket(this.logPostData.payLoad)

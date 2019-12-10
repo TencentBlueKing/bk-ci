@@ -369,7 +369,7 @@ export default {
 
     // 第一次拉取日志
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : ''}${jobId ? '?jobId=' + jobId : ''}`)
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : '?jobId=' + jobId}`)
     },
 
     // 建立日志WS连接

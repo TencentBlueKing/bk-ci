@@ -1,11 +1,11 @@
 import ansiParse from './assets/ansiParse'
 
 const colorList = [
-    { key: '##[command]', color: 'rgba(0,112,187,1)' },
-    { key: '##[info]', color: 'rgba(31,174,62,1)' },
-    { key: '##[warning]', color: 'rgba(187,187,35,1)' },
-    { key: '##[error]', color: 'rgba(233,45,61,1)' },
-    { key: '##[debug]', color: 'rgba(13,143,97,1)' }
+    { key: '##[command]', color: 'rgba(146,166,202,1)' },
+    { key: '##[info]', color: 'rgba(127,202,84,1)' },
+    { key: '##[warning]', color: 'rgba(246,222,84,1)' },
+    { key: '##[error]', color: 'rgba(247,49,49,1)' },
+    { key: '##[debug]', color: 'rgba(99,176,106,1)' }
 ]
 
 const reg = (() => {
@@ -20,10 +20,8 @@ const reg = (() => {
 function handleColor (val) {
     const res = ansiParse(val)[0] || { message: '', hasHandle: false }
     const currentColor = colorList.find(color => String(val).includes(color.key))
-    if (currentColor) {
-        res.color = currentColor.color
-        res.fontWeight = 600
-    }
+    if (currentColor) res.color = currentColor.color
+    if (res.color) res.fontWeight = 600
     res.message = String(res.message).replace(reg, '')
     res.hasHandle = true
     return res
