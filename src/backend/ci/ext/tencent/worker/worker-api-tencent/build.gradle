@@ -30,6 +30,9 @@ dependencies {
     compile project(":core:artifactory:api-artifactory-store")
     compile project(":ext:tencent:common:common-archive-tencent")
     compile project(":ext:tencent:common:common-pipeline-tencent")
+
+    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
+    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

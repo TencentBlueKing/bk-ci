@@ -24,16 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task.xcode
+package com.tencent.devops.worker.common.api.dispatch
 
-data class Argument(
-    val project: String,
-    val sdk: String,
-    val scheme: String,
-    val certId: String,
-    val configuration: String,
-    val iosOutPath: String,
-    val rootDir: String,
-    val enableBitCode: Boolean,
-    val extra: String
-)
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.VM
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+
+class VMResourceApi : AbstractBuildResourceApi() {
+
+    fun getVmByPipeline(): Result<VM> {
+        val path = "/dispatch/api/build/vms/getVmByPipeLine"
+        val request = buildGet(path)
+        val response = request(request, "获取构建机基本信息失败")
+        return objectMapper.readValue(response)
+    }
+}

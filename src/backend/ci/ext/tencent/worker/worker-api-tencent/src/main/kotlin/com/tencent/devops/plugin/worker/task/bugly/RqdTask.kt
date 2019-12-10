@@ -1,6 +1,32 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.plugin.worker.task.bugly
 
-import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.pipeline.element.RqdElement
 import com.tencent.devops.common.pipeline.enums.Platform
 import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
@@ -10,12 +36,18 @@ import com.tencent.devops.worker.common.api.process.RqdResourceApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
+import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.IosUtils
 import net.dongliu.apk.parser.ApkFile
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.file.Paths
 import java.util.regex.Pattern
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @TaskClassType(classTypes = [RqdElement.classType])
 class RqdTask : ITask() {
@@ -136,7 +168,7 @@ class RqdTask : ITask() {
             val ipaBundleId = map["bundleIdentifier"] ?: ""
             val bundleVersionFull = map["bundleVersionFull"] ?: ""
             val bundleVersion = map["bundleVersion"] ?: ""
-            var ipaVersionId = when {
+            val ipaVersionId = when {
                 bundleVersionFull.isNullOrBlank() || bundleVersionFull == "0" -> bundleVersion
                 isNumeric(bundleVersionFull) -> "$bundleVersion($bundleVersionFull)"
                 else -> bundleVersionFull
@@ -168,7 +200,7 @@ class RqdTask : ITask() {
             LoggerService.addNormalLine("dSYMFile.zip's path:${destFIle.canonicalFile}")
             LoggerService.addNormalLine("Begin to zip dSYM file.")
 
-            FileUtil.zipToTargetPath(dsymFile, destFIle)
+            zipToTargetPath(dsymFile, destFIle)
             LoggerService.addNormalLine("Success to zip dSYM file.")
             postRqdFile(destFIle, appId, appKey, "2", buildId)
             LoggerService.addNormalLine("success upload dsymFile")
@@ -226,7 +258,7 @@ class RqdTask : ITask() {
         LoggerService.addNormalLine(".so|.so.debug|.sym  file count: $count")
         if (count != 0) {
             LoggerService.addNormalLine("Begin to zip .so|.so.debug|.sym file.")
-            FileUtil.zipToTargetPath(sourceFolder, targetFile)
+            zipToTargetPath(sourceFolder, targetFile)
             LoggerService.addNormalLine("Success to zip .so|.so.debug|.sym file.")
             postRqdFile(targetFile, appId, appKey, "3", buildId)
             LoggerService.addNormalLine("success upload .so|.so.debug|.sym file")
@@ -263,15 +295,15 @@ class RqdTask : ITask() {
         }
         LoggerService.addNormalLine("Begin to upload symbol table file to rqd.")
         val result = RqdResourceApi().upload(
-            file,
-            appId,
-            appKey,
-            file.name,
-            symbolType,
-            pid,
-            version,
-            bundleId,
-            LoggerService.elementId
+            file = file,
+            appId = appId,
+            appKey = appKey,
+            fileName = file.name,
+            symbolType = symbolType,
+            pid = pid,
+            version = version,
+            bundleId = bundleId,
+            elementId = LoggerService.elementId
         )
         LoggerService.addNormalLine("Uploaded symbol table file to rqd, response: ${result.data}")
         if (result.isNotOk()) {
@@ -301,5 +333,30 @@ class RqdTask : ITask() {
         }
         rqdToolInputStream.close()
         rqdToolOutputStream.close()
+    }
+
+    /**
+     * zip文件到当前路径
+     * @param file 文件对象
+     * @return zip文件
+     */
+    fun zipToTargetPath(file: File, target: File): File {
+        val sourcePath = Paths.get(file.canonicalPath)
+        ZipOutputStream(FileOutputStream(target)).use { zos ->
+            val buf = ByteArray(4096)
+            file.walk().filter { return@filter it.isFile }.forEach {
+                val relativePath = sourcePath.relativize(Paths.get(it.canonicalPath)).toString()
+                zos.putNextEntry(ZipEntry(relativePath))
+                FileInputStream(it).use {
+                    var len = it.read(buf)
+                    while (len != -1) {
+                        zos.write(buf, 0, len)
+                        len = it.read(buf)
+                    }
+                }
+                zos.closeEntry()
+            }
+        }
+        return target
     }
 }

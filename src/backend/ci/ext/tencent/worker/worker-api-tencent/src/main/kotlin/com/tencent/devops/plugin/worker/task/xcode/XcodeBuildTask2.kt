@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.plugin.worker.task.xcode
 
 import com.tencent.devops.common.api.util.DHUtil
@@ -7,13 +33,13 @@ import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.ErrorType
-import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.task.ITask
-import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.ShellUtil
 import java.io.File
 import java.util.Base64
 import java.util.regex.Pattern
@@ -74,12 +100,11 @@ class XcodeBuildTask2 : ITask() {
     }
 
     private fun init(project: String) {
-        ShellUtil.buildEnvs = buildVariables.buildEnvs
-        ShellUtil.buildId = buildVariables.buildId
-        ShellUtil.dir = workspace
 
         // 优先选择xcworkspace目录，其次xcodeproj，不然报错
-        File(project).listFiles().filter { it.isDirectory && (it.name.endsWith(".xcworkspace") or it.name.endsWith(".xcodeproj")) }.forEach {
+        File(project).listFiles()?.filter {
+            it.isDirectory and (it.name.endsWith(".xcworkspace") or it.name.endsWith(".xcodeproj"))
+        }?.forEach {
             if (it.name.endsWith(".xcworkspace")) {
                 projectBuildStr = "-workspace ${it.name}"
             } else if (projectBuildStr.isEmpty()) {
@@ -94,7 +119,12 @@ class XcodeBuildTask2 : ITask() {
 
         // 列出scheme
         LoggerService.addNormalLine("show all scheme:")
-        ShellUtil.execute("xcodebuild -list -project $projectBuildStr")
+        ShellUtil.execute(
+            script = "xcodebuild -list -project $projectBuildStr",
+            dir = workspace,
+            buildEnvs = buildVariables.buildEnvs,
+            runtimeVariables = emptyMap()
+        )
     }
 
     private fun generatePlist(certId: String): String {
@@ -125,19 +155,19 @@ class XcodeBuildTask2 : ITask() {
         uuid = getUuid(content)
         val bundleId = getBundleId(content)
         val template = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
-                "<plist version=\"1.0\">\n" +
-                "<dict>\n" +
-                "       <key>teamID</key>\n" +
-                "       <string>$teamId</string>\n" +
-                "       <key>method</key>\n" +
-                "       <string>$method</string>\n" +
-                "       <dict>\n" +
-                "          <key>$bundleId</key>\n" +
-                "          <string>$uuid</string>\n" +
-                "       </dict>\n" +
-                "</dict>\n" +
-                "</plist>"
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
+            "<plist version=\"1.0\">\n" +
+            "<dict>\n" +
+            "       <key>teamID</key>\n" +
+            "       <string>$teamId</string>\n" +
+            "       <key>method</key>\n" +
+            "       <string>$method</string>\n" +
+            "       <dict>\n" +
+            "          <key>$bundleId</key>\n" +
+            "          <string>$uuid</string>\n" +
+            "       </dict>\n" +
+            "</dict>\n" +
+            "</plist>"
 
         val file = File(workspace, "ipa.plist")
         file.writeBytes(template.toByteArray())
@@ -145,10 +175,14 @@ class XcodeBuildTask2 : ITask() {
     }
 
     private fun getBundleId(content: String): String { // com.tencent.rd
-        val matcher1 = Pattern.compile("<key>application-identifier</key><string>.*</string><key>com.apple.developer.team-identifier</key>", Pattern.DOTALL).matcher(content) // CMB775PKXJ.com.tencent.*
+        val matcher1 = Pattern.compile(
+            "<key>application-identifier</key><string>.*</string><key>com.apple.developer.team-identifier</key>",
+            Pattern.DOTALL
+        ).matcher(content) // CMB775PKXJ.com.tencent.*
         val str1 = if (matcher1.find()) {
             val result = matcher1.group()
-            result.removePrefix("<key>application-identifier</key><string>").removeSuffix("</string><key>com.apple.developer.team-identifier</key>")
+            result.removePrefix("<key>application-identifier</key><string>")
+                .removeSuffix("</string><key>com.apple.developer.team-identifier</key>")
         } else {
             throw TaskExecuteException(
                 errorMsg = "no application-identifier found",
@@ -157,10 +191,14 @@ class XcodeBuildTask2 : ITask() {
             )
         }
 
-        val matcher2 = Pattern.compile("<key>AppIDName</key><string>.*</string><key>ApplicationIdentifierPrefix</key>", Pattern.DOTALL).matcher(content)
+        val matcher2 = Pattern.compile(
+            "<key>AppIDName</key><string>.*</string><key>ApplicationIdentifierPrefix</key>",
+            Pattern.DOTALL
+        ).matcher(content)
         val str2 = if (matcher2.find()) {
             val result = matcher2.group()
-            result.removePrefix("<key>AppIDName</key><string>").removeSuffix("</string><key>ApplicationIdentifierPrefix</key>")
+            result.removePrefix("<key>AppIDName</key><string>")
+                .removeSuffix("</string><key>ApplicationIdentifierPrefix</key>")
         } else {
             throw TaskExecuteException(
                 errorMsg = "no application-identifier found",
@@ -199,11 +237,21 @@ class XcodeBuildTask2 : ITask() {
     }
 
     private fun switchXCode() {
-        ShellUtil.execute(buildVariables.buildId, "sudo /usr/bin/xcode-select --switch \${XCODE_HOME}", workspace, buildVariables.buildEnvs, emptyMap(), null)
+        ShellUtil.execute(
+            script = "sudo /usr/bin/xcode-select --switch \${XCODE_HOME}",
+            dir = workspace,
+            buildEnvs = buildVariables.buildEnvs,
+            runtimeVariables = emptyMap()
+        )
     }
 
     private fun showSdks() {
-        val result = ShellUtil.execute("xcodebuild -showsdks")
+        val result = ShellUtil.execute(
+            script = "xcodebuild -showsdks",
+            dir = workspace,
+            buildEnvs = buildVariables.buildEnvs,
+            runtimeVariables = emptyMap()
+        )
 
         val matcher = Pattern.compile("iOS\\s*(\\S*)\\s*(\\S*)\\s*-sdk\\s*(iphoneos\\S*)").matcher(result)
         sdk = if (matcher.find()) matcher.group(3).removeSuffix("iOS") else ""
@@ -211,32 +259,64 @@ class XcodeBuildTask2 : ITask() {
     }
 
     private fun clean() {
-        ShellUtil.execute("xcodebuild clean $projectBuildStr -scheme $scheme -sdk $sdk")
+        ShellUtil.execute(
+            script = "xcodebuild clean $projectBuildStr -scheme $scheme -sdk $sdk",
+            dir = workspace,
+            buildEnvs = buildVariables.buildEnvs,
+            runtimeVariables = emptyMap()
+        )
     }
 
     private fun build() {
-        if (configuration.isNotEmpty()) ShellUtil.execute("xcodebuild build $projectBuildStr -scheme $scheme -configuration $configuration -sdk $sdk")
-        else ShellUtil.execute("xcodebuild build $projectBuildStr -scheme $scheme -sdk $sdk")
+        if (configuration.isNotEmpty()) {
+            ShellUtil.execute(
+                script = "xcodebuild build $projectBuildStr -scheme $scheme -configuration $configuration -sdk $sdk",
+                dir = workspace,
+                buildEnvs = buildVariables.buildEnvs,
+                runtimeVariables = emptyMap()
+            )
+        } else {
+            ShellUtil.execute(
+                script = "xcodebuild build $projectBuildStr -scheme $scheme -sdk $sdk",
+                dir = workspace,
+                buildEnvs = buildVariables.buildEnvs,
+                runtimeVariables = emptyMap()
+            )
+        }
     }
 
     private fun archive() {
         val archivePath = "" // build/SODA.xcarchive
         val codeSignIdentify = "" // iPhone Developer: junchi he (22AYX4B947)
         if (configuration.isNotEmpty())
-            ShellUtil.execute("xcodebuild archive $projectBuildStr -scheme $scheme " +
-                "-configuration $configuration -archivePath \"$archivePath\" CODE_SIGN_IDENTITY=\"$codeSignIdentify\" " +
-                "PROVISIONING_PROFILE=\"$uuid\" DEVELOPMENT_TEAM=$teamId -sdk $sdk")
-
-        else ShellUtil.execute("xcodebuild archive $projectBuildStr -scheme $scheme " +
+            ShellUtil.execute(
+                script = "xcodebuild archive $projectBuildStr -scheme $scheme " +
+                    "-configuration $configuration -archivePath \"$archivePath\" CODE_SIGN_IDENTITY=\"$codeSignIdentify\" " +
+                    "PROVISIONING_PROFILE=\"$uuid\" DEVELOPMENT_TEAM=$teamId -sdk $sdk",
+                dir = workspace,
+                buildEnvs = buildVariables.buildEnvs,
+                runtimeVariables = emptyMap()
+            )
+        else ShellUtil.execute(
+            script = "xcodebuild archive $projectBuildStr -scheme $scheme " +
                 "-archivePath \"$archivePath\" CODE_SIGN_IDENTITY=\"$codeSignIdentify\" " +
-                "PROVISIONING_PROFILE=\"$uuid\" DEVELOPMENT_TEAM=$teamId -sdk $sdk")
+                "PROVISIONING_PROFILE=\"$uuid\" DEVELOPMENT_TEAM=$teamId -sdk $sdk",
+            dir = workspace,
+            buildEnvs = buildVariables.buildEnvs,
+            runtimeVariables = emptyMap()
+        )
     }
 
     private fun export(ipaPath: String, certId: String) {
         val archivePath = "" // build/SODA.xcarchive
         val plistFile = generatePlist(certId) // ipa.plist
 
-        ShellUtil.execute("xcodebuild -exportArchive -archivePath $archivePath -exportPath $ipaPath -exportOptionsPlist $plistFile")
+        ShellUtil.execute(
+            script = "xcodebuild -exportArchive -archivePath $archivePath -exportPath $ipaPath -exportOptionsPlist $plistFile",
+            dir = workspace,
+            buildEnvs = buildVariables.buildEnvs,
+            runtimeVariables = emptyMap()
+        )
     }
 
     private fun getProvision(certInfo: CertIOS): File {
@@ -249,10 +329,3 @@ class XcodeBuildTask2 : ITask() {
         return provisionFile
     }
 }
-
-// fun main(args: Array<String>) {
-//    val content =File("D:\\docs\\2018\\cert\\2\\zy.mobileprovision").readText().replace("\\s", "").replace("\n", "").replace("\t", "")
-//    println(getTeamId(content))
-//    println(getUuid(content))
-//    println(getBundleId(content))
-// }
