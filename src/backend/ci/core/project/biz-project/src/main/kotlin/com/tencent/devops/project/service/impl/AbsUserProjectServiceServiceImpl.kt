@@ -40,7 +40,6 @@ import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.OPPServiceVO
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.UserProjectServiceService
 import org.jooq.DSLContext
@@ -97,17 +96,14 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     /**
      * 批量修改服务url
      */
-    override fun updateServiceUrlByBatch(
+    override fun updateServiceUrls(
         userId: String,
-        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
-    ): Result<Boolean> {
-        if (serviceUrlUpdateInfoList == null) {
-            return Result(data = true)
+        serviceUpdateUrls: List<ServiceUpdateUrls>
+    ): Result<Int> {
+        if (serviceUpdateUrls.isEmpty()) {
+            return Result(data = 0)
         }
-        serviceUrlUpdateInfoList.forEach {
-            serviceDao.updateUrlByName(dslContext, it)
-        }
-        return Result(data = true)
+        return Result(serviceDao.updateUrlsByName(dslContext, serviceUpdateUrls))
     }
 
     /**
@@ -284,14 +280,6 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                 }
             }
         }
-    }
-
-    override fun updateServiceUrls(
-        userId: String,
-        name: String,
-        serviceUpdateUrls: ServiceUpdateUrls
-    ): Result<Boolean> {
-        return Result(serviceDao.updateUrls(dslContext, userId, name, serviceUpdateUrls))
     }
 
     companion object {
