@@ -29,6 +29,7 @@ dependencies {
     compile project(":core:worker:worker-common")
     compile project(":core:artifactory:api-artifactory-store")
     compile project(":ext:tencent:common:common-archive-tencent")
+    compile project(":ext:tencent:common:common-pipeline-tencent")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
