@@ -25,10 +25,11 @@ enum class ImageRDTypeEnum(val type: Int) {
             }
         }
 
-        fun getImageRDTypeStr(type: Int): String {
+        fun getImageRDTypeStr(type: Int?): String {
             return when (type) {
                 0 -> SELF_DEVELOPED.name
                 1 -> THIRD_PARTY.name
+                //默认第三方
                 else -> THIRD_PARTY.name
             }
         }
