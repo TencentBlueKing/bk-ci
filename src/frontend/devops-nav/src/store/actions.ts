@@ -68,8 +68,10 @@ const actions: ActionTree<RootState, any> = {
     async getProjects ({ dispatch }: ActionContext<RootState, any>, includeDisable = false) {
         const res: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/?includeDisable=${includeDisable}`)
         const projectList: Project[] = res
-        dispatch('setProjectList', projectList)
-        window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
+        if (Array.isArray(projectList)) {
+            dispatch('setProjectList', projectList)
+            window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
+        }
     },
     getDepartmentInfo (_, { type, id }) {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/organizations/types/${type}/ids/${id}`)
