@@ -18,7 +18,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         entry,
         output: {
             publicPath,
-            chunkFilename: isMaster ? '[name].[chunkhash].js' : '[name].js',
+            chunkFilename: '[name].[chunkhash].js',
             filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
             path: buildDist
         },
