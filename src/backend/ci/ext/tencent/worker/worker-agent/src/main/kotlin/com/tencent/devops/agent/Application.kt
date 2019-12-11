@@ -92,7 +92,7 @@ fun main(args: Array<String>) {
                 .build()
             do {
                 try {
-                    OkhttpUtils.doGet(url).use { resp ->
+                    OkhttpUtils.doHttp(request).use { resp ->
                         val resoCode = resp.code()
                         val responseStr = resp.body()!!.string()
                         System.out.println("resoCode: $resoCode;responseStr:$responseStr")
