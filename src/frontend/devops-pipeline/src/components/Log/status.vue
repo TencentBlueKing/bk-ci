@@ -1,11 +1,21 @@
 <template>
     <span class="log-status readonly">
         <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'" class="bk-icon icon-circle-2-1 executing" />
-        <i v-if="status === 'WAITING'" class="bk-icon icon-clock" />
-        <i v-if="status === 'CANCELED'" class="bk-icon warning icon-exclamation-circle-shape" />
-        <i v-if="status === 'REVIEWING' || status === 'REVIEW_ABORT'" class="bk-icon warning icon-exclamation-triangle-shape" />
-        <i v-if="status === 'FAILED' || status === 'HEARTBEAT_TIMEOUT' || status === 'QUEUE_TIMEOUT' || status === 'EXEC_TIMEOUT'" class="bk-icon danger icon-close-circle-shape" />
-        <i v-if="status === 'SUCCEED'" class="bk-icon success icon-check-circle-shape" />
+        <svg aria-hidden="true" v-if="status === 'WAITING'">
+            <use xlink:href="#icon-build-waiting"></use>
+        </svg>
+        <svg fill="#fff" aria-hidden="true" v-if="['SKIP', 'CANCELED'].includes(status) || !status">
+            <use xlink:href="#icon-build-canceled"></use>
+        </svg>
+        <svg aria-hidden="true" v-if="status === 'REVIEWING'">
+            <use xlink:href="#icon-build-warning"></use>
+        </svg>
+        <svg aria-hidden="true" v-if="status === 'FAILED'">
+            <use xlink:href="#icon-build-failed"></use>
+        </svg>
+        <svg aria-hidden="true" v-if="status === 'SUCCEED'">
+            <use xlink:href="#icon-build-sucess"></use>
+        </svg>
     </span>
 </template>
 
@@ -13,7 +23,10 @@
     export default {
         name: 'log-status',
         props: {
-            status: String
+            status: {
+                type: String,
+                default: 'CANCELED'
+            }
         }
     }
 </script>
@@ -28,6 +41,12 @@
         height: 42px;
         line-height: 42px;
         box-sizing: border-box;
+        padding: 12px;
+        svg {
+            width: 18px;
+            height: 18px;
+            vertical-align: top;
+        }
 
         > span,
         > i {

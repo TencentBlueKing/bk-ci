@@ -4,12 +4,21 @@
             <header class="log-head">
                 <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
                 <p class="log-buttons">
+                    <bk-select v-if="executeCount !== 1" placeholder="重试次数" class="log-execute">
+                        <bk-option v-for="execute in executeCount"
+                            :key="execute"
+                            :id="execute"
+                            :name="execute"
+                            @click.native="changeExecute(execute)"
+                        >
+                        </bk-option>
+                    </bk-select>
                     <bk-button class="log-button" @click="showTime = !showTime">显示时间</bk-button>
                     <a download :href="downLoadLink"><bk-button class="log-button">下载日志</bk-button></a>
                 </p>
             </header>
 
-            <virtual-scroll class="log-scroll" ref="scroll" v-bkloading="{ isLoading: isInit }" :id="id">
+            <virtual-scroll class="log-scroll" ref="scroll" :id="id">
                 <template slot-scope="item">
                     <span class="item-txt selection-color"
                         v-if="!isInit"
@@ -21,6 +30,10 @@
             </virtual-scroll>
 
             <span class="share-icon" @mouseup="copyLink" ref="shareIcon"></span>
+
+            <section class="log-loading" v-if="isInit">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </section>
         </section>
     </article>
 </template>
@@ -35,6 +48,13 @@
         return num
     }
 
+    function millisecond (num) {
+        num = Number(num)
+        if (num < 10) return '00' + num
+        else if (num < 100) return '0' + num
+        return num
+    }
+
     export default {
         components: {
             virtualScroll,
@@ -45,7 +65,7 @@
             timeFilter (val) {
                 if (!val) return ''
                 const time = new Date(val)
-                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
+                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
             }
         },
 
@@ -60,6 +80,10 @@
             },
             downLoadLink: {
                 type: String
+            },
+            executeCount: {
+                type: Number,
+                default: 0
             },
             logType: {
                 type: String
@@ -91,7 +115,9 @@
                 isShareMove: false,
                 showTime: this.$route.query.showTime === 'true',
                 offsetLeft: 0,
-                offsetTop: 0
+                offsetTop: 0,
+                currentExe: 1,
+                completeInit: false
             }
         },
 
@@ -112,17 +138,50 @@
         },
 
         methods: {
-            preventDefault (event) {
-                event.preventDefault()
-                const sel = window.getSelection()
-                sel.removeAllRanges()
+            // downLoad () {
+            //     const cookieArr = /backend_csrftoken=([^;]+);/.exec(document.cookie)
+            //     const currentCookie = cookieArr[1] || ''
+            //     fetch(this.downLoadLink, {
+            //         method: 'GET',
+            //         headers: {
+            //             'content-type': 'application/json',
+            //             'X-CSRFToken': currentCookie,
+            //             'withCredentials': true,
+            //             'Cookie': document.cookie
+            //         }
+            //     }).then((res) => {
+            //         if (res.status >= 200 && res.status < 300) {
+            //             return res
+            //         } else {
+            //             throw new Error(res.statusText)
+            //         }
+            //     }).then(res => res.blob()).then((blob) => {
+            //         const a = document.createElement('a')
+            //         const url = window.URL || window.webkitURL || window.moxURL
+            //         a.href = url.createObjectURL(blob)
+            //         a.download = `abc.txt`
+            //         document.body.appendChild(a)
+            //         a.click()
+            //         document.body.removeChild(a)
+            //     }).catch((err) => {
+            //         console.error(err.message || err)
+            //     }).finally(() => {
+            //         this.fileLoadPending = false
+            //     })
+            // },
+
+            changeExecute (execute) {
+                if (this.currentExe === execute) return
+                this.currentExe = execute
+                this.$refs.scroll.resetData()
+                this.$emit('changeExecute', execute)
             },
 
             shareMove (event) {
                 if (!this.isShareMove) return
                 let curTarget = event.target
                 if (!curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode
-                if (curTarget.classList.contains('item-txt')) {
+                if (curTarget.className && curTarget.classList.contains('item-txt')) {
                     const top = curTarget.parentNode.style.top.slice(0, -2)
                     if (this.startShareIndex === -1) this.startShareIndex = top
                     this.endShareIndex = top
@@ -130,6 +189,12 @@
             },
 
             startShare (event) {
+                const time = new Date()
+                if (time - this.startShare.time < 350) {
+                    event.preventDefault()
+                }
+                this.startShare.time = time
+
                 let curTarget = event.target
                 if (curTarget === this.$refs.shareIcon) return
                 if (curTarget.classList.contains('log-home')) this.$emit('closeLog')
@@ -147,9 +212,9 @@
                 const eleShare = document.querySelector('.share-icon')
                 const selection = window.getSelection()
                 const txt = selection.toString()
-                if (txt) {
-                    const left = event.clientX - this.offsetLeft
-                    const top = event.clientY - this.offsetTop
+                if (txt && this.completeInit) {
+                    const left = event.clientX - this.offsetLeft + 15
+                    const top = event.clientY - this.offsetTop + 15
                     eleShare.style.display = 'inline'
                     eleShare.style.left = left + 'px'
                     eleShare.style.top = top + 'px'
@@ -222,34 +287,85 @@
             },
 
             addLogData (data, isInit) {
+                this.completeInit = isInit
                 const type = isInit ? 'initLog' : 'addListData'
                 const foldParam = this.$route.query.flodIndexs
                 const id = this.$route.query.id
                 let foldArr = []
                 if (typeof foldParam !== 'undefined' && foldParam && id === this.id) foldArr = foldParam.split(',')
                 const scroll = this.$refs.scroll
-                const lastIndex = scroll.indexList[scroll.indexList.length] || {}
+                const lastIndex = scroll.indexList[scroll.indexList.length - 1] || {}
                 const isBottom = +lastIndex.value === +scroll.totalNumber
+                const addListPostData = {
+                    oldNumber: scroll.totalNumber,
+                    oldItemNumber: scroll.itemNumber,
+                    oldMapHeight: scroll.mapHeight,
+                    oldVisHeight: scroll.visHeight
+                }
                 scroll.addListData(data, type, foldArr.map(x => +x))
-                if (isInit || !isBottom) {
-                    this.$refs.scroll.getListData()
+                if (!isBottom) {
+                    scroll.getNumberChangeList(addListPostData)
                 } else {
-                    this.scrollPage(scroll.totalNumber - scroll.itemNumber)
+                    scroll.scrollPageByIndex(scroll.totalNumber - scroll.itemNumber)
                 }
             },
 
-            scrollPage (index) {
-                if (index < 0) this.showSearchIndex = this.searchResult.length - 1
-                else if (index < this.searchResult.length) this.showSearchIndex = index
-                else this.showSearchIndex = 0
-                const listIndex = this.searchResult[this.showSearchIndex]
-                this.$refs.scroll.scrollPageByIndex(listIndex)
+            scrollPageToBottom () {
+                const scroll = this.$refs.scroll
+                scroll.scrollPageByIndex(scroll.totalNumber - scroll.itemNumber)
             }
         }
     }
 </script>
 
 <style lang="scss" scoped>
+    .log-loading {
+        position: absolute;
+        bottom: 0;
+        height: calc(100% - 84px);
+        width: 100%;
+        background: black;
+        z-index: 100;
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+            top: 50%;
+            left: 50%;
+            transform: translate3d(-50%, -50%, 0);
+        }
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 37px;
+            height: 37px;
+            margin: 8px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #fff transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    }
+
     .share-icon {
         position: absolute;
         display: none;
@@ -301,8 +417,8 @@
             .log-head {
                 line-height: 52px;
                 margin: 16px 20px;
-                border-bottom: 2px solid;
-                border-bottom-color: rgba(102,102,102,1);
+                border-bottom: 1px solid;
+                border-bottom-color: #2b2b2b;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -318,7 +434,16 @@
                         margin-right: 10px;
                         &:hover {
                             color: #fff;
+                            background: #3f454a;
                         }
+                    }
+                    .log-execute {
+                        width: 100px;
+                        margin-right: 10px;
+                        color: #c2cade;
+                        background: #2f363d;
+                        border-color: #444d56;
+                        font-size: 14px;
                     }
                 }
                 .log-title {

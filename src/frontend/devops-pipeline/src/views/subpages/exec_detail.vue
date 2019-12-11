@@ -47,6 +47,8 @@
                     :title="currentElement.name"
                     :status="currentElement.status"
                     :id="currentElement.id"
+                    :execute-count="currentElement.executeCount"
+                    @changeExecute="changeExecute"
                     :link-url="linkUrl"
                     log-type="plugin"
                     :down-load-link="downLoadPluginLink"
@@ -313,8 +315,7 @@
                 'requestPipelineExecDetail',
                 'setPipelineDetail',
                 'getInitLog',
-                'buildLogWs',
-                'stopLogWs'
+                'getAfterLog'
             ]),
             ...mapActions('soda', [
                 'requestInterceptAtom'
@@ -351,6 +352,13 @@
                 }
             },
 
+            changeExecute (currentExe) {
+                this.openLogApi.hasOpen = false
+                clearTimeout(this.getAfterLogApi.id)
+                this.logPostData.currentExe = currentExe
+                this.openLogApi()
+            },
+
             showJobLog (id) {
                 let conIndex
                 const staIndex = this.execDetail.model.stages.findIndex(stage => {
@@ -374,11 +382,7 @@
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
-                    jobId: this.currentJob.containerId,
-                    payLoad: {
-                        page: `/log/build/${this.execDetail.id}/job/${this.currentJob.containerId}`,
-                        sessionId: this.uuid()
-                    }
+                    jobId: this.currentJob.containerId
                 }
                 this.openLogApi()
             },
@@ -389,11 +393,7 @@
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
-                    tag: this.currentElement.id,
-                    payLoad: {
-                        page: `/log/build/${this.execDetail.id}/tag/${this.currentElement.id}`,
-                        sessionId: this.uuid()
-                    }
+                    tag: this.currentElement.id
                 }
                 this.openLogApi()
             },
@@ -403,36 +403,46 @@
                 this.openLogApi.hasOpen = true
                 this.isInitLog = true
                 this.getInitLog(this.logPostData).then((res) => {
-                    res = res.data || {}
-                    this.$refs.log.addLogData(res.logs, true)
+                    this.handleLogRes(res)
+                    if (!res.finished || res.hasMore) this.$refs.log.scrollPageToBottom()
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    this.isInitLog = false
+                })
+            },
+
+            handleLogRes (res) {
+                res = res.data || {}
+                const lastLog = res.logs[res.logs.length - 1] || { lineNo: 0 }
+                this.logPostData.lineNo = +lastLog.lineNo + 1
+                if (res.finished) {
                     if (res.hasMore) {
-                        const lastLog = res.logs[res.logs.length - 1] || { lineNo: 0 }
-                        this.logPostData.lineNo = lastLog.lineNo
-                        webSocketMessage.openDialogWebSocket((res) => {
-                            this.$refs.log.addLogData(res.logs || [])
-                            if (res.finished) {
-                                this.closeLog()
-                            }
-                        }, this.logPostData.payLoad)
-                        this.buildLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
+                        this.isInitLog = false
+                        this.$refs.log.addLogData(res.logs)
+                        this.getAfterLogApi(100)
+                    } else {
+                        this.$refs.log.addLogData(res.logs, true)
+                        this.isInitLog = false
                     }
-                }).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err })).finally(() => (this.isInitLog = false))
+                } else {
+                    this.$refs.log.addLogData(res.logs)
+                    this.isInitLog = false
+                    this.getAfterLogApi(1000)
+                }
+            },
+
+            getAfterLogApi (mis) {
+                this.getAfterLogApi.id = setTimeout(() => {
+                    this.getAfterLog(this.logPostData).then((res) => {
+                        this.handleLogRes(res)
+                    })
+                }, mis)
             },
 
             closeLog () {
-                this.openLogApi.hasOpen = false
                 this.showLog = false
-                this.stopLogWs(this.logPostData).catch((err) => this.$bkMessage({ theme: 'error', message: err.message || err }))
-                webSocketMessage.closeDialogWebSocket(this.logPostData.payLoad)
-            },
-
-            uuid () {
-                let id = ''
-                for (let i = 0; i < 7; i++) {
-                    const randomNum = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
-                    id += randomNum
-                }
-                return id
+                this.openLogApi.hasOpen = false
+                clearTimeout(this.getAfterLogApi.id)
             }
         }
     }

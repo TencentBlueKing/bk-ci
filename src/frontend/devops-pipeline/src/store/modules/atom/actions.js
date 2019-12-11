@@ -372,6 +372,16 @@ export default {
         return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : '?jobId=' + jobId}`)
     },
 
+    // 第一次拉取日志
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, lineNo }) {
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}&${tag ? 'tag=' + tag : 'jobId=' + jobId}`)
+    },
+
+    // 建立拉取完整日志ws
+    buildInitWs ({ commit }, { projectId, pipelineId, buildId, tag, jobId, lineNo, payLoad }) {
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/after?lineNo=${lineNo}&sessionId=${payLoad.sessionId}&${tag ? 'tag=' + tag : 'jobId=' + jobId}`)
+    },
+
     // 建立日志WS连接
     buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag, payLoad, jobId }) {
         let url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/job?lineNo=${lineNo}&sessionId=${payLoad.sessionId}&jobId=${jobId}`

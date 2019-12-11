@@ -8,7 +8,7 @@
         </ul>
         <ul class="scroll scroll-main" :style="`top: ${-totalScrollHeight}px;width: ${mainWidth}px; left: ${indexWidth}px`">
             <li :class="[{ 'pointer': item.tagData }, 'scroll-item']"
-                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * mainWidth / bottomScrollWidth}px`"
+                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * mainWidth / bottomScrollWidth}px; width: ${(mainWidth - bottomScrollWidth) * mainWidth / bottomScrollWidth + mainWidth}px`"
                 v-for="item in listData"
                 :key="item.top + item.value"
                 @click="foldListData(item.tagData || {})"
@@ -102,6 +102,13 @@
         },
 
         methods: {
+            resetData () {
+                this.flodIndexs = []
+                this.totalNumber = 0
+                this.setStatus()
+                this.worker.postMessage({ type: 'resetData' })
+            },
+
             changeMinMap () {
                 const offsetY = event.offsetY
                 const diffDis = offsetY - this.minMapTop - this.visHeight / 16
@@ -184,11 +191,11 @@
             handleWheel (data) {
                 if (this.isScrolling || this.itemHeight * this.totalNumber <= this.visHeight) return
 
-                // const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
-                // let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
-                // if (bottomScrollLeft <= 0) bottomScrollLeft = 0
-                // if (bottomScrollLeft + this.bottomScrollWidth >= this.mainWidth) bottomScrollLeft = this.mainWidth - this.bottomScrollWidth
-                // this.bottomScrollDis = bottomScrollLeft
+                const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
+                let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
+                if (bottomScrollLeft <= 0) bottomScrollLeft = 0
+                if (bottomScrollLeft + this.bottomScrollWidth >= this.mainWidth) bottomScrollLeft = this.mainWidth - this.bottomScrollWidth
+                this.bottomScrollDis = bottomScrollLeft
 
                 const deltaY = Math.max(-1, Math.min(1, (event.wheelDeltaY || -event.detail)))
                 let dis = deltaY * -(this.itemHeight * 3)
@@ -225,10 +232,12 @@
             },
             
             scrollPageByIndex (index) {
-                const height = this.itemHeight * index
-                this.minMapTop = height / (this.totalHeight - this.visHeight) * (this.visHeight * 7 / 8)
+                let height = this.itemHeight * (index + 1)
+                if (height <= 0) height = 0
+                else if (height >= this.totalHeight - this.visHeight) height = this.totalHeight - this.visHeight
+                this.minMapTop = height / (this.totalHeight - this.visHeight) * (this.mapHeight - this.visHeight / 8)
                 this.minNavTop = height / (this.totalHeight - this.visHeight) * (this.visHeight - this.navHeight)
-                this.getListData(height, height)
+                this.getListData(height)
             },
 
             getListData (totalScrollHeight = this.totalScrollHeight, isResize = false, type = 'wheelGetData') {
@@ -267,17 +276,7 @@
                             const oldVisHeight = this.visHeight
                             this.totalNumber = data.number
                             this.setStatus()
-                            let minMapTop = this.minMapTop * (oldNumber - oldItemNumber) / ((oldMapHeight - oldVisHeight / 8) || 1) / ((this.totalNumber - this.itemNumber) || 1) * (this.mapHeight - this.visHeight / 8)
-                            if (minMapTop <= 0) {
-                                minMapTop = 0
-                                this.totalScrollHeight = 0
-                            } else if (minMapTop > this.mapHeight - this.visHeight / 8) {
-                                minMapTop = this.mapHeight - this.visHeight / 8
-                                this.totalScrollHeight = this.totalHeight - this.visHeight
-                            }
-                            this.minMapTop = minMapTop
-                            this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
-                            this.getListData(this.totalScrollHeight)
+                            this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
                             break
                         case 'initLink':
                             this.drawList(data)
@@ -287,6 +286,21 @@
                             break
                     }
                 })
+            },
+
+            getNumberChangeList ({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight }) {
+                let minMapTop = this.minMapTop * (oldNumber - oldItemNumber) / ((oldMapHeight - oldVisHeight / 8) || 1) / ((this.totalNumber - this.itemNumber) || 1) * (this.mapHeight - this.visHeight / 8)
+                let totalScrollHeight = minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
+                if (minMapTop <= 0) {
+                    minMapTop = 0
+                    totalScrollHeight = 0
+                } else if (minMapTop > this.mapHeight - this.visHeight / 8) {
+                    minMapTop = this.mapHeight - this.visHeight / 8
+                    totalScrollHeight = this.totalHeight - this.visHeight
+                }
+                this.minMapTop = minMapTop
+                this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
+                this.getListData(totalScrollHeight)
             },
 
             handleInitLink () {
@@ -465,6 +479,12 @@
             .pointer {
                 cursor: pointer;
             }
+            .scroll-item {
+                min-width: 100%;
+                &:hover {
+                    background: #282828;
+                }
+            }
         }
         .scroll {
             position: absolute;
@@ -472,6 +492,7 @@
             height: 1000000px;
             cursor: default;
             .scroll-item {
+                box-sizing: border-box;
                 position: absolute;
             }
         }

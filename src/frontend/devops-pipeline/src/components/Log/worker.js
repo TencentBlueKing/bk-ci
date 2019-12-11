@@ -14,7 +14,7 @@ const reg = (() => {
         key = key.replace(/\[|\]/gi, '\\$&')
         return `(${key})`
     })
-    return new RegExp(`.*${colors.join('|')}.*`, 'gi')
+    return new RegExp(`${colors.join('|')}`, 'gi')
 })()
 
 function handleColor (val) {
@@ -31,8 +31,8 @@ let allListData = []
 let offscreenCanvas
 let canvasContext
 
-const tagList = []
-const foldList = []
+let tagList = []
+let foldList = []
 
 onmessage = function (e) {
     const data = e.data
@@ -55,6 +55,11 @@ onmessage = function (e) {
         case 'foldListData':
             foldListData(data)
             postMessage({ type: 'completeFold', number: allListData.length })
+            break
+        case 'resetData':
+            allListData = []
+            tagList = []
+            foldList = []
             break
     }
 }
