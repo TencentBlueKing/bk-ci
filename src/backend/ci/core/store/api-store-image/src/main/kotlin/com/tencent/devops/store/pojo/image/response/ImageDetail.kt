@@ -34,6 +34,9 @@ data class ImageDetail(
     @ApiModelProperty("研发来源")
     val rdType: String,
 
+    @ApiModelProperty("权重")
+    val weight: Int?,
+
     @ApiModelProperty("镜像适用的Agent类型")
     var agentTypeScope: List<ImageAgentTypeEnum>,
 
