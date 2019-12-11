@@ -140,14 +140,6 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getPipelineNameByIds(projectId, pipelineIds))
     }
 
-    override fun getBuildNoByBuildIds(
-        projectId: String,
-        pipelineId: String,
-        buildIds: Set<String>
-    ): Result<Map<String, Int>> {
-        return Result(pipelineService.getBuildNoByBuildIds(projectId, pipelineId, buildIds))
-    }
-
     override fun getBuildNoByBuildIds(buildIds: Set<String>): Result<Map<String, String>> {
         return Result(pipelineService.getBuildNoByByPair(buildIds))
     }
