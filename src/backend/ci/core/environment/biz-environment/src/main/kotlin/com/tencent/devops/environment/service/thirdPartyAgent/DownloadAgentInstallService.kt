@@ -109,6 +109,7 @@ class DownloadAgentInstallService @Autowired constructor(
         val jarFiles = getGoAgentJarFiles(record.os)
         val goDaemonFile = getGoDaemonFile(record.os)
         val goAgentFile = getGoAgentFile(record.os)
+        val packageFiles = getAgentPackageFiles(record.os)
         val scriptFiles = getGoAgentScriptFiles(record)
         val propertyFile = getPropertyFile(record)
 
@@ -117,7 +118,7 @@ class DownloadAgentInstallService @Autowired constructor(
         return Response.ok(StreamingOutput { output ->
             val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
 
-            jarFiles.forEach {
+            jarFiles.plus(packageFiles).forEach {
                 zipOut.putArchiveEntry(ZipArchiveEntry(it, it.name))
                 IOUtils.copy(FileInputStream(it), zipOut)
                 zipOut.closeArchiveEntry()
@@ -174,6 +175,9 @@ class DownloadAgentInstallService @Autowired constructor(
         val agentRecord = getAgentRecord(agentId)
         return downloadGoAgent(agentId, agentRecord)
     }
+
+    private fun getAgentPackageFiles(os: String) =
+        File(agentPackage, "packages/${os.toLowerCase()}/").listFiles()
 
     private fun getGoAgentJarFiles(os: String): List<File> {
         val agentJar = getAgentJarFile()
