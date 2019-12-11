@@ -28,6 +28,8 @@ package com.tencent.devops.store.service.ideatom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ideatom.IdeAtomCategoryRelDao
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -53,11 +55,17 @@ class IdeAtomCategoryServiceImpl @Autowired constructor(
         val ideAtomCategoryList = mutableListOf<Category>()
         val ideAtomCategoryRecords = ideAtomCategoryRelDao.getCategorysByIdeAtomId(dslContext, atomId) // 查询IDE插件范畴信息
         ideAtomCategoryRecords?.forEach {
+            val categoryCode = it["categoryCode"] as String
+            val categoryName = it["categoryName"] as String
+            val categoryLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
+                defaultMessage = categoryName
+            )
             ideAtomCategoryList.add(
                 Category(
                     id = it["id"] as String,
-                    categoryCode = it["categoryCode"] as String,
-                    categoryName = it["categoryName"] as String,
+                    categoryCode = categoryCode,
+                    categoryName = categoryLanName,
                     iconUrl = it["iconUrl"] as? String,
                     categoryType = StoreTypeEnum.getStoreType((it["categoryType"] as Byte).toInt()),
                     createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
