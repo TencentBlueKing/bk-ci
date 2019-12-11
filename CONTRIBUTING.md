@@ -56,6 +56,7 @@ git commit -m 'bugfix: 部分第三方构建机上出现worker-agent.jar进程�
 | format   | 不修改业务逻辑下，仅做代码规范的格式化 |
 | merge    | 仅做分支合并同步                       |
 | depend   | 对工程的依赖进行增删改                 |
+| chore    | 构建脚本、任务等相关代码                 |
 
 
 
