@@ -22,7 +22,7 @@
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item class="wt660" :label="$t('store.标签')" property="labelIdList">
-                    <bk-select v-model="form.labelIdList" searchable multiple show-select-all>
+                    <bk-select v-model="form.labelIdList" searchable multiple show-select-all @selected="chooseLabel">
                         <bk-option v-for="(option, index) in labelList"
                             :key="index"
                             :id="option.id"
@@ -115,6 +115,10 @@
             chooseImageName (option) {
                 this.form.classifyName = option.classifyName
                 this.form.classifyId = option.id
+            },
+
+            chooseLabel (ids) {
+                this.form.labelList = this.labelList.filter((x) => ids.includes(x.id)) || []
             },
 
             hackData () {
