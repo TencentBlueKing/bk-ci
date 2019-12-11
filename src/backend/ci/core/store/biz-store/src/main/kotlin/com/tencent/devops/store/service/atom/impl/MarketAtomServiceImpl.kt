@@ -294,7 +294,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         classifyList?.forEach {
             val classifyCode = it["classifyCode"] as String
             if (classifyCode != "trigger") {
-                labelInfoList.add(MarketMainItemLabel(classifyCode, it["classifyName"] as String))
+                val classifyName = it["classifyName"] as String
+                val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    defaultMessage = classifyName
+                )
+                labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
                 futureList.add(
                     doList(
                         userId = userId,

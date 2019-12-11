@@ -257,10 +257,14 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 desc = true, page = page, pageSize = pageSize
             )
         )
-        val classifyList = classifyDao.getAllClassify(dslContext, 1)
+        val classifyList = classifyDao.getAllClassify(dslContext, StoreTypeEnum.TEMPLATE.type.toByte())
         classifyList.forEach {
             val classifyCode = it.classifyCode
-            labelInfoList.add(MarketMainItemLabel(classifyCode, it.classifyName))
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = it.classifyName
+            )
+            labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
             futureList.add(
                 doList(
                     userId = userId,
