@@ -29,7 +29,7 @@ enum class ImageRDTypeEnum(val type: Int) {
             return when (type) {
                 0 -> SELF_DEVELOPED.name
                 1 -> THIRD_PARTY.name
-                //默认第三方
+                // 默认第三方
                 else -> THIRD_PARTY.name
             }
         }
