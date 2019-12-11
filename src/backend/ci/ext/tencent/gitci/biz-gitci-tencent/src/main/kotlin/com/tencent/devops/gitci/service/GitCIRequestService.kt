@@ -396,7 +396,7 @@ class GitCIRequestService @Autowired constructor(
                 getCommitTimeStamp(latestCommit.timestamp),
                 latestCommit.author.name,
                 0,
-                gitMrEvent.object_attributes.id,
+                gitMrEvent.object_attributes.iid,
                 e,
                 ""
         )
