@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomDao
 import com.tencent.devops.store.dao.ideatom.MarketIdeAtomClassifyDao
@@ -224,9 +225,14 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         val classifyList = marketIdeAtomClassifyDao.getAllAtomClassify(dslContext)
         classifyList?.forEach {
             val classifyCode = it["classifyCode"] as String
+            val classifyName = it["classifyName"] as String
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = classifyName
+            )
             result.add(MarketIdeAtomMainItem(
                     key = classifyCode,
-                    label = it["classifyName"] as String,
+                    label = classifyLanName,
                     records = doList(
                             userId = userId,
                             ideAtomName = null,
