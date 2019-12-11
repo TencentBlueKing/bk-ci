@@ -308,7 +308,7 @@ abstract class ImageService @Autowired constructor() {
                     id = it[KEY_IMAGE_ID] as String,
                     code = imageCode,
                     name = it[KEY_IMAGE_NAME] as String,
-                    rdType = ImageRDTypeEnum.getImageRDType((it[KEY_IMAGE_RD_TYPE] as Byte).toInt()),
+                    rdType = ImageRDTypeEnum.getImageRDTypeStr((it[KEY_IMAGE_RD_TYPE] as Byte?)?.toInt()),
                     imageSourceType = ImageType.getType(it[KEY_IMAGE_SOURCE_TYPE] as String).name,
                     imageSize = imageSize,
                     imageSizeNum = imageSizeNum,
@@ -657,6 +657,11 @@ abstract class ImageService @Autowired constructor() {
 
     fun getImageRepoInfoByRecord(imageRecord: Record): ImageRepoInfo {
         val id = imageRecord.get(KEY_IMAGE_ID) as String
+        val imageCode = imageRecord.get(KEY_IMAGE_CODE) as String
+        val imageFeature = imageFeatureDao.getImageFeature(dslContext, imageCode)
+        val publicFlag = imageFeature.publicFlag ?: false
+        // 默认第三方
+        val rdType = ImageRDTypeEnum.getImageRDType(imageFeature.imageType?.toInt() ?: 1)
         val sourceType = ImageType.getType(imageRecord.get(KEY_IMAGE_SOURCE_TYPE) as String)
         val repoUrl = imageRecord.get(KEY_IMAGE_REPO_URL) as String? ?: ""
         val repoName = imageRecord.get(KEY_IMAGE_REPO_NAME) as String? ?: ""
@@ -684,7 +689,9 @@ abstract class ImageService @Autowired constructor() {
                 repoName = cleanImageRepoName,
                 repoTag = cleanTag,
                 ticketId = ticketId,
-                ticketProject = ticketProject
+                ticketProject = ticketProject,
+                publicFlag = publicFlag,
+                rdType = rdType
             )
         }
     }
@@ -858,7 +865,7 @@ abstract class ImageService @Autowired constructor() {
             imageSourceType = ImageType.getType(imageRecord.imageSourceType).name,
             imageRepoUrl = imageRecord.imageRepoUrl ?: "",
             imageRepoName = imageRecord.imageRepoName ?: "",
-            rdType = ImageRDTypeEnum.getImageRDType(imageFeatureRecord.imageType.toInt()),
+            rdType = ImageRDTypeEnum.getImageRDTypeStr(imageFeatureRecord.imageType?.toInt()),
             weight = imageFeatureRecord.weight,
             agentTypeScope = agentTypeScope,
             ticketId = imageRecord.ticketId ?: "",
