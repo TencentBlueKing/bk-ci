@@ -82,18 +82,24 @@ fun main(args: Array<String>) {
         BuildType.MACOS.name -> {
             var startBuild:Boolean = false
             val gateyway = AgentEnv.getGateway()
-            val url = "$gateyway/dispatch-macos/api/gw/macos/startBuild"
+            val url = "http://$gateyway/dispatch-macos/api/gw/macos/startBuild"
+            System.out.println("url:$url")
             val request = Request.Builder()
                 .url(url)
                 .header("Accept", "application/json")
-                .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+                .header("X-DEVOPS-BUILD-TYPE", "MACOS")
+                .get()
                 .build()
             do {
                 try {
                     OkhttpUtils.doGet(url).use { resp ->
-                        if(resp.code() == 200) {
-                            val responseStr = resp.body()!!.string()
+                        val resoCode = resp.code()
+                        val responseStr = resp.body()!!.string()
+                        System.out.println("resoCode: $resoCode;responseStr:$responseStr")
+                        if(resoCode == 200) {
                             val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
+
+                            System.out.println("response:$response")
                             // 将变量写入到property当中
                             response.forEach { (key, value) ->
                                 when(key) {
@@ -104,16 +110,19 @@ fun main(args: Array<String>) {
                                 }
                             }
                             startBuild = true
+                        }else {
+                            System.out.println("There is no build for this macos,sleep for 5s.")
                         }
                     }
                     if (!startBuild) {
                         Thread.sleep(5000)
                     }
                 } catch (e:Exception) {
-
+                    System.out.println("Failed to connect to devops server.")
                 }
 
             } while (!startBuild)
+            System.out.println("Start to run.")
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
                     val workspace = System.getProperty("devops_workspace")
