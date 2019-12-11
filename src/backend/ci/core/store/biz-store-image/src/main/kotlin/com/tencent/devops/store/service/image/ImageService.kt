@@ -3,6 +3,7 @@ package com.tencent.devops.store.service.image
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DataConsistencyException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -15,6 +16,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -63,6 +65,8 @@ import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.exception.image.CategoryNotExistException
 import com.tencent.devops.store.exception.image.ImageNotExistException
+import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
 import com.tencent.devops.store.pojo.common.VersionInfo
@@ -441,13 +445,10 @@ abstract class ImageService @Autowired constructor() {
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:mainPageList:Inner:userDeptList=$userDeptList")
-
-        val latestLabel = MessageCodeUtil.getMessageByLocale("最新", "Latest")
-        val hottestLabel = MessageCodeUtil.getMessageByLocale("最热", "Hottest")
         result.add(
             MarketImageMain(
-                key = "latest",
-                label = latestLabel,
+                key = LATEST,
+                label = MessageCodeUtil.getCodeLanMessage(LATEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -468,8 +469,8 @@ abstract class ImageService @Autowired constructor() {
         )
         result.add(
             MarketImageMain(
-                key = "hottest",
-                label = hottestLabel,
+                key = HOTTEST,
+                label = MessageCodeUtil.getCodeLanMessage(HOTTEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -492,10 +493,14 @@ abstract class ImageService @Autowired constructor() {
         classifyList.forEach {
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {
+                val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    defaultMessage = it.classifyName
+                )
                 result.add(
                     MarketImageMain(
                         key = classifyCode,
-                        label = it.classifyName,
+                        label = classifyLanName,
                         records = doList(
                             userId = userId,
                             userDeptList = userDeptList,
@@ -687,12 +692,33 @@ abstract class ImageService @Autowired constructor() {
         }
     }
 
-    fun getImageDetailByCode(
+    fun getImageDetailByCodeAndVersion(
+        userId: String,
+        imageCode: String,
+        imageVersion: String?,
+        interfaceName: String? = "Anon interface"
+    ): ImageDetail {
+        logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode,$imageVersion)")
+        if (null == imageVersion) {
+            // 不传version默认返回最新版本
+            return getLatestImageDetailByCode(userId, imageCode, interfaceName)
+        } else {
+            val imageRecord =
+                imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+                    errorCode = USER_IMAGE_VERSION_NOT_EXIST,
+                    defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
+                    params = arrayOf(imageCode, imageVersion)
+                )
+            return getImageDetail(userId, imageRecord)
+        }
+    }
+
+    fun getLatestImageDetailByCode(
         userId: String,
         imageCode: String,
         interfaceName: String? = "Anon interface"
     ): ImageDetail {
-        logger.info("$interfaceName:getImageDetailByCode:Input:($userId,$imageCode)")
+        logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode)")
         val imageRecord =
             imageDao.getLatestImageByCode(dslContext, imageCode) ?: throw InvalidParamException(
                 message = "image is null,imageCode=$imageCode",
@@ -836,6 +862,7 @@ abstract class ImageService @Autowired constructor() {
             imageRepoUrl = imageRecord.imageRepoUrl ?: "",
             imageRepoName = imageRecord.imageRepoName ?: "",
             rdType = ImageRDTypeEnum.getImageRDType(imageFeatureRecord.imageType.toInt()),
+            weight = imageFeatureRecord.weight,
             agentTypeScope = agentTypeScope,
             ticketId = imageRecord.ticketId ?: "",
             imageTag = imageRecord.imageTag ?: "",
