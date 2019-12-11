@@ -65,6 +65,8 @@ import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.exception.image.CategoryNotExistException
 import com.tencent.devops.store.exception.image.ImageNotExistException
+import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
 import com.tencent.devops.store.pojo.common.VersionInfo
@@ -443,13 +445,10 @@ abstract class ImageService @Autowired constructor() {
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:mainPageList:Inner:userDeptList=$userDeptList")
-
-        val latestLabel = MessageCodeUtil.getMessageByLocale("最新", "Latest")
-        val hottestLabel = MessageCodeUtil.getMessageByLocale("最热", "Hottest")
         result.add(
             MarketImageMain(
-                key = "latest",
-                label = latestLabel,
+                key = LATEST,
+                label = MessageCodeUtil.getCodeLanMessage(LATEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -470,8 +469,8 @@ abstract class ImageService @Autowired constructor() {
         )
         result.add(
             MarketImageMain(
-                key = "hottest",
-                label = hottestLabel,
+                key = HOTTEST,
+                label = MessageCodeUtil.getCodeLanMessage(HOTTEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -494,10 +493,14 @@ abstract class ImageService @Autowired constructor() {
         classifyList.forEach {
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {
+                val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    defaultMessage = it.classifyName
+                )
                 result.add(
                     MarketImageMain(
                         key = classifyCode,
-                        label = it.classifyName,
+                        label = classifyLanName,
                         records = doList(
                             userId = userId,
                             userDeptList = userDeptList,
