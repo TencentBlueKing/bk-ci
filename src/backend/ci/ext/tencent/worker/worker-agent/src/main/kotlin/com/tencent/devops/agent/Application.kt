@@ -98,8 +98,6 @@ fun main(args: Array<String>) {
                         System.out.println("resoCode: $resoCode;responseStr:$responseStr")
                         if(resoCode == 200) {
                             val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
-
-                            System.out.println("response:$response")
                             // 将变量写入到property当中
                             response.forEach { (key, value) ->
                                 when(key) {
