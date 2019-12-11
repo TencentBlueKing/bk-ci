@@ -178,15 +178,15 @@
             },
 
             'filterData.pipeType': {
-                handler () {
-                    this.getClassifys()
+                handler (val) {
+                    this.getClassifys(val)
                 },
                 immediate: true
             }
         },
 
         created () {
-            if (VERSION_TYPE === 'ee') this.storeTypes.pop()
+            if (VERSION_TYPE === 'ee') this.storeTypes.splice(2, 1)
         },
 
         methods: {
@@ -295,14 +295,14 @@
                 else this.$router.push({ name: 'atomHome', query: { pipeType } })
             },
 
-            getClassifys () {
+            getClassifys (val) {
                 const fun = {
                     atom: () => this.getAtomClassifys(),
                     template: () => this.getTemplateClassifys(),
                     ide: () => this.getIDEClassifys(),
                     image: () => this.getImageClassifys()
                 }
-                const type = this.$route.query.pipeType || 'atom'
+                const type = val || 'atom'
                 const method = fun[type]
                 method().then((arr) => {
                     const query = this.$route.query || {}
