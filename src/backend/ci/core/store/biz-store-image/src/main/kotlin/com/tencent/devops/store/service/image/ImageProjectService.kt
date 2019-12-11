@@ -431,7 +431,7 @@ class ImageProjectService @Autowired constructor(
                 storeCode = it.code,
                 storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
-            val imageDetail = imageService.getImageDetailByCode(userId, it.code, interfaceName)
+            val imageDetail = imageService.getLatestImageDetailByCode(userId, it.code, interfaceName)
             imageDetail.isInstalled = isInstalled
             resultList.add(imageDetail)
         }
