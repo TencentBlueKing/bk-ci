@@ -1,7 +1,7 @@
 <template>
     <section>
         <div :class="['atom-item-main atom-item', { 'disabled': atom.disabled }, { 'active': atom.atomCode === activeAtomCode }]" ref="atomCard"
-            v-bk-tooltips="{ content: atomOsPrompt, delay: 300 }">
+            v-bk-tooltips="tooltips">
             <div class="atom-logo">
                 <img v-if="atom.logoUrl" :src="atom.logoUrl" />
                 <logo v-else class="bk-icon" :name="getIconByCode(atom.atomCode)" size="50" />
@@ -11,15 +11,13 @@
                     {{atom.name}}
                     <span class="allow-os-list" @mouseover="showOverallTip = false" @mouseleave="showOverallTip = true">
                         <template v-if="atom.os && atom.os.length > 0">
-                            <template v-for="os in atom.os">
-                                <bk-popover :content="`${jobConst[os]}${$t('editPage.hasEnv')}`" :key="os">
-                                    <i :class="`os-tag bk-icon icon-${os.toLowerCase()}`"></i>
-                                </bk-popover>
+                            <template v-for="(os, index) in atom.os">
+                                <i :key="os" :class="`os-tag bk-icon icon-${os.toLowerCase()}`" ref="osTag"
+                                    v-bk-tooltips="osTooltips(os, index)"
+                                ></i>
                             </template>
                         </template>
-                        <bk-popover v-else :content="`${$t('editPage.noEnv')}`">
-                            <i :class="`os-tag bk-icon icon-none`"></i>
-                        </bk-popover>
+                        <i :class="`os-tag bk-icon icon-none`" ref="osTag" v-else v-bk-tooltips="osTooltips()"></i>
                     </span>
                 </p>
                 <p class="desc">{{atom.summary || $t('editPage.noDesc')}}</p>
@@ -112,6 +110,15 @@
                     contxt = this.$t('editPage.noEnvUseTips')
                 }
                 return atom.disabled && showOverallTip ? contxt : null
+            },
+
+            tooltips () {
+                return {
+                    extCls: 'atom-card-prompt',
+                    content: this.atomOsPrompt,
+                    delay: 500,
+                    appendTo: () => this.$refs.atomCard
+                }
             }
         },
 
@@ -128,6 +135,14 @@
 
             scrollIntoView () {
                 if (this.atomCode === this.atom.atomCode) this.$refs.atomCard.scrollIntoView(false)
+            },
+
+            osTooltips (os, index) {
+                return {
+                    content: os ? `${jobConst[os]}编译环境下可用` : '无编译环境下可用',
+                    delay: 500,
+                    appendTo: () => os ? this.$refs.osTag[index] : this.$refs.osTag
+                }
             },
 
             getIconByCode (atomCode) {

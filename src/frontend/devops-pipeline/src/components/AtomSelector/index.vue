@@ -521,6 +521,11 @@
                             font-size: 14px;
                             padding-right: 4px;
                             vertical-align: top;
+                            &:hover {
+                                .tippy-popper {
+                                    display: block;
+                                }
+                            }
                         }
                     }
                 }
@@ -574,6 +579,16 @@
     .atom-item-main {
         display: flex;
         height: 100%;
+        .tippy-popper {
+            display: none;
+        }
+        &.disabled {
+            &:hover {
+                .atom-card-prompt {
+                    display: block;
+                }
+            }
+        }
     }
 
     .selector-slide-enter-active, .selector-slide-leave-active {
