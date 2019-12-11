@@ -89,16 +89,30 @@ fun main(args: Array<String>) {
                 .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
                 .build()
             do {
-                OkhttpUtils.doGet(url).use { resp ->
-                    if(resp.code() == 200) {
-//                        val responseStr = resp.body()!!.string()
-//                        val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
-                        startBuild = true
+                try {
+                    OkhttpUtils.doGet(url).use { resp ->
+                        if(resp.code() == 200) {
+                            val responseStr = resp.body()!!.string()
+                            val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
+                            // 将变量写入到property当中
+                            response.forEach { (key, value) ->
+                                when(key) {
+                                    "agentId" -> System.setProperty("devops.agent.id",value)
+                                    "secretKey" -> System.setProperty("devops.agent.secret.key",value)
+                                    "projectId" -> System.setProperty("devops.project.id",value)
+                                    else -> null
+                                }
+                            }
+                            startBuild = true
+                        }
                     }
+                    if (!startBuild) {
+                        Thread.sleep(5000)
+                    }
+                } catch (e:Exception) {
+
                 }
-                if (!startBuild) {
-                    Thread.sleep(5000)
-                }
+
             } while (!startBuild)
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
