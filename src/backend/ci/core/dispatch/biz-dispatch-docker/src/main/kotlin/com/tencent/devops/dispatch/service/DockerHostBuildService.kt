@@ -658,7 +658,7 @@ class DockerHostBuildService @Autowired constructor(
                 } else {
                     dispatchType.imageType!!.type
                 },
-                //无构建环境默认每次都从仓库拉取
+                // 无构建环境默认每次都从仓库拉取
                 imagePublicFlag = false,
                 imageRDType = ImageRDTypeEnum.SELF_DEVELOPED
             )
