@@ -28,7 +28,6 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.atom.MarketAtomDao
-import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateReq
 import com.tencent.devops.store.pojo.common.ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
