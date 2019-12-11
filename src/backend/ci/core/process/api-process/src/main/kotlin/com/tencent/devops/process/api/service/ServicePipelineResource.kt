@@ -242,21 +242,6 @@ interface ServicePipelineResource {
         pipelineIds: Set<String>
     ): Result<Map<String, String>>
 
-    @ApiOperation("根据构建id获取构建号")
-    @POST
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/getBuildNos")
-    @Path("/{projectId}/{pipelineId}/getBuildNos")
-    fun getBuildNoByBuildIds(
-        @ApiParam("项目id", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线id", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建id列表", required = true)
-        buildIds: Set<String>
-    ): Result<Map<String, Int>>
-
     @ApiOperation("根据构建id，获取build num")
     @POST
     // @Path("/getBuildNoByIds")
