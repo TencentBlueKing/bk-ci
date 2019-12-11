@@ -26,12 +26,19 @@
 
 package com.tencent.devops.agent
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.agent.runner.WorkRunner
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
+import com.tencent.devops.common.api.util.OkhttpUtils
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
@@ -68,6 +75,41 @@ fun main(args: Array<String>) {
                     } else {
                         dir.mkdirs()
                     }
+                    return dir
+                }
+            })
+        }
+        BuildType.MACOS.name -> {
+            var startBuild:Boolean = false
+            val gateyway = AgentEnv.getGateway()
+            val url = "$gateyway/dispatch-macos/api/gw/macos/startBuild"
+            val request = Request.Builder()
+                .url(url)
+                .header("Accept", "application/json")
+                .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+                .build()
+            do {
+                OkhttpUtils.doGet(url).use { resp ->
+                    if(resp.code() == 200) {
+//                        val responseStr = resp.body()!!.string()
+//                        val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
+                        startBuild = true
+                    }
+                }
+                if (!startBuild) {
+                    Thread.sleep(5000)
+                }
+            } while (!startBuild)
+            Runner.run(object : WorkspaceInterface {
+                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                    val workspace = System.getProperty("devops_workspace")
+
+                    val dir = if (workspace.isNullOrBlank()) {
+                        File("/data/landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
+                    } else {
+                        File(workspace)
+                    }
+                    dir.mkdirs()
                     return dir
                 }
             })
