@@ -53,7 +53,7 @@ interface ApigwGitResourceV2 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "用户ID", required = true)
+        @ApiParam(value = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
         @ApiParam(value = "repo hash iD", required = false)
