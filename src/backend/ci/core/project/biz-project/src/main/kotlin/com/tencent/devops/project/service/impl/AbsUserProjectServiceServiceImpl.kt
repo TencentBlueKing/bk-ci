@@ -40,7 +40,6 @@ import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.OPPServiceVO
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.UserProjectServiceService
 import org.jooq.DSLContext
@@ -68,6 +67,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     linkNew = tServiceRecord.linkNew,
                     status = tServiceRecord.status, injectType = tServiceRecord.injectType,
                     iframeUrl = tServiceRecord.iframeUrl,
+                    grayIframeUrl = tServiceRecord.grayIframeUrl,
                     cssUrl = tServiceRecord.cssUrl,
                     jsUrl = tServiceRecord.jsUrl,
                     grayCssUrl = tServiceRecord.grayCssUrl,
@@ -96,17 +96,14 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     /**
      * 批量修改服务url
      */
-    override fun updateServiceUrlByBatch(
+    override fun updateServiceUrls(
         userId: String,
-        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
-    ): Result<Boolean> {
-        if (serviceUrlUpdateInfoList == null) {
-            return Result(data = true)
+        serviceUpdateUrls: List<ServiceUpdateUrls>
+    ): Result<Int> {
+        if (serviceUpdateUrls.isEmpty()) {
+            return Result(data = 0)
         }
-        serviceUrlUpdateInfoList.forEach {
-            serviceDao.updateUrlByName(dslContext, it)
-        }
-        return Result(data = true)
+        return Result(serviceDao.updateUrlsByName(dslContext, serviceUpdateUrls))
     }
 
     /**
@@ -142,6 +139,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             linkNew = tServiceRecord.linkNew,
             injectType = tServiceRecord.injectType,
             iframeUrl = tServiceRecord.iframeUrl,
+            grayIframeUrl = tServiceRecord.grayIframeUrl,
             cssUrl = tServiceRecord.cssUrl,
             jsUrl = tServiceRecord.jsUrl,
             grayCssUrl = tServiceRecord.grayCssUrl,
@@ -223,9 +221,10 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                             linkNew = it.linkNew ?: "",
                             status = status,
                             injectType = it.injectType ?: "",
-                            iframeUrl = it.iframeUrl ?: "",
-                            cssUrl = getCSSUrl(it, projectId),
-                            jsUrl = getJSUrl(it, projectId),
+                            iframeUrl = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
+                            grayIframeUrl = it.grayIframeUrl ?: "",
+                            cssUrl = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
+                            jsUrl = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
                             grayCssUrl = it.grayCssUrl ?: "",
                             grayJsUrl = it.grayJsUrl ?: "",
                             showProjectList = it.showProjectList ?: false,
@@ -253,29 +252,21 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         }
     }
 
-    // 获取CSS URL，包括灰度的
-    private fun getCSSUrl(record: TServiceRecord, projectId: String?): String {
+    /**
+     * 判断所在项目是灰度还是生产，并给出链接
+     * @param url 生产链接
+     * @param grayUrl 灰度链接
+     * @param projectId 项目id
+     */
+    private fun genUrl(url: String?, grayUrl: String?, projectId: String?): String {
         return if (gray.isGray() && !projectId.isNullOrBlank()) {
-            if (redisOperation.isMember(gray.getGrayRedisKey(), projectId!!)) {
-                record.grayCssUrl ?: record.cssUrl
+            if (gray.isGrayMatchProject(projectId!!, redisOperation)) {
+                grayUrl ?: url
             } else {
-                record.cssUrl
+                url
             }
         } else {
-            record.cssUrl
-        } ?: ""
-    }
-
-    // 获取 JS URL， 包括灰度的
-    private fun getJSUrl(record: TServiceRecord, projectId: String?): String {
-        return if (gray.isGray() && !projectId.isNullOrBlank()) {
-            if (redisOperation.isMember(gray.getGrayRedisKey(), projectId!!)) {
-                record.grayJsUrl ?: record.jsUrl
-            } else {
-                record.jsUrl
-            }
-        } else {
-            record.jsUrl
+            url
         } ?: ""
     }
 
@@ -289,14 +280,6 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                 }
             }
         }
-    }
-
-    override fun updateServiceUrls(
-        userId: String,
-        name: String,
-        serviceUpdateUrls: ServiceUpdateUrls
-    ): Result<Boolean> {
-        return Result(serviceDao.updateUrls(dslContext, userId, name, serviceUpdateUrls))
     }
 
     companion object {

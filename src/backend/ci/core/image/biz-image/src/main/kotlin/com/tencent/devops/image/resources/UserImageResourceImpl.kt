@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.image.api.UserImageResource
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
+import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import com.tencent.devops.image.pojo.UploadImageTask
 import com.tencent.devops.image.service.ImageArtifactoryService
@@ -115,6 +116,11 @@ class UserImageResourceImpl @Autowired constructor(
             logger.error("list project image failed", e)
             throw RuntimeException("list project image failed")
         }
+    }
+
+    override fun listAllProjectImages(userId: String, projectId: String, searchKey: String?): Result<ImageListResp> {
+        checkUserAndProject(userId, projectId)
+        return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
     }
 
     override fun listProjectBuildImages(userId: String, projectId: String, searchKey: String?, start: Int?, limit: Int?): Result<ImagePageData> {

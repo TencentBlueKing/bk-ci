@@ -673,9 +673,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return Result(true)
     }
 
-    fun generateCiYaml(atomCode: String?): String {
+    override fun generateCiYaml(
+        atomCode: String?,
+        os: String?,
+        classType: String?,
+        defaultShowFlag: Boolean?
+    ): String {
         val atomCodeList = if (atomCode.isNullOrBlank()) {
-            marketAtomDao.getSupportGitCiAtom(dslContext).map { it.value1() }
+            marketAtomDao.getSupportGitCiAtom(dslContext, os, classType).map { it.value1() }
         } else {
             listOf(atomCode)
         }
@@ -685,7 +690,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val atom = marketAtomDao.getLatestAtomByCode(dslContext, it) ?: return@forEach
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, it) ?: return@forEach
             if (null == feature.recommendFlag || feature.recommendFlag) {
-                buf.append(generateYaml(atom))
+                buf.append(generateYaml(atom, defaultShowFlag))
                 buf.append("\r\n")
                 buf.append("\r\n")
             } else {
@@ -697,11 +702,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun generateYaml(atom: TAtomRecord): String {
+    private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuffer()
-            .append("h2. ${atom.name}\r\n")
-            .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
-            .append("- taskType: marketBuild@latest\r\n")
+            if (defaultShowFlag != null && defaultShowFlag) {
+                sb.append("h2. ${atom.name}\r\n")
+                    .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
+            }
+            sb.append("- taskType: marketBuild@latest\r\n")
             .append("  displayName: ${atom.name}\r\n")
             .append("  inputs:\r\n")
             .append("    atomCode: ${atom.atomCode}\r\n")
@@ -780,7 +787,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             sb.append("      output: {}\r\n")
         }
-        sb.append("{code}\r\n \r\n")
+        if (defaultShowFlag != null && defaultShowFlag) {
+            sb.append("{code}\r\n \r\n")
+        }
         return sb.toString()
     }
 

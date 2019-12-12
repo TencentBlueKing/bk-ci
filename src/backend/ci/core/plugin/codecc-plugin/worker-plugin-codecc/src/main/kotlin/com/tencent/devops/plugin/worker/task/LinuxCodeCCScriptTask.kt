@@ -50,7 +50,7 @@ class LinuxCodeCCScriptTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         // 如果指定_CODECC_FILTER_TOOLS，则只做_CODECC_FILTER_TOOLS的扫描
-        val repos = CodeccRepoHelper.getCodeccRepos(taskParams["id"] ?: "", buildTask, buildVariables)
+        val repos = CodeccRepoHelper.getCodeccRepos(buildTask, buildVariables)
         val filterTools = buildVariables.variables["_CODECC_FILTER_TOOLS"] ?: ""
         val coverityConfig = CodeccExecuteConfig(
             scriptType = BuildScriptType.valueOf(taskParams["scriptType"] ?: ""),
@@ -62,6 +62,9 @@ class LinuxCodeCCScriptTask : ITask() {
             filterTools = filterTools.split(",").map { it.trim() }.filter { it.isNotBlank() }
         )
         LoggerService.addNormalLine("buildVariables coverityConfig: $coverityConfig")
+
+        // 第三方机器初始化
+        CodeccEnvHelper.thirdInit(coverityConfig)
 
         // 先写入codecc任务
         CodeccEnvHelper.saveTask(buildVariables)

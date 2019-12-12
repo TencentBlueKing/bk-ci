@@ -45,6 +45,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 
 /**
  * store项目通用业务逻辑类
@@ -72,15 +73,23 @@ class StoreProjectServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum
     ): Result<List<InstalledProjRespItem>> {
         logger.info("getInstalledProjects accessToken is :$accessToken, userId is :$userId, storeCode is :$storeCode, storeType is :$storeType")
+        val watch = StopWatch()
         // 获取用户有权限的项目列表
+        watch.start("get accessible projects")
         val projectList = client.get(ServiceProjectResource::class).list(userId).data
-        logger.info("projectList is :$projectList")
+        watch.stop()
+        logger.info("$userId accessible projectList is :size=${projectList?.size},$projectList")
         if (projectList?.count() == 0) {
             return Result(mutableListOf())
         }
+        watch.start("projectCodeMap")
         val projectCodeMap = projectList?.map { it.projectCode to it }?.toMap()!!
+        watch.stop()
+        watch.start("getInstalledProject")
         val records =
             storeProjectRelDao.getInstalledProject(dslContext, storeCode, storeType.type.toByte(), projectCodeMap.keys)
+        watch.stop()
+        watch.start("generate InstalledProjRespItem")
         val result = mutableListOf<InstalledProjRespItem>()
         records?.forEach {
             result.add(
@@ -92,6 +101,8 @@ class StoreProjectServiceImpl @Autowired constructor(
                 )
             )
         }
+        watch.stop()
+        logger.info("getInstalledProjects:watch:$watch")
         return Result(result)
     }
 

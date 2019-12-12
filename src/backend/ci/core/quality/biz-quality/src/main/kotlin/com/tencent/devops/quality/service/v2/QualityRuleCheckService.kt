@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.plugin.codecc.api.ServiceCodeccElementResource
+import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
@@ -94,14 +94,14 @@ class QualityRuleCheckService @Autowired constructor(
     fun userListAtomRule(projectId: String, pipelineId: String, atomCode: String, atomVersion: String): AtomRuleResponse {
         val filterRuleList = getProjectRuleList(projectId, pipelineId, null).filter { it.controlPoint.name == atomCode }
         val ruleList = listMatchTask(filterRuleList)
-        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion)
+        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
     }
 
     fun userListTemplateAtomRule(projectId: String, templateId: String, atomCode: String, atomVersion: String): AtomRuleResponse {
         val filterRuleList = getProjectRuleList(projectId, null, templateId).filter { it.controlPoint.name == atomCode }
         val ruleList = listMatchTask(filterRuleList)
-        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion)
+        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
     }
 
@@ -507,7 +507,7 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
-        return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
+        return project?.project_name ?: throw OperationException("ProjectId: $projectId not exist")
     }
 
     private fun getPipelineName(projectId: String, pipelineId: String): String {

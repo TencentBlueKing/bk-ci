@@ -32,7 +32,7 @@ open class InvalidConfigException(
     message: String,
     errorCode: String = CommonMessageCode.ERROR_INVALID_CONFIG,
     params: Array<String>? = null
-) : ErrorCodeException(errorCode, message, params) {
+) : ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params) {
     override fun toString(): String {
         return "Config is invalid,message:$message"
     }

@@ -53,6 +53,8 @@ data class OPPServiceVO(
     val injectType: String?,
     @ApiModelProperty("iframeUrl")
     val iframeUrl: String?,
+    @ApiModelProperty("grayIframeUrl")
+    val grayIframeUrl: String?,
     @ApiModelProperty("cssUrl")
     val cssUrl: String?,
     @ApiModelProperty("jsUrl")

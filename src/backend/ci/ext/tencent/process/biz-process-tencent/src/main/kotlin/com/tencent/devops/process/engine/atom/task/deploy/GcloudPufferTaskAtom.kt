@@ -33,11 +33,12 @@ import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.gcloud.DynamicGcloudClient
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
-import com.tencent.devops.common.gcloud.api.pojo.dyn.DynNewResourceParam
 import com.tencent.devops.common.gcloud.api.pojo.PrePublishParam
 import com.tencent.devops.common.gcloud.api.pojo.UploadResParam
+import com.tencent.devops.common.gcloud.api.pojo.dyn.DynNewResourceParam
 import com.tencent.devops.common.pipeline.element.GcloudPufferElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -46,7 +47,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.gcloud.TicketUtil
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
@@ -57,11 +57,12 @@ import java.nio.file.Files
 class GcloudPufferTaskAtom @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val commonConfig: CommonConfig
 ) : IAtomTask<GcloudPufferElement> {
 
-    @Value("\${gateway.url:#{null}}")
-    private val gatewayUrl: String? = null
+//    @Value("\${gateway.url:#{null}}")
+//    private val gatewayUrl: String? = null
 
     override fun execute(task: PipelineBuildTask, param: GcloudPufferElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
@@ -78,7 +79,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
                 return AtomResponse(BuildStatus.FAILED)
             }
 
-            val jfrogClient = JfrogClient(gatewayUrl ?: "", task.projectId, task.pipelineId, buildId)
+            val jfrogClient = JfrogClient(commonConfig.devopsHostGateway ?: "", task.projectId, task.pipelineId, buildId)
             val isCustom = fileSource.toUpperCase() == "CUSTOMIZE"
             val destPath = Files.createTempDirectory("gcloud").toAbsolutePath().toString()
             val downloadFileList = jfrogClient.downloadFile(filePath, isCustom, destPath)

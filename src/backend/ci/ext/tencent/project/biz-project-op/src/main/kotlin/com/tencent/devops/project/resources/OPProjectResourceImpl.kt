@@ -31,39 +31,48 @@ import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.OpProjectService
+import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
 
 @RestResource
-class OPProjectResourceImpl @Autowired constructor(private val projectService: OpProjectService) : OPProjectResource {
+class OPProjectResourceImpl @Autowired constructor(
+    private val opProjectService: OpProjectService,
+    private val projectService: ProjectService
+) : OPProjectResource {
+
+    override fun list(userId: String): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId))
+    }
 
     override fun listGrayProject(): Result<OpGrayProject> {
-        return projectService.listGrayProject()
+        return opProjectService.listGrayProject()
     }
 
     override fun setGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = projectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+        return Result(data = opProjectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
     }
 
     override fun updateProject(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Result<Int> {
-        return Result(data = projectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
+        return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
     }
 
     override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, request: HttpServletRequest): Result<Map<String, Any?>?> {
-        return projectService.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag)
+        return opProjectService.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag)
     }
 
     override fun getProjectCount(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, grayFlag: Boolean): Result<Int> {
-        return projectService.getProjectCount(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, grayFlag)
+        return opProjectService.getProjectCount(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, grayFlag)
     }
 
 //    override fun updateProjectV2(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Result<Int> {
-//        return Result(data = projectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
+//        return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
 //    }
 //
 //    override fun setGrayProjectV2(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-//        return Result(data = projectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+//        return Result(data = opProjectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
 //    }
 }

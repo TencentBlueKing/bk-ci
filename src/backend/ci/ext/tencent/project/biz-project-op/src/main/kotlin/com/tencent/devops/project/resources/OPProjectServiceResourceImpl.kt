@@ -29,6 +29,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectServiceResource
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.GrayTestInfo
 import com.tencent.devops.project.pojo.service.GrayTestListInfo
 import com.tencent.devops.project.pojo.service.OPPServiceVO
@@ -36,7 +37,6 @@ import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceType
 import com.tencent.devops.project.pojo.service.ServiceTypeModify
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.GrayTestService
 import com.tencent.devops.project.service.ServiceTypeService
@@ -150,10 +150,6 @@ class OPProjectServiceResourceImpl constructor(
         return userProjectServiceService.listOPService(userId)
     }
 
-//    override fun listOPServiceV2(userId: String): Result<List<OPPServiceVO>> {
-//        return userProjectServiceService.listOPService(userId)
-//    }
-
     override fun createService(userId: String, serviceCreateInfo: ServiceCreateInfo): Result<OPPServiceVO> {
         return userProjectServiceService.createService(userId, serviceCreateInfo)
     }
@@ -166,8 +162,8 @@ class OPProjectServiceResourceImpl constructor(
         return userProjectServiceService.updateService(userId, serviceId, serviceCreateInfo)
     }
 
-    override fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
-        return userProjectServiceService.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
+    override fun updateServiceUrlByBatch(userId: String, serviceUpdateUrls: List<ServiceUpdateUrls>): Result<Int> {
+        return userProjectServiceService.updateServiceUrls(userId, serviceUpdateUrls)
     }
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -178,52 +174,4 @@ class OPProjectServiceResourceImpl constructor(
         userProjectServiceService.syncService(userId, services)
         return Result(true)
     }
-
-//    override fun syncServiceV2(userId: String, services: List<ServiceListVO>): Result<Boolean> {
-//        userProjectServiceService.syncService(userId, services)
-//        return Result(true)
-//    }
-//
-//    override fun createServiceTypeV2(userId: String, title: String, weight: Int): Result<ServiceType> {
-//        return Result(serviceTypeService.createServiceType(userId, title, weight))
-//    }
-//
-//    override fun deleteServiceTypeV2(userId: String, serviceTypeId: Long): Result<Boolean> {
-//        return Result(serviceTypeService.deleteServiceType(serviceTypeId))
-//    }
-//
-//    override fun updateServiceTypeV2(userId: String, serviceTypeId: Long, serviceTypeModify: ServiceTypeModify): Result<Boolean> {
-//        serviceTypeService.updateServiceType(userId, serviceTypeId, serviceTypeModify)
-//        return Result(true)
-//    }
-//
-//    override fun getServiceTypeByIdV2(userId: String, serviceTypeId: Long): Result<ServiceType> {
-//        return Result(serviceTypeService.get(serviceTypeId))
-//    }
-//
-//    override fun updateUserAuthV2(userId: String, id: Long, grayTestInfo: GrayTestInfo): Result<Boolean> {
-//        grayTestService.update(userId, id, grayTestInfo)
-//        return Result(true)
-//    }
-//
-//    override fun deleteUserAuthV2(userId: String, grayTestId: Long): Result<Boolean> {
-//        grayTestService.delete(grayTestId)
-//        return Result(true)
-//    }
-//
-//    override fun listGrayTestByIdV2(userId: String, id: Long): Result<GrayTestInfo> {
-//        return Result(grayTestService.get(id))
-//    }
-//
-//    override fun createServiceV2(userId: String, serviceCreateInfo: ServiceCreateInfo): Result<OPPServiceVO> {
-//        return userProjectServiceService.createService(userId, serviceCreateInfo)
-//    }
-//
-//    override fun updateServiceUrlByBatchV2(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean> {
-//        return userProjectServiceService.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
-//    }
-//
-//    override fun addUserAuthV2(userId: String, grayTestInfo: GrayTestInfo): Result<GrayTestInfo> {
-//        return Result(grayTestService.create(userId, grayTestInfo))
-//    }
 }

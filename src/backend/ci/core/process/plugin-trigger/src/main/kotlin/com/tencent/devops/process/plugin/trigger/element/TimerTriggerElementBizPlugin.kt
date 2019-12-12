@@ -26,9 +26,10 @@
 
 package com.tencent.devops.process.plugin.trigger.element
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -45,9 +46,6 @@ class TimerTriggerElementBizPlugin constructor(
     }
 
     override fun check(element: TimerTriggerElement, appearedCnt: Int) {
-        if (appearedCnt > 1) {
-            throw IllegalArgumentException("只允许一个代码扫描原子")
-        }
     }
 
     override fun afterCreate(
@@ -63,21 +61,29 @@ class TimerTriggerElementBizPlugin constructor(
             val crontabExpressions = mutableSetOf<String>()
             val eConvertExpressions = element.convertExpressions()
             if (eConvertExpressions.isEmpty()) {
-                throw OperationException("定时触发器的定时参数为空,不合法")
+                throw ErrorCodeException(defaultMessage = "定时触发器的定时参数不合法",
+                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB)
             }
             eConvertExpressions.forEach { cron ->
                 if (!CronExpression.isValidExpression(cron)) {
-                    throw OperationException("定时触发器的定时参数[$cron]不合法")
+                    throw ErrorCodeException(defaultMessage = "定时触发器的定时参数[$cron]不合法",
+                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
+                        params = arrayOf(cron))
                 }
             }
             crontabExpressions.addAll(eConvertExpressions)
             if (crontabExpressions.isNotEmpty()) {
                 val result = pipelineTimerService.saveTimer(
-                    projectId, pipelineId, userId, crontabExpressions, channelCode
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    crontabExpressions = crontabExpressions,
+                    channelCode = channelCode
                 )
                 logger.info("[$pipelineId]| update pipeline timer|crontab=$crontabExpressions")
                 if (result.isNotOk()) {
-                    throw OperationException(result.message ?: "保存定时器失败，请检查定时表达式参数")
+                    throw ErrorCodeException(defaultMessage = "定时触发器的定时参数不合法",
+                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB)
                 }
             } else {
                 pipelineTimerService.deleteTimer(pipelineId, userId)

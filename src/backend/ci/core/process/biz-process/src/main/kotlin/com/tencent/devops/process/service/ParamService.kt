@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -45,6 +47,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import java.io.File
 
 @Service
 class ParamService @Autowired constructor(
@@ -69,9 +72,8 @@ class ParamService @Autowired constructor(
                 filterParams.add(addCodelibProperties(userId, projectId, it))
             } else if (it.type == BuildFormPropertyType.CONTAINER_TYPE && it.containerType != null) {
                 filterParams.add(addContainerTypeProperties(userId, projectId, it))
-                // TODO add artifactory type
-//            } else if (it.type == BuildFormPropertyType.ARTIFACTORY) {
-//                filterParams.add(addArtifactoryProperties(userId, projectId, it))
+            } else if (it.type == BuildFormPropertyType.ARTIFACTORY) {
+                filterParams.add(addArtifactoryProperties(userId, projectId, it))
             } else if (it.type == BuildFormPropertyType.SUB_PIPELINE) {
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
             } else {
@@ -149,35 +151,35 @@ class ParamService @Autowired constructor(
     /**
      * 自定义仓库文件过滤参数
      */
-//    private fun addArtifactoryProperties(userId: String?, projectId: String, property: BuildFormProperty): BuildFormProperty {
-//        try {
-//            val glob = property.glob
-//            if (glob.isNullOrBlank() && (property.properties == null || property.properties!!.isEmpty())) {
-//                logger.warn("glob and properties are both empty")
-//                return property
-//            }
-//
-//            val listResult = client.get(ServiceArtifactoryResource::class).searchCustomFiles(
-//                projectId,
-//                CustomFileSearchCondition(
-//                    property.glob,
-//                    property.properties ?: mapOf()
-//                )
-//            )
-//            if (listResult.data == null) {
-//                logger.warn("list file result is empty")
-//                return property
-//            }
-//
-//            return copyFormProperty(
-//                property,
-//                listResult.data!!.map { BuildFormValue(it, File(it).name) }
-//            )
-//        } catch (t: Throwable) {
-//            logger.warn("[$userId|$projectId|$property] Fail to list artifactory files", t)
-//        }
-//        return property
-//    }
+    private fun addArtifactoryProperties(userId: String?, projectId: String, property: BuildFormProperty): BuildFormProperty {
+        try {
+            val glob = property.glob
+            if (glob.isNullOrBlank() && (property.properties == null || property.properties!!.isEmpty())) {
+                logger.warn("glob and properties are both empty")
+                return property
+            }
+
+            val listResult = client.get(ServiceArtifactoryResource::class).searchCustomFiles(
+                projectId,
+                CustomFileSearchCondition(
+                    property.glob,
+                    property.properties ?: mapOf()
+                )
+            )
+            if (listResult.data == null) {
+                logger.warn("list file result is empty")
+                return property
+            }
+
+            return copyFormProperty(
+                property,
+                listResult.data!!.map { BuildFormValue(it, File(it).name) }
+            )
+        } catch (t: Throwable) {
+            logger.warn("[$userId|$projectId|$property] Fail to list artifactory files", t)
+        }
+        return property
+    }
 
     /**
      * 自定义子流水线参数过滤
