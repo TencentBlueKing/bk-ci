@@ -26,10 +26,13 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Record
 
 /**
  * store公共
@@ -79,4 +82,14 @@ interface StoreCommonService {
      * 获取store组件详情页地址
      */
     fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String
+
+    /**
+     * 为标签集合添加标签
+     */
+    fun addLabelToLabelList(it: Record, labelList: MutableList<Label>)
+
+    /**
+     * 为范畴集合添加范畴
+     */
+    fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>)
 }

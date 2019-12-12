@@ -31,13 +31,17 @@ import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.ING
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.configuration.StoreDetailUrlConfig
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreBuildInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -45,9 +49,11 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * store公共
@@ -180,5 +186,50 @@ class StoreCommonServiceImpl @Autowired constructor(
         }
         logger.info("getStoreDetailUrl url is :$url")
         return url
+    }
+
+    /**
+     * 为标签集合添加标签
+     */
+    override fun addLabelToLabelList(it: Record, labelList: MutableList<Label>) {
+        val labelCode = it["labelCode"] as String
+        val labelName = it["labelName"] as String
+        val labelLanName = MessageCodeUtil.getCodeLanMessage(
+            messageCode = "${StoreMessageCode.MSG_CODE_STORE_LABEL_PREFIX}$labelCode",
+            defaultMessage = labelName
+        )
+        labelList.add(
+            Label(
+                id = it["id"] as String,
+                labelCode = labelCode,
+                labelName = labelLanName,
+                labelType = StoreTypeEnum.getStoreType((it["labelType"] as Byte).toInt()),
+                createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
+                updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
+            )
+        )
+    }
+
+    /**
+     * 为范畴集合添加范畴
+     */
+    override fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>) {
+        val categoryCode = it["categoryCode"] as String
+        val categoryName = it["categoryName"] as String
+        val categoryLanName = MessageCodeUtil.getCodeLanMessage(
+            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
+            defaultMessage = categoryName
+        )
+        categoryList.add(
+            Category(
+                id = it["id"] as String,
+                categoryCode = categoryCode,
+                categoryName = categoryLanName,
+                iconUrl = it["iconUrl"] as? String,
+                categoryType = StoreTypeEnum.getStoreType((it["categoryType"] as Byte).toInt()),
+                createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
+                updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
+            )
+        )
     }
 }
