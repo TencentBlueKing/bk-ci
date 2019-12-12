@@ -49,6 +49,6 @@ data class BuildVariables(
     val buildEnvs: List<BuildEnv>,
     @ApiModelProperty("container或者job的id", required = false)
     val containerId: String,
-    @ApiModelProperty("参数类型集合",required = false)
+    @ApiModelProperty("参数类型集合", required = false)
     val variablesWithType: List<BuildParameters>
 )
