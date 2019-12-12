@@ -75,7 +75,7 @@ object CodeccEnvHelper {
     // 第三方构建机初始化
     fun thirdInit(coverityConfig: CodeccExecuteConfig) {
         // 第三方构建机安装环境
-        val channelCode =  coverityConfig.buildVariables.variables["pipeline.start.channel"] ?: ""
+        val channelCode = coverityConfig.buildVariables.variables["pipeline.start.channel"] ?: ""
         if (BuildEnv.isThirdParty()) {
             when (AgentEnv.getOS()) {
                 OSType.WINDOWS -> {
@@ -104,6 +104,5 @@ object CodeccEnvHelper {
                 }
             }
         }
-
     }
 }
