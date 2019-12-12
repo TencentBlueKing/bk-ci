@@ -32,7 +32,7 @@ import okhttp3.Protocol
 import okhttp3.Response
 import org.springframework.http.HttpStatus
 
-class CodeccDownloadResourceApi: AbstractBuildResourceApi(), CodeccDownloadApi {
+class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi {
 
     override fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean): Response {
         val path = "/dispatch/api/build/codecc/$tool?osType=${osType.name}&fileMd5=$fileMd5&is32Bit=$is32Bit"
