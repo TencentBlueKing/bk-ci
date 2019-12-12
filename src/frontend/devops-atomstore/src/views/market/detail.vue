@@ -58,6 +58,10 @@
                     <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('阅读更多内容') }} </p>
                     <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
+
+                <bk-tab-panel name="yaml" label="YAML">
+                    <pre v-highlightjs="atomYaml" class="detail-yaml"><code class="YAML"></code></pre>
+                </bk-tab-panel>
             </bk-tab>
             <transition name="atom-fade">
                 <commentDialog v-if="showComment" @freshComment="freshComment" @closeDialog="showComment = false" :name="detail.name" :code="detailCode" :id="detailId" :comment-id="commentInfo.commentId"></commentDialog>
@@ -128,7 +132,15 @@
                         template: () => this.requestTemplateScoreDetail(this.detailCode),
                         image: () => this.requestImageScoreDetail(this.detailCode)
                     }
-                }
+                },
+                cmOptions: {
+                    tabSize: 4,
+                    mode: 'YAML',
+                    theme: 'Monokai',
+                    lineNumbers: true,
+                    line: true
+                },
+                atomYaml: ''
             }
         },
 
@@ -161,7 +173,8 @@
                 'requestImage',
                 'requestImageComments',
                 'requestImageScoreDetail',
-                'getUserApprovalInfo'
+                'getUserApprovalInfo',
+                'getAtomYaml'
             ]),
 
             freshComment (comment) {
@@ -189,7 +202,7 @@
                 this.isLoading = true
                 const type = this.$route.params.type
                 const funObj = {
-                    atom: () => this.getAtomDetail(),
+                    atom: () => this.getAtomDetail().then(() => this.getAtomYamlApi()),
                     template: () => this.getTemplateDetail(),
                     image: () => this.getImageDetail()
                 }
@@ -216,6 +229,13 @@
                     this.detail.downloads = atomStatic.downloads || 0
                     this.commentInfo = atomDetail.userCommentInfo || {}
                     this.$set(this.detail, 'approveStatus', (userAppInfo || {}).approveStatus)
+                })
+            },
+
+            getAtomYamlApi () {
+                const atomCode = this.detailCode
+                return this.getAtomYaml({ atomCode }).then((res) => {
+                    this.atomYaml = res
                 })
             },
 
@@ -313,6 +333,13 @@
     .detail-tabs {
         margin: 49px auto 30px;
         width: 1200px;
+        .detail-yaml {
+            margin: 0;
+            code {
+                font-family: Consolas, "Courier New", monospace;
+                padding: 10px;
+            }
+        }
         .summary-tab {
             overflow: hidden;
             min-height: 360px;
@@ -331,6 +358,10 @@
         }
         .comment-empty {
             margin-top: 70px;
+        }
+        /deep/ .CodeMirror {
+            min-height: 300px;
+            height: auto;
         }
     }
 
