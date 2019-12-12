@@ -2,6 +2,12 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
+import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_ID
+import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_NAME
+import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_TYPE
+import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -29,12 +35,12 @@ class ImageLabelService @Autowired constructor(
         imageLabelRecords?.forEach {
             imageLabelList.add(
                 Label(
-                    id = it["id"] as String,
-                    labelCode = it["labelCode"] as String,
-                    labelName = it["labelName"] as String,
-                    labelType = StoreTypeEnum.getStoreType((it["labelType"] as Byte).toInt()),
-                    createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
-                    updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
+                    id = it[KEY_LABEL_ID] as String,
+                    labelCode = it[KEY_LABEL_CODE] as String,
+                    labelName = it[KEY_LABEL_NAME] as String,
+                    labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
+                    createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
+                    updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
                 )
             )
         }
