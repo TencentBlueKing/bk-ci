@@ -1,21 +1,20 @@
 package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class ImageLabelService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val imageLabelRelDao: ImageLabelRelDao
+    private val imageLabelRelDao: ImageLabelRelDao,
+    private val storeCommonService: StoreCommonService
 ) {
     private val logger = LoggerFactory.getLogger(ImageLabelService::class.java)
 
@@ -27,16 +26,7 @@ class ImageLabelService @Autowired constructor(
         val imageLabelList = mutableListOf<Label>()
         val imageLabelRecords = imageLabelRelDao.getLabelsByImageId(dslContext, imageId) // 查询镜像标签信息
         imageLabelRecords?.forEach {
-            imageLabelList.add(
-                Label(
-                    id = it["id"] as String,
-                    labelCode = it["labelCode"] as String,
-                    labelName = it["labelName"] as String,
-                    labelType = StoreTypeEnum.getStoreType((it["labelType"] as Byte).toInt()),
-                    createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
-                    updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
-                )
-            )
+            storeCommonService.addLabelToLabelList(it, imageLabelList)
         }
         return Result(imageLabelList)
     }
