@@ -1,6 +1,6 @@
 spring:
   application:
-    name: artifactory
+    name: artifactory${service-suffix}
     desc: DevOps Artifactory Service
     version: 4.0.0
     packageName: com.tencent.devops.artifactory

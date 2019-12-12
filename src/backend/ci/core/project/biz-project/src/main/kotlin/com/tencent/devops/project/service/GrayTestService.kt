@@ -40,11 +40,11 @@ interface GrayTestService {
     fun get(id: Long): GrayTestInfo
     fun listByUser(userId: String): List<GrayTestInfo>
     fun listByCondition(
-            userNameList: List<String>,
-            serviceIdList: List<String>,
-            statusList: List<String>,
-            pageSize: Int,
-            pageNum: Int
+        userNameList: List<String>,
+        serviceIdList: List<String>,
+        statusList: List<String>,
+        pageSize: Int,
+        pageNum: Int
     ): List<GrayTestListInfo>
 
     fun listAllUsers(): Map<String, List<Any>>

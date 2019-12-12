@@ -90,5 +90,4 @@ interface ProjectService {
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
 
     fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO
-
 }

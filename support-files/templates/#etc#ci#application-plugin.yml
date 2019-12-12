@@ -11,6 +11,6 @@ server:
 
 plugin:
   codecc:
-    path: __INSTALL_PATH__/codecc/tools
+    path: __INSTALL_PATH__/public/codecc/tools
     covFile: build_dev.py
     toolFile: build_tool_dev.py

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: log
+    name: log${service-suffix}
     desc: DevOps Log Service
     version: 4.0
     packageName: com.tencent.devops.log

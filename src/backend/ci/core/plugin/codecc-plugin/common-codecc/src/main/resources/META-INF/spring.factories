@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.plugin.codecc.AutoConfiguration
+com.tencent.devops.plugin.codecc.CodeCCAutoConfiguration

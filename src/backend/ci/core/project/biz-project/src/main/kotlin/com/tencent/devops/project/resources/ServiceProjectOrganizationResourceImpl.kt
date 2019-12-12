@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProjectOrganizationResourceImpl @Autowired constructor(
-        private val projectOrganizationService: ProjectOrganizationService
+    private val projectOrganizationService: ProjectOrganizationService
 ) : ServiceProjectOrganizationResource {
 
     override fun getDeptInfo(userId: String, id: Int): Result<DeptInfo> {
