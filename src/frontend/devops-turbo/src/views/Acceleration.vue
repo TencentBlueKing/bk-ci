@@ -496,7 +496,7 @@
                 localStorage.setItem('tooltipEventList', JSON.stringify(this.tooltipEventList))
             },
             setParentzIndex (zIndex) {
-                document.querySelector('.navigation-bar-container').style.zIndex = zIndex
+                // document.querySelector('.navigation-bar-container').style.zIndex = zIndex
             }
         }
     }
