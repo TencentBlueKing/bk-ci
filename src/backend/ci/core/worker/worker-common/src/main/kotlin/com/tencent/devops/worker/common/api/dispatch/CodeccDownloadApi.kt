@@ -27,8 +27,6 @@
 package com.tencent.devops.worker.common.api.dispatch
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import okhttp3.Response
 
@@ -39,5 +37,4 @@ interface CodeccDownloadApi : WorkerRestApiSDK {
     fun downloadCovScript(osType: OSType, fileMd5: String): Response
 
     fun downloadToolScript(osType: OSType, fileMd5: String): Response
-
 }

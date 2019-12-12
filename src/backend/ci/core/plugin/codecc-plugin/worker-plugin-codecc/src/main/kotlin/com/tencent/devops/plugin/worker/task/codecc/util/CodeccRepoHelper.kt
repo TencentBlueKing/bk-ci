@@ -51,7 +51,6 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.api.process.BuildTaskSDKApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.utils.CredentialUtils
