@@ -238,19 +238,6 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(t)
     }
 
-    /**
-     * TODO 这个与下面的getBuildNoByByPair方法重复了，需要后面搞清楚前面接口是否不用了，重构一版
-     * @see #com.tencent.devops.process.api.service.ServicePipelineResource#getBuildNoByBuildIds
-     */
-    fun listBuildInfoByBuildIds(buildIds: Set<String>): MutableMap<String, Int> {
-        val result = mutableMapOf<String, Int>()
-        val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
-        buildInfoList.forEach {
-            result[it.buildId] = it.buildNum
-        }
-        return result
-    }
-
     fun getBuildNoByByPair(buildIds: Set<String>): MutableMap<String, String> {
         val result = mutableMapOf<String, String>()
         val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)

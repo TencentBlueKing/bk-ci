@@ -81,6 +81,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
@@ -364,15 +365,23 @@ class PipelineBuildWebhookService @Autowired constructor(
 
                 try {
                     val webhookCommit = WebhookCommit(
-                        userId,
-                        pipelineId,
-                        getStartParams(projectId, element, repo, matcher, variables, webHookParams, matchResult),
-                        repositoryConfig,
-                        matcher.getRepoName(),
-                        matcher.getRevision(),
-                        webHookParams.block,
-                        matcher.getEventType(),
-                        matcher.getCodeType()
+                        userId = userId,
+                        pipelineId = pipelineId,
+                        params = getStartParams(
+                            projectId = projectId,
+                            element = element,
+                            repo = repo,
+                            matcher = matcher,
+                            variables = variables,
+                            params = webHookParams,
+                            matchResult = matchResult
+                        ),
+                        repositoryConfig = repositoryConfig,
+                        repoName = matcher.getRepoName(),
+                        commitId = matcher.getRevision(),
+                        block = webHookParams.block,
+                        eventType = matcher.getEventType(),
+                        codeType = matcher.getCodeType()
                     )
                     val buildId =
                         client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
@@ -679,13 +688,15 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         // 添加质量红线原子
         val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(projectId, pipelineId, startParams, model)
+        // 兼容从旧v1版本下发过来的请求携带旧的变量命名
+        val params = startParams.map { (PipelineVarUtil.oldVarToNewVar(it.key) ?: it.key) to it.value }.toMap()
 
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = pipelineInfo,
                 startType = StartType.WEB_HOOK,
-                startParams = startParams,
+                startParams = params,
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = fullModel,
