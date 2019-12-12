@@ -464,14 +464,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val labelList = atomLabelService.getLabelsByAtomId(atomId).data // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
             val atomEnvInfoRecord = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
+            val classifyCode = record["classifyCode"] as? String
+            val classifyName = record["classifyName"] as? String
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = classifyName
+            )
             Result(
                 AtomVersion(
                     atomId = atomId,
                     atomCode = atomCode,
                     name = record["name"] as String,
                     logoUrl = record["logoUrl"] as? String,
-                    classifyCode = record["classifyCode"] as? String,
-                    classifyName = record["classifyName"] as? String,
+                    classifyCode = classifyCode,
+                    classifyName = classifyLanName,
                     category = AtomCategoryEnum.getAtomCategory((record["category"] as Byte).toInt()),
                     docsLink = record["docsLink"] as? String,
                     htmlTemplateVersion = htmlTemplateVersion,
