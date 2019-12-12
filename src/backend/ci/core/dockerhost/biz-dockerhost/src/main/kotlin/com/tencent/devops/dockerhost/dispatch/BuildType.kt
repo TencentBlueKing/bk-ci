@@ -32,6 +32,7 @@ enum class BuildType {
     PLUGIN_AGENT,
     DOCKER,
     DOCKER_HOST,
+    MACOS,
     TSTACK_AGENT;
 
     companion object {
