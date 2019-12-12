@@ -41,10 +41,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
 
-/**
- * deng
- * 2019-01-23
- */
 @Component
 class LogListener constructor(
     private val rabbitTemplate: RabbitTemplate,

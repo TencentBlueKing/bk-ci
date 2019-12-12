@@ -31,22 +31,18 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.process.service.AtomMarketInitPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineResourceImpl @Autowired constructor(
-    private val pipelineService: PipelineService,
-    private val atomMarketInitPipelineService: AtomMarketInitPipelineService
+    private val pipelineService: PipelineService
 ) : ServicePipelineResource {
     override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
         checkParams(userId, projectId, pipelineId)
@@ -144,36 +140,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getPipelineNameByIds(projectId, pipelineIds))
     }
 
-    override fun getBuildNoByBuildIds(
-        projectId: String,
-        pipelineId: String,
-        buildIds: Set<String>
-    ): Result<Map<String, Int>> {
-        return Result(pipelineService.getBuildNoByBuildIds(projectId, pipelineId, buildIds))
-    }
-
     override fun getBuildNoByBuildIds(buildIds: Set<String>): Result<Map<String, String>> {
         return Result(pipelineService.getBuildNoByByPair(buildIds))
     }
 
     override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {
         return Result(pipelineService.getPipelineAllStatus(userId, projectId, pipelineId))
-    }
-
-    override fun initAtomMarketPipeline(
-        userId: String,
-        projectCode: String,
-        atomMarketInitPipelineReq: AtomMarketInitPipelineReq
-    ): Result<AtomMarketInitPipelineResp> {
-        return atomMarketInitPipelineService.initPipeline(
-            userId,
-            projectCode,
-            atomMarketInitPipelineReq.atomBaseInfo,
-            atomMarketInitPipelineReq.repositoryHashId,
-            atomMarketInitPipelineReq.repositoryPath,
-            atomMarketInitPipelineReq.script,
-            atomMarketInitPipelineReq.buildEnv
-        )
     }
 
     private fun checkParams(userId: String, projectId: String, pipelineId: String) {

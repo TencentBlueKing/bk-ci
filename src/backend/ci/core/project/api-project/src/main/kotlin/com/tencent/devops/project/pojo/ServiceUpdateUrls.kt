@@ -29,11 +29,10 @@ package com.tencent.devops.project.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- * @author marcusfeng,  Date on 2019-08-01.
- */
 @ApiModel("服务-更新Urls模型")
 data class ServiceUpdateUrls(
+    @ApiModelProperty("服务名称", required = true)
+    val name: String,
     @ApiModelProperty("cssUrl")
     val cssUrl: String?,
     @ApiModelProperty("jsUrl")

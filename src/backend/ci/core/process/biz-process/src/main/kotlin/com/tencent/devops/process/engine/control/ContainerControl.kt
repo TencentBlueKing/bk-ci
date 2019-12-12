@@ -180,7 +180,7 @@ class ContainerControl @Autowired constructor(
                     ?: return
                 // 要求强制终止
                 ActionType.isTerminate(actionType) -> {
-                    checkTerminateAction(containerTaskList)
+                    checkTerminateAction(containerTaskList, reason)
                 }
                 // 要求停止执行的请求
                 ActionType.isEnd(actionType) -> {
@@ -294,7 +294,7 @@ class ContainerControl @Autowired constructor(
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY
     }
 
-    private fun checkTerminateAction(containerTaskList: Collection<PipelineBuildTask>): Triple<Nothing?, BuildStatus, Boolean> {
+    private fun checkTerminateAction(containerTaskList: Collection<PipelineBuildTask>, message: String?): Triple<Nothing?, BuildStatus, Boolean> {
         var startVMFail = false
         var containerFinalStatus: BuildStatus = BuildStatus.FAILED
         containerTaskList.forEach { task ->
@@ -309,10 +309,9 @@ class ContainerControl @Autowired constructor(
                     )
                     LogUtils.addRedLine(
                         rabbitTemplate = rabbitTemplate,
-                        buildId = task.buildId, message = "终止执行插件[${task.taskName}]!",
+                        buildId = task.buildId, message = "终止执行插件[${task.taskName}]: $message",
                         tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                     )
-
                     pipelineBuildDetailService.taskEnd(
                         buildId = task.buildId,
                         taskId = task.taskId,
@@ -320,9 +319,8 @@ class ContainerControl @Autowired constructor(
                         canRetry = true,
                         errorType = ErrorType.SYSTEM,
                         errorCode = AtomErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                        errorMsg = "启动构建机失败"
+                        errorMsg = message ?: "插件执行意外终止"
                     )
-
                     startVMFail = startVMFail || task.taskSeq == 0
                 }
                 BuildStatus.isFailure(task.status) -> {

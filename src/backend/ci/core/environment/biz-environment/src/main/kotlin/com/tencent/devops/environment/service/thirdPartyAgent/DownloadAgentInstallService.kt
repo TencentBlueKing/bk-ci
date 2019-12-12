@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
@@ -56,8 +56,8 @@ import javax.ws.rs.core.StreamingOutput
 class DownloadAgentInstallService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val profile: Profile,
-    private val slaveGatewayService: SlaveGatewayService
+    private val agentUrlService: AgentUrlService,
+    private val profile: Profile
 ) {
 
     @Value("\${environment.agent-package}")
@@ -109,6 +109,7 @@ class DownloadAgentInstallService @Autowired constructor(
         val jarFiles = getGoAgentJarFiles(record.os)
         val goDaemonFile = getGoDaemonFile(record.os)
         val goAgentFile = getGoAgentFile(record.os)
+        val packageFiles = getAgentPackageFiles(record.os)
         val scriptFiles = getGoAgentScriptFiles(record)
         val propertyFile = getPropertyFile(record)
 
@@ -117,7 +118,7 @@ class DownloadAgentInstallService @Autowired constructor(
         return Response.ok(StreamingOutput { output ->
             val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
 
-            jarFiles.forEach {
+            jarFiles.plus(packageFiles).forEach {
                 zipOut.putArchiveEntry(ZipArchiveEntry(it, it.name))
                 IOUtils.copy(FileInputStream(it), zipOut)
                 zipOut.closeArchiveEntry()
@@ -174,6 +175,9 @@ class DownloadAgentInstallService @Autowired constructor(
         val agentRecord = getAgentRecord(agentId)
         return downloadGoAgent(agentId, agentRecord)
     }
+
+    private fun getAgentPackageFiles(os: String) =
+        File(agentPackage, "packages/${os.toLowerCase()}/").listFiles()
 
     private fun getGoAgentJarFiles(os: String): List<File> {
         val agentJar = getAgentJarFile()
@@ -262,13 +266,14 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getAgentReplaceProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
-        val gw = slaveGatewayService.fixGateway(agentRecord.gateway)
+        val agentUrl = agentUrlService.genAgentUrl(agentRecord)
+        val gw = agentUrlService.genGateway(agentRecord)
         return mapOf(
-            "agent_url" to "$gw/ms/environment/api/external/thirdPartyAgent/$agentId/agent",
+            "agent_url" to agentUrl,
             "projectId" to agentRecord.projectId,
             "agentId" to agentId,
             "agentSecretKey" to SecurityUtil.decrypt(agentRecord.secretKey),
-            "gateWay" to gw!!,
+            "gateWay" to gw,
             "landun.env" to profile.getEnv().name,
             "agentCollectorOn" to agentCollectorOn
         )

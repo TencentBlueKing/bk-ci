@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import java.text.MessageFormat
 
 /**
@@ -42,8 +40,7 @@ import java.text.MessageFormat
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-@Component
-class MessageCodeUtil @Autowired constructor() {
+class MessageCodeUtil {
     companion object {
 
         private val logger = LoggerFactory.getLogger(MessageCodeUtil::class.java)
@@ -104,8 +101,8 @@ class MessageCodeUtil @Autowired constructor() {
          * 获取code对应的中英文信息
          * @param messageCode code
          */
-        fun getCodeLanMessage(messageCode: String): String {
-            return getCodeMessage(messageCode, null) ?: messageCode
+        fun getCodeLanMessage(messageCode: String, defaultMessage: String? = null): String {
+            return getCodeMessage(messageCode, null) ?: defaultMessage ?: messageCode
         }
 
         /**
@@ -113,7 +110,7 @@ class MessageCodeUtil @Autowired constructor() {
          * @param messageCode code
          * @param params 替换描述信息占位符的参数数组
          */
-        protected fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
+        fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
             var message: String? = null
             try {
                 val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
@@ -138,6 +135,14 @@ class MessageCodeUtil @Autowired constructor() {
                 "ZH_CN" -> messageCodeDetail.messageDetailZhCn // 简体中文描述
                 "ZH_TW" -> messageCodeDetail.messageDetailZhTw ?: "" // 繁体中文描述
                 else -> messageCodeDetail.messageDetailEn ?: "" // 英文描述
+            }
+        }
+
+        fun getMessageByLocale(chinese: String, english: String?): String {
+            return when (CommonUtils.getBkLocale()) {
+                "ZH_CN" -> chinese // 简体中文描述
+                "ZH_TW" -> chinese // 繁体中文描述
+                else -> english ?: "" // 英文描述
             }
         }
     }

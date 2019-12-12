@@ -56,29 +56,34 @@ class QualityHisMetadataService @Autowired constructor(
         logger.info("save history metadata for build: $buildId")
         logger.info("save history metadata data:\n$callback")
 
-        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(projectId, pipelineId, setOf(buildId)).data?.get(buildId) ?: 0
-        hisMetadataDao.saveHisOriginMetadata(dslContext,
-                projectId,
-                pipelineId,
-                buildId,
-                buildNo.toString(),
-                callbackStr = objectMapper.writeValueAsString(callback))
-        hisMetadataDao.batchSaveHisDetailMetadata(dslContext,
-                projectId,
-                pipelineId,
-                buildId,
-                buildNo.toString(),
-                callback.elementType,
-                callback.data.map { QualityHisMetadata(
-                        it.enName,
-                        it.cnName,
-                        it.detail,
-                        it.type,
-                        callback.elementType,
-                        it.msg,
-                        it.value,
-                        it.extra
-                ) })
+        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId) ?: "0"
+        hisMetadataDao.saveHisOriginMetadata(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            callbackStr = objectMapper.writeValueAsString(callback)
+        )
+        hisMetadataDao.batchSaveHisDetailMetadata(dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            elementType = callback.elementType,
+            qualityMetadataList = callback.data.map {
+                QualityHisMetadata(
+                    enName = it.enName,
+                    cnName = it.cnName,
+                    detail = it.detail,
+                    type = it.type,
+                    elementType = callback.elementType,
+                    msg = it.msg,
+                    value = it.value,
+                    extra = it.extra
+                )
+            }
+        )
         return "success save metadata for $buildId"
     }
 
@@ -86,25 +91,25 @@ class QualityHisMetadataService @Autowired constructor(
         logger.info("save history metadata for build($elementType): $buildId")
         logger.info("save history metadata data:\n$data")
 
-        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(projectId, pipelineId, setOf(buildId)).data?.get(buildId) ?: 0
+        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId) ?: "0"
         val metadataMap = metadataService.serviceListByDataId(elementType, data.keys).map { it.dataId to it }.toMap()
         val qualityMetadataList = data.map {
             val key = it.key
             val value = it.value
-            val isNumber = NumberUtils.isNumber(value)
+            val isNumber = NumberUtils.isCreatable(value)
             val isDigits = NumberUtils.isDigits(value)
             val metadata = metadataMap[key]
             // int
             if (isNumber && isDigits) {
                 return@map QualityHisMetadata(
-                        key,
-                        metadata?.dataName ?: "",
-                        metadata?.elementDetail ?: "",
-                        QualityDataType.INT,
-                        metadata?.elementType ?: "",
-                        "from script element",
-                        value,
-                        null
+                    enName = key,
+                    cnName = metadata?.dataName ?: "",
+                    detail = metadata?.elementDetail ?: "",
+                    type = QualityDataType.INT,
+                    elementType = metadata?.elementType ?: "",
+                    msg = "from script element",
+                    value = value,
+                    extra = null
 
                 )
             }
@@ -112,46 +117,54 @@ class QualityHisMetadataService @Autowired constructor(
             // float
             if (isNumber && !isDigits) {
                 return@map QualityHisMetadata(
-                        key,
-                        metadata?.dataName ?: "",
-                        metadata?.elementDetail ?: "",
-                        QualityDataType.FLOAT,
-                        metadata?.elementType ?: "",
-                        "from script element",
-                        value,
-                        null
+                    enName = key,
+                    cnName = metadata?.dataName ?: "",
+                    detail = metadata?.elementDetail ?: "",
+                    type = QualityDataType.FLOAT,
+                    elementType = metadata?.elementType ?: "",
+                    msg = "from script element",
+                    value = value,
+                    extra = null
 
                 )
             }
 
             // boolean
             return@map QualityHisMetadata(
-                    key,
-                    metadata?.dataName ?: "",
-                    metadata?.elementDetail ?: "",
-                    QualityDataType.BOOLEAN,
-                    metadata?.elementType ?: "",
-                    "from script element",
-                    value,
-                    null
+                enName = key,
+                cnName = metadata?.dataName ?: "",
+                detail = metadata?.elementDetail ?: "",
+                type = QualityDataType.BOOLEAN,
+                elementType = metadata?.elementType ?: "",
+                msg = "from script element",
+                value = value,
+                extra = null
 
             )
         }
-        hisMetadataDao.batchSaveHisDetailMetadata(dslContext, projectId, pipelineId, buildId, buildNo.toString(), elementType, qualityMetadataList)
+        hisMetadataDao.batchSaveHisDetailMetadata(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            elementType = elementType,
+            qualityMetadataList = qualityMetadataList
+        )
         return true
     }
 
     fun serviceGetHisMetadata(buildId: String): List<QualityHisMetadata> {
         return hisMetadataDao.getHisMetadata(dslContext, buildId)?.map {
             QualityHisMetadata(
-                    it.dataId,
-                    it.dataName,
-                    it.elementDetail,
-                    QualityDataType.valueOf(it.dataType),
-                    it.elementType ?: "",
-                    it.dataDesc,
-                    it.dataValue,
-                    it.extra
+                enName = it.dataId,
+                cnName = it.dataName,
+                detail = it.elementDetail,
+                type = QualityDataType.valueOf(it.dataType),
+                elementType = it.elementType ?: "",
+                msg = it.dataDesc,
+                value = it.dataValue,
+                extra = it.extra
             )
         } ?: listOf()
     }

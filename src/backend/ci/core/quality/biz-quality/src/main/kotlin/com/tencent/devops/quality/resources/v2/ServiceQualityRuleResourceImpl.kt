@@ -43,14 +43,24 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
     private val ruleService: QualityRuleService
 ) : ServiceQualityRuleResource {
 
-    override fun matchRuleList(projectId: String, pipelineId: String, templateId: String?, startTime: Long): Result<List<QualityRuleMatchTask>> {
+    override fun matchRuleList(
+        projectId: String,
+        pipelineId: String,
+        templateId: String?,
+        startTime: Long
+    ): Result<List<QualityRuleMatchTask>> {
         val ruleList = mutableListOf<QualityRuleMatchTask>()
         ruleList.addAll(ruleCheckService.userGetMatchRuleList(projectId, pipelineId))
         ruleList.addAll(ruleCheckService.userGetMatchTemplateList(projectId, templateId))
         return Result(ruleList)
     }
 
-    override fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Result<Set<String>> {
+    override fun getAuditUserList(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<Set<String>> {
         return Result(ruleCheckService.getAuditUserList(projectId, pipelineId, buildId, taskId))
     }
 

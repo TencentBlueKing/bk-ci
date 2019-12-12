@@ -29,11 +29,23 @@ package com.tencent.devops.process.service.view
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
+import com.tencent.devops.process.constant.ProcessMessageCode.ALL_PIPELINES_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_VIEW_NO_PERM
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_EDIT_PIPELINE_VIEW_NO_PERM
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_VIEW_HAD_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_VIEW_MAX_LIMIT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.FAVORITE_PIPELINES_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode.MY_PIPELINES_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode.PERSON_VIEW_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode.PROJECT_VIEW_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode.SYSTEM_VIEW_LABEL
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
@@ -62,7 +74,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class PipelineViewService @Autowired constructor(
@@ -77,56 +88,110 @@ class PipelineViewService @Autowired constructor(
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
-        if (pipelineViewLastViewDao.get(dslContext, userId, projectId) == null) {
-            pipelineViewLastViewDao.create(dslContext, userId, projectId, viewId)
+        if (pipelineViewLastViewDao.get(dslContext = dslContext, userId = userId, projectId = projectId) == null) {
+            pipelineViewLastViewDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                viewId = viewId
+            )
         } else {
-            pipelineViewLastViewDao.update(dslContext, userId, projectId, viewId)
+            pipelineViewLastViewDao.update(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                viewId = viewId
+            )
         }
     }
 
     fun getUsingView(userId: String, projectId: String): String? {
-        return pipelineViewLastViewDao.get(dslContext, userId, projectId)?.viewId
+        return pipelineViewLastViewDao.get(dslContext = dslContext, userId = userId, projectId = projectId)?.viewId
     }
 
     fun getViewSettings(userId: String, projectId: String): PipelineViewSettings {
-        val currentViewListAndView = getCurrentViewIdAndList(userId, projectId)
+        val currentViewListAndView = getCurrentViewIdAndList(userId = userId, projectId = projectId)
         val currentViewId = currentViewListAndView.first
         val currentViewList = currentViewListAndView.second
-        return PipelineViewSettings(currentViewId, currentViewList, getViewClassifyList(userId, projectId))
+        return PipelineViewSettings(
+            currentViewId = currentViewId,
+            currentViews = currentViewList,
+            viewClassifies = getViewClassifyList(userId = userId, projectId = projectId)
+        )
     }
 
     fun getViewClassifyList(userId: String, projectId: String): List<PipelineViewClassify> {
         val systemViewList = listOf(
-            PipelineViewIdAndName(PIPELINE_VIEW_FAVORITE_PIPELINES, FAVORITE_PIPELINES_LABEL),
-            PipelineViewIdAndName(PIPELINE_VIEW_MY_PIPELINES, MY_PIPELINES_LABEL),
-            PipelineViewIdAndName(PIPELINE_VIEW_ALL_PIPELINES, ALL_PIPELINES_LABEL)
+            PipelineViewIdAndName(
+                id = PIPELINE_VIEW_FAVORITE_PIPELINES,
+                name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+            ),
+            PipelineViewIdAndName(
+                id = PIPELINE_VIEW_MY_PIPELINES,
+                name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+            ),
+            PipelineViewIdAndName(
+                id = PIPELINE_VIEW_ALL_PIPELINES,
+                name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+            )
         )
 
-        val projectViewRecordList = pipelineViewDao.list(dslContext, projectId, true)
+        val projectViewRecordList = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = true
+        )
         val projectViewList = projectViewRecordList.map {
-            PipelineViewIdAndName(encode(it.id), it.name)
+            PipelineViewIdAndName(id = encode(it.id), name = it.name)
         }
 
-        val personViewRecordList = pipelineViewDao.list(dslContext, projectId, userId, false)
+        val personViewRecordList = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            userId = userId,
+            isProject = false
+        )
         val personViewList = personViewRecordList.map {
-            PipelineViewIdAndName(encode(it.id), it.name)
+            PipelineViewIdAndName(id = encode(it.id), name = it.name)
         }
 
-        val systemPipelineViewClassify = PipelineViewClassify(SYSTEM_VIEW_LABEL, systemViewList)
-        val projectPipelineViewClassify = PipelineViewClassify(PROJECT_VIEW_LABEL, projectViewList)
-        val personPipelineViewClassify = PipelineViewClassify(PERSON_VIEW_LABEL, personViewList)
+        val systemPipelineViewClassify = PipelineViewClassify(
+            label = MessageCodeUtil.getCodeLanMessage(SYSTEM_VIEW_LABEL),
+            viewList = systemViewList
+        )
+        val projectPipelineViewClassify = PipelineViewClassify(
+            label = MessageCodeUtil.getCodeLanMessage(PROJECT_VIEW_LABEL),
+            viewList = projectViewList
+        )
+        val personPipelineViewClassify = PipelineViewClassify(
+            label = MessageCodeUtil.getCodeLanMessage(PERSON_VIEW_LABEL),
+            viewList = personViewList
+        )
 
         return listOf(systemPipelineViewClassify, projectPipelineViewClassify, personPipelineViewClassify)
     }
 
     fun getCurrentViewIdAndList(userId: String, projectId: String): Pair<String, List<PipelineViewIdAndName>> {
-        val pipelineViewSettingsRecord = pipelineViewUserSettingDao.get(dslContext, userId, projectId)
+        val pipelineViewSettingsRecord = pipelineViewUserSettingDao.get(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId
+        )
 
         val currentViewList = if (pipelineViewSettingsRecord == null) {
             listOf(
-                PipelineViewIdAndName(PIPELINE_VIEW_FAVORITE_PIPELINES, FAVORITE_PIPELINES_LABEL),
-                PipelineViewIdAndName(PIPELINE_VIEW_MY_PIPELINES, MY_PIPELINES_LABEL),
-                PipelineViewIdAndName(PIPELINE_VIEW_ALL_PIPELINES, ALL_PIPELINES_LABEL)
+                PipelineViewIdAndName(
+                    id = PIPELINE_VIEW_FAVORITE_PIPELINES,
+                    name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+                ),
+                PipelineViewIdAndName(
+                    id = PIPELINE_VIEW_MY_PIPELINES,
+                    name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+                ),
+                PipelineViewIdAndName(
+                    id = PIPELINE_VIEW_ALL_PIPELINES,
+                    name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+                )
             )
         } else {
             val currentViewIdList = objectMapper.readValue<List<String>>(pipelineViewSettingsRecord.settings)
@@ -142,32 +207,32 @@ class PipelineViewService @Autowired constructor(
             val tmpList = mutableListOf<PipelineViewIdAndName>()
             currentViewIdList.forEach { viewId ->
                 if (viewId in SYSTEM_VIEW_ID_LIST) {
-                    tmpList.add(PipelineViewIdAndName(viewId, getSystemViewName(viewId)))
+                    tmpList.add(PipelineViewIdAndName(id = viewId, name = getSystemViewName(viewId)))
                     return@forEach
                 }
 
                 val viewLongId = decode(viewId)
                 if (pipelineViewMap.containsKey(viewLongId)) {
                     val record = pipelineViewMap[viewLongId]!!
-                    tmpList.add(PipelineViewIdAndName(encode(record.id), record.name))
+                    tmpList.add(PipelineViewIdAndName(id = encode(record.id), name = record.name))
                 }
             }
             tmpList
         }
 
-        val usingViewId = getUsingView(userId, projectId)
+        val usingViewId = getUsingView(userId = userId, projectId = projectId)
         val currentViewId = if (usingViewId != null && currentViewList.map { it.id }.contains(usingViewId)) {
             usingViewId
         } else {
             currentViewList.first().id
         }
 
-        return Pair(currentViewId, currentViewList)
+        return Pair(first = currentViewId, second = currentViewList)
     }
 
     fun updateViewSettings(userId: String, projectId: String, viewIdList: List<String>) {
         if (viewIdList.size > 7) {
-            throw CustomException(Response.Status.FORBIDDEN, "最多允许同时保存7个视图")
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_MAX_LIMIT)
         }
 
         val projectViewRecordList = pipelineViewDao.list(dslContext, projectId)
@@ -178,8 +243,8 @@ class PipelineViewService @Autowired constructor(
                 return@forEach
             }
             if (!projectViewIdList.contains(decode(viewId))) {
-                logger.warn("Pipeline view($viewId) not exist")
-                throw CustomException(Response.Status.BAD_REQUEST, "视图($viewId)不存在")
+                logger.warn("[$projectId]| Pipeline view($viewId) not exist")
+                throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
             }
         }
 
@@ -201,7 +266,12 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
-        val views = pipelineViewDao.listProjectOrUser(dslContext, projectId, true, userId)
+        val views = pipelineViewDao.listProjectOrUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = true,
+            userId = userId
+        )
 
         return views.map {
             PipelineNewViewSummary(
@@ -217,8 +287,8 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
-        val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw CustomException(Response.Status.NOT_FOUND, "视图($viewId)不存在")
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
 
         val filters =
             getFilters(
@@ -252,45 +322,51 @@ class PipelineViewService @Autowired constructor(
                     logic = pipelineView.logic.name,
                     isProject = pipelineView.projected,
                     filters = objectMapper.writerFor(object :
-                        TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(
-                        pipelineView.filters
-                    ),
+                        TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(pipelineView.filters),
                     userId = userId
                 )
                 encode(viewId)
             }
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
-            throw CustomException(Response.Status.BAD_REQUEST, "视图(${pipelineView.name})已存在")
+            throw throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS,
+                params = arrayOf(pipelineView.name)
+            )
         }
     }
 
     fun deleteView(userId: String, projectId: String, viewId: String): Boolean {
         val id = decode(viewId)
         val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw CustomException(Response.Status.NOT_FOUND, "视图($viewId)不存在")
+            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
         val isUserManager = isUserManager(userId, projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
-            throw CustomException(Response.Status.FORBIDDEN, "用户($userId)无权限删除视图($viewId)")
+            throw ErrorCodeException(
+                errorCode = ERROR_DEL_PIPELINE_VIEW_NO_PERM,
+                params = arrayOf(userId, viewId)
+            )
         }
 
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val result = pipelineViewDao.delete(context, id)
             pipelineViewLabelDao.detachLabelByView(context, id, userId)
-            result
+            pipelineViewDao.delete(context, id)
         }
     }
 
     fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Boolean {
         val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw CustomException(Response.Status.NOT_FOUND, "视图($viewId)不存在")
-        val isUserManager = isUserManager(userId, projectId)
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+        val isUserManager = isUserManager(userId = userId, projectId = projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
-            throw CustomException(Response.Status.FORBIDDEN, "用户($userId)无权限编辑视图($viewId)")
+            throw ErrorCodeException(
+                errorCode = ERROR_EDIT_PIPELINE_VIEW_NO_PERM,
+                params = arrayOf(userId, viewId)
+            )
         }
 
         try {
@@ -312,7 +388,10 @@ class PipelineViewService @Autowired constructor(
             }
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineView by userId")
-            throw CustomException(Response.Status.BAD_REQUEST, "视图(${pipelineView.name})已存在")
+            throw throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS,
+                params = arrayOf(pipelineView.name)
+            )
         }
     }
 
@@ -334,7 +413,7 @@ class PipelineViewService @Autowired constructor(
             }
         }
 
-        return Triple(filterByNames, filterByCreators, filterByLabels)
+        return Triple(first = filterByNames, second = filterByCreators, third = filterByLabels)
     }
 
     private fun getFilters(
@@ -353,17 +432,28 @@ class PipelineViewService @Autowired constructor(
         }
 
         if (filterByName.isNotEmpty()) {
-            allFilters.add(PipelineViewFilterByName(Condition.LIKE, filterByName))
+            allFilters.add(PipelineViewFilterByName(condition = Condition.LIKE, pipelineName = filterByName))
         }
 
         if (filterByCreator.isNotEmpty()) {
-            allFilters.add(PipelineViewFilterByCreator(Condition.INCLUDE, filterByCreator.split(",")))
+            allFilters.add(
+                PipelineViewFilterByCreator(
+                    condition = Condition.INCLUDE,
+                    userIds = filterByCreator.split(",")
+                )
+            )
         }
 
         if (labelIds.isNotEmpty()) {
             val groupToLabelsMap = pipelineGroupService.getGroupToLabelsMap(labelIds)
             groupToLabelsMap.forEach { (groupId, labelIdList) ->
-                allFilters.add(PipelineViewFilterByLabel(Condition.INCLUDE, groupId, labelIdList))
+                allFilters.add(
+                    PipelineViewFilterByLabel(
+                        condition = Condition.INCLUDE,
+                        groupId = groupId,
+                        labelIds = labelIdList
+                    )
+                )
             }
         }
 
@@ -371,15 +461,21 @@ class PipelineViewService @Autowired constructor(
     }
 
     private fun isUserManager(userId: String, projectId: String): Boolean {
-        return pipelinePermissionService.isProjectUser(userId, projectId, BkAuthGroup.MANAGER)
+        return pipelinePermissionService.isProjectUser(
+            userId = userId,
+            projectId = projectId,
+            group = BkAuthGroup.MANAGER
+        )
     }
 
     private fun getSystemViewName(viewId: String): String {
         return when (viewId) {
-            PIPELINE_VIEW_FAVORITE_PIPELINES -> FAVORITE_PIPELINES_LABEL
-            PIPELINE_VIEW_MY_PIPELINES -> MY_PIPELINES_LABEL
-            PIPELINE_VIEW_ALL_PIPELINES -> ALL_PIPELINES_LABEL
-            else -> throw CustomException(Response.Status.NOT_FOUND, "视图($viewId)不存在")
+            PIPELINE_VIEW_FAVORITE_PIPELINES -> MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+            PIPELINE_VIEW_MY_PIPELINES -> MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+            PIPELINE_VIEW_ALL_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+            else -> throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId)
+            )
         }
     }
 
@@ -389,12 +485,6 @@ class PipelineViewService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineViewService::class.java)
-        private const val SYSTEM_VIEW_LABEL = "系统视图"
-        private const val PROJECT_VIEW_LABEL = "项目视图"
-        private const val PERSON_VIEW_LABEL = "个人视图"
-        private const val FAVORITE_PIPELINES_LABEL = "我的收藏"
-        private const val MY_PIPELINES_LABEL = "我的流水线"
-        private const val ALL_PIPELINES_LABEL = "全部流水线"
         private val SYSTEM_VIEW_ID_LIST =
             listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
     }
