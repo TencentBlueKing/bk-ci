@@ -10,10 +10,10 @@ server:
   port: __BKCI_STORE_API_PORT__
 
 store:
-  profileUrlPrefix: __PAAS_USER_AVATARS_URL__
-  atomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/console/store/atomStore/detail/atom/
-  templateDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/console/store/atomStore/detail/template/
-  artifactoryServiceUrlPrefix: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/ms/artifactory/api
-file:
-  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
-  maxUploadFileSize: 52428800
+  commentNotifyAdmin: admin
+  profileUrlPrefix: __HTTP_SCHEMA__://__PAAS_USER_AVATARS_URL__
+  atomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/atom/
+  templateDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/template/
+  artifactoryServiceUrlPrefix: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/artifactory/api
+  ideAtomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/ide/
+  imageDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/image/
