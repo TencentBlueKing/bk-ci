@@ -154,4 +154,14 @@ class ImageFeatureDao {
                 .where(conditions)
         return baseQuery.fetchOne().get(0, Int::class.java)
     }
+
+    fun countByCode(dslContext: DSLContext, imageCode: String): Int {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        with(tImageFeature) {
+            val baseQuery =
+                dslContext.select(IMAGE_CODE.countDistinct()).from(this)
+                    .where(IMAGE_CODE.eq(imageCode))
+            return baseQuery.fetchOne().get(0, Int::class.java)
+        }
+    }
 }
