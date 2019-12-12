@@ -41,16 +41,16 @@ class QualityRuleTemplateDao {
     fun listTemplateEnable(dslContext: DSLContext): Result<TQualityRuleTemplateRecord>? {
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
             return dslContext.selectFrom(this)
-                    .where((TYPE.eq(TemplateType.TEMPLATE.name)).and(ENABLE.eq(true)))
-                    .fetch()
+                .where((TYPE.eq(TemplateType.TEMPLATE.name)).and(ENABLE.eq(true)))
+                .fetch()
         }
     }
 
     fun listIndicatorSetEnable(dslContext: DSLContext): Result<TQualityRuleTemplateRecord>? {
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
             return dslContext.selectFrom(this)
-                    .where((TYPE.eq(TemplateType.INDICATOR_SET.name)).and(ENABLE.eq(true)))
-                    .fetch()
+                .where((TYPE.eq(TemplateType.INDICATOR_SET.name)).and(ENABLE.eq(true)))
+                .fetch()
         }
     }
 
@@ -58,9 +58,9 @@ class QualityRuleTemplateDao {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
             return dslContext.selectFrom(this)
-                    .orderBy(CREATE_TIME.desc())
-                    .limit(sqlLimit.offset, sqlLimit.limit)
-                    .fetch()
+                .orderBy(CREATE_TIME.desc())
+                .limit(sqlLimit.offset, sqlLimit.limit)
+                .fetch()
         }
     }
 
@@ -78,23 +78,23 @@ class QualityRuleTemplateDao {
         val now = LocalDateTime.now()
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
             val record = dslContext.insertInto(
-                    this, NAME, TYPE, DESC, STAGE, CONTROL_POINT,
-                    CONTROL_POINT_POSITION, CREATE_USER,
-                    UPDATE_USER, CREATE_TIME, UPDATE_TIME, ENABLE
+                this, NAME, TYPE, DESC, STAGE, CONTROL_POINT,
+                CONTROL_POINT_POSITION, CREATE_USER,
+                UPDATE_USER, CREATE_TIME, UPDATE_TIME, ENABLE
             ).values(
-                    templateUpdate.name,
-                    templateUpdate.type,
-                    templateUpdate.desc,
-                    templateUpdate.stage,
-                    templateUpdate.elementType,
-                    templateUpdate.controlPointPostion,
-                    userId,
-                    userId,
-                    now,
-                    now,
-                    templateUpdate.enable
+                templateUpdate.name,
+                templateUpdate.type,
+                templateUpdate.desc,
+                templateUpdate.stage,
+                templateUpdate.elementType,
+                templateUpdate.controlPointPostion,
+                userId,
+                userId,
+                now,
+                now,
+                templateUpdate.enable
             ).returning(ID)
-                    .fetchOne()
+                .fetchOne()
             return record.id
         }
     }
@@ -102,9 +102,9 @@ class QualityRuleTemplateDao {
     fun delete(userId: String, id: Long, dslContext: DSLContext): Long {
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
             return dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
-                    .toLong()
+                .where(ID.eq(id))
+                .execute()
+                .toLong()
         }
     }
 
@@ -122,9 +122,9 @@ class QualityRuleTemplateDao {
                 if (enable != null) update.set(ENABLE, enable)
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
-                    .set(UPDATE_USER, userId)
-                    .where(ID.eq(id))
-                    .execute()
+                .set(UPDATE_USER, userId)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 }

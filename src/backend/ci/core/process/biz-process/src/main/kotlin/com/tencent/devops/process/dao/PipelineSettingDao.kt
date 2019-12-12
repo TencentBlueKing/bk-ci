@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.notify.enums.NotifyTypeEnum
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -50,7 +51,9 @@ class PipelineSettingDao {
         projectId: String,
         pipelineId: String,
         pipelineName: String,
-        isTemplate: Boolean = false
+        isTemplate: Boolean = false,
+        successNotifyTypes: String = "${NotifyTypeEnum.EMAIL.name},${NotifyTypeEnum.RTX.name}",
+        failNotifyTypes: String = "${NotifyTypeEnum.EMAIL.name},${NotifyTypeEnum.RTX.name}"
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.insertInto(
@@ -82,8 +85,8 @@ class PipelineSettingDao {
                     "\${$PIPELINE_START_USER_NAME}",
                     "",
                     "",
-                    "EMAIL,RTX",
-                    "EMAIL,RTX",
+                    successNotifyTypes,
+                    failNotifyTypes,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
                     DateTimeUtils.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),

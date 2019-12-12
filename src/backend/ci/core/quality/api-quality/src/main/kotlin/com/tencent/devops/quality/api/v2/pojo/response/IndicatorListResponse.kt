@@ -51,7 +51,8 @@ data class IndicatorListResponse(
         val availableOperation: List<QualityOperation>,
         val dataType: QualityDataType,
         val threshold: String,
-        val desc: String
+        val desc: String,
+        val range: String
     )
 
     data class QualityMetadata(

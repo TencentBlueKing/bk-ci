@@ -43,7 +43,17 @@ class UserQualityInterceptResourceImpl @Autowired constructor(
     private val historyService: QualityHistoryService,
     private val ruleCheckService: QualityRuleCheckService
 ) : UserQualityInterceptResource {
-    override fun list(userId: String, projectId: String, pipelineId: String?, ruleHashId: String?, interceptResult: RuleInterceptResult?, startTime: Long?, endTime: Long?, page: Int?, pageSize: Int?): Result<Page<RuleInterceptHistory>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        ruleHashId: String?,
+        interceptResult: RuleInterceptResult?,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RuleInterceptHistory>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -53,11 +63,27 @@ class UserQualityInterceptResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = historyService.listInterceptHistory(userId, projectId, pipelineId, ruleHashId, interceptResult, startTime, endTime, limit.offset, limit.limit)
+        val result = historyService.listInterceptHistory(
+            userId,
+            projectId,
+            pipelineId,
+            ruleHashId,
+            interceptResult,
+            startTime,
+            endTime,
+            limit.offset,
+            limit.limit
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
     }
 
-    override fun getAuditUserList(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Result<Set<String>> {
+    override fun getAuditUserList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<Set<String>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }

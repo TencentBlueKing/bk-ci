@@ -29,10 +29,6 @@ package com.tencent.devops.process.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- * deng
- * 19/01/2018
- */
 @ApiModel("流水线-COPY创建信息")
 data class PipelineCopy(
     @ApiModelProperty("名称", required = true)

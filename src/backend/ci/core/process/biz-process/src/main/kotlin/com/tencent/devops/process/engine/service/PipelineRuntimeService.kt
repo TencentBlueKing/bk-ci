@@ -204,6 +204,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId
             )
         }
+        buildStartupParamService.deletePipelineBuildParam(projectId = projectId, pipelineId = pipelineId)
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
@@ -235,19 +236,6 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildInfo(buildId: String): BuildInfo? {
         val t = pipelineBuildDao.getBuildInfo(dslContext, buildId)
         return pipelineBuildDao.convert(t)
-    }
-
-    /**
-     * TODO 这个与下面的getBuildNoByByPair方法重复了，需要后面搞清楚前面接口是否不用了，重构一版
-     * @see #com.tencent.devops.process.api.service.ServicePipelineResource#getBuildNoByBuildIds
-     */
-    fun listBuildInfoByBuildIds(buildIds: Set<String>): MutableMap<String, Int> {
-        val result = mutableMapOf<String, Int>()
-        val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
-        buildInfoList.forEach {
-            result[it.buildId] = it.buildNum
-        }
-        return result
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>): MutableMap<String, String> {
