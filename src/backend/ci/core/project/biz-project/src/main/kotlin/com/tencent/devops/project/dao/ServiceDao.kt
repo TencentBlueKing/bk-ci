@@ -30,10 +30,10 @@ import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.UpdateSetMoreStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -73,7 +73,8 @@ class ServiceDao {
                 SHOW_NAV,
                 PROJECT_ID_TYPE,
                 CREATED_USER,
-                DELETED
+                DELETED,
+                GRAY_IFRAME_URL
             )
                 .values(
                     serviceVO.id,
@@ -92,7 +93,8 @@ class ServiceDao {
                     serviceVO.showNav,
                     serviceVO.projectIdType,
                     userId,
-                    false
+                    false,
+                    serviceVO.grayIframeUrl
                 )
                 .execute()
         }
@@ -120,7 +122,8 @@ class ServiceDao {
                 CREATED_TIME,
                 DELETED,
                 LOGO_URL,
-                WEB_SOCKET
+                WEB_SOCKET,
+                GRAY_IFRAME_URL
             ).values(
                 serviceCreateInfo.name,
                 serviceCreateInfo.serviceTypeId,
@@ -140,7 +143,8 @@ class ServiceDao {
                 LocalDateTime.now(),
                 false,
                 serviceCreateInfo.logoUrl,
-                serviceCreateInfo.webSocket
+                serviceCreateInfo.webSocket,
+                serviceCreateInfo.grayIframeUrl
             ).returning().fetchOne()
         }
     }
@@ -165,6 +169,7 @@ class ServiceDao {
                 .set(LINK_NEW, serviceCreateInfo.linkNew)
                 .set(INJECT_TYPE, serviceCreateInfo.injectType)
                 .set(IFRAME_URL, serviceCreateInfo.iframeUrl)
+                .set(GRAY_IFRAME_URL, serviceCreateInfo.grayIframeUrl)
                 .set(CSS_URL, serviceCreateInfo.cssUrl)
                 .set(JS_URL, serviceCreateInfo.jsUrl)
                 .set(GRAY_CSS_URL, serviceCreateInfo.grayCssUrl)
@@ -184,16 +189,33 @@ class ServiceDao {
         }
     }
 
-    fun updateUrlByName(dslContext: DSLContext, serviceUrlUpdateInfo: ServiceUrlUpdateInfo): Boolean {
-        with(TService.T_SERVICE) {
-            val execute = dslContext.update(this)
-                    .set(JS_URL, serviceUrlUpdateInfo.jsUrl)
-                    .set(CSS_URL, serviceUrlUpdateInfo.cssUrl)
-                    .where(NAME.eq(serviceUrlUpdateInfo.name))
-                    .and(DELETED.eq(false))
-                    .execute()
-            return execute > 0
-        }
+    fun updateUrlsByName(dslContext: DSLContext, serviceUpdateUrls: List<ServiceUpdateUrls>): Int {
+        return with(TService.T_SERVICE) {
+            dslContext.batch(
+                serviceUpdateUrls.filter {
+                    (!it.jsUrl.isNullOrBlank()) ||
+                        (!it.grayJsUrl.isNullOrBlank()) ||
+                        (!it.cssUrl.isNullOrBlank()) ||
+                        (!it.grayCssUrl.isNullOrBlank())
+                }.map {
+                    val step = dslContext.update(this)
+                    var updateStep: UpdateSetMoreStep<TServiceRecord>? = null
+                    if (!it.jsUrl.isNullOrBlank()) {
+                        updateStep = step.set(JS_URL, it.jsUrl)
+                    }
+                    if (!it.grayJsUrl.isNullOrBlank()) {
+                        updateStep = step.set(GRAY_JS_URL, it.grayJsUrl)
+                    }
+                    if (!it.cssUrl.isNullOrBlank()) {
+                        updateStep = step.set(CSS_URL, it.cssUrl)
+                    }
+                    if (!it.grayCssUrl.isNullOrBlank()) {
+                        updateStep = step.set(GRAY_CSS_URL, it.grayCssUrl)
+                    }
+                    updateStep!!.where(NAME.eq(it.name))
+                }
+            ).execute()
+        }.sum()
     }
 
     fun select(dslContext: DSLContext, serviceId: Long): TServiceRecord? {

@@ -94,6 +94,7 @@ func initLog() {
 }
 
 func watch() {
+	workDir := systemutil.GetExecutableDir()
 	var agentPath = systemutil.GetWorkDir() + "/devopsAgent.exe"
 	for {
 		cmd := exec.Command(agentPath)

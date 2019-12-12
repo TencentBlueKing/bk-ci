@@ -29,10 +29,6 @@ package com.tencent.devops.store.pojo.container.macos
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- * deng
- * 2019-04-09
- */
 @ApiModel("macos构建机资源")
 data class MacOSNode(
     @ApiModelProperty("macos构建资源名")

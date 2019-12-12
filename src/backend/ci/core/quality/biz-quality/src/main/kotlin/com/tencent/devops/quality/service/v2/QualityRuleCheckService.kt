@@ -94,14 +94,14 @@ class QualityRuleCheckService @Autowired constructor(
     fun userListAtomRule(projectId: String, pipelineId: String, atomCode: String, atomVersion: String): AtomRuleResponse {
         val filterRuleList = getProjectRuleList(projectId, pipelineId, null).filter { it.controlPoint.name == atomCode }
         val ruleList = listMatchTask(filterRuleList)
-        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion)
+        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
     }
 
     fun userListTemplateAtomRule(projectId: String, templateId: String, atomCode: String, atomVersion: String): AtomRuleResponse {
         val filterRuleList = getProjectRuleList(projectId, null, templateId).filter { it.controlPoint.name == atomCode }
         val ruleList = listMatchTask(filterRuleList)
-        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion)
+        val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
     }
 
@@ -507,7 +507,7 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
-        return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
+        return project?.project_name ?: throw OperationException("ProjectId: $projectId not exist")
     }
 
     private fun getPipelineName(projectId: String, pipelineId: String): String {

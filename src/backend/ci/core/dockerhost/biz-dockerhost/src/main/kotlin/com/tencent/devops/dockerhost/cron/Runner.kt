@@ -89,7 +89,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                     }
                 }
             } else {
-                logger.info("Get empy docker start build info")
+                logger.info("Get empty docker start build info")
             }
         } catch (t: Throwable) {
             logger.error("StartBuild encounter unknown exception", t)
@@ -106,7 +106,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                 return
             }
             if (dockerEndBuildInfo != null) {
-                logger.warn("dockerEndBuidlInfo: $dockerEndBuildInfo")
+                logger.warn("dockerEndBuildInfo: $dockerEndBuildInfo")
                 if (dockerEndBuildInfo.status == PipelineTaskStatus.DONE.status || dockerEndBuildInfo.status == PipelineTaskStatus.FAILURE.status) {
                     logger.warn("Stop the container, containerId: ${dockerEndBuildInfo.containerId}")
                     dockerHostBuildService.stopContainer(dockerEndBuildInfo)

@@ -34,8 +34,8 @@ import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
-import java.util.Locale
 import java.util.Properties
+import java.util.Locale
 
 object AgentEnv {
 
@@ -50,6 +50,7 @@ object AgentEnv {
     private const val AGENT_GATEWAY = "landun.gateway"
     private const val DOCKER_GATEWAY = "devops_gateway"
     private const val AGENT_ENV = "landun.env"
+    private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -57,6 +58,7 @@ object AgentEnv {
     private var gateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
+    private var logMode: LogMode? = null
 
     private var property: Properties? = null
 
@@ -93,7 +95,7 @@ object AgentEnv {
         return agentId!!
     }
 
-    private fun getEnv(): Env {
+    fun getEnv(): Env {
         if (env == null) {
             synchronized(this) {
                 if (env == null) {
@@ -206,5 +208,23 @@ object AgentEnv {
 
     fun isDockerEnv(): Boolean {
         return BuildEnv.getBuildType() == BuildType.DOCKER
+    }
+
+    fun getLogMode(): LogMode {
+        if (null == logMode) {
+            synchronized(this) {
+                if (null == logMode) {
+                    logMode = try {
+                        LogMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
+                                ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
+                    } catch (t: Throwable) {
+                        logger.warn("not system variable named log mode!")
+                        LogMode.UPLOAD
+                    }
+                    logger.info("get the log mode $logMode")
+                }
+            }
+        }
+        return logMode!!
     }
 }

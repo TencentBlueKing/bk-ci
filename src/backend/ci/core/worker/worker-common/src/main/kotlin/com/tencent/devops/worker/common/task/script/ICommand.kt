@@ -27,14 +27,12 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 
 interface ICommand {
-    val outerCommandFunc: ((scriptType: BuildScriptType, buildId: String, file: File, workspace: File) -> String)?
 
     fun execute(
         buildId: String,
