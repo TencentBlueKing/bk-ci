@@ -39,10 +39,6 @@ import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * deng
- * 2019-01-08
- */
 @RestResource
 class UserTemplateInstanceResourceImpl @Autowired constructor(
     private val templateService: TemplateService,

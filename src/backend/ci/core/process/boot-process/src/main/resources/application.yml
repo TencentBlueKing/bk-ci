@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: process${service-suffix}
+    desc: DevOps Pipeline Service
+    version: 4.0.0
+    packageName: com.tencent.devops.process
+
+# 并发配置
+queueConcurrency:
+  buildStart: 1
+  stage: 1
+  container: 1
+  task: 1
+  monitor: 1
+  buildFinish: 1
+  buildCancel: 1
+  pipelineCreate: 1
+  pipelineDelete: 1
+  pipelineUpdate: 1
+  timerTrigger: 1
+  webhook: 1
+  measure: 1
+  market: 1
+  containerStartup: 1
+  heartBeat: 1
+  timerChanger: 1
+
+server:
+  port: 21921

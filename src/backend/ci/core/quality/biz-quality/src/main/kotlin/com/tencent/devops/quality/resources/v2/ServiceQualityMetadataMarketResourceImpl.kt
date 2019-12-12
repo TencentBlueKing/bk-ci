@@ -37,7 +37,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceQualityMetadataMarketResourceImpl @Autowired constructor(
     private val qualityMetadataService: QualityMetadataService
 ) : ServiceQualityMetadataMarketResource {
-    override fun setTestMetadata(userId: String, atomCode: String, metadataList: List<QualityMetaData>): Result<Map<String, Long>> {
+    override fun setTestMetadata(
+        userId: String,
+        atomCode: String,
+        metadataList: List<QualityMetaData>
+    ): Result<Map<String, Long>> {
         return Result(qualityMetadataService.serviceSetTestMetadata(userId, atomCode, metadataList))
     }
 

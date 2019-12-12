@@ -124,6 +124,14 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(Page(0, 9999, result.count, result.records))
     }
 
+    override fun listByProjects(projectIds: Set<String>, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val result = repositoryService.listByProject(projectIds, null, limit.offset, limit.limit)
+        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
     override fun listByProject(
         projectId: String,
         repositoryType: ScmType?,
@@ -137,15 +145,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
 
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = repositoryService.listByProject(projectId, repositoryType, limit.offset, limit.limit)
-        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
-    }
-
-    override fun listByProjects(projectIds: Set<String>, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val result = repositoryService.listByProject(projectIds, null, limit.offset, limit.limit)
+        val result = repositoryService.listByProject(setOf(projectId), repositoryType, limit.offset, limit.limit)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 }

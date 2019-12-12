@@ -72,12 +72,15 @@ class SubPipelineStartUpService(
         projectId: String,
         parentPipelineId: String,
         buildId: String,
+        callProjectId: String = "",
         callPipelineId: String,
         atomCode: String,
         taskId: String,
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
+        val project = if (callPipelineId.isNotEmpty()) { callProjectId } else { projectId }
+
         logger.info("callPipelineStartup: $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
 
         // 获取构建任务
@@ -86,7 +89,7 @@ class SubPipelineStartUpService(
 
         logger.info("task: $task")
 
-        logger.info("callPipelineStartup: ${task.projectId} | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
+        logger.info("callPipelineStartup: $project | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
 
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = pipelineRuntimeService.getAllVariable(buildId)
@@ -98,7 +101,7 @@ class SubPipelineStartUpService(
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
-        val pipelineInfo = (pipelineRepositoryService.getPipelineInfo(task.projectId, callPipelineId)
+        val pipelineInfo = (pipelineRepositoryService.getPipelineInfo(project, callPipelineId)
                 ?: return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID.toString(), arrayOf(buildId)))
 
         logger.info("pipelineInfo: $pipelineInfo")
@@ -106,7 +109,7 @@ class SubPipelineStartUpService(
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
         try {
-            checkSubpipeline(atomCode, task.projectId, callPipelineId, existPipelines)
+            checkSubpipeline(atomCode, project, callPipelineId, existPipelines)
         } catch (e: OperationException) {
             return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL.toString())
         }
@@ -114,7 +117,7 @@ class SubPipelineStartUpService(
         val subBuildId = buildService.subpipelineStartup(
                 userId = runVariables.getValue(PIPELINE_START_USER_ID),
                 startType = StartType.PIPELINE,
-                projectId = task.projectId,
+                projectId = project,
                 parentPipelineId = parentPipelineId,
                 parentBuildId = buildId,
                 parentTaskId = taskId,
@@ -125,7 +128,7 @@ class SubPipelineStartUpService(
                 isMobile = false
         )
 
-        return Result(ProjectBuildId(id = subBuildId, projectId = task.projectId))
+        return Result(ProjectBuildId(id = subBuildId, projectId = project))
     }
 
     /**
@@ -185,8 +188,9 @@ class SubPipelineStartUpService(
                         val map = element.data
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]
+                        val subPro = msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
-                        checkSubpipeline(atomCode, projectId, subPip as String, exist)
+                        checkSubpipeline(atomCode, subPro as String, subPip as String, exist)
                         existPipelines.addAll(exist)
                     } else if (element is SubPipelineCallElement) {
                         val exist = HashSet(currentExistPipelines)

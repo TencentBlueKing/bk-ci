@@ -68,7 +68,7 @@ class GitScmService @Autowired constructor(
                 userName = repo.userName,
                 authType = tokenType
             )
-            client.getScm(ServiceGitResource::class).getMergeRequestReviewersInfo(
+            client.get(ServiceGitResource::class).getMergeRequestReviewersInfo(
                 repoName = repo.projectName,
                 mrId = mrId,
                 tokenType = tokenType,
@@ -96,7 +96,7 @@ class GitScmService @Autowired constructor(
                 userName = repo.userName,
                 authType = tokenType
             )
-            return client.getScm(ServiceGitResource::class).getMergeRequestInfo(
+            return client.get(ServiceGitResource::class).getMergeRequestInfo(
                 repoName = repo.projectName,
                 mrId = mrId,
                 tokenType = tokenType,
@@ -124,7 +124,7 @@ class GitScmService @Autowired constructor(
                 userName = repo.userName,
                 authType = tokenType
             )
-            return client.getScm(ServiceGitResource::class).getMergeRequestChangeInfo(
+            return client.get(ServiceGitResource::class).getMergeRequestChangeInfo(
                 repoName = repo.projectName,
                 mrId = mrId,
                 tokenType = tokenType,

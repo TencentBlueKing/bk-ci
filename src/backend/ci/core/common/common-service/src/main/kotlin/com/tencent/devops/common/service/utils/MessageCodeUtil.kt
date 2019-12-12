@@ -101,8 +101,8 @@ class MessageCodeUtil {
          * 获取code对应的中英文信息
          * @param messageCode code
          */
-        fun getCodeLanMessage(messageCode: String): String {
-            return getCodeMessage(messageCode, null) ?: messageCode
+        fun getCodeLanMessage(messageCode: String, defaultMessage: String? = null): String {
+            return getCodeMessage(messageCode, null) ?: defaultMessage ?: messageCode
         }
 
         /**
@@ -110,7 +110,7 @@ class MessageCodeUtil {
          * @param messageCode code
          * @param params 替换描述信息占位符的参数数组
          */
-        protected fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
+        fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
             var message: String? = null
             try {
                 val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)

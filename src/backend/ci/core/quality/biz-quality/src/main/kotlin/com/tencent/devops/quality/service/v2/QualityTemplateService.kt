@@ -54,44 +54,47 @@ class QualityTemplateService @Autowired constructor(
 ) {
 
     fun userListIndicatorSet(): List<RuleIndicatorSet> {
-        return ruleTemplateDao.listIndicatorSetEnable(dslContext)?.map {
-            val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(it.id, dslContext)?.map { it.indicatorId }
-                    ?: listOf()
+        return ruleTemplateDao.listIndicatorSetEnable(dslContext)?.map { record ->
+            val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(record.id, dslContext)
+                ?.map { item -> item.indicatorId } ?: listOf()
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleIndicatorSet(
-                    HashUtil.encodeLongId(it.id),
-                    it.name,
-                    it.desc,
-                    indicators
+                hashId = HashUtil.encodeLongId(record.id),
+                name = record.name,
+                desc = record.desc,
+                indicators = indicators
             )
         } ?: listOf()
     }
 
-    fun userList(): List<RuleTemplate> {
+    fun userList(projectId: String): List<RuleTemplate> {
         val templateList = ruleTemplateDao.listTemplateEnable(dslContext)
-        return templateList?.map {
-            val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(it.id, dslContext)?.map { it.indicatorId }
-                    ?: listOf()
-            val controlPoint = controlPointService.serviceGet(it.controlPoint)
+        return templateList?.map { record ->
+            val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(record.id, dslContext)
+                ?.map { item -> item.indicatorId } ?: listOf()
+
+            val controlPoint = controlPointService.serviceGet(record.controlPoint, projectId)
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleTemplate(
-                    HashUtil.encodeLongId(it.id),
-                    it.name,
-                    it.desc,
-                    indicators,
-                    it.stage,
-                    it.controlPoint,
-                    controlPoint?.name ?: "",
-                    ControlPointPosition(it.controlPointPosition),
-                    listOf(ControlPointPosition("BEFORE"), ControlPointPosition("AFTER"))
+                hashId = HashUtil.encodeLongId(record.id),
+                name = record.name,
+                desc = record.desc,
+                indicators = indicators,
+                stage = record.stage,
+                controlPoint = record.controlPoint,
+                controlPointName = controlPoint?.name ?: "",
+                controlPointPosition = ControlPointPosition(record.controlPointPosition),
+                availablePosition = listOf(ControlPointPosition("BEFORE"), ControlPointPosition("AFTER"))
             )
         } ?: listOf()
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<TemplateData> {
-        val data = ruleTemplateDao.list(userId, page!!, pageSize!!, dslContext).map {
-            val templateIndicatorMap = ruleTemplateIndicatorDao.listByTemplateId(it.id, dslContext)
-            val indicatorIds = templateIndicatorMap.map { it.indicatorId }.toHashSet()
+        val controlPointMap = controlPointService.listAllControlPoint().map { it.elementType to it }.toMap()
+
+        val data = ruleTemplateDao.list(userId, page!!, pageSize!!, dslContext).map { record ->
+            val templateIndicatorMap = ruleTemplateIndicatorDao.listByTemplateId(record.id, dslContext)
+            val indicatorIds = templateIndicatorMap.map { item -> item.indicatorId }.toHashSet()
             val indicatorList = indicatorDao.listByIds(dslContext, indicatorIds)
 
             val templateIndicatorMaps = templateIndicatorMap.map { it1 ->
@@ -100,24 +103,30 @@ class QualityTemplateService @Autowired constructor(
                     "${indicatorInst.elementName}-${indicatorInst.elementDetail}-${indicatorInst.cnName}"
                 } else null
                 TemplateIndicatorMap(
-                        it1.id,
-                        it1.templateId,
-                        it1.indicatorId,
-                        indicatorName,
-                        it1.operation,
-                        it1.threshold
+                    id = it1.id,
+                    templateId = it1.templateId,
+                    indicatorId = it1.indicatorId,
+                    indicatorName = indicatorName,
+                    operation = it1.operation,
+                    threshold = it1.threshold
                 )
             }
-            val controlPoint = controlPointService.serviceGetByType(it.controlPoint)
             TemplateData(
-                    it.id, it.name, it.type, it.desc, it.stage, it.controlPoint,
-                    if (controlPoint == null) null else controlPoint.name,
-                    it.controlPointPosition, it.enable, templateIndicatorMap.size,
-                    templateIndicatorMaps
+                id = record.id,
+                name = record.name,
+                type = record.type,
+                desc = record.desc,
+                stage = record.stage,
+                elementType = record.controlPoint,
+                elementName = controlPointMap[record.controlPoint]?.name,
+                controlPointPostion = record.controlPointPosition,
+                enable = record.enable,
+                indicatorNum = templateIndicatorMap.size,
+                indicatorDetail = templateIndicatorMaps
             )
         }
         val count = ruleTemplateDao.count(dslContext)
-        return Page(page, pageSize, count, data)
+        return Page(page = page, pageSize = pageSize, count = count, records = data)
     }
 
     fun opCreate(userId: String, templateUpdateData: TemplateUpdateData): Boolean {

@@ -27,7 +27,7 @@ class BusinessConfigDao {
             )
                 .values(
                     request.business.name,
-                    request.feature.name,
+                    request.feature,
                     request.businessValue,
                     request.configValue,
                     request.description
@@ -41,7 +41,7 @@ class BusinessConfigDao {
                 .set(CONFIG_VALUE, request.configValue)
                 .set(DESCRIPTION, request.description)
                 .where(BUSINESS.eq(request.business.name))
-                .and(FEATURE.eq(request.feature.name))
+                .and(FEATURE.eq(request.feature))
                 .and(BUSINESS_VALUE.eq(request.businessValue))
                 .execute()
         }
@@ -72,6 +72,15 @@ class BusinessConfigDao {
                 .and(FEATURE.eq(feature))
                 .and(BUSINESS_VALUE.eq(businessValue))
                 .fetchOne()
+        }
+    }
+
+    fun listFeatureConfig(dslContext: DSLContext, business: String, businessValue: String): Result<TBusinessConfigRecord>? {
+        with(TBusinessConfig.T_BUSINESS_CONFIG) {
+            return dslContext.selectFrom(this)
+                .where(BUSINESS.eq(business))
+                .and(BUSINESS_VALUE.eq(businessValue))
+                .fetch()
         }
     }
 

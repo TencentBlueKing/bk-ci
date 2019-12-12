@@ -60,7 +60,7 @@ class UserDevCloudResourceImpl @Autowired constructor(
 
     override fun addDevCloudVm(userId: String, projectId: String, devCloudVmParam: DevCloudVmParam): Result<Boolean> {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
-            throw ErrorCodeException(ERROR_NODE_NO_CREATE_PERMISSSION, "没有创建节点的权限")
+            throw ErrorCodeException(errorCode = ERROR_NODE_NO_CREATE_PERMISSSION, defaultMessage = "没有创建节点的权限")
         }
         devCloudService.addDevCloudVm(userId, projectId, devCloudVmParam)
         return Result(true)

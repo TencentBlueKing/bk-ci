@@ -24,40 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2
+package com.tencent.devops.plugin.worker.task.unity3d.model
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import java.io.File
+import com.tencent.devops.common.pipeline.enums.Platform
 
-@Api(tags = ["SERVICE_CONTROL_POINT_V2"], description = "质量红线-拦截点v2")
-@Path("/service/controlPoints/v2")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceQualityControlPointResource {
-
-    @ApiOperation("获取控制点信息")
-    @Path("/set")
-    @POST
-    fun set(
-        @QueryParam("userId")
-        userId: String,
-        controlPoint: QualityControlPoint
-    ): Result<Int>
-
-    @ApiOperation("清除控制点信息")
-    @Path("/cleanTestProject")
-    @PUT
-    fun cleanTestProject(
-        @QueryParam("userId")
-        controlPointType: String
-    ): Result<Int>
-}
+data class Argument(
+    val platform: Platform,
+    val executeMethod: String?,
+    val debug: Boolean,
+    val rootDir: File,
+    val androidKey: AndroidKey,
+    val androidAPKPath: String,
+    val androidAPKName: String,
+    val xcodeProjectName: String,
+    val enableBitCode: Boolean? = null,
+    var version: String = ""
+)

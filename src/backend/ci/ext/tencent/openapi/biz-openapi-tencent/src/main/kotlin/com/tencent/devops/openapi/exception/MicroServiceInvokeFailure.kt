@@ -33,7 +33,7 @@ open class MicroServiceInvokeFailure(
     message: String,
     errorCode: String = CommonMessageCode.SYSTEM_ERROR,
     params: Array<String>? = null
-) : ErrorCodeException(errorCode, message, params) {
+) : ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params) {
     override fun toString(): String {
         return "MicroService($serviceInterface) invoke fail,message:$message"
     }
