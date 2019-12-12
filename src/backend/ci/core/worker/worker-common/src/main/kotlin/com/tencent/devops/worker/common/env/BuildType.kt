@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.env
 enum class BuildType {
     WORKER,
     AGENT,
+    MACOS,
     DOCKER;
 
     companion object {
