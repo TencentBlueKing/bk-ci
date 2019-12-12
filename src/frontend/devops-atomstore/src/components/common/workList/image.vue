@@ -59,7 +59,7 @@
                     <span class="atom-status-icon fail" v-if="props.row.imageStatus === 'GROUNDING_SUSPENSION'"></span>
                     <span class="atom-status-icon obtained" v-if="props.row.imageStatus === 'AUDIT_REJECT' || props.row.imageStatus === 'UNDERCARRIAGED'"></span>
                     <span class="atom-status-icon bk-icon icon-initialize" v-if="props.row.imageStatus === 'INIT'"></span>
-                    <span>{{ imageStatusList[props.row.imageStatus] }}</span>
+                    <span>{{ $t(imageStatusList[props.row.imageStatus]) }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('store.修改人')" prop="modifier" width="180"></bk-table-column>

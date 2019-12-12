@@ -117,7 +117,7 @@
             },
 
             statusFormatter (row, column, cellValue, index) {
-                return imageStatusList[cellValue]
+                return this.$t(imageStatusList[cellValue])
             },
 
             convertTime (row, column, cellValue, index) {
