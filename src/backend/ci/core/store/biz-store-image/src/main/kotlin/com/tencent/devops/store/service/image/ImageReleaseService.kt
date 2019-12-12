@@ -455,6 +455,20 @@ abstract class ImageReleaseService {
         return Result(true)
     }
 
+    fun recheckWithoutValidate(
+        context: DSLContext,
+        userId: String,
+        imageId: String,
+        sendCheckResultNotify: Boolean = true
+    ) {
+        runCheckImagePipeline(
+            context = context,
+            userId = userId,
+            imageId = imageId,
+            sendCheckResultNotify = false
+        )
+    }
+
     private fun runCheckImagePipeline(
         context: DSLContext,
         userId: String,
