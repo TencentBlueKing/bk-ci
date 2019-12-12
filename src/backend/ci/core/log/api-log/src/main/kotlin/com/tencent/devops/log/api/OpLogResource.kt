@@ -27,16 +27,12 @@
 package com.tencent.devops.log.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.pojo.QueryLogs
 import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -87,7 +83,4 @@ interface OpLogResource {
         @QueryParam("buildId")
         buildId: String
     ): Result<Boolean>
-
-
-
 }

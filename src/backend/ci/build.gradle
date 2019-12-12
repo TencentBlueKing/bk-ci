@@ -101,18 +101,9 @@ buildscript {
 ext {
     commit = null
     // Open the Git repository in the current directory.
-    def gitDir = file('.git')
+    def gitDir = file('../../../.git')
     if (gitDir.exists()) {
-        gitDir = file('.')
-    } else {
-        gitDir = file('../.git')
-        if (gitDir.exists()) {
-            gitDir = file('..')
-        }
-    }
-
-    if (gitDir.exists()) {
-
+        gitDir = file('../../../')
         git = Grgit.open(gitDir)
 
         commit = git.head()
@@ -123,8 +114,7 @@ ext {
 
 allprojects {
     group "com.tencent.bk.devops"
-//    version "0.1.0-SNAPSHOT"
-    version "0.0.3"
+    version "2.0.0"
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {
@@ -180,6 +170,8 @@ subprojects {
     }
 
     jar.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+    uploadArchives.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+//    install.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
 
     configurations {
         ktlint

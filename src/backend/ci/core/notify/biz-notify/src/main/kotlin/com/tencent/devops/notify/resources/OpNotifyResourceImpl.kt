@@ -85,7 +85,7 @@ class OpNotifyResourceImpl @Autowired constructor(
     ): Result<NotificationResponseWithPage<BaseMessage>?> {
         if (type.isNullOrEmpty() || !(type == "rtx" || type == "email" || type == "wechat" || type == "sms")) {
             throw InvalidParamException(
-                message = "invalid notify type:${type}",
+                message = "invalid notify type:$type",
                 errorCode = ERROR_NOTIFY_INVALID_NOTIFY_TYPE,
                 params = arrayOf(type ?: "")
             )
