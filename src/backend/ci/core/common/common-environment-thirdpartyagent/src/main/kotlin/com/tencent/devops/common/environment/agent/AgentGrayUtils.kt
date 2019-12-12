@@ -42,6 +42,7 @@ class AgentGrayUtils constructor(
         private const val GRAY_CURRENT_AGENT_VERSION = "environment.thirdparty.agent.gray.version"
 
         private const val CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:can_upgrade"
+        private const val GREY_CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:grey_can_upgrade"
         private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
     }
@@ -106,26 +107,27 @@ class AgentGrayUtils constructor(
     }
 
     fun setCanUpgradeAgents(agentIds: List<Long>) {
-        val existingAgentIds = (redisOperation.getSetMembers(CAN_UPGRADE_AGENT_SET_KEY) ?: setOf()).map {
+        val canUpgradeAgentSetKey = getCanUpgradeAgentSetKey()
+        val existingAgentIds = (redisOperation.getSetMembers(canUpgradeAgentSetKey) ?: setOf()).map {
             it.toLong()
         }
         val newAgentIds = agentIds.toSet()
         val toAddAgentIds = newAgentIds.filterNot { existingAgentIds.contains(it) }
         if (toAddAgentIds.isNotEmpty()) {
             toAddAgentIds.forEach {
-                redisOperation.addSetValue(CAN_UPGRADE_AGENT_SET_KEY, it.toString())
+                redisOperation.addSetValue(canUpgradeAgentSetKey, it.toString())
             }
         }
         val toDeleteAgents = existingAgentIds.filterNot { newAgentIds.contains(it) }
         if (toDeleteAgents.isNotEmpty()) {
             toDeleteAgents.forEach {
-                redisOperation.removeSetMember(CAN_UPGRADE_AGENT_SET_KEY, it.toString())
+                redisOperation.removeSetMember(canUpgradeAgentSetKey, it.toString())
             }
         }
     }
 
     fun getCanUpgradeAgents(): List<Long> {
-        return (redisOperation.getSetMembers(CAN_UPGRADE_AGENT_SET_KEY)
+        return (redisOperation.getSetMembers(getCanUpgradeAgentSetKey())
             ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
     }
 
@@ -134,6 +136,14 @@ class AgentGrayUtils constructor(
             GRAY_CURRENT_AGENT_MASTERT_VERSION
         } else {
             CURRENT_AGENT_MASTER_VERSION
+        }
+    }
+
+    fun getCanUpgradeAgentSetKey(): String {
+        return if (gray.isGray()) {
+            GREY_CAN_UPGRADE_AGENT_SET_KEY
+        } else {
+            CAN_UPGRADE_AGENT_SET_KEY
         }
     }
 
