@@ -168,7 +168,7 @@
             },
 
             statusFormatter (row, column, cellValue, index) {
-                return this.atomStatusList[cellValue]
+                return this.$t(this.atomStatusList[cellValue])
             },
 
             getAtomDetail () {
