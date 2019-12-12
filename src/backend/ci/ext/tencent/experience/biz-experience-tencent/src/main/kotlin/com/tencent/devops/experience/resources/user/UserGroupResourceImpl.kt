@@ -48,23 +48,28 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
         val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
-        val result = groupService.list(userId, projectId, offset, pageSizeNotNull)
-        return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
+        val result = groupService.list(userId = userId, projectId = projectId, offset = offset, limit = pageSizeNotNull)
+        return Result(Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = result.first,
+            records = result.second
+        ))
     }
 
     override fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): Result<List<String>> {
         checkParam(userId, projectId)
-        return Result(groupService.getProjectUsers(userId, projectId, projectGroup))
+        return Result(groupService.getProjectUsers(userId = userId, projectId = projectId, projectGroup = projectGroup))
     }
 
     override fun projectGroupAndUsers(userId: String, projectId: String): Result<List<ProjectGroupAndUsers>> {
         checkParam(userId, projectId)
-        return Result(groupService.getProjectGroupAndUsers(userId, projectId))
+        return Result(groupService.getProjectGroupAndUsers(userId = userId, projectId = projectId))
     }
 
     override fun create(userId: String, projectId: String, group: GroupCreate): Result<Boolean> {
         checkParam(userId, projectId)
-        groupService.create(projectId, userId, group)
+        groupService.create(projectId = projectId, userId = userId, group = group)
         return Result(true)
     }
 
@@ -75,18 +80,18 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
 
     override fun getUsers(userId: String, projectId: String, groupHashId: String): Result<GroupUsers> {
         checkParam(userId, projectId, groupHashId)
-        return Result(groupService.getUsers(userId, projectId, groupHashId))
+        return Result(groupService.getUsers(userId = userId, projectId = projectId, groupHashId = groupHashId))
     }
 
     override fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate): Result<Boolean> {
         checkParam(userId, projectId, groupHashId)
-        groupService.edit(userId, projectId, groupHashId, group)
+        groupService.edit(userId = userId, projectId = projectId, groupHashId = groupHashId, group = group)
         return Result(true)
     }
 
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {
         checkParam(userId, projectId, groupHashId)
-        groupService.delete(userId, projectId, groupHashId)
+        groupService.delete(userId = userId, projectId = projectId, groupHashId = groupHashId)
         return Result(true)
     }
 

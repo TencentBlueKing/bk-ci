@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.element.JobCloudsFastPushElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -67,15 +68,16 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
     private val jobCloudsFastPushFile: JobCloudsFastPushFile,
     private val jobFastPushFile: JobFastPushFile,
     private val rabbitTemplate: RabbitTemplate,
-    private val client: Client
+    private val client: Client,
+    private val commonConfig: CommonConfig
 ) : IAtomTask<JobCloudsFastPushElement> {
 
     override fun getParamElement(task: PipelineBuildTask): JobCloudsFastPushElement {
         return JsonUtil.mapTo(task.taskParams, JobCloudsFastPushElement::class.java)
     }
 
-    @Value("\${gateway.url:#{null}}")
-    private val gatewayUrl: String? = null
+//    @Value("\${gateway.url:#{null}}")
+//    private val gatewayUrl: String? = null
 
     @Value("\${clouds.esb.proxyIp}")
     private val cloudStoneIps = ""
@@ -272,7 +274,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         var count = 0
 
         try {
-            val jfrogClinet = JfrogClient(gatewayUrl!!, projectId, pipelineId, buildId)
+            val jfrogClinet = JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId)
             regexPathsStr.split(",").forEach { regex ->
                 val files = jfrogClinet.downloadFile(regex.trim(), isCustom, workspace.canonicalPath)
                 count += files.size

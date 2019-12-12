@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:dockerhost:biz-dockerhost")
     compile project(":ext:tencent:dockerhost:api-dockerhost-tencent")
+    compile "org.fusesource:sigar:1.6.4"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

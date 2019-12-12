@@ -35,14 +35,44 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectLocalService
+import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.TxProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectPermissionService: TxProjectPermissionService,
-    private val projectLocalService: ProjectLocalService
+    private val projectLocalService: ProjectLocalService,
+    private val projectMemberService: ProjectMemberService
 ) : ServiceTxProjectResource {
+    override fun getProjectEnNamesByCenterId(
+        userId: String,
+        centerId: Long?
+    ): Result<List<String>> {
+        return Result(
+            projectLocalService.getProjectEnNamesByCenterId(
+                userId = userId,
+                centerId = centerId,
+                interfaceName = "/service/projects/enNames/center"
+            )
+        )
+    }
+
+    override fun getProjectEnNamesByDeptIdAndCenterName(
+        userId: String,
+        deptId: Long?,
+        centerName: String?
+    ): Result<List<String>> {
+        return Result(
+            projectLocalService.getProjectEnNamesByOrganization(
+                userId = userId,
+                deptId = deptId,
+                centerName = centerName,
+                interfaceName = "/service/projects/enNames/dept"
+            )
+        )
+    }
+
     override fun getProjectEnNamesByOrganization(
         userId: String,
         bgId: Long,
@@ -69,6 +99,32 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.getProjectByGroup(userId, bgName, deptName, centerName))
     }
 
+    override fun getProjectByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?
+    ): Result<List<ProjectVO>> {
+        return Result(projectLocalService.getProjectByOrganizationId(
+            userId = userId,
+            organizationType = organizationType,
+            organizationId = organizationId,
+            deptName = deptName,
+            centerName = centerName,
+            interfaceName = "/service/project/tx/getProjectByOrganizationId"
+        ))
+    }
+
+    override fun getProjectByGroupId(
+        userId: String,
+        bgId: Long?,
+        deptId: Long?,
+        centerId: Long?
+    ): Result<List<ProjectVO>> {
+        return Result(projectLocalService.getProjectByGroupId(userId, bgId, deptId, centerId))
+    }
+
     override fun list(accessToken: String): Result<List<ProjectVO>> {
         return Result(projectLocalService.list(accessToken, true))
     }
@@ -84,6 +140,12 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     // TODO
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
         return Result(projectLocalService.create(userId, "", projectCreateInfo))
+    }
+
+    override fun getProjectManagers(
+        projectCode: String
+    ): Result<List<String>> {
+        return Result(projectMemberService.getProjectManagers(projectCode))
     }
 
     override fun verifyUserProjectPermission(
@@ -112,5 +174,9 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         } else {
             Result(false)
         }
+    }
+
+    override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
+        return Result(projectLocalService.createGitCIProject(userId, gitProjectId))
     }
 }

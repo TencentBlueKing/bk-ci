@@ -58,9 +58,7 @@ class QueueInterceptor @Autowired constructor(
         val pipelineId = task.pipelineInfo.pipelineId
         val setting = pipelineSettingService.getSetting(pipelineId)
         val runLockType = setting?.runLockType ?: return Response(BuildStatus.RUNNING)
-        return if (runLockType == PipelineRunLockType.SINGLE.ordinal ||
-                runLockType == PipelineRunLockType.SINGLE_LOCK.ordinal
-        ) {
+        return if (runLockType == PipelineRunLockType.SINGLE.ordinal) {
             val maxQueue = setting.maxQueueSize ?: 10
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
             if (buildSummaryRecord == null) {
@@ -70,17 +68,31 @@ class QueueInterceptor @Autowired constructor(
                 // 设置了最大排队数量限制为0，但此时没有构建正在执行
                 Response(BuildStatus.RUNNING)
             } else if (maxQueue == 0 && buildSummaryRecord.runningCount > 0) {
-                Response(ERROR_PIPELINE_QUEUE_FULL, "流水线串行，排队数设置为0")
+                Response(ERROR_PIPELINE_QUEUE_FULL.toInt(), "流水线串行，排队数设置为0")
             } else if (buildSummaryRecord.queueCount >= maxQueue) {
                 // 排队数量超过最大限制
                 logger.info("[$pipelineId] MaxQueue=$maxQueue| currentQueue=${buildSummaryRecord.queueCount}")
                 // 排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
                 val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(pipelineId)
                 if (buildInfo != null) {
-                    LogUtils.addRedLine(rabbitTemplate, buildInfo.buildId, "$pipelineId] queue outSize,cancel first Queue build", "QueueInterceptor", "", 1)
+                    LogUtils.addRedLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildInfo.buildId,
+                        message = "$pipelineId] queue outSize,cancel first Queue build",
+                        tag = "QueueInterceptor",
+                        jobId = "",
+                        executeCount = 1
+                    )
                     logger.info("$pipelineId] queue outSize,shutdown first Queue build")
                     pipelineEventDispatcher.dispatch(
-                            PipelineBuildCancelEvent(javaClass.simpleName, buildInfo.projectId, pipelineId, buildSummaryRecord.latestStartUser, buildInfo.buildId, BuildStatus.CANCELED)
+                        PipelineBuildCancelEvent(
+                            source = javaClass.simpleName,
+                            projectId = buildInfo.projectId,
+                            pipelineId = pipelineId,
+                            userId = buildSummaryRecord.latestStartUser,
+                            buildId = buildInfo.buildId,
+                            status = BuildStatus.CANCELED
+                        )
                     )
                     Response(BuildStatus.QUEUE)
                 }

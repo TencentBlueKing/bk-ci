@@ -49,6 +49,8 @@ data class ServiceVO(
     @ApiModelProperty("框架URL")
     @JsonProperty("iframe_url")
     val iframeUrl: String,
+    @ApiModelProperty("grayIframeUrl")
+    val grayIframeUrl: String?,
     @ApiModelProperty("cssURL")
     @JsonProperty("css_url")
     val cssUrl: String,

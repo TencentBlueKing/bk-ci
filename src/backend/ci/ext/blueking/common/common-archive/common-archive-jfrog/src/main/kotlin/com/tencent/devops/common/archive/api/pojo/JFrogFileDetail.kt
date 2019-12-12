@@ -26,6 +26,8 @@
 
 package com.tencent.devops.common.archive.api.pojo
 
+import com.tencent.devops.common.archive.pojo.CheckSums
+
 data class JFrogFileDetail(
     val path: String,
     val size: Long,

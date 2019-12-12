@@ -26,10 +26,11 @@
 
 package com.tencent.devops.environment
 
-import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
 @Configuration
 class TencentServiceConfig {
@@ -38,5 +39,6 @@ class TencentServiceConfig {
      *  下载链接服务
      */
     @Bean
-    fun agentUrlService(slaveGatewayService: SlaveGatewayService) = BluekingAgentUrlServiceImpl(slaveGatewayService)
+    @Primary
+    fun agentUrlService(commonConfig: CommonConfig) = TencentAgentUrlServiceImpl(commonConfig)
 }

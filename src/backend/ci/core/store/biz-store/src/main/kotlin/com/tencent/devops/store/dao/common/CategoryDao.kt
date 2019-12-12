@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.records.TCategoryRecord
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.CategoryRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -61,6 +62,33 @@ class CategoryDao {
         }
     }
 
+    fun add(
+        dslContext: DSLContext,
+        id: String,
+        categoryCode: String,
+        categoryName: String,
+        iconUrl: String,
+        type: Byte
+    ) {
+        with(TCategory.T_CATEGORY) {
+            dslContext.insertInto(
+                this,
+                ID,
+                CATEGORY_CODE,
+                CATEGORY_NAME,
+                ICON_URL,
+                TYPE
+            )
+                .values(
+                    id,
+                    categoryCode,
+                    categoryName,
+                    iconUrl,
+                    type
+                ).execute()
+        }
+    }
+
     fun countByName(dslContext: DSLContext, categoryName: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectCount().from(this).where(CATEGORY_NAME.eq(categoryName).and(TYPE.eq(type)))
@@ -71,6 +99,13 @@ class CategoryDao {
     fun countByCode(dslContext: DSLContext, categoryCode: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectCount().from(this).where(CATEGORY_CODE.eq(categoryCode).and(TYPE.eq(type)))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
+    fun countById(dslContext: DSLContext, categoryId: String, type: Byte): Int {
+        with(TCategory.T_CATEGORY) {
+            return dslContext.selectCount().from(this).where(ID.eq(categoryId).and(TYPE.eq(type)))
                 .fetchOne(0, Int::class.java)
         }
     }
@@ -103,6 +138,15 @@ class CategoryDao {
         }
     }
 
+    fun getCategoryByCodeAndType(dslContext: DSLContext, categoryCode: String, type: Byte): TCategoryRecord? {
+        with(TCategory.T_CATEGORY) {
+            return dslContext.selectFrom(this)
+                .where(CATEGORY_CODE.eq(categoryCode))
+                .and(TYPE.eq(type))
+                .fetchOne()
+        }
+    }
+
     fun getAllCategory(dslContext: DSLContext, type: Byte): Result<TCategoryRecord>? {
         with(TCategory.T_CATEGORY) {
             return dslContext
@@ -115,7 +159,10 @@ class CategoryDao {
 
     fun convert(record: TCategoryRecord): Category {
         with(record) {
-            val categoryLanName = MessageCodeUtil.getCodeLanMessage(categoryCode)
+            val categoryLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
+                defaultMessage = categoryName
+            )
             return Category(
                 id = id,
                 categoryCode = categoryCode,

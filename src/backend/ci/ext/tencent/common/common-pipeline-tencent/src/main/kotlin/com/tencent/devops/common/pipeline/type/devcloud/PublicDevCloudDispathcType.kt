@@ -30,7 +30,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 
 /**
  * class PCGDockerImage(
@@ -52,13 +53,21 @@ import com.tencent.devops.common.pipeline.type.DispatchType
  * image:
  * tc/tlinux/qbgdev:3.2.2.3.rc:tlinux:C++
  */
-data class PublicDevCloudDispathcType(@JsonProperty("value") var image: String)
-    : DispatchType(
-    image,
-    DispatchRouteKeySuffix.DEVCLOUD
-) {
+data class PublicDevCloudDispathcType(
+    @JsonProperty("value") var image: String?,
+    override var imageType: ImageType? = ImageType.BKDEVOPS,
+    override var credentialId: String? = "",
+    override var credentialProject: String? = "",
+    // 商店镜像代码
+    override var imageCode: String? = "",
+    // 商店镜像版本
+    override var imageVersion: String? = "",
+    // 商店镜像名称
+    override var imageName: String? = ""
+) : StoreDispatchType(if (image.isNullOrBlank())
+    imageCode else image, DispatchRouteKeySuffix.DEVCLOUD, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
     override fun replaceField(variables: Map<String, String>) {
-        image = EnvUtils.parseEnv(image, variables)
+        image = EnvUtils.parseEnv(image!!, variables)
     }
 
     override fun buildType() = BuildType.PUBLIC_DEVCLOUD

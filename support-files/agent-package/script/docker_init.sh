@@ -6,7 +6,7 @@ URL=${devops_gateway}/ms/dispatch/api/build/dockers
 cd /data/devops/workspace
 echo "start to download the docker.jar..." > /data/devops/logs/docker.log
 
-curl -s -H "X-DEVOPS-BUILD-TYPE: DOCKER" -H "X-DEVOPS-PROJECT-ID: ${devops_project_id}" -H "X-DEVOPS-AGENT-ID: ${devops_agent_id}" -H "X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}"  -o docker.jar ${URL}
+curl -k -s -H "X-DEVOPS-BUILD-TYPE: DOCKER" -H "X-DEVOPS-PROJECT-ID: ${devops_project_id}" -H "X-DEVOPS-AGENT-ID: ${devops_agent_id}" -H "X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}"  -o docker.jar ${URL}
 
 echo "download the docker.jar finished, ready to start it..." >> /data/devops/logs/docker.log 
 md5sum docker.jar >> /data/devops/logs/docker.log 2>&1

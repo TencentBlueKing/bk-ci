@@ -30,24 +30,25 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
-import com.tencent.devops.process.service.scm.ScmService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.util.WebhookRedisUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 /**
  * 流水线webhook存储服务
@@ -56,7 +57,7 @@ import javax.ws.rs.NotFoundException
 @Service
 class PipelineWebhookService @Autowired constructor(
     private val webhookRedisUtils: WebhookRedisUtils,
-    private val scmService: ScmService,
+    private val scmProxyService: ScmProxyService,
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResDao: PipelineResDao,
@@ -70,7 +71,7 @@ class PipelineWebhookService @Autowired constructor(
         pipelineWebhook: PipelineWebhook,
         codeEventType: CodeEventType? = null,
         variables: Map<String, String>? = null,
-        createPipelineFlag: Boolean ? = false
+        createPipelineFlag: Boolean? = false
     ): Result<Boolean> {
         logger.info("save Webhook[$pipelineWebhook]")
         val repositoryConfig = getRepositoryConfig(pipelineWebhook, variables)
@@ -79,7 +80,7 @@ class PipelineWebhookService @Autowired constructor(
         if (createPipelineFlag != null && createPipelineFlag) {
             // 新增流水线时，模版里配置的代码库是变量或者当前项目下不存在，不需创建webhook
             try {
-                scmService.getRepo(pipelineWebhook.projectId, repositoryConfig)
+                scmProxyService.getRepo(pipelineWebhook.projectId, repositoryConfig)
             } catch (e: Exception) {
                 logger.info("skip save Webhook[$pipelineWebhook]: ${e.message}")
                 continueFlag = false
@@ -89,13 +90,17 @@ class PipelineWebhookService @Autowired constructor(
         if (continueFlag) {
             val projectName = when (pipelineWebhook.repositoryType) {
                 ScmType.CODE_GIT ->
-                    scmService.addGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
+                    scmProxyService.addGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 ScmType.CODE_SVN ->
-                    scmService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
+                    scmProxyService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.CODE_GITLAB ->
-                    scmService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig)
+                    scmProxyService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.GITHUB -> {
-                    val repo = client.get(ServiceRepositoryResource::class).get(pipelineWebhook.projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType).data!!
+                    val repo = client.get(ServiceRepositoryResource::class).get(
+                        pipelineWebhook.projectId,
+                        repositoryConfig.getURLEncodeRepositoryId(),
+                        repositoryConfig.repositoryType
+                    ).data!!
                     repo.projectName
                 }
                 ScmType.CODE_TGIT -> {
@@ -123,7 +128,11 @@ class PipelineWebhookService @Autowired constructor(
         return Result(true)
     }
 
-    fun listRepositoryTypeWebhooks(repositoryType: ScmType, start: Int, limit: Int): Result<Collection<PipelineWebhook>> {
+    fun listRepositoryTypeWebhooks(
+        repositoryType: ScmType,
+        start: Int,
+        limit: Int
+    ): Result<Collection<PipelineWebhook>> {
         if (start < 0) {
             return Result(emptyList())
         }
@@ -176,7 +185,11 @@ class PipelineWebhookService @Autowired constructor(
     private fun getStartupParam(pipelineId: String): Map<String, String> {
         val result = HashMap<String, String>()
         val model = getModel(pipelineId)
-            ?: throw NotFoundException("流水线不存在")
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线不存在"
+            )
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
@@ -228,7 +241,10 @@ class PipelineWebhookService @Autowired constructor(
         return repoSplit[1].trim()
     }
 
-    private fun getRepositoryConfig(pipelineWebhook: PipelineWebhook, variable: Map<String, String>? = null): RepositoryConfig {
+    private fun getRepositoryConfig(
+        pipelineWebhook: PipelineWebhook,
+        variable: Map<String, String>? = null
+    ): RepositoryConfig {
         return when (pipelineWebhook.repoType) {
             RepositoryType.ID -> RepositoryConfig(pipelineWebhook.repoHashId, null, RepositoryType.ID)
             RepositoryType.NAME -> {
@@ -251,7 +267,10 @@ class PipelineWebhookService @Autowired constructor(
                     RepositoryConfig(null, repoName, RepositoryType.NAME)
                 } else {
                     // 两者不能同时为空
-                    throw ParamBlankException("Webhook 的ID和名称同时为空")
+                    throw ErrorCodeException(
+                        defaultMessage = "Webhook 的ID和名称同时为空",
+                        errorCode = ProcessMessageCode.ERROR_PARAM_WEBHOOK_ID_NAME_ALL_NULL
+                    )
                 }
             }
         }

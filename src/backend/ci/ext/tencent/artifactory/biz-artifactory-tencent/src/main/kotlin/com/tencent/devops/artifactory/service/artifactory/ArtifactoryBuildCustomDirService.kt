@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -82,9 +82,9 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         return JFrogUtil.sort(fileInfoList)
     }
 
-    override fun show(projectId: String, path: String): FileDetail {
-        logger.info("[$projectId|[$path]] the method of being done is: show")
-        val path = JFrogUtil.normalize(path)
+    override fun show(projectId: String, argPath: String): FileDetail {
+        logger.info("[$projectId|[$argPath]] the method of being done is: show")
+        val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
@@ -107,8 +107,8 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
             val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
             jFrogPropertiesMap[ARCHIVE_PROPS_PIPELINE_NAME] = pipelineName
         }
-
-        return if (jFrogFileInfo.checksums == null) {
+        val checksums = jFrogFileInfo.checksums
+        return if (checksums == null) {
             FileDetail(
                 JFrogUtil.getFileName(path),
                 path,
@@ -130,9 +130,9 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
                 LocalDateTime.parse(jFrogFileInfo.created, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 LocalDateTime.parse(jFrogFileInfo.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 FileChecksums(
-                    jFrogFileInfo.checksums.sha256,
-                    jFrogFileInfo.checksums.sha1,
-                    jFrogFileInfo.checksums.md5
+                    checksums.sha256,
+                    checksums.sha1,
+                    checksums.md5
                 ),
                 jFrogPropertiesMap
             )
