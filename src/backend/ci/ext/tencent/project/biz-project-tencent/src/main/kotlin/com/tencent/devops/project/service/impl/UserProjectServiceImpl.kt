@@ -37,7 +37,6 @@ import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.OPPServiceVO
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.utils.BG_IEG_ID
@@ -96,11 +95,11 @@ class UserProjectServiceImpl @Autowired constructor(
         return super.updateService(userId, serviceId, serviceCreateInfo)
     }
 
-    override fun updateServiceUrlByBatch(
+    override fun updateServiceUrls(
         userId: String,
-        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
-    ): Result<Boolean> {
-        return super.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
+        serviceUpdateUrls: List<ServiceUpdateUrls>
+    ): Result<Int> {
+        return super.updateServiceUrls(userId, serviceUpdateUrls)
     }
 
     override fun deleteService(userId: String, serviceId: Long): Result<Boolean> {
@@ -133,14 +132,6 @@ class UserProjectServiceImpl @Autowired constructor(
                 }
             }
         }
-    }
-
-    override fun updateServiceUrls(
-        userId: String,
-        name: String,
-        serviceUpdateUrls: ServiceUpdateUrls
-    ): Result<Boolean> {
-        return super.updateServiceUrls(userId, name, serviceUpdateUrls)
     }
 
     private fun isServiceHidden(serviceName: String, isIEGMember: Boolean): Boolean {

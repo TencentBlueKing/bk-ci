@@ -41,6 +41,7 @@ import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
@@ -175,6 +176,7 @@ class DockerHostBuildService(
         } catch (t: Throwable) {
             logger.warn("Fail to pull the image $imageName of build $buildId", t)
             log(buildId, "pull image fail，error is：${t.message}")
+            return Result(CommonMessageCode.SYSTEM_ERROR.toInt(), t.message, null)
         }
         val dockerImageName = CommonUtils.normalizeImageName(checkImageRequest.imageName)
         // 查询镜像详细信息
