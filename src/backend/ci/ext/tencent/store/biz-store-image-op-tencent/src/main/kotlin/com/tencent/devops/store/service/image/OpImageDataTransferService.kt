@@ -134,7 +134,6 @@ class OpImageDataTransferService @Autowired constructor(
         return 0
     }
 
-
     /**
      * 以项目为单位批量重新验证
      */
@@ -144,6 +143,10 @@ class OpImageDataTransferService @Autowired constructor(
         interfaceName: String? = "Anon interface"
     ): Int {
         logger.info("$interfaceName:batchRecheckByProject:Input($userId,$projectCode)")
+        // 0.鉴权：管理员才有权限操作
+        if (!imageAdminUsers.contains(userId.trim())) {
+            throw PermissionForbiddenException("Permission Denied,userId=$userId")
+        }
         val records = opImageDao.listProjectImages(dslContext, projectCode)
         var count = 0
         records?.forEach { it ->
@@ -168,6 +171,10 @@ class OpImageDataTransferService @Autowired constructor(
         interfaceName: String? = "Anon interface"
     ): Int {
         logger.info("$interfaceName:batchRecheckAll:Input($userId)")
+        // 0.鉴权：管理员才有权限操作
+        if (!imageAdminUsers.contains(userId.trim())) {
+            throw PermissionForbiddenException("Permission Denied,userId=$userId")
+        }
         val records = opImageDao.listAllImages(dslContext)
         var count = 0
         records?.forEach { it ->
@@ -269,10 +276,10 @@ class OpImageDataTransferService @Autowired constructor(
             // 4.镜像标识生成
             var imageCode = ""
             if (opImageDao.countImageByRepoInfo(dslContext, imageRepoUrl, imageRepoName, null) > 0) {
-                //复用已有的code
+                // 复用已有的code
                 val records = opImageDao.getImagesByRepoInfo(dslContext, imageRepoUrl, imageRepoName, null)
                 imageCode = records!![0].imageCode
-                //将已迁移完成的老版本镜像全部置为已发布
+                // 将已迁移完成的老版本镜像全部置为已发布
                 records.forEach { record ->
                     logger.info("$interfaceName:transferImage:release existed image(${record.id},${record.imageCode},${record.version},${record.imageRepoUrl},${record.imageRepoName},${record.imageTag})")
                     if (record.imageStatus != ImageStatusEnum.RELEASED.status.toByte()) {
@@ -285,7 +292,7 @@ class OpImageDataTransferService @Autowired constructor(
                     }
                 }
             } else {
-                //生成code
+                // 生成code
                 imageCode = it.repo!!.removePrefix("/").removeSuffix("/").replace("paas/bkdevops/", "").replace("/", "_")
                 // 重复处理
                 var imageCodeNum = 0
