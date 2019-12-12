@@ -484,7 +484,7 @@ export const getters = {
             if (index) {
                 return stage.containers.some(container => {
                     return container.elements.find(el => {
-                        return el['@type'] === atom
+                        return el.atomCode === atom
                     })
                 })
             }
