@@ -17,7 +17,7 @@ object MessageCheckUtil {
     private fun checkTitle(title: String?) {
         if (title.isNullOrBlank()) {
             throw InvalidParamException(
-                message = "invalid title:${title}",
+                message = "invalid title:$title",
                 errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_TITLE,
                 params = arrayOf(title ?: "")
             )
@@ -27,7 +27,7 @@ object MessageCheckUtil {
     private fun checkBody(body: String?) {
         if (body.isNullOrBlank()) {
             throw InvalidParamException(
-                message = "invalid body:${body}",
+                message = "invalid body:$body",
                 errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY,
                 params = arrayOf(body ?: "")
             )

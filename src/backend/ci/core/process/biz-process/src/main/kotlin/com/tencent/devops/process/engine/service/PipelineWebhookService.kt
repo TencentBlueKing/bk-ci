@@ -40,7 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
-import com.tencent.devops.process.service.scm.ScmService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.util.WebhookRedisUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -56,7 +56,7 @@ import javax.ws.rs.NotFoundException
 @Service
 class PipelineWebhookService @Autowired constructor(
     private val webhookRedisUtils: WebhookRedisUtils,
-    private val scmService: ScmService,
+    private val scmProxyService: ScmProxyService,
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResDao: PipelineResDao,
@@ -79,7 +79,7 @@ class PipelineWebhookService @Autowired constructor(
         if (createPipelineFlag != null && createPipelineFlag) {
             // 新增流水线时，模版里配置的代码库是变量或者当前项目下不存在，不需创建webhook
             try {
-                scmService.getRepo(pipelineWebhook.projectId, repositoryConfig)
+                scmProxyService.getRepo(pipelineWebhook.projectId, repositoryConfig)
             } catch (e: Exception) {
                 logger.info("skip save Webhook[$pipelineWebhook]: ${e.message}")
                 continueFlag = false
@@ -89,11 +89,11 @@ class PipelineWebhookService @Autowired constructor(
         if (continueFlag) {
             val projectName = when (pipelineWebhook.repositoryType) {
                 ScmType.CODE_GIT ->
-                    scmService.addGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
+                    scmProxyService.addGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 ScmType.CODE_SVN ->
-                    scmService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
+                    scmProxyService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.CODE_GITLAB ->
-                    scmService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig)
+                    scmProxyService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.GITHUB -> {
                     val repo = client.get(ServiceRepositoryResource::class).get(pipelineWebhook.projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType).data!!
                     repo.projectName

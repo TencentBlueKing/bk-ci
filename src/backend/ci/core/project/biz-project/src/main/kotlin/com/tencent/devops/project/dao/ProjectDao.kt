@@ -582,16 +582,16 @@ class ProjectDao {
     }
 
     fun getProjectCount(
-            dslContext: DSLContext,
-            projectName: String?,
-            englishName: String?,
-            projectType: Int?,
-            isSecrecy: Boolean?,
-            creator: String?,
-            approver: String?,
-            approvalStatus: Int?,
-            grayFlag: Boolean,
-            englishNames: Set<String>?
+        dslContext: DSLContext,
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        grayFlag: Boolean,
+        englishNames: Set<String>?
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(

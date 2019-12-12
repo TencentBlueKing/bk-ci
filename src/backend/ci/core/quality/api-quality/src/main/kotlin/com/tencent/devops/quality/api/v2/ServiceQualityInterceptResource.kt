@@ -59,4 +59,3 @@ interface ServiceQualityInterceptResource {
         buildId: String
     ): Result<List<QualityRuleIntercept>>
 }
-

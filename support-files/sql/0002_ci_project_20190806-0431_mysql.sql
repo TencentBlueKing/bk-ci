@@ -87,10 +87,10 @@ CREATE TABLE `T_USER_DAILY_LOGIN` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for t_favorite
+-- Table structure for T_FAVORITE
 -- ----------------------------
-DROP TABLE IF EXISTS `t_favorite`;
-CREATE TABLE `t_favorite` (
+DROP TABLE IF EXISTS `T_FAVORITE`;
+CREATE TABLE `T_FAVORITE` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
   `service_id` bigint(20) DEFAULT NULL COMMENT '服务id',
   `username` varchar(64) DEFAULT NULL COMMENT '用户',
@@ -150,10 +150,10 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
--- Table structure for t_service
+-- Table structure for T_SERVICE
 -- ----------------------------
-DROP TABLE IF EXISTS `t_service`;
-CREATE TABLE `t_service` (
+DROP TABLE IF EXISTS `T_SERVICE`;
+CREATE TABLE `T_SERVICE` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `name` varchar(64) DEFAULT NULL COMMENT '名称',
   `service_type_id` bigint(20) DEFAULT NULL,
