@@ -27,26 +27,24 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.pojo.common.Category
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class TemplateCategoryServiceImpl @Autowired constructor() : TemplateCategoryService {
 
     @Autowired
-    lateinit var dslContext: DSLContext
+    private lateinit var dslContext: DSLContext
     @Autowired
-    lateinit var templateCategoryRelDao: TemplateCategoryRelDao
+    private lateinit var templateCategoryRelDao: TemplateCategoryRelDao
+    @Autowired
+    private lateinit var storeCommonService: StoreCommonService
 
     private val logger = LoggerFactory.getLogger(TemplateCategoryServiceImpl::class.java)
 
@@ -59,23 +57,7 @@ class TemplateCategoryServiceImpl @Autowired constructor() : TemplateCategorySer
         val templateCategoryRecords =
             templateCategoryRelDao.getCategorysByTemplateId(dslContext, templateId) // 查询模板范畴信息
         templateCategoryRecords?.forEach {
-            val categoryCode = it["categoryCode"] as String
-            val categoryName = it["categoryName"] as String
-            val categoryLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
-                defaultMessage = categoryName
-            )
-            templateCategoryList.add(
-                Category(
-                    id = it["id"] as String,
-                    categoryCode = categoryCode,
-                    categoryName = categoryLanName,
-                    iconUrl = it["iconUrl"] as? String,
-                    categoryType = StoreTypeEnum.getStoreType((it["categoryType"] as Byte).toInt()),
-                    createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
-                    updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
-                )
-            )
+            storeCommonService.addCategoryToCategoryList(it, templateCategoryList)
         }
         return Result(templateCategoryList)
     }
