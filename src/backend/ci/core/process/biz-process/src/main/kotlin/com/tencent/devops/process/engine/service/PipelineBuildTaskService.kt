@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import org.jooq.DSLContext
@@ -67,8 +66,8 @@ class PipelineBuildTaskService @Autowired constructor(
                     starter = starter,
                     approver = approver,
                     subBuildId = subBuildId,
-                    startTime = startTime.timestampmilli() ?: 0L,
-                    endTime = endTime.timestampmilli() ?: 0L,
+                    startTime = startTime?.timestampmilli() ?: 0L,
+                    endTime = endTime?.timestampmilli() ?: 0L,
                     errorType = if (errorType == null) null else ErrorType.values()[errorType],
                     errorCode = errorCode,
                     errorMsg = errorMsg
