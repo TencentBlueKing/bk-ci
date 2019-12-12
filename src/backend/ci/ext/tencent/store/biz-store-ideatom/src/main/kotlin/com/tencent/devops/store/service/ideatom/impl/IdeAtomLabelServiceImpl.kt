@@ -27,21 +27,20 @@
 package com.tencent.devops.store.service.ideatom.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.store.dao.ideatom.IdeAtomLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class IdeAtomLabelServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val ideAtomLabelRelDao: IdeAtomLabelRelDao
+    private val ideAtomLabelRelDao: IdeAtomLabelRelDao,
+    private val storeCommonService: StoreCommonService
 ) : IdeAtomLabelService {
 
     private val logger = LoggerFactory.getLogger(IdeAtomLabelServiceImpl::class.java)
@@ -50,20 +49,11 @@ class IdeAtomLabelServiceImpl @Autowired constructor(
      * 查找IDE插件标签
      */
     override fun getLabelsByAtomId(atomId: String): Result<List<Label>?> {
-        logger.info("the atomId is :$atomId")
+        logger.info("getLabelsByAtomId atomId is :$atomId")
         val ideAtomLabelList = mutableListOf<Label>()
         val ideAtomLabelRecords = ideAtomLabelRelDao.getLabelsByAtomId(dslContext, atomId) // 查询IDE插件标签信息
         ideAtomLabelRecords?.forEach {
-            ideAtomLabelList.add(
-                Label(
-                    id = it["id"] as String,
-                    labelCode = it["labelCode"] as String,
-                    labelName = it["labelName"] as String,
-                    labelType = StoreTypeEnum.getStoreType((it["labelType"] as Byte).toInt()),
-                    createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
-                    updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
-                )
-            )
+            storeCommonService.addLabelToLabelList(it, ideAtomLabelList)
         }
         return Result(ideAtomLabelList)
     }

@@ -28,7 +28,9 @@ package com.tencent.devops.store.service.ideatom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomEnvInfoDao
@@ -71,14 +73,20 @@ class IdeAtomServiceImpl @Autowired constructor(
             val classifyRecord = classifyDao.getClassify(dslContext, atomRecord.classifyId)
             val atomVersionLogRecord = marketIdeAtomVersionLogDao.getIdeAtomVersion(dslContext, atomId)
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomId)
+            val classifyCode = classifyRecord?.classifyCode
+            val classifyName = classifyRecord?.classifyName
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = classifyName
+            )
             IdeAtom(
                 atomId = atomRecord.id,
                 atomName = atomRecord.atomName,
                 atomCode = atomRecord.atomCode,
                 atomType = IdeAtomTypeEnum.getAtomTypeObj(atomFeatureRecord.atomType.toInt()),
                 atomStatus = IdeAtomStatusEnum.getIdeAtomStatusObj(atomRecord.atomStatus.toInt())!!,
-                classifyCode = classifyRecord?.classifyCode,
-                classifyName = classifyRecord?.classifyName,
+                classifyCode = classifyCode,
+                classifyName = classifyLanName,
                 version = atomRecord.version,
                 releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionLogRecord.releaseType.toInt())!!,
                 versionContent = atomVersionLogRecord.content,
