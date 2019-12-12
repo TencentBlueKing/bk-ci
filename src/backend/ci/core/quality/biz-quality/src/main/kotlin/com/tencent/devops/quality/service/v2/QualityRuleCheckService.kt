@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.plugin.codecc.api.ServiceCodeccElementResource
+import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
