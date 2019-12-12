@@ -23,17 +23,41 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.v2
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:process:biz-process-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OPEN_API_V2_GIT"], description = "OPEN-API-V2-GIT工蜂资源")
+@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/git")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ApigwGitResourceV2 {
+
+    @ApiOperation("根据用户ID, 通过oauth方式获取项目")
+    @GET
+    @Path("/getProject")
+    fun getProject(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "用户ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "repo hash iD", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String?
+    ): Result<AuthorizeResult>
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
