@@ -31,8 +31,7 @@ import com.tencent.devops.worker.common.task.script.ICommand
 import com.tencent.devops.worker.common.utils.ShellUtil
 import java.io.File
 
-class CommandShellImpl(
-) : ICommand {
+class CommandShellImpl() : ICommand {
 
     override fun execute(
         buildId: String,

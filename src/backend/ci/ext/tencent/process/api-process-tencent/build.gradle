@@ -30,4 +30,5 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-scm")
     compile project(":core:process:api-process")
+    compile project(":ext:tencent:common:common-pipeline-tencent")
 }

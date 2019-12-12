@@ -62,7 +62,7 @@ class PipelineBuildDetailService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val websocketService: WebsocketService,
+    private val pipelineWebsocketService: PipelineWebsocketService,
     private val pipelineBuildDao: PipelineBuildDao
 ) {
 
@@ -105,6 +105,8 @@ class PipelineBuildDetailService @Autowired constructor(
 
         return ModelDetail(
             id = record.buildId,
+            pipelineId = buildInfo.pipelineId,
+            pipelineName = model.name,
             userId = record.startUser ?: "",
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
@@ -134,7 +136,7 @@ class PipelineBuildDetailService @Autowired constructor(
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         logger.info("dispatch pipelineDetailChangeEvent, buildId: $buildId")
         webSocketDispatcher.dispatch(
-                websocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
+                pipelineWebsocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
         )
 //        pipelineEventDispatcher.dispatch(
 //            PipelineStatusChangeEvent(

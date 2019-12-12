@@ -48,7 +48,11 @@ class ActivityService @Autowired constructor(
 
     fun list(type: ActivityType): List<ActivityInfo> {
         return activityDao.list(dslContext, type, ActivityStatus.ACTIVITY).map {
-            ActivityInfo(it.name, it.link, it.createTime.toLocalTime().toString())
+            ActivityInfo(
+                name = MessageCodeUtil.getMessageByLocale(chinese = it.name, english = it.englishName),
+                link = it.link,
+                createTime = it.createTime.toLocalTime().toString()
+            )
         }
     }
 
@@ -68,6 +72,7 @@ class ActivityService @Autowired constructor(
                 OPActivityVO(
                     id = it.id,
                     name = it.name,
+                    englishName = it.englishName,
                     link = it.link,
                     type = it.type,
                     status = it.status,

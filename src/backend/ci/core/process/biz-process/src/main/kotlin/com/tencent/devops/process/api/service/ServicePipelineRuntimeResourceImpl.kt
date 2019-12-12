@@ -35,7 +35,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_UPDATE_FAILED
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.WebsocketService
+import com.tencent.devops.process.engine.service.PipelineWebsocketService
 import com.tencent.devops.process.pojo.BuildHistory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineRuntimeResourceImpl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val websocketService: WebsocketService
+    private val pipelineWebsocketService: PipelineWebsocketService
 ) : ServicePipelineRuntimeResource {
 
     override fun updateArtifactList(
@@ -65,7 +65,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             val list = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
             if (list.isEmpty()) {
                 throw ErrorCodeException(
-                    ERROR_NO_BUILD_EXISTS_BY_ID.toString(),
+                    errorCode = ERROR_NO_BUILD_EXISTS_BY_ID.toString(),
                     defaultMessage = "要更新的构建 $buildId 不存在",
                     params = arrayOf(buildId)
                 )
@@ -73,7 +73,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             val buildHistory = list[0]
 
             webSocketDispatcher.dispatch(
-                websocketService.buildHistoryMessage(
+                pipelineWebsocketService.buildHistoryMessage(
                     buildId = buildId,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -84,7 +84,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
         }
 
         throw ErrorCodeException(
-            ERROR_UPDATE_FAILED.toString(),
+            errorCode = ERROR_UPDATE_FAILED.toString(),
             defaultMessage = "更新失败的构建 $buildId",
             params = arrayOf(buildId)
         )

@@ -355,7 +355,6 @@ interface ServiceGitResource {
         token: String
     ): Result<GitMrChangeInfo>
 
-
     @ApiOperation("添加Git Commit Check")
     @POST
     @Path("/addCommitCheck")
