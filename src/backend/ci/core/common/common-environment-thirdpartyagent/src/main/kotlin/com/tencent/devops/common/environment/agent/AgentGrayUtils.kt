@@ -29,12 +29,15 @@ package com.tencent.devops.common.environment.agent
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import org.slf4j.LoggerFactory
 
 class AgentGrayUtils constructor(
     private val redisOperation: RedisOperation,
     private val gray: Gray
 ) {
     companion object {
+        private val logger = LoggerFactory.getLogger(AgentGrayUtils::class.java)
+
         private const val CURRENT_AGENT_MASTER_VERSION = "environment.thirdparty.agent.master.version"
         private const val GRAY_CURRENT_AGENT_MASTERT_VERSION = "environment.thirdparty.agent.gray.master.version"
 
@@ -107,6 +110,7 @@ class AgentGrayUtils constructor(
     }
 
     fun setCanUpgradeAgents(agentIds: List<Long>) {
+        logger.info("setCanUpgradeAgents, agentIds: $agentIds")
         val canUpgradeAgentSetKey = getCanUpgradeAgentSetKey()
         val existingAgentIds = (redisOperation.getSetMembers(canUpgradeAgentSetKey) ?: setOf()).map {
             it.toLong()
