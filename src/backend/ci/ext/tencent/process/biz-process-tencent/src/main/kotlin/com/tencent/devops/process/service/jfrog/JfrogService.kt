@@ -45,10 +45,10 @@ class JfrogService @Autowired constructor(
         if (buildIds.isEmpty()) return mapOf()
         if (projectId.isBlank()) return mapOf()
         if (pipelineId.isBlank()) return mapOf()
-        val buildNoByBuildIds = pipelineService.getBuildNoByBuildIds(projectId, pipelineId, buildIds)
+        val buildNoByBuildIds = pipelineService.getBuildNoByByPair(buildIds)
         val result = mutableMapOf<String, String>()
         buildNoByBuildIds.forEach { (t, u) ->
-            result[t] = u.toString()
+            result[t] = u
         }
         return result
     }

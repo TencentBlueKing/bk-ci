@@ -114,7 +114,7 @@ interface OpImageResource {
     @ApiOperation("根据镜像代码获取镜像信息")
     @GET
     @Path("/imageCodes/{imageCode}")
-    fun getImagesByCode(
+    fun getImagesByCodeAndVersion(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
