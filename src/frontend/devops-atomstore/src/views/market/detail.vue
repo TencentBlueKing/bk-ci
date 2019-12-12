@@ -14,7 +14,7 @@
 
         <main class="store-main" v-show="!isLoading">
             <component :is="`${type}Info`" :detail="detail"></component>
-            <bk-tab type="currentType" :active="'des'" class="detail-tabs">
+            <bk-tab type="currentType" :active.sync="currentTab" class="detail-tabs">
                 <bk-tab-panel name="des" :label="$t('概述')" class="summary-tab">
                     <mavon-editor
                         :editable="false"
@@ -59,8 +59,8 @@
                     <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
 
-                <bk-tab-panel name="yaml" label="YAML">
-                    <pre v-highlightjs="atomYaml" class="detail-yaml"><code class="YAML"></code></pre>
+                <bk-tab-panel name="yaml" label="YAML" v-if="type === 'atom'">
+                    <section class="plugin-yaml"></section>
                 </bk-tab-panel>
             </bk-tab>
             <transition name="atom-fade">
@@ -79,6 +79,11 @@
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
+
+    import CodeMirror from 'codemirror'
+    import 'codemirror/mode/yaml/yaml'
+    import 'codemirror/lib/codemirror.css'
+    import 'codemirror/theme/3024-night.css'
 
     export default {
         components: {
@@ -121,6 +126,17 @@
                 showComment: false,
                 showInstallConfirm: false,
                 commentInfo: {},
+                codeEditor: {},
+                currentTab: 'des',
+                codeMirrorCon: {
+                    lineNumbers: true,
+                    tabMode: 'indent',
+                    mode: 'yaml',
+                    theme: '3024-night',
+                    autoRefresh: true,
+                    cursorBlinkRate: 0,
+                    readOnly: true
+                },
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
@@ -132,15 +148,7 @@
                         template: () => this.requestTemplateScoreDetail(this.detailCode),
                         image: () => this.requestImageScoreDetail(this.detailCode)
                     }
-                },
-                cmOptions: {
-                    tabSize: 4,
-                    mode: 'YAML',
-                    theme: 'Monokai',
-                    lineNumbers: true,
-                    line: true
-                },
-                atomYaml: ''
+                }
             }
         },
 
@@ -156,7 +164,17 @@
             }
         },
 
-        created () {
+        watch: {
+            currentTab (val) {
+                if (val === 'yaml') {
+                    setTimeout(() => {
+                        this.codeEditor.refresh()
+                    }, 0)
+                }
+            }
+        },
+
+        mounted () {
             this.getDetail()
         },
         
@@ -235,7 +253,9 @@
             getAtomYamlApi () {
                 const atomCode = this.detailCode
                 return this.getAtomYaml({ atomCode }).then((res) => {
-                    this.atomYaml = res
+                    const ele = document.querySelector('.plugin-yaml')
+                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                    this.codeEditor.setValue(res || '')
                 })
             },
 
@@ -319,6 +339,11 @@
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
 
+    .plugin-yaml {
+        height: 400px;
+        background: black;
+    }
+
     .store-main {
         height: calc(100vh - 93px);
         margin-left: calc(100vw - 100%);
@@ -333,12 +358,12 @@
     .detail-tabs {
         margin: 49px auto 30px;
         width: 1200px;
-        .detail-yaml {
-            margin: 0;
-            code {
-                font-family: Consolas, "Courier New", monospace;
-                padding: 10px;
-            }
+        /deep/ .CodeMirror {
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            padding: 10px;
+            height: auto;
         }
         .summary-tab {
             overflow: hidden;
