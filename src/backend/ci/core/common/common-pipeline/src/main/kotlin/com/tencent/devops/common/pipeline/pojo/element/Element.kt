@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTas
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -58,14 +59,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = CodeSvnElement::class, name = CodeSvnElement.classType),
     JsonSubTypes.Type(value = LinuxScriptElement::class, name = LinuxScriptElement.classType),
     JsonSubTypes.Type(value = WindowsScriptElement::class, name = WindowsScriptElement.classType),
-    JsonSubTypes.Type(value = ManualReviewUserTaskElement::class, name = ManualReviewUserTaskElement.classType),
     JsonSubTypes.Type(value = ManualTriggerElement::class, name = ManualTriggerElement.classType),
     JsonSubTypes.Type(value = RemoteTriggerElement::class, name = RemoteTriggerElement.classType),
     JsonSubTypes.Type(value = TimerTriggerElement::class, name = TimerTriggerElement.classType),
     JsonSubTypes.Type(value = ManualReviewUserTaskElement::class, name = ManualReviewUserTaskElement.classType),
     JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType),
     JsonSubTypes.Type(value = MarketBuildAtomElement::class, name = MarketBuildAtomElement.classType),
-    JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType)
+    JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType),
+    JsonSubTypes.Type(value = MarketCheckImageElement::class, name = MarketCheckImageElement.classType)
 )
 abstract class Element(
     open val name: String,

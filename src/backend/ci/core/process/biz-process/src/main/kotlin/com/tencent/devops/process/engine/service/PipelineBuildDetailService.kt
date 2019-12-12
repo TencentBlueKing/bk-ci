@@ -105,6 +105,8 @@ class PipelineBuildDetailService @Autowired constructor(
 
         return ModelDetail(
             id = record.buildId,
+            pipelineId = buildInfo.pipelineId,
+            pipelineName = model.name,
             userId = record.startUser ?: "",
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),

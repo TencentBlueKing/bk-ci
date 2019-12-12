@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -58,6 +59,7 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineUserService: PipelineUserService,
+    private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val modelCheckPlugin: ModelCheckPlugin
 ) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
@@ -92,5 +94,6 @@ class MQPipelineDeleteListener @Autowired constructor(
             pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId, userId)
         }
         pipelineWebhookService.deleteWebhook(pipelineId, userId)
+        callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)
     }
 }

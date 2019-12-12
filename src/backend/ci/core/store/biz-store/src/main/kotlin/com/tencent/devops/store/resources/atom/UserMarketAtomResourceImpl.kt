@@ -106,4 +106,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     override fun deleteAtom(userId: String, atomCode: String): Result<Boolean> {
         return marketAtomService.deleteAtom(userId, atomCode)
     }
+
+    override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+        return Result(marketAtomService.generateCiYaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
+    }
 }

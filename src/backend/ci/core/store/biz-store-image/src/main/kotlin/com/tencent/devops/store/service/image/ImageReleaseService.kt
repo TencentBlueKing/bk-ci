@@ -23,26 +23,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.tencent.devops.store.service.image
 
-import com.tencent.devops.common.api.constant.APPROVE
-import com.tencent.devops.common.api.constant.BEGIN
-import com.tencent.devops.common.api.constant.CHECK
-import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.DOING
-import com.tencent.devops.common.api.constant.END
-import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.LATEST
-import com.tencent.devops.common.api.constant.NUM_FIVE
-import com.tencent.devops.common.api.constant.NUM_FOUR
-import com.tencent.devops.common.api.constant.NUM_ONE
-import com.tencent.devops.common.api.constant.NUM_SIX
-import com.tencent.devops.common.api.constant.NUM_THREE
-import com.tencent.devops.common.api.constant.NUM_TWO
-import com.tencent.devops.common.api.constant.SUCCESS
-import com.tencent.devops.common.api.constant.TEST
-import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
@@ -63,6 +49,7 @@ import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
@@ -93,22 +80,41 @@ import java.time.LocalDateTime
 import java.util.Base64
 
 @Service
-class ImageReleaseService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val storeProjectRelDao: StoreProjectRelDao,
-    private val imageDao: ImageDao,
-    private val marketImageDao: MarketImageDao,
-    private val marketImageFeatureDao: MarketImageFeatureDao,
-    private val marketImageVersionLogDao: MarketImageVersionLogDao,
-    private val imageLabelRelDao: ImageLabelRelDao,
-    private val storeMemberDao: StoreMemberDao,
-    private val storePipelineRelDao: StorePipelineRelDao,
-    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
-    private val storeReleaseDao: StoreReleaseDao,
-    private val storeCommonService: StoreCommonService,
-    private val imageNotifyService: ImageNotifyService,
-    private val client: Client
-) {
+abstract class ImageReleaseService {
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var storeProjectRelDao: StoreProjectRelDao
+    @Autowired
+    lateinit var imageDao: ImageDao
+    @Autowired
+    lateinit var marketImageDao: MarketImageDao
+    @Autowired
+    lateinit var imageCategoryRelDao: ImageCategoryRelDao
+    @Autowired
+    lateinit var marketImageFeatureDao: MarketImageFeatureDao
+    @Autowired
+    lateinit var marketImageVersionLogDao: MarketImageVersionLogDao
+    @Autowired
+    lateinit var imageLabelRelDao: ImageLabelRelDao
+    @Autowired
+    lateinit var storeMemberDao: StoreMemberDao
+    @Autowired
+    lateinit var storePipelineRelDao: StorePipelineRelDao
+    @Autowired
+    lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
+    @Autowired
+    lateinit var storeReleaseDao: StoreReleaseDao
+    @Autowired
+    lateinit var storeCommonService: StoreCommonService
+    @Autowired
+    lateinit var imageNotifyService: ImageNotifyService
+    @Autowired
+    lateinit var supportService: SupportService
+    @Autowired
+    lateinit var client: Client
+
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
 
     fun addMarketImage(
@@ -124,24 +130,29 @@ class ImageReleaseService @Autowired constructor(
         val codeCount = imageDao.countByCode(dslContext, imageCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(imageCode), null)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(imageCode),
+                null
+            )
         }
         val imageName = marketImageRelRequest.imageName
         // 判断镜像名称是否存在
         val nameCount = imageDao.countByName(dslContext, imageName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(imageName), null)
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(imageName),
+                null
+            )
         }
         if (needAuth) {
             val validateFlag: Boolean?
             try {
                 // 判断用户是否项目的成员
-                validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                    accessToken = accessToken,
-                    projectCode = marketImageRelRequest.projectCode,
-                    userId = userId
-                ).data
+                validateFlag = client.get(ServiceProjectResource::class)
+                    .verifyUserProjectPermission(accessToken, marketImageRelRequest.projectCode, userId).data
             } catch (e: Exception) {
                 logger.error("verifyUserProjectPermission error is :$e")
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
@@ -211,7 +222,8 @@ class ImageReleaseService @Autowired constructor(
     fun updateMarketImage(
         userId: String,
         marketImageUpdateRequest: MarketImageUpdateRequest,
-        checkLatest: Boolean = true
+        checkLatest: Boolean = true,
+        sendCheckResultNotify: Boolean = true
     ): Result<String?> {
         logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
         val imageCode = marketImageUpdateRequest.imageCode
@@ -223,7 +235,10 @@ class ImageReleaseService @Autowired constructor(
         val imageRecords = marketImageDao.getImagesByImageCode(dslContext, imageCode)
         logger.info("the imageRecords is :$imageRecords")
         if (null == imageRecords || imageRecords.size == 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(imageCode)
+            )
         }
         val imageName = marketImageUpdateRequest.imageName
         // 判断更新的名称是否已存在
@@ -237,46 +252,47 @@ class ImageReleaseService @Autowired constructor(
         val imageRepoName = marketImageUpdateRequest.imageRepoName
         if (imageSourceType == ImageType.BKDEVOPS) {
             // 判断用户发布的镜像是否是自已名下有权限操作的镜像
-            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
-            val listProjectImagesResult = client.get(ServiceImageResource::class).listProjectImages(
+            val projectCode =
+                storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
+                    ?: throw DataConsistencyException(
+                        srcData = "(IMAGE,$userId,$imageCode)",
+                        targetData = "TestProjectCode",
+                        message = "Cannot find testproject record"
+                    )
+            val listProjectImagesResult = client.get(ServiceImageResource::class).listAllProjectImages(
                 userId = userId,
-                projectId = projectCode!!,
-                searchKey = imageRepoName,
-                start = null,
-                limit = null
-                )
+                projectId = projectCode,
+                searchKey = imageRepoName
+            )
             logger.info("the listProjectImagesResult is :$listProjectImagesResult")
             if (listProjectImagesResult.isNotOk()) {
                 return Result(listProjectImagesResult.status, listProjectImagesResult.message, null)
             }
-            val projectImagePageData = listProjectImagesResult.data
-            if (null == projectImagePageData || projectImagePageData.total < 1) {
+            val projectImageListResp = listProjectImagesResult.data
+            if ((null == projectImageListResp || projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
                 // 查询是否上架的是公共镜像
-                val listPublicImagesResult = client.get(ServiceImageResource::class).listPublicImages(
+                val listPublicImagesResult = client.get(ServiceImageResource::class).listAllPublicImages(
                     userId = userId,
-                    searchKey = imageRepoName,
-                    start = null,
-                    limit = null
+                    searchKey = imageRepoName
                 )
                 logger.info("the listPublicImagesResult is :$listPublicImagesResult")
                 if (listPublicImagesResult.isNotOk()) {
                     return Result(listPublicImagesResult.status, listPublicImagesResult.message, null)
                 }
-                val publicImagePageData = listPublicImagesResult.data
-                if (null == publicImagePageData || publicImagePageData.total < 1) {
+                val publicImageListResp = listPublicImagesResult.data
+                if ((null == publicImageListResp || publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
                     return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
                 }
             }
         }
         // 判断镜像的tag是否被关联过
-        val relFlag = imageDao.countByTag(
+        val relFlag = imageDao.countReleaseImageByTag(
             dslContext = dslContext,
+            imageCode = imageCode,
             imageRepoUrl = marketImageUpdateRequest.imageRepoUrl,
             imageRepoName = imageRepoName,
             imageTag = imageTag
-        ) == 0 || (imageRecord.imageRepoUrl == marketImageUpdateRequest.imageRepoUrl?.trim() &&
-            imageRecord.imageRepoName == marketImageUpdateRequest.imageRepoName.trim() &&
-            imageRecord.imageTag == marketImageUpdateRequest.imageTag.trim())
+        ) == 0
         if (!relFlag) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
@@ -289,9 +305,16 @@ class ImageReleaseService @Autowired constructor(
         val dbVersion = imageRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = imageRecord.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion = if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(dbVersion, releaseType)
+        val requireVersion =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
+                dbVersion,
+                releaseType
+            )
         if (version != requireVersion) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID, arrayOf(version, requireVersion))
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
+                arrayOf(version, requireVersion)
+            )
         }
         if (imageRecords.size > 1) {
             // 判断最近一个镜像版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
@@ -302,7 +325,10 @@ class ImageReleaseService @Autowired constructor(
                 ImageStatusEnum.UNDERCARRIAGED.status.toByte()
             )
             if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
-                return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH, arrayOf(imageRecord.imageName, imageRecord.version))
+                return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                    arrayOf(imageRecord.imageName, imageRecord.version)
+                )
             }
         }
         var imageId = UUIDUtil.generate()
@@ -343,7 +369,12 @@ class ImageReleaseService @Autowired constructor(
                 imageLabelRelDao.batchAdd(context, userId, imageId, labelIdList)
             }
             // 运行检查镜像合法性的流水线
-            runCheckImagePipeline(context, userId, imageId)
+            runCheckImagePipeline(
+                context = context,
+                userId = userId,
+                imageId = imageId,
+                sendCheckResultNotify = sendCheckResultNotify
+            )
         }
         return Result(imageId)
     }
@@ -364,6 +395,8 @@ class ImageReleaseService @Autowired constructor(
         return Result(true)
     }
 
+    abstract fun getPassTestStatus(isNormalUpgrade: Boolean): Byte
+
     fun passTest(
         userId: String,
         imageId: String,
@@ -383,8 +416,7 @@ class ImageReleaseService @Autowired constructor(
         val imageCode = imageRecord.imageCode
         val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
-        val imageStatus =
-            if (isNormalUpgrade) ImageStatusEnum.RELEASED.status.toByte() else ImageStatusEnum.AUDITING.status.toByte()
+        val imageStatus = getPassTestStatus(isNormalUpgrade)
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, imageStatus, validateUserFlag)
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
@@ -426,7 +458,8 @@ class ImageReleaseService @Autowired constructor(
     private fun runCheckImagePipeline(
         context: DSLContext,
         userId: String,
-        imageId: String
+        imageId: String,
+        sendCheckResultNotify: Boolean = true
     ) {
         logger.info("runCheckImagePipeline userId is:$userId,imageId is:$imageId")
         val imageRecord = imageDao.getImage(context, imageId)!!
@@ -446,24 +479,37 @@ class ImageReleaseService @Autowired constructor(
             val pair = DHUtil.initKey()
             val encoder = Base64.getEncoder()
             val decoder = Base64.getDecoder()
-            val credentialResult = client.get(ServiceCredentialResource::class).get(projectCode!!, ticketId,
-                encoder.encodeToString(pair.publicKey))
+            val credentialResult = client.get(ServiceCredentialResource::class).get(
+                projectCode!!, ticketId,
+                encoder.encodeToString(pair.publicKey)
+            )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
                 throw ParamBlankException("Fail to get the credential($ticketId) of project($projectCode)")
             }
             val credential = credentialResult.data!!
-            userName = String(DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
-            if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
-                password = String(DHUtil.decrypt(
-                    decoder.decode(credential.v2),
+            userName = String(
+                DHUtil.decrypt(
+                    decoder.decode(credential.v1),
                     decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                    pair.privateKey
+                )
+            )
+            if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
+                password = String(
+                    DHUtil.decrypt(
+                        decoder.decode(credential.v2),
+                        decoder.decode(credential.publicKey),
+                        pair.privateKey
+                    )
+                )
             }
         }
-        val dockerImageName = "${imageRecord.imageRepoUrl}/${imageRecord.imageRepoName}:${imageRecord.imageTag}"
+        logger.info("runCheckImagePipeline:$imageId,username=$userName,password=$password")
+        val dockerImageName = if (imageRecord.imageRepoUrl.isNullOrBlank()) {
+            "${imageRecord.imageRepoName}:${imageRecord.imageTag}"
+        } else {
+            "${imageRecord.imageRepoUrl}/${imageRecord.imageRepoName}:${imageRecord.imageTag}"
+        }
         val imageSourceType = imageRecord.imageSourceType
         if (null == imagePipelineRelRecord) {
             val checkImageInitPipelineReq = CheckImageInitPipelineReq(
@@ -472,7 +518,8 @@ class ImageReleaseService @Autowired constructor(
                 version = version,
                 imageType = imageSourceType,
                 registryUser = userName,
-                registryPwd = password
+                registryPwd = password,
+                sendNotify = sendCheckResultNotify
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
@@ -499,6 +546,12 @@ class ImageReleaseService @Autowired constructor(
             startParams["version"] = version
             if (null != imageSourceType) {
                 startParams["imageType"] = imageSourceType
+            }
+            if (null != userName) {
+                startParams["registryUser"] = userName
+            }
+            if (null != password) {
+                startParams["registryPwd"] = password
             }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, imagePipelineRelRecord.pipelineId, startParams,
@@ -534,12 +587,24 @@ class ImageReleaseService @Autowired constructor(
         releaseType: Byte,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
+        val logoUrl = marketImageUpdateRequest.logoUrl
+        var iconData: String? = null
+        if (!logoUrl.isNullOrBlank()) {
+            iconData = supportService.getIconDataByLogoUrl(logoUrl!!)
+        }
         marketImageDao.updateMarketImage(
             dslContext = context,
             userId = userId,
             imageId = imageId,
             imageSize = imageSize,
+            iconData = iconData,
             marketImageUpdateRequest = marketImageUpdateRequest
+        )
+        imageCategoryRelDao.updateCategory(
+            dslContext = context,
+            userId = userId,
+            imageId = imageId,
+            categoryCode = marketImageUpdateRequest.category
         )
         marketImageVersionLogDao.addMarketImageVersion(
             dslContext = context,
@@ -558,13 +623,25 @@ class ImageReleaseService @Autowired constructor(
         imageRecord: TImageRecord,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
+        val logoUrl = marketImageUpdateRequest.logoUrl
+        var iconData: String? = null
+        if (!logoUrl.isNullOrBlank()) {
+            iconData = supportService.getIconDataByLogoUrl(logoUrl!!)
+        }
         marketImageDao.upgradeMarketImage(
             dslContext = context,
             userId = userId,
             imageId = imageId,
             imageSize = imageSize,
+            iconData = iconData,
             imageRecord = imageRecord,
             marketImageUpdateRequest = marketImageUpdateRequest
+        )
+        imageCategoryRelDao.updateCategory(
+            dslContext = context,
+            userId = userId,
+            imageId = imageId,
+            categoryCode = marketImageUpdateRequest.category
         )
         marketImageVersionLogDao.addMarketImageVersion(
             dslContext = context,
@@ -590,55 +667,22 @@ class ImageReleaseService @Autowired constructor(
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = getNormalUpgradeFlag(imageCode, status)
             logger.info("getProcessInfo isNormalUpgrade: $isNormalUpgrade")
-            val processInfo = initProcessInfo(isNormalUpgrade)
-            val totalStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
-            when (status) {
-                ImageStatusEnum.INIT.status, ImageStatusEnum.COMMITTING.status -> {
-                    storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
-                }
-                ImageStatusEnum.CHECKING.status -> {
-                    storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
-                }
-                ImageStatusEnum.CHECK_FAIL.status -> {
-                    storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, FAIL)
-                }
-                ImageStatusEnum.TESTING.status -> {
-                    storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, DOING)
-                }
-                ImageStatusEnum.AUDITING.status -> {
-                    storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, DOING)
-                }
-                ImageStatusEnum.AUDIT_REJECT.status -> {
-                    storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
-                }
-                ImageStatusEnum.RELEASED.status -> {
-                    val currStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
-                    storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
-                }
-            }
-            val storeProcessInfo = storeCommonService.generateStoreProcessInfo(userId, imageId, imageCode, StoreTypeEnum.IMAGE, record.modifier, processInfo)
+            val processInfo = handleProcessInfo(isNormalUpgrade, status)
+
+            val storeProcessInfo = storeCommonService.generateStoreProcessInfo(
+                userId = userId,
+                storeId = imageId,
+                storeCode = imageCode,
+                storeType = StoreTypeEnum.IMAGE,
+                modifier = record.modifier,
+                processInfo = processInfo
+            )
             logger.info("getProcessInfo storeProcessInfo: $storeProcessInfo")
             return Result(storeProcessInfo)
         }
     }
 
-    /**
-     * 初始化进度
-     */
-    private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
-        val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(COMMIT), COMMIT, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(CHECK), CHECK, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_FOUR, UNDO))
-        if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FIVE, UNDO))
-        } else {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
-        }
-        return processInfo
-    }
+    abstract fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem>
 
     /**
      * 取消发布
@@ -658,7 +702,7 @@ class ImageReleaseService @Autowired constructor(
     /**
      * 检查版本发布过程中的操作权限：重新构建、确认测试完成、取消发布
      */
-    private fun checkImageVersionOptRight(
+    protected fun checkImageVersionOptRight(
         userId: String,
         imageId: String,
         status: Byte,
@@ -666,7 +710,11 @@ class ImageReleaseService @Autowired constructor(
     ): Triple<Boolean, String?, Array<String>?> {
         logger.info("checkImageVersionOptRight userId is:$userId, imageId is:$imageId, status is:$status, validateUserFlag is:$validateUserFlag")
         val imageRecord =
-            imageDao.getImage(dslContext, imageId) ?: return Triple(false, CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageId))
+            imageDao.getImage(dslContext, imageId) ?: return Triple(
+                false,
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(imageId)
+            )
         val imageCode = imageRecord.imageCode
         val modifier = imageRecord.modifier
         val imageStatus = imageRecord.imageStatus
@@ -686,7 +734,10 @@ class ImageReleaseService @Autowired constructor(
         ) {
             return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
         } else if (status == ImageStatusEnum.CHECKING.status.toByte() &&
-            imageStatus !in (listOf(ImageStatusEnum.CHECK_FAIL.status.toByte(), ImageStatusEnum.TESTING.status.toByte()))
+            imageStatus !in (listOf(
+                ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                ImageStatusEnum.TESTING.status.toByte()
+            ))
         ) {
             return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
         } else if (status == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
