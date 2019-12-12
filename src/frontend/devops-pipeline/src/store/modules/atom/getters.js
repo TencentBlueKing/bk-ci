@@ -171,7 +171,7 @@ export default {
 
             const elementValid = allElements.some(ele => {
                 ele['@type'] === 'linuxPaasCodeCCScript' && codeccCount++
-                ele['@type'] === 'CodeccCheckAtom' && codeccCount++
+                ele.atomCode === 'CodeccCheckAtom' && codeccCount++
                 ele['@type'] === 'manualTrigger' && manualTriggerCount++
                 ele['@type'] === 'timerTrigger' && timerTriggerCount++
                 ele['@type'] === 'remoteTrigger' && remoteTriggerCount++
