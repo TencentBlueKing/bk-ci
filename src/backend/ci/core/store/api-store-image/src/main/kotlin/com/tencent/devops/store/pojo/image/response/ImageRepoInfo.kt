@@ -1,6 +1,7 @@
 package com.tencent.devops.store.pojo.image.response
 
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -28,5 +29,11 @@ data class ImageRepoInfo(
     val ticketId: String,
 
     @ApiModelProperty("初始化凭证的项目", required = true)
-    val ticketProject: String
+    val ticketProject: String,
+
+    @ApiModelProperty("是否为公共镜像 true：是 false：否", required = true)
+    val publicFlag: Boolean,
+
+    @ApiModelProperty("研发来源")
+    val rdType: ImageRDTypeEnum
 )
