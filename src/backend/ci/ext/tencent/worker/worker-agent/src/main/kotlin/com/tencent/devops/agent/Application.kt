@@ -82,7 +82,7 @@ fun main(args: Array<String>) {
         BuildType.MACOS.name -> {
             var startBuild:Boolean = false
             val gateyway = AgentEnv.getGateway()
-            val url = "http://$gateyway/dispatch-macos/api/gw/macos/startBuild"
+            val url = "http://$gateyway/dispatch-macos/gw/build/macos/startBuild"
             System.out.println("url:$url")
             val request = Request.Builder()
                 .url(url)
