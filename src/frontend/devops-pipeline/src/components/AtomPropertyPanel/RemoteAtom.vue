@@ -6,7 +6,7 @@
                 id="atom-iframe"
                 ref="iframeEle"
                 allowfullscreen
-                height="100%"
+                height="300px"
                 :src="src"
                 @load="onLoad"
             />
@@ -44,10 +44,13 @@
             receiveMsgFromIframe (e) {
                 if (location.href.indexOf(e.origin) === 0) return
                 console.log(e.data, 'top')
-                if (e.data && e.data.atomValue) {
+                if (!e.data) return
+                if (e.data.atomValue) {
                     // Vue.set(this.element.data, 'input', e.data.atomValue)
                     this.handleUpdateWholeAtomInput(e.data.atomValue)
-                } else if (e.data && e.data.isError) {
+                } else if (e.data.isError) {
+                    console.log(e.data)
+                } else if (e.data.iframeHeight) {
                     console.log(e.data)
                 }
             }
