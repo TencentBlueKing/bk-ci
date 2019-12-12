@@ -163,5 +163,4 @@ interface ServiceRepositoryResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>>
-g
 }
