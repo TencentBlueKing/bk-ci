@@ -22,9 +22,11 @@ import store from './store'
 import './assets/scss/index.scss'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
+import VueHighlightJS from 'vue-highlightjs'
 
 const Vue = window.Vue
 Vue.use(mavonEditor)
+Vue.use(VueHighlightJS)
 
 window.Pages = window.Pages || {}
 window.Pages['store'] = {
